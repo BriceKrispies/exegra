@@ -1,0 +1,910 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "api-flow": {
+    "state": "api-responded",
+    "vars": {
+     "rejected": false,
+     "validated": true
+    }
+   },
+   "client-flow": {
+    "state": "client-done",
+    "vars": {
+     "delivered": true
+    }
+   },
+   "database-flow": {
+    "state": "database-committed",
+    "vars": {
+     "durable": true
+    }
+   },
+   "worker-flow": {
+    "state": "worker-acknowledged",
+    "vars": {
+     "accepted": true,
+     "acked": true
+    }
+   }
+  },
+  "pending": [],
+  "time": 1
+ },
+ "initial": {
+  "machines": {
+   "api-flow": {
+    "state": "api-idle",
+    "vars": {
+     "rejected": false,
+     "validated": false
+    }
+   },
+   "client-flow": {
+    "state": "client-idle",
+    "vars": {
+     "delivered": false
+    }
+   },
+   "database-flow": {
+    "state": "database-idle",
+    "vars": {
+     "durable": false
+    }
+   },
+   "worker-flow": {
+    "state": "worker-idle",
+    "vars": {
+     "accepted": false,
+     "acked": false
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "command-submitted",
+    "payload": {
+     "token": "valid-token"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "command-happy-path",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "api-flow": {
+      "state": "api-idle",
+      "vars": {
+       "rejected": false,
+       "validated": false
+      }
+     },
+     "client-flow": {
+      "state": "client-awaiting",
+      "vars": {
+       "delivered": false
+      }
+     },
+     "database-flow": {
+      "state": "database-idle",
+      "vars": {
+       "durable": false
+      }
+     },
+     "worker-flow": {
+      "state": "worker-idle",
+      "vars": {
+       "accepted": false,
+       "acked": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "command-received",
+      "payload": {
+       "token": "valid-token"
+      },
+      "seq": 1,
+      "source": {
+       "behavior": "client-flow",
+       "kind": "transition",
+       "transition": "client-submit"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "command-submitted",
+    "payload": {
+     "token": "valid-token"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "client-flow",
+     "emitted": [
+      {
+       "event": "command-received",
+       "payload": {
+        "token": "valid-token"
+       },
+       "seq": 1,
+       "time": 0
+      }
+     ],
+     "from": "client-idle",
+     "guard": null,
+     "sets": [],
+     "to": "client-awaiting",
+     "transition": "client-submit"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "api-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "database-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "command-submitted",
+    "client-submit",
+    "client-flow",
+    "web-client"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "api-flow": {
+      "state": "api-routing",
+      "vars": {
+       "rejected": false,
+       "validated": true
+      }
+     },
+     "client-flow": {
+      "state": "client-awaiting",
+      "vars": {
+       "delivered": false
+      }
+     },
+     "database-flow": {
+      "state": "database-idle",
+      "vars": {
+       "durable": false
+      }
+     },
+     "worker-flow": {
+      "state": "worker-idle",
+      "vars": {
+       "accepted": false,
+       "acked": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "command-routed",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "behavior": "api-flow",
+       "kind": "transition",
+       "transition": "api-route-command"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "command-received",
+    "payload": {
+     "token": "valid-token"
+    },
+    "seq": 1,
+    "source": {
+     "behavior": "client-flow",
+     "kind": "transition",
+     "transition": "client-submit"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "api-flow",
+     "emitted": [
+      {
+       "event": "command-routed",
+       "payload": {},
+       "seq": 2,
+       "time": 0
+      }
+     ],
+     "from": "api-idle",
+     "guard": "event.token == 'valid-token'",
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "validated"
+      }
+     ],
+     "to": "api-routing",
+     "transition": "api-route-command"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "database-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "command-received",
+    "api-route-command",
+    "api-flow",
+    "api-service"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "api-flow": {
+      "state": "api-routing",
+      "vars": {
+       "rejected": false,
+       "validated": true
+      }
+     },
+     "client-flow": {
+      "state": "client-awaiting",
+      "vars": {
+       "delivered": false
+      }
+     },
+     "database-flow": {
+      "state": "database-idle",
+      "vars": {
+       "durable": false
+      }
+     },
+     "worker-flow": {
+      "state": "worker-accepted",
+      "vars": {
+       "accepted": true,
+       "acked": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "command-accepted",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "behavior": "worker-flow",
+       "kind": "transition",
+       "transition": "worker-accept-command"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "command-routed",
+    "payload": {},
+    "seq": 2,
+    "source": {
+     "behavior": "api-flow",
+     "kind": "transition",
+     "transition": "api-route-command"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "worker-flow",
+     "emitted": [
+      {
+       "event": "command-accepted",
+       "payload": {},
+       "seq": 3,
+       "time": 0
+      }
+     ],
+     "from": "worker-idle",
+     "guard": null,
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "accepted"
+      }
+     ],
+     "to": "worker-accepted",
+     "transition": "worker-accept-command"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "api-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "database-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "command-routed",
+    "worker-accept-command",
+    "worker-flow",
+    "authoritative-worker-1"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "api-flow": {
+      "state": "api-routing",
+      "vars": {
+       "rejected": false,
+       "validated": true
+      }
+     },
+     "client-flow": {
+      "state": "client-awaiting",
+      "vars": {
+       "delivered": false
+      }
+     },
+     "database-flow": {
+      "state": "database-idle",
+      "vars": {
+       "durable": false
+      }
+     },
+     "worker-flow": {
+      "state": "worker-awaiting-commit",
+      "vars": {
+       "accepted": true,
+       "acked": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "persist-requested",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "behavior": "worker-flow",
+       "kind": "transition",
+       "transition": "worker-request-persist"
+      },
+      "time": 1
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "command-accepted",
+    "payload": {},
+    "seq": 3,
+    "source": {
+     "behavior": "worker-flow",
+     "kind": "transition",
+     "transition": "worker-accept-command"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "worker-flow",
+     "emitted": [
+      {
+       "event": "persist-requested",
+       "payload": {},
+       "seq": 4,
+       "time": 1
+      }
+     ],
+     "from": "worker-accepted",
+     "guard": null,
+     "sets": [],
+     "to": "worker-awaiting-commit",
+     "transition": "worker-request-persist"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "api-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "database-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "command-accepted",
+    "worker-request-persist",
+    "worker-flow",
+    "authoritative-worker-1"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "api-flow": {
+      "state": "api-routing",
+      "vars": {
+       "rejected": false,
+       "validated": true
+      }
+     },
+     "client-flow": {
+      "state": "client-awaiting",
+      "vars": {
+       "delivered": false
+      }
+     },
+     "database-flow": {
+      "state": "database-committed",
+      "vars": {
+       "durable": true
+      }
+     },
+     "worker-flow": {
+      "state": "worker-awaiting-commit",
+      "vars": {
+       "accepted": true,
+       "acked": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "persist-committed",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "behavior": "database-flow",
+       "kind": "transition",
+       "transition": "database-commit"
+      },
+      "time": 1
+     }
+    ],
+    "time": 1
+   },
+   "event": {
+    "id": "persist-requested",
+    "payload": {},
+    "seq": 4,
+    "source": {
+     "behavior": "worker-flow",
+     "kind": "transition",
+     "transition": "worker-request-persist"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "database-flow",
+     "emitted": [
+      {
+       "event": "persist-committed",
+       "payload": {},
+       "seq": 5,
+       "time": 1
+      }
+     ],
+     "from": "database-idle",
+     "guard": null,
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "durable"
+      }
+     ],
+     "to": "database-committed",
+     "transition": "database-commit"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "api-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 4,
+   "kind": "deliver",
+   "responsible": [
+    "persist-requested",
+    "database-commit",
+    "database-flow",
+    "game-database"
+   ],
+   "time": 1
+  },
+  {
+   "config": {
+    "machines": {
+     "api-flow": {
+      "state": "api-routing",
+      "vars": {
+       "rejected": false,
+       "validated": true
+      }
+     },
+     "client-flow": {
+      "state": "client-awaiting",
+      "vars": {
+       "delivered": false
+      }
+     },
+     "database-flow": {
+      "state": "database-committed",
+      "vars": {
+       "durable": true
+      }
+     },
+     "worker-flow": {
+      "state": "worker-acknowledged",
+      "vars": {
+       "accepted": true,
+       "acked": true
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "acknowledgement-sent",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "behavior": "worker-flow",
+       "kind": "transition",
+       "transition": "worker-ack-after-commit"
+      },
+      "time": 1
+     }
+    ],
+    "time": 1
+   },
+   "event": {
+    "id": "persist-committed",
+    "payload": {},
+    "seq": 5,
+    "source": {
+     "behavior": "database-flow",
+     "kind": "transition",
+     "transition": "database-commit"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "worker-flow",
+     "emitted": [
+      {
+       "event": "acknowledgement-sent",
+       "payload": {},
+       "seq": 6,
+       "time": 1
+      }
+     ],
+     "from": "worker-awaiting-commit",
+     "guard": null,
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "acked"
+      }
+     ],
+     "to": "worker-acknowledged",
+     "transition": "worker-ack-after-commit"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "api-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "database-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 5,
+   "kind": "deliver",
+   "responsible": [
+    "persist-committed",
+    "worker-ack-after-commit",
+    "worker-flow",
+    "authoritative-worker-1"
+   ],
+   "time": 1
+  },
+  {
+   "config": {
+    "machines": {
+     "api-flow": {
+      "state": "api-responded",
+      "vars": {
+       "rejected": false,
+       "validated": true
+      }
+     },
+     "client-flow": {
+      "state": "client-awaiting",
+      "vars": {
+       "delivered": false
+      }
+     },
+     "database-flow": {
+      "state": "database-committed",
+      "vars": {
+       "durable": true
+      }
+     },
+     "worker-flow": {
+      "state": "worker-acknowledged",
+      "vars": {
+       "accepted": true,
+       "acked": true
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "response-delivered",
+      "payload": {},
+      "seq": 7,
+      "source": {
+       "behavior": "api-flow",
+       "kind": "transition",
+       "transition": "api-deliver-response"
+      },
+      "time": 1
+     }
+    ],
+    "time": 1
+   },
+   "event": {
+    "id": "acknowledgement-sent",
+    "payload": {},
+    "seq": 6,
+    "source": {
+     "behavior": "worker-flow",
+     "kind": "transition",
+     "transition": "worker-ack-after-commit"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "api-flow",
+     "emitted": [
+      {
+       "event": "response-delivered",
+       "payload": {},
+       "seq": 7,
+       "time": 1
+      }
+     ],
+     "from": "api-routing",
+     "guard": null,
+     "sets": [],
+     "to": "api-responded",
+     "transition": "api-deliver-response"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "database-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 6,
+   "kind": "deliver",
+   "responsible": [
+    "acknowledgement-sent",
+    "api-deliver-response",
+    "api-flow",
+    "api-service"
+   ],
+   "time": 1
+  },
+  {
+   "config": {
+    "machines": {
+     "api-flow": {
+      "state": "api-responded",
+      "vars": {
+       "rejected": false,
+       "validated": true
+      }
+     },
+     "client-flow": {
+      "state": "client-done",
+      "vars": {
+       "delivered": true
+      }
+     },
+     "database-flow": {
+      "state": "database-committed",
+      "vars": {
+       "durable": true
+      }
+     },
+     "worker-flow": {
+      "state": "worker-acknowledged",
+      "vars": {
+       "accepted": true,
+       "acked": true
+      }
+     }
+    },
+    "pending": [],
+    "time": 1
+   },
+   "event": {
+    "id": "response-delivered",
+    "payload": {},
+    "seq": 7,
+    "source": {
+     "behavior": "api-flow",
+     "kind": "transition",
+     "transition": "api-deliver-response"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "client-flow",
+     "emitted": [],
+     "from": "client-awaiting",
+     "guard": null,
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "delivered"
+      }
+     ],
+     "to": "client-done",
+     "transition": "client-receive-response"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "api-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "database-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 7,
+   "kind": "deliver",
+   "responsible": [
+    "response-delivered",
+    "client-receive-response",
+    "client-flow",
+    "web-client"
+   ],
+   "time": 1
+  }
+ ]
+}

@@ -1,0 +1,77 @@
+/* owned by its component module; see docs/module-contracts.md */
+@layer components {
+  .real {
+    height: 100%;
+    overflow: auto;
+    padding: var(--s-4) var(--s-5) var(--s-6);
+    font-size: var(--fs-2);
+  }
+  @media (min-width: 768px) and (pointer: fine) { .real { padding: var(--s-3) var(--s-4); } }
+  .real__h, .real__sub {
+    margin: 0 0 var(--s-2);
+    font-size: var(--fs-1);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .real__sub { margin-top: var(--s-5); padding-top: var(--s-3); border-top: 1px solid var(--line-1); }
+  .real__sub2 { margin: var(--s-3) 0 var(--s-1); font-size: var(--fs-2); color: var(--text-2); }
+  .real__empty { color: var(--text-2); margin: var(--s-3) 0; }
+  .real__muted { color: var(--text-3); }
+  .real__bad { color: var(--bad); }
+  .real__mono, .real code { font-family: var(--font-mono); font-size: var(--fs-1); }
+  .real__num { font-variant-numeric: tabular-nums; }
+  .real__list { list-style: none; margin: 0; padding: 0; }
+  .real__list li { padding: var(--s-1) 0; }
+
+  .real__bar { display: flex; height: 10px; border-radius: var(--r-1); overflow: hidden; background: var(--surface-3); margin: var(--s-2) 0; }
+  .real__seg { display: block; height: 100%; }
+  .real__seg + .real__seg { border-left: 1px solid var(--surface-1); }
+  .real__seg--generated, .real__chip--generated .real__dot { background: var(--c-amber); }
+  .real__seg--partially-generated, .real__chip--partially-generated .real__dot { background: var(--c-violet); }
+  .real__seg--model-configured, .real__chip--model-configured .real__dot { background: var(--c-blue); }
+  .real__seg--manual, .real__chip--manual .real__dot { background: var(--c-slate); }
+  .real__seg--not-implemented, .real__chip--not-implemented .real__dot { background: var(--bad); }
+  .real__seg--undeclared { background: var(--none); }
+  .real__chip--undeclared .real__dot { background: transparent; border: 1.5px solid var(--none); }
+  .real__legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5); }
+  .real__chip { display: inline-flex; align-items: center; gap: var(--s-2); white-space: nowrap; }
+  .real__dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+
+  .real__filters { display: flex; flex-wrap: wrap; gap: var(--s-2); margin: var(--s-3) 0; }
+  .real__toggle { min-height: 22px; font-size: var(--fs-1); color: var(--text-2); border-radius: var(--r-pill); }
+  .real__toggle--on { background: var(--selected); border-color: var(--accent); color: var(--text-1); }
+  .real button:focus-visible, .real summary:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+  .real__link { all: unset; cursor: pointer; color: var(--accent); border-radius: var(--r-1); }
+  .real__link:hover { text-decoration: underline; }
+  .real__link:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+
+  .real__table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .real__table th {
+    text-align: left;
+    font-size: var(--fs-1);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    padding: var(--s-2);
+    border-bottom: 1px solid var(--line-2);
+  }
+  .real__table td { padding: var(--s-2); border-bottom: 1px solid var(--line-1); vertical-align: top; }
+  .real__gone { color: var(--text-3); }
+  .real__notes { color: var(--text-2); min-width: 160px; }
+
+  .real__file { margin: var(--s-2) 0; border: 1px solid var(--line-1); border-radius: var(--r-1); background: var(--surface-2); }
+  .real__file summary { cursor: pointer; padding: 0 var(--s-3); min-height: var(--row-h); display: flex; align-items: center; }
+  .real__pre {
+    margin: 0;
+    padding: var(--s-3);
+    max-height: 320px;
+    overflow: auto;
+    border-top: 1px solid var(--line-1);
+    background: var(--surface-0);
+    color: var(--text-2);
+    font-size: var(--fs-1);
+    white-space: pre;
+  }
+}

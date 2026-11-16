@@ -1,0 +1,16 @@
+[package]
+name = "exegra-engine-wasm"
+version = "0.1.0"
+edition = "2021"
+description = "WebAssembly build of Exegra's simulation engine, for the browser and Node."
+publish = false
+
+[lib]
+name = "exegra_engine_wasm"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+exegra-engine = { path = "../exegra-engine" }
+# Pinned to the wasm-bindgen CLI that generates the JavaScript glue: the two must be the same version.
+wasm-bindgen = "=0.2.122"

@@ -1,0 +1,19 @@
+[package]
+name = "exegra-engine"
+version = "0.1.0"
+edition = "2021"
+description = "Exegra's discrete-event simulation engine: engine input in, trace out."
+publish = false
+
+[lib]
+name = "exegra_engine"
+path = "src/lib.rs"
+
+[[bin]]
+name = "exegra-sim"
+path = "src/main.rs"
+
+[dependencies]
+serde = "1"
+# float_roundtrip: decimal numbers parse to the nearest double, as JSON.parse does.
+serde_json = { version = "1", features = ["float_roundtrip"] }

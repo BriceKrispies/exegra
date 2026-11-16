@@ -1,0 +1,120 @@
+/* Native <dialog> editing dialogs (src/ui/dialogs.js). Phone first: a dialog is a
+   full-screen sheet with its title at the top and its actions at the bottom, clear of
+   the safe areas; from tablet width up it is a centred card. Buttons, chips and
+   property controls share the rules in inspector.css. */
+@layer components {
+  .dialog {
+    --label-w: 110px;
+    box-sizing: border-box;
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    color: var(--text-1);
+    background: var(--surface-1);
+    border: 0;
+    font-family: var(--font-ui);
+    font-size: var(--fs-2);
+  }
+  .dialog[open] { animation: dialog-rise var(--dur-sheet) var(--ease-out); }
+  @keyframes dialog-rise { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .dialog::backdrop { background: rgb(0 0 0 / 0.5); }
+  .dialog__form { display: flex; flex-direction: column; height: 100%; max-height: 100%; }
+  .dialog__head {
+    flex: none;
+    padding: calc(var(--s-4) + var(--safe-top)) calc(var(--s-5) + var(--safe-right)) var(--s-4) calc(var(--s-5) + var(--safe-left));
+    border-bottom: 1px solid var(--line-1);
+  }
+  .dialog__title { margin: 0; font-size: var(--fs-4); font-weight: 600; overflow-wrap: anywhere; }
+  .dialog__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: var(--s-4) calc(var(--s-5) + var(--safe-right)) var(--s-4) calc(var(--s-5) + var(--safe-left));
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  .dialog__foot {
+    flex: none;
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--s-3);
+    padding: var(--s-3) calc(var(--s-5) + var(--safe-right)) calc(var(--s-3) + var(--safe-bottom)) calc(var(--s-5) + var(--safe-left));
+    border-top: 1px solid var(--line-1);
+    background: var(--surface-1);
+  }
+  .dialog__foot .btn { flex: 1 1 0; }
+
+  .dialog__field { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-2); align-items: start; }
+  .dialog__label { color: var(--text-2); font-size: var(--fs-1); }
+  .dialog__control { display: flex; flex-direction: column; gap: var(--s-1); min-width: 0; }
+  .dialog__input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: var(--ctl-h);
+    padding: 3px var(--s-3);
+    font: inherit;
+    font-size: var(--fs-2);
+    color: var(--text-1);
+    background: var(--surface-2);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-2);
+  }
+  textarea.dialog__input { resize: vertical; line-height: 1.4; padding: var(--s-2) var(--s-3); }
+  .dialog__static { display: inline-block; padding-top: 4px; overflow-wrap: anywhere; }
+  .dialog__hint { margin: 0; min-height: 0; font-size: var(--fs-1); color: var(--text-3); }
+  .dialog__hint:empty { display: none; }
+  .dialog__hint--bad { color: var(--text-1); }
+  .dialog__hint--bad::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: var(--s-1); border-radius: 50%; background: var(--bad); }
+  .dialog__props { display: flex; flex-direction: column; gap: var(--s-3); }
+
+  .dialog__text { margin: 0; overflow-wrap: anywhere; }
+  .dialog__subhead { margin: var(--s-2) 0 0; font-size: var(--fs-label); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); border-bottom: 1px solid var(--line-1); padding-bottom: var(--s-1); }
+  .dialog__list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--s-1); font-size: var(--fs-1); }
+  .dialog__list li { overflow-wrap: anywhere; }
+  .dialog__kind { color: var(--text-3); }
+  .dialog__gate { display: flex; align-items: center; gap: var(--s-3); margin-top: var(--s-2); padding: var(--s-2) var(--s-3); border: 1px solid var(--line-2); border-radius: var(--r-2); }
+  .dialog__check { flex: none; accent-color: var(--accent); }
+
+  .dialog__error {
+    flex: none;
+    margin: 0 var(--s-5) var(--s-3);
+    padding: var(--s-2) var(--s-3);
+    font-size: var(--fs-1);
+    border-left: 3px solid var(--bad);
+    background: var(--surface-2);
+  }
+  .dialog__error[hidden] { display: none; }
+  .dialog__error .prop__error-diag { color: var(--text-2); }
+
+  .dialog :is(select, input, textarea, button, .dialog__gate):focus-visible,
+  .dialog__gate:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  @media (min-width: 768px) {
+    .dialog {
+      width: min(560px, calc(100vw - 48px));
+      height: auto;
+      max-height: calc(100dvh - 48px);
+      margin: auto;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-3);
+      box-shadow: var(--shadow-2);
+    }
+    .dialog__form { height: auto; max-height: calc(100dvh - 48px); }
+    .dialog__head { padding: var(--s-4) var(--s-5); }
+    .dialog__title { font-size: var(--fs-3); }
+    .dialog__body { padding: var(--s-4) var(--s-5); gap: var(--s-3); }
+    .dialog__foot { padding: var(--s-3) var(--s-5); }
+    .dialog__foot .btn { flex: none; }
+    .dialog__field { grid-template-columns: var(--label-w) minmax(0, 1fr); gap: var(--s-2); }
+    .dialog__label { padding-top: 6px; font-size: var(--fs-2); }
+  }
+  @media (min-width: 768px) and (pointer: fine) {
+    .dialog__check { width: 16px; height: 16px; }
+    .dialog__label { padding-top: 4px; }
+  }
+}

@@ -1,0 +1,18 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+*.tmp
+.history/
+screenshots/
+# Linked projects are local data: everything under specs/ is ignored except what Exegra ships.
+specs/*
+!specs/exegra/
+!specs/benchmark/
+specs/zz-test-*/
+# Local tests (they need a linked project that is not in this repository) are named local-*.
+tests/**/local-*
+engine/target/
+src/engine/pkg/
+formal/.lake/
+formal/generated/

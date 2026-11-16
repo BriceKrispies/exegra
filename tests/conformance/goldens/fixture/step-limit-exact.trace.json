@@ -1,0 +1,490 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "pinger-machine": {
+    "state": "pg-ready",
+    "vars": {
+     "rounds": 3
+    }
+   }
+  },
+  "pending": [],
+  "time": 6
+ },
+ "initial": {
+  "machines": {
+   "pinger-machine": {
+    "state": "pg-ready",
+    "vars": {
+     "rounds": 0
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "ping",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "step-limit-exact",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "pinger-machine": {
+      "state": "pg-ready",
+      "vars": {
+       "rounds": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "pong",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "behavior": "pinger-machine",
+       "kind": "transition",
+       "transition": "pg-ping"
+      },
+      "time": 1
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "ping",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "pinger-machine",
+     "emitted": [
+      {
+       "event": "pong",
+       "payload": {},
+       "seq": 1,
+       "time": 1
+      }
+     ],
+     "from": "pg-ready",
+     "guard": "rounds < 3",
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "rounds"
+      }
+     ],
+     "to": "pg-ready",
+     "transition": "pg-ping"
+    }
+   ],
+   "ignored": [],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "ping",
+    "pg-ping",
+    "pinger-machine",
+    "gateway"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "pinger-machine": {
+      "state": "pg-ready",
+      "vars": {
+       "rounds": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ping",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "behavior": "pinger-machine",
+       "kind": "transition",
+       "transition": "pg-pong"
+      },
+      "time": 2
+     }
+    ],
+    "time": 1
+   },
+   "event": {
+    "id": "pong",
+    "payload": {},
+    "seq": 1,
+    "source": {
+     "behavior": "pinger-machine",
+     "kind": "transition",
+     "transition": "pg-ping"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "pinger-machine",
+     "emitted": [
+      {
+       "event": "ping",
+       "payload": {},
+       "seq": 2,
+       "time": 2
+      }
+     ],
+     "from": "pg-ready",
+     "guard": null,
+     "sets": [],
+     "to": "pg-ready",
+     "transition": "pg-pong"
+    }
+   ],
+   "ignored": [],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "pong",
+    "pg-pong",
+    "pinger-machine",
+    "gateway"
+   ],
+   "time": 1
+  },
+  {
+   "config": {
+    "machines": {
+     "pinger-machine": {
+      "state": "pg-ready",
+      "vars": {
+       "rounds": 2
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "pong",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "behavior": "pinger-machine",
+       "kind": "transition",
+       "transition": "pg-ping"
+      },
+      "time": 3
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "ping",
+    "payload": {},
+    "seq": 2,
+    "source": {
+     "behavior": "pinger-machine",
+     "kind": "transition",
+     "transition": "pg-pong"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "pinger-machine",
+     "emitted": [
+      {
+       "event": "pong",
+       "payload": {},
+       "seq": 3,
+       "time": 3
+      }
+     ],
+     "from": "pg-ready",
+     "guard": "rounds < 3",
+     "sets": [
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "rounds"
+      }
+     ],
+     "to": "pg-ready",
+     "transition": "pg-ping"
+    }
+   ],
+   "ignored": [],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "ping",
+    "pg-ping",
+    "pinger-machine",
+    "gateway"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "pinger-machine": {
+      "state": "pg-ready",
+      "vars": {
+       "rounds": 2
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ping",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "behavior": "pinger-machine",
+       "kind": "transition",
+       "transition": "pg-pong"
+      },
+      "time": 4
+     }
+    ],
+    "time": 3
+   },
+   "event": {
+    "id": "pong",
+    "payload": {},
+    "seq": 3,
+    "source": {
+     "behavior": "pinger-machine",
+     "kind": "transition",
+     "transition": "pg-ping"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "pinger-machine",
+     "emitted": [
+      {
+       "event": "ping",
+       "payload": {},
+       "seq": 4,
+       "time": 4
+      }
+     ],
+     "from": "pg-ready",
+     "guard": null,
+     "sets": [],
+     "to": "pg-ready",
+     "transition": "pg-pong"
+    }
+   ],
+   "ignored": [],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "pong",
+    "pg-pong",
+    "pinger-machine",
+    "gateway"
+   ],
+   "time": 3
+  },
+  {
+   "config": {
+    "machines": {
+     "pinger-machine": {
+      "state": "pg-ready",
+      "vars": {
+       "rounds": 3
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "pong",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "behavior": "pinger-machine",
+       "kind": "transition",
+       "transition": "pg-ping"
+      },
+      "time": 5
+     }
+    ],
+    "time": 4
+   },
+   "event": {
+    "id": "ping",
+    "payload": {},
+    "seq": 4,
+    "source": {
+     "behavior": "pinger-machine",
+     "kind": "transition",
+     "transition": "pg-pong"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "pinger-machine",
+     "emitted": [
+      {
+       "event": "pong",
+       "payload": {},
+       "seq": 5,
+       "time": 5
+      }
+     ],
+     "from": "pg-ready",
+     "guard": "rounds < 3",
+     "sets": [
+      {
+       "after": 3,
+       "before": 2,
+       "variable": "rounds"
+      }
+     ],
+     "to": "pg-ready",
+     "transition": "pg-ping"
+    }
+   ],
+   "ignored": [],
+   "index": 4,
+   "kind": "deliver",
+   "responsible": [
+    "ping",
+    "pg-ping",
+    "pinger-machine",
+    "gateway"
+   ],
+   "time": 4
+  },
+  {
+   "config": {
+    "machines": {
+     "pinger-machine": {
+      "state": "pg-ready",
+      "vars": {
+       "rounds": 3
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ping",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "behavior": "pinger-machine",
+       "kind": "transition",
+       "transition": "pg-pong"
+      },
+      "time": 6
+     }
+    ],
+    "time": 5
+   },
+   "event": {
+    "id": "pong",
+    "payload": {},
+    "seq": 5,
+    "source": {
+     "behavior": "pinger-machine",
+     "kind": "transition",
+     "transition": "pg-ping"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "pinger-machine",
+     "emitted": [
+      {
+       "event": "ping",
+       "payload": {},
+       "seq": 6,
+       "time": 6
+      }
+     ],
+     "from": "pg-ready",
+     "guard": null,
+     "sets": [],
+     "to": "pg-ready",
+     "transition": "pg-pong"
+    }
+   ],
+   "ignored": [],
+   "index": 5,
+   "kind": "deliver",
+   "responsible": [
+    "pong",
+    "pg-pong",
+    "pinger-machine",
+    "gateway"
+   ],
+   "time": 5
+  },
+  {
+   "config": {
+    "machines": {
+     "pinger-machine": {
+      "state": "pg-ready",
+      "vars": {
+       "rounds": 3
+      }
+     }
+    },
+    "pending": [],
+    "time": 6
+   },
+   "event": {
+    "id": "ping",
+    "payload": {},
+    "seq": 6,
+    "source": {
+     "behavior": "pinger-machine",
+     "kind": "transition",
+     "transition": "pg-pong"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "pinger-machine",
+     "considered": [
+      "pg-ping"
+     ],
+     "reason": "guard-false"
+    }
+   ],
+   "index": 6,
+   "kind": "deliver",
+   "responsible": [
+    "ping"
+   ],
+   "time": 6
+  }
+ ]
+}

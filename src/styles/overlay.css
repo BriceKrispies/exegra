@@ -1,0 +1,167 @@
+/* Viewport overlay (src/ui/overlay.js) and toasts. Phone first: only the view card's
+   small marks show; the legend and the render statistics are not drawn until opened,
+   and then sit below the app bar where they do not cover the floating controls. */
+@layer components {
+  .overlay__corner { position: absolute; display: flex; max-width: min(360px, calc(100% - 2 * var(--s-3))); }
+  .overlay__corner--tl { top: var(--s-3); left: calc(var(--s-3) + var(--safe-left)); }
+  .overlay__corner--bl { top: var(--s-3); left: calc(var(--s-3) + var(--safe-left)); }
+  .overlay__corner--br { top: var(--s-3); right: calc(var(--s-3) + var(--safe-right)); max-width: 180px; }
+  .overlay:has(.overlay__card--stats[data-state="open"]) .overlay__corner--bl { max-width: calc(100% - 180px - 3 * var(--s-3)); }
+
+  .overlay__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+    max-height: 45dvh;
+    overflow: auto;
+    padding: var(--s-1) var(--s-3);
+    background: var(--glass);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--line-1);
+    border-radius: var(--r-3);
+    color: var(--text-2);
+    font-size: var(--fs-1);
+    pointer-events: auto;
+  }
+  /* closed cards are not drawn on a phone; when one is open the view card makes room */
+  .overlay__card--legend[data-state="closed"],
+  .overlay__card--stats[data-state="closed"] { display: none; }
+  .overlay:has(.overlay__card--legend[data-state="open"]) .overlay__corner--tl { display: none; }
+
+  /* view card: on a phone only the illustrative mark and the notes chip */
+  .overlay__card--view { flex-direction: row; flex-wrap: wrap; align-items: center; background: none; border: 0; padding: 0; -webkit-backdrop-filter: none; backdrop-filter: none; overflow: visible; max-height: none; pointer-events: none; }
+  .overlay__view { display: flex; align-items: center; gap: var(--s-3); }
+  .overlay__view-name, .overlay__view-proj { display: none; }
+  .overlay__details--notes {
+    pointer-events: auto;
+    padding: 0 var(--s-3);
+    background: var(--glass);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--line-1);
+    border-radius: var(--r-3);
+  }
+  .overlay__details--notes[open] { max-width: min(320px, calc(100vw - 2 * var(--s-3))); padding-bottom: var(--s-3); }
+
+  .overlay__summary {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    min-height: var(--target);
+    pointer-events: auto;
+    color: var(--text-2);
+    font-size: var(--fs-label);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    user-select: none;
+  }
+  .overlay__summary::before {
+    content: "";
+    width: 0;
+    height: 0;
+    border-left: 4px solid currentColor;
+    border-top: 3.5px solid transparent;
+    border-bottom: 3.5px solid transparent;
+  }
+  .overlay__details[open] > .overlay__summary::before {
+    border-left: 3.5px solid transparent;
+    border-right: 3.5px solid transparent;
+    border-top: 4px solid currentColor;
+    border-bottom: 0;
+  }
+  .overlay__notes { display: flex; flex-direction: column; gap: var(--s-2); line-height: 1.4; }
+  .overlay__standing { color: var(--text-3); }
+  .overlay__legend { display: flex; flex-direction: column; gap: var(--s-2); padding: var(--s-1) 0 var(--s-3); }
+  .overlay__legend-item { display: flex; align-items: center; gap: var(--s-3); }
+  .overlay__legend-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; }
+  .overlay__muted { color: var(--text-3); }
+  .overlay__stats {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 0 var(--s-4);
+    padding: var(--s-1) 0 var(--s-3);
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .overlay__stats dt { color: var(--text-3); }
+  .overlay__stats dd { margin: 0; text-align: right; color: var(--text-1); }
+
+  .overlay__illustrative {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 0 var(--s-3);
+    font-size: var(--fs-label);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--warn);
+    background: var(--glass);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent);
+    border-radius: var(--r-pill);
+  }
+
+  /* From tablet width up the overlay has the scene to itself: view name top left, legend
+     bottom left, statistics bottom right, closed cards showing just their summary. */
+  @media (min-width: 768px) {
+    .overlay__corner--bl { top: auto; bottom: var(--s-4); align-items: flex-end; }
+    .overlay__corner--br { top: auto; bottom: var(--s-4); right: calc(var(--s-4) + 52px); align-items: flex-end; }
+    .overlay__card--legend[data-state="closed"],
+    .overlay__card--stats[data-state="closed"] { display: flex; }
+    .overlay:has(.overlay__card--legend[data-state="open"]) .overlay__corner--tl { display: flex; }
+    /* pointer-transparent except the summaries, so a card never swallows a click on the scene */
+    .overlay__card { pointer-events: none; overflow: visible; max-height: none; border-radius: var(--r-2); background: color-mix(in srgb, var(--surface-1) 88%, transparent); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .overlay__details--notes { pointer-events: none; }
+    .overlay__card--view { flex-direction: column; align-items: flex-start; padding: var(--s-2) var(--s-3); background: color-mix(in srgb, var(--surface-1) 88%, transparent); border: 1px solid var(--line-1); }
+    .overlay__view { align-items: baseline; }
+    .overlay__view-name { display: inline; color: var(--text-1); font-size: var(--fs-3); }
+    .overlay__view-proj { display: inline; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
+    .overlay__details--notes { padding: 0; background: none; border: 0; -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .overlay__details--notes[open] { padding-bottom: 0; }
+    .overlay__illustrative { min-height: 0; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; border-radius: var(--r-1); }
+  }
+  @media (min-width: 768px) and (pointer: fine) {
+    .overlay__summary { min-height: 22px; }
+  }
+
+  /* toasts: above the navigation (and the transport) on a phone */
+  .toasts {
+    position: fixed;
+    left: calc(var(--s-3) + var(--safe-left));
+    right: calc(var(--s-3) + var(--safe-right));
+    top: calc(var(--appbar-h) + var(--safe-top) + var(--s-3));
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    pointer-events: none;
+  }
+  .toast {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--s-3);
+    padding: var(--s-3) var(--s-2) var(--s-3) var(--s-4);
+    background: var(--surface-2);
+    border: 1px solid var(--line-2);
+    border-left: 3px solid var(--bad);
+    border-radius: var(--r-2);
+    box-shadow: var(--shadow-2);
+    pointer-events: auto;
+  }
+  .toast__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--s-1); overflow-wrap: anywhere; }
+  .toast__detail { color: var(--text-2); font-size: var(--fs-1); }
+  .toast__close { flex: none; width: var(--target); height: var(--target); padding: 0; background: none; border-color: transparent; color: var(--text-2); }
+  @media (min-width: 768px) {
+    .toasts { left: auto; top: auto; right: var(--s-4); bottom: var(--s-4); width: min(380px, calc(100vw - 2 * var(--s-4))); }
+  }
+  @media (min-width: 768px) and (pointer: fine) {
+    .toast__close { width: 24px; height: 24px; }
+  }
+  /* While the floating transport shows (a scenario loaded, Simulate not open), the bottom
+     cards sit above it. */
+  @media (min-width: 768px) {
+    .app.app--transport:not([data-sim-open="true"]) :is(.overlay__corner--bl, .overlay__corner--br) { bottom: calc(var(--s-4) + 56px); }
+  }
+}

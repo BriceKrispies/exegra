@@ -1,0 +1,334 @@
+/* The panel host and the navigation: one panel component that layout.css places as
+   a bottom sheet, a side panel or a column, the bottom navigation that becomes a
+   rail, and the menu sheet used by More, the overflow menu and the save menu. */
+@layer components {
+  /* ---- panel / sheet ---------------------------------------------------------------- */
+  .panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: clip;
+    background: var(--glass-strong);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border-top: 1px solid var(--line-2);
+    border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+    box-shadow: var(--shadow-3);
+  }
+  .panel__header {
+    flex: none;
+    display: flex;
+    align-items: stretch;
+    gap: var(--s-2);
+    padding: 0 var(--s-2) 0 0;
+    border-bottom: 1px solid var(--line-1);
+    touch-action: none;
+    user-select: none;
+  }
+  .panel__heading { flex: 1; min-width: 0; margin: 0; font-size: inherit; }
+  .panel__handle {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    align-content: start;
+    gap: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 64px;
+    padding: var(--s-2) var(--s-5) var(--s-3);
+    background: none;
+    border: 0;
+    border-radius: var(--r-sheet) 0 0 0;
+    text-align: left;
+    white-space: normal;
+    cursor: grab;
+  }
+  .panel__handle:active:not(:disabled) { background: none; }
+  .panel--dragging .panel__handle { cursor: grabbing; }
+  .panel__grip {
+    justify-self: center;
+    width: 40px;
+    height: 5px;
+    margin: 2px 0 var(--s-3);
+    border-radius: var(--r-pill);
+    background: var(--line-2);
+  }
+  .panel__title {
+    font-size: var(--fs-4);
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--text-1);
+  }
+  .panel__summary {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-2);
+    font-size: var(--fs-1);
+    font-weight: 400;
+  }
+  .panel__summary:empty { display: none; }
+  .panel__actions { flex: none; display: flex; align-items: center; gap: var(--s-1); }
+  .panel__btn {
+    width: var(--target);
+    height: var(--target);
+    padding: 0;
+    background: none;
+    border-color: transparent;
+    border-radius: var(--r-pill);
+    color: var(--text-2);
+  }
+  .panel__body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: clip;
+    container: panel / inline-size;
+  }
+  #explorer { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .tabpanel {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: var(--s-5);
+  }
+  .tabpanel:focus { outline: none; }
+
+  .panel__resize::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    transform: translateX(-50%);
+    background: transparent;
+    transition: background-color var(--dur-quick);
+  }
+  .panel__resize:hover::after,
+  .panel__resize:focus-visible::after,
+  .panel__resize.panel__resize--active::after { background: var(--accent); width: 3px; }
+  .panel__resize:focus-visible { outline: none; }
+
+  @media (min-width: 768px) {
+    /* a docked panel that is closed takes no room (this layer would otherwise win over layout.css) */
+    .panel[data-detent="closed"] { display: none; }
+    .panel {
+      background: var(--surface-1);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      border-top: 0;
+      border-left: 1px solid var(--line-1);
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .panel--explorer { border-left: 1px solid var(--line-1); }
+    .panel__header { touch-action: auto; }
+    .panel__handle {
+      min-height: 52px;
+      padding: var(--s-3) var(--s-4);
+      border-radius: 0;
+      cursor: default;
+      align-content: center;
+    }
+    .panel__grip { display: none; }
+    .panel__title { font-size: var(--fs-3); }
+  }
+  @media (min-width: 768px) and (pointer: fine) {
+    .panel__handle { min-height: 44px; padding: var(--s-2) var(--s-4); }
+    .panel__title { font-size: var(--fs-3); }
+    .panel__btn { width: 28px; height: 28px; }
+  }
+  @media (min-width: 1200px) {
+    .panel--explorer { border-left: 0; border-right: 1px solid var(--line-1); }
+  }
+
+  /* ---- navigation: bottom bar on a phone, rail from tablet width up ---------------------- */
+  .nav {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    background: var(--glass-strong);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border-top: 1px solid var(--line-1);
+  }
+  .nav__item {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    height: var(--nav-h);
+    padding: var(--s-2) var(--s-1);
+    background: none;
+    border: 0;
+    border-radius: 0;
+    color: var(--text-2);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+  .nav__item:active:not(:disabled) { background: none; }
+  .nav__icon {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 30px;
+    border-radius: var(--r-pill);
+    transition: background-color var(--dur-quick), color var(--dur-quick);
+  }
+  .nav__label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  .nav__item[aria-current="true"] { color: var(--text-1); }
+  .nav__item[aria-current="true"] .nav__icon { background: var(--selected); color: var(--accent); }
+  .nav__item[aria-current="true"] .nav__label { font-weight: 600; }
+  .nav__item--secondary { display: none; }
+  .nav__item--more[aria-expanded="true"] .nav__icon { background: var(--pressed); }
+  @media (hover: hover) {
+    .nav__item:hover:not(:disabled) { background: none; color: var(--text-1); }
+    .nav__item:hover:not(:disabled) .nav__icon { background: var(--hover); }
+    .nav__item[aria-current="true"]:hover .nav__icon { background: var(--selected); }
+  }
+
+  @media (min-width: 768px) {
+    .nav {
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: var(--s-1);
+      background: var(--surface-1);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      border-top: 0;
+      border-right: 1px solid var(--line-1);
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .nav__item { flex: none; height: 60px; }
+    .nav__item--secondary { display: flex; }
+    .nav__item--more { display: none; }
+    .nav__sep { flex: none; height: 1px; margin: var(--s-2) var(--s-4); background: var(--line-1); }
+  }
+  @media (max-width: 767.98px) {
+    .nav__sep { display: none; }
+  }
+  @media (min-width: 768px) and (pointer: fine) {
+    .nav__item { height: 56px; }
+    .nav__icon { width: 48px; height: 28px; }
+  }
+
+  /* ---- menu sheet: More, overflow, save conflict --------------------------------------- */
+  .menu-sheet {
+    position: fixed;
+    z-index: 70;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    min-width: 240px;
+    max-width: calc(100vw - 2 * var(--s-3));
+    max-height: calc(100dvh - var(--appbar-h) - var(--nav-h) - var(--safe-top) - var(--safe-bottom) - 2 * var(--s-3));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--s-2);
+    background: var(--glass-strong);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-3);
+    box-shadow: var(--shadow-2);
+    white-space: normal;
+  }
+  .menu-sheet:not([data-open]) { display: none; }
+  .menu-sheet--bottom {
+    left: calc(var(--s-3) + var(--safe-left));
+    right: calc(var(--s-3) + var(--safe-right));
+    bottom: calc(var(--dock-bottom) + var(--transport-space) + var(--s-3));
+  }
+  .menu-sheet__title {
+    padding: var(--s-2) var(--s-3) var(--s-1);
+    color: var(--text-3);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .menu-sheet__item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--s-4);
+    width: 100%;
+    min-height: 48px;
+    padding: var(--s-2) var(--s-4);
+    background: none;
+    border-color: transparent;
+    border-radius: var(--r-2);
+    text-align: left;
+    white-space: normal;
+  }
+  .menu-sheet__item .icon { flex: none; color: var(--text-2); }
+  .menu-sheet__item[aria-current="true"] { background: var(--selected); }
+  .menu-sheet__text { display: flex; flex-direction: column; gap: var(--s-1); min-width: 0; }
+  .menu-sheet__hint { color: var(--text-3); font-size: var(--fs-1); }
+  .menu-sheet__sep { height: 1px; margin: var(--s-1) var(--s-2); background: var(--line-1); }
+  @media (min-width: 768px) {
+    .menu-sheet--bottom { left: calc(var(--rail-w) + var(--s-3)); right: auto; bottom: auto; top: calc(var(--appbar-h) + var(--s-3)); width: 280px; }
+  }
+  @media (min-width: 768px) and (pointer: fine) {
+    .menu-sheet__item { min-height: 32px; padding: var(--s-2) var(--s-3); gap: var(--s-3); }
+  }
+
+  /* ---- tables that become card lists ---------------------------------------------------
+     A table marked .cardtable (claims, realisation, simulation configuration and pending
+     events, the inspector's small tables) is a list of cards while its panel is narrower
+     than 640 px, and a table from there up. Cells carry their column name in data-label;
+     a cell marked .cardtable__title heads its card. */
+  @container panel (max-width: 639.98px) {
+    .cardtable, .cardtable tbody { display: block; width: 100%; }
+    .cardtable thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .cardtable tr {
+      display: flex;
+      flex-direction: column;
+      gap: var(--s-2);
+      margin: 0 0 var(--s-3);
+      padding: var(--s-4);
+      background: var(--surface-2);
+      border: 1px solid var(--line-1);
+      border-radius: var(--r-3);
+    }
+    .cardtable td {
+      display: grid;
+      grid-template-columns: 7.5em minmax(0, 1fr);
+      align-items: baseline;
+      gap: var(--s-3);
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      overflow-wrap: anywhere;
+    }
+    .cardtable td[data-label]::before {
+      content: attr(data-label);
+      color: var(--text-3);
+      font-size: var(--fs-label);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .cardtable td:not([data-label]) { display: block; }
+    .cardtable td.cardtable__title { font-weight: 600; font-size: var(--fs-2); }
+    .cardtable td:empty { display: none; }
+  }
+}

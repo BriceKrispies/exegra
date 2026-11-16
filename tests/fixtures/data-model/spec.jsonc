@@ -1,0 +1,177 @@
+{
+  // A slice of a multi-tenant platform's data, modelled with Exegra's record and copy kinds:
+  // erasure copies, principal-keyed records, data-class freshness, read models and public variants.
+  // The values are illustrative.
+  //
+  // DELIBERATE MISS: copy "trade-name-snapshot" holds a display name and states
+  // no erasure point. The erasure table covers the snapshots of receipt records too;
+  // here the trade snapshot was left out, and rule erasure-point must find it.
+  "exegra": "0.1",
+  "system": {
+    "id": "account-data-slice",
+    "name": "Account data slice",
+    "illustrative": true,
+    "description": "Sign-in sessions, display names and their history, receipts and trades with name snapshots, a CDN store-page variant and a leaderboard read model."
+  },
+  "components": [
+    { "id": "identity-unit", "name": "Identity and play", "category": "computational", "purpose": "Owns principals, sign-in sessions and display names." },
+    { "id": "commerce-unit", "name": "Commerce", "category": "computational", "purpose": "Owns receipts and trades." },
+    { "id": "platform-unit", "name": "Platform", "category": "computational", "purpose": "Owns games and the leaderboard contributions and derived views." },
+    { "id": "page-tier", "name": "Page tier", "category": "computational", "purpose": "Renders pages and holds the page-tier assertion of a sign-in session." },
+    { "id": "event-stream", "name": "Event stream", "category": "transport", "purpose": "A sign-in session's stream and its key log." },
+    { "id": "frontend-kernel", "name": "Frontend kernel", "category": "client", "purpose": "The browser-side store of one sign-in session." },
+    { "id": "cdn", "name": "CDN", "category": "infrastructure", "purpose": "Holds public page variants for at most 60 seconds (CLX-105)." }
+  ],
+  "relationships": [
+    { "id": "kernel-calls-page-tier", "kind": "calls", "from": "frontend-kernel", "to": "page-tier", "description": "Requests pages and fragments." },
+    { "id": "kernel-subscribes-stream", "kind": "subscribes", "from": "frontend-kernel", "to": "event-stream", "description": "Receives key-changed and principal notices." },
+    { "id": "page-tier-calls-identity", "kind": "calls", "from": "page-tier", "to": "identity-unit", "description": "Reads sessions, principals and display names." },
+    { "id": "page-tier-calls-commerce", "kind": "calls", "from": "page-tier", "to": "commerce-unit", "description": "Reads receipts and trades." },
+    { "id": "page-tier-calls-platform", "kind": "calls", "from": "page-tier", "to": "platform-unit", "description": "Reads games and leaderboard views." },
+    { "id": "identity-publishes-stream", "kind": "publishes", "from": "identity-unit", "to": "event-stream", "description": "Key-changed, signed-out and revoked notices." },
+    { "id": "commerce-reads-identity", "kind": "reads", "from": "commerce-unit", "to": "identity-unit", "description": "Reads the counterpart's display name for a snapshot at the time of the act." },
+    { "id": "platform-reads-identity", "kind": "reads", "from": "platform-unit", "to": "identity-unit", "description": "Reads standing, privacy and age band for the derived views." },
+    { "id": "cdn-calls-page-tier", "kind": "calls", "from": "cdn", "to": "page-tier", "description": "Fetches a missing public page variant from the origin (INF-031)." }
+  ],
+  "records": [
+    {
+      "id": "principal", "name": "Principal", "owner": "identity-unit", "key": ["principal-id"],
+      "fields": [
+        { "name": "principal-id", "type": "principal-id", "refersTo": "principal", "role": "subject" },
+        { "name": "age-band", "type": "age-band" },
+        { "name": "standing", "type": "standing" }
+      ],
+      "retention": "Until deletion; the per-principal key is destroyed."
+    },
+    {
+      "id": "sign-in-session", "name": "Sign-in session", "owner": "identity-unit", "key": ["session-id"],
+      "fields": [
+        { "name": "session-id", "type": "session-id", "personal": "credential" },
+        { "name": "principal", "type": "principal-id", "refersTo": "principal", "role": "subject" },
+        { "name": "authority-version", "type": "number" }
+      ],
+      "retention": "Ended at sign-out, revocation or the principal's deletion (in the deletion's transaction).",
+      "description": "dc-sign-in-sessions: session id, principal id, authority version."
+    },
+    {
+      "id": "display-name", "name": "Display name", "owner": "identity-unit", "key": ["principal"],
+      "fields": [
+        { "name": "principal", "type": "principal-id", "refersTo": "principal", "role": "subject" },
+        { "name": "name", "type": "display-name", "personal": "name" },
+        { "name": "set-at", "type": "timestamp" }
+      ],
+      "retention": "Until changed or the principal is deleted.",
+      "description": "Public display names, resolved when a record is read."
+    },
+    {
+      "id": "display-name-history", "name": "Display-name history", "owner": "identity-unit", "key": ["principal", "from"],
+      "fields": [
+        { "name": "principal", "type": "principal-id", "refersTo": "principal", "role": "subject" },
+        { "name": "name", "type": "display-name", "personal": "name" },
+        { "name": "from", "type": "timestamp" },
+        { "name": "until", "type": "timestamp" }
+      ],
+      "retention": "Erased on deletion, except names removed by moderation or linked to a moderation case, kept for the moderation record retention period (Q-50; PLY-180, PLY-184)."
+    },
+    {
+      "id": "receipt", "name": "Receipt", "owner": "commerce-unit", "key": ["receipt-id"],
+      "fields": [
+        { "name": "receipt-id", "type": "receipt-id" },
+        { "name": "buyer", "type": "principal-id", "refersTo": "principal", "role": "party" },
+        { "name": "giver", "type": "principal-id", "refersTo": "principal", "role": "party" },
+        { "name": "recipient", "type": "principal-id", "refersTo": "principal", "role": "party" },
+        { "name": "counterpart-name", "type": "display-name", "personal": "name", "role": "snapshot", "description": "The gift counterpart's display name as it was at the time of the act (COM-200, COM-209)." },
+        { "name": "amount", "type": "money", "personal": "financial" }
+      ],
+      "retention": "The financial record retention (COM-218)."
+    },
+    {
+      "id": "trade", "name": "Trade", "owner": "commerce-unit", "key": ["trade-id"],
+      "fields": [
+        { "name": "trade-id", "type": "trade-id" },
+        { "name": "party-a", "type": "principal-id", "refersTo": "principal", "role": "party" },
+        { "name": "party-b", "type": "principal-id", "refersTo": "principal", "role": "party" },
+        { "name": "counterpart-name", "type": "display-name", "personal": "name", "role": "snapshot" },
+        { "name": "items", "type": "item-id[]" }
+      ],
+      "retention": "The financial record retention (COM-218)."
+    },
+    {
+      "id": "game", "name": "Game", "owner": "platform-unit", "key": ["game-id"],
+      "fields": [
+        { "name": "game-id", "type": "game-id" },
+        { "name": "title", "type": "game-name", "description": "Organization and game names are public data, not principal data." },
+        { "name": "price", "type": "money" }
+      ],
+      "retention": "Immutable per version (dc-game-registry)."
+    },
+    {
+      "id": "leaderboard-contribution", "name": "Leaderboard contribution", "owner": "platform-unit", "key": ["board", "player"],
+      "fields": [
+        { "name": "board", "type": "board-id" },
+        { "name": "player", "type": "principal-id", "refersTo": "principal", "role": "subject" },
+        { "name": "score", "type": "number", "personal": "activity" }
+      ],
+      "retention": "Until the board ends or the player is deleted."
+    }
+  ],
+  "copies": [
+    {
+      "id": "session-key-log", "name": "Stream key log", "of": ["sign-in-session"], "fields": ["session-id", "principal"],
+      "heldBy": "event-stream", "scope": "per-session",
+      "freshness": { "bound": "the replay window of the client constants", "mechanism": "signed-out and revoked notices" },
+      "erasure": { "point": "dropped when its sign-in session ends, which a deletion does in its transaction (CLX-153)" },
+      "description": "Holds keys and positions only, which may embed principal ids (erasure-copies: sign-in-sessions)."
+    },
+    {
+      "id": "page-tier-assertion", "name": "Page-tier assertion", "of": ["sign-in-session"], "fields": ["session-id", "principal", "authority-version"],
+      "heldBy": "page-tier", "scope": "per-session", "dependsOnAuthority": true,
+      "freshness": { "bound": "the page-tier assertion lifetime", "mechanism": "authority epoch" },
+      "erasure": { "point": "every sign-in session of the principal is ended in the deletion's transaction" }
+    },
+    {
+      "id": "kernel-display-names", "name": "Display names in the frontend kernel", "of": ["display-name"], "fields": ["principal", "name"],
+      "heldBy": "frontend-kernel", "scope": "per-session",
+      "freshness": { "bound": "the read stamp, revalidated on a key-changed event; current only while the stream is connected and gap-free (CLX-077)", "mechanism": "key-changed events" },
+      "erasure": { "point": "the principal notice of CLX-141 has been appended to the log of every session whose fragments list the principal", "bound": 60, "unit": "second" }
+    },
+    {
+      "id": "kernel-receipts", "name": "Issued receipts in the frontend kernel", "of": ["receipt"],
+      "heldBy": "frontend-kernel", "scope": "per-principal",
+      "freshness": { "bound": 0, "unit": "tick", "mechanism": "an issued receipt is immutable" },
+      "erasure": { "point": "Clear-Site-Data erases everything when the sign-in session ends (SEC-203)" }
+    },
+    {
+      "id": "receipt-name-snapshot", "name": "Receipt name snapshot", "of": ["display-name"], "fields": ["name"],
+      "heldBy": "commerce-unit", "scope": "internal",
+      "freshness": { "bound": "none: the name as it was at the time of the act", "mechanism": "written once, in the act's transaction" },
+      "erasure": { "point": "at the end of the retention of the receipt that holds it (COM-218)", "basis": "financial-record data of the act; a deletion does not reach it (COM-210, Q-52)" }
+    },
+    {
+      // DELIBERATE MISS: no erasure point.
+      "id": "trade-name-snapshot", "name": "Trade name snapshot", "of": ["display-name"], "fields": ["name"],
+      "heldBy": "commerce-unit", "scope": "internal",
+      "freshness": { "bound": "none: the name as it was at the time of the act", "mechanism": "written once, in the trade's transaction" }
+    },
+    {
+      "id": "store-page-variant", "name": "Store-page variant", "of": ["game"], "fields": ["game-id", "title", "price"],
+      "heldBy": "cdn", "scope": "shared",
+      "freshness": { "bound": 60, "unit": "second", "mechanism": "surrogate-key purge (CLX-138)" },
+      "description": "public-variants: store-page; rendered as for a guest and naming no principal."
+    },
+    {
+      "id": "leaderboard-view", "name": "Leaderboard view", "of": ["leaderboard-contribution"], "fields": ["board", "player", "score"],
+      "heldBy": "platform-unit", "scope": "internal", "dependsOnAuthority": true,
+      "freshness": { "bound": "the projection lag of the read model", "mechanism": "outbox events" },
+      "erasure": { "point": "the view's consumer has applied the deletion tombstone and the rows are removed" },
+      "description": "read-models: leaderboards. Holds the player by reference; display names and the viewer filter are applied when the answer is read."
+    }
+  ],
+  "claims": [
+    { "id": "shared-copies-hold-no-principal", "kind": "structural", "statement": "No shared copy holds a field that names a principal or depends on authority.", "evaluate": { "method": "data-model", "rules": ["no-principal-in-shared"] } },
+    { "id": "party-fields-by-id", "kind": "structural", "statement": "Every party field references a principal id, never a name.", "evaluate": { "method": "data-model", "rules": ["party-by-id"] } },
+    { "id": "erasure-point-on-every-copy", "kind": "structural", "statement": "Every copy of a principal's personal data, or of a row derived from it, has an erasure point.", "evaluate": { "method": "data-model", "rules": ["erasure-point"] } },
+    { "id": "copies-have-freshness", "kind": "structural", "statement": "Every copy has a freshness bound.", "evaluate": { "method": "data-model", "rules": ["freshness-bound"] } },
+    { "id": "copies-held-near-owner", "kind": "structural", "statement": "Every copy's holder has a relationship path to the owner of what it copies.", "evaluate": { "method": "data-model", "rules": ["holder-reaches-owner"] } }
+  ]
+}

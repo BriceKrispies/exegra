@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#131518">
+  <title>Exegra</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23131518'/%3E%3Crect x='4' y='4' width='8' height='8' fill='%235cc8d6'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/src/styles/main.css">
+</head>
+<body>
+  <!-- One DOM for every size. layout.css places it: on a phone the scene fills the screen
+       and the panels are bottom sheets over it; from 768 px the navigation is a rail and a
+       panel sits beside the scene; from 1200 px the explorer is a column of its own. -->
+  <div class="app" id="app" data-layout="phone">
+
+    <header class="appbar" id="appbar" aria-label="App bar"></header>
+
+    <nav class="nav" id="nav" aria-label="Sections"></nav>
+
+    <main class="viewport" id="viewport" aria-label="Architecture workspace">
+      <div class="scene-host" id="scene-host"></div>
+      <div class="overlay" id="viewport-overlay"></div>
+      <div class="scene-controls" id="scene-controls" role="toolbar" aria-label="Scene" aria-orientation="vertical"></div>
+      <div class="transport" id="transport" role="region" aria-label="Simulation transport" hidden></div>
+    </main>
+
+    <section class="panel panel--explorer" id="panel-explorer" data-panel="explorer" data-detent="closed" aria-labelledby="panel-explorer-handle">
+      <div class="panel__resize" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Resize explorer" data-resize="explorer"></div>
+      <header class="panel__header">
+        <h2 class="panel__heading">
+          <button type="button" class="panel__handle" id="panel-explorer-handle" aria-controls="panel-explorer-body" aria-expanded="false">
+            <span class="panel__grip" aria-hidden="true"></span>
+            <span class="panel__title">Explorer</span>
+            <span class="panel__summary" data-summary></span>
+          </button>
+        </h2>
+        <div class="panel__actions">
+          <button type="button" class="panel__btn" data-action="collapse" data-testid="collapse-explorer" aria-label="Close explorer" title="Close explorer"></button>
+        </div>
+      </header>
+      <div class="panel__body" id="panel-explorer-body">
+        <div id="explorer"></div>
+      </div>
+    </section>
+
+    <section class="panel panel--context" id="panel-context" data-panel="context" data-detent="closed" aria-labelledby="panel-context-handle">
+      <div class="panel__resize" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Resize panel" data-resize="context"></div>
+      <header class="panel__header">
+        <h2 class="panel__heading">
+          <button type="button" class="panel__handle" id="panel-context-handle" aria-controls="panel-context-body" aria-expanded="false">
+            <span class="panel__grip" aria-hidden="true"></span>
+            <span class="panel__title" data-title>Inspector</span>
+            <span class="panel__summary" data-summary></span>
+          </button>
+        </h2>
+        <div class="panel__actions">
+          <button type="button" class="panel__btn" data-action="collapse" data-testid="collapse-context" aria-label="Close panel" title="Close panel"></button>
+        </div>
+      </header>
+      <div class="panel__body" id="panel-context-body">
+        <section class="tabpanel" id="tab-inspector" data-dest="inspector" aria-label="Inspector" tabindex="-1"></section>
+        <section class="tabpanel" id="tab-simulation" data-dest="simulation" aria-label="Simulation" tabindex="-1" hidden></section>
+        <section class="tabpanel" id="tab-verification" data-dest="verification" aria-label="Verification" tabindex="-1" hidden></section>
+        <section class="tabpanel" id="tab-changes" data-dest="changes" aria-label="Changes" tabindex="-1" hidden></section>
+        <section class="tabpanel" id="tab-diagnostics" data-dest="diagnostics" aria-label="Diagnostics" tabindex="-1" hidden></section>
+        <section class="tabpanel" id="tab-source" data-dest="source" aria-label="Source" tabindex="-1" hidden></section>
+        <section class="tabpanel" id="tab-realisation" data-dest="realisation" aria-label="Realisation" tabindex="-1" hidden></section>
+      </div>
+    </section>
+
+    <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+    <div id="dialogs"></div>
+  </div>
+
+  <noscript>Exegra needs JavaScript.</noscript>
+  <script type="module" src="/src/app/main.js"></script>
+</body>
+</html>

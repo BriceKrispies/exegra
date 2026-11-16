@@ -1,0 +1,305 @@
+{
+ "behaviors": [
+  {
+   "id": "client-flow",
+   "initial": "client-idle",
+   "states": [
+    "client-idle",
+    "client-awaiting",
+    "client-done",
+    "client-refused"
+   ],
+   "subject": "web-client",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "emit": "command-received",
+       "payload": {
+        "token": "event.token"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-idle",
+     "guard": null,
+     "id": "client-submit",
+     "on": "command-submitted",
+     "to": "client-awaiting"
+    },
+    {
+     "effects": [
+      {
+       "set": "delivered",
+       "to": true
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-awaiting",
+     "guard": null,
+     "id": "client-receive-response",
+     "on": "response-delivered",
+     "to": "client-done"
+    },
+    {
+     "effects": [],
+     "faultOnly": false,
+     "from": "client-awaiting",
+     "guard": null,
+     "id": "client-receive-rejection",
+     "on": "command-rejected",
+     "to": "client-refused"
+    }
+   ],
+   "variables": [
+    {
+     "initial": false,
+     "name": "delivered"
+    }
+   ]
+  },
+  {
+   "id": "api-flow",
+   "initial": "api-idle",
+   "states": [
+    "api-idle",
+    "api-routing",
+    "api-responded",
+    "api-refused"
+   ],
+   "subject": "api-service",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "validated",
+       "to": true
+      },
+      {
+       "emit": "command-routed"
+      }
+     ],
+     "faultOnly": false,
+     "from": "api-idle",
+     "guard": "event.token == 'valid-token'",
+     "id": "api-route-command",
+     "on": "command-received",
+     "to": "api-routing"
+    },
+    {
+     "effects": [
+      {
+       "set": "rejected",
+       "to": true
+      },
+      {
+       "emit": "command-rejected"
+      }
+     ],
+     "faultOnly": false,
+     "from": "api-idle",
+     "guard": "event.token != 'valid-token'",
+     "id": "api-reject-command",
+     "on": "command-received",
+     "to": "api-refused"
+    },
+    {
+     "effects": [
+      {
+       "emit": "response-delivered"
+      }
+     ],
+     "faultOnly": false,
+     "from": "api-routing",
+     "guard": null,
+     "id": "api-deliver-response",
+     "on": "acknowledgement-sent",
+     "to": "api-responded"
+    }
+   ],
+   "variables": [
+    {
+     "initial": false,
+     "name": "validated"
+    },
+    {
+     "initial": false,
+     "name": "rejected"
+    }
+   ]
+  },
+  {
+   "id": "worker-flow",
+   "initial": "worker-idle",
+   "states": [
+    "worker-idle",
+    "worker-accepted",
+    "worker-awaiting-commit",
+    "worker-acknowledged",
+    "worker-acked-early"
+   ],
+   "subject": "authoritative-worker-1",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "accepted",
+       "to": true
+      },
+      {
+       "emit": "command-accepted"
+      }
+     ],
+     "faultOnly": false,
+     "from": "worker-idle",
+     "guard": null,
+     "id": "worker-accept-command",
+     "on": "command-routed",
+     "to": "worker-accepted"
+    },
+    {
+     "effects": [
+      {
+       "set": "acked",
+       "to": true
+      },
+      {
+       "emit": "acknowledgement-sent"
+      },
+      {
+       "after": 1,
+       "emit": "persist-requested"
+      }
+     ],
+     "faultOnly": true,
+     "from": "worker-accepted",
+     "guard": null,
+     "id": "worker-ack-early",
+     "on": "command-accepted",
+     "to": "worker-acked-early"
+    },
+    {
+     "effects": [
+      {
+       "after": 1,
+       "emit": "persist-requested"
+      }
+     ],
+     "faultOnly": false,
+     "from": "worker-accepted",
+     "guard": null,
+     "id": "worker-request-persist",
+     "on": "command-accepted",
+     "to": "worker-awaiting-commit"
+    },
+    {
+     "effects": [
+      {
+       "set": "acked",
+       "to": true
+      },
+      {
+       "emit": "acknowledgement-sent"
+      }
+     ],
+     "faultOnly": false,
+     "from": "worker-awaiting-commit",
+     "guard": null,
+     "id": "worker-ack-after-commit",
+     "on": "persist-committed",
+     "to": "worker-acknowledged"
+    }
+   ],
+   "variables": [
+    {
+     "initial": false,
+     "name": "accepted"
+    },
+    {
+     "initial": false,
+     "name": "acked"
+    }
+   ]
+  },
+  {
+   "id": "database-flow",
+   "initial": "database-idle",
+   "states": [
+    "database-idle",
+    "database-committed"
+   ],
+   "subject": "game-database",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "durable",
+       "to": true
+      },
+      {
+       "emit": "persist-committed"
+      }
+     ],
+     "faultOnly": false,
+     "from": "database-idle",
+     "guard": null,
+     "id": "database-commit",
+     "on": "persist-requested",
+     "to": "database-committed"
+    }
+   ],
+   "variables": [
+    {
+     "initial": false,
+     "name": "durable"
+    }
+   ]
+  }
+ ],
+ "events": [
+  {
+   "id": "command-submitted"
+  },
+  {
+   "id": "command-received"
+  },
+  {
+   "id": "command-rejected"
+  },
+  {
+   "id": "command-routed"
+  },
+  {
+   "id": "command-accepted"
+  },
+  {
+   "id": "persist-requested"
+  },
+  {
+   "id": "persist-committed"
+  },
+  {
+   "id": "acknowledgement-sent"
+  },
+  {
+   "id": "response-delivered"
+  }
+ ],
+ "faults": [],
+ "format": "exegra-sim-input",
+ "scenario": {
+  "faults": [],
+  "id": "command-commit-lost",
+  "stepLimit": 1000,
+  "steps": [
+   {
+    "at": 0,
+    "event": "command-submitted",
+    "payload": {
+     "token": "valid-token"
+    }
+   }
+  ]
+ },
+ "version": 1
+}

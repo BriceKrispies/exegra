@@ -1,0 +1,416 @@
+{
+  "schemaVersion": "0.1",
+  "idPattern": "^[a-z][a-z0-9_]*(-[a-z0-9_]+)*$",
+  "sections": {
+    "exegra": { "doc": "Schema version of the specification format." },
+    "system": { "entity": "system", "single": true },
+    "vocabulary": { "doc": "Model-defined extensions of categories, relationship kinds and properties." },
+    "components": { "entity": "component" },
+    "relationships": { "entity": "relationship" },
+    "contracts": { "entity": "contract" },
+    "events": { "entity": "event" },
+    "behaviors": { "entity": "behavior" },
+    "faults": { "entity": "fault" },
+    "environments": { "entity": "environment" },
+    "failureModes": { "entity": "failureMode" },
+    "faultModels": { "entity": "faultModel" },
+    "records": { "entity": "record" },
+    "copies": { "entity": "copy" },
+    "scenarios": { "entity": "scenario" },
+    "assumptions": { "entity": "assumption" },
+    "claims": { "entity": "claim" },
+    "evidence": { "entity": "evidence" },
+    "views": { "entity": "view" }
+  },
+  "vocabulary": {
+    "categories": {
+      "logical": { "label": "Logical module", "shape": "box", "color": "slate", "description": "A logical unit of responsibility with no declared runtime of its own." },
+      "computational": { "label": "Computational service", "shape": "chamfer", "color": "blue", "description": "An executing process or service that performs computation." },
+      "storage": { "label": "Data store", "shape": "cylinder", "color": "amber", "description": "A component whose responsibility is durable or shared state." },
+      "client": { "label": "Client", "shape": "tablet", "color": "teal", "description": "A user-facing or caller-side program." },
+      "external": { "label": "External system", "shape": "octa", "color": "violet", "description": "A system outside the control of the specified system." },
+      "infrastructure": { "label": "Infrastructure", "shape": "hex", "color": "steel", "description": "Platform, transport, tooling or operational substrate." },
+      "transport": { "label": "Message transport", "shape": "pipe", "color": "rose", "description": "An asynchronous channel carrying messages between components." }
+    },
+    "relationshipKinds": {
+      "depends-on": { "label": "Depends on", "line": "solid", "color": "neutral", "dependency": true, "description": "The source requires the target to fulfil its responsibilities." },
+      "calls": { "label": "Calls", "line": "solid", "color": "blue", "dependency": true, "description": "The source synchronously invokes an operation of the target." },
+      "data-flow": { "label": "Data flow", "line": "dashed", "color": "teal", "dependency": false, "description": "Data moves from source to target. Says nothing about who initiates." },
+      "publishes": { "label": "Publishes", "line": "dotted", "color": "rose", "dependency": false, "description": "The source asynchronously emits messages to the target channel." },
+      "subscribes": { "label": "Subscribes", "line": "dotted", "color": "rose", "dependency": true, "description": "The source consumes messages from the target channel." },
+      "reads": { "label": "Reads", "line": "dashed", "color": "amber", "dependency": true, "description": "The source reads state held by the target." },
+      "writes": { "label": "Writes", "line": "solid", "color": "amber", "dependency": true, "description": "The source mutates state held by the target." },
+      "observes": { "label": "Observes", "line": "dotted", "color": "neutral", "dependency": false, "description": "The source collects telemetry about the target." }
+    },
+    "shapes": ["box", "chamfer", "cylinder", "tablet", "octa", "hex", "pipe", "sphere", "diamond", "capsule"],
+    "colors": ["slate", "blue", "amber", "teal", "violet", "steel", "rose", "green", "red", "neutral"],
+    "lines": ["solid", "dashed", "dotted"],
+    "projections": ["structural", "claims", "behavior", "references", "data"],
+    "propertyTypes": ["string", "text", "boolean", "number", "enum"]
+  },
+  "entities": {
+    "system": {
+      "label": "System",
+      "doc": "The top-level specification and its metadata.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "version": { "type": "string", "label": "Version" },
+        "illustrative": { "type": "boolean", "label": "Illustrative", "doc": "True when the whole system is an example and not a description of real software." },
+        "notes": { "type": "list", "items": { "type": "text" }, "label": "Notes" }
+      }
+    },
+    "component": {
+      "label": "Component",
+      "doc": "A logical, computational, storage, client, external or infrastructure entity. kind 'subsystem' marks a component that contains other components.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "kind": { "type": "enum", "values": ["component", "subsystem"], "label": "Kind", "doc": "Defaults to component. Only a subsystem may be the parent of other components." },
+        "category": { "type": "enum", "valuesFrom": "categories", "required": true, "label": "Category" },
+        "parent": { "type": "ref", "ref": ["component"], "label": "Parent subsystem" },
+        "purpose": { "type": "text", "label": "Purpose", "expected": true },
+        "responsibilities": { "type": "list", "items": { "type": "text" }, "label": "Responsibilities" },
+        "owner": { "type": "string", "label": "Owner" },
+        "trustZone": { "type": "string", "label": "Trust zone", "doc": "Name of the trust boundary this component lives inside." },
+        "ports": { "type": "entities", "entity": "port", "label": "Ports" },
+        "unknowns": { "type": "list", "items": { "type": "text" }, "label": "Known unknowns" },
+        "illustrative": { "type": "boolean", "label": "Illustrative" },
+        "tags": { "type": "list", "items": { "type": "string" }, "label": "Tags" },
+        "implementation": {
+          "type": "object", "label": "Implementation",
+          "fields": {
+            "status": { "type": "enum", "values": ["manual", "model-configured", "partially-generated", "generated", "not-implemented"], "required": true, "label": "Realisation" },
+            "modules": { "type": "list", "items": { "type": "string" }, "label": "Modules" },
+            "notes": { "type": "text", "label": "Notes" }
+          }
+        }
+      }
+    },
+    "port": {
+      "label": "Port",
+      "doc": "An explicitly declared interaction surface of a component.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "direction": { "type": "enum", "values": ["provides", "requires"], "required": true, "label": "Direction" },
+        "contract": { "type": "ref", "ref": ["contract"], "label": "Contract" },
+        "protocol": { "type": "string", "label": "Protocol" },
+        "description": { "type": "text", "label": "Description" }
+      }
+    },
+    "relationship": {
+      "label": "Relationship",
+      "doc": "A typed, directed connection between components or ports.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "kind": { "type": "enum", "valuesFrom": "relationshipKinds", "required": true, "label": "Kind" },
+        "from": { "type": "ref", "ref": ["component", "port"], "required": true, "label": "From" },
+        "to": { "type": "ref", "ref": ["component", "port"], "required": true, "label": "To" },
+        "label": { "type": "string", "label": "Label" },
+        "description": { "type": "text", "label": "Description", "expected": true },
+        "contract": { "type": "ref", "ref": ["contract"], "label": "Contract" },
+        "illustrative": { "type": "boolean", "label": "Illustrative" }
+      }
+    },
+    "contract": {
+      "label": "Contract",
+      "doc": "Inputs, outputs, preconditions, postconditions, error conditions and obligations of an interaction.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "inputs": { "type": "list", "label": "Inputs", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "string" }, "optional": { "type": "boolean" }, "description": { "type": "text" } } } },
+        "outputs": { "type": "list", "label": "Outputs", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "string" }, "optional": { "type": "boolean" }, "description": { "type": "text" } } } },
+        "preconditions": { "type": "list", "items": { "type": "text" }, "label": "Preconditions" },
+        "postconditions": { "type": "list", "items": { "type": "text" }, "label": "Postconditions" },
+        "errors": { "type": "list", "label": "Error conditions", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "condition": { "type": "text" } } } },
+        "obligations": { "type": "list", "items": { "type": "text" }, "label": "Obligations" },
+        "binding": { "type": "object", "label": "Binding", "fields": { "protocol": { "type": "string" }, "method": { "type": "string" }, "path": { "type": "string" }, "operation": { "type": "string" } } }
+      }
+    },
+    "event": {
+      "label": "Event",
+      "doc": "An occurrence that can trigger transitions.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "payload": { "type": "list", "label": "Payload fields", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "string" } } } },
+        "contract": { "type": "ref", "ref": ["contract"], "label": "Contract" },
+        "role": { "type": "enum", "values": ["request", "response", "error"], "label": "Role in the contract" },
+        "correlation": { "type": "string", "label": "Correlation field" }
+      }
+    },
+    "behavior": {
+      "label": "Behavior",
+      "doc": "A state machine describing how one component reacts to events.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "subject": { "type": "ref", "ref": ["component"], "required": true, "label": "Subject component" },
+        "description": { "type": "text", "label": "Description" },
+        "initial": { "type": "ref", "ref": ["state"], "required": true, "label": "Initial state" },
+        "variables": { "type": "list", "label": "Variables", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "enum", "values": ["boolean", "number", "string"], "required": true }, "initial": { "type": "any", "required": true } } } },
+        "states": { "type": "entities", "entity": "state", "label": "States", "required": true },
+        "transitions": { "type": "entities", "entity": "transition", "label": "Transitions" }
+      }
+    },
+    "state": {
+      "label": "State",
+      "doc": "A defined configuration within a behavior.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "terminal": { "type": "boolean", "label": "Terminal" }
+      }
+    },
+    "transition": {
+      "label": "Transition",
+      "doc": "A declared change between states with a trigger, guard and effects.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "from": { "type": "ref", "ref": ["state"], "required": true, "label": "From state" },
+        "to": { "type": "ref", "ref": ["state"], "required": true, "label": "To state" },
+        "on": { "type": "ref", "ref": ["event"], "required": true, "label": "Trigger event" },
+        "guard": { "type": "expr", "label": "Guard" },
+        "effects": { "type": "list", "items": { "type": "effect" }, "label": "Effects" },
+        "faultOnly": { "type": "boolean", "label": "Fault only", "doc": "The transition exists only when a fault of kind enable-transition activates it." },
+        "description": { "type": "text", "label": "Description" }
+      }
+    },
+    "fault": {
+      "label": "Fault",
+      "doc": "A declared deviation that a scenario run can inject.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "kind": { "type": "enum", "values": ["drop-event", "delay-event", "enable-transition", "disable-transition", "inject-event"], "required": true, "label": "Kind" },
+        "description": { "type": "text", "label": "Description" },
+        "event": { "type": "ref", "ref": ["event"], "label": "Event" },
+        "transition": { "type": "ref", "ref": ["transition"], "label": "Transition" },
+        "occurrence": { "type": "number", "label": "Occurrence", "doc": "1-based occurrence of the event to affect. Omitted means every occurrence." },
+        "by": { "type": "number", "label": "Delay by (logical ticks)" },
+        "at": { "type": "number", "label": "Inject at (logical time)" },
+        "payload": { "type": "map", "label": "Payload" },
+        "realises": { "type": "ref", "ref": ["failureMode"], "label": "Realises failure mode", "doc": "The failure mode this injection is an instance of. Not read by the simulation engine." }
+      }
+    },
+    "environment": {
+      "label": "Environment",
+      "doc": "What a deployment target guarantees: clock skew, message behavior, storage durability, consistency, zones and regions. Each guarantee names its source.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "guarantees": {
+          "type": "list", "label": "Guarantees",
+          "items": {
+            "type": "object",
+            "fields": {
+              "aspect": { "type": "enum", "values": ["clock-skew", "message-delay", "message-loss", "message-duplication", "message-reordering", "storage-durability", "api-consistency", "zone-count", "region-count", "other"], "required": true, "label": "Aspect" },
+              "value": { "type": "any", "required": true, "label": "Value", "doc": "A number or a string." },
+              "unit": { "type": "string", "label": "Unit" },
+              "source": { "type": "ref", "ref": ["*"], "label": "Source", "doc": "The entity that justifies the value: a requirement or other claim, an assumption, an evidence entity, or an entity of any kind the specification declares. Required; a missing source is a validation error." }
+            }
+          }
+        }
+      }
+    },
+    "failureMode": {
+      "label": "Failure mode",
+      "doc": "One way a component, a relationship or an environment can fail, with a sourced rate and duration.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "kind": { "type": "enum", "values": ["crash", "stop", "restart", "partition", "delay", "loss", "duplicate", "reorder", "clock-skew", "slow-storage", "storage-loss", "corruption", "eventual-consistency", "partial-apply", "concurrent-change", "overload", "dependency-outage", "other"], "required": true, "label": "Kind" },
+        "target": { "type": "ref", "ref": ["component", "relationship", "environment"], "required": true, "label": "Target" },
+        "scope": { "type": "enum", "values": ["instance", "process", "host", "zone", "region", "provider"], "required": true, "label": "Scope", "doc": "How much fails together: one instance up to a whole provider." },
+        "rate": {
+          "type": "object", "label": "Rate", "doc": "How often it happens. Required, with a source; a missing rate or rate source is a validation error.",
+          "fields": {
+            "value": { "type": "number", "required": true, "label": "Occurrences" },
+            "per": { "type": "enum", "values": ["second", "minute", "hour", "day", "week", "month", "year", "run"], "required": true, "label": "Per" },
+            "source": { "type": "ref", "ref": ["*"], "label": "Source", "doc": "The entity that justifies the value: a requirement or other claim, an assumption, an evidence entity, or an entity of any kind the specification declares. Required; a missing source is a validation error." }
+          }
+        },
+        "duration": {
+          "type": "object", "label": "Duration", "doc": "How long it lasts. With a duration, a source is required.",
+          "fields": {
+            "typical": { "type": "number", "label": "Typical" },
+            "max": { "type": "number", "label": "Maximum" },
+            "unit": { "type": "enum", "values": ["millisecond", "second", "minute", "hour", "day", "tick"], "required": true, "label": "Unit" },
+            "source": { "type": "ref", "ref": ["*"], "label": "Source", "doc": "The entity that justifies the value: a requirement or other claim, an assumption, an evidence entity, or an entity of any kind the specification declares. Required; a missing source is a validation error." }
+          }
+        },
+        "description": { "type": "text", "label": "Description" }
+      }
+    },
+    "faultModel": {
+      "label": "Fault model",
+      "doc": "A named set of failure modes in an environment, with bounds on how many may occur at once. Claims are evaluated under a fault model.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "environment": { "type": "ref", "ref": ["environment"], "required": true, "label": "Environment" },
+        "modes": { "type": "list", "items": { "type": "ref", "ref": ["failureMode"] }, "required": true, "label": "Failure modes" },
+        "bounds": {
+          "type": "list", "label": "Concurrency bounds",
+          "items": {
+            "type": "object",
+            "fields": {
+              "scope": { "type": "enum", "values": ["instance", "process", "host", "zone", "region", "provider"], "label": "Scope", "doc": "Limits failures of this scope. Omit to bound the listed modes (or all modes) regardless of scope." },
+              "modes": { "type": "list", "items": { "type": "ref", "ref": ["failureMode"] }, "label": "Failure modes" },
+              "maxConcurrent": { "type": "number", "required": true, "label": "At most at once" },
+              "source": { "type": "ref", "ref": ["*"], "label": "Source", "doc": "The entity that justifies the value: a requirement or other claim, an assumption, an evidence entity, or an entity of any kind the specification declares. Required; a missing source is a validation error." }
+            }
+          }
+        },
+        "description": { "type": "text", "label": "Description" }
+      }
+    },
+    "scenario": {
+      "label": "Scenario",
+      "doc": "A specified sequence of input events and active faults executed over a set of behaviors.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "behaviors": { "type": "list", "items": { "type": "ref", "ref": ["behavior"] }, "required": true, "label": "Behaviors" },
+        "steps": { "type": "list", "required": true, "label": "Input events", "items": { "type": "object", "fields": { "at": { "type": "number", "required": true }, "event": { "type": "ref", "ref": ["event"], "required": true }, "payload": { "type": "map" }, "note": { "type": "text" } } } },
+        "faults": { "type": "list", "items": { "type": "ref", "ref": ["fault"] }, "label": "Active faults" },
+        "maxSteps": { "type": "number", "label": "Step limit" },
+        "faultModel": { "type": "ref", "ref": ["faultModel"], "label": "Fault model", "doc": "The fault model this scenario's injected faults are drawn from." }
+      }
+    },
+    "assumption": {
+      "label": "Assumption",
+      "doc": "A condition accepted by the model but not established by available evidence.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "statement": { "type": "text", "required": true, "label": "Statement" },
+        "rationale": { "type": "text", "label": "Rationale" },
+        "illustrative": { "type": "boolean", "label": "Illustrative" }
+      }
+    },
+    "record": {
+      "label": "Record",
+      "doc": "A kind of record the system stores: its owning component, key, fields and retention. The data rules (src/core/data-model.js) are computed over records and their copies.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "owner": { "type": "ref", "ref": ["component"], "required": true, "label": "Owning component", "doc": "The component whose state this record is: the authoritative table." },
+        "key": { "type": "list", "items": { "type": "string" }, "label": "Key", "doc": "Names of the fields that identify a record. Each must be a declared field." },
+        "fields": {
+          "type": "list", "required": true, "label": "Fields",
+          "items": {
+            "type": "object",
+            "fields": {
+              "name": { "type": "string", "required": true, "label": "Name" },
+              "type": { "type": "string", "required": true, "label": "Type", "doc": "Free type text such as principal-id, display-name, number or timestamp. A type containing the word name or handle counts as a name." },
+              "personal": { "type": "enum", "values": ["identifier", "contact", "name", "credential", "financial", "activity", "location", "other"], "label": "Personal-data class", "doc": "Set when the field is personal data of a principal." },
+              "refersTo": { "type": "ref", "ref": ["record"], "literals": ["principal"], "label": "Refers to", "doc": "The record this field holds the key of, or \"principal\" for a principal id." },
+              "role": { "type": "enum", "values": ["party", "subject", "snapshot"], "label": "Role", "doc": "party: a principal taking part in the act (must refer to the principal by id); subject: the principal the record is about; snapshot: a copy of a value as it was at the time of the act." },
+              "description": { "type": "text", "label": "Description" }
+            }
+          }
+        },
+        "retention": { "type": "text", "label": "Retention", "doc": "How long a record is kept and what ends it." },
+        "description": { "type": "text", "label": "Description" },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source", "doc": "The entity that states this record (a requirement, decision or case)." }
+      }
+    },
+    "copy": {
+      "label": "Copy",
+      "doc": "A place where some or all fields of one or more records are kept outside their owning component: a cache, a derived view, a CDN variant, a per-session store.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "of": { "type": "list", "items": { "type": "ref", "ref": ["record"] }, "required": true, "label": "Copy of", "doc": "The record, or the records of a projection, that this copy holds fields of." },
+        "fields": { "type": "list", "items": { "type": "string" }, "label": "Fields held", "doc": "Field names of the source records, or record-id.field when ambiguous. Omitted: every field of every source record." },
+        "heldBy": { "type": "ref", "ref": ["component"], "required": true, "label": "Held by" },
+        "scope": { "type": "enum", "values": ["shared", "per-session", "per-principal", "internal"], "required": true, "label": "Scope", "doc": "shared: served as stored to more than one viewer (a CDN, a shared cache); per-session or per-principal: served only to one sign-in session or principal; internal: held server-side and never served as stored, every answer passing a read-time authority filter." },
+        "freshness": {
+          "type": "object", "label": "Freshness",
+          "fields": {
+            "bound": { "type": "any", "label": "Bound", "doc": "How far an answer from this copy may trail its source: a number with a unit, or a text such as zero, K-62 or the read stamp." },
+            "unit": { "type": "enum", "values": ["millisecond", "second", "minute", "hour", "day", "tick", "position"], "label": "Unit" },
+            "mechanism": { "type": "text", "label": "Kept current by" },
+            "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+          }
+        },
+        "erasure": {
+          "type": "object", "label": "Erasure",
+          "fields": {
+            "point": { "type": "text", "label": "Erasure point", "doc": "When a principal's deletion (or the end of the source record) has reached this copy." },
+            "bound": { "type": "number", "label": "Bound" },
+            "unit": { "type": "enum", "values": ["millisecond", "second", "minute", "hour", "day"], "label": "Unit" },
+            "basis": { "type": "text", "label": "Basis", "doc": "Why the copy is kept beyond a deletion, when it is (a legal obligation, a financial record)." },
+            "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+          }
+        },
+        "dependsOnAuthority": { "type": "boolean", "label": "Depends on authority", "doc": "True when the content of the copy depends on who is asking (grants, age band, privacy, blocks)." },
+        "description": { "type": "text", "label": "Description" },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+      }
+    },
+    "claim": {
+      "label": "Claim",
+      "doc": "A precise statement about a property expected to hold, with an explicit evaluation mechanism.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "kind": { "type": "enum", "values": ["structural", "invariant", "temporal", "measured", "requirement"], "required": true, "label": "Kind" },
+        "statement": { "type": "text", "required": true, "label": "Statement" },
+        "rationale": { "type": "text", "label": "Rationale" },
+        "subjects": { "type": "list", "items": { "type": "ref", "ref": ["component", "port", "relationship", "behavior", "contract", "scenario", "state", "transition", "event", "fault", "record", "copy"] }, "label": "Subjects" },
+        "assumptions": { "type": "list", "items": { "type": "ref", "ref": ["assumption"] }, "label": "Assumptions" },
+        "faultModel": { "type": "ref", "ref": ["faultModel"], "label": "Fault model", "doc": "The fault model this claim is evaluated under. A result states it in its scope." },
+        "evaluate": { "type": "evaluation", "required": true, "label": "Evaluation" }
+      }
+    },
+    "evidence": {
+      "label": "Evidence",
+      "doc": "An artifact supporting or contradicting a claim. Author-entered; never an evaluation result by itself.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "claim": { "type": "ref", "ref": ["claim"], "required": true, "label": "Claim" },
+        "kind": { "type": "enum", "values": ["test", "measurement", "document", "review"], "required": true, "label": "Kind" },
+        "supports": { "type": "boolean", "label": "Supports the claim", "doc": "Defaults to true. False marks contradicting evidence." },
+        "ref": { "type": "string", "required": true, "label": "Artifact reference" },
+        "description": { "type": "text", "label": "Description" },
+        "observed": { "type": "string", "label": "Observed" }
+      }
+    },
+    "view": {
+      "label": "View",
+      "doc": "A named projection of the model with explicit filter and display rules.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "projection": { "type": "enum", "valuesFrom": "projections", "required": true, "label": "Projection" },
+        "description": { "type": "text", "label": "Description" },
+        "filter": {
+          "type": "object", "label": "Filter",
+          "fields": {
+            "categories": { "type": "list", "items": { "type": "string" }, "label": "Categories" },
+            "relationshipKinds": { "type": "list", "items": { "type": "string" }, "label": "Relationship kinds" },
+            "within": { "type": "ref", "ref": ["component"], "label": "Within subsystem" },
+            "tags": { "type": "list", "items": { "type": "string" }, "label": "Tags" },
+            "entityKinds": { "type": "list", "items": { "type": "string" }, "label": "Entity kinds", "doc": "For the references projection: which kinds of entity to draw." }
+          }
+        },
+        "display": {
+          "type": "object", "label": "Display",
+          "fields": {
+            "showPorts": { "type": "boolean", "label": "Show ports" },
+            "colorBy": { "type": "enum", "values": ["category", "implementation", "trustZone"], "label": "Color by" },
+            "depth": { "type": "number", "label": "Reference depth", "doc": "For the references projection: how many reference hops around the focused entity to draw (1 to 3)." },
+            "layout": { "type": "enum", "values": ["auto", "layered", "layered-down", "packed", "radial"], "label": "Layout method", "doc": "Presentation only. Default for this view; a viewer may choose another without changing the model." }
+          }
+        }
+      }
+    }
+  }
+}

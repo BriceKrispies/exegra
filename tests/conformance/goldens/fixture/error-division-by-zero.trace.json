@@ -1,0 +1,219 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "calc-machine": {
+    "state": "calc-ready",
+    "vars": {
+     "divisor": 0,
+     "text": "abc",
+     "total": 11
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "calc-div-op",
+    "payload": {},
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    },
+    "time": 1
+   },
+   {
+    "event": "calc-ok-op",
+    "payload": {},
+    "seq": 2,
+    "source": {
+     "kind": "scenario",
+     "step": 2
+    },
+    "time": 2
+   }
+  ],
+  "time": 0
+ },
+ "initial": {
+  "machines": {
+   "calc-machine": {
+    "state": "calc-ready",
+    "vars": {
+     "divisor": 0,
+     "text": "abc",
+     "total": 10
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "calc-ok-op",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   },
+   {
+    "event": "calc-div-op",
+    "payload": {},
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    },
+    "time": 1
+   },
+   {
+    "event": "calc-ok-op",
+    "payload": {},
+    "seq": 2,
+    "source": {
+     "kind": "scenario",
+     "step": 2
+    },
+    "time": 2
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "error",
+ "scenarioId": "error-division-by-zero",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "calc-machine": {
+      "state": "calc-ready",
+      "vars": {
+       "divisor": 0,
+       "text": "abc",
+       "total": 11
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "calc-div-op",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 1
+     },
+     {
+      "event": "calc-ok-op",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 2
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "calc-ok-op",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "calc-machine",
+     "emitted": [],
+     "from": "calc-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 11,
+       "before": 10,
+       "variable": "total"
+      }
+     ],
+     "to": "calc-ready",
+     "transition": "calc-ok"
+    }
+   ],
+   "ignored": [],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "calc-ok-op",
+    "calc-ok",
+    "calc-machine",
+    "ledger"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "calc-machine": {
+      "state": "calc-ready",
+      "vars": {
+       "divisor": 0,
+       "text": "abc",
+       "total": 11
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "calc-div-op",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 1
+     },
+     {
+      "event": "calc-ok-op",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 2
+     }
+    ],
+    "time": 0
+   },
+   "error": {
+    "message": "Division by zero"
+   },
+   "event": {
+    "id": "calc-div-op",
+    "payload": {},
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "calc-div-op"
+   ],
+   "time": 1
+  }
+ ]
+}

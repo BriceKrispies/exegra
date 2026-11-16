@@ -1,0 +1,185 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "gateway-machine": {
+    "state": "gw-idle",
+    "vars": {
+     "closed": false,
+     "last": "none",
+     "seen": 0
+    }
+   },
+   "ledger-machine": {
+    "state": "ledger-open",
+    "vars": {
+     "balance": 0,
+     "entries": 0
+    }
+   }
+  },
+  "pending": [],
+  "time": 2
+ },
+ "initial": {
+  "machines": {
+   "gateway-machine": {
+    "state": "gw-idle",
+    "vars": {
+     "closed": false,
+     "last": "none",
+     "seen": 0
+    }
+   },
+   "ledger-machine": {
+    "state": "ledger-open",
+    "vars": {
+     "balance": 0,
+     "entries": 0
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "noise",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   },
+   {
+    "event": "noise",
+    "payload": {},
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    },
+    "time": 2
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "unhandled-event",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "gateway-machine": {
+      "state": "gw-idle",
+      "vars": {
+       "closed": false,
+       "last": "none",
+       "seen": 0
+      }
+     },
+     "ledger-machine": {
+      "state": "ledger-open",
+      "vars": {
+       "balance": 0,
+       "entries": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "noise",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 2
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "noise",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "gateway-machine",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "ledger-machine",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "noise"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "gateway-machine": {
+      "state": "gw-idle",
+      "vars": {
+       "closed": false,
+       "last": "none",
+       "seen": 0
+      }
+     },
+     "ledger-machine": {
+      "state": "ledger-open",
+      "vars": {
+       "balance": 0,
+       "entries": 0
+      }
+     }
+    },
+    "pending": [],
+    "time": 2
+   },
+   "event": {
+    "id": "noise",
+    "payload": {},
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "gateway-machine",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "ledger-machine",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "noise"
+   ],
+   "time": 2
+  }
+ ]
+}

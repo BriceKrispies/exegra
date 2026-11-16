@@ -1,0 +1,13 @@
+name = "exegra"
+version = "0.1.0"
+defaultTargets = ["Exegra", "exegra-lean"]
+
+[[lean_lib]]
+name = "Exegra"
+# Native shared libraries of the modules, so that `exegra prove` can load the compiled explorer
+# into Lean when it checks a generated proof file (native_decide then runs native code).
+precompileModules = true
+
+[[lean_exe]]
+name = "exegra-lean"
+root = "Main"

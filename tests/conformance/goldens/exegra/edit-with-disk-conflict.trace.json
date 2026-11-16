@@ -1,0 +1,2120 @@
+{
+ "faults": [
+  "disk-changed-externally"
+ ],
+ "final": {
+  "machines": {
+   "inspector-flow": {
+    "state": "inspector-ready",
+    "vars": {
+     "shownRevision": 2
+    }
+   },
+   "interaction-flow": {
+    "state": "interaction-done",
+    "vars": {
+     "refusalShown": false
+    }
+   },
+   "parser-flow": {
+    "state": "parser-ready",
+    "vars": {
+     "runs": 1
+    }
+   },
+   "projection-flow": {
+    "state": "projection-ready",
+    "vars": {
+     "shownRevision": 2
+    }
+   },
+   "renderer-flow": {
+    "state": "renderer-ready",
+    "vars": {
+     "shownRevision": 2
+    }
+   },
+   "session-flow": {
+    "state": "session-conflicted",
+    "vars": {
+     "rejectionsLogged": 0,
+     "saveState": "conflict"
+    }
+   },
+   "source-editor-flow": {
+    "state": "source-in-sync",
+    "vars": {
+     "shownRevision": 2
+    }
+   },
+   "transaction-flow": {
+    "state": "tx-idle",
+    "vars": {
+     "rejected": false,
+     "revision": 2
+    }
+   },
+   "validator-flow": {
+    "state": "validator-ready",
+    "vars": {
+     "lastResult": "passed"
+    }
+   },
+   "workspace-flow": {
+    "state": "workspace-conflicted",
+    "vars": {
+     "conflict": true,
+     "persistedRevision": 1
+    }
+   }
+  },
+  "pending": [],
+  "time": 1
+ },
+ "initial": {
+  "machines": {
+   "inspector-flow": {
+    "state": "inspector-ready",
+    "vars": {
+     "shownRevision": 1
+    }
+   },
+   "interaction-flow": {
+    "state": "interaction-idle",
+    "vars": {
+     "refusalShown": false
+    }
+   },
+   "parser-flow": {
+    "state": "parser-ready",
+    "vars": {
+     "runs": 0
+    }
+   },
+   "projection-flow": {
+    "state": "projection-ready",
+    "vars": {
+     "shownRevision": 1
+    }
+   },
+   "renderer-flow": {
+    "state": "renderer-ready",
+    "vars": {
+     "shownRevision": 1
+    }
+   },
+   "session-flow": {
+    "state": "session-in-sync",
+    "vars": {
+     "rejectionsLogged": 0,
+     "saveState": "saved"
+    }
+   },
+   "source-editor-flow": {
+    "state": "source-in-sync",
+    "vars": {
+     "shownRevision": 1
+    }
+   },
+   "transaction-flow": {
+    "state": "tx-idle",
+    "vars": {
+     "rejected": false,
+     "revision": 1
+    }
+   },
+   "validator-flow": {
+    "state": "validator-ready",
+    "vars": {
+     "lastResult": "none"
+    }
+   },
+   "workspace-flow": {
+    "state": "workspace-clean",
+    "vars": {
+     "conflict": false,
+     "persistedRevision": 1
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "edit-requested",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "edit-with-disk-conflict",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-awaiting",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 0
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "session-flow": {
+      "state": "session-in-sync",
+      "vars": {
+       "rejectionsLogged": 0,
+       "saveState": "saved"
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-idle",
+      "vars": {
+       "rejected": false,
+       "revision": 1
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "none"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-clean",
+      "vars": {
+       "conflict": false,
+       "persistedRevision": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "operation-submitted",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "behavior": "interaction-flow",
+       "kind": "transition",
+       "transition": "interaction-submit"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "edit-requested",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "interaction-flow",
+     "emitted": [
+      {
+       "event": "operation-submitted",
+       "payload": {},
+       "seq": 1,
+       "time": 0
+      }
+     ],
+     "from": "interaction-idle",
+     "guard": null,
+     "sets": [],
+     "to": "interaction-awaiting",
+     "transition": "interaction-submit"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "transaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "edit-requested",
+    "interaction-submit",
+    "interaction-flow",
+    "visual-interaction"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-awaiting",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 0
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "session-flow": {
+      "state": "session-in-sync",
+      "vars": {
+       "rejectionsLogged": 0,
+       "saveState": "saved"
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-validating",
+      "vars": {
+       "rejected": false,
+       "revision": 1
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "none"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-clean",
+      "vars": {
+       "conflict": false,
+       "persistedRevision": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "text-edits-computed",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "behavior": "transaction-flow",
+       "kind": "transition",
+       "transition": "tx-begin"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "operation-submitted",
+    "payload": {},
+    "seq": 1,
+    "source": {
+     "behavior": "interaction-flow",
+     "kind": "transition",
+     "transition": "interaction-submit"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "transaction-flow",
+     "emitted": [
+      {
+       "event": "text-edits-computed",
+       "payload": {},
+       "seq": 2,
+       "time": 0
+      }
+     ],
+     "from": "tx-idle",
+     "guard": null,
+     "sets": [],
+     "to": "tx-validating",
+     "transition": "tx-begin"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "operation-submitted",
+    "tx-begin",
+    "transaction-flow",
+    "transactions"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-awaiting",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 1
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "session-flow": {
+      "state": "session-in-sync",
+      "vars": {
+       "rejectionsLogged": 0,
+       "saveState": "saved"
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-validating",
+      "vars": {
+       "rejected": false,
+       "revision": 1
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "none"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-clean",
+      "vars": {
+       "conflict": false,
+       "persistedRevision": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "model-parsed",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "behavior": "parser-flow",
+       "kind": "transition",
+       "transition": "parser-parse"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "text-edits-computed",
+    "payload": {},
+    "seq": 2,
+    "source": {
+     "behavior": "transaction-flow",
+     "kind": "transition",
+     "transition": "tx-begin"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "parser-flow",
+     "emitted": [
+      {
+       "event": "model-parsed",
+       "payload": {},
+       "seq": 3,
+       "time": 0
+      }
+     ],
+     "from": "parser-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "runs"
+      }
+     ],
+     "to": "parser-ready",
+     "transition": "parser-parse"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "transaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "text-edits-computed",
+    "parser-parse",
+    "parser-flow",
+    "parser"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-awaiting",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 1
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "session-flow": {
+      "state": "session-in-sync",
+      "vars": {
+       "rejectionsLogged": 0,
+       "saveState": "saved"
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-validating",
+      "vars": {
+       "rejected": false,
+       "revision": 1
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "passed"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-clean",
+      "vars": {
+       "conflict": false,
+       "persistedRevision": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "validation-passed",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "behavior": "validator-flow",
+       "kind": "transition",
+       "transition": "validator-accept"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "model-parsed",
+    "payload": {},
+    "seq": 3,
+    "source": {
+     "behavior": "parser-flow",
+     "kind": "transition",
+     "transition": "parser-parse"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "validator-flow",
+     "emitted": [
+      {
+       "event": "validation-passed",
+       "payload": {},
+       "seq": 4,
+       "time": 0
+      }
+     ],
+     "from": "validator-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": "passed",
+       "before": "none",
+       "variable": "lastResult"
+      }
+     ],
+     "to": "validator-ready",
+     "transition": "validator-accept"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "transaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "model-parsed",
+    "validator-accept",
+    "validator-flow",
+    "validator"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-awaiting",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 1
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "session-flow": {
+      "state": "session-in-sync",
+      "vars": {
+       "rejectionsLogged": 0,
+       "saveState": "saved"
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-idle",
+      "vars": {
+       "rejected": false,
+       "revision": 2
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "passed"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-clean",
+      "vars": {
+       "conflict": false,
+       "persistedRevision": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "transaction-committed",
+      "payload": {
+       "revision": 2
+      },
+      "seq": 5,
+      "source": {
+       "behavior": "transaction-flow",
+       "kind": "transition",
+       "transition": "tx-commit"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "validation-passed",
+    "payload": {},
+    "seq": 4,
+    "source": {
+     "behavior": "validator-flow",
+     "kind": "transition",
+     "transition": "validator-accept"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "transaction-flow",
+     "emitted": [
+      {
+       "event": "transaction-committed",
+       "payload": {
+        "revision": 2
+       },
+       "seq": 5,
+       "time": 0
+      }
+     ],
+     "from": "tx-validating",
+     "guard": null,
+     "sets": [
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "revision"
+      },
+      {
+       "after": false,
+       "before": false,
+       "variable": "rejected"
+      }
+     ],
+     "to": "tx-idle",
+     "transition": "tx-commit"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 4,
+   "kind": "deliver",
+   "responsible": [
+    "validation-passed",
+    "tx-commit",
+    "transaction-flow",
+    "transactions"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-done",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 1
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "session-flow": {
+      "state": "session-refreshing",
+      "vars": {
+       "rejectionsLogged": 0,
+       "saveState": "saved"
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-idle",
+      "vars": {
+       "rejected": false,
+       "revision": 2
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "passed"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-clean",
+      "vars": {
+       "conflict": false,
+       "persistedRevision": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "refresh-requested",
+      "payload": {
+       "revision": 2
+      },
+      "seq": 6,
+      "source": {
+       "behavior": "session-flow",
+       "kind": "transition",
+       "transition": "session-on-commit"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "transaction-committed",
+    "payload": {
+     "revision": 2
+    },
+    "seq": 5,
+    "source": {
+     "behavior": "transaction-flow",
+     "kind": "transition",
+     "transition": "tx-commit"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "interaction-flow",
+     "emitted": [],
+     "from": "interaction-awaiting",
+     "guard": null,
+     "sets": [],
+     "to": "interaction-done",
+     "transition": "interaction-accept"
+    },
+    {
+     "behavior": "session-flow",
+     "emitted": [
+      {
+       "event": "refresh-requested",
+       "payload": {
+        "revision": 2
+       },
+       "seq": 6,
+       "time": 0
+      }
+     ],
+     "from": "session-in-sync",
+     "guard": null,
+     "sets": [],
+     "to": "session-refreshing",
+     "transition": "session-on-commit"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "transaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 5,
+   "kind": "deliver",
+   "responsible": [
+    "transaction-committed",
+    "interaction-accept",
+    "interaction-flow",
+    "visual-interaction",
+    "session-on-commit",
+    "session-flow",
+    "session"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-done",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 1
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "session-flow": {
+      "state": "session-refreshing",
+      "vars": {
+       "rejectionsLogged": 0,
+       "saveState": "saved"
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-idle",
+      "vars": {
+       "rejected": false,
+       "revision": 2
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "passed"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-clean",
+      "vars": {
+       "conflict": false,
+       "persistedRevision": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "projection-refreshed",
+      "payload": {
+       "revision": 2
+      },
+      "seq": 7,
+      "source": {
+       "behavior": "projection-flow",
+       "kind": "transition",
+       "transition": "projection-refresh"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "refresh-requested",
+    "payload": {
+     "revision": 2
+    },
+    "seq": 6,
+    "source": {
+     "behavior": "session-flow",
+     "kind": "transition",
+     "transition": "session-on-commit"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "projection-flow",
+     "emitted": [
+      {
+       "event": "projection-refreshed",
+       "payload": {
+        "revision": 2
+       },
+       "seq": 7,
+       "time": 0
+      }
+     ],
+     "from": "projection-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "shownRevision"
+      }
+     ],
+     "to": "projection-ready",
+     "transition": "projection-refresh"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "transaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 6,
+   "kind": "deliver",
+   "responsible": [
+    "refresh-requested",
+    "projection-refresh",
+    "projection-flow",
+    "projection-system"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-done",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 1
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "session-flow": {
+      "state": "session-save-pending",
+      "vars": {
+       "rejectionsLogged": 0,
+       "saveState": "saving"
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-idle",
+      "vars": {
+       "rejected": false,
+       "revision": 2
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "passed"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-clean",
+      "vars": {
+       "conflict": false,
+       "persistedRevision": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "model-published",
+      "payload": {
+       "revision": 2
+      },
+      "seq": 8,
+      "source": {
+       "behavior": "session-flow",
+       "kind": "transition",
+       "transition": "session-on-refreshed"
+      },
+      "time": 0
+     },
+     {
+      "event": "save-requested",
+      "payload": {
+       "revision": 2
+      },
+      "seq": 9,
+      "source": {
+       "behavior": "session-flow",
+       "kind": "transition",
+       "transition": "session-on-refreshed"
+      },
+      "time": 1
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "projection-refreshed",
+    "payload": {
+     "revision": 2
+    },
+    "seq": 7,
+    "source": {
+     "behavior": "projection-flow",
+     "kind": "transition",
+     "transition": "projection-refresh"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "session-flow",
+     "emitted": [
+      {
+       "event": "model-published",
+       "payload": {
+        "revision": 2
+       },
+       "seq": 8,
+       "time": 0
+      },
+      {
+       "event": "save-requested",
+       "payload": {
+        "revision": 2
+       },
+       "seq": 9,
+       "time": 1
+      }
+     ],
+     "from": "session-refreshing",
+     "guard": null,
+     "sets": [
+      {
+       "after": "saving",
+       "before": "saved",
+       "variable": "saveState"
+      }
+     ],
+     "to": "session-save-pending",
+     "transition": "session-on-refreshed"
+    },
+    {
+     "behavior": "renderer-flow",
+     "emitted": [],
+     "from": "renderer-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "shownRevision"
+      }
+     ],
+     "to": "renderer-ready",
+     "transition": "renderer-draw"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "transaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 7,
+   "kind": "deliver",
+   "responsible": [
+    "projection-refreshed",
+    "session-on-refreshed",
+    "session-flow",
+    "session",
+    "renderer-draw",
+    "renderer-flow",
+    "scene-renderer"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-done",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 1
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "session-flow": {
+      "state": "session-save-pending",
+      "vars": {
+       "rejectionsLogged": 0,
+       "saveState": "saving"
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-idle",
+      "vars": {
+       "rejected": false,
+       "revision": 2
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "passed"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-clean",
+      "vars": {
+       "conflict": false,
+       "persistedRevision": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "save-requested",
+      "payload": {
+       "revision": 2
+      },
+      "seq": 9,
+      "source": {
+       "behavior": "session-flow",
+       "kind": "transition",
+       "transition": "session-on-refreshed"
+      },
+      "time": 1
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "model-published",
+    "payload": {
+     "revision": 2
+    },
+    "seq": 8,
+    "source": {
+     "behavior": "session-flow",
+     "kind": "transition",
+     "transition": "session-on-refreshed"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "source-editor-flow",
+     "emitted": [],
+     "from": "source-in-sync",
+     "guard": null,
+     "sets": [
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "shownRevision"
+      }
+     ],
+     "to": "source-in-sync",
+     "transition": "source-refresh-after-visual-edit"
+    },
+    {
+     "behavior": "inspector-flow",
+     "emitted": [],
+     "from": "inspector-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "shownRevision"
+      }
+     ],
+     "to": "inspector-ready",
+     "transition": "inspector-refresh"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "transaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 8,
+   "kind": "deliver",
+   "responsible": [
+    "model-published",
+    "source-refresh-after-visual-edit",
+    "source-editor-flow",
+    "source-editor",
+    "inspector-refresh",
+    "inspector-flow",
+    "inspector"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-done",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 1
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "session-flow": {
+      "state": "session-save-pending",
+      "vars": {
+       "rejectionsLogged": 0,
+       "saveState": "saving"
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-idle",
+      "vars": {
+       "rejected": false,
+       "revision": 2
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "passed"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-conflicted",
+      "vars": {
+       "conflict": true,
+       "persistedRevision": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "save-conflicted",
+      "payload": {},
+      "seq": 10,
+      "source": {
+       "behavior": "workspace-flow",
+       "kind": "transition",
+       "transition": "workspace-detect-conflict"
+      },
+      "time": 1
+     }
+    ],
+    "time": 1
+   },
+   "event": {
+    "id": "save-requested",
+    "payload": {
+     "revision": 2
+    },
+    "seq": 9,
+    "source": {
+     "behavior": "session-flow",
+     "kind": "transition",
+     "transition": "session-on-refreshed"
+    }
+   },
+   "faults": [
+    {
+     "effect": "enabled",
+     "fault": "disk-changed-externally"
+    }
+   ],
+   "fired": [
+    {
+     "behavior": "workspace-flow",
+     "emitted": [
+      {
+       "event": "save-conflicted",
+       "payload": {},
+       "seq": 10,
+       "time": 1
+      }
+     ],
+     "from": "workspace-clean",
+     "guard": null,
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "conflict"
+      }
+     ],
+     "to": "workspace-conflicted",
+     "transition": "workspace-detect-conflict"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "transaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 9,
+   "kind": "deliver",
+   "responsible": [
+    "save-requested",
+    "workspace-detect-conflict",
+    "workspace-flow",
+    "workspace-service",
+    "disk-changed-externally"
+   ],
+   "time": 1
+  },
+  {
+   "config": {
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-done",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 1
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "session-flow": {
+      "state": "session-conflicted",
+      "vars": {
+       "rejectionsLogged": 0,
+       "saveState": "conflict"
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-idle",
+      "vars": {
+       "rejected": false,
+       "revision": 2
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "passed"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-conflicted",
+      "vars": {
+       "conflict": true,
+       "persistedRevision": 1
+      }
+     }
+    },
+    "pending": [],
+    "time": 1
+   },
+   "event": {
+    "id": "save-conflicted",
+    "payload": {},
+    "seq": 10,
+    "source": {
+     "behavior": "workspace-flow",
+     "kind": "transition",
+     "transition": "workspace-detect-conflict"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "session-flow",
+     "emitted": [],
+     "from": "session-save-pending",
+     "guard": null,
+     "sets": [
+      {
+       "after": "conflict",
+       "before": "saving",
+       "variable": "saveState"
+      }
+     ],
+     "to": "session-conflicted",
+     "transition": "session-on-conflict"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "transaction-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 10,
+   "kind": "deliver",
+   "responsible": [
+    "save-conflicted",
+    "session-on-conflict",
+    "session-flow",
+    "session"
+   ],
+   "time": 1
+  }
+ ]
+}

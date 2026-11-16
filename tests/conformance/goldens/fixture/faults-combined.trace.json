@@ -1,0 +1,1018 @@
+{
+ "faults": [
+  "drop-first-submit",
+  "delay-first-submit",
+  "delay-tick-3",
+  "enable-close",
+  "disable-high",
+  "inject-submit"
+ ],
+ "final": {
+  "machines": {
+   "auditor-machine": {
+    "state": "aud-watching",
+    "vars": {
+     "alerts": 0,
+     "level": 150
+    }
+   },
+   "gateway-machine": {
+    "state": "gw-idle",
+    "vars": {
+     "closed": true,
+     "last": "large",
+     "seen": 1
+    }
+   },
+   "ledger-machine": {
+    "state": "ledger-open",
+    "vars": {
+     "balance": 150,
+     "entries": 1
+    }
+   }
+  },
+  "pending": [],
+  "time": 9
+ },
+ "initial": {
+  "machines": {
+   "auditor-machine": {
+    "state": "aud-watching",
+    "vars": {
+     "alerts": 0,
+     "level": 0
+    }
+   },
+   "gateway-machine": {
+    "state": "gw-idle",
+    "vars": {
+     "closed": false,
+     "last": "none",
+     "seen": 0
+    }
+   },
+   "ledger-machine": {
+    "state": "ledger-open",
+    "vars": {
+     "balance": 0,
+     "entries": 0
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "submit",
+    "payload": {
+     "amount": 150,
+     "label": "dropped"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   },
+   {
+    "event": "submit",
+    "payload": {
+     "amount": 150,
+     "label": "kept"
+    },
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    },
+    "time": 1
+   },
+   {
+    "event": "tick",
+    "payload": {},
+    "seq": 2,
+    "source": {
+     "kind": "scenario",
+     "step": 2
+    },
+    "time": 5
+   },
+   {
+    "event": "submit",
+    "payload": {
+     "amount": 500,
+     "label": "injected"
+    },
+    "seq": 4,
+    "source": {
+     "fault": "inject-submit",
+     "kind": "fault"
+    },
+    "time": 7
+   },
+   {
+    "event": "reset",
+    "payload": {},
+    "seq": 3,
+    "source": {
+     "kind": "scenario",
+     "step": 3
+    },
+    "time": 9
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "faults-combined",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "auditor-machine": {
+      "state": "aud-watching",
+      "vars": {
+       "alerts": 0,
+       "level": 0
+      }
+     },
+     "gateway-machine": {
+      "state": "gw-idle",
+      "vars": {
+       "closed": false,
+       "last": "none",
+       "seen": 0
+      }
+     },
+     "ledger-machine": {
+      "state": "ledger-open",
+      "vars": {
+       "balance": 0,
+       "entries": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "submit",
+      "payload": {
+       "amount": 150,
+       "label": "kept"
+      },
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 1
+     },
+     {
+      "event": "tick",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 5
+     },
+     {
+      "event": "submit",
+      "payload": {
+       "amount": 500,
+       "label": "injected"
+      },
+      "seq": 4,
+      "source": {
+       "fault": "inject-submit",
+       "kind": "fault"
+      },
+      "time": 7
+     },
+     {
+      "event": "reset",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 9
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "submit",
+    "payload": {
+     "amount": 150,
+     "label": "dropped"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [
+    {
+     "effect": "dropped",
+     "fault": "drop-first-submit"
+    }
+   ],
+   "fired": [],
+   "ignored": [],
+   "index": 0,
+   "kind": "drop",
+   "responsible": [
+    "submit",
+    "drop-first-submit"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "auditor-machine": {
+      "state": "aud-watching",
+      "vars": {
+       "alerts": 0,
+       "level": 0
+      }
+     },
+     "gateway-machine": {
+      "state": "gw-active",
+      "vars": {
+       "closed": false,
+       "last": "large",
+       "seen": 1
+      }
+     },
+     "ledger-machine": {
+      "state": "ledger-open",
+      "vars": {
+       "balance": 0,
+       "entries": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "forward",
+      "payload": {
+       "amount": 150,
+       "meta": {
+        "flags": [
+         true,
+         false
+        ],
+        "rank": 1
+       },
+       "tag": "big"
+      },
+      "seq": 5,
+      "source": {
+       "behavior": "gateway-machine",
+       "kind": "transition",
+       "transition": "gw-submit-large"
+      },
+      "time": 3
+     },
+     {
+      "event": "tick",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 5
+     },
+     {
+      "event": "submit",
+      "payload": {
+       "amount": 500,
+       "label": "injected"
+      },
+      "seq": 4,
+      "source": {
+       "fault": "inject-submit",
+       "kind": "fault"
+      },
+      "time": 7
+     },
+     {
+      "event": "reset",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 9
+     }
+    ],
+    "time": 1
+   },
+   "event": {
+    "id": "submit",
+    "payload": {
+     "amount": 150,
+     "label": "kept"
+    },
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "gateway-machine",
+     "emitted": [
+      {
+       "event": "forward",
+       "payload": {
+        "amount": 150,
+        "meta": {
+         "flags": [
+          true,
+          false
+         ],
+         "rank": 1
+        },
+        "tag": "big"
+       },
+       "seq": 5,
+       "time": 3
+      }
+     ],
+     "from": "gw-idle",
+     "guard": "event.amount >= 100",
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "seen"
+      },
+      {
+       "after": "large",
+       "before": "none",
+       "variable": "last"
+      }
+     ],
+     "to": "gw-active",
+     "transition": "gw-submit-large"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "ledger-machine",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "auditor-machine",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "submit",
+    "gw-submit-large",
+    "gateway-machine",
+    "gateway"
+   ],
+   "time": 1
+  },
+  {
+   "config": {
+    "machines": {
+     "auditor-machine": {
+      "state": "aud-watching",
+      "vars": {
+       "alerts": 0,
+       "level": 0
+      }
+     },
+     "gateway-machine": {
+      "state": "gw-active",
+      "vars": {
+       "closed": false,
+       "last": "large",
+       "seen": 1
+      }
+     },
+     "ledger-machine": {
+      "state": "ledger-open",
+      "vars": {
+       "balance": 150,
+       "entries": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "audit-request",
+      "payload": {
+       "at": 3,
+       "level": 150,
+       "note": "credit"
+      },
+      "seq": 6,
+      "source": {
+       "behavior": "ledger-machine",
+       "kind": "transition",
+       "transition": "led-credit"
+      },
+      "time": 4
+     },
+     {
+      "event": "tick",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 5
+     },
+     {
+      "event": "submit",
+      "payload": {
+       "amount": 500,
+       "label": "injected"
+      },
+      "seq": 4,
+      "source": {
+       "fault": "inject-submit",
+       "kind": "fault"
+      },
+      "time": 7
+     },
+     {
+      "event": "reset",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 9
+     }
+    ],
+    "time": 3
+   },
+   "event": {
+    "id": "forward",
+    "payload": {
+     "amount": 150,
+     "meta": {
+      "flags": [
+       true,
+       false
+      ],
+      "rank": 1
+     },
+     "tag": "big"
+    },
+    "seq": 5,
+    "source": {
+     "behavior": "gateway-machine",
+     "kind": "transition",
+     "transition": "gw-submit-large"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "ledger-machine",
+     "emitted": [
+      {
+       "event": "audit-request",
+       "payload": {
+        "at": 3,
+        "level": 150,
+        "note": "credit"
+       },
+       "seq": 6,
+       "time": 4
+      }
+     ],
+     "from": "ledger-open",
+     "guard": "event.amount > 0",
+     "sets": [
+      {
+       "after": 150,
+       "before": 0,
+       "variable": "balance"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "entries"
+      }
+     ],
+     "to": "ledger-open",
+     "transition": "led-credit"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "gateway-machine",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "auditor-machine",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "forward",
+    "led-credit",
+    "ledger-machine",
+    "ledger"
+   ],
+   "time": 3
+  },
+  {
+   "config": {
+    "machines": {
+     "auditor-machine": {
+      "state": "aud-watching",
+      "vars": {
+       "alerts": 0,
+       "level": 150
+      }
+     },
+     "gateway-machine": {
+      "state": "gw-active",
+      "vars": {
+       "closed": false,
+       "last": "large",
+       "seen": 1
+      }
+     },
+     "ledger-machine": {
+      "state": "ledger-open",
+      "vars": {
+       "balance": 150,
+       "entries": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "tick",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 5
+     },
+     {
+      "event": "submit",
+      "payload": {
+       "amount": 500,
+       "label": "injected"
+      },
+      "seq": 4,
+      "source": {
+       "fault": "inject-submit",
+       "kind": "fault"
+      },
+      "time": 7
+     },
+     {
+      "event": "reset",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 9
+     }
+    ],
+    "time": 4
+   },
+   "event": {
+    "id": "audit-request",
+    "payload": {
+     "at": 3,
+     "level": 150,
+     "note": "credit"
+    },
+    "seq": 6,
+    "source": {
+     "behavior": "ledger-machine",
+     "kind": "transition",
+     "transition": "led-credit"
+    }
+   },
+   "faults": [
+    {
+     "effect": "disabled",
+     "fault": "disable-high"
+    }
+   ],
+   "fired": [
+    {
+     "behavior": "auditor-machine",
+     "emitted": [],
+     "from": "aud-watching",
+     "guard": null,
+     "sets": [
+      {
+       "after": 150,
+       "before": 0,
+       "variable": "level"
+      }
+     ],
+     "to": "aud-watching",
+     "transition": "aud-record"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "gateway-machine",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "ledger-machine",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "audit-request",
+    "aud-record",
+    "auditor-machine",
+    "auditor",
+    "disable-high"
+   ],
+   "time": 4
+  },
+  {
+   "config": {
+    "machines": {
+     "auditor-machine": {
+      "state": "aud-watching",
+      "vars": {
+       "alerts": 0,
+       "level": 150
+      }
+     },
+     "gateway-machine": {
+      "state": "gw-active",
+      "vars": {
+       "closed": false,
+       "last": "large",
+       "seen": 1
+      }
+     },
+     "ledger-machine": {
+      "state": "ledger-open",
+      "vars": {
+       "balance": 150,
+       "entries": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "submit",
+      "payload": {
+       "amount": 500,
+       "label": "injected"
+      },
+      "seq": 4,
+      "source": {
+       "fault": "inject-submit",
+       "kind": "fault"
+      },
+      "time": 7
+     },
+     {
+      "event": "tick",
+      "payload": {},
+      "seq": 7,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 8
+     },
+     {
+      "event": "reset",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 9
+     }
+    ],
+    "time": 5
+   },
+   "event": {
+    "id": "tick",
+    "payload": {},
+    "seq": 2,
+    "source": {
+     "kind": "scenario",
+     "step": 2
+    }
+   },
+   "faults": [
+    {
+     "effect": "delayed",
+     "fault": "delay-tick-3"
+    }
+   ],
+   "fired": [],
+   "ignored": [],
+   "index": 4,
+   "kind": "delay",
+   "responsible": [
+    "tick",
+    "delay-tick-3"
+   ],
+   "time": 5
+  },
+  {
+   "config": {
+    "machines": {
+     "auditor-machine": {
+      "state": "aud-watching",
+      "vars": {
+       "alerts": 0,
+       "level": 150
+      }
+     },
+     "gateway-machine": {
+      "state": "gw-active",
+      "vars": {
+       "closed": false,
+       "last": "large",
+       "seen": 1
+      }
+     },
+     "ledger-machine": {
+      "state": "ledger-open",
+      "vars": {
+       "balance": 150,
+       "entries": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "tick",
+      "payload": {},
+      "seq": 7,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 8
+     },
+     {
+      "event": "reset",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 9
+     }
+    ],
+    "time": 7
+   },
+   "event": {
+    "id": "submit",
+    "payload": {
+     "amount": 500,
+     "label": "injected"
+    },
+    "seq": 4,
+    "source": {
+     "fault": "inject-submit",
+     "kind": "fault"
+    }
+   },
+   "faults": [
+    {
+     "effect": "injected",
+     "fault": "inject-submit"
+    }
+   ],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "gateway-machine",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "ledger-machine",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "auditor-machine",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 5,
+   "kind": "deliver",
+   "responsible": [
+    "submit",
+    "inject-submit"
+   ],
+   "time": 7
+  },
+  {
+   "config": {
+    "machines": {
+     "auditor-machine": {
+      "state": "aud-watching",
+      "vars": {
+       "alerts": 0,
+       "level": 150
+      }
+     },
+     "gateway-machine": {
+      "state": "gw-closed",
+      "vars": {
+       "closed": true,
+       "last": "large",
+       "seen": 1
+      }
+     },
+     "ledger-machine": {
+      "state": "ledger-open",
+      "vars": {
+       "balance": 150,
+       "entries": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "reset",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 9
+     }
+    ],
+    "time": 8
+   },
+   "event": {
+    "id": "tick",
+    "payload": {},
+    "seq": 7,
+    "source": {
+     "kind": "scenario",
+     "step": 2
+    }
+   },
+   "faults": [
+    {
+     "effect": "enabled",
+     "fault": "enable-close"
+    }
+   ],
+   "fired": [
+    {
+     "behavior": "gateway-machine",
+     "emitted": [],
+     "from": "gw-active",
+     "guard": null,
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "closed"
+      }
+     ],
+     "to": "gw-closed",
+     "transition": "gw-close-faulty"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "ledger-machine",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "auditor-machine",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 6,
+   "kind": "deliver",
+   "responsible": [
+    "tick",
+    "gw-close-faulty",
+    "gateway-machine",
+    "gateway",
+    "enable-close"
+   ],
+   "time": 8
+  },
+  {
+   "config": {
+    "machines": {
+     "auditor-machine": {
+      "state": "aud-watching",
+      "vars": {
+       "alerts": 0,
+       "level": 150
+      }
+     },
+     "gateway-machine": {
+      "state": "gw-idle",
+      "vars": {
+       "closed": true,
+       "last": "large",
+       "seen": 1
+      }
+     },
+     "ledger-machine": {
+      "state": "ledger-open",
+      "vars": {
+       "balance": 150,
+       "entries": 1
+      }
+     }
+    },
+    "pending": [],
+    "time": 9
+   },
+   "event": {
+    "id": "reset",
+    "payload": {},
+    "seq": 3,
+    "source": {
+     "kind": "scenario",
+     "step": 3
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "gateway-machine",
+     "emitted": [],
+     "from": "gw-closed",
+     "guard": null,
+     "sets": [],
+     "to": "gw-idle",
+     "transition": "gw-reset-closed"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "ledger-machine",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "auditor-machine",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 7,
+   "kind": "deliver",
+   "responsible": [
+    "reset",
+    "gw-reset-closed",
+    "gateway-machine",
+    "gateway"
+   ],
+   "time": 9
+  }
+ ]
+}

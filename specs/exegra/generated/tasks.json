@@ -1,0 +1,4615 @@
+{
+  "format": "exegra-tasks",
+  "semanticHash": "0929b444e64eb5",
+  "summary": {
+    "byType": {
+      "gap": 164,
+      "inconclusive-claim": 0,
+      "not-implemented": 13,
+      "traceability": 0,
+      "undeclared-realisation": 9,
+      "unevaluated-claim": 46,
+      "unknown": 87,
+      "validation": 0,
+      "violated-claim": 1
+    },
+    "total": 320
+  },
+  "tasks": [
+    {
+      "detail": "A path reaches \"specification-file\" from \"toolbar\" without passing through any via component: toolbar -> toolbar-data-flow-persistence-client -> persistence-client -> persistence-client-data-flow-dev-server-plugin -> dev-server-plugin -> dev-server-plugin-data-flow-workspace-service -> workspace-service -> workspace-service-writes-specification-file -> specification-file. Bypassing path toolbar -> toolbar-data-flow-persistence-client -> persistence-client -> persistence-client-data-flow-dev-server-plugin -> dev-server-plugin -> dev-server-plugin-data-flow-workspace-service -> workspace-service -> workspace-service-writes-specification-file -> specification-file.",
+      "entities": [
+        "edits-only-via-transactions",
+        "toolbar-data-flow-persistence-client",
+        "persistence-client-data-flow-dev-server-plugin",
+        "dev-server-plugin-data-flow-workspace-service",
+        "workspace-service-writes-specification-file"
+      ],
+      "id": "claim:edits-only-via-transactions:violated",
+      "severity": "high",
+      "source": {
+        "column": 5,
+        "line": 3418
+      },
+      "title": "Claim \"edits-only-via-transactions\" is violated",
+      "type": "violated-claim"
+    },
+    {
+      "detail": "No modules are declared. Planned: WG-4665. Not built yet; its claims stay not evaluated until recorded evidence supports them.",
+      "entities": [
+        "simulation-aspect-registry"
+      ],
+      "id": "impl:simulation-aspect-registry:not-implemented",
+      "severity": "high",
+      "source": {
+        "column": 5,
+        "line": 1052
+      },
+      "title": "Component \"Simulation aspect registry\" is declared not-implemented",
+      "type": "not-implemented"
+    },
+    {
+      "detail": "No modules are declared. Planned: WG-4666. Not built yet; its claims stay not evaluated until recorded evidence supports them.",
+      "entities": [
+        "refinement-checker"
+      ],
+      "id": "impl:refinement-checker:not-implemented",
+      "severity": "high",
+      "source": {
+        "column": 5,
+        "line": 1070
+      },
+      "title": "Component \"Refinement checker\" is declared not-implemented",
+      "type": "not-implemented"
+    },
+    {
+      "detail": "No modules are declared. Planned: WG-4667. Not built yet; its claims stay not evaluated until recorded evidence supports them.",
+      "entities": [
+        "chaos-aspect"
+      ],
+      "id": "impl:chaos-aspect:not-implemented",
+      "severity": "high",
+      "source": {
+        "column": 5,
+        "line": 1088
+      },
+      "title": "Component \"Chaos aspect\" is declared not-implemented",
+      "type": "not-implemented"
+    },
+    {
+      "detail": "No modules are declared. Planned: WG-4668. Not built yet; its claims stay not evaluated until recorded evidence supports them.",
+      "entities": [
+        "load-aspect"
+      ],
+      "id": "impl:load-aspect:not-implemented",
+      "severity": "high",
+      "source": {
+        "column": 5,
+        "line": 1106
+      },
+      "title": "Component \"Load aspect\" is declared not-implemented",
+      "type": "not-implemented"
+    },
+    {
+      "detail": "No modules are declared. Planned: WG-4669. Not built yet; its claims stay not evaluated until recorded evidence supports them.",
+      "entities": [
+        "cost-aspect"
+      ],
+      "id": "impl:cost-aspect:not-implemented",
+      "severity": "high",
+      "source": {
+        "column": 5,
+        "line": 1124
+      },
+      "title": "Component \"Cost aspect\" is declared not-implemented",
+      "type": "not-implemented"
+    },
+    {
+      "detail": "No modules are declared. Planned: WG-4671. Not built yet; its claims stay not evaluated until recorded evidence supports them.",
+      "entities": [
+        "simulation-overlays"
+      ],
+      "id": "impl:simulation-overlays:not-implemented",
+      "severity": "high",
+      "source": {
+        "column": 5,
+        "line": 1141
+      },
+      "title": "Component \"Simulation overlays\" is declared not-implemented",
+      "type": "not-implemented"
+    },
+    {
+      "detail": "No modules are declared. Planned: WG-4677.",
+      "entities": [
+        "deployment-model"
+      ],
+      "id": "impl:deployment-model:not-implemented",
+      "severity": "high",
+      "source": {
+        "column": 5,
+        "line": 1269
+      },
+      "title": "Component \"Deployment model\" is declared not-implemented",
+      "type": "not-implemented"
+    },
+    {
+      "detail": "No modules are declared. Planned: WG-4678.",
+      "entities": [
+        "infrastructure-generator"
+      ],
+      "id": "impl:infrastructure-generator:not-implemented",
+      "severity": "high",
+      "source": {
+        "column": 5,
+        "line": 1289
+      },
+      "title": "Component \"Infrastructure generator\" is declared not-implemented",
+      "type": "not-implemented"
+    },
+    {
+      "detail": "No modules are declared. Planned: WG-4679.",
+      "entities": [
+        "implementation-refinement"
+      ],
+      "id": "impl:implementation-refinement:not-implemented",
+      "severity": "high",
+      "source": {
+        "column": 5,
+        "line": 1309
+      },
+      "title": "Component \"Implementation refinement checker\" is declared not-implemented",
+      "type": "not-implemented"
+    },
+    {
+      "detail": "No modules are declared. Planned: WG-4680.",
+      "entities": [
+        "reality-loop"
+      ],
+      "id": "impl:reality-loop:not-implemented",
+      "severity": "high",
+      "source": {
+        "column": 5,
+        "line": 1329
+      },
+      "title": "Component \"Game days and runtime monitors\" is declared not-implemented",
+      "type": "not-implemented"
+    },
+    {
+      "detail": "No modules are declared. Planned: WG-4715. Specified in docs/simulation.md, \"Planned: resources, workloads and performance\"; defined in formal/ first, then the Rust engine, then checked differentially. Its claims stay not evaluated until recorded evidence supports them.",
+      "entities": [
+        "workload-model"
+      ],
+      "id": "impl:workload-model:not-implemented",
+      "severity": "high",
+      "source": {
+        "column": 5,
+        "line": 1494
+      },
+      "title": "Component \"Workload model\" is declared not-implemented",
+      "type": "not-implemented"
+    },
+    {
+      "detail": "No modules are declared. Planned: WG-4715. Specified in docs/simulation.md, \"Planned: resources, workloads and performance\"; defined in formal/ first, then the Rust engine, then checked differentially. Its claims stay not evaluated until recorded evidence supports them.",
+      "entities": [
+        "performance-metrics"
+      ],
+      "id": "impl:performance-metrics:not-implemented",
+      "severity": "high",
+      "source": {
+        "column": 5,
+        "line": 1521
+      },
+      "title": "Component \"Performance metrics\" is declared not-implemented",
+      "type": "not-implemented"
+    },
+    {
+      "detail": "No modules are declared. Planned: WG-4715. Specified in docs/simulation.md, \"Planned: resources, workloads and performance\"; defined in formal/ first, then the Rust engine, then checked differentially. Its claims stay not evaluated until recorded evidence supports them.",
+      "entities": [
+        "metric-claims"
+      ],
+      "id": "impl:metric-claims:not-implemented",
+      "severity": "high",
+      "source": {
+        "column": 5,
+        "line": 1547
+      },
+      "title": "Component \"Metric claims\" is declared not-implemented",
+      "type": "not-implemented"
+    },
+    {
+      "detail": "Claim \"benchmark-scene-interactive\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "benchmark-scene-interactive",
+        "scene-renderer",
+        "projection-system",
+        "layout-engine",
+        "benchmark-generator"
+      ],
+      "id": "claim:benchmark-scene-interactive:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3796
+      },
+      "title": "Claim \"benchmark-scene-interactive\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"simulation-seeded-runs-reproducible\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "simulation-seeded-runs-reproducible",
+        "simulation-engine",
+        "formal-semantics",
+        "workload-model"
+      ],
+      "id": "claim:simulation-seeded-runs-reproducible:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3854
+      },
+      "title": "Claim \"simulation-seeded-runs-reproducible\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"simulation-instances-are-independent\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "simulation-instances-are-independent",
+        "simulation-engine",
+        "formal-semantics"
+      ],
+      "id": "claim:simulation-instances-are-independent:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3872
+      },
+      "title": "Claim \"simulation-instances-are-independent\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"specs-declare-aspects-as-data\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "specs-declare-aspects-as-data",
+        "simulation-aspect-registry",
+        "validator"
+      ],
+      "id": "claim:specs-declare-aspects-as-data:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3889
+      },
+      "title": "Claim \"specs-declare-aspects-as-data\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"aspect-runs-reproducible\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "aspect-runs-reproducible",
+        "simulation-aspect-registry",
+        "simulation-engine"
+      ],
+      "id": "claim:aspect-runs-reproducible:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3906
+      },
+      "title": "Claim \"aspect-runs-reproducible\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"refinement-agrees-at-boundary\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "refinement-agrees-at-boundary",
+        "refinement-checker"
+      ],
+      "id": "claim:refinement-agrees-at-boundary:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3923
+      },
+      "title": "Claim \"refinement-agrees-at-boundary\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"simulation-depth-follows-collapse\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "simulation-depth-follows-collapse",
+        "refinement-checker",
+        "session",
+        "simulator-panel"
+      ],
+      "id": "claim:simulation-depth-follows-collapse:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3939
+      },
+      "title": "Claim \"simulation-depth-follows-collapse\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"chaos-campaigns-reproducible\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "chaos-campaigns-reproducible",
+        "chaos-aspect"
+      ],
+      "id": "claim:chaos-campaigns-reproducible:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3957
+      },
+      "title": "Claim \"chaos-campaigns-reproducible\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"chaos-failures-only-as-declared\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "chaos-failures-only-as-declared",
+        "chaos-aspect"
+      ],
+      "id": "claim:chaos-failures-only-as-declared:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3973
+      },
+      "title": "Claim \"chaos-failures-only-as-declared\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"load-matches-queueing-theory\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "load-matches-queueing-theory",
+        "load-aspect",
+        "simulation-engine"
+      ],
+      "id": "claim:load-matches-queueing-theory:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3989
+      },
+      "title": "Claim \"load-matches-queueing-theory\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"load-parameters-sourced\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "load-parameters-sourced",
+        "load-aspect",
+        "validator"
+      ],
+      "id": "claim:load-parameters-sourced:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4006
+      },
+      "title": "Claim \"load-parameters-sourced\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"cost-prices-sourced\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "cost-prices-sourced",
+        "cost-aspect"
+      ],
+      "id": "claim:cost-prices-sourced:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4023
+      },
+      "title": "Claim \"cost-prices-sourced\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"cost-follows-usage\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "cost-follows-usage",
+        "cost-aspect",
+        "load-aspect"
+      ],
+      "id": "claim:cost-follows-usage:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4039
+      },
+      "title": "Claim \"cost-follows-usage\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"results-report-ranges\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "results-report-ranges",
+        "claim-evaluator",
+        "claim-method-registry"
+      ],
+      "id": "claim:results-report-ranges:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4056
+      },
+      "title": "Claim \"results-report-ranges\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"statistical-claims-state-their-basis\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "statistical-claims-state-their-basis",
+        "claim-evaluator",
+        "claim-method-registry"
+      ],
+      "id": "claim:statistical-claims-state-their-basis:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4073
+      },
+      "title": "Claim \"statistical-claims-state-their-basis\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"overlays-follow-trace\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "overlays-follow-trace",
+        "simulation-overlays",
+        "scene-renderer"
+      ],
+      "id": "claim:overlays-follow-trace:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4090
+      },
+      "title": "Claim \"overlays-follow-trace\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"deployment-cutover-safe\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "deployment-cutover-safe",
+        "deployment-model"
+      ],
+      "id": "claim:deployment-cutover-safe:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4251
+      },
+      "title": "Claim \"deployment-cutover-safe\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"deployment-rollback-durable\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "deployment-rollback-durable",
+        "deployment-model"
+      ],
+      "id": "claim:deployment-rollback-durable:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4267
+      },
+      "title": "Claim \"deployment-rollback-durable\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"generated-infrastructure-matches-model\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "generated-infrastructure-matches-model",
+        "infrastructure-generator",
+        "deployment-model"
+      ],
+      "id": "claim:generated-infrastructure-matches-model:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4283
+      },
+      "title": "Claim \"generated-infrastructure-matches-model\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"implementation-refines-model\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "implementation-refines-model",
+        "implementation-refinement"
+      ],
+      "id": "claim:implementation-refines-model:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4300
+      },
+      "title": "Claim \"implementation-refines-model\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"claims-monitored-in-production\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "claims-monitored-in-production",
+        "reality-loop"
+      ],
+      "id": "claim:claims-monitored-in-production:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4316
+      },
+      "title": "Claim \"claims-monitored-in-production\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"invariants-proved-unbounded\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "invariants-proved-unbounded",
+        "proof-export",
+        "formal-semantics"
+      ],
+      "id": "claim:invariants-proved-unbounded:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4365
+      },
+      "title": "Claim \"invariants-proved-unbounded\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"resource-queues-respect-bounds\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "resource-queues-respect-bounds",
+        "resource-model",
+        "simulation-engine",
+        "formal-semantics"
+      ],
+      "id": "claim:resource-queues-respect-bounds:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4530
+      },
+      "title": "Claim \"resource-queues-respect-bounds\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"resource-utilisation-at-most-one\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "resource-utilisation-at-most-one",
+        "resource-model",
+        "performance-metrics",
+        "simulation-engine"
+      ],
+      "id": "claim:resource-utilisation-at-most-one:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4548
+      },
+      "title": "Claim \"resource-utilisation-at-most-one\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"format-1-unchanged-under-format-2\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "format-1-unchanged-under-format-2",
+        "simulation-contract",
+        "simulation-engine",
+        "formal-semantics"
+      ],
+      "id": "claim:format-1-unchanged-under-format-2:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4566
+      },
+      "title": "Claim \"format-1-unchanged-under-format-2\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"engine-matches-formal-semantics-v2\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "engine-matches-formal-semantics-v2",
+        "simulation-engine",
+        "formal-semantics",
+        "simulation-contract"
+      ],
+      "id": "claim:engine-matches-formal-semantics-v2:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4584
+      },
+      "title": "Claim \"engine-matches-formal-semantics-v2\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"metric-claims-report-basis\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "metric-claims-report-basis",
+        "metric-claims",
+        "claim-evaluator",
+        "claim-method-registry"
+      ],
+      "id": "claim:metric-claims-report-basis:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4602
+      },
+      "title": "Claim \"metric-claims-report-basis\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"metrics-reproduce-mm1-utilisation\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "metrics-reproduce-mm1-utilisation",
+        "performance-metrics",
+        "workload-model",
+        "resource-model",
+        "metric-claims"
+      ],
+      "id": "claim:metrics-reproduce-mm1-utilisation:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4621
+      },
+      "title": "Claim \"metrics-reproduce-mm1-utilisation\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"pool-classes-protect-move-db-leg-under-flood\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "pool-classes-protect-move-db-leg-under-flood",
+        "metric-claims",
+        "resource-model",
+        "workload-model",
+        "performance-metrics"
+      ],
+      "id": "claim:pool-classes-protect-move-db-leg-under-flood:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4641
+      },
+      "title": "Claim \"pool-classes-protect-move-db-leg-under-flood\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"response-time-counts-failures-as-unbounded\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "response-time-counts-failures-as-unbounded",
+        "performance-metrics",
+        "metric-claims"
+      ],
+      "id": "claim:response-time-counts-failures-as-unbounded:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4661
+      },
+      "title": "Claim \"response-time-counts-failures-as-unbounded\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"sampled-explorations-never-verified\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "sampled-explorations-never-verified",
+        "exhaustive-explorer",
+        "proof-export",
+        "formal-semantics"
+      ],
+      "id": "claim:sampled-explorations-never-verified:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4678
+      },
+      "title": "Claim \"sampled-explorations-never-verified\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"metrics-reproduce-mm1-mean-wait\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "metrics-reproduce-mm1-mean-wait",
+        "performance-metrics",
+        "workload-model",
+        "resource-model",
+        "metric-claims"
+      ],
+      "id": "claim:metrics-reproduce-mm1-mean-wait:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4696
+      },
+      "title": "Claim \"metrics-reproduce-mm1-mean-wait\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"metrics-reproduce-mm2-erlang-c\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "metrics-reproduce-mm2-erlang-c",
+        "performance-metrics",
+        "resource-model",
+        "metric-claims"
+      ],
+      "id": "claim:metrics-reproduce-mm2-erlang-c:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4716
+      },
+      "title": "Claim \"metrics-reproduce-mm2-erlang-c\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"ladder-reacts-without-flapping\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "ladder-reacts-without-flapping",
+        "performance-metrics",
+        "metric-claims",
+        "workload-model"
+      ],
+      "id": "claim:ladder-reacts-without-flapping:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4735
+      },
+      "title": "Claim \"ladder-reacts-without-flapping\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"retry-budget-bounds-amplification\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "retry-budget-bounds-amplification",
+        "workload-model",
+        "performance-metrics",
+        "metric-claims"
+      ],
+      "id": "claim:retry-budget-bounds-amplification:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4754
+      },
+      "title": "Claim \"retry-budget-bounds-amplification\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"reconnect-stagger-bounds-handshake-wait\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "reconnect-stagger-bounds-handshake-wait",
+        "resource-model",
+        "workload-model",
+        "metric-claims"
+      ],
+      "id": "claim:reconnect-stagger-bounds-handshake-wait:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4773
+      },
+      "title": "Claim \"reconnect-stagger-bounds-handshake-wait\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"address-limiter-acts\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "address-limiter-acts",
+        "workload-model",
+        "performance-metrics",
+        "metric-claims"
+      ],
+      "id": "claim:address-limiter-acts:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4792
+      },
+      "title": "Claim \"address-limiter-acts\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"address-limiter-false-positives-bounded\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "address-limiter-false-positives-bounded",
+        "workload-model",
+        "performance-metrics",
+        "metric-claims"
+      ],
+      "id": "claim:address-limiter-false-positives-bounded:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4811
+      },
+      "title": "Claim \"address-limiter-false-positives-bounded\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"bulkhead-keeps-static-served-under-db-slowdown\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "bulkhead-keeps-static-served-under-db-slowdown",
+        "resource-model",
+        "performance-metrics",
+        "metric-claims"
+      ],
+      "id": "claim:bulkhead-keeps-static-served-under-db-slowdown:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4830
+      },
+      "title": "Claim \"bulkhead-keeps-static-served-under-db-slowdown\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"metric-claims-calibrated-or-unvalidated\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "metric-claims-calibrated-or-unvalidated",
+        "metric-claims",
+        "performance-metrics"
+      ],
+      "id": "claim:metric-claims-calibrated-or-unvalidated:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4849
+      },
+      "title": "Claim \"metric-claims-calibrated-or-unvalidated\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"crash-instance-loses-state\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "crash-instance-loses-state",
+        "resource-model",
+        "simulation-engine",
+        "formal-semantics"
+      ],
+      "id": "claim:crash-instance-loses-state:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4866
+      },
+      "title": "Claim \"crash-instance-loses-state\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"distribution-lowering-bit-exact\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "distribution-lowering-bit-exact",
+        "workload-model",
+        "simulation-contract"
+      ],
+      "id": "claim:distribution-lowering-bit-exact:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4884
+      },
+      "title": "Claim \"distribution-lowering-bit-exact\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"poisson-arrivals-by-inversion\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "poisson-arrivals-by-inversion",
+        "workload-model",
+        "formal-semantics"
+      ],
+      "id": "claim:poisson-arrivals-by-inversion:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4901
+      },
+      "title": "Claim \"poisson-arrivals-by-inversion\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"overlapping-faults-follow-active-set\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "overlapping-faults-follow-active-set",
+        "resource-model",
+        "formal-semantics"
+      ],
+      "id": "claim:overlapping-faults-follow-active-set:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4918
+      },
+      "title": "Claim \"overlapping-faults-follow-active-set\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"broadcasts-evaluated-at-delivery\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "broadcasts-evaluated-at-delivery",
+        "simulation-engine",
+        "workload-model",
+        "formal-semantics"
+      ],
+      "id": "claim:broadcasts-evaluated-at-delivery:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4935
+      },
+      "title": "Claim \"broadcasts-evaluated-at-delivery\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"request-lifecycle-defines-outcomes\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "request-lifecycle-defines-outcomes",
+        "performance-metrics",
+        "metric-claims",
+        "formal-semantics"
+      ],
+      "id": "claim:request-lifecycle-defines-outcomes:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4953
+      },
+      "title": "Claim \"request-lifecycle-defines-outcomes\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Its implementation status is unknown until it declares implementation.status.",
+      "entities": [
+        "threejs-library"
+      ],
+      "id": "impl:threejs-library:undeclared",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 981
+      },
+      "title": "Component \"Three.js\" declares no realisation",
+      "type": "undeclared-realisation"
+    },
+    {
+      "detail": "Its implementation status is unknown until it declares implementation.status.",
+      "entities": [
+        "vite-dev-server"
+      ],
+      "id": "impl:vite-dev-server:undeclared",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 989
+      },
+      "title": "Component \"Vite\" declares no realisation",
+      "type": "undeclared-realisation"
+    },
+    {
+      "detail": "Its implementation status is unknown until it declares implementation.status.",
+      "entities": [
+        "browser-platform"
+      ],
+      "id": "impl:browser-platform:undeclared",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 997
+      },
+      "title": "Component \"Web browser platform\" declares no realisation",
+      "type": "undeclared-realisation"
+    },
+    {
+      "detail": "Its implementation status is unknown until it declares implementation.status.",
+      "entities": [
+        "browser-storage"
+      ],
+      "id": "impl:browser-storage:undeclared",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1005
+      },
+      "title": "Component \"Browser web storage\" declares no realisation",
+      "type": "undeclared-realisation"
+    },
+    {
+      "detail": "Its implementation status is unknown until it declares implementation.status.",
+      "entities": [
+        "filesystem"
+      ],
+      "id": "impl:filesystem:undeclared",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1013
+      },
+      "title": "Component \"File system\" declares no realisation",
+      "type": "undeclared-realisation"
+    },
+    {
+      "detail": "Its implementation status is unknown until it declares implementation.status.",
+      "entities": [
+        "jsonc-parser-library"
+      ],
+      "id": "impl:jsonc-parser-library:undeclared",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1021
+      },
+      "title": "Component \"jsonc-parser\" declares no realisation",
+      "type": "undeclared-realisation"
+    },
+    {
+      "detail": "Its implementation status is unknown until it declares implementation.status.",
+      "entities": [
+        "playwright-runner"
+      ],
+      "id": "impl:playwright-runner:undeclared",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1029
+      },
+      "title": "Component \"Playwright\" declares no realisation",
+      "type": "undeclared-realisation"
+    },
+    {
+      "detail": "Its implementation status is unknown until it declares implementation.status.",
+      "entities": [
+        "ai-coding-agent"
+      ],
+      "id": "impl:ai-coding-agent:undeclared",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1037
+      },
+      "title": "Component \"AI coding agent\" declares no realisation",
+      "type": "undeclared-realisation"
+    },
+    {
+      "detail": "Its implementation status is unknown until it declares implementation.status.",
+      "entities": [
+        "markdown-specification-source"
+      ],
+      "id": "impl:markdown-specification-source:undeclared",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1044
+      },
+      "title": "Component \"Markdown specification\" declares no realisation",
+      "type": "undeclared-realisation"
+    },
+    {
+      "detail": "Known unknown of Meta-model.",
+      "entities": [
+        "metamodel"
+      ],
+      "id": "unknown:metamodel:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 135
+      },
+      "title": "The built-in entity kinds, claim kinds, claim evaluation methods and projections are fixed per build. A specification can add entity kinds, properties of any kind, categories, relationship kinds and verification methods (carried out outside Exegra) through its vocabulary, but it cannot add an evaluation method that Exegra itself runs.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Claim method registry.",
+      "entities": [
+        "claim-method-registry"
+      ],
+      "id": "unknown:claim-method-registry:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 153
+      },
+      "title": "The registry declares methods but the evaluator implements them separately; adding an entry without code leaves the claim not evaluated.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Parser.",
+      "entities": [
+        "parser"
+      ],
+      "id": "unknown:parser:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 169
+      },
+      "title": "The whole text is re-parsed on every commit and on every source-editor analysis; there is no incremental parsing and no measurement of its cost on large specifications.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Parser.",
+      "entities": [
+        "parser"
+      ],
+      "id": "unknown:parser:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 169
+      },
+      "title": "The schema.version error message tells the user to run an `exegra migrate` command that does not exist.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Normal form and hash.",
+      "entities": [
+        "model-hash"
+      ],
+      "id": "unknown:model-hash:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 230
+      },
+      "title": "The hash is not cryptographic (cyrb53); it identifies revisions and detects change, it does not resist collisions.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Transaction system.",
+      "entities": [
+        "transactions"
+      ],
+      "id": "unknown:transactions:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 261
+      },
+      "title": "History, undo and redo stacks are unbounded in memory and are not persisted: undo is lost on reload and per CLI invocation.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Transaction system.",
+      "entities": [
+        "transactions"
+      ],
+      "id": "unknown:transactions:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 261
+      },
+      "title": "Only operation transactions and replacement sources are validated before they commit. Undo and redo restore text that was committed before and do not validate again, and reload commits any text that parses, so the model after a reload can carry validation errors.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Transaction system.",
+      "entities": [
+        "transactions"
+      ],
+      "id": "unknown:transactions:2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 261
+      },
+      "title": "The session never passes expectRevision or expectHash; only the CLI uses the optimistic checks (--expect-hash).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Claim evaluator.",
+      "entities": [
+        "claim-evaluator"
+      ],
+      "id": "unknown:claim-evaluator:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 287
+      },
+      "title": "Behavioral results hold for the listed scenario traces only; there is no exhaustive state-space exploration and no probabilistic evaluation.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Simulation engine.",
+      "entities": [
+        "simulation-engine"
+      ],
+      "id": "unknown:simulation-engine:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 310
+      },
+      "title": "Time is logical ticks only, and there is no stochastic or timing-accurate execution. Integer time units, instances with routes and aggregates, resources, workloads, links, latency, timers, meters, timed faults, crash-instance and seeded randomness are specified as engine input and trace format 2 in docs/simulation.md and not built (planned: WG-4664, WG-4715).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Simulation engine.",
+      "entities": [
+        "simulation-engine"
+      ],
+      "id": "unknown:simulation-engine:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 310
+      },
+      "title": "One machine per behavior: no instances, routes, resources or seeded randomness yet (planned: WG-4664; specified in docs/simulation.md).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Simulation engine.",
+      "entities": [
+        "simulation-engine"
+      ],
+      "id": "unknown:simulation-engine:2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 310
+      },
+      "title": "Behaviors are flat: a component cannot yet be simulated at a chosen depth, as its abstract behavior or as its children (planned: WG-4666).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Projection system.",
+      "entities": [
+        "projection-system"
+      ],
+      "id": "unknown:projection-system:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 353
+      },
+      "title": "The cost of projection on large models has no recorded measurement; the benchmark specification exists for that purpose but no result is recorded.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Projection system.",
+      "entities": [
+        "projection-system"
+      ],
+      "id": "unknown:projection-system:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 353
+      },
+      "title": "The references projection draws nothing but a note until an entity is selected, unless the view filters to entity kinds.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Layout engine.",
+      "entities": [
+        "layout-engine"
+      ],
+      "id": "unknown:layout-engine:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 378
+      },
+      "title": "Pins are absolute positions; nothing re-anchors them when the model changes.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Layout engine.",
+      "entities": [
+        "layout-engine"
+      ],
+      "id": "unknown:layout-engine:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 378
+      },
+      "title": "The score weights are fixed constants chosen by hand; no recorded measurement shows that the lowest score is the most readable layout. Crossings are counted on at most 400 sampled edges.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Layout engine.",
+      "entities": [
+        "layout-engine"
+      ],
+      "id": "unknown:layout-engine:2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 378
+      },
+      "title": "Automatic layout computes all four methods on every recompute; its cost on large scenes has no recorded measurement.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Three.js scene renderer.",
+      "entities": [
+        "scene-renderer"
+      ],
+      "id": "unknown:scene-renderer:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 399
+      },
+      "title": "No frame-rate or load-time measurement is recorded for the 396-component benchmark specification.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Three.js scene renderer.",
+      "entities": [
+        "scene-renderer"
+      ],
+      "id": "unknown:scene-renderer:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 399
+      },
+      "title": "Pointer, drag and connect handling live inside src/render/scene-view.js, which this file assigns to the renderer; the split between rendering and interaction is not a module boundary (see visual-interaction).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Visual interaction and application entry.",
+      "entities": [
+        "visual-interaction"
+      ],
+      "id": "unknown:visual-interaction:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 419
+      },
+      "title": "This component holds the camera rig and the application entry (src/app/main.js) because traceability assigns each file to one component; the picking, drag and connect handling it relies on is in src/render/scene-view.js, claimed by scene-renderer.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Visual interaction and application entry.",
+      "entities": [
+        "visual-interaction"
+      ],
+      "id": "unknown:visual-interaction:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 419
+      },
+      "title": "main.js is also the composition root: it mounts the panels, so this component has dependencies on them that have nothing to do with 3D interaction.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Application session.",
+      "entities": [
+        "session"
+      ],
+      "id": "unknown:session:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 440
+      },
+      "title": "A failed save leaves the pending flag set and stops writing until the next commit; there is no automatic retry.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Application session.",
+      "entities": [
+        "session"
+      ],
+      "id": "unknown:session:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 440
+      },
+      "title": "The layout method chosen for a view is stored only in the browser's localStorage under the project and view: it is not in the specification or the layout file, is not shared and is lost when storage is cleared.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Application session.",
+      "entities": [
+        "session"
+      ],
+      "id": "unknown:session:2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 440
+      },
+      "title": "The session writes the current text, not one write per revision; the edit-flow machines in this file abstract that.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Application session.",
+      "entities": [
+        "session"
+      ],
+      "id": "unknown:session:3",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 440
+      },
+      "title": "Claim re-evaluation and re-projection run synchronously inside every commit with no measurement of their cost on large models.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Toolbar.",
+      "entities": [
+        "toolbar"
+      ],
+      "id": "unknown:toolbar:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 488
+      },
+      "title": "Import writes the project's files through the persistence service without passing the transaction system, a validation gate or a base-hash check (analyzeSpec is run on the bundle first, but only syntax errors stop it); the session then opens whatever was written, with its validation errors.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of System explorer.",
+      "entities": [
+        "explorer"
+      ],
+      "id": "unknown:explorer:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 507
+      },
+      "title": "Rows beyond the 200-row window of a list can only be reached by narrowing the filter; there is no paging.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Property controls.",
+      "entities": [
+        "property-controls"
+      ],
+      "id": "unknown:property-controls:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 560
+      },
+      "title": "src/ui/property-controls.js and src/ui/dialogs.js import each other.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Edit dialogs.",
+      "entities": [
+        "dialogs"
+      ],
+      "id": "unknown:dialogs:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 575
+      },
+      "title": "src/ui/dialogs.js and src/ui/property-controls.js import each other.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Source editor.",
+      "entities": [
+        "source-editor"
+      ],
+      "id": "unknown:source-editor:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 590
+      },
+      "title": "It is a plain textarea: no syntax highlighting, completion or incremental analysis; the whole draft is analyzed on every pause.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Verification panel.",
+      "entities": [
+        "verification-panel"
+      ],
+      "id": "unknown:verification-panel:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 623
+      },
+      "title": "It shows recorded results loaded with the project and cannot execute tests; execution happens only through `exegra verify`.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Verification panel.",
+      "entities": [
+        "verification-panel"
+      ],
+      "id": "unknown:verification-panel:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 623
+      },
+      "title": "Rows beyond the 200-row window can only be reached by filtering; there is no paging.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Realisation panel.",
+      "entities": [
+        "realisation-panel"
+      ],
+      "id": "unknown:realisation-panel:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 640
+      },
+      "title": "It cannot run the traceability check; without a recorded result it says the check has not been run.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Persistence client.",
+      "entities": [
+        "persistence-client"
+      ],
+      "id": "unknown:persistence-client:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 699
+      },
+      "title": "No retry, queue or offline buffer: a failed request is reported once to the caller.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Development-server plugin.",
+      "entities": [
+        "dev-server-plugin"
+      ],
+      "id": "unknown:dev-server-plugin:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 717
+      },
+      "title": "Protection rests on loopback host, loopback origin and a custom header only; any local process can read and write projects while the development server runs.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Workspace service.",
+      "entities": [
+        "workspace-service"
+      ],
+      "id": "unknown:workspace-service:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 736
+      },
+      "title": "On Windows the atomic rename is retried and then replaced by an in-place write, which is not atomic.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Workspace service.",
+      "entities": [
+        "workspace-service"
+      ],
+      "id": "unknown:workspace-service:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 736
+      },
+      "title": "Import and recording of results write without a base-hash check, and import writes its files one after another, not as one atomic unit.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Workspace service.",
+      "entities": [
+        "workspace-service"
+      ],
+      "id": "unknown:workspace-service:2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 736
+      },
+      "title": "The journal is read in full on every write to number its next line and is never truncated.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Specification file.",
+      "entities": [
+        "specification-file"
+      ],
+      "id": "unknown:specification-file:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 760
+      },
+      "title": "Besides the workspace service, tools/make-benchmark.js writes specs/benchmark/spec.jsonc and tools/import-markdown.js writes the specification of a linked project directly with node:fs.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Recorded results file.",
+      "entities": [
+        "recorded-results-file"
+      ],
+      "id": "unknown:recorded-results-file:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 779
+      },
+      "title": "Results are not tied to the model hash or the code revision they were recorded for.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Agent command line.",
+      "entities": [
+        "agent-cli"
+      ],
+      "id": "unknown:agent-cli:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 800
+      },
+      "title": "Each invocation builds a fresh Project from disk: there is no undo history across invocations and no long-running session.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Agent command line.",
+      "entities": [
+        "agent-cli"
+      ],
+      "id": "unknown:agent-cli:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 800
+      },
+      "title": "Writing the spec file and the layout file are two separate writes; if the second conflicts, the first has already been written.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Agent command line.",
+      "entities": [
+        "agent-cli"
+      ],
+      "id": "unknown:agent-cli:2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 800
+      },
+      "title": "No MCP server or other protocol wrapper exists; the command line is the only agent-facing interface.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Build and development system.",
+      "entities": [
+        "build-system"
+      ],
+      "id": "unknown:build-system:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 848
+      },
+      "title": "The production build contains no persistence service: it bundles the shipped specs and is read-only.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Artifact generators.",
+      "entities": [
+        "generators"
+      ],
+      "id": "unknown:generators:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 858
+      },
+      "title": "No generator emits code or any part of Exegra's own runtime; Exegra generates reports about the model, not the software it describes.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Verification pipeline.",
+      "entities": [
+        "verification-pipeline"
+      ],
+      "id": "unknown:verification-pipeline:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 873
+      },
+      "title": "Only evidence of kind test is executed; measurement, document and review evidence stay author-entered.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Verification pipeline.",
+      "entities": [
+        "verification-pipeline"
+      ],
+      "id": "unknown:verification-pipeline:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 873
+      },
+      "title": "The traceability check compares paths only: it does not check that a module implements what its component claims, nor that relationships match imports.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Verification pipeline.",
+      "entities": [
+        "verification-pipeline"
+      ],
+      "id": "unknown:verification-pipeline:2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 873
+      },
+      "title": "Browser tests need Chrome and the Vite development server; `verify --skip-browser` skips them and leaves their evidence without a recorded result.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Benchmark generator.",
+      "entities": [
+        "benchmark-generator"
+      ],
+      "id": "unknown:benchmark-generator:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 901
+      },
+      "title": "It writes the benchmark specification directly with node:fs, not through the workspace service or the transaction system.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Markdown importer.",
+      "entities": [
+        "markdown-importer"
+      ],
+      "id": "unknown:markdown-importer:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 911
+      },
+      "title": "It does not analyze, validate or evaluate what it writes (it imports only the jsonc-parser library); that the output analyzes without errors is checked by the tests, not by the tool.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Markdown importer.",
+      "entities": [
+        "markdown-importer"
+      ],
+      "id": "unknown:markdown-importer:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 911
+      },
+      "title": "It writes the project's specification file directly with node:fs, not through the workspace service or the transaction system, and an edit made to that file through Exegra is overwritten by the next import.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Markdown importer.",
+      "entities": [
+        "markdown-importer"
+      ],
+      "id": "unknown:markdown-importer:2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 911
+      },
+      "title": "It reads no default source: the source directory is given with --source or as \"source\" in the import map, and the project with --project or with --map and --out.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Test suites.",
+      "entities": [
+        "test-suites"
+      ],
+      "id": "unknown:test-suites:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 940
+      },
+      "title": "Tests are evidence only through `exegra verify`; recorded results are not tied to the code revision.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Test suites.",
+      "entities": [
+        "test-suites"
+      ],
+      "id": "unknown:test-suites:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 940
+      },
+      "title": "No test measures performance, so no claim about frame rate or load time has evidence.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Simulation contract.",
+      "entities": [
+        "simulation-contract"
+      ],
+      "id": "unknown:simulation-contract:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1158
+      },
+      "title": "Engine input and trace format 2 (contracts engine-input-v2 and trace-v2) are specified but not derived, recorded as goldens or generated for differential checks yet (planned: WG-4664, WG-4715). simulationInput keeps deriving version 1 for every specification that uses none of its constructs.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Exhaustive explorer.",
+      "entities": [
+        "exhaustive-explorer"
+      ],
+      "id": "unknown:exhaustive-explorer:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1234
+      },
+      "title": "The engine input (format version 1) carries no bound of a scenario's fault model, so every subset of the scenario's faults is explored; the concurrency bounds of fault models are not applied yet.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Exhaustive explorer.",
+      "entities": [
+        "exhaustive-explorer"
+      ],
+      "id": "unknown:exhaustive-explorer:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1234
+      },
+      "title": "A fault acts for the whole run or not at all: a fault without an occurrence cannot act on some deliveries of its event and not on others.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Exhaustive explorer.",
+      "entities": [
+        "exhaustive-explorer"
+      ],
+      "id": "unknown:exhaustive-explorer:2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1234
+      },
+      "title": "Breadth-first order makes a counterexample one of the fewest steps, but that is not proved.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Exhaustive explorer.",
+      "entities": [
+        "exhaustive-explorer"
+      ],
+      "id": "unknown:exhaustive-explorer:3",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1234
+      },
+      "title": "The Rust explorer for large state spaces is not built yet (planned: WG-4650); it will be checked differentially against this one.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Exhaustive explorer.",
+      "entities": [
+        "exhaustive-explorer"
+      ],
+      "id": "unknown:exhaustive-explorer:4",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1234
+      },
+      "title": "Evaluation errors and failed steps end a path without being reported as such: a configuration whose invariant cannot be evaluated counts as a violation, and a failed step has no successor.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Exhaustive explorer.",
+      "entities": [
+        "exhaustive-explorer"
+      ],
+      "id": "unknown:exhaustive-explorer:5",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1234
+      },
+      "title": "Format 2 inputs are not explored yet (planned: WG-4664, WG-4715). The specified relation adds internal entries to the simultaneous-order choice, the new fault kinds to the mask, and one successor per choice value and per instance of an any route; sampled draws are fixed by a seed named first in the result, and a result is shown as verified only when the scenario has no sampled site. Scenarios with workloads need a short horizon and maxArrivals, and keyed populations of thousands of clients are beyond reach. When a timed fault acts is not explored (WG-4704).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Exhaustive explorer.",
+      "entities": [
+        "exhaustive-explorer"
+      ],
+      "id": "unknown:exhaustive-explorer:6",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1234
+      },
+      "title": "Temporal claims are checked without the claim's negatives and without the trace check's vacuity rules (a never whose matcher cannot occur in the scenario holds here without a note).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Exhaustive explorer.",
+      "entities": [
+        "exhaustive-explorer"
+      ],
+      "id": "unknown:exhaustive-explorer:7",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1234
+      },
+      "title": "A violating prefix of a never or precedes claim is reported as the counterexample, not extended to a complete run; any extension violates it too, but that is not a theorem.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Deployment model.",
+      "entities": [
+        "deployment-model"
+      ],
+      "id": "unknown:deployment-model:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1269
+      },
+      "title": "Not built yet (planned: WG-4677).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Infrastructure generator.",
+      "entities": [
+        "infrastructure-generator"
+      ],
+      "id": "unknown:infrastructure-generator:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1289
+      },
+      "title": "Not built yet (planned: WG-4678).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Implementation refinement checker.",
+      "entities": [
+        "implementation-refinement"
+      ],
+      "id": "unknown:implementation-refinement:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1309
+      },
+      "title": "Not built yet (planned: WG-4679).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Game days and runtime monitors.",
+      "entities": [
+        "reality-loop"
+      ],
+      "id": "unknown:reality-loop:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1329
+      },
+      "title": "Not built yet (planned: WG-4680).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Formal semantics (Lean 4).",
+      "entities": [
+        "formal-semantics"
+      ],
+      "id": "unknown:formal-semantics:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1350
+      },
+      "title": "Format 2 is defined for the WG-4664 constructs only (formal/Exegra/Format2.lean: integer time units, counted and keyed instances, routes, aggregates, resources with use, acquire and release, SplitMix64 streams and integer distributions; formal/Exegra/Resource.lean proves the held-units and queue-bound invariants of a settled resource). Not defined yet: resource faults, windowed faults and crash-instance with incarnations (planned: WG-4664); timers, links, workloads, meters and metrics (planned: WG-4715).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Formal semantics (Lean 4).",
+      "entities": [
+        "formal-semantics"
+      ],
+      "id": "unknown:formal-semantics:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1350
+      },
+      "title": "lift_agrees is stated in formal/Exegra/Lift.lean with its proof left as sorry (pinned on sorryAx); it is checked differentially by tools/differential.js --lift on every liftable golden and generated input (planned: WG-4664).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Formal semantics (Lean 4).",
+      "entities": [
+        "formal-semantics"
+      ],
+      "id": "unknown:formal-semantics:2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1350
+      },
+      "title": "The determinism property over seeds is not stated as a theorem for format 2 yet (planned: WG-4664).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Proof export.",
+      "entities": [
+        "proof-export"
+      ],
+      "id": "unknown:proof-export:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1377
+      },
+      "title": "Results are established by native_decide, so each theorem depends on an auxiliary axiom that trusts the Lean compiler and runtime. Kernel reduction (decide) is not feasible: the expression language's number literals go through Float.scaleB and the visited set hashes strings with String.hash, both opaque to the kernel.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Proof export.",
+      "entities": [
+        "proof-export"
+      ],
+      "id": "unknown:proof-export:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1377
+      },
+      "title": "The unbounded proof of an invariant (by induction over the step relation, with the explorer supplying counterexamples to induction) is not built yet (planned: WG-4686).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Proof export.",
+      "entities": [
+        "proof-export"
+      ],
+      "id": "unknown:proof-export:2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1377
+      },
+      "title": "Claim results are reported by exegra prove only; evaluate and verify do not show them yet.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Proof export.",
+      "entities": [
+        "proof-export"
+      ],
+      "id": "unknown:proof-export:3",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1377
+      },
+      "title": "Negatives of a claim are not explored in Lean: prove checks that a claim holds on every configuration of its scenarios, not that its negatives violate it (WG-4711).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Contract conformance.",
+      "entities": [
+        "contract-conformance"
+      ],
+      "id": "unknown:contract-conformance:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1407
+      },
+      "title": "Object and generic types (for example {text, hash} or Operation[]) are opaque to the type check: their values are accepted unchecked.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Contract conformance.",
+      "entities": [
+        "contract-conformance"
+      ],
+      "id": "unknown:contract-conformance:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1407
+      },
+      "title": "A response is paired with its request by one correlation field or by count; there is no timeout or ordering rule for unanswered requests at the end of a run.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Data model.",
+      "entities": [
+        "data-model"
+      ],
+      "id": "unknown:data-model:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1433
+      },
+      "title": "A field counts as a name when its type text contains the word name or handle; there is no type system for field types, so a party field typed as an opaque string passes rule party-by-id (WG-4697).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Data model.",
+      "entities": [
+        "data-model"
+      ],
+      "id": "unknown:data-model:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1433
+      },
+      "title": "Retention is free text: nothing checks that a record's retention and its copies' erasure points agree, and a copy of a copy cannot be declared, since of names records only (WG-4697).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Resource model.",
+      "entities": [
+        "resource-model"
+      ],
+      "id": "unknown:resource-model:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1459
+      },
+      "title": "Built for WG-4664 in the Lean semantics and the Rust engine (capacity, classes, reservations, limits, queue bounds, maxWait, overflow, demand factors, use, acquire, release, then and refused answers); not derived by simulationInput from a specification yet, and the resource faults (scale-demand, set-capacity, set-class-limit, collapse-classes, replace-demand), windows and crash-instance are refused by both engines (planned: WG-4664; timed resource faults WG-4715).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Resource model.",
+      "entities": [
+        "resource-model"
+      ],
+      "id": "unknown:resource-model:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1459
+      },
+      "title": "Processor sharing is not part of format 2; CPU is a FCFS multi-server station (planned: WG-4719).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Resource model.",
+      "entities": [
+        "resource-model"
+      ],
+      "id": "unknown:resource-model:2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1459
+      },
+      "title": "Credit-based backpressure between components is not represented (planned: WG-4722); autoscaling and cold start are not represented (planned: WG-4720).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Workload model.",
+      "entities": [
+        "workload-model"
+      ],
+      "id": "unknown:workload-model:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1494
+      },
+      "title": "Not built: specified as engine input and trace format 2 (planned: WG-4715; time units and seeded randomness from WG-4664).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Workload model.",
+      "entities": [
+        "workload-model"
+      ],
+      "id": "unknown:workload-model:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1494
+      },
+      "title": "Packet-level networking and packet-rate floods are not represented: a link is a FIFO byte pipe with a latency distribution, one step per message (aggregated mode planned: WG-4718).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Workload model.",
+      "entities": [
+        "workload-model"
+      ],
+      "id": "unknown:workload-model:2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1494
+      },
+      "title": "Matchmaking gather is writable only as a hand-written behavior (primitive planned: WG-4721).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Performance metrics.",
+      "entities": [
+        "performance-metrics"
+      ],
+      "id": "unknown:performance-metrics:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1521
+      },
+      "title": "Not built (planned: WG-4715). Warm-up is declared, not detected.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Metric claims.",
+      "entities": [
+        "metric-claims"
+      ],
+      "id": "unknown:metric-claims:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1547
+      },
+      "title": "Not built (planned: WG-4715; the general statistical claims and result ranges of WG-4670 build on it).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Metric claims.",
+      "entities": [
+        "metric-claims"
+      ],
+      "id": "unknown:metric-claims:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1547
+      },
+      "title": "The status model-holds is proposed; its final name and display follow WG-4703.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "metamodel"
+      ],
+      "id": "diag:gap.unknowns:metamodel",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 135
+      },
+      "title": "Component \"metamodel\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "claim-method-registry"
+      ],
+      "id": "diag:gap.unknowns:claim-method-registry",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 153
+      },
+      "title": "Component \"claim-method-registry\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "parser"
+      ],
+      "id": "diag:gap.unknowns:parser",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 169
+      },
+      "title": "Component \"parser\" records 2 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "model-hash"
+      ],
+      "id": "diag:gap.unknowns:model-hash",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 230
+      },
+      "title": "Component \"model-hash\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "transactions"
+      ],
+      "id": "diag:gap.unknowns:transactions",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 261
+      },
+      "title": "Component \"transactions\" records 3 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "claim-evaluator"
+      ],
+      "id": "diag:gap.unknowns:claim-evaluator",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 287
+      },
+      "title": "Component \"claim-evaluator\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "simulation-engine"
+      ],
+      "id": "diag:gap.unknowns:simulation-engine",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 310
+      },
+      "title": "Component \"simulation-engine\" records 3 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "projection-system"
+      ],
+      "id": "diag:gap.unknowns:projection-system",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 353
+      },
+      "title": "Component \"projection-system\" records 2 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "layout-engine"
+      ],
+      "id": "diag:gap.unknowns:layout-engine",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 378
+      },
+      "title": "Component \"layout-engine\" records 3 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "scene-renderer"
+      ],
+      "id": "diag:gap.unknowns:scene-renderer",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 399
+      },
+      "title": "Component \"scene-renderer\" records 2 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "visual-interaction"
+      ],
+      "id": "diag:gap.unknowns:visual-interaction",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 419
+      },
+      "title": "Component \"visual-interaction\" records 2 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "session"
+      ],
+      "id": "diag:gap.unknowns:session",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 440
+      },
+      "title": "Component \"session\" records 4 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "toolbar"
+      ],
+      "id": "diag:gap.unknowns:toolbar",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 488
+      },
+      "title": "Component \"toolbar\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "explorer"
+      ],
+      "id": "diag:gap.unknowns:explorer",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 507
+      },
+      "title": "Component \"explorer\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "property-controls"
+      ],
+      "id": "diag:gap.unknowns:property-controls",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 560
+      },
+      "title": "Component \"property-controls\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "dialogs"
+      ],
+      "id": "diag:gap.unknowns:dialogs",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 575
+      },
+      "title": "Component \"dialogs\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "source-editor"
+      ],
+      "id": "diag:gap.unknowns:source-editor",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 590
+      },
+      "title": "Component \"source-editor\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "verification-panel"
+      ],
+      "id": "diag:gap.unknowns:verification-panel",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 623
+      },
+      "title": "Component \"verification-panel\" records 2 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "realisation-panel"
+      ],
+      "id": "diag:gap.unknowns:realisation-panel",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 640
+      },
+      "title": "Component \"realisation-panel\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "persistence-client"
+      ],
+      "id": "diag:gap.unknowns:persistence-client",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 699
+      },
+      "title": "Component \"persistence-client\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "dev-server-plugin"
+      ],
+      "id": "diag:gap.unknowns:dev-server-plugin",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 717
+      },
+      "title": "Component \"dev-server-plugin\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "workspace-service"
+      ],
+      "id": "diag:gap.unknowns:workspace-service",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 736
+      },
+      "title": "Component \"workspace-service\" records 3 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "specification-file"
+      ],
+      "id": "diag:gap.unknowns:specification-file",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 760
+      },
+      "title": "Component \"specification-file\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "recorded-results-file"
+      ],
+      "id": "diag:gap.unknowns:recorded-results-file",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 779
+      },
+      "title": "Component \"recorded-results-file\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "agent-cli"
+      ],
+      "id": "diag:gap.unknowns:agent-cli",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 800
+      },
+      "title": "Component \"agent-cli\" records 3 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "build-system"
+      ],
+      "id": "diag:gap.unknowns:build-system",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 848
+      },
+      "title": "Component \"build-system\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "generators"
+      ],
+      "id": "diag:gap.unknowns:generators",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 858
+      },
+      "title": "Component \"generators\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "verification-pipeline"
+      ],
+      "id": "diag:gap.unknowns:verification-pipeline",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 873
+      },
+      "title": "Component \"verification-pipeline\" records 3 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "benchmark-generator"
+      ],
+      "id": "diag:gap.unknowns:benchmark-generator",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 901
+      },
+      "title": "Component \"benchmark-generator\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "markdown-importer"
+      ],
+      "id": "diag:gap.unknowns:markdown-importer",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 911
+      },
+      "title": "Component \"markdown-importer\" records 3 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "test-suites"
+      ],
+      "id": "diag:gap.unknowns:test-suites",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 940
+      },
+      "title": "Component \"test-suites\" records 2 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "simulation-contract"
+      ],
+      "id": "diag:gap.unknowns:simulation-contract",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1158
+      },
+      "title": "Component \"simulation-contract\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "exhaustive-explorer"
+      ],
+      "id": "diag:gap.unknowns:exhaustive-explorer",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1234
+      },
+      "title": "Component \"exhaustive-explorer\" records 8 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "deployment-model"
+      ],
+      "id": "diag:gap.unknowns:deployment-model",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1269
+      },
+      "title": "Component \"deployment-model\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "infrastructure-generator"
+      ],
+      "id": "diag:gap.unknowns:infrastructure-generator",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1289
+      },
+      "title": "Component \"infrastructure-generator\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "implementation-refinement"
+      ],
+      "id": "diag:gap.unknowns:implementation-refinement",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1309
+      },
+      "title": "Component \"implementation-refinement\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "reality-loop"
+      ],
+      "id": "diag:gap.unknowns:reality-loop",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1329
+      },
+      "title": "Component \"reality-loop\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "formal-semantics"
+      ],
+      "id": "diag:gap.unknowns:formal-semantics",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1350
+      },
+      "title": "Component \"formal-semantics\" records 3 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "proof-export"
+      ],
+      "id": "diag:gap.unknowns:proof-export",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1377
+      },
+      "title": "Component \"proof-export\" records 4 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "contract-conformance"
+      ],
+      "id": "diag:gap.unknowns:contract-conformance",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1407
+      },
+      "title": "Component \"contract-conformance\" records 2 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "data-model"
+      ],
+      "id": "diag:gap.unknowns:data-model",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1433
+      },
+      "title": "Component \"data-model\" records 2 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "resource-model"
+      ],
+      "id": "diag:gap.unknowns:resource-model",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1459
+      },
+      "title": "Component \"resource-model\" records 3 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "workload-model"
+      ],
+      "id": "diag:gap.unknowns:workload-model",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1494
+      },
+      "title": "Component \"workload-model\" records 3 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "performance-metrics"
+      ],
+      "id": "diag:gap.unknowns:performance-metrics",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1521
+      },
+      "title": "Component \"performance-metrics\" records 1 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "metric-claims"
+      ],
+      "id": "diag:gap.unknowns:metric-claims",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1547
+      },
+      "title": "Component \"metric-claims\" records 2 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "layout-moves-are-not-semantic"
+      ],
+      "id": "diag:gap.no-fault-model:layout-moves-are-not-semantic",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3746
+      },
+      "title": "Claim \"layout-moves-are-not-semantic\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "simulation-deterministic"
+      ],
+      "id": "diag:gap.no-fault-model:simulation-deterministic",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3754
+      },
+      "title": "Claim \"simulation-deterministic\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "generation-deterministic"
+      ],
+      "id": "diag:gap.no-fault-model:generation-deterministic",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3762
+      },
+      "title": "Claim \"generation-deterministic\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "persistence-confined-to-workspace"
+      ],
+      "id": "diag:gap.no-fault-model:persistence-confined-to-workspace",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3770
+      },
+      "title": "Claim \"persistence-confined-to-workspace\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "invalid-source-keeps-last-valid-model"
+      ],
+      "id": "diag:gap.no-fault-model:invalid-source-keeps-last-valid-model",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3778
+      },
+      "title": "Claim \"invalid-source-keeps-last-valid-model\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "unsupported-constructs-are-diagnosed"
+      ],
+      "id": "diag:gap.no-fault-model:unsupported-constructs-are-diagnosed",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3786
+      },
+      "title": "Claim \"unsupported-constructs-are-diagnosed\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "benchmark-scene-interactive"
+      ],
+      "id": "diag:gap.no-evidence:benchmark-scene-interactive",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3796
+      },
+      "title": "Claim \"benchmark-scene-interactive\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "benchmark-scene-interactive"
+      ],
+      "id": "diag:gap.no-fault-model:benchmark-scene-interactive",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3796
+      },
+      "title": "Claim \"benchmark-scene-interactive\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "sim-flow-matches-trace"
+      ],
+      "id": "diag:gap.no-fault-model:sim-flow-matches-trace",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3804
+      },
+      "title": "Claim \"sim-flow-matches-trace\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "sim-flow-never-borrows-edges"
+      ],
+      "id": "diag:gap.no-fault-model:sim-flow-never-borrows-edges",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3820
+      },
+      "title": "Claim \"sim-flow-never-borrows-edges\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "sim-step-shows-message-moving"
+      ],
+      "id": "diag:gap.no-fault-model:sim-step-shows-message-moving",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3836
+      },
+      "title": "Claim \"sim-step-shows-message-moving\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "simulation-seeded-runs-reproducible"
+      ],
+      "id": "diag:gap.no-evidence:simulation-seeded-runs-reproducible",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3854
+      },
+      "title": "Claim \"simulation-seeded-runs-reproducible\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "simulation-seeded-runs-reproducible"
+      ],
+      "id": "diag:gap.no-fault-model:simulation-seeded-runs-reproducible",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3854
+      },
+      "title": "Claim \"simulation-seeded-runs-reproducible\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "simulation-instances-are-independent"
+      ],
+      "id": "diag:gap.no-evidence:simulation-instances-are-independent",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3872
+      },
+      "title": "Claim \"simulation-instances-are-independent\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "simulation-instances-are-independent"
+      ],
+      "id": "diag:gap.no-fault-model:simulation-instances-are-independent",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3872
+      },
+      "title": "Claim \"simulation-instances-are-independent\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "specs-declare-aspects-as-data"
+      ],
+      "id": "diag:gap.no-evidence:specs-declare-aspects-as-data",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3889
+      },
+      "title": "Claim \"specs-declare-aspects-as-data\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "specs-declare-aspects-as-data"
+      ],
+      "id": "diag:gap.no-fault-model:specs-declare-aspects-as-data",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3889
+      },
+      "title": "Claim \"specs-declare-aspects-as-data\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "aspect-runs-reproducible"
+      ],
+      "id": "diag:gap.no-evidence:aspect-runs-reproducible",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3906
+      },
+      "title": "Claim \"aspect-runs-reproducible\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "aspect-runs-reproducible"
+      ],
+      "id": "diag:gap.no-fault-model:aspect-runs-reproducible",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3906
+      },
+      "title": "Claim \"aspect-runs-reproducible\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "refinement-agrees-at-boundary"
+      ],
+      "id": "diag:gap.no-evidence:refinement-agrees-at-boundary",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3923
+      },
+      "title": "Claim \"refinement-agrees-at-boundary\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "refinement-agrees-at-boundary"
+      ],
+      "id": "diag:gap.no-fault-model:refinement-agrees-at-boundary",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3923
+      },
+      "title": "Claim \"refinement-agrees-at-boundary\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "simulation-depth-follows-collapse"
+      ],
+      "id": "diag:gap.no-evidence:simulation-depth-follows-collapse",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3939
+      },
+      "title": "Claim \"simulation-depth-follows-collapse\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "simulation-depth-follows-collapse"
+      ],
+      "id": "diag:gap.no-fault-model:simulation-depth-follows-collapse",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3939
+      },
+      "title": "Claim \"simulation-depth-follows-collapse\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "chaos-campaigns-reproducible"
+      ],
+      "id": "diag:gap.no-evidence:chaos-campaigns-reproducible",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3957
+      },
+      "title": "Claim \"chaos-campaigns-reproducible\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "chaos-campaigns-reproducible"
+      ],
+      "id": "diag:gap.no-fault-model:chaos-campaigns-reproducible",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3957
+      },
+      "title": "Claim \"chaos-campaigns-reproducible\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "chaos-failures-only-as-declared"
+      ],
+      "id": "diag:gap.no-evidence:chaos-failures-only-as-declared",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3973
+      },
+      "title": "Claim \"chaos-failures-only-as-declared\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "chaos-failures-only-as-declared"
+      ],
+      "id": "diag:gap.no-fault-model:chaos-failures-only-as-declared",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3973
+      },
+      "title": "Claim \"chaos-failures-only-as-declared\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "load-matches-queueing-theory"
+      ],
+      "id": "diag:gap.no-evidence:load-matches-queueing-theory",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3989
+      },
+      "title": "Claim \"load-matches-queueing-theory\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "load-matches-queueing-theory"
+      ],
+      "id": "diag:gap.no-fault-model:load-matches-queueing-theory",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 3989
+      },
+      "title": "Claim \"load-matches-queueing-theory\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "load-parameters-sourced"
+      ],
+      "id": "diag:gap.no-evidence:load-parameters-sourced",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4006
+      },
+      "title": "Claim \"load-parameters-sourced\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "load-parameters-sourced"
+      ],
+      "id": "diag:gap.no-fault-model:load-parameters-sourced",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4006
+      },
+      "title": "Claim \"load-parameters-sourced\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "cost-prices-sourced"
+      ],
+      "id": "diag:gap.no-evidence:cost-prices-sourced",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4023
+      },
+      "title": "Claim \"cost-prices-sourced\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "cost-prices-sourced"
+      ],
+      "id": "diag:gap.no-fault-model:cost-prices-sourced",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4023
+      },
+      "title": "Claim \"cost-prices-sourced\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "cost-follows-usage"
+      ],
+      "id": "diag:gap.no-evidence:cost-follows-usage",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4039
+      },
+      "title": "Claim \"cost-follows-usage\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "cost-follows-usage"
+      ],
+      "id": "diag:gap.no-fault-model:cost-follows-usage",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4039
+      },
+      "title": "Claim \"cost-follows-usage\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "results-report-ranges"
+      ],
+      "id": "diag:gap.no-evidence:results-report-ranges",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4056
+      },
+      "title": "Claim \"results-report-ranges\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "results-report-ranges"
+      ],
+      "id": "diag:gap.no-fault-model:results-report-ranges",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4056
+      },
+      "title": "Claim \"results-report-ranges\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "statistical-claims-state-their-basis"
+      ],
+      "id": "diag:gap.no-evidence:statistical-claims-state-their-basis",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4073
+      },
+      "title": "Claim \"statistical-claims-state-their-basis\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "statistical-claims-state-their-basis"
+      ],
+      "id": "diag:gap.no-fault-model:statistical-claims-state-their-basis",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4073
+      },
+      "title": "Claim \"statistical-claims-state-their-basis\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "overlays-follow-trace"
+      ],
+      "id": "diag:gap.no-evidence:overlays-follow-trace",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4090
+      },
+      "title": "Claim \"overlays-follow-trace\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "overlays-follow-trace"
+      ],
+      "id": "diag:gap.no-fault-model:overlays-follow-trace",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4090
+      },
+      "title": "Claim \"overlays-follow-trace\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "engines-agree-on-traces"
+      ],
+      "id": "diag:gap.no-fault-model:engines-agree-on-traces",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4107
+      },
+      "title": "Claim \"engines-agree-on-traces\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "simulation-contract-pinned"
+      ],
+      "id": "diag:gap.no-fault-model:simulation-contract-pinned",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4124
+      },
+      "title": "Claim \"simulation-contract-pinned\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "simulation-runs-off-main-thread"
+      ],
+      "id": "diag:gap.no-fault-model:simulation-runs-off-main-thread",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4141
+      },
+      "title": "Claim \"simulation-runs-off-main-thread\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "ui-touch-usable-on-phone"
+      ],
+      "id": "diag:gap.no-fault-model:ui-touch-usable-on-phone",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4158
+      },
+      "title": "Claim \"ui-touch-usable-on-phone\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "ui-every-function-at-every-size"
+      ],
+      "id": "diag:gap.no-fault-model:ui-every-function-at-every-size",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4177
+      },
+      "title": "Claim \"ui-every-function-at-every-size\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "ui-expands-to-desktop"
+      ],
+      "id": "diag:gap.no-fault-model:ui-expands-to-desktop",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4200
+      },
+      "title": "Claim \"ui-expands-to-desktop\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "fault-model-scoped-claims"
+      ],
+      "id": "diag:gap.no-fault-model:fault-model-scoped-claims",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4217
+      },
+      "title": "Claim \"fault-model-scoped-claims\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "exhaustive-exploration-sound"
+      ],
+      "id": "diag:gap.no-fault-model:exhaustive-exploration-sound",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4234
+      },
+      "title": "Claim \"exhaustive-exploration-sound\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "deployment-cutover-safe"
+      ],
+      "id": "diag:gap.no-evidence:deployment-cutover-safe",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4251
+      },
+      "title": "Claim \"deployment-cutover-safe\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "deployment-cutover-safe"
+      ],
+      "id": "diag:gap.no-fault-model:deployment-cutover-safe",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4251
+      },
+      "title": "Claim \"deployment-cutover-safe\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "deployment-rollback-durable"
+      ],
+      "id": "diag:gap.no-evidence:deployment-rollback-durable",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4267
+      },
+      "title": "Claim \"deployment-rollback-durable\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "deployment-rollback-durable"
+      ],
+      "id": "diag:gap.no-fault-model:deployment-rollback-durable",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4267
+      },
+      "title": "Claim \"deployment-rollback-durable\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "generated-infrastructure-matches-model"
+      ],
+      "id": "diag:gap.no-evidence:generated-infrastructure-matches-model",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4283
+      },
+      "title": "Claim \"generated-infrastructure-matches-model\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "generated-infrastructure-matches-model"
+      ],
+      "id": "diag:gap.no-fault-model:generated-infrastructure-matches-model",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4283
+      },
+      "title": "Claim \"generated-infrastructure-matches-model\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "implementation-refines-model"
+      ],
+      "id": "diag:gap.no-evidence:implementation-refines-model",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4300
+      },
+      "title": "Claim \"implementation-refines-model\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "implementation-refines-model"
+      ],
+      "id": "diag:gap.no-fault-model:implementation-refines-model",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4300
+      },
+      "title": "Claim \"implementation-refines-model\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "claims-monitored-in-production"
+      ],
+      "id": "diag:gap.no-evidence:claims-monitored-in-production",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4316
+      },
+      "title": "Claim \"claims-monitored-in-production\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "claims-monitored-in-production"
+      ],
+      "id": "diag:gap.no-fault-model:claims-monitored-in-production",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4316
+      },
+      "title": "Claim \"claims-monitored-in-production\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "engine-matches-formal-semantics"
+      ],
+      "id": "diag:gap.no-fault-model:engine-matches-formal-semantics",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4332
+      },
+      "title": "Claim \"engine-matches-formal-semantics\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "formal-semantics-properties-proved"
+      ],
+      "id": "diag:gap.no-fault-model:formal-semantics-properties-proved",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4349
+      },
+      "title": "Claim \"formal-semantics-properties-proved\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "invariants-proved-unbounded"
+      ],
+      "id": "diag:gap.no-evidence:invariants-proved-unbounded",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4365
+      },
+      "title": "Claim \"invariants-proved-unbounded\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "invariants-proved-unbounded"
+      ],
+      "id": "diag:gap.no-fault-model:invariants-proved-unbounded",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4365
+      },
+      "title": "Claim \"invariants-proved-unbounded\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "contract-events-validated"
+      ],
+      "id": "diag:gap.no-fault-model:contract-events-validated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4382
+      },
+      "title": "Claim \"contract-events-validated\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "trace-contract-conformance"
+      ],
+      "id": "diag:gap.no-fault-model:trace-contract-conformance",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4398
+      },
+      "title": "Claim \"trace-contract-conformance\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "data-model-rules-computed"
+      ],
+      "id": "diag:gap.no-fault-model:data-model-rules-computed",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4416
+      },
+      "title": "Claim \"data-model-rules-computed\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "invariants-proved-within-bounds"
+      ],
+      "id": "diag:gap.no-fault-model:invariants-proved-within-bounds",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4458
+      },
+      "title": "Claim \"invariants-proved-within-bounds\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "trace-claim-verified-needs-negative"
+      ],
+      "id": "diag:gap.no-fault-model:trace-claim-verified-needs-negative",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4476
+      },
+      "title": "Claim \"trace-claim-verified-needs-negative\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "negatives-are-validated"
+      ],
+      "id": "diag:gap.no-fault-model:negatives-are-validated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4493
+      },
+      "title": "Claim \"negatives-are-validated\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "own-behavioral-claims-falsifiable"
+      ],
+      "id": "diag:gap.no-fault-model:own-behavioral-claims-falsifiable",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4509
+      },
+      "title": "Claim \"own-behavioral-claims-falsifiable\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "resource-queues-respect-bounds"
+      ],
+      "id": "diag:gap.no-evidence:resource-queues-respect-bounds",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4530
+      },
+      "title": "Claim \"resource-queues-respect-bounds\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "resource-queues-respect-bounds"
+      ],
+      "id": "diag:gap.no-fault-model:resource-queues-respect-bounds",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4530
+      },
+      "title": "Claim \"resource-queues-respect-bounds\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "resource-utilisation-at-most-one"
+      ],
+      "id": "diag:gap.no-evidence:resource-utilisation-at-most-one",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4548
+      },
+      "title": "Claim \"resource-utilisation-at-most-one\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "resource-utilisation-at-most-one"
+      ],
+      "id": "diag:gap.no-fault-model:resource-utilisation-at-most-one",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4548
+      },
+      "title": "Claim \"resource-utilisation-at-most-one\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "format-1-unchanged-under-format-2"
+      ],
+      "id": "diag:gap.no-evidence:format-1-unchanged-under-format-2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4566
+      },
+      "title": "Claim \"format-1-unchanged-under-format-2\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "format-1-unchanged-under-format-2"
+      ],
+      "id": "diag:gap.no-fault-model:format-1-unchanged-under-format-2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4566
+      },
+      "title": "Claim \"format-1-unchanged-under-format-2\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "engine-matches-formal-semantics-v2"
+      ],
+      "id": "diag:gap.no-evidence:engine-matches-formal-semantics-v2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4584
+      },
+      "title": "Claim \"engine-matches-formal-semantics-v2\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "engine-matches-formal-semantics-v2"
+      ],
+      "id": "diag:gap.no-fault-model:engine-matches-formal-semantics-v2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4584
+      },
+      "title": "Claim \"engine-matches-formal-semantics-v2\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "metric-claims-report-basis"
+      ],
+      "id": "diag:gap.no-evidence:metric-claims-report-basis",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4602
+      },
+      "title": "Claim \"metric-claims-report-basis\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "metric-claims-report-basis"
+      ],
+      "id": "diag:gap.no-fault-model:metric-claims-report-basis",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4602
+      },
+      "title": "Claim \"metric-claims-report-basis\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "metrics-reproduce-mm1-utilisation"
+      ],
+      "id": "diag:gap.no-evidence:metrics-reproduce-mm1-utilisation",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4621
+      },
+      "title": "Claim \"metrics-reproduce-mm1-utilisation\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "metrics-reproduce-mm1-utilisation"
+      ],
+      "id": "diag:gap.no-fault-model:metrics-reproduce-mm1-utilisation",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4621
+      },
+      "title": "Claim \"metrics-reproduce-mm1-utilisation\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "pool-classes-protect-move-db-leg-under-flood"
+      ],
+      "id": "diag:gap.no-evidence:pool-classes-protect-move-db-leg-under-flood",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4641
+      },
+      "title": "Claim \"pool-classes-protect-move-db-leg-under-flood\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "pool-classes-protect-move-db-leg-under-flood"
+      ],
+      "id": "diag:gap.no-fault-model:pool-classes-protect-move-db-leg-under-flood",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4641
+      },
+      "title": "Claim \"pool-classes-protect-move-db-leg-under-flood\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "response-time-counts-failures-as-unbounded"
+      ],
+      "id": "diag:gap.no-evidence:response-time-counts-failures-as-unbounded",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4661
+      },
+      "title": "Claim \"response-time-counts-failures-as-unbounded\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "response-time-counts-failures-as-unbounded"
+      ],
+      "id": "diag:gap.no-fault-model:response-time-counts-failures-as-unbounded",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4661
+      },
+      "title": "Claim \"response-time-counts-failures-as-unbounded\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "sampled-explorations-never-verified"
+      ],
+      "id": "diag:gap.no-evidence:sampled-explorations-never-verified",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4678
+      },
+      "title": "Claim \"sampled-explorations-never-verified\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "sampled-explorations-never-verified"
+      ],
+      "id": "diag:gap.no-fault-model:sampled-explorations-never-verified",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4678
+      },
+      "title": "Claim \"sampled-explorations-never-verified\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "metrics-reproduce-mm1-mean-wait"
+      ],
+      "id": "diag:gap.no-evidence:metrics-reproduce-mm1-mean-wait",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4696
+      },
+      "title": "Claim \"metrics-reproduce-mm1-mean-wait\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "metrics-reproduce-mm1-mean-wait"
+      ],
+      "id": "diag:gap.no-fault-model:metrics-reproduce-mm1-mean-wait",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4696
+      },
+      "title": "Claim \"metrics-reproduce-mm1-mean-wait\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "metrics-reproduce-mm2-erlang-c"
+      ],
+      "id": "diag:gap.no-evidence:metrics-reproduce-mm2-erlang-c",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4716
+      },
+      "title": "Claim \"metrics-reproduce-mm2-erlang-c\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "metrics-reproduce-mm2-erlang-c"
+      ],
+      "id": "diag:gap.no-fault-model:metrics-reproduce-mm2-erlang-c",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4716
+      },
+      "title": "Claim \"metrics-reproduce-mm2-erlang-c\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "ladder-reacts-without-flapping"
+      ],
+      "id": "diag:gap.no-evidence:ladder-reacts-without-flapping",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4735
+      },
+      "title": "Claim \"ladder-reacts-without-flapping\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "ladder-reacts-without-flapping"
+      ],
+      "id": "diag:gap.no-fault-model:ladder-reacts-without-flapping",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4735
+      },
+      "title": "Claim \"ladder-reacts-without-flapping\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "retry-budget-bounds-amplification"
+      ],
+      "id": "diag:gap.no-evidence:retry-budget-bounds-amplification",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4754
+      },
+      "title": "Claim \"retry-budget-bounds-amplification\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "retry-budget-bounds-amplification"
+      ],
+      "id": "diag:gap.no-fault-model:retry-budget-bounds-amplification",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4754
+      },
+      "title": "Claim \"retry-budget-bounds-amplification\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "reconnect-stagger-bounds-handshake-wait"
+      ],
+      "id": "diag:gap.no-evidence:reconnect-stagger-bounds-handshake-wait",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4773
+      },
+      "title": "Claim \"reconnect-stagger-bounds-handshake-wait\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "reconnect-stagger-bounds-handshake-wait"
+      ],
+      "id": "diag:gap.no-fault-model:reconnect-stagger-bounds-handshake-wait",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4773
+      },
+      "title": "Claim \"reconnect-stagger-bounds-handshake-wait\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "address-limiter-acts"
+      ],
+      "id": "diag:gap.no-evidence:address-limiter-acts",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4792
+      },
+      "title": "Claim \"address-limiter-acts\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "address-limiter-acts"
+      ],
+      "id": "diag:gap.no-fault-model:address-limiter-acts",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4792
+      },
+      "title": "Claim \"address-limiter-acts\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "address-limiter-false-positives-bounded"
+      ],
+      "id": "diag:gap.no-evidence:address-limiter-false-positives-bounded",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4811
+      },
+      "title": "Claim \"address-limiter-false-positives-bounded\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "address-limiter-false-positives-bounded"
+      ],
+      "id": "diag:gap.no-fault-model:address-limiter-false-positives-bounded",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4811
+      },
+      "title": "Claim \"address-limiter-false-positives-bounded\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "bulkhead-keeps-static-served-under-db-slowdown"
+      ],
+      "id": "diag:gap.no-evidence:bulkhead-keeps-static-served-under-db-slowdown",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4830
+      },
+      "title": "Claim \"bulkhead-keeps-static-served-under-db-slowdown\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "bulkhead-keeps-static-served-under-db-slowdown"
+      ],
+      "id": "diag:gap.no-fault-model:bulkhead-keeps-static-served-under-db-slowdown",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4830
+      },
+      "title": "Claim \"bulkhead-keeps-static-served-under-db-slowdown\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "metric-claims-calibrated-or-unvalidated"
+      ],
+      "id": "diag:gap.no-evidence:metric-claims-calibrated-or-unvalidated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4849
+      },
+      "title": "Claim \"metric-claims-calibrated-or-unvalidated\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "metric-claims-calibrated-or-unvalidated"
+      ],
+      "id": "diag:gap.no-fault-model:metric-claims-calibrated-or-unvalidated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4849
+      },
+      "title": "Claim \"metric-claims-calibrated-or-unvalidated\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "crash-instance-loses-state"
+      ],
+      "id": "diag:gap.no-evidence:crash-instance-loses-state",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4866
+      },
+      "title": "Claim \"crash-instance-loses-state\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "crash-instance-loses-state"
+      ],
+      "id": "diag:gap.no-fault-model:crash-instance-loses-state",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4866
+      },
+      "title": "Claim \"crash-instance-loses-state\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "distribution-lowering-bit-exact"
+      ],
+      "id": "diag:gap.no-evidence:distribution-lowering-bit-exact",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4884
+      },
+      "title": "Claim \"distribution-lowering-bit-exact\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "distribution-lowering-bit-exact"
+      ],
+      "id": "diag:gap.no-fault-model:distribution-lowering-bit-exact",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4884
+      },
+      "title": "Claim \"distribution-lowering-bit-exact\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "poisson-arrivals-by-inversion"
+      ],
+      "id": "diag:gap.no-evidence:poisson-arrivals-by-inversion",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4901
+      },
+      "title": "Claim \"poisson-arrivals-by-inversion\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "poisson-arrivals-by-inversion"
+      ],
+      "id": "diag:gap.no-fault-model:poisson-arrivals-by-inversion",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4901
+      },
+      "title": "Claim \"poisson-arrivals-by-inversion\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "overlapping-faults-follow-active-set"
+      ],
+      "id": "diag:gap.no-evidence:overlapping-faults-follow-active-set",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4918
+      },
+      "title": "Claim \"overlapping-faults-follow-active-set\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "overlapping-faults-follow-active-set"
+      ],
+      "id": "diag:gap.no-fault-model:overlapping-faults-follow-active-set",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4918
+      },
+      "title": "Claim \"overlapping-faults-follow-active-set\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "broadcasts-evaluated-at-delivery"
+      ],
+      "id": "diag:gap.no-evidence:broadcasts-evaluated-at-delivery",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4935
+      },
+      "title": "Claim \"broadcasts-evaluated-at-delivery\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "broadcasts-evaluated-at-delivery"
+      ],
+      "id": "diag:gap.no-fault-model:broadcasts-evaluated-at-delivery",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4935
+      },
+      "title": "Claim \"broadcasts-evaluated-at-delivery\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "request-lifecycle-defines-outcomes"
+      ],
+      "id": "diag:gap.no-evidence:request-lifecycle-defines-outcomes",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4953
+      },
+      "title": "Claim \"request-lifecycle-defines-outcomes\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "request-lifecycle-defines-outcomes"
+      ],
+      "id": "diag:gap.no-fault-model:request-lifecycle-defines-outcomes",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4953
+      },
+      "title": "Claim \"request-lifecycle-defines-outcomes\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "temporal-claims-checked-on-all-runs"
+      ],
+      "id": "diag:gap.no-fault-model:temporal-claims-checked-on-all-runs",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 4971
+      },
+      "title": "Claim \"temporal-claims-checked-on-all-runs\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    }
+  ],
+  "version": 1
+}

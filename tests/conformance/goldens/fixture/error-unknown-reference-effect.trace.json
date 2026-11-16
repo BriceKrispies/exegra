@@ -1,0 +1,105 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "calc-machine": {
+    "state": "calc-ready",
+    "vars": {
+     "divisor": 0,
+     "text": "abc",
+     "total": 10
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "calc-effect-op",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   }
+  ],
+  "time": 0
+ },
+ "initial": {
+  "machines": {
+   "calc-machine": {
+    "state": "calc-ready",
+    "vars": {
+     "divisor": 0,
+     "text": "abc",
+     "total": 10
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "calc-effect-op",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "error",
+ "scenarioId": "error-unknown-reference-effect",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "calc-machine": {
+      "state": "calc-ready",
+      "vars": {
+       "divisor": 0,
+       "text": "abc",
+       "total": 10
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "calc-effect-op",
+      "payload": {},
+      "seq": 0,
+      "source": {
+       "kind": "scenario",
+       "step": 0
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "error": {
+    "message": "Unknown reference \"event.missing\""
+   },
+   "event": {
+    "id": "calc-effect-op",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "calc-effect-op"
+   ],
+   "time": 0
+  }
+ ]
+}

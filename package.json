@@ -1,0 +1,44 @@
+{
+  "name": "exegra",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A self-describing, visual, executable system specification environment.",
+  "scripts": {
+    "build:engine": "node tools/build-engine.js",
+    "build:formal": "cd formal && lake build",
+    "predev": "npm run build:engine",
+    "dev": "vite",
+    "prebuild": "npm run build:engine",
+    "build": "vite build",
+    "preview": "vite preview",
+    "pretest": "npm run build:engine",
+    "test": "node --test --test-concurrency=2 \"tests/core/*.test.js\"",
+    "pretest:browser": "npm run build:engine",
+    "test:browser": "playwright test",
+    "pretypecheck": "npm run build:engine",
+    "typecheck": "tsc -p jsconfig.json --noEmit",
+    "exegra": "node cli/exegra.js",
+    "pregenerate": "npm run build:engine",
+    "generate": "node cli/exegra.js generate --write --project exegra",
+    "preverify": "npm run build:engine",
+    "verify": "node cli/exegra.js verify --project exegra --expect-violated edits-only-via-transactions --pretty",
+    "check": "npm run typecheck && npm test && npm run test:browser",
+    "benchmark:generate": "node tools/make-benchmark.js",
+    "import:markdown": "node tools/import-markdown.js"
+  },
+  "bin": {
+    "exegra": "cli/exegra.js"
+  },
+  "dependencies": {
+    "jsonc-parser": "^3.3.1",
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^26.6.6",
+    "@types/three": "^0.187.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
+  }
+}

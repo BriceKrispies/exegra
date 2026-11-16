@@ -1,0 +1,195 @@
+/* Where the shell's parts sit at each size. Written for a phone first:
+   the scene fills the screen and everything else floats over it. The two
+   min-width blocks re-place the same elements as a grid. What the parts look
+   like is in panels.css (panels, navigation, menus) and toolbar.css (app bar). */
+@layer layout {
+  .app {
+    /* offsets the floating parts share on a phone */
+    --dock-bottom: calc(var(--nav-h) + var(--safe-bottom));
+    --transport-space: 0px;
+    --sheet-bottom: calc(var(--dock-bottom) + var(--transport-space));
+    --sheet-top: calc(var(--appbar-h) + var(--safe-top));
+    --fab-bottom: calc(var(--sheet-bottom) + var(--sheet-peek) + var(--s-3));
+    --sheet-h: calc(100dvh - var(--sheet-bottom) - var(--sheet-top));
+
+    position: fixed;
+    inset: 0;
+    /* clip, not hidden: a clipping box cannot be scrolled, not even by focus() or by a
+       sheet's translated content, so the frame never moves under the fixed chrome */
+    overflow: clip;
+    background: var(--surface-0);
+  }
+  .app.app--transport { --transport-space: var(--transport-h); }
+  #dialogs { display: contents; }
+
+  /* ---- phone ------------------------------------------------------------------------- */
+  .viewport {
+    position: absolute;
+    inset: 0;
+    min-width: 0;
+    min-height: 0;
+    overflow: clip;
+    background: var(--surface-0);
+  }
+  /* The canvas and its label layer form one stacking context at the bottom of the frame. */
+  .scene-host {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    isolation: isolate;
+    overflow: clip;
+  }
+  .scene-host canvas { touch-action: none; }
+
+  /* Above the navigation, so the app bar's menus and its full-screen search cover it. */
+  .appbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 45;
+  }
+
+  .nav {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    height: var(--dock-bottom);
+    padding: 0 var(--safe-right) var(--safe-bottom) var(--safe-left);
+  }
+
+  /* A panel is a bottom sheet: full height below the app bar, slid down to show
+     only its detent. sheet.js drags it by setting an inline transform. */
+  .panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: var(--sheet-bottom);
+    z-index: 35;
+    height: calc(100% - var(--sheet-bottom) - var(--sheet-top));
+    --sheet-visible: 0px;
+    transform: translateY(calc(100% - var(--sheet-visible)));
+    transition: transform var(--dur-sheet) var(--ease-out), visibility 0s linear 0s;
+  }
+  .panel[data-detent="closed"] {
+    visibility: hidden;
+    transition: transform var(--dur-sheet) var(--ease-out), visibility 0s linear var(--dur-sheet);
+  }
+  .panel[data-detent="peek"] { --sheet-visible: var(--sheet-peek); }
+  .panel[data-detent="half"] { --sheet-visible: var(--sheet-half); }
+  .panel[data-detent="full"] { --sheet-visible: 100%; }
+  .panel.panel--dragging { transition: none; }
+  /* The part of a sheet below the screen edge is padding, so its list scrolls to its last item at every detent. */
+  .panel[data-detent="peek"] .panel__body { padding-bottom: max(0px, calc(var(--sheet-h) - var(--sheet-peek))); }
+  .panel[data-detent="half"] .panel__body { padding-bottom: max(0px, calc(var(--sheet-h) - var(--sheet-half))); }
+
+  .scene-controls {
+    position: absolute;
+    right: calc(var(--s-3) + var(--safe-right));
+    bottom: var(--fab-bottom);
+    z-index: 36; /* above a sheet at peek; hidden at half and full */
+  }
+
+  .transport {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: var(--dock-bottom);
+    z-index: 38;
+    height: var(--transport-h);
+  }
+
+  .overlay {
+    position: absolute;
+    inset: calc(var(--appbar-h) + var(--safe-top)) 0 var(--sheet-bottom) 0;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* Chrome that would sit on top of an open sheet steps aside. */
+  .app[data-sheet="half"] :is(.appbar__history, .scene-controls),
+  .app[data-sheet="full"] :is(.appbar__history, .scene-controls) { visibility: hidden; }
+
+  .panel__resize { display: none; }
+
+  /* ---- tablet: navigation rail, panel beside the scene ---------------------------------- */
+  @media (min-width: 768px) {
+    .app {
+      --fab-bottom: var(--s-4);
+      display: grid;
+      grid-template-columns: calc(var(--rail-w) + var(--safe-left)) minmax(0, 1fr) auto;
+      grid-template-rows: auto minmax(0, 1fr);
+      grid-template-areas:
+        "bar  bar  bar"
+        "rail view panel";
+    }
+    .appbar { position: relative; grid-area: bar; }
+    .nav {
+      position: relative;
+      grid-area: rail;
+      height: auto;
+      padding: var(--s-3) 0 var(--safe-bottom) var(--safe-left);
+    }
+    .viewport { position: relative; inset: auto; grid-area: view; }
+    .overlay { inset: 0; }
+
+    .panel {
+      position: relative;
+      grid-area: panel;
+      left: auto;
+      right: auto;
+      bottom: auto;
+      height: auto;
+      min-height: 0;
+      width: var(--panel-w);
+      max-width: calc(100vw - var(--rail-w) - var(--scene-min-w));
+      transform: none;
+      transition: none;
+      visibility: visible;
+    }
+    .panel[data-detent="closed"] { display: none; }
+
+    .panel__resize {
+      display: block;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: -5px;
+      width: 10px;
+      z-index: 5;
+      cursor: col-resize;
+      touch-action: none;
+    }
+
+    .scene-controls { bottom: var(--s-4); right: var(--s-4); }
+    .transport {
+      left: 50%;
+      right: auto;
+      bottom: var(--s-4);
+      transform: translateX(-50%);
+      max-width: calc(100% - 2 * var(--s-4) - 64px);
+    }
+    .app[data-sheet] :is(.appbar__history, .scene-controls) { visibility: visible; }
+  }
+
+  /* ---- desktop: explorer, scene and context panel side by side ---------------------------- */
+  @media (min-width: 1200px) {
+    .app {
+      grid-template-columns: var(--rail-w) auto minmax(0, 1fr) auto;
+      grid-template-areas:
+        "bar  bar      bar  bar"
+        "rail explorer view panel";
+    }
+    .panel--explorer {
+      grid-area: explorer;
+      width: var(--explorer-w);
+      max-width: none;
+    }
+    .panel--explorer .panel__resize { left: auto; right: -5px; }
+  }
+
+  .app--resizing { user-select: none; cursor: col-resize; }
+  .app--resizing .scene-host { pointer-events: none; }
+}

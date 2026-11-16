@@ -1,0 +1,435 @@
+{
+  // Conformance fixture: a small specification that exercises every construct the simulation
+  // engine implements. Its scenarios and their goldens are listed in tests/conformance/README.md.
+  // It is not a model of any real system; names are chosen to make the traces readable.
+  "exegra": "0.1",
+  "system": { "id": "conformance-fixture", "name": "Conformance fixture", "version": "0.1.0" },
+
+  "components": [
+    { "id": "gateway", "name": "Gateway", "category": "logical" },
+    { "id": "ledger", "name": "Ledger", "category": "logical" },
+    { "id": "auditor", "name": "Auditor", "category": "logical" }
+  ],
+
+  "events": [
+    { "id": "submit", "name": "Submit", "payload": [{ "name": "amount", "type": "number" }, { "name": "label", "type": "string" }] },
+    { "id": "tick", "name": "Tick" },
+    { "id": "reset", "name": "Reset" },
+    { "id": "noise", "name": "Noise (no behavior handles it)" },
+    { "id": "forward", "name": "Forward", "payload": [{ "name": "amount", "type": "number" }, { "name": "tag", "type": "string" }] },
+    { "id": "audit-request", "name": "Audit request", "payload": [{ "name": "level", "type": "number" }, { "name": "note", "type": "string" }, { "name": "at", "type": "number" }] },
+    { "id": "alarm", "name": "Alarm" },
+    { "id": "ping", "name": "Ping" },
+    { "id": "pong", "name": "Pong" },
+    { "id": "calc-ok-op", "name": "Calculate (ok)" },
+    { "id": "calc-div-op", "name": "Calculate (division)" },
+    { "id": "calc-mod-op", "name": "Calculate (modulo)" },
+    { "id": "calc-type-op", "name": "Calculate (type error)" },
+    { "id": "calc-guard-op", "name": "Calculate (guard is not boolean)" },
+    { "id": "calc-probe-op", "name": "Calculate (reads a payload field)", "payload": [{ "name": "missing", "type": "number" }] },
+    { "id": "calc-effect-op", "name": "Calculate (effect reads a payload field)", "payload": [{ "name": "missing", "type": "number" }] },
+    { "id": "ops-run", "name": "Evaluate the expression showcase" },
+    { "id": "ops-second", "name": "Second evaluation" }
+  ],
+
+  "behaviors": [
+    {
+      // Declaration order matters: gw-close-faulty is tried first when a fault enables it; the two
+      // submit transitions show first-match-wins.
+      "id": "gateway-machine",
+      "name": "Gateway machine",
+      "subject": "gateway",
+      "initial": "gw-idle",
+      "variables": [
+        { "name": "seen", "type": "number", "initial": 0 },
+        { "name": "last", "type": "string", "initial": "none" },
+        { "name": "closed", "type": "boolean", "initial": false }
+      ],
+      "states": [
+        { "id": "gw-idle", "name": "Idle" },
+        { "id": "gw-active", "name": "Active" },
+        { "id": "gw-closed", "name": "Closed" }
+      ],
+      "transitions": [
+        { "id": "gw-close-faulty", "from": "gw-active", "to": "gw-closed", "on": "tick", "faultOnly": true, "effects": [{ "set": "closed", "to": true }] },
+        {
+          "id": "gw-tick", "from": "gw-active", "to": "gw-active", "on": "tick",
+          "guard": "time >= 0 && ledger-machine.balance > 100 && ledger-machine.state == 'ledger-open'",
+          "effects": [{ "set": "seen", "to": "seen + 1" }, { "set": "last", "to": "last + '!'" }]
+        },
+        {
+          "id": "gw-submit-large", "from": "gw-idle", "to": "gw-active", "on": "submit", "guard": "event.amount >= 100",
+          "effects": [
+            { "set": "seen", "to": "seen + 1" },
+            { "set": "last", "to": "'large'" },
+            { "emit": "forward", "after": 2, "payload": { "amount": "event.amount", "tag": "'big'", "meta": { "rank": 1, "flags": [true, false] } } }
+          ]
+        },
+        {
+          "id": "gw-submit-small", "from": "gw-idle", "to": "gw-active", "on": "submit",
+          "effects": [{ "set": "last", "to": "'small'" }, { "emit": "forward", "after": 0, "payload": { "amount": "event.amount" } }]
+        },
+        { "id": "gw-reset", "from": "gw-active", "to": "gw-idle", "on": "reset" },
+        { "id": "gw-reset-closed", "from": "gw-closed", "to": "gw-idle", "on": "reset" }
+      ]
+    },
+    {
+      "id": "ledger-machine",
+      "name": "Ledger machine",
+      "subject": "ledger",
+      "initial": "ledger-open",
+      "variables": [
+        { "name": "balance", "type": "number", "initial": 0 },
+        { "name": "entries", "type": "number", "initial": 0 }
+      ],
+      "states": [
+        { "id": "ledger-open", "name": "Open" },
+        { "id": "ledger-frozen", "name": "Frozen" }
+      ],
+      "transitions": [
+        {
+          "id": "led-credit", "from": "ledger-open", "to": "ledger-open", "on": "forward", "guard": "event.amount > 0",
+          "effects": [
+            { "set": "balance", "to": "balance + event.amount" },
+            { "set": "entries", "to": "entries + 1" },
+            { "emit": "audit-request", "after": 1, "payload": { "level": "balance", "note": "'credit'", "at": "time" } }
+          ]
+        },
+        {
+          "id": "led-freeze", "from": "ledger-open", "to": "ledger-frozen", "on": "forward", "guard": "event.amount < 0",
+          "effects": [{ "set": "balance", "to": "balance + event.amount" }, { "set": "entries", "to": "-(entries + 1)" }]
+        }
+      ]
+    },
+    {
+      "id": "auditor-machine",
+      "name": "Auditor machine",
+      "subject": "auditor",
+      "initial": "aud-watching",
+      "variables": [
+        { "name": "level", "type": "number", "initial": 0 },
+        { "name": "alerts", "type": "number", "initial": 0 }
+      ],
+      "states": [
+        { "id": "aud-watching", "name": "Watching" },
+        { "id": "aud-alarmed", "name": "Alarmed" }
+      ],
+      "transitions": [
+        { "id": "aud-high", "from": "aud-watching", "to": "aud-alarmed", "on": "audit-request", "guard": "event.level >= 150", "effects": [{ "set": "level", "to": "event.level" }, { "emit": "alarm", "after": 3 }] },
+        { "id": "aud-record", "from": "aud-watching", "to": "aud-watching", "on": "audit-request", "effects": [{ "set": "level", "to": "event.level" }] },
+        { "id": "aud-alarm", "from": "aud-alarmed", "to": "aud-alarmed", "on": "alarm", "effects": [{ "set": "alerts", "to": "alerts + 1" }] }
+      ]
+    },
+    {
+      // Each ping answers with a pong and the other way round, up to three rounds.
+      "id": "pinger-machine",
+      "name": "Pinger machine",
+      "subject": "gateway",
+      "initial": "pg-ready",
+      "variables": [{ "name": "rounds", "type": "number", "initial": 0 }],
+      "states": [{ "id": "pg-ready", "name": "Ready" }],
+      "transitions": [
+        { "id": "pg-ping", "from": "pg-ready", "to": "pg-ready", "on": "ping", "guard": "rounds < 3", "effects": [{ "set": "rounds", "to": "rounds + 1" }, { "emit": "pong", "after": 1 }] },
+        { "id": "pg-pong", "from": "pg-ready", "to": "pg-ready", "on": "pong", "effects": [{ "emit": "ping", "after": 1 }] }
+      ]
+    },
+    {
+      // Every transition but calc-ok fails when it fires (calc-probe fails only without its payload field).
+      "id": "calc-machine",
+      "name": "Calculation machine",
+      "subject": "ledger",
+      "initial": "calc-ready",
+      "variables": [
+        { "name": "total", "type": "number", "initial": 10 },
+        { "name": "divisor", "type": "number", "initial": 0 },
+        { "name": "text", "type": "string", "initial": "abc" }
+      ],
+      "states": [{ "id": "calc-ready", "name": "Ready" }],
+      "transitions": [
+        { "id": "calc-ok", "from": "calc-ready", "to": "calc-ready", "on": "calc-ok-op", "effects": [{ "set": "total", "to": "total + 1" }] },
+        { "id": "calc-div", "from": "calc-ready", "to": "calc-ready", "on": "calc-div-op", "effects": [{ "set": "total", "to": "total / divisor" }] },
+        { "id": "calc-mod", "from": "calc-ready", "to": "calc-ready", "on": "calc-mod-op", "effects": [{ "set": "total", "to": "total % divisor" }] },
+        { "id": "calc-type", "from": "calc-ready", "to": "calc-ready", "on": "calc-type-op", "effects": [{ "set": "total", "to": "text - 1" }] },
+        { "id": "calc-guard", "from": "calc-ready", "to": "calc-ready", "on": "calc-guard-op", "guard": "total + 1" },
+        { "id": "calc-probe", "from": "calc-ready", "to": "calc-ready", "on": "calc-probe-op", "guard": "event.missing == 1", "effects": [{ "set": "total", "to": "event.missing" }] },
+        {
+          "id": "calc-effect", "from": "calc-ready", "to": "calc-ready", "on": "calc-effect-op",
+          "effects": [{ "set": "text", "to": "'changed'" }, { "set": "total", "to": "event.missing + 1" }]
+        }
+      ]
+    },
+    {
+      // Expression showcase: every operator, precedence, short-circuiting and a number that is not exact.
+      "id": "ops-machine",
+      "name": "Expression showcase",
+      "subject": "ledger",
+      "initial": "ops-ready",
+      "variables": [
+        { "name": "a", "type": "number", "initial": 7 },
+        { "name": "b", "type": "number", "initial": 2 },
+        { "name": "s", "type": "string", "initial": "ab" },
+        { "name": "t", "type": "boolean", "initial": true },
+        { "name": "sum", "type": "number", "initial": 0 },
+        { "name": "diff", "type": "number", "initial": 0 },
+        { "name": "prod", "type": "number", "initial": 0 },
+        { "name": "quo", "type": "number", "initial": 0 },
+        { "name": "rem", "type": "number", "initial": 0 },
+        { "name": "neg", "type": "number", "initial": 0 },
+        { "name": "negneg", "type": "number", "initial": 0 },
+        { "name": "prec", "type": "number", "initial": 0 },
+        { "name": "paren", "type": "number", "initial": 0 },
+        { "name": "inexact", "type": "number", "initial": 0 },
+        { "name": "cat", "type": "string", "initial": "" },
+        { "name": "lt", "type": "boolean", "initial": false },
+        { "name": "le", "type": "boolean", "initial": false },
+        { "name": "gt", "type": "boolean", "initial": false },
+        { "name": "ge", "type": "boolean", "initial": false },
+        { "name": "eq", "type": "boolean", "initial": false },
+        { "name": "ne", "type": "boolean", "initial": false },
+        { "name": "eqs", "type": "boolean", "initial": false },
+        { "name": "mixed", "type": "boolean", "initial": true },
+        { "name": "nul", "type": "boolean", "initial": false },
+        { "name": "and1", "type": "boolean", "initial": false },
+        { "name": "or1", "type": "boolean", "initial": false },
+        { "name": "not1", "type": "boolean", "initial": true },
+        { "name": "imp1", "type": "boolean", "initial": true },
+        { "name": "imp2", "type": "boolean", "initial": false },
+        { "name": "imp3", "type": "boolean", "initial": false },
+        { "name": "short_and", "type": "boolean", "initial": true },
+        { "name": "short_or", "type": "boolean", "initial": false },
+        { "name": "short_imp", "type": "boolean", "initial": false },
+        { "name": "mix", "type": "boolean", "initial": false },
+        { "name": "ticks", "type": "number", "initial": 0 },
+        { "name": "flag", "type": "boolean", "initial": true }
+      ],
+      "states": [{ "id": "ops-ready", "name": "Ready" }, { "id": "ops-done", "name": "Done" }],
+      "transitions": [
+        {
+          "id": "ops-eval", "from": "ops-ready", "to": "ops-done", "on": "ops-run",
+          "effects": [
+            { "set": "sum", "to": "a + b" },
+            { "set": "diff", "to": "a - b" },
+            { "set": "prod", "to": "a * b" },
+            { "set": "quo", "to": "a / b" },
+            { "set": "rem", "to": "a % b" },
+            { "set": "neg", "to": "-a" },
+            { "set": "negneg", "to": "a - -b" },
+            { "set": "prec", "to": "1 + 2 * 3 - 8 / 4 % 3" },
+            { "set": "paren", "to": "(1 + 2) * 3" },
+            { "set": "inexact", "to": "0.1 + 0.2" },
+            { "set": "cat", "to": "s + \"cd\" + 'ef'" },
+            { "set": "lt", "to": "a < b" },
+            { "set": "le", "to": "b <= 2" },
+            { "set": "gt", "to": "a > b" },
+            { "set": "ge", "to": "b >= 3" },
+            { "set": "eq", "to": "a == 7" },
+            { "set": "ne", "to": "a != 7" },
+            { "set": "eqs", "to": "s == 'ab'" },
+            { "set": "mixed", "to": "1 == '1'" },
+            { "set": "nul", "to": "null == null" },
+            { "set": "and1", "to": "t && a > b" },
+            { "set": "or1", "to": "!t || b >= 2" },
+            { "set": "not1", "to": "!t" },
+            { "set": "imp1", "to": "t => false" },
+            { "set": "imp2", "to": "false => t" },
+            { "set": "imp3", "to": "t => false => true" },
+            { "set": "short_and", "to": "false && 1 / 0 > 1" },
+            { "set": "short_or", "to": "true || 1 / 0 > 1" },
+            { "set": "short_imp", "to": "false => 1 / 0 > 1" },
+            { "set": "mix", "to": "true || false && false" },
+            { "set": "ticks", "to": "time + 5" },
+            { "set": "flag", "to": false }
+          ]
+        },
+        {
+          "id": "ops-again", "from": "ops-done", "to": "ops-done", "on": "ops-second",
+          "guard": "sum == 9 && cat == 'abcdef' && inexact > 0.3 && !eq == false",
+          "effects": [{ "set": "ticks", "to": "ticks + time" }, { "set": "flag", "to": true }]
+        }
+      ]
+    }
+  ],
+
+  "faults": [
+    { "id": "drop-first-submit", "name": "First submit is lost", "kind": "drop-event", "event": "submit", "occurrence": 1 },
+    { "id": "drop-all-tick", "name": "Every tick is lost", "kind": "drop-event", "event": "tick" },
+    { "id": "drop-second-tick", "name": "Second tick is lost", "kind": "drop-event", "event": "tick", "occurrence": 2 },
+    { "id": "delay-first-submit", "name": "First submit arrives 4 ticks late", "kind": "delay-event", "event": "submit", "by": 4, "occurrence": 1 },
+    { "id": "delay-tick-3", "name": "Ticks arrive 3 ticks late", "kind": "delay-event", "event": "tick", "by": 3 },
+    { "id": "delay-tick-2", "name": "Ticks arrive 2 more ticks late", "kind": "delay-event", "event": "tick", "by": 2 },
+    { "id": "enable-close", "name": "Gateway closes on tick", "kind": "enable-transition", "transition": "gw-close-faulty" },
+    { "id": "disable-high", "name": "High audits are not recognised", "kind": "disable-transition", "transition": "aud-high" },
+    { "id": "disable-alarm", "name": "Alarms are not counted", "kind": "disable-transition", "transition": "aud-alarm" },
+    { "id": "inject-submit", "name": "A submit nobody sent", "kind": "inject-event", "event": "submit", "at": 7, "payload": { "amount": 500, "label": "injected" } }
+  ],
+
+  "scenarios": [
+    {
+      "id": "core-flow", "name": "Guards, effects, emits and transition order",
+      "behaviors": ["gateway-machine", "ledger-machine", "auditor-machine"],
+      "steps": [
+        { "at": 0, "event": "submit", "payload": { "amount": 150, "label": "big" } },
+        { "at": 10, "event": "tick" },
+        { "at": 11, "event": "reset" },
+        { "at": 12, "event": "submit", "payload": { "amount": 5, "label": "small" } },
+        { "at": 14, "event": "reset" },
+        { "at": 15, "event": "submit", "payload": { "amount": 0, "label": "zero" } },
+        { "at": 17, "event": "reset" },
+        { "at": 18, "event": "submit", "payload": { "amount": -5, "label": "negative" } },
+        { "at": 20, "event": "reset" },
+        { "at": 21, "event": "submit", "payload": { "amount": 7, "label": "after-freeze" } }
+      ]
+    },
+    {
+      "id": "simultaneous-events", "name": "Equal times are ordered by scheduling sequence",
+      "behaviors": ["gateway-machine", "ledger-machine", "auditor-machine"],
+      "steps": [
+        { "at": 4, "event": "tick" },
+        { "at": 4, "event": "submit", "payload": { "amount": 5, "label": "x" } },
+        { "at": 4, "event": "reset" },
+        { "at": 0, "event": "submit", "payload": { "amount": 200, "label": "y" } },
+        { "at": 0, "event": "noise" }
+      ]
+    },
+    {
+      "id": "unhandled-event", "name": "An event no behavior handles",
+      "behaviors": ["gateway-machine", "ledger-machine"],
+      "steps": [{ "at": 0, "event": "noise" }, { "at": 2, "event": "noise" }]
+    },
+    {
+      "id": "empty-run", "name": "No input at all",
+      "behaviors": ["gateway-machine", "ledger-machine"],
+      "steps": []
+    },
+    {
+      "id": "faults-drop", "name": "Drop faults, with and without occurrence",
+      "behaviors": ["gateway-machine", "ledger-machine", "auditor-machine"],
+      "faults": ["drop-first-submit", "drop-all-tick", "drop-second-tick"],
+      "steps": [
+        { "at": 0, "event": "submit", "payload": { "amount": 150, "label": "dropped" } },
+        { "at": 2, "event": "submit", "payload": { "amount": 150, "label": "kept" } },
+        { "at": 10, "event": "tick" },
+        { "at": 11, "event": "tick" },
+        { "at": 12, "event": "tick" }
+      ]
+    },
+    {
+      "id": "faults-delay", "name": "Delay faults, chained and with occurrence",
+      "behaviors": ["gateway-machine", "ledger-machine", "auditor-machine"],
+      "faults": ["delay-first-submit", "delay-tick-3", "delay-tick-2"],
+      "steps": [
+        { "at": 0, "event": "submit", "payload": { "amount": 150, "label": "late" } },
+        { "at": 10, "event": "tick" },
+        { "at": 12, "event": "tick" }
+      ]
+    },
+    {
+      "id": "fault-enable-transition", "name": "A faultOnly transition enabled by a fault",
+      "behaviors": ["gateway-machine", "ledger-machine"],
+      "faults": ["enable-close"],
+      "steps": [
+        { "at": 0, "event": "submit", "payload": { "amount": 150, "label": "a" } },
+        { "at": 10, "event": "tick" },
+        { "at": 11, "event": "reset" }
+      ]
+    },
+    {
+      "id": "fault-disable-guard-true", "name": "A disabled transition whose guard holds is skipped for the next one",
+      "behaviors": ["gateway-machine", "ledger-machine", "auditor-machine"],
+      "faults": ["disable-high"],
+      "steps": [
+        { "at": 0, "event": "submit", "payload": { "amount": 150, "label": "a" } },
+        { "at": 10, "event": "reset" },
+        { "at": 11, "event": "submit", "payload": { "amount": 5, "label": "b" } }
+      ]
+    },
+    {
+      "id": "fault-disable-guard-false", "name": "A disabled transition whose guard is false records nothing",
+      "behaviors": ["gateway-machine", "ledger-machine", "auditor-machine"],
+      "faults": ["disable-high"],
+      "steps": [{ "at": 0, "event": "submit", "payload": { "amount": 5, "label": "small" } }]
+    },
+    {
+      "id": "fault-disable-sole", "name": "A disabled transition with no alternative is reported as disabled",
+      "behaviors": ["gateway-machine", "ledger-machine", "auditor-machine"],
+      "faults": ["disable-alarm"],
+      "steps": [{ "at": 0, "event": "submit", "payload": { "amount": 150, "label": "a" } }]
+    },
+    {
+      "id": "fault-inject", "name": "An injected event",
+      "behaviors": ["gateway-machine", "ledger-machine", "auditor-machine"],
+      "faults": ["inject-submit"],
+      "steps": [
+        { "at": 0, "event": "submit", "payload": { "amount": 5, "label": "own" } },
+        { "at": 3, "event": "reset" },
+        { "at": 7, "event": "tick" }
+      ]
+    },
+    {
+      "id": "faults-combined", "name": "Several fault kinds together",
+      "behaviors": ["gateway-machine", "ledger-machine", "auditor-machine"],
+      "faults": ["drop-first-submit", "delay-first-submit", "delay-tick-3", "enable-close", "disable-high", "inject-submit"],
+      "steps": [
+        { "at": 0, "event": "submit", "payload": { "amount": 150, "label": "dropped" } },
+        { "at": 1, "event": "submit", "payload": { "amount": 150, "label": "kept" } },
+        { "at": 5, "event": "tick" },
+        { "at": 9, "event": "reset" }
+      ]
+    },
+    {
+      "id": "step-limit-reached", "name": "The step limit stops a run with events pending",
+      "behaviors": ["pinger-machine"], "maxSteps": 5,
+      "steps": [{ "at": 0, "event": "ping" }]
+    },
+    {
+      "id": "step-limit-exact", "name": "The queue empties on the last permitted step",
+      "behaviors": ["pinger-machine"], "maxSteps": 7,
+      "steps": [{ "at": 0, "event": "ping" }]
+    },
+    {
+      "id": "default-step-limit", "name": "No maxSteps: the default limit applies",
+      "behaviors": ["pinger-machine"],
+      "steps": [{ "at": 0, "event": "ping" }]
+    },
+    {
+      "id": "error-division-by-zero", "name": "Division by zero stops the run",
+      "behaviors": ["calc-machine"],
+      "steps": [{ "at": 0, "event": "calc-ok-op" }, { "at": 1, "event": "calc-div-op" }, { "at": 2, "event": "calc-ok-op" }]
+    },
+    {
+      "id": "error-modulo-by-zero", "name": "Modulo by zero stops the run",
+      "behaviors": ["calc-machine"],
+      "steps": [{ "at": 0, "event": "calc-mod-op" }]
+    },
+    {
+      "id": "error-type", "name": "A type error in an effect stops the run",
+      "behaviors": ["calc-machine"],
+      "steps": [{ "at": 0, "event": "calc-type-op" }]
+    },
+    {
+      "id": "error-guard-not-boolean", "name": "A guard that is not a boolean stops the run",
+      "behaviors": ["calc-machine"],
+      "steps": [{ "at": 0, "event": "calc-guard-op" }]
+    },
+    {
+      "id": "error-unknown-reference-guard", "name": "A guard reading a payload field the event did not carry",
+      "behaviors": ["calc-machine"],
+      "steps": [{ "at": 0, "event": "calc-probe-op" }]
+    },
+    {
+      "id": "error-unknown-reference-effect", "name": "An effect failing after another effect set a variable",
+      "behaviors": ["calc-machine"],
+      "steps": [{ "at": 0, "event": "calc-effect-op" }]
+    },
+    {
+      "id": "payload-field-present", "name": "The same guard with the payload field present",
+      "behaviors": ["calc-machine"],
+      "steps": [{ "at": 0, "event": "calc-probe-op", "payload": { "missing": 1 } }]
+    },
+    {
+      "id": "expression-showcase", "name": "Every operator of the expression language",
+      "behaviors": ["ops-machine"],
+      "steps": [{ "at": 3, "event": "ops-run" }, { "at": 4, "event": "ops-second" }]
+    }
+  ]
+}

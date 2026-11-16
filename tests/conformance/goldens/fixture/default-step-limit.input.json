@@ -1,0 +1,123 @@
+{
+ "behaviors": [
+  {
+   "id": "pinger-machine",
+   "initial": "pg-ready",
+   "states": [
+    "pg-ready"
+   ],
+   "subject": "gateway",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "rounds",
+       "to": "rounds + 1"
+      },
+      {
+       "after": 1,
+       "emit": "pong"
+      }
+     ],
+     "faultOnly": false,
+     "from": "pg-ready",
+     "guard": "rounds < 3",
+     "id": "pg-ping",
+     "on": "ping",
+     "to": "pg-ready"
+    },
+    {
+     "effects": [
+      {
+       "after": 1,
+       "emit": "ping"
+      }
+     ],
+     "faultOnly": false,
+     "from": "pg-ready",
+     "guard": null,
+     "id": "pg-pong",
+     "on": "pong",
+     "to": "pg-ready"
+    }
+   ],
+   "variables": [
+    {
+     "initial": 0,
+     "name": "rounds"
+    }
+   ]
+  }
+ ],
+ "events": [
+  {
+   "id": "submit"
+  },
+  {
+   "id": "tick"
+  },
+  {
+   "id": "reset"
+  },
+  {
+   "id": "noise"
+  },
+  {
+   "id": "forward"
+  },
+  {
+   "id": "audit-request"
+  },
+  {
+   "id": "alarm"
+  },
+  {
+   "id": "ping"
+  },
+  {
+   "id": "pong"
+  },
+  {
+   "id": "calc-ok-op"
+  },
+  {
+   "id": "calc-div-op"
+  },
+  {
+   "id": "calc-mod-op"
+  },
+  {
+   "id": "calc-type-op"
+  },
+  {
+   "id": "calc-guard-op"
+  },
+  {
+   "id": "calc-probe-op"
+  },
+  {
+   "id": "calc-effect-op"
+  },
+  {
+   "id": "ops-run"
+  },
+  {
+   "id": "ops-second"
+  }
+ ],
+ "faults": [],
+ "format": "exegra-sim-input",
+ "scenario": {
+  "faults": [],
+  "id": "default-step-limit",
+  "stepLimit": 1000,
+  "steps": [
+   {
+    "at": 0,
+    "event": "ping",
+    "payload": {}
+   }
+  ]
+ },
+ "version": 1
+}

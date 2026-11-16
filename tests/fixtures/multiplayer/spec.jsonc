@@ -1,0 +1,654 @@
+{
+  // Project B: an ILLUSTRATIVE multiplayer game platform. This is an example
+  // of the specification format, not a description of anyone's real system.
+  // Every component, relationship and assumption whose specifics are invented
+  // carries "illustrative": true. No latency, capacity or probability figures
+  // appear here: where a parameter would be needed it is an unknown or an
+  // assumption. Time in behaviors is LOGICAL ticks, never milliseconds.
+  "exegra": "0.1",
+  "system": {
+    "id": "multiplayer-platform",
+    "name": "Example multiplayer platform",
+    "version": "0.1.0",
+    "description": "An illustrative architecture of a multiplayer game platform: clients submit commands, an authoritative worker applies them, and the acknowledgement must follow durable commit. It is an example, not a description of a real system.",
+    "illustrative": true,
+    "notes": [
+      "Illustrative: all components, owners, trust zones and flows are invented to exercise the specification format.",
+      "No numeric latency, capacity or probability figures are given; objectives that would need them are recorded as unknowns, assumptions or measured claims.",
+      "Two deliberate defects are seeded for demonstration: the faulty early-acknowledge worker transition (behavior) and the telemetry-to-database read (structure)."
+    ]
+  },
+
+  // ---- Model-defined vocabulary --------------------------------------------
+  "vocabulary": {
+    "relationshipKinds": {
+      "authenticates-with": {
+        "label": "Authenticates with",
+        "line": "dotted",
+        "color": "violet",
+        "dependency": true,
+        "description": "The source obtains or verifies identity assertions through the target."
+      }
+    },
+    "properties": [
+      {
+        "entity": "component",
+        "name": "dataClassification",
+        "type": "enum",
+        "values": ["none", "session", "game-state", "credentials"],
+        "label": "Data classification",
+        "doc": "The most sensitive class of data the component handles."
+      }
+    ]
+  },
+
+  // ---- Components -----------------------------------------------------------
+  "components": [
+    // -- Client and external system
+    {
+      "id": "web-client",
+      "name": "Web client",
+      "category": "client",
+      "purpose": "The player-facing program that submits game commands and shows their outcome.",
+      "responsibilities": [
+        "Obtain an identity token from the identity provider",
+        "Submit commands to the API service",
+        "Show the acknowledgement or rejection of a command"
+      ],
+      "owner": "client-team",
+      "trustZone": "public",
+      "dataClassification": "session",
+      "illustrative": true,
+      "ports": [
+        { "id": "client-command-out", "name": "Command out", "direction": "requires", "contract": "submit-command", "protocol": "request/response", "description": "Where the client submits a command." }
+      ]
+    },
+    {
+      "id": "identity-provider",
+      "name": "External identity provider",
+      "category": "external",
+      "purpose": "Issues and verifies identity tokens. Outside the control of the platform.",
+      "responsibilities": ["Issue tokens to authenticated players", "Verify tokens presented by the authentication service"],
+      "owner": "external-vendor",
+      "trustZone": "external",
+      "dataClassification": "credentials",
+      "unknowns": ["Token lifetime and revocation behavior are not specified."],
+      "illustrative": true
+    },
+
+    // -- Edge subsystem
+    {
+      "id": "edge",
+      "name": "Edge",
+      "kind": "subsystem",
+      "category": "logical",
+      "purpose": "The services that face the public network and decide whether a request may enter.",
+      "owner": "edge-team",
+      "trustZone": "edge",
+      "illustrative": true
+    },
+    {
+      "id": "authentication-service",
+      "name": "Authentication service",
+      "category": "computational",
+      "parent": "edge",
+      "purpose": "Verifies tokens presented with commands, using the identity provider.",
+      "responsibilities": ["Verify the token of each incoming command", "Report whether the token is valid"],
+      "owner": "edge-team",
+      "trustZone": "edge",
+      "dataClassification": "credentials",
+      "illustrative": true,
+      "ports": [
+        { "id": "auth-authenticate-in", "name": "Authenticate in", "direction": "provides", "contract": "authenticate", "description": "Token verification surface used by the API service." }
+      ]
+    },
+    {
+      "id": "api-service",
+      "name": "API service",
+      "category": "computational",
+      "parent": "edge",
+      "purpose": "The only entry point for commands; validates, then routes them toward game runtime.",
+      "responsibilities": [
+        "Accept commands from clients",
+        "Reject commands whose token fails authentication",
+        "Route valid commands to the game coordinator",
+        "Deliver the acknowledgement to the client"
+      ],
+      "owner": "edge-team",
+      "trustZone": "edge",
+      "dataClassification": "session",
+      "illustrative": true,
+      "ports": [
+        { "id": "api-command-in", "name": "Command in", "direction": "provides", "contract": "submit-command", "protocol": "request/response", "description": "Where clients submit commands." },
+        { "id": "api-authenticate-out", "name": "Authenticate out", "direction": "requires", "contract": "authenticate", "description": "Token verification request to the authentication service." }
+      ]
+    },
+
+    // -- Game runtime subsystem
+    {
+      "id": "game-runtime",
+      "name": "Game runtime",
+      "kind": "subsystem",
+      "category": "logical",
+      "purpose": "Applies commands to authoritative game state.",
+      "owner": "runtime-team",
+      "trustZone": "internal",
+      "illustrative": true
+    },
+    {
+      "id": "game-coordinator",
+      "name": "Game coordinator",
+      "category": "computational",
+      "parent": "game-runtime",
+      "purpose": "Chooses which worker is authoritative for a game and routes commands to it.",
+      "responsibilities": ["Assign games to workers", "Route each command to the worker owning its game"],
+      "owner": "runtime-team",
+      "trustZone": "internal",
+      "dataClassification": "game-state",
+      "unknowns": ["How worker ownership of a game is handed over after a worker failure is not specified."],
+      "illustrative": true,
+      "ports": [
+        { "id": "coordinator-route-in", "name": "Route in", "direction": "provides", "contract": "submit-command", "description": "Commands from the API service." }
+      ]
+    },
+    {
+      // Choice made: the pool is a subsystem with two illustrative instances,
+      // so that routing, writes and telemetry have concrete endpoints. The pool
+      // size in a real system is an unknown (recorded below).
+      "id": "game-workers",
+      "name": "Game workers",
+      "kind": "subsystem",
+      "category": "logical",
+      "parent": "game-runtime",
+      "purpose": "The pool of authoritative game workers.",
+      "owner": "runtime-team",
+      "trustZone": "internal",
+      "unknowns": ["Pool size, placement and scaling policy are unknown; two instances are shown only to give relationships concrete endpoints."],
+      "illustrative": true
+    },
+    {
+      "id": "authoritative-worker-1",
+      "name": "Authoritative game worker 1",
+      "category": "computational",
+      "parent": "game-workers",
+      "purpose": "Holds authoritative state for its games, applies commands and acknowledges them only once the transition is durable.",
+      "responsibilities": [
+        "Accept routed commands",
+        "Request persistence of each state transition",
+        "Acknowledge a command only after durable commit is confirmed"
+      ],
+      "owner": "runtime-team",
+      "trustZone": "internal",
+      "dataClassification": "game-state",
+      "illustrative": true,
+      "ports": [
+        { "id": "worker-command-in", "name": "Command in", "direction": "provides", "contract": "submit-command", "description": "Commands routed by the coordinator." },
+        { "id": "worker-persist-out", "name": "Persist out", "direction": "requires", "contract": "persist-transition", "description": "Request to persist a state transition." }
+      ]
+    },
+    {
+      "id": "authoritative-worker-2",
+      "name": "Authoritative game worker 2",
+      "category": "computational",
+      "parent": "game-workers",
+      "purpose": "A second illustrative instance with the same responsibilities as worker 1.",
+      "responsibilities": ["Same as authoritative game worker 1"],
+      "owner": "runtime-team",
+      "trustZone": "internal",
+      "dataClassification": "game-state",
+      "illustrative": true
+    },
+
+    // -- Data subsystem
+    {
+      "id": "data",
+      "name": "Data",
+      "kind": "subsystem",
+      "category": "logical",
+      "purpose": "Durable and shared state.",
+      "owner": "data-team",
+      "trustZone": "data",
+      "illustrative": true
+    },
+    {
+      "id": "game-database",
+      "name": "Persistent game database",
+      "category": "storage",
+      "parent": "data",
+      "purpose": "Durable record of committed game state transitions.",
+      "responsibilities": ["Persist transitions atomically", "Confirm a commit only when the transition is durable"],
+      "owner": "data-team",
+      "trustZone": "data",
+      "dataClassification": "game-state",
+      "unknowns": ["Replication and recovery behavior are not specified."],
+      "illustrative": true,
+      "ports": [
+        { "id": "database-persist-in", "name": "Persist in", "direction": "provides", "contract": "persist-transition", "description": "Transition persistence requests from workers." }
+      ]
+    },
+    {
+      "id": "shared-cache",
+      "name": "Shared cache",
+      "category": "storage",
+      "parent": "data",
+      "purpose": "Shared, non-authoritative copy of recent game state for fast reads.",
+      "responsibilities": ["Hold recent state copies", "Serve reads without touching the database"],
+      "owner": "data-team",
+      "trustZone": "data",
+      "dataClassification": "game-state",
+      "unknowns": ["Eviction and consistency policy are not specified."],
+      "illustrative": true
+    },
+
+    // -- Transport and operations
+    {
+      "id": "message-transport",
+      "name": "Asynchronous message transport",
+      "category": "transport",
+      "purpose": "Carries asynchronous messages between services.",
+      "responsibilities": ["Deliver published messages to subscribers"],
+      "owner": "platform-team",
+      "trustZone": "internal",
+      "dataClassification": "game-state",
+      "illustrative": true
+    },
+    {
+      "id": "telemetry",
+      "name": "Operational telemetry",
+      "category": "infrastructure",
+      "purpose": "Collects operational signals about the services.",
+      "responsibilities": ["Collect metrics and logs from services"],
+      "owner": "platform-team",
+      "trustZone": "operations",
+      "dataClassification": "none",
+      "illustrative": true
+    }
+  ],
+
+  // ---- Relationships ----------------------------------------------------------
+  "relationships": [
+    // Main command path, through ports
+    { "id": "client-calls-api", "kind": "calls", "from": "client-command-out", "to": "api-command-in", "contract": "submit-command", "description": "The client submits each command to the API service." },
+    { "id": "api-calls-authentication", "kind": "calls", "from": "api-authenticate-out", "to": "auth-authenticate-in", "contract": "authenticate", "description": "The API service has each command's token verified before routing." },
+    { "id": "api-calls-coordinator", "kind": "calls", "from": "api-service", "to": "coordinator-route-in", "contract": "submit-command", "description": "Validated commands are routed to the game coordinator." },
+    { "id": "coordinator-routes-to-worker-1", "kind": "calls", "from": "game-coordinator", "to": "worker-command-in", "contract": "submit-command", "description": "The coordinator routes commands of its games to worker 1." },
+    { "id": "coordinator-routes-to-worker-2", "kind": "calls", "from": "game-coordinator", "to": "authoritative-worker-2", "description": "The coordinator routes commands of its games to worker 2.", "illustrative": true },
+    { "id": "worker-1-writes-database", "kind": "writes", "from": "worker-persist-out", "to": "database-persist-in", "contract": "persist-transition", "description": "Worker 1 persists each state transition to the game database." },
+    { "id": "worker-2-writes-database", "kind": "writes", "from": "authoritative-worker-2", "to": "game-database", "description": "Worker 2 persists each state transition to the game database.", "illustrative": true },
+
+    // Identity
+    { "id": "authentication-authenticates-with-idp", "kind": "authenticates-with", "from": "authentication-service", "to": "identity-provider", "description": "Token verification is delegated to the external identity provider." },
+    { "id": "client-authenticates-with-idp", "kind": "authenticates-with", "from": "web-client", "to": "identity-provider", "description": "The client obtains its identity token from the identity provider." },
+
+    // Cache
+    { "id": "worker-1-writes-cache", "kind": "writes", "from": "authoritative-worker-1", "to": "shared-cache", "description": "Worker 1 refreshes cached state after a transition.", "illustrative": true },
+    { "id": "worker-1-reads-cache", "kind": "reads", "from": "authoritative-worker-1", "to": "shared-cache", "description": "Worker 1 reads recent state from the cache.", "illustrative": true },
+    { "id": "worker-2-writes-cache", "kind": "writes", "from": "authoritative-worker-2", "to": "shared-cache", "description": "Worker 2 refreshes cached state after a transition.", "illustrative": true },
+    { "id": "worker-2-reads-cache", "kind": "reads", "from": "authoritative-worker-2", "to": "shared-cache", "description": "Worker 2 reads recent state from the cache.", "illustrative": true },
+
+    // Asynchronous transport
+    { "id": "worker-1-publishes-transport", "kind": "publishes", "from": "authoritative-worker-1", "to": "message-transport", "description": "Worker 1 publishes acknowledgements and game events.", "illustrative": true },
+    { "id": "worker-2-publishes-transport", "kind": "publishes", "from": "authoritative-worker-2", "to": "message-transport", "description": "Worker 2 publishes acknowledgements and game events.", "illustrative": true },
+    { "id": "api-subscribes-transport", "kind": "subscribes", "from": "api-service", "to": "message-transport", "description": "The API service consumes acknowledgements to deliver to clients.", "illustrative": true },
+    { "id": "coordinator-subscribes-transport", "kind": "subscribes", "from": "game-coordinator", "to": "message-transport", "description": "The coordinator consumes worker lifecycle events.", "illustrative": true },
+
+    // Operations
+    { "id": "telemetry-observes-api", "kind": "observes", "from": "telemetry", "to": "api-service", "description": "Telemetry collects signals from the API service." },
+    { "id": "telemetry-observes-authentication", "kind": "observes", "from": "telemetry", "to": "authentication-service", "description": "Telemetry collects signals from the authentication service." },
+    { "id": "telemetry-observes-coordinator", "kind": "observes", "from": "telemetry", "to": "game-coordinator", "description": "Telemetry collects signals from the coordinator." },
+    { "id": "telemetry-observes-worker-1", "kind": "observes", "from": "telemetry", "to": "authoritative-worker-1", "description": "Telemetry collects signals from worker 1." },
+    { "id": "telemetry-observes-worker-2", "kind": "observes", "from": "telemetry", "to": "authoritative-worker-2", "description": "Telemetry collects signals from worker 2." },
+
+    // Seeded weakness: see claim "database-reached-only-by-runtime"
+    { "id": "telemetry-reads-game-database", "kind": "reads", "from": "telemetry", "to": "game-database", "description": "Telemetry queries the game database directly for operational reports. Intentionally seeded weakness.", "illustrative": true }
+  ],
+
+  // ---- Contracts --------------------------------------------------------------
+  "contracts": [
+    {
+      "id": "submit-command",
+      "name": "Submit command",
+      "description": "A player command is submitted and eventually acknowledged or rejected.",
+      "inputs": [
+        { "name": "token", "type": "string", "description": "Identity token of the submitting player." },
+        { "name": "command", "type": "object", "description": "The game command to apply." }
+      ],
+      "outputs": [
+        { "name": "acknowledgement", "type": "object", "description": "Confirmation that the command was applied and recorded." }
+      ],
+      "preconditions": ["The caller presents a token.", "The command is well-formed for the target game."],
+      "postconditions": ["The command was applied to the authoritative state exactly once.", "The resulting state transition is durably committed."],
+      "errors": [
+        { "name": "unauthenticated", "condition": "The token is missing or fails verification." },
+        { "name": "rejected", "condition": "The command is not valid in the current game state." }
+      ],
+      "obligations": [
+        "An acknowledgement is sent only after the state transition is durably committed.",
+        "A command whose token fails verification never reaches a worker."
+      ]
+    },
+    {
+      "id": "authenticate",
+      "name": "Authenticate",
+      "description": "Verifies an identity token.",
+      "inputs": [{ "name": "token", "type": "string" }],
+      "outputs": [{ "name": "identity", "type": "object", "description": "The verified player identity." }],
+      "preconditions": ["A token is presented."],
+      "postconditions": ["The result states whether the token is valid."],
+      "errors": [{ "name": "invalid-token", "condition": "The token cannot be verified." }],
+      "obligations": ["An unverifiable token is never reported valid."]
+    },
+    {
+      "id": "persist-transition",
+      "name": "Persist transition",
+      "description": "Durably records one authoritative state transition.",
+      "inputs": [
+        { "name": "game", "type": "string", "description": "Identifier of the game." },
+        { "name": "transition", "type": "object", "description": "The state transition to record." }
+      ],
+      "outputs": [{ "name": "commit-confirmation", "type": "object", "description": "Confirms the transition is durable." }],
+      "preconditions": ["The transition follows the last committed transition of the game."],
+      "postconditions": ["After the confirmation is given the transition survives restart of the database."],
+      "errors": [{ "name": "commit-failed", "condition": "The transition could not be made durable." }],
+      "obligations": ["A commit confirmation is given only when the transition is durable."]
+    }
+  ],
+
+  // ---- Events -----------------------------------------------------------------
+  "events": [
+    { "id": "command-submitted", "name": "Command submitted", "description": "The player submits a command in the client.", "payload": [{ "name": "token", "type": "string" }] },
+    { "id": "command-received", "name": "Command received", "description": "The API service receives the command and must authenticate it.", "payload": [{ "name": "token", "type": "string" }] },
+    { "id": "command-rejected", "name": "Command rejected", "description": "The command failed authentication and is refused." },
+    { "id": "command-routed", "name": "Command routed", "description": "A validated command is routed to the authoritative worker." },
+    { "id": "command-accepted", "name": "Command accepted", "description": "The worker accepted the command and applied it in memory." },
+    { "id": "persist-requested", "name": "Persist requested", "description": "The worker asks the database to persist the transition." },
+    { "id": "persist-committed", "name": "Persist committed", "description": "The database confirms the transition is durable." },
+    { "id": "acknowledgement-sent", "name": "Acknowledgement sent", "description": "The worker acknowledges the command." },
+    { "id": "response-delivered", "name": "Response delivered", "description": "The API service delivers the acknowledgement to the client." }
+  ],
+
+  // ---- Behaviors: command processing --------------------------------------------
+  // Logical time: the single "after": 1 on persist-requested stands for the
+  // asynchronous hop between worker and database, not for a real duration.
+  "behaviors": [
+    {
+      "id": "client-flow",
+      "name": "Client command flow",
+      "subject": "web-client",
+      "initial": "client-idle",
+      "variables": [{ "name": "delivered", "type": "boolean", "initial": false }],
+      "states": [
+        { "id": "client-idle", "name": "Idle" },
+        { "id": "client-awaiting", "name": "Awaiting outcome" },
+        { "id": "client-done", "name": "Acknowledged", "terminal": true },
+        { "id": "client-refused", "name": "Rejected", "terminal": true }
+      ],
+      "transitions": [
+        { "id": "client-submit", "from": "client-idle", "to": "client-awaiting", "on": "command-submitted", "effects": [{ "emit": "command-received", "payload": { "token": "event.token" } }] },
+        { "id": "client-receive-response", "from": "client-awaiting", "to": "client-done", "on": "response-delivered", "effects": [{ "set": "delivered", "to": true }] },
+        { "id": "client-receive-rejection", "from": "client-awaiting", "to": "client-refused", "on": "command-rejected" }
+      ]
+    },
+    {
+      "id": "api-flow",
+      "name": "API service command flow",
+      "subject": "api-service",
+      "description": "Authentication is folded into the guards: a token equal to 'valid-token' stands for a token the authentication service verified.",
+      "initial": "api-idle",
+      "variables": [
+        { "name": "validated", "type": "boolean", "initial": false },
+        { "name": "rejected", "type": "boolean", "initial": false }
+      ],
+      "states": [
+        { "id": "api-idle", "name": "Idle" },
+        { "id": "api-routing", "name": "Awaiting acknowledgement" },
+        { "id": "api-responded", "name": "Responded", "terminal": true },
+        { "id": "api-refused", "name": "Refused", "terminal": true }
+      ],
+      "transitions": [
+        { "id": "api-route-command", "from": "api-idle", "to": "api-routing", "on": "command-received", "guard": "event.token == 'valid-token'", "effects": [{ "set": "validated", "to": true }, { "emit": "command-routed" }] },
+        { "id": "api-reject-command", "from": "api-idle", "to": "api-refused", "on": "command-received", "guard": "event.token != 'valid-token'", "effects": [{ "set": "rejected", "to": true }, { "emit": "command-rejected" }] },
+        { "id": "api-deliver-response", "from": "api-routing", "to": "api-responded", "on": "acknowledgement-sent", "effects": [{ "emit": "response-delivered" }] }
+      ]
+    },
+    {
+      "id": "worker-flow",
+      "name": "Authoritative worker command flow",
+      "subject": "authoritative-worker-1",
+      "initial": "worker-idle",
+      "variables": [
+        { "name": "accepted", "type": "boolean", "initial": false },
+        { "name": "acked", "type": "boolean", "initial": false }
+      ],
+      "states": [
+        { "id": "worker-idle", "name": "Idle" },
+        { "id": "worker-accepted", "name": "Command accepted" },
+        { "id": "worker-awaiting-commit", "name": "Awaiting durable commit" },
+        { "id": "worker-acknowledged", "name": "Acknowledged after commit", "terminal": true },
+        { "id": "worker-acked-early", "name": "Acknowledged before commit (faulty)", "terminal": true }
+      ],
+      "transitions": [
+        { "id": "worker-accept-command", "from": "worker-idle", "to": "worker-accepted", "on": "command-routed", "effects": [{ "set": "accepted", "to": true }, { "emit": "command-accepted" }] },
+        // Faulty implementation. Declared BEFORE the correct transition for the
+        // same state and event so that it takes priority while enabled.
+        { "id": "worker-ack-early", "from": "worker-accepted", "to": "worker-acked-early", "on": "command-accepted", "faultOnly": true, "description": "Acknowledges on acceptance, before the transition is durable.", "effects": [{ "set": "acked", "to": true }, { "emit": "acknowledgement-sent" }, { "emit": "persist-requested", "after": 1 }] },
+        { "id": "worker-request-persist", "from": "worker-accepted", "to": "worker-awaiting-commit", "on": "command-accepted", "effects": [{ "emit": "persist-requested", "after": 1 }] },
+        { "id": "worker-ack-after-commit", "from": "worker-awaiting-commit", "to": "worker-acknowledged", "on": "persist-committed", "description": "The correct worker acknowledges only on durable commit.", "effects": [{ "set": "acked", "to": true }, { "emit": "acknowledgement-sent" }] }
+      ]
+    },
+    {
+      "id": "database-flow",
+      "name": "Database persistence flow",
+      "subject": "game-database",
+      "initial": "database-idle",
+      "variables": [{ "name": "durable", "type": "boolean", "initial": false }],
+      "states": [
+        { "id": "database-idle", "name": "Idle" },
+        { "id": "database-committed", "name": "Committed", "terminal": true }
+      ],
+      "transitions": [
+        { "id": "database-commit", "from": "database-idle", "to": "database-committed", "on": "persist-requested", "description": "Makes the transition durable, then confirms.", "effects": [{ "set": "durable", "to": true }, { "emit": "persist-committed" }] }
+      ]
+    }
+  ],
+
+  // ---- Faults ------------------------------------------------------------------
+  "faults": [
+    { "id": "early-ack", "name": "Worker acknowledges early", "kind": "enable-transition", "transition": "worker-ack-early", "description": "Activates the faulty worker implementation that acknowledges on acceptance, before durable commit." },
+    { "id": "db-commit-lost", "name": "Commit confirmation lost", "kind": "drop-event", "event": "persist-committed", "description": "The commit confirmation never reaches the worker." },
+    { "id": "slow-commit", "name": "Slow commit confirmation", "kind": "delay-event", "event": "persist-committed", "by": 3, "description": "The commit confirmation arrives 3 logical ticks late. Ticks are logical simulation time, not milliseconds." },
+    { "id": "routing-disabled", "name": "API routing disabled", "kind": "disable-transition", "transition": "api-route-command", "description": "The API service cannot route a valid command to the runtime." }
+  ],
+
+  // ---- Scenarios ---------------------------------------------------------------
+  "scenarios": [
+    {
+      "id": "command-happy-path",
+      "name": "Authenticated command, no faults",
+      "description": "One authenticated command is applied, committed and then acknowledged.",
+      "behaviors": ["client-flow", "api-flow", "worker-flow", "database-flow"],
+      "steps": [{ "at": 0, "event": "command-submitted", "payload": { "token": "valid-token" }, "note": "A player with a valid token submits a command." }]
+    },
+    {
+      "id": "command-unauthenticated",
+      "name": "Command with an invalid token",
+      "description": "The API service rejects the command; it never reaches the worker.",
+      "behaviors": ["client-flow", "api-flow", "worker-flow", "database-flow"],
+      "steps": [{ "at": 0, "event": "command-submitted", "payload": { "token": "invalid-token" }, "note": "The token does not verify." }]
+    },
+    {
+      "id": "command-ack-before-durable",
+      "name": "Faulty worker acknowledges before durability",
+      "description": "Deliberate failure demonstration: same input as the happy path, with the early-acknowledge fault active.",
+      "behaviors": ["client-flow", "api-flow", "worker-flow", "database-flow"],
+      "faults": ["early-ack"],
+      "steps": [{ "at": 0, "event": "command-submitted", "payload": { "token": "valid-token" } }]
+    },
+    {
+      "id": "command-commit-lost",
+      "name": "Commit confirmation lost",
+      "description": "The correct worker never acknowledges because the confirmation is dropped: safety holds, liveness is lost.",
+      "behaviors": ["client-flow", "api-flow", "worker-flow", "database-flow"],
+      "faults": ["db-commit-lost"],
+      "steps": [{ "at": 0, "event": "command-submitted", "payload": { "token": "valid-token" } }]
+    },
+    {
+      "id": "command-slow-commit",
+      "name": "Commit confirmation delayed",
+      "description": "The confirmation arrives late; the acknowledgement is correspondingly late but still follows durability.",
+      "behaviors": ["client-flow", "api-flow", "worker-flow", "database-flow"],
+      "faults": ["slow-commit"],
+      "steps": [{ "at": 0, "event": "command-submitted", "payload": { "token": "valid-token" } }]
+    }
+  ],
+
+  // ---- Assumptions -------------------------------------------------------------
+  "assumptions": [
+    { "id": "commit-confirmation-truthful", "statement": "The database gives a commit confirmation only when the transition is durable.", "rationale": "The behavior sets durable before it emits the confirmation; a real database would have to guarantee this.", "illustrative": true },
+    { "id": "transport-delivers-at-least-once", "statement": "The asynchronous transport delivers every published message at least once.", "rationale": "Acknowledgement delivery relies on it; loss is modelled only by explicit faults.", "illustrative": true },
+    { "id": "idp-tokens-unforgeable", "statement": "Tokens issued by the identity provider cannot be forged.", "rationale": "The unauthenticated-command claims depend on a valid token implying a verified player.", "illustrative": true },
+    { "id": "logical-time-ordering", "statement": "Events with equal logical time are delivered in scheduling order.", "rationale": "Documents the simulator's tie-break rule on which the early-acknowledge demonstration relies." }
+  ],
+
+  // ---- Claims ------------------------------------------------------------------
+  "claims": [
+    // -- Behavioral invariants and temporal properties
+    {
+      "id": "ack-implies-durable",
+      "kind": "invariant",
+      "statement": "In every step of the happy path, commit-lost and slow-commit scenarios, if the worker has acknowledged then the database has durably committed.",
+      "rationale": "The central safety obligation of submit-command. Checked on the listed traces only, not on all executions.",
+      "subjects": ["worker-flow", "database-flow", "submit-command", "command-happy-path", "command-commit-lost", "command-slow-commit"],
+      "assumptions": ["commit-confirmation-truthful"],
+      "evaluate": { "method": "state-invariant", "scenarios": ["command-happy-path", "command-commit-lost", "command-slow-commit"], "expr": "worker-flow.acked => database-flow.durable", "negatives": [{ "scenario": "command-happy-path", "faults": ["early-ack"] }] }
+    },
+    {
+      "id": "ack-implies-durable-under-early-ack",
+      "kind": "invariant",
+      "statement": "This claim documents that the faulty early-acknowledge worker breaks the guarantee: with the early-ack fault active, a step exists in which the worker has acknowledged while the database is not yet durable.",
+      "rationale": "Expected to be VIOLATED. It exists to show the counterexample the checker produces for the faulty implementation.",
+      "subjects": ["worker-flow", "database-flow", "command-ack-before-durable"],
+      "evaluate": { "method": "state-invariant", "scenarios": ["command-ack-before-durable"], "expr": "worker-flow.acked => database-flow.durable" }
+    },
+    {
+      "id": "commit-precedes-ack",
+      "kind": "temporal",
+      "statement": "In the happy path, every acknowledgement is preceded by a delivered persist-committed event.",
+      "subjects": ["worker-flow", "database-flow", "command-happy-path"],
+      "assumptions": ["commit-confirmation-truthful"],
+      "evaluate": { "method": "precedes", "scenarios": ["command-happy-path"], "first": { "event": "persist-committed" }, "then": { "event": "acknowledgement-sent" }, "negatives": [{ "scenario": "command-happy-path", "faults": ["early-ack"] }] }
+    },
+    {
+      "id": "command-eventually-acknowledged",
+      "kind": "temporal",
+      "statement": "In the happy path, the response is eventually delivered to the client.",
+      "rationale": "Liveness on the trace without faults only; the commit-lost scenario shows it does not hold under that fault.",
+      "subjects": ["client-flow", "command-happy-path"],
+      "evaluate": { "method": "eventually", "scenarios": ["command-happy-path"], "occurs": { "event": "response-delivered" }, "negatives": [{ "scenario": "command-happy-path", "faults": ["db-commit-lost"] }] }
+    },
+    {
+      "id": "unauthenticated-never-reaches-worker",
+      "kind": "temporal",
+      "statement": "In the unauthenticated scenario, the command is never routed to the worker.",
+      "subjects": ["api-flow", "worker-flow", "command-unauthenticated"],
+      "assumptions": ["idp-tokens-unforgeable"],
+      "evaluate": { "method": "never", "scenarios": ["command-unauthenticated"], "occurs": { "event": "command-routed" } }
+    },
+
+    // -- Structural claims
+    {
+      "id": "client-reaches-data-only-via-api",
+      "kind": "structural",
+      "statement": "Every directed path from the web client to a data store passes through the API service.",
+      "subjects": ["web-client", "api-service"],
+      "evaluate": { "method": "only-via", "from": "web-client", "to": { "category": "storage" }, "via": "api-service" }
+    },
+    {
+      "id": "no-direct-client-to-database",
+      "kind": "structural",
+      "statement": "The web client has no direct relationship to the persistent game database.",
+      "subjects": ["web-client", "game-database"],
+      "evaluate": { "method": "no-relationship", "from": "web-client", "to": "game-database", "transitive": false }
+    },
+    {
+      "id": "stores-have-owners",
+      "kind": "structural",
+      "statement": "Every data store declares an owner.",
+      "subjects": ["game-database", "shared-cache"],
+      "evaluate": { "method": "property-defined", "select": { "category": "storage" }, "property": "owner" }
+    },
+    {
+      "id": "api-exposes-submit-command",
+      "kind": "structural",
+      "statement": "The API service provides a port with the submit-command contract.",
+      "subjects": ["api-service", "submit-command"],
+      "evaluate": { "method": "has-port", "select": "api-service", "direction": "provides", "contract": "submit-command" }
+    },
+    {
+      // Honest: with the chosen relationship kinds no dependency cycle exists.
+      // Publishes and observes are not dependencies; subscribes points from the
+      // consumer to the channel.
+      "id": "dependencies-acyclic",
+      "kind": "structural",
+      "statement": "Relationships of kinds flagged as dependencies form no cycle.",
+      "subjects": ["api-service", "game-coordinator", "authoritative-worker-1", "authoritative-worker-2", "game-database", "message-transport"],
+      "evaluate": { "method": "acyclic" }
+    },
+    {
+      "id": "database-reached-only-by-runtime",
+      "kind": "structural",
+      "statement": "No infrastructure component has a direct relationship to the persistent game database; only game runtime workers touch it.",
+      "rationale": "Intentionally seeded failure. The relationship telemetry-reads-game-database was added on purpose so that the model contains a failing structural claim with a concrete counterexample.",
+      "subjects": ["telemetry", "game-database", "telemetry-reads-game-database"],
+      "evaluate": { "method": "no-relationship", "from": { "category": "infrastructure" }, "to": "game-database", "transitive": false }
+    },
+
+    // -- Measured claims the model cannot establish
+    {
+      "id": "ack-latency-objective",
+      "kind": "measured",
+      "statement": "The time from command submission to acknowledgement stays within the latency objective of the platform's service-level document. The objective value is not stated in this illustrative model.",
+      "subjects": ["api-service", "authoritative-worker-1", "submit-command"],
+      "evaluate": { "method": "external-evidence" }
+    },
+    {
+      "id": "worker-availability-objective",
+      "kind": "measured",
+      "statement": "Authoritative workers meet the availability objective of the platform's service-level document. The objective value is not stated in this illustrative model.",
+      "subjects": ["game-workers"],
+      "evaluate": { "method": "external-evidence" }
+    },
+
+    // -- Unsupported method: stays explicitly not evaluated
+    {
+      "id": "ack-probability-bound",
+      "kind": "temporal",
+      "statement": "Under a stochastic model of transport loss, the probability that an accepted command is never acknowledged stays below a bound still to be set.",
+      "rationale": "No probabilistic evaluator exists in this build; the claim is kept to show it stays not evaluated.",
+      "subjects": ["message-transport", "worker-flow"],
+      "assumptions": ["transport-delivers-at-least-once"],
+      "evaluate": { "method": "probabilistic-model-check", "scenarios": ["command-happy-path"] }
+    }
+  ],
+
+  // ---- Evidence ----------------------------------------------------------------
+  "evidence": [
+    {
+      "id": "ack-latency-report",
+      "claim": "ack-latency-objective",
+      "kind": "measurement",
+      "ref": "illustrative://latency-report",
+      "description": "A placeholder for a latency measurement report. No such report exists.",
+      "observed": "illustrative, not a real measurement"
+    }
+  ],
+
+  // ---- Views -------------------------------------------------------------------
+  "views": [
+    { "id": "architecture", "name": "Architecture", "projection": "structural", "description": "Every component and relationship.", "display": { "showPorts": true } },
+    { "id": "data-flow", "name": "Data flow", "projection": "structural", "description": "Only relationships that move or hold data.", "filter": { "relationshipKinds": ["data-flow", "reads", "writes", "publishes", "subscribes"] } },
+    { "id": "trust-zones", "name": "Trust zones", "projection": "structural", "description": "Components coloured by trust zone.", "display": { "colorBy": "trustZone" } },
+    { "id": "claims", "name": "Claims", "projection": "claims", "description": "Claims and their evaluation status." },
+    { "id": "behavior", "name": "Command behavior", "projection": "behavior", "description": "State machines and scenarios of command processing." }
+  ]
+}

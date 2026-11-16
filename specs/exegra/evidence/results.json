@@ -1,0 +1,166 @@
+{
+  "results": {
+    "ev-roundtrip-core": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:07:19.389Z"
+    },
+    "ev-browser-inspector-rename": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:07:25.033Z"
+    },
+    "ev-browser-source-edit": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:07:35.728Z"
+    },
+    "ev-workspace-write": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:07:35.899Z"
+    },
+    "ev-browser-persists": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:07:41.514Z"
+    },
+    "ev-roundtrip-rejected": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:07:41.712Z"
+    },
+    "ev-browser-rejected-source": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:07:52.437Z"
+    },
+    "ev-workspace-conflict": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:07:52.603Z"
+    },
+    "ev-layout-core": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:07:52.784Z"
+    },
+    "ev-layout-browser": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:07:58.483Z"
+    },
+    "ev-simulation-core": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:07:58.684Z"
+    },
+    "ev-generate-core": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:07:58.882Z"
+    },
+    "ev-workspace-confinement": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:07:59.342Z"
+    },
+    "ev-roundtrip-invalid-draft": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:07:59.514Z"
+    },
+    "ev-browser-invalid-draft": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:08:10.221Z"
+    },
+    "ev-model-unsupported": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:08:10.392Z"
+    },
+    "ev-flows-trace": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:08:10.580Z"
+    },
+    "ev-flows-edges": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:08:10.771Z"
+    },
+    "ev-browser-sim-flow": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:08:18.665Z"
+    },
+    "ev-simulation-contract": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:08:19.941Z"
+    },
+    "ev-engines-agree": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:08:21.210Z"
+    },
+    "ev-simulation-worker-responsive": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:08:35.401Z"
+    },
+    "ev-browser-phone-touch-usable": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:08:50.927Z"
+    },
+    "ev-browser-phone-every-function": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:09:11.315Z"
+    },
+    "ev-browser-tablet-desktop-expand": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:09:19.719Z"
+    },
+    "ev-fault-model-core": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:09:19.947Z"
+    },
+    "ev-formal-differential": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:09:33.571Z"
+    },
+    "ev-formal-proofs": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:09:34.525Z"
+    },
+    "ev-contract-events-static": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:09:34.695Z"
+    },
+    "ev-contract-trace-checks": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:09:34.906Z"
+    },
+    "ev-contract-request-log": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:09:35.119Z"
+    },
+    "ev-browser-requests-section": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:09:41.155Z"
+    },
+    "ev-data-model-core": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:09:41.351Z"
+    },
+    "ev-formal-explore": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:09:52.244Z"
+    },
+    "ev-formal-explore-bounded": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:09:56.675Z"
+    },
+    "ev-negatives-status": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:09:56.872Z"
+    },
+    "ev-negatives-validated": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:09:57.133Z"
+    },
+    "ev-own-claims-falsifiable": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:09:57.395Z"
+    },
+    "ev-formal-explore-temporal": {
+      "outcome": "pass",
+      "ranAt": "2026-11-16T22:10:01.661Z"
+    }
+  },
+  "traceability": {
+    "checkedModules": 138,
+    "missingModules": [],
+    "unclaimedFiles": [],
+    "claimedFiles": 100
+  }
+}

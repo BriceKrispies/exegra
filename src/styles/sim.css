@@ -1,0 +1,290 @@
+/* owned by its component module; see docs/module-contracts.md */
+@layer components {
+  /* Phone first: one column (run, timeline, step) scrolling inside the panel; three
+     columns side by side once the panel is wide enough. */
+  /* Narrow container (phone, side panel, desktop context panel): one stack, top to
+     bottom: run controls, the timeline as a bounded scrolling list, the step detail
+     and its checks. Each column takes its full content height (flex: none, no
+     min-height: 0), so no column can be squeezed under the next one. Three columns
+     side by side only when the panel is at least 900 px wide. */
+  .sim {
+    container-type: inline-size;
+    display: flex;
+    flex-direction: column;
+    font-size: var(--fs-2);
+  }
+  .sim__col {
+    flex: none;
+    min-width: 0;
+    padding: var(--s-4) var(--s-5);
+    border-bottom: 1px solid var(--line-1);
+  }
+  .sim__col:last-child { border-bottom: 0; }
+  .sim__col--timeline .sim__scroll-inner {
+    max-height: min(320px, 40dvh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--line-1);
+    border-radius: var(--r-2);
+  }
+  /* Narrow order: what the user needs while stepping comes first. The step column's two
+     blocks (detail, checks) become items of the stack, so: (a) current step, (b) timeline,
+     (c) checks, (d) run settings with "About this scenario" collapsed at their end. With no
+     scenario loaded the run settings (the scenario picker) come first. */
+  .sim__col--step { display: contents; }
+  .sim__stepbody, .sim__checkshost { min-width: 0; padding: var(--s-4) var(--s-5); border-bottom: 1px solid var(--line-1); overflow-wrap: anywhere; }
+  .sim__checkshost:empty { display: none; }
+  .sim__stepbody { order: 1; }
+  .sim__col--timeline { order: 2; }
+  .sim__checkshost { order: 3; }
+  .sim__col--run { order: 4; }
+  .sim[data-loaded="false"] .sim__col--run { order: 0; }
+  .sim__about { margin-top: var(--s-4); border-top: 1px solid var(--line-1); }
+  .sim__about-summary {
+    display: flex;
+    align-items: center;
+    min-height: var(--row-h);
+    color: var(--text-3);
+    font-size: var(--fs-1);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .sim__about-summary::before { content: "B8"; margin-right: var(--s-2); }
+  .sim__about[open] > .sim__about-summary::before { content: "BE"; }
+  @container panel (min-width: 900px) {
+    .sim__col--step { display: block; }
+    .sim__stepbody, .sim__checkshost { padding: 0; border-bottom: 0; }
+    .sim__stepbody, .sim__col--timeline, .sim__checkshost, .sim__col--run, .sim[data-loaded="false"] .sim__col--run { order: 0; }
+    .sim {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) minmax(280px, 1.4fr) minmax(300px, 1.6fr);
+      grid-template-rows: minmax(0, 1fr);
+      height: 100%;
+    }
+    .sim__col { min-height: 0; overflow: auto; border-bottom: 0; border-right: 1px solid var(--line-1); }
+    .sim__col:last-child { border-right: 0; }
+    .sim__col--timeline .sim__scroll-inner { max-height: none; overflow: visible; border: 0; }
+  }
+  .sim__h, .sim__sub {
+    margin: 0 0 var(--s-2);
+    font-size: var(--fs-1);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .sim__h { padding-bottom: var(--s-2); border-bottom: 1px solid var(--line-1); }
+  .sim__sub { margin-top: var(--s-4); }
+  .sim__label { display: block; margin-bottom: var(--s-1); color: var(--text-3); font-size: var(--fs-1); }
+  .sim__col select { width: 100%; }
+  .sim__desc { margin: var(--s-3) 0; color: var(--text-2); }
+  .sim__muted { color: var(--text-3); }
+  .sim__mono, .sim code { font-family: var(--font-mono); font-size: var(--fs-1); }
+  .sim__list { list-style: none; margin: 0; padding: 0; }
+  .sim__list li { padding: var(--s-1) 0; }
+  .sim__bname { font-weight: 600; }
+  .sim__link {
+    all: unset;
+    cursor: pointer;
+    color: var(--accent);
+    border-radius: var(--r-1);
+  }
+  .sim__link:hover { text-decoration: underline; }
+  .sim__link:focus-visible, .sim__rowbtn:focus-visible, .sim__chip--entity:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+  .sim__fault { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-2) var(--s-3); min-height: var(--row-h); cursor: pointer; }
+  .sim__fault input { flex: none; }
+  .sim__chip {
+    display: inline-flex;
+    align-items: center;
+    height: 16px;
+    padding: 0 var(--s-2);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-1);
+    font-size: var(--fs-1);
+    color: var(--text-2);
+    background: var(--surface-2);
+    white-space: nowrap;
+  }
+  .sim__chip--drop { color: var(--bad); border-color: var(--bad); }
+  .sim__chip--delay { color: var(--warn); border-color: var(--warn); }
+  .sim__chip--entity { cursor: pointer; height: auto; min-height: 20px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left; }
+  .sim__chip--entity:hover { background: var(--surface-3); }
+  .sim__chips { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+  .sim__mark {
+    font-size: var(--fs-1);
+    padding: 0 var(--s-2);
+    border-radius: var(--r-1);
+    color: var(--text-2);
+    border: 1px dashed var(--line-2);
+    white-space: nowrap;
+  }
+  .sim__mark--fault { color: var(--warn); border-color: var(--warn); }
+  .sim__mark--bad { color: var(--bad); border-color: var(--bad); }
+  .sim__controls { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: var(--s-2); margin: var(--s-4) 0 var(--s-3); }
+  .sim__controls button:disabled, .sim__jump:disabled { opacity: 0.45; cursor: not-allowed; }
+  .sim button:focus-visible, .sim select:focus-visible, .sim input:focus-visible, .sim summary:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+  .sim__status { display: block; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .sim__outcome--error { color: var(--bad); }
+  .sim__outcome--step-limit { color: var(--warn); }
+  .sim__notice {
+    margin: var(--s-4) 0 0;
+    padding: var(--s-3);
+    border: 1px solid var(--line-1);
+    border-left: 2px solid var(--warn);
+    background: var(--surface-2);
+    color: var(--text-2);
+  }
+
+  .sim__rows { list-style: none; margin: 0; padding: 0; }
+  .sim__row { border-bottom: 1px solid var(--line-1); }
+  .sim__row--future { opacity: 0.55; }
+  .sim__row--current { background: var(--selected); opacity: 1; }
+  .sim__rowbtn {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    width: 100%;
+    min-height: var(--row-h);
+    padding: 0 var(--s-2);
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+  }
+  .sim__rowbtn:hover { background: var(--hover); }
+  /* one timeline row per step, on one line: small tokens keep their width, the event and the
+     summary share the rest and end in an ellipsis */
+  .sim__idx { flex: none; width: 3.2em; color: var(--text-3); font-family: var(--font-mono); white-space: nowrap; }
+  .sim__time { flex: none; width: 4em; color: var(--text-2); font-family: var(--font-mono); white-space: nowrap; }
+  .sim__ev { flex: 0 1 auto; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .sim__sum { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); }
+  .sim__rowbtn > .sim__chip, .sim__rowbtn > .sim__mark { flex: none; }
+
+  .sim__table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .sim__table th {
+    text-align: left;
+    font-size: var(--fs-1);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-3);
+    padding: var(--s-1) var(--s-2);
+    border-bottom: 1px solid var(--line-2);
+  }
+  .sim__table td { padding: var(--s-2); border-bottom: 1px solid var(--line-1); vertical-align: top; }
+  .sim__num { font-family: var(--font-mono); white-space: nowrap; }
+
+  /* key/value: the term above its value in a narrow column, side by side from 480 px */
+  .sim__kv { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 var(--s-4); margin: 0; }
+  .sim__kv dt { color: var(--text-3); font-size: var(--fs-1); margin-top: var(--s-2); }
+  .sim__kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+  @container (min-width: 480px) {
+    .sim__kv { grid-template-columns: minmax(6em, max-content) minmax(0, 1fr); gap: var(--s-1) var(--s-4); }
+    .sim__kv dt { margin-top: 0; }
+  }
+  .sim__fired { margin: var(--s-2) 0; padding: var(--s-2) var(--s-3); border: 1px solid var(--line-1); border-radius: var(--r-1); background: var(--surface-2); display: grid; gap: var(--s-1); }
+  .sim__fired-head { font-weight: 600; }
+  .sim__state { font-weight: 600; }
+  .sim__var { display: inline-block; max-width: 100%; margin-right: var(--s-4); overflow-wrap: anywhere; }
+  /* long ids and expressions wrap; nothing in the step detail is painted over its neighbour */
+  .sim__col--step, .sim__col--run { overflow-wrap: anywhere; }
+  .sim__fired > *, .sim__list li, .sim__check, .sim__banner, .sim__desc, .sim__notice, .sim__status { min-width: 0; overflow-wrap: anywhere; }
+  .sim__chip:not(.sim__chip--entity), .sim__mark, .sim__num { white-space: nowrap; }
+  .sim__rowbtn { overflow: hidden; }
+  .sim__changed { color: var(--accent); font-weight: 600; }
+  .sim__details { margin-top: var(--s-2); color: var(--text-2); }
+  .sim__details summary { cursor: pointer; color: var(--text-3); min-height: var(--row-h); display: flex; align-items: center; }
+
+  .sim__banner {
+    margin: var(--s-2) 0;
+    padding: var(--s-3);
+    border: 1px solid var(--bad);
+    border-left-width: 3px;
+    background: color-mix(in srgb, var(--bad) 14%, var(--surface-1));
+    color: var(--text-1);
+    font-weight: 600;
+  }
+  .sim__bad { color: var(--bad); }
+  /* request log: one wrapping line per contract event, each a full-height jump target */
+  .sim__reqbtn { height: auto; padding-block: var(--s-2); min-height: var(--row-h); align-items: flex-start; overflow: visible; }
+  .sim__reqtext { flex: 1 1 0; min-width: 0; font-family: var(--font-mono); font-size: var(--fs-1); white-space: normal; overflow-wrap: anywhere; }
+  .sim__check { padding: var(--s-2) 0; border-bottom: 1px solid var(--line-1); }
+  .sim__check--bad { border-left: 2px solid var(--bad); padding-left: var(--s-3); }
+  .sim__jump { margin-left: var(--s-3); }
+
+  @media (min-width: 768px) and (pointer: fine) {
+    .sim__col { padding: var(--s-3) var(--s-4); }
+    .sim__controls { display: flex; flex-wrap: wrap; }
+    .sim__jump { height: 22px; }
+  }
+
+  /* ---- transport (src/ui/sim-transport.js) --------------------------------------------- */
+  .transport {
+    display: flex;
+    align-items: center;
+    gap: var(--s-1);
+    padding: 0 calc(var(--s-3) + var(--safe-right)) 0 calc(var(--s-3) + var(--safe-left));
+    background: var(--glass-strong);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border-top: 1px solid var(--line-2);
+  }
+  .transport__btn {
+    flex: none;
+    width: var(--target);
+    height: var(--target);
+    padding: 0;
+    background: none;
+    border-color: transparent;
+    border-radius: var(--r-pill);
+  }
+  .transport__btn[data-testid="transport-play"] { background: var(--accent); color: var(--on-accent); }
+  .transport__btn[data-testid="transport-play"]:disabled { background: var(--surface-3); color: var(--text-3); }
+  .transport__info {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0;
+    height: var(--target);
+    padding: 0 var(--s-3);
+    background: none;
+    border-color: transparent;
+    text-align: left;
+  }
+  .transport__name, .transport__readout {
+    display: block;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.25;
+  }
+  .transport__name { font-size: var(--fs-1); color: var(--text-2); }
+  .transport__readout { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--text-1); font-variant-numeric: tabular-nums; }
+  .transport[data-outcome="error"] .transport__readout { color: var(--bad); }
+  @media (min-width: 768px) {
+    .transport {
+      height: auto;
+      padding: var(--s-1);
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-pill);
+      box-shadow: var(--shadow-2);
+    }
+    .transport__info { flex: 0 1 auto; max-width: 260px; }
+  }
+  @media (min-width: 768px) and (pointer: fine) {
+    .transport__btn { width: 32px; height: 32px; }
+    .transport__info { height: 32px; }
+  }
+  /* From tablet width up the Simulate panel has the same controls; the floating transport
+     would only duplicate them (layout.js sets data-sim-open). */
+  @media (min-width: 768px) {
+    .app[data-sim-open="true"] .transport { display: none; }
+  }
+}

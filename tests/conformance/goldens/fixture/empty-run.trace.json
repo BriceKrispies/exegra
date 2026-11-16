@@ -1,0 +1,48 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "gateway-machine": {
+    "state": "gw-idle",
+    "vars": {
+     "closed": false,
+     "last": "none",
+     "seen": 0
+    }
+   },
+   "ledger-machine": {
+    "state": "ledger-open",
+    "vars": {
+     "balance": 0,
+     "entries": 0
+    }
+   }
+  },
+  "pending": [],
+  "time": 0
+ },
+ "initial": {
+  "machines": {
+   "gateway-machine": {
+    "state": "gw-idle",
+    "vars": {
+     "closed": false,
+     "last": "none",
+     "seen": 0
+    }
+   },
+   "ledger-machine": {
+    "state": "ledger-open",
+    "vars": {
+     "balance": 0,
+     "entries": 0
+    }
+   }
+  },
+  "pending": [],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "empty-run",
+ "steps": []
+}

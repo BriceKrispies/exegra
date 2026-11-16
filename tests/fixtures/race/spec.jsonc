@@ -1,0 +1,170 @@
+{
+  // A fixture protocol with a known race, for exhaustive exploration (tests/core/formal-explore.test.js).
+  // Two clients increment a counter held by a store. In the racy variant each client reads the value
+  // and writes back value + 1, so two reads before either write lose an update. The scripted run does
+  // not show it: events of equal time are delivered in scheduling order, client b needs more hops
+  // before its read, and a's write lands first. Another order of the simultaneous events does show
+  // it. In the fixed variant the store increments atomically, so no order loses an update.
+  // Time is logical ticks.
+  "exegra": "0.1",
+  "system": {
+    "id": "race-fixture",
+    "name": "Lost-update race fixture",
+    "version": "0.1.0",
+    "description": "Two clients increment a stored counter; a racy read-modify-write store and an atomic one.",
+    "illustrative": true
+  },
+
+  "components": [
+    { "id": "client-a", "name": "Client A", "category": "client", "purpose": "Increments the counter once.", "illustrative": true },
+    { "id": "client-b", "name": "Client B", "category": "client", "purpose": "Increments the counter once, after some preparation.", "illustrative": true },
+    { "id": "counter-store", "name": "Counter store", "category": "storage", "purpose": "Holds the counter.", "illustrative": true }
+  ],
+
+  "relationships": [
+    { "id": "client-a-calls-store", "kind": "calls", "from": "client-a", "to": "counter-store" },
+    { "id": "client-b-calls-store", "kind": "calls", "from": "client-b", "to": "counter-store" }
+  ],
+
+  "events": [
+    { "id": "go-a", "name": "Client A starts" },
+    { "id": "go-b", "name": "Client B starts" },
+    { "id": "prepare-b", "name": "Client B prepares" },
+    { "id": "ready-b", "name": "Client B is ready" },
+    { "id": "read-a", "name": "Client A reads" },
+    { "id": "read-b", "name": "Client B reads" },
+    { "id": "value-a", "name": "Value for client A", "payload": [{ "name": "v", "type": "number" }] },
+    { "id": "value-b", "name": "Value for client B", "payload": [{ "name": "v", "type": "number" }] },
+    { "id": "write-a", "name": "Client A writes", "payload": [{ "name": "v", "type": "number" }] },
+    { "id": "write-b", "name": "Client B writes", "payload": [{ "name": "v", "type": "number" }] }
+  ],
+
+  "behaviors": [
+    {
+      "id": "client-a-flow",
+      "name": "Client A increment",
+      "subject": "client-a",
+      "initial": "a-idle",
+      "states": [{ "id": "a-idle", "name": "Idle" }, { "id": "a-reading", "name": "Reading" }, { "id": "a-done", "name": "Done", "terminal": true }],
+      "transitions": [
+        { "id": "a-start", "from": "a-idle", "to": "a-reading", "on": "go-a", "effects": [{ "emit": "read-a" }] },
+        { "id": "a-write", "from": "a-reading", "to": "a-done", "on": "value-a", "effects": [{ "emit": "write-a", "payload": { "v": "event.v + 1" } }] }
+      ]
+    },
+    {
+      "id": "client-b-flow",
+      "name": "Client B increment",
+      "subject": "client-b",
+      "initial": "b-idle",
+      "states": [
+        { "id": "b-idle", "name": "Idle" }, { "id": "b-preparing", "name": "Preparing" }, { "id": "b-ready", "name": "Ready" },
+        { "id": "b-reading", "name": "Reading" }, { "id": "b-done", "name": "Done", "terminal": true }
+      ],
+      "transitions": [
+        { "id": "b-start", "from": "b-idle", "to": "b-preparing", "on": "go-b", "effects": [{ "emit": "prepare-b" }] },
+        { "id": "b-prepare", "from": "b-preparing", "to": "b-ready", "on": "prepare-b", "effects": [{ "emit": "ready-b" }] },
+        { "id": "b-read", "from": "b-ready", "to": "b-reading", "on": "ready-b", "effects": [{ "emit": "read-b" }] },
+        { "id": "b-write", "from": "b-reading", "to": "b-done", "on": "value-b", "effects": [{ "emit": "write-b", "payload": { "v": "event.v + 1" } }] }
+      ]
+    },
+    {
+      "id": "racy-store",
+      "name": "Read-modify-write store",
+      "subject": "counter-store",
+      "initial": "racy-serving",
+      "variables": [{ "name": "value", "type": "number", "initial": 0 }, { "name": "writes", "type": "number", "initial": 0 }],
+      "states": [{ "id": "racy-serving", "name": "Serving" }],
+      "transitions": [
+        { "id": "racy-read-a", "from": "racy-serving", "to": "racy-serving", "on": "read-a", "effects": [{ "emit": "value-a", "payload": { "v": "value" } }] },
+        { "id": "racy-read-b", "from": "racy-serving", "to": "racy-serving", "on": "read-b", "effects": [{ "emit": "value-b", "payload": { "v": "value" } }] },
+        { "id": "racy-write-a", "from": "racy-serving", "to": "racy-serving", "on": "write-a", "effects": [{ "set": "value", "to": "event.v" }, { "set": "writes", "to": "writes + 1" }] },
+        { "id": "racy-write-b", "from": "racy-serving", "to": "racy-serving", "on": "write-b", "effects": [{ "set": "value", "to": "event.v" }, { "set": "writes", "to": "writes + 1" }] }
+      ]
+    },
+    {
+      "id": "atomic-store",
+      "name": "Atomic increment store",
+      "subject": "counter-store",
+      "initial": "atomic-serving",
+      "variables": [{ "name": "value", "type": "number", "initial": 0 }, { "name": "writes", "type": "number", "initial": 0 }],
+      "states": [{ "id": "atomic-serving", "name": "Serving" }],
+      "transitions": [
+        { "id": "atomic-read-a", "from": "atomic-serving", "to": "atomic-serving", "on": "read-a", "effects": [{ "emit": "value-a", "payload": { "v": "value" } }] },
+        { "id": "atomic-read-b", "from": "atomic-serving", "to": "atomic-serving", "on": "read-b", "effects": [{ "emit": "value-b", "payload": { "v": "value" } }] },
+        { "id": "atomic-write-a", "from": "atomic-serving", "to": "atomic-serving", "on": "write-a", "effects": [{ "set": "value", "to": "value + 1" }, { "set": "writes", "to": "writes + 1" }] },
+        { "id": "atomic-write-b", "from": "atomic-serving", "to": "atomic-serving", "on": "write-b", "effects": [{ "set": "value", "to": "value + 1" }, { "set": "writes", "to": "writes + 1" }] }
+      ]
+    }
+  ],
+
+  "faults": [
+    { "id": "write-b-lost", "name": "Client B's write is lost", "kind": "drop-event", "event": "write-b", "description": "The store never receives client B's write." }
+  ],
+
+  "scenarios": [
+    {
+      "id": "lost-update-race",
+      "name": "Two increments, read-modify-write store",
+      "behaviors": ["client-a-flow", "client-b-flow", "racy-store"],
+      "steps": [{ "at": 0, "event": "go-a" }, { "at": 0, "event": "go-b" }]
+    },
+    {
+      "id": "atomic-increments",
+      "name": "Two increments, atomic store, B's write may be lost",
+      "behaviors": ["client-a-flow", "client-b-flow", "atomic-store"],
+      "faults": ["write-b-lost"],
+      "steps": [{ "at": 0, "event": "go-a" }, { "at": 0, "event": "go-b" }]
+    }
+  ],
+
+  "claims": [
+    {
+      "id": "racy-no-lost-update",
+      "kind": "invariant",
+      "statement": "The read-modify-write store never loses an update: its value equals the number of writes it applied.",
+      "rationale": "Expected to fail under exhaustive exploration (the scripted run alone passes).",
+      "subjects": ["racy-store"],
+      "evaluate": { "method": "state-invariant", "scenarios": ["lost-update-race"], "expr": "racy-store.value == racy-store.writes" }
+    },
+    {
+      "id": "atomic-no-lost-update",
+      "kind": "invariant",
+      "statement": "The atomic store never loses an update: its value equals the number of writes it applied.",
+      "rationale": "Holds in every order of the simultaneous events, with or without the lost write.",
+      "subjects": ["atomic-store"],
+      "evaluate": { "method": "state-invariant", "scenarios": ["atomic-increments"], "expr": "atomic-store.value == atomic-store.writes" }
+    },
+    {
+      "id": "atomic-read-precedes-write",
+      "kind": "temporal",
+      "statement": "Client A reads before it writes.",
+      "rationale": "A temporal claim: exhaustive exploration checks it on every complete run.",
+      "subjects": ["client-a-flow"],
+      "evaluate": { "method": "precedes", "scenarios": ["atomic-increments"], "first": { "event": "read-a" }, "then": { "event": "write-a" } }
+    },
+    {
+      "id": "atomic-a-write-happens",
+      "kind": "temporal",
+      "statement": "Client A's write is delivered in every run, whichever of B's writes is lost.",
+      "rationale": "Holds on every path: only client B's write can be dropped.",
+      "subjects": ["client-a-flow"],
+      "evaluate": { "method": "eventually", "scenarios": ["atomic-increments"], "occurs": { "event": "write-a" } }
+    },
+    {
+      "id": "atomic-b-write-happens",
+      "kind": "temporal",
+      "statement": "Client B's write is delivered in every run.",
+      "rationale": "Fails: with the write-b-lost fault the run ends at quiescence without delivering it.",
+      "subjects": ["client-b-flow"],
+      "evaluate": { "method": "eventually", "scenarios": ["atomic-increments"], "occurs": { "event": "write-b" } }
+    },
+    {
+      "id": "racy-a-writes-first",
+      "kind": "temporal",
+      "statement": "Client A's write reaches the racy store before client B's.",
+      "rationale": "True in the scripted run; another order of the simultaneous events lets B write first.",
+      "subjects": ["racy-store"],
+      "evaluate": { "method": "precedes", "scenarios": ["lost-update-race"], "first": { "transition": "racy-write-a" }, "then": { "transition": "racy-write-b" } }
+    }
+  ]
+}

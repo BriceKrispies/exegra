@@ -1,0 +1,465 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "ops-machine": {
+    "state": "ops-done",
+    "vars": {
+     "a": 7,
+     "and1": true,
+     "b": 2,
+     "cat": "abcdef",
+     "diff": 5,
+     "eq": true,
+     "eqs": true,
+     "flag": true,
+     "ge": false,
+     "gt": true,
+     "imp1": false,
+     "imp2": true,
+     "imp3": true,
+     "inexact": 0.30000000000000004,
+     "le": true,
+     "lt": false,
+     "mix": true,
+     "mixed": false,
+     "ne": false,
+     "neg": -7,
+     "negneg": 9,
+     "not1": false,
+     "nul": true,
+     "or1": true,
+     "paren": 9,
+     "prec": 5,
+     "prod": 14,
+     "quo": 3.5,
+     "rem": 1,
+     "s": "ab",
+     "short_and": false,
+     "short_imp": true,
+     "short_or": true,
+     "sum": 9,
+     "t": true,
+     "ticks": 12
+    }
+   }
+  },
+  "pending": [],
+  "time": 4
+ },
+ "initial": {
+  "machines": {
+   "ops-machine": {
+    "state": "ops-ready",
+    "vars": {
+     "a": 7,
+     "and1": false,
+     "b": 2,
+     "cat": "",
+     "diff": 0,
+     "eq": false,
+     "eqs": false,
+     "flag": true,
+     "ge": false,
+     "gt": false,
+     "imp1": true,
+     "imp2": false,
+     "imp3": false,
+     "inexact": 0,
+     "le": false,
+     "lt": false,
+     "mix": false,
+     "mixed": true,
+     "ne": false,
+     "neg": 0,
+     "negneg": 0,
+     "not1": true,
+     "nul": false,
+     "or1": false,
+     "paren": 0,
+     "prec": 0,
+     "prod": 0,
+     "quo": 0,
+     "rem": 0,
+     "s": "ab",
+     "short_and": true,
+     "short_imp": false,
+     "short_or": false,
+     "sum": 0,
+     "t": true,
+     "ticks": 0
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "ops-run",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 3
+   },
+   {
+    "event": "ops-second",
+    "payload": {},
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    },
+    "time": 4
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "expression-showcase",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "ops-machine": {
+      "state": "ops-done",
+      "vars": {
+       "a": 7,
+       "and1": true,
+       "b": 2,
+       "cat": "abcdef",
+       "diff": 5,
+       "eq": true,
+       "eqs": true,
+       "flag": false,
+       "ge": false,
+       "gt": true,
+       "imp1": false,
+       "imp2": true,
+       "imp3": true,
+       "inexact": 0.30000000000000004,
+       "le": true,
+       "lt": false,
+       "mix": true,
+       "mixed": false,
+       "ne": false,
+       "neg": -7,
+       "negneg": 9,
+       "not1": false,
+       "nul": true,
+       "or1": true,
+       "paren": 9,
+       "prec": 5,
+       "prod": 14,
+       "quo": 3.5,
+       "rem": 1,
+       "s": "ab",
+       "short_and": false,
+       "short_imp": true,
+       "short_or": true,
+       "sum": 9,
+       "t": true,
+       "ticks": 8
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ops-second",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 4
+     }
+    ],
+    "time": 3
+   },
+   "event": {
+    "id": "ops-run",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "ops-machine",
+     "emitted": [],
+     "from": "ops-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 9,
+       "before": 0,
+       "variable": "sum"
+      },
+      {
+       "after": 5,
+       "before": 0,
+       "variable": "diff"
+      },
+      {
+       "after": 14,
+       "before": 0,
+       "variable": "prod"
+      },
+      {
+       "after": 3.5,
+       "before": 0,
+       "variable": "quo"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "rem"
+      },
+      {
+       "after": -7,
+       "before": 0,
+       "variable": "neg"
+      },
+      {
+       "after": 9,
+       "before": 0,
+       "variable": "negneg"
+      },
+      {
+       "after": 5,
+       "before": 0,
+       "variable": "prec"
+      },
+      {
+       "after": 9,
+       "before": 0,
+       "variable": "paren"
+      },
+      {
+       "after": 0.30000000000000004,
+       "before": 0,
+       "variable": "inexact"
+      },
+      {
+       "after": "abcdef",
+       "before": "",
+       "variable": "cat"
+      },
+      {
+       "after": false,
+       "before": false,
+       "variable": "lt"
+      },
+      {
+       "after": true,
+       "before": false,
+       "variable": "le"
+      },
+      {
+       "after": true,
+       "before": false,
+       "variable": "gt"
+      },
+      {
+       "after": false,
+       "before": false,
+       "variable": "ge"
+      },
+      {
+       "after": true,
+       "before": false,
+       "variable": "eq"
+      },
+      {
+       "after": false,
+       "before": false,
+       "variable": "ne"
+      },
+      {
+       "after": true,
+       "before": false,
+       "variable": "eqs"
+      },
+      {
+       "after": false,
+       "before": true,
+       "variable": "mixed"
+      },
+      {
+       "after": true,
+       "before": false,
+       "variable": "nul"
+      },
+      {
+       "after": true,
+       "before": false,
+       "variable": "and1"
+      },
+      {
+       "after": true,
+       "before": false,
+       "variable": "or1"
+      },
+      {
+       "after": false,
+       "before": true,
+       "variable": "not1"
+      },
+      {
+       "after": false,
+       "before": true,
+       "variable": "imp1"
+      },
+      {
+       "after": true,
+       "before": false,
+       "variable": "imp2"
+      },
+      {
+       "after": true,
+       "before": false,
+       "variable": "imp3"
+      },
+      {
+       "after": false,
+       "before": true,
+       "variable": "short_and"
+      },
+      {
+       "after": true,
+       "before": false,
+       "variable": "short_or"
+      },
+      {
+       "after": true,
+       "before": false,
+       "variable": "short_imp"
+      },
+      {
+       "after": true,
+       "before": false,
+       "variable": "mix"
+      },
+      {
+       "after": 8,
+       "before": 0,
+       "variable": "ticks"
+      },
+      {
+       "after": false,
+       "before": true,
+       "variable": "flag"
+      }
+     ],
+     "to": "ops-done",
+     "transition": "ops-eval"
+    }
+   ],
+   "ignored": [],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "ops-run",
+    "ops-eval",
+    "ops-machine",
+    "ledger"
+   ],
+   "time": 3
+  },
+  {
+   "config": {
+    "machines": {
+     "ops-machine": {
+      "state": "ops-done",
+      "vars": {
+       "a": 7,
+       "and1": true,
+       "b": 2,
+       "cat": "abcdef",
+       "diff": 5,
+       "eq": true,
+       "eqs": true,
+       "flag": true,
+       "ge": false,
+       "gt": true,
+       "imp1": false,
+       "imp2": true,
+       "imp3": true,
+       "inexact": 0.30000000000000004,
+       "le": true,
+       "lt": false,
+       "mix": true,
+       "mixed": false,
+       "ne": false,
+       "neg": -7,
+       "negneg": 9,
+       "not1": false,
+       "nul": true,
+       "or1": true,
+       "paren": 9,
+       "prec": 5,
+       "prod": 14,
+       "quo": 3.5,
+       "rem": 1,
+       "s": "ab",
+       "short_and": false,
+       "short_imp": true,
+       "short_or": true,
+       "sum": 9,
+       "t": true,
+       "ticks": 12
+      }
+     }
+    },
+    "pending": [],
+    "time": 4
+   },
+   "event": {
+    "id": "ops-second",
+    "payload": {},
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "ops-machine",
+     "emitted": [],
+     "from": "ops-done",
+     "guard": "sum == 9 && cat == 'abcdef' && inexact > 0.3 && !eq == false",
+     "sets": [
+      {
+       "after": 12,
+       "before": 8,
+       "variable": "ticks"
+      },
+      {
+       "after": true,
+       "before": false,
+       "variable": "flag"
+      }
+     ],
+     "to": "ops-done",
+     "transition": "ops-again"
+    }
+   ],
+   "ignored": [],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "ops-second",
+    "ops-again",
+    "ops-machine",
+    "ledger"
+   ],
+   "time": 4
+  }
+ ]
+}

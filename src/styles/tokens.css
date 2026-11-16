@@ -1,0 +1,157 @@
+/* Design tokens. Base values are for a phone (touch, narrow); the blocks at the end
+   tighten type and control sizes for a fine pointer from tablet width up.
+
+   Breakpoints. CSS cannot read custom properties inside a media query, so the media
+   queries in the stylesheets repeat these literal values; src/ui/layout.js reads the
+   tokens below to build its matchMedia queries, so script and style agree.
+     --bp-tablet  768px   navigation rail, panels beside the scene
+     --bp-desktop 1200px  explorer, scene and context panel side by side */
+@layer tokens {
+  :root {
+    color-scheme: dark;
+
+    --bp-tablet: 768px;
+    --bp-desktop: 1200px;
+
+    /* surfaces */
+    --surface-0: #131518;
+    --surface-1: #181b1f;
+    --surface-2: #1f2327;
+    --surface-3: #282d33;
+
+    /* translucent surfaces for chrome that floats over the scene */
+    --glass: color-mix(in srgb, var(--surface-1) 78%, transparent);
+    --glass-strong: color-mix(in srgb, var(--surface-1) 92%, transparent);
+    --glass-blur: blur(14px) saturate(1.2);
+
+    /* text */
+    --text-1: #e4e7ea;
+    --text-2: #a6adb5;
+    --text-3: #6c747d;
+
+    /* lines */
+    --line-1: #2a2f35;
+    --line-2: #3a4048;
+
+    /* accent */
+    --accent: #5cc8d6;
+    --on-accent: #0b1416;
+
+    /* semantic */
+    --ok: #5fb878;
+    --ok-external: #4fb3a5;
+    --warn: #d9a441;
+    --bad: #e0605a;
+    --none: #7b838c;
+
+    /* palette roles */
+    --c-slate: #8b98a8;
+    --c-blue: #5b8fd9;
+    --c-amber: #d9a441;
+    --c-teal: #4fb3a5;
+    --c-violet: #9b7fd4;
+    --c-steel: #7f8ea3;
+    --c-rose: #d47a8e;
+    --c-green: #5fb878;
+    --c-red: #e0605a;
+    --c-neutral: #9aa3ad;
+
+    /* spacing: an 8 px rhythm, with 2 and 4 px for hairline adjustments */
+    --s-1: 2px;
+    --s-2: 4px;
+    --s-3: 8px;
+    --s-4: 12px;
+    --s-5: 16px;
+    --s-6: 24px;
+    --s-7: 32px;
+
+    /* type scale (phone): body 16 px, which also keeps mobile browsers from zooming into inputs */
+    --font-ui: "Inter", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+    --fs-1: 13px;   /* secondary text, labels, ids */
+    --fs-2: 16px;   /* body */
+    --fs-3: 17px;   /* titles */
+    --fs-4: 20px;   /* sheet titles */
+    --fs-label: 12px; /* small caps section labels */
+    --fs-scene: 12px; /* labels in the 3D scene: few and legible on a phone, the clutter pass hides the rest */
+
+    /* radius */
+    --r-1: 4px;
+    --r-2: 8px;
+    --r-3: 12px;
+    --r-sheet: 16px;
+    --r-pill: 999px;
+
+    /* elevation */
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-2: 0 6px 18px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(0 0 0 / 0.3);
+    --shadow-3: 0 -8px 28px rgb(0 0 0 / 0.45), 0 0 0 1px rgb(255 255 255 / 0.04);
+
+    /* derived interaction tints */
+    --hover: color-mix(in srgb, var(--text-1) 6%, transparent);
+    --pressed: color-mix(in srgb, var(--text-1) 10%, transparent);
+    --selected: color-mix(in srgb, var(--accent) 16%, transparent);
+    --focus-ring: 2px solid var(--accent);
+
+    /* touch: the minimum size of every interactive control */
+    --target: 44px;
+
+    /* controls and rows */
+    --control-h: 44px;
+    --row-h: 44px;
+    --ctl-h: 44px;
+
+    /* shell metrics */
+    --appbar-h: 56px;
+    --nav-h: 64px;
+    --rail-w: 80px;
+    --transport-h: 60px;
+    --explorer-w: 280px;
+    --panel-w: 400px;          /* side and context panel; layout.js keeps the user's width here */
+    --panel-w-min: 320px;
+    --panel-w-max: 760px;
+    --panel-w-wide: 680px;     /* desktop default for the table-heavy destinations */
+    --explorer-w-min: 220px;
+    --explorer-w-max: 520px;
+    --sheet-peek: clamp(132px, 22dvh, 210px);  /* layout.js overwrites these with pixel values */
+    --sheet-half: 50dvh;
+    --scene-min-w: 360px;
+
+    /* safe-area insets */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+
+    /* motion */
+    --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --dur-sheet: 260ms;
+    --dur-quick: 140ms;
+  }
+
+  /* A fine pointer from tablet width up: the desktop's denser type and controls. */
+  @media (min-width: 768px) and (pointer: fine) {
+    :root {
+      --fs-1: 11px;
+      --fs-2: 12px;
+      --fs-3: 13px;
+      --fs-4: 15px;
+      --fs-label: 11px;
+      --fs-scene: 11px;
+      --control-h: 28px;
+      --row-h: 28px;
+      --ctl-h: 26px;
+      --appbar-h: 48px;
+      --r-1: 3px;
+      --r-2: 5px;
+    }
+  }
+  /* A touch tablet keeps 44 px targets but a slightly smaller body. */
+  @media (min-width: 768px) and (pointer: coarse) {
+    :root {
+      --fs-2: 15px;
+      --fs-3: 16px;
+      --fs-4: 18px;
+    }
+  }
+}

@@ -1,0 +1,238 @@
+{
+ "behaviors": [
+  {
+   "id": "write-client-flow",
+   "initial": "write-client-idle",
+   "states": [
+    "write-client-idle",
+    "write-client-awaiting",
+    "write-client-saved"
+   ],
+   "subject": "persistence-client",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "attempts",
+       "to": "attempts + 1"
+      },
+      {
+       "emit": "write-file-request",
+       "payload": {
+        "baseHash": "baseHash",
+        "file": "'spec'",
+        "name": "'exegra'",
+        "text": "'spec text of revision 2'"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "write-client-idle",
+     "guard": null,
+     "id": "write-client-send",
+     "on": "write-intent",
+     "to": "write-client-awaiting"
+    },
+    {
+     "effects": [
+      {
+       "set": "attempts",
+       "to": "attempts + 1"
+      },
+      {
+       "set": "baseHash",
+       "to": "event.current"
+      },
+      {
+       "emit": "write-file-request",
+       "payload": {
+        "baseHash": "event.current",
+        "file": "'spec'",
+        "name": "'exegra'",
+        "text": "'spec text of revision 2'"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "write-client-awaiting",
+     "guard": "attempts < 3",
+     "id": "write-client-retry",
+     "on": "write-file-conflict",
+     "to": "write-client-awaiting"
+    },
+    {
+     "effects": [
+      {
+       "set": "saved",
+       "to": true
+      }
+     ],
+     "faultOnly": false,
+     "from": "write-client-awaiting",
+     "guard": null,
+     "id": "write-client-done",
+     "on": "write-file-ok",
+     "to": "write-client-saved"
+    }
+   ],
+   "variables": [
+    {
+     "initial": 0,
+     "name": "attempts"
+    },
+    {
+     "initial": "h1",
+     "name": "baseHash"
+    },
+    {
+     "initial": false,
+     "name": "saved"
+    }
+   ]
+  },
+  {
+   "id": "write-endpoint-flow",
+   "initial": "write-endpoint-ready",
+   "states": [
+    "write-endpoint-ready"
+   ],
+   "subject": "dev-server-plugin",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "conflicts",
+       "to": "conflicts + 1"
+      },
+      {
+       "emit": "write-file-conflict",
+       "payload": {
+        "code": "'conflict'",
+        "current": "diskHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "write-endpoint-ready",
+     "guard": "event.baseHash != diskHash",
+     "id": "write-endpoint-conflict",
+     "on": "write-file-request",
+     "to": "write-endpoint-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskHash",
+       "to": "'h3'"
+      },
+      {
+       "set": "writes",
+       "to": "writes + 1"
+      },
+      {
+       "emit": "write-file-ok",
+       "payload": {
+        "hash": "'h3'",
+        "ok": "true"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "write-endpoint-ready",
+     "guard": "event.baseHash == diskHash",
+     "id": "write-endpoint-accept",
+     "on": "write-file-request",
+     "to": "write-endpoint-ready"
+    }
+   ],
+   "variables": [
+    {
+     "initial": "h2",
+     "name": "diskHash"
+    },
+    {
+     "initial": 0,
+     "name": "writes"
+    },
+    {
+     "initial": 0,
+     "name": "conflicts"
+    }
+   ]
+  }
+ ],
+ "events": [
+  {
+   "id": "edit-requested"
+  },
+  {
+   "id": "source-apply-requested"
+  },
+  {
+   "id": "operation-submitted"
+  },
+  {
+   "id": "text-edits-computed"
+  },
+  {
+   "id": "model-parsed"
+  },
+  {
+   "id": "validation-passed"
+  },
+  {
+   "id": "validation-failed"
+  },
+  {
+   "id": "transaction-committed"
+  },
+  {
+   "id": "transaction-rejected"
+  },
+  {
+   "id": "refresh-requested"
+  },
+  {
+   "id": "projection-refreshed"
+  },
+  {
+   "id": "model-published"
+  },
+  {
+   "id": "save-requested"
+  },
+  {
+   "id": "save-succeeded"
+  },
+  {
+   "id": "save-conflicted"
+  },
+  {
+   "id": "write-intent"
+  },
+  {
+   "id": "write-file-request"
+  },
+  {
+   "id": "write-file-ok"
+  },
+  {
+   "id": "write-file-conflict"
+  }
+ ],
+ "faults": [],
+ "format": "exegra-sim-input",
+ "scenario": {
+  "faults": [],
+  "id": "write-with-stale-base-hash",
+  "stepLimit": 1000,
+  "steps": [
+   {
+    "at": 0,
+    "event": "write-intent",
+    "payload": {}
+   }
+  ]
+ },
+ "version": 1
+}

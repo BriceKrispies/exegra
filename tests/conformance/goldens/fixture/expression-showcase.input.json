@@ -1,0 +1,393 @@
+{
+ "behaviors": [
+  {
+   "id": "ops-machine",
+   "initial": "ops-ready",
+   "states": [
+    "ops-ready",
+    "ops-done"
+   ],
+   "subject": "ledger",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "sum",
+       "to": "a + b"
+      },
+      {
+       "set": "diff",
+       "to": "a - b"
+      },
+      {
+       "set": "prod",
+       "to": "a * b"
+      },
+      {
+       "set": "quo",
+       "to": "a / b"
+      },
+      {
+       "set": "rem",
+       "to": "a % b"
+      },
+      {
+       "set": "neg",
+       "to": "-a"
+      },
+      {
+       "set": "negneg",
+       "to": "a - -b"
+      },
+      {
+       "set": "prec",
+       "to": "1 + 2 * 3 - 8 / 4 % 3"
+      },
+      {
+       "set": "paren",
+       "to": "(1 + 2) * 3"
+      },
+      {
+       "set": "inexact",
+       "to": "0.1 + 0.2"
+      },
+      {
+       "set": "cat",
+       "to": "s + \"cd\" + 'ef'"
+      },
+      {
+       "set": "lt",
+       "to": "a < b"
+      },
+      {
+       "set": "le",
+       "to": "b <= 2"
+      },
+      {
+       "set": "gt",
+       "to": "a > b"
+      },
+      {
+       "set": "ge",
+       "to": "b >= 3"
+      },
+      {
+       "set": "eq",
+       "to": "a == 7"
+      },
+      {
+       "set": "ne",
+       "to": "a != 7"
+      },
+      {
+       "set": "eqs",
+       "to": "s == 'ab'"
+      },
+      {
+       "set": "mixed",
+       "to": "1 == '1'"
+      },
+      {
+       "set": "nul",
+       "to": "null == null"
+      },
+      {
+       "set": "and1",
+       "to": "t && a > b"
+      },
+      {
+       "set": "or1",
+       "to": "!t || b >= 2"
+      },
+      {
+       "set": "not1",
+       "to": "!t"
+      },
+      {
+       "set": "imp1",
+       "to": "t => false"
+      },
+      {
+       "set": "imp2",
+       "to": "false => t"
+      },
+      {
+       "set": "imp3",
+       "to": "t => false => true"
+      },
+      {
+       "set": "short_and",
+       "to": "false && 1 / 0 > 1"
+      },
+      {
+       "set": "short_or",
+       "to": "true || 1 / 0 > 1"
+      },
+      {
+       "set": "short_imp",
+       "to": "false => 1 / 0 > 1"
+      },
+      {
+       "set": "mix",
+       "to": "true || false && false"
+      },
+      {
+       "set": "ticks",
+       "to": "time + 5"
+      },
+      {
+       "set": "flag",
+       "to": false
+      }
+     ],
+     "faultOnly": false,
+     "from": "ops-ready",
+     "guard": null,
+     "id": "ops-eval",
+     "on": "ops-run",
+     "to": "ops-done"
+    },
+    {
+     "effects": [
+      {
+       "set": "ticks",
+       "to": "ticks + time"
+      },
+      {
+       "set": "flag",
+       "to": true
+      }
+     ],
+     "faultOnly": false,
+     "from": "ops-done",
+     "guard": "sum == 9 && cat == 'abcdef' && inexact > 0.3 && !eq == false",
+     "id": "ops-again",
+     "on": "ops-second",
+     "to": "ops-done"
+    }
+   ],
+   "variables": [
+    {
+     "initial": 7,
+     "name": "a"
+    },
+    {
+     "initial": 2,
+     "name": "b"
+    },
+    {
+     "initial": "ab",
+     "name": "s"
+    },
+    {
+     "initial": true,
+     "name": "t"
+    },
+    {
+     "initial": 0,
+     "name": "sum"
+    },
+    {
+     "initial": 0,
+     "name": "diff"
+    },
+    {
+     "initial": 0,
+     "name": "prod"
+    },
+    {
+     "initial": 0,
+     "name": "quo"
+    },
+    {
+     "initial": 0,
+     "name": "rem"
+    },
+    {
+     "initial": 0,
+     "name": "neg"
+    },
+    {
+     "initial": 0,
+     "name": "negneg"
+    },
+    {
+     "initial": 0,
+     "name": "prec"
+    },
+    {
+     "initial": 0,
+     "name": "paren"
+    },
+    {
+     "initial": 0,
+     "name": "inexact"
+    },
+    {
+     "initial": "",
+     "name": "cat"
+    },
+    {
+     "initial": false,
+     "name": "lt"
+    },
+    {
+     "initial": false,
+     "name": "le"
+    },
+    {
+     "initial": false,
+     "name": "gt"
+    },
+    {
+     "initial": false,
+     "name": "ge"
+    },
+    {
+     "initial": false,
+     "name": "eq"
+    },
+    {
+     "initial": false,
+     "name": "ne"
+    },
+    {
+     "initial": false,
+     "name": "eqs"
+    },
+    {
+     "initial": true,
+     "name": "mixed"
+    },
+    {
+     "initial": false,
+     "name": "nul"
+    },
+    {
+     "initial": false,
+     "name": "and1"
+    },
+    {
+     "initial": false,
+     "name": "or1"
+    },
+    {
+     "initial": true,
+     "name": "not1"
+    },
+    {
+     "initial": true,
+     "name": "imp1"
+    },
+    {
+     "initial": false,
+     "name": "imp2"
+    },
+    {
+     "initial": false,
+     "name": "imp3"
+    },
+    {
+     "initial": true,
+     "name": "short_and"
+    },
+    {
+     "initial": false,
+     "name": "short_or"
+    },
+    {
+     "initial": false,
+     "name": "short_imp"
+    },
+    {
+     "initial": false,
+     "name": "mix"
+    },
+    {
+     "initial": 0,
+     "name": "ticks"
+    },
+    {
+     "initial": true,
+     "name": "flag"
+    }
+   ]
+  }
+ ],
+ "events": [
+  {
+   "id": "submit"
+  },
+  {
+   "id": "tick"
+  },
+  {
+   "id": "reset"
+  },
+  {
+   "id": "noise"
+  },
+  {
+   "id": "forward"
+  },
+  {
+   "id": "audit-request"
+  },
+  {
+   "id": "alarm"
+  },
+  {
+   "id": "ping"
+  },
+  {
+   "id": "pong"
+  },
+  {
+   "id": "calc-ok-op"
+  },
+  {
+   "id": "calc-div-op"
+  },
+  {
+   "id": "calc-mod-op"
+  },
+  {
+   "id": "calc-type-op"
+  },
+  {
+   "id": "calc-guard-op"
+  },
+  {
+   "id": "calc-probe-op"
+  },
+  {
+   "id": "calc-effect-op"
+  },
+  {
+   "id": "ops-run"
+  },
+  {
+   "id": "ops-second"
+  }
+ ],
+ "faults": [],
+ "format": "exegra-sim-input",
+ "scenario": {
+  "faults": [],
+  "id": "expression-showcase",
+  "stepLimit": 1000,
+  "steps": [
+   {
+    "at": 3,
+    "event": "ops-run",
+    "payload": {}
+   },
+   {
+    "at": 4,
+    "event": "ops-second",
+    "payload": {}
+   }
+  ]
+ },
+ "version": 1
+}

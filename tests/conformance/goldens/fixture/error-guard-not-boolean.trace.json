@@ -1,0 +1,105 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "calc-machine": {
+    "state": "calc-ready",
+    "vars": {
+     "divisor": 0,
+     "text": "abc",
+     "total": 10
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "calc-guard-op",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   }
+  ],
+  "time": 0
+ },
+ "initial": {
+  "machines": {
+   "calc-machine": {
+    "state": "calc-ready",
+    "vars": {
+     "divisor": 0,
+     "text": "abc",
+     "total": 10
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "calc-guard-op",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "error",
+ "scenarioId": "error-guard-not-boolean",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "calc-machine": {
+      "state": "calc-ready",
+      "vars": {
+       "divisor": 0,
+       "text": "abc",
+       "total": 10
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "calc-guard-op",
+      "payload": {},
+      "seq": 0,
+      "source": {
+       "kind": "scenario",
+       "step": 0
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "error": {
+    "message": "Guard \"total + 1\" of transition \"calc-guard\" did not evaluate to a boolean."
+   },
+   "event": {
+    "id": "calc-guard-op",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "calc-guard-op"
+   ],
+   "time": 0
+  }
+ ]
+}

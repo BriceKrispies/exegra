@@ -1,0 +1,568 @@
+{
+ "faults": [
+  "enable-close"
+ ],
+ "final": {
+  "machines": {
+   "gateway-machine": {
+    "state": "gw-idle",
+    "vars": {
+     "closed": true,
+     "last": "large",
+     "seen": 1
+    }
+   },
+   "ledger-machine": {
+    "state": "ledger-open",
+    "vars": {
+     "balance": 150,
+     "entries": 1
+    }
+   }
+  },
+  "pending": [],
+  "time": 11
+ },
+ "initial": {
+  "machines": {
+   "gateway-machine": {
+    "state": "gw-idle",
+    "vars": {
+     "closed": false,
+     "last": "none",
+     "seen": 0
+    }
+   },
+   "ledger-machine": {
+    "state": "ledger-open",
+    "vars": {
+     "balance": 0,
+     "entries": 0
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "submit",
+    "payload": {
+     "amount": 150,
+     "label": "a"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   },
+   {
+    "event": "tick",
+    "payload": {},
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    },
+    "time": 10
+   },
+   {
+    "event": "reset",
+    "payload": {},
+    "seq": 2,
+    "source": {
+     "kind": "scenario",
+     "step": 2
+    },
+    "time": 11
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "fault-enable-transition",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "gateway-machine": {
+      "state": "gw-active",
+      "vars": {
+       "closed": false,
+       "last": "large",
+       "seen": 1
+      }
+     },
+     "ledger-machine": {
+      "state": "ledger-open",
+      "vars": {
+       "balance": 0,
+       "entries": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "forward",
+      "payload": {
+       "amount": 150,
+       "meta": {
+        "flags": [
+         true,
+         false
+        ],
+        "rank": 1
+       },
+       "tag": "big"
+      },
+      "seq": 3,
+      "source": {
+       "behavior": "gateway-machine",
+       "kind": "transition",
+       "transition": "gw-submit-large"
+      },
+      "time": 2
+     },
+     {
+      "event": "tick",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 10
+     },
+     {
+      "event": "reset",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 11
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "submit",
+    "payload": {
+     "amount": 150,
+     "label": "a"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "gateway-machine",
+     "emitted": [
+      {
+       "event": "forward",
+       "payload": {
+        "amount": 150,
+        "meta": {
+         "flags": [
+          true,
+          false
+         ],
+         "rank": 1
+        },
+        "tag": "big"
+       },
+       "seq": 3,
+       "time": 2
+      }
+     ],
+     "from": "gw-idle",
+     "guard": "event.amount >= 100",
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "seen"
+      },
+      {
+       "after": "large",
+       "before": "none",
+       "variable": "last"
+      }
+     ],
+     "to": "gw-active",
+     "transition": "gw-submit-large"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "ledger-machine",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "submit",
+    "gw-submit-large",
+    "gateway-machine",
+    "gateway"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "gateway-machine": {
+      "state": "gw-active",
+      "vars": {
+       "closed": false,
+       "last": "large",
+       "seen": 1
+      }
+     },
+     "ledger-machine": {
+      "state": "ledger-open",
+      "vars": {
+       "balance": 150,
+       "entries": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "audit-request",
+      "payload": {
+       "at": 2,
+       "level": 150,
+       "note": "credit"
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "ledger-machine",
+       "kind": "transition",
+       "transition": "led-credit"
+      },
+      "time": 3
+     },
+     {
+      "event": "tick",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 10
+     },
+     {
+      "event": "reset",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 11
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "forward",
+    "payload": {
+     "amount": 150,
+     "meta": {
+      "flags": [
+       true,
+       false
+      ],
+      "rank": 1
+     },
+     "tag": "big"
+    },
+    "seq": 3,
+    "source": {
+     "behavior": "gateway-machine",
+     "kind": "transition",
+     "transition": "gw-submit-large"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "ledger-machine",
+     "emitted": [
+      {
+       "event": "audit-request",
+       "payload": {
+        "at": 2,
+        "level": 150,
+        "note": "credit"
+       },
+       "seq": 4,
+       "time": 3
+      }
+     ],
+     "from": "ledger-open",
+     "guard": "event.amount > 0",
+     "sets": [
+      {
+       "after": 150,
+       "before": 0,
+       "variable": "balance"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "entries"
+      }
+     ],
+     "to": "ledger-open",
+     "transition": "led-credit"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "gateway-machine",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "forward",
+    "led-credit",
+    "ledger-machine",
+    "ledger"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "gateway-machine": {
+      "state": "gw-active",
+      "vars": {
+       "closed": false,
+       "last": "large",
+       "seen": 1
+      }
+     },
+     "ledger-machine": {
+      "state": "ledger-open",
+      "vars": {
+       "balance": 150,
+       "entries": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "tick",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 10
+     },
+     {
+      "event": "reset",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 11
+     }
+    ],
+    "time": 3
+   },
+   "event": {
+    "id": "audit-request",
+    "payload": {
+     "at": 2,
+     "level": 150,
+     "note": "credit"
+    },
+    "seq": 4,
+    "source": {
+     "behavior": "ledger-machine",
+     "kind": "transition",
+     "transition": "led-credit"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "gateway-machine",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "ledger-machine",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "audit-request"
+   ],
+   "time": 3
+  },
+  {
+   "config": {
+    "machines": {
+     "gateway-machine": {
+      "state": "gw-closed",
+      "vars": {
+       "closed": true,
+       "last": "large",
+       "seen": 1
+      }
+     },
+     "ledger-machine": {
+      "state": "ledger-open",
+      "vars": {
+       "balance": 150,
+       "entries": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "reset",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 11
+     }
+    ],
+    "time": 10
+   },
+   "event": {
+    "id": "tick",
+    "payload": {},
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    }
+   },
+   "faults": [
+    {
+     "effect": "enabled",
+     "fault": "enable-close"
+    }
+   ],
+   "fired": [
+    {
+     "behavior": "gateway-machine",
+     "emitted": [],
+     "from": "gw-active",
+     "guard": null,
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "closed"
+      }
+     ],
+     "to": "gw-closed",
+     "transition": "gw-close-faulty"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "ledger-machine",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "tick",
+    "gw-close-faulty",
+    "gateway-machine",
+    "gateway",
+    "enable-close"
+   ],
+   "time": 10
+  },
+  {
+   "config": {
+    "machines": {
+     "gateway-machine": {
+      "state": "gw-idle",
+      "vars": {
+       "closed": true,
+       "last": "large",
+       "seen": 1
+      }
+     },
+     "ledger-machine": {
+      "state": "ledger-open",
+      "vars": {
+       "balance": 150,
+       "entries": 1
+      }
+     }
+    },
+    "pending": [],
+    "time": 11
+   },
+   "event": {
+    "id": "reset",
+    "payload": {},
+    "seq": 2,
+    "source": {
+     "kind": "scenario",
+     "step": 2
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "gateway-machine",
+     "emitted": [],
+     "from": "gw-closed",
+     "guard": null,
+     "sets": [],
+     "to": "gw-idle",
+     "transition": "gw-reset-closed"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "ledger-machine",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 4,
+   "kind": "deliver",
+   "responsible": [
+    "reset",
+    "gw-reset-closed",
+    "gateway-machine",
+    "gateway"
+   ],
+   "time": 11
+  }
+ ]
+}

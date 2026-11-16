@@ -1,0 +1,50 @@
+@layer states {
+  [hidden] { display: none !important; }
+
+  :focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 1px;
+  }
+  .explorer__row:focus-visible,
+  .nav__item:focus-visible,
+  .panel__handle:focus-visible { outline-offset: -2px; }
+
+  :disabled,
+  [aria-disabled="true"] { cursor: default; }
+  button:disabled { color: var(--text-3); opacity: 0.55; }
+  input:disabled, select:disabled { color: var(--text-3); opacity: 0.55; }
+
+  .is-busy { cursor: progress; }
+
+  /* Touch targets. Every interactive control is at least --target (44 px) in both
+     directions. This layer comes after the components, so it also wins over a
+     component's own smaller size and over `all: unset`. A fine pointer from tablet
+     width up hands sizing back to the components (revert-layer). */
+  :where(button, select, summary, [role="button"], [role="tab"], [role="menuitem"], [role="option"], [role="treeitem"],
+    input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"])) {
+    min-height: var(--target);
+  }
+  :where(button, [role="button"], [role="menuitem"]) { min-width: var(--target); }
+  /* An inline link-style button keeps its place in the text but grows its hit box. */
+  :where(.ilink, .sim__link, .real__link, .btn--link) {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+  }
+  /* A checkbox is reached through its label, which carries the target size. */
+  :where(label:has(> input[type="checkbox"]), label:has(> input[type="radio"])) { min-height: var(--target); }
+
+  @media (min-width: 768px) and (pointer: fine) {
+    :where(button, select, summary, [role="button"], [role="tab"], [role="menuitem"], [role="option"], [role="treeitem"],
+      input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"])) {
+      min-height: revert-layer;
+    }
+    :where(button, [role="button"], [role="menuitem"]) { min-width: revert-layer; }
+    :where(.ilink, .sim__link, .real__link, .btn--link) { display: revert-layer; align-items: revert-layer; vertical-align: revert-layer; }
+    :where(label:has(> input[type="checkbox"]), label:has(> input[type="radio"])) { min-height: revert-layer; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  }
+}

@@ -1,0 +1,369 @@
+{
+ "behaviors": [
+  {
+   "id": "gateway-machine",
+   "initial": "gw-idle",
+   "states": [
+    "gw-idle",
+    "gw-active",
+    "gw-closed"
+   ],
+   "subject": "gateway",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "closed",
+       "to": true
+      }
+     ],
+     "faultOnly": true,
+     "from": "gw-active",
+     "guard": null,
+     "id": "gw-close-faulty",
+     "on": "tick",
+     "to": "gw-closed"
+    },
+    {
+     "effects": [
+      {
+       "set": "seen",
+       "to": "seen + 1"
+      },
+      {
+       "set": "last",
+       "to": "last + '!'"
+      }
+     ],
+     "faultOnly": false,
+     "from": "gw-active",
+     "guard": "time >= 0 && ledger-machine.balance > 100 && ledger-machine.state == 'ledger-open'",
+     "id": "gw-tick",
+     "on": "tick",
+     "to": "gw-active"
+    },
+    {
+     "effects": [
+      {
+       "set": "seen",
+       "to": "seen + 1"
+      },
+      {
+       "set": "last",
+       "to": "'large'"
+      },
+      {
+       "after": 2,
+       "emit": "forward",
+       "payload": {
+        "amount": "event.amount",
+        "meta": {
+         "flags": [
+          true,
+          false
+         ],
+         "rank": 1
+        },
+        "tag": "'big'"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "gw-idle",
+     "guard": "event.amount >= 100",
+     "id": "gw-submit-large",
+     "on": "submit",
+     "to": "gw-active"
+    },
+    {
+     "effects": [
+      {
+       "set": "last",
+       "to": "'small'"
+      },
+      {
+       "after": 0,
+       "emit": "forward",
+       "payload": {
+        "amount": "event.amount"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "gw-idle",
+     "guard": null,
+     "id": "gw-submit-small",
+     "on": "submit",
+     "to": "gw-active"
+    },
+    {
+     "effects": [],
+     "faultOnly": false,
+     "from": "gw-active",
+     "guard": null,
+     "id": "gw-reset",
+     "on": "reset",
+     "to": "gw-idle"
+    },
+    {
+     "effects": [],
+     "faultOnly": false,
+     "from": "gw-closed",
+     "guard": null,
+     "id": "gw-reset-closed",
+     "on": "reset",
+     "to": "gw-idle"
+    }
+   ],
+   "variables": [
+    {
+     "initial": 0,
+     "name": "seen"
+    },
+    {
+     "initial": "none",
+     "name": "last"
+    },
+    {
+     "initial": false,
+     "name": "closed"
+    }
+   ]
+  },
+  {
+   "id": "ledger-machine",
+   "initial": "ledger-open",
+   "states": [
+    "ledger-open",
+    "ledger-frozen"
+   ],
+   "subject": "ledger",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "balance",
+       "to": "balance + event.amount"
+      },
+      {
+       "set": "entries",
+       "to": "entries + 1"
+      },
+      {
+       "after": 1,
+       "emit": "audit-request",
+       "payload": {
+        "at": "time",
+        "level": "balance",
+        "note": "'credit'"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ledger-open",
+     "guard": "event.amount > 0",
+     "id": "led-credit",
+     "on": "forward",
+     "to": "ledger-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "balance",
+       "to": "balance + event.amount"
+      },
+      {
+       "set": "entries",
+       "to": "-(entries + 1)"
+      }
+     ],
+     "faultOnly": false,
+     "from": "ledger-open",
+     "guard": "event.amount < 0",
+     "id": "led-freeze",
+     "on": "forward",
+     "to": "ledger-frozen"
+    }
+   ],
+   "variables": [
+    {
+     "initial": 0,
+     "name": "balance"
+    },
+    {
+     "initial": 0,
+     "name": "entries"
+    }
+   ]
+  },
+  {
+   "id": "auditor-machine",
+   "initial": "aud-watching",
+   "states": [
+    "aud-watching",
+    "aud-alarmed"
+   ],
+   "subject": "auditor",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "level",
+       "to": "event.level"
+      },
+      {
+       "after": 3,
+       "emit": "alarm"
+      }
+     ],
+     "faultOnly": false,
+     "from": "aud-watching",
+     "guard": "event.level >= 150",
+     "id": "aud-high",
+     "on": "audit-request",
+     "to": "aud-alarmed"
+    },
+    {
+     "effects": [
+      {
+       "set": "level",
+       "to": "event.level"
+      }
+     ],
+     "faultOnly": false,
+     "from": "aud-watching",
+     "guard": null,
+     "id": "aud-record",
+     "on": "audit-request",
+     "to": "aud-watching"
+    },
+    {
+     "effects": [
+      {
+       "set": "alerts",
+       "to": "alerts + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "aud-alarmed",
+     "guard": null,
+     "id": "aud-alarm",
+     "on": "alarm",
+     "to": "aud-alarmed"
+    }
+   ],
+   "variables": [
+    {
+     "initial": 0,
+     "name": "level"
+    },
+    {
+     "initial": 0,
+     "name": "alerts"
+    }
+   ]
+  }
+ ],
+ "events": [
+  {
+   "id": "submit"
+  },
+  {
+   "id": "tick"
+  },
+  {
+   "id": "reset"
+  },
+  {
+   "id": "noise"
+  },
+  {
+   "id": "forward"
+  },
+  {
+   "id": "audit-request"
+  },
+  {
+   "id": "alarm"
+  },
+  {
+   "id": "ping"
+  },
+  {
+   "id": "pong"
+  },
+  {
+   "id": "calc-ok-op"
+  },
+  {
+   "id": "calc-div-op"
+  },
+  {
+   "id": "calc-mod-op"
+  },
+  {
+   "id": "calc-type-op"
+  },
+  {
+   "id": "calc-guard-op"
+  },
+  {
+   "id": "calc-probe-op"
+  },
+  {
+   "id": "calc-effect-op"
+  },
+  {
+   "id": "ops-run"
+  },
+  {
+   "id": "ops-second"
+  }
+ ],
+ "faults": [
+  {
+   "by": 4,
+   "event": "submit",
+   "id": "delay-first-submit",
+   "kind": "delay-event",
+   "occurrence": 1
+  }
+ ],
+ "format": "exegra-sim-input",
+ "scenario": {
+  "faults": [
+   "delay-first-submit"
+  ],
+  "id": "faults-combined",
+  "stepLimit": 1000,
+  "steps": [
+   {
+    "at": 0,
+    "event": "submit",
+    "payload": {
+     "amount": 150,
+     "label": "dropped"
+    }
+   },
+   {
+    "at": 1,
+    "event": "submit",
+    "payload": {
+     "amount": 150,
+     "label": "kept"
+    }
+   },
+   {
+    "at": 5,
+    "event": "tick",
+    "payload": {}
+   },
+   {
+    "at": 9,
+    "event": "reset",
+    "payload": {}
+   }
+  ]
+ },
+ "version": 1
+}

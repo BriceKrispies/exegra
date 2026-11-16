@@ -1,0 +1,128 @@
+/* owned by src/render/scene-view.js; see docs/module-contracts.md */
+@layer components {
+  /* Its own stacking context: the labels' z-indexes (CSS2DRenderer orders them by depth,
+     and a message in flight is lifted to the top) compete only with each other, never with
+     the app bar, the panels, the menus or the dialogs. */
+  .scene-labels {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    isolation: isolate;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .scene-label,
+  .scene-edge-label,
+  .scene-flow-label {
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .scene-label {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-1);
+    padding: 1px var(--s-1);
+    font: 500 var(--fs-scene)/1.25 var(--font-ui);
+    color: var(--text-1);
+    background: color-mix(in srgb, var(--surface-0) 62%, transparent);
+    border-radius: var(--r-1);
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.85), 0 1px 1px rgba(0, 0, 0, 0.6);
+    transition: opacity 120ms linear;
+  }
+
+  .scene-label__name {
+    color: var(--text-1);
+  }
+
+  .scene-label__sub {
+    font-size: 0.82em;
+    font-weight: 400;
+    color: var(--text-3);
+  }
+
+  .scene-label__sub[hidden] {
+    display: none;
+  }
+
+  /* The category is already encoded by shape and color; spell it out only for the node in focus. */
+  .scene-label:not(.scene-label--selected):not(.scene-label--container) .scene-label__sub {
+    display: none;
+  }
+
+  .scene-label__badge {
+    padding: 0 var(--s-1);
+    font-size: 0.78em;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text-2);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-1);
+    text-shadow: none;
+  }
+
+  .scene-label--container {
+    padding-inline: 0;
+    background: none;
+    font-size: 0.82em;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .scene-label--container .scene-label__name {
+    color: var(--text-2);
+  }
+
+  .scene-label--selected .scene-label__name {
+    color: var(--accent);
+  }
+
+  .scene-label--dimmed {
+    opacity: 0.3;
+  }
+
+  .scene-label--status-violated .scene-label__name {
+    color: var(--bad);
+  }
+
+  .scene-label--hidden {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .scene-flow-label {
+    padding: 2px var(--s-2);
+    font: 600 var(--fs-scene)/1.25 var(--font-mono);
+    color: var(--surface-0);
+    background: var(--accent);
+    border-radius: var(--r-1);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    transform: translateY(-14px);
+    /* The label renderer stacks labels by depth; a message in flight stays on top of them,
+       inside the label layer's own stacking context (see .scene-labels). */
+    z-index: 100000 !important;
+  }
+
+  .scene-flow-label--undeclared {
+    background: var(--bad, #e5484d);
+    color: #fff;
+  }
+
+  .scene-flow-label--lost {
+    background: var(--surface-2);
+    color: var(--text-2);
+  }
+
+  .scene-edge-label {
+    padding: 1px var(--s-2);
+    font: 500 var(--fs-scene)/1.25 var(--font-mono);
+    color: var(--text-1);
+    background: color-mix(in srgb, var(--surface-1) 88%, transparent);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-1);
+    text-shadow: none;
+  }
+}

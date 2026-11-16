@@ -1,0 +1,535 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "write-client-flow": {
+    "state": "write-client-saved",
+    "vars": {
+     "attempts": 2,
+     "baseHash": "h2",
+     "saved": true
+    }
+   },
+   "write-endpoint-flow": {
+    "state": "write-endpoint-ready",
+    "vars": {
+     "conflicts": 1,
+     "diskHash": "h3",
+     "writes": 1
+    }
+   }
+  },
+  "pending": [],
+  "time": 0
+ },
+ "initial": {
+  "machines": {
+   "write-client-flow": {
+    "state": "write-client-idle",
+    "vars": {
+     "attempts": 0,
+     "baseHash": "h1",
+     "saved": false
+    }
+   },
+   "write-endpoint-flow": {
+    "state": "write-endpoint-ready",
+    "vars": {
+     "conflicts": 0,
+     "diskHash": "h2",
+     "writes": 0
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "write-intent",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "write-with-stale-base-hash",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "write-client-flow": {
+      "state": "write-client-awaiting",
+      "vars": {
+       "attempts": 1,
+       "baseHash": "h1",
+       "saved": false
+      }
+     },
+     "write-endpoint-flow": {
+      "state": "write-endpoint-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskHash": "h2",
+       "writes": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "write-file-request",
+      "payload": {
+       "baseHash": "h1",
+       "file": "spec",
+       "name": "exegra",
+       "text": "spec text of revision 2"
+      },
+      "seq": 1,
+      "source": {
+       "behavior": "write-client-flow",
+       "kind": "transition",
+       "transition": "write-client-send"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "write-intent",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "write-client-flow",
+     "emitted": [
+      {
+       "event": "write-file-request",
+       "payload": {
+        "baseHash": "h1",
+        "file": "spec",
+        "name": "exegra",
+        "text": "spec text of revision 2"
+       },
+       "seq": 1,
+       "time": 0
+      }
+     ],
+     "from": "write-client-idle",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "attempts"
+      }
+     ],
+     "to": "write-client-awaiting",
+     "transition": "write-client-send"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "write-endpoint-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "write-intent",
+    "write-client-send",
+    "write-client-flow",
+    "persistence-client"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "write-client-flow": {
+      "state": "write-client-awaiting",
+      "vars": {
+       "attempts": 1,
+       "baseHash": "h1",
+       "saved": false
+      }
+     },
+     "write-endpoint-flow": {
+      "state": "write-endpoint-ready",
+      "vars": {
+       "conflicts": 1,
+       "diskHash": "h2",
+       "writes": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "write-file-conflict",
+      "payload": {
+       "code": "conflict",
+       "current": "h2"
+      },
+      "seq": 2,
+      "source": {
+       "behavior": "write-endpoint-flow",
+       "kind": "transition",
+       "transition": "write-endpoint-conflict"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "write-file-request",
+    "payload": {
+     "baseHash": "h1",
+     "file": "spec",
+     "name": "exegra",
+     "text": "spec text of revision 2"
+    },
+    "seq": 1,
+    "source": {
+     "behavior": "write-client-flow",
+     "kind": "transition",
+     "transition": "write-client-send"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "write-endpoint-flow",
+     "emitted": [
+      {
+       "event": "write-file-conflict",
+       "payload": {
+        "code": "conflict",
+        "current": "h2"
+       },
+       "seq": 2,
+       "time": 0
+      }
+     ],
+     "from": "write-endpoint-ready",
+     "guard": "event.baseHash != diskHash",
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "conflicts"
+      }
+     ],
+     "to": "write-endpoint-ready",
+     "transition": "write-endpoint-conflict"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "write-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "write-file-request",
+    "write-endpoint-conflict",
+    "write-endpoint-flow",
+    "dev-server-plugin"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "write-client-flow": {
+      "state": "write-client-awaiting",
+      "vars": {
+       "attempts": 2,
+       "baseHash": "h2",
+       "saved": false
+      }
+     },
+     "write-endpoint-flow": {
+      "state": "write-endpoint-ready",
+      "vars": {
+       "conflicts": 1,
+       "diskHash": "h2",
+       "writes": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "write-file-request",
+      "payload": {
+       "baseHash": "h2",
+       "file": "spec",
+       "name": "exegra",
+       "text": "spec text of revision 2"
+      },
+      "seq": 3,
+      "source": {
+       "behavior": "write-client-flow",
+       "kind": "transition",
+       "transition": "write-client-retry"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "write-file-conflict",
+    "payload": {
+     "code": "conflict",
+     "current": "h2"
+    },
+    "seq": 2,
+    "source": {
+     "behavior": "write-endpoint-flow",
+     "kind": "transition",
+     "transition": "write-endpoint-conflict"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "write-client-flow",
+     "emitted": [
+      {
+       "event": "write-file-request",
+       "payload": {
+        "baseHash": "h2",
+        "file": "spec",
+        "name": "exegra",
+        "text": "spec text of revision 2"
+       },
+       "seq": 3,
+       "time": 0
+      }
+     ],
+     "from": "write-client-awaiting",
+     "guard": "attempts < 3",
+     "sets": [
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "attempts"
+      },
+      {
+       "after": "h2",
+       "before": "h1",
+       "variable": "baseHash"
+      }
+     ],
+     "to": "write-client-awaiting",
+     "transition": "write-client-retry"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "write-endpoint-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "write-file-conflict",
+    "write-client-retry",
+    "write-client-flow",
+    "persistence-client"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "write-client-flow": {
+      "state": "write-client-awaiting",
+      "vars": {
+       "attempts": 2,
+       "baseHash": "h2",
+       "saved": false
+      }
+     },
+     "write-endpoint-flow": {
+      "state": "write-endpoint-ready",
+      "vars": {
+       "conflicts": 1,
+       "diskHash": "h3",
+       "writes": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "write-file-ok",
+      "payload": {
+       "hash": "h3",
+       "ok": true
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "write-endpoint-flow",
+       "kind": "transition",
+       "transition": "write-endpoint-accept"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "write-file-request",
+    "payload": {
+     "baseHash": "h2",
+     "file": "spec",
+     "name": "exegra",
+     "text": "spec text of revision 2"
+    },
+    "seq": 3,
+    "source": {
+     "behavior": "write-client-flow",
+     "kind": "transition",
+     "transition": "write-client-retry"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "write-endpoint-flow",
+     "emitted": [
+      {
+       "event": "write-file-ok",
+       "payload": {
+        "hash": "h3",
+        "ok": true
+       },
+       "seq": 4,
+       "time": 0
+      }
+     ],
+     "from": "write-endpoint-ready",
+     "guard": "event.baseHash == diskHash",
+     "sets": [
+      {
+       "after": "h3",
+       "before": "h2",
+       "variable": "diskHash"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "writes"
+      }
+     ],
+     "to": "write-endpoint-ready",
+     "transition": "write-endpoint-accept"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "write-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "write-file-request",
+    "write-endpoint-accept",
+    "write-endpoint-flow",
+    "dev-server-plugin"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "write-client-flow": {
+      "state": "write-client-saved",
+      "vars": {
+       "attempts": 2,
+       "baseHash": "h2",
+       "saved": true
+      }
+     },
+     "write-endpoint-flow": {
+      "state": "write-endpoint-ready",
+      "vars": {
+       "conflicts": 1,
+       "diskHash": "h3",
+       "writes": 1
+      }
+     }
+    },
+    "pending": [],
+    "time": 0
+   },
+   "event": {
+    "id": "write-file-ok",
+    "payload": {
+     "hash": "h3",
+     "ok": true
+    },
+    "seq": 4,
+    "source": {
+     "behavior": "write-endpoint-flow",
+     "kind": "transition",
+     "transition": "write-endpoint-accept"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "write-client-flow",
+     "emitted": [],
+     "from": "write-client-awaiting",
+     "guard": null,
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "saved"
+      }
+     ],
+     "to": "write-client-saved",
+     "transition": "write-client-done"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "write-endpoint-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 4,
+   "kind": "deliver",
+   "responsible": [
+    "write-file-ok",
+    "write-client-done",
+    "write-client-flow",
+    "persistence-client"
+   ],
+   "time": 0
+  }
+ ]
+}

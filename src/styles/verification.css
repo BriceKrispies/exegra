@@ -1,0 +1,74 @@
+/* owned by its component module; see docs/module-contracts.md */
+@layer components {
+  .ver {
+    height: 100%;
+    overflow: auto;
+    padding: var(--s-4) var(--s-5) var(--s-6);
+    font-size: var(--fs-2);
+  }
+  @media (min-width: 768px) and (pointer: fine) { .ver { padding: var(--s-3) var(--s-4); } }
+  .ver__h {
+    margin: 0 0 var(--s-2);
+    font-size: var(--fs-1);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .ver__counts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5); }
+  .ver__counts li { display: inline-flex; align-items: center; gap: var(--s-2); }
+  .ver__count { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .ver__legend, .ver__recorded { margin: var(--s-2) 0 0; color: var(--text-2); }
+  .ver__recorded { color: var(--text-3); }
+  .ver__chip { display: inline-flex; align-items: center; gap: var(--s-2); white-space: nowrap; }
+  .ver__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--none); flex: none; }
+  .ver__chip--ok .ver__dot { background: var(--ok); }
+  .ver__chip--ok-external .ver__dot { background: var(--ok-external); }
+  .ver__chip--bad .ver__dot { background: var(--bad); }
+  .ver__chip--warn .ver__dot { background: var(--warn); }
+  .ver__chip--none .ver__dot { background: transparent; border: 1.5px solid var(--none); }
+  .ver__chip--bad { color: var(--bad); }
+
+  .ver__filters { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; margin: var(--s-4) 0 var(--s-3); }
+  .ver__toggle { min-height: 22px; font-size: var(--fs-1); color: var(--text-2); border-radius: var(--r-pill); }
+  .ver__filters select { flex: 1 1 140px; }
+  .ver__toggle--on { background: var(--selected); border-color: var(--accent); color: var(--text-1); }
+  .ver button:focus-visible, .ver select:focus-visible, .ver__row:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+
+  .ver__table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .ver__table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--surface-1);
+    text-align: left;
+    font-size: var(--fs-1);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    padding: var(--s-2);
+    border-bottom: 1px solid var(--line-2);
+  }
+  .ver__table td { padding: var(--s-2); border-bottom: 1px solid var(--line-1); vertical-align: top; }
+  .ver__row { cursor: pointer; min-height: var(--row-h); }
+  @media (hover: hover) { .ver__row:hover { background: var(--hover); } }
+  .ver__row--selected { background: var(--selected); box-shadow: inset 2px 0 0 var(--accent); }
+  .ver__mono { font-family: var(--font-mono); font-size: var(--fs-1); }
+  .ver__statement { min-width: 220px; }
+  .ver__scope { color: var(--text-2); min-width: 180px; }
+  .ver__num { white-space: nowrap; }
+  .ver__muted { color: var(--text-3); }
+  .ver__cex {
+    margin-top: var(--s-2);
+    padding: var(--s-2) var(--s-3);
+    border-left: 2px solid var(--bad);
+    background: color-mix(in srgb, var(--bad) 12%, var(--surface-1));
+    color: var(--text-1);
+  }
+  .ver__text { flex: 1 1 200px; min-width: 0; max-width: 100%; }
+  @container panel (min-width: 640px) { .ver__text { min-width: 160px; max-width: 320px; } }
+  .ver input:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+  .ver__more { margin: var(--s-3) 0; color: var(--text-3); font-style: italic; }
+  .ver__empty { color: var(--text-3); margin: var(--s-4) 0; }
+  .ver__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+}

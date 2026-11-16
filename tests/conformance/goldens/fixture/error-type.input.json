@@ -1,0 +1,196 @@
+{
+ "behaviors": [
+  {
+   "id": "calc-machine",
+   "initial": "calc-ready",
+   "states": [
+    "calc-ready"
+   ],
+   "subject": "ledger",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "total",
+       "to": "total + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "calc-ready",
+     "guard": null,
+     "id": "calc-ok",
+     "on": "calc-ok-op",
+     "to": "calc-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "total",
+       "to": "total / divisor"
+      }
+     ],
+     "faultOnly": false,
+     "from": "calc-ready",
+     "guard": null,
+     "id": "calc-div",
+     "on": "calc-div-op",
+     "to": "calc-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "total",
+       "to": "total % divisor"
+      }
+     ],
+     "faultOnly": false,
+     "from": "calc-ready",
+     "guard": null,
+     "id": "calc-mod",
+     "on": "calc-mod-op",
+     "to": "calc-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "total",
+       "to": "text - 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "calc-ready",
+     "guard": null,
+     "id": "calc-type",
+     "on": "calc-type-op",
+     "to": "calc-ready"
+    },
+    {
+     "effects": [],
+     "faultOnly": false,
+     "from": "calc-ready",
+     "guard": "total + 1",
+     "id": "calc-guard",
+     "on": "calc-guard-op",
+     "to": "calc-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "total",
+       "to": "event.missing"
+      }
+     ],
+     "faultOnly": false,
+     "from": "calc-ready",
+     "guard": "event.missing == 1",
+     "id": "calc-probe",
+     "on": "calc-probe-op",
+     "to": "calc-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "text",
+       "to": "'changed'"
+      },
+      {
+       "set": "total",
+       "to": "event.missing + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "calc-ready",
+     "guard": null,
+     "id": "calc-effect",
+     "on": "calc-effect-op",
+     "to": "calc-ready"
+    }
+   ],
+   "variables": [
+    {
+     "initial": 10,
+     "name": "total"
+    },
+    {
+     "initial": 0,
+     "name": "divisor"
+    },
+    {
+     "initial": "abc",
+     "name": "text"
+    }
+   ]
+  }
+ ],
+ "events": [
+  {
+   "id": "submit"
+  },
+  {
+   "id": "tick"
+  },
+  {
+   "id": "reset"
+  },
+  {
+   "id": "noise"
+  },
+  {
+   "id": "forward"
+  },
+  {
+   "id": "audit-request"
+  },
+  {
+   "id": "alarm"
+  },
+  {
+   "id": "ping"
+  },
+  {
+   "id": "pong"
+  },
+  {
+   "id": "calc-ok-op"
+  },
+  {
+   "id": "calc-div-op"
+  },
+  {
+   "id": "calc-mod-op"
+  },
+  {
+   "id": "calc-type-op"
+  },
+  {
+   "id": "calc-guard-op"
+  },
+  {
+   "id": "calc-probe-op"
+  },
+  {
+   "id": "calc-effect-op"
+  },
+  {
+   "id": "ops-run"
+  },
+  {
+   "id": "ops-second"
+  }
+ ],
+ "faults": [],
+ "format": "exegra-sim-input",
+ "scenario": {
+  "faults": [],
+  "id": "error-type",
+  "stepLimit": 1000,
+  "steps": [
+   {
+    "at": 0,
+    "event": "calc-type-op",
+    "payload": {}
+   }
+  ]
+ },
+ "version": 1
+}

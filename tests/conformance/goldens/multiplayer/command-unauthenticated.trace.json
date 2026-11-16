@@ -1,0 +1,381 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "api-flow": {
+    "state": "api-refused",
+    "vars": {
+     "rejected": true,
+     "validated": false
+    }
+   },
+   "client-flow": {
+    "state": "client-refused",
+    "vars": {
+     "delivered": false
+    }
+   },
+   "database-flow": {
+    "state": "database-idle",
+    "vars": {
+     "durable": false
+    }
+   },
+   "worker-flow": {
+    "state": "worker-idle",
+    "vars": {
+     "accepted": false,
+     "acked": false
+    }
+   }
+  },
+  "pending": [],
+  "time": 0
+ },
+ "initial": {
+  "machines": {
+   "api-flow": {
+    "state": "api-idle",
+    "vars": {
+     "rejected": false,
+     "validated": false
+    }
+   },
+   "client-flow": {
+    "state": "client-idle",
+    "vars": {
+     "delivered": false
+    }
+   },
+   "database-flow": {
+    "state": "database-idle",
+    "vars": {
+     "durable": false
+    }
+   },
+   "worker-flow": {
+    "state": "worker-idle",
+    "vars": {
+     "accepted": false,
+     "acked": false
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "command-submitted",
+    "payload": {
+     "token": "invalid-token"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "command-unauthenticated",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "api-flow": {
+      "state": "api-idle",
+      "vars": {
+       "rejected": false,
+       "validated": false
+      }
+     },
+     "client-flow": {
+      "state": "client-awaiting",
+      "vars": {
+       "delivered": false
+      }
+     },
+     "database-flow": {
+      "state": "database-idle",
+      "vars": {
+       "durable": false
+      }
+     },
+     "worker-flow": {
+      "state": "worker-idle",
+      "vars": {
+       "accepted": false,
+       "acked": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "command-received",
+      "payload": {
+       "token": "invalid-token"
+      },
+      "seq": 1,
+      "source": {
+       "behavior": "client-flow",
+       "kind": "transition",
+       "transition": "client-submit"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "command-submitted",
+    "payload": {
+     "token": "invalid-token"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "client-flow",
+     "emitted": [
+      {
+       "event": "command-received",
+       "payload": {
+        "token": "invalid-token"
+       },
+       "seq": 1,
+       "time": 0
+      }
+     ],
+     "from": "client-idle",
+     "guard": null,
+     "sets": [],
+     "to": "client-awaiting",
+     "transition": "client-submit"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "api-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "database-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "command-submitted",
+    "client-submit",
+    "client-flow",
+    "web-client"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "api-flow": {
+      "state": "api-refused",
+      "vars": {
+       "rejected": true,
+       "validated": false
+      }
+     },
+     "client-flow": {
+      "state": "client-awaiting",
+      "vars": {
+       "delivered": false
+      }
+     },
+     "database-flow": {
+      "state": "database-idle",
+      "vars": {
+       "durable": false
+      }
+     },
+     "worker-flow": {
+      "state": "worker-idle",
+      "vars": {
+       "accepted": false,
+       "acked": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "command-rejected",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "behavior": "api-flow",
+       "kind": "transition",
+       "transition": "api-reject-command"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "command-received",
+    "payload": {
+     "token": "invalid-token"
+    },
+    "seq": 1,
+    "source": {
+     "behavior": "client-flow",
+     "kind": "transition",
+     "transition": "client-submit"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "api-flow",
+     "emitted": [
+      {
+       "event": "command-rejected",
+       "payload": {},
+       "seq": 2,
+       "time": 0
+      }
+     ],
+     "from": "api-idle",
+     "guard": "event.token != 'valid-token'",
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "rejected"
+      }
+     ],
+     "to": "api-refused",
+     "transition": "api-reject-command"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "database-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "command-received",
+    "api-reject-command",
+    "api-flow",
+    "api-service"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "api-flow": {
+      "state": "api-refused",
+      "vars": {
+       "rejected": true,
+       "validated": false
+      }
+     },
+     "client-flow": {
+      "state": "client-refused",
+      "vars": {
+       "delivered": false
+      }
+     },
+     "database-flow": {
+      "state": "database-idle",
+      "vars": {
+       "durable": false
+      }
+     },
+     "worker-flow": {
+      "state": "worker-idle",
+      "vars": {
+       "accepted": false,
+       "acked": false
+      }
+     }
+    },
+    "pending": [],
+    "time": 0
+   },
+   "event": {
+    "id": "command-rejected",
+    "payload": {},
+    "seq": 2,
+    "source": {
+     "behavior": "api-flow",
+     "kind": "transition",
+     "transition": "api-reject-command"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "client-flow",
+     "emitted": [],
+     "from": "client-awaiting",
+     "guard": null,
+     "sets": [],
+     "to": "client-refused",
+     "transition": "client-receive-rejection"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "api-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "database-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "command-rejected",
+    "client-receive-rejection",
+    "client-flow",
+    "web-client"
+   ],
+   "time": 0
+  }
+ ]
+}
