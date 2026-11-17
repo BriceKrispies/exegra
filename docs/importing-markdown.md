@@ -120,3 +120,31 @@ The importer invents nothing. When it recognises a construct and cannot map it t
 ## Tests
 
 `tests/core/import-markdown.test.js` covers the parsers on small inputs (a requirement with every key, a retired one, unresolved references left out and counted, component and boundary rows, sections with markers, case tables, glossary terms), joining wrapped text while keeping sub-points, rendering a requirement and a decision from their properties, and the rendering check catching a lost word or an unresolved reference. On the fixture under `tests/fixtures/markdown-import/` it covers the whole conversion through an import map (validates, passes both coverage checks, deterministic, names and categories from the map), the command line (`--map`, `--out`, `--check`), and a linked project resolved through `project.jsonc` whose documents the `markdown` command renders. See [verification.md](verification.md).
+
+## A single-file register
+
+`tools/import-register.js` converts a specification kept as one Markdown file of headings, prose and register tables, rather than the multi-file tree above. Its import map says `"format": "register"`.
+
+```sh
+node tools/import-register.js --project <name>             # writes the file specs/<name>/project.jsonc names
+node tools/import-register.js --project <name> --check     # write nothing; exit 1 if the file on disk is out of date
+node tools/import-register.js --map <map> --out <file> [--export-md <file>]
+node tools/import-register.js --render <spec.jsonc | project> [--out <file.md>]   # the Markdown, from the JSONC alone
+```
+
+When the converted file replaces the Markdown, the map records it with `"authority": "jsonc"` (and `authoritySince`). From then on the importer refuses to write the project's specification file, so edits made in Exegra are never overwritten; `--render` still gives the Markdown back from the sections.
+
+What the map holds:
+
+| Key | Meaning |
+|---|---|
+| `file` | The Markdown file, relative to `source`. |
+| `kinds` | Entity kinds for typed rows: `label`, `section`, `shape`, `color`, `doc`. Their properties come from the columns of the tables their rules match. |
+| `rules` | One per table shape: `kind` (a declared kind, or `component`), `header` (the exact header cells), optional `under` (a regular expression one of the section's headings or its ancestors' must match), `id` (`column`, `prefix`, and `pattern` with `fallback` for a column that only sometimes holds an identifier), `columns` (header to property name, when the derived camel-case name is not wanted), `refs` (header to a list property of the components the cell names) and `relationship` (`kind`, `from`, `to` and `description` columns). The first matching rule wins. |
+| `categories`, `aliases` | A category per component name, and other names for a component, both read by the importer only. |
+| `mentions` | Regular expressions for identifiers; a match that is the id of an imported entity becomes a `mentions` reference. Write a regular-expression backslash as two backslashes (`\\d` for a digit): the map reader refuses any JSONC error. |
+| `drafts` | Draft fragments (JSONC files in the source repository) of authored entities that are not in the Markdown: `components`, `relationships`, `claims`, `assumptions`, and the lists of kinds the fragment declares in its own `vocabulary`. Each entity gets `origin: "draft"` and `source` (the fragment and line of its declaration), and cites in `basis` the imported entities it answers; a basis that names no entity fails validation. The system notes name each fragment. Drafts never change the Markdown the sections render. |
+
+How the file is held: each heading is a `section` whose `body` is the Markdown under it, verbatim, except that each table's header and separator lines become one `table` entity and each row one row entity, each replaced in the body by a `{{entity:<id>}}` marker line. A row of a table no rule matches is a `tableRow` holding its `cells`. A typed row holds each cell in a property, exactly as written (escapes included). A row whose spacing differs from `| a | b |` carries `layout`, its pipes and spaces with `{}` for each cell, so that it renders byte for byte. Every entity carries `source` (`path:line`); a row with an identifier column carries `ref`.
+
+The two checks of the Markdown importer apply: the file must rebuild line for line from the sections with each marker expanded to its source lines, and every row rendered from its properties must give the cells of its source row; otherwise nothing is written. Losses are reported as above, plus lines that start with a pipe but belong to no table (GitHub renders them as text). The tool also reports how many lines render byte-identical from the written file alone.

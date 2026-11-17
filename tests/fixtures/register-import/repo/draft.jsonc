@@ -1,0 +1,17 @@
+{
+  // A draft fragment for the fixture: authored entities that cite imported ones.
+  "draft": { "title": "Fixture draft", "status": "Not reviewed." },
+  "vocabulary": {
+    "entityKinds": { "openDecision": { "label": "Open decision", "section": "openDecisions", "shape": "diamond", "color": "rose", "properties": { "question": { "type": "text", "required": true }, "basis": { "type": "list", "items": { "type": "ref", "ref": ["*"] } }, "origin": { "type": "string" }, "source": { "type": "string" } } } },
+    "verificationMethods": { "draft-review": { "label": "Draft", "description": "Not evaluated until reviewed." } }
+  },
+  "components": [
+    { "id": "cache", "name": "Cache", "category": "storage", "implementation": { "status": "not-implemented" }, "basis": ["cap-01"] }
+  ],
+  "claims": [
+    { "id": "dr-1", "kind": "requirement", "statement": "The cache must be keyed by organization.", "evaluate": { "method": "draft-review" }, "basis": ["c-001", "store"] }
+  ],
+  "openDecisions": [
+    { "id": "od-1", "question": "Which cache?", "basis": ["cap-02"] }
+  ]
+}

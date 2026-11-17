@@ -957,6 +957,7 @@
           "tests/core/fault-model.test.js",
           "tests/core/generate.test.js",
           "tests/core/import-markdown.test.js",
+          "tests/core/import-register.test.js",
           "tests/core/layout.test.js",
           "tests/core/model.test.js",
           "tests/core/projections.test.js",
@@ -1569,6 +1570,33 @@
         "status": "not-implemented",
         "modules": [],
         "notes": "Planned: WG-4715. Specified in docs/simulation.md, \"Planned: resources, workloads and performance\"; defined in formal/ first, then the Rust engine, then checked differentially. Its claims stay not evaluated until recorded evidence supports them."
+      }
+    },
+    {
+      "id": "register-importer",
+      "name": "Register importer",
+      "parent": "tooling",
+      "category": "infrastructure",
+      "runsIn": "node",
+      "purpose": "A command line tool that converts one large Markdown specification file, written as headings, prose and register tables, into the specification file of a linked project: every table row becomes an entity of a kind the import map declares (or a generic table row), and every entity names the line it came from.",
+      "responsibilities": [
+        "Read one Markdown file and the project's import map (specs/<project>/import-map.jsonc with \"format\": \"register\"), which declares the entity kinds, the table rules (header cells, optional heading scope, the id column or id prefix, a property per column, reference columns), component categories and aliases, and which identifier patterns count as mentions",
+        "Hold every line: headings become sections whose bodies keep prose verbatim, and each imported table row and table header is replaced in its section body by one {{entity:<id>}} marker line; write nothing unless the file rebuilds line for line with each marker expanded to the lines it came from",
+        "Make every row entity render back to its cells: a row rendered from its properties must give the same cells as the source row, or the import fails naming the entity",
+        "Give every imported entity a source property (path:line in the source repository) and, when the row carries an identifier, a ref property with the identifier as written; identifiers and citations named in a row become its mentions (references to imported entities) and citations (as written)",
+        "Record what it recognised but could not map (a row whose cell count differs from its header, an unresolved mention, a duplicate identifier, a reference column naming no entity) as losses with counts and examples, printed and written into the generated specification's system notes",
+        "Merge the draft fragments the map lists (\"drafts\"): authored entities that are not from the Markdown, each given origin \"draft\" and the file and line of its declaration as source, citing in basis the imported entities it answers; drafts never change the Markdown the sections render"
+      ],
+      "unknowns": [
+        "It writes the project's specification file directly with node:fs, not through the workspace service or the transaction system, like the Markdown importer; once a map says \"authority\": \"jsonc\" it refuses to import over that file (only --out writes elsewhere), so edits made in Exegra are not overwritten.",
+        "It does not analyze or validate what it writes; that the output analyzes without errors is checked by the tests and by exegra validate."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/import-register.js"
+        ],
+        "notes": "Run by hand when the Markdown file changes; one way, as the Markdown importer."
       }
     }
   ],
@@ -2237,6 +2265,62 @@
       "from": "cost-aspect",
       "to": "performance-metrics",
       "description": "Prices the counted quantities and reports cost per run, per bucket and per month (planned, WG-4669 on WG-4715)."
+    },
+    {
+      "id": "register-importer-reads-markdown-specification-source",
+      "kind": "reads",
+      "from": "register-importer",
+      "to": "markdown-specification-source",
+      "description": "Reads the Markdown file and the repository's git commit; it never writes there."
+    },
+    {
+      "id": "markdown-specification-source-data-flow-register-importer",
+      "kind": "data-flow",
+      "from": "markdown-specification-source",
+      "to": "register-importer",
+      "description": "The headings, prose and register tables of the Markdown file travel to the importer, one way."
+    },
+    {
+      "id": "register-importer-data-flow-specification-file",
+      "kind": "data-flow",
+      "from": "register-importer",
+      "to": "specification-file",
+      "description": "The generated text of the project's specification file travels to the file, deterministically, with the losses recorded in its system notes."
+    },
+    {
+      "id": "register-importer-writes-specification-file",
+      "kind": "writes",
+      "from": "register-importer",
+      "to": "specification-file",
+      "description": "Writes the project's specification file directly with node:fs, bypassing the transaction system."
+    },
+    {
+      "id": "register-importer-depends-on-jsonc-parser-library",
+      "kind": "depends-on",
+      "from": "register-importer",
+      "to": "jsonc-parser-library",
+      "description": "Reads the import map and re-reads the generated text with the library."
+    },
+    {
+      "id": "register-importer-calls-markdown-importer",
+      "kind": "calls",
+      "from": "register-importer",
+      "to": "markdown-importer",
+      "description": "Reuses the Markdown importer's text helpers, loss collection, coverage comparison and git commit reader."
+    },
+    {
+      "id": "register-importer-calls-filesystem",
+      "kind": "calls",
+      "from": "register-importer",
+      "to": "filesystem",
+      "description": "Reads the Markdown file and the import map, and writes or compares the generated file, with node:fs."
+    },
+    {
+      "id": "test-suites-calls-register-importer",
+      "kind": "calls",
+      "from": "test-suites",
+      "to": "register-importer",
+      "description": "Core tests exercise the register importer on a fixture and analyze its output."
     }
   ],
 
@@ -4984,6 +5068,70 @@
       "evaluate": {
         "method": "external-evidence"
       }
+    },
+    {
+      "id": "register-import-holds-every-line",
+      "kind": "invariant",
+      "statement": "The register importer writes nothing unless the Markdown file rebuilds line for line from the generated sections with every entity marker expanded to the lines it came from, and every imported table row rendered from its properties gives the cells of its source row.",
+      "rationale": "A converted specification replaces its Markdown, so a line the conversion dropped or a cell it changed would be lost silently. The two checks make loss a failed import instead.",
+      "subjects": [
+        "register-importer"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "register-import-entities-cite-source",
+      "kind": "invariant",
+      "statement": "Every document, section, table and row entity the register importer writes carries a source property naming the file and line it was imported from, and every row whose rule has an identifier column carries that identifier as written in ref.",
+      "rationale": "A reader of the converted specification must be able to go from any entity to the words it was made from.",
+      "subjects": [
+        "register-importer"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "register-import-drafts-are-marked",
+      "kind": "invariant",
+      "statement": "Every entity the register importer takes from a draft fragment carries origin \"draft\" and a source in that fragment, the system notes name the fragment, and the Markdown rendered from the sections is the same with or without drafts.",
+      "rationale": "Authored additions sit in the same file as the converted specification; a reader must always be able to tell them from what the Markdown says.",
+      "subjects": [
+        "register-importer"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "register-import-respects-authority",
+      "kind": "invariant",
+      "statement": "When the import map says the JSONC is the authority, the register importer writes nothing to the project's specification file, and --render produces the Markdown from the specification file alone.",
+      "rationale": "After the conversion the JSONC is edited in Exegra; a re-import would silently discard those edits.",
+      "subjects": [
+        "register-importer"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
     }
   ],
 
@@ -5168,6 +5316,41 @@
       "kind": "test",
       "ref": "tests/core/formal-explore.test.js#temporal claims: eventually holds",
       "description": "exegra prove on the race fixture: an eventually holds on every path; an eventually fails with a counterexample run that drops the event and ends without it; a precedes that the scripted run satisfies is violated by a run that reorders simultaneous events. Skipped, with a message, when lake is not on the PATH."
+    },
+    {
+      "id": "ev-register-import-coverage",
+      "claim": "register-import-holds-every-line",
+      "kind": "test",
+      "ref": "tests/core/import-register.test.js#the fixture imports, validates and rebuilds line for line",
+      "description": "The fixture converts with both checks passing, the output validates without errors and the sections rebuild the file exactly."
+    },
+    {
+      "id": "ev-register-import-lost-cell",
+      "claim": "register-import-holds-every-line",
+      "kind": "test",
+      "ref": "tests/core/import-register.test.js#a row that does not render back fails the import",
+      "description": "A row whose rendering differs from its source cells fails the import and is named."
+    },
+    {
+      "id": "ev-register-import-sources",
+      "claim": "register-import-entities-cite-source",
+      "kind": "test",
+      "ref": "tests/core/import-register.test.js#every imported entity names its source line",
+      "description": "Every document, section, table and row of the fixture output has a source whose line holds the text it came from, and keyed rows carry ref."
+    },
+    {
+      "id": "ev-register-import-drafts",
+      "claim": "register-import-drafts-are-marked",
+      "kind": "test",
+      "ref": "tests/core/import-register.test.js#a draft fragment is merged with origin, source and checked basis",
+      "description": "A fixture draft merges with origin and source, its basis references are checked by validation, and the rendered Markdown is unchanged."
+    },
+    {
+      "id": "ev-register-import-authority",
+      "claim": "register-import-respects-authority",
+      "kind": "test",
+      "ref": "tests/core/import-register.test.js#a map whose JSONC is the authority refuses to import, and render needs only the JSONC",
+      "description": "An authority map makes the import exit 1 without writing; --render of a written specification gives the source Markdown."
     }
   ],
 
