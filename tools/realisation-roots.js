@@ -281,6 +281,8 @@ export function collectExternalResults(evidence, roots, opts = {}) {
       const before = mtimeOf(reportAbs);
       if (run.command && !opts.ingestOnly) {
         state.ran = true;
+        // bun refuses to write a report into a directory that does not exist.
+        fs.mkdirSync(path.dirname(reportAbs), { recursive: true });
         log(`verify: running ${run.command.join(' ')} in ${alias}:${run.cwd || '.'}`);
         const proc = spawnSync(run.command[0], run.command.slice(1), {
           cwd: path.join(root.path, run.cwd), shell: false, encoding: 'utf8', timeout: RUN_TIMEOUT_MS, maxBuffer: OUTPUT_MAX_BYTES, windowsHide: true,

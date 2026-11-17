@@ -202,7 +202,8 @@ test('junit: verify runs a root\'s test command, and a command that writes no re
     const source = fs.readFileSync(path.join(root, REPORT), 'utf8');
     fs.rmSync(path.join(root, REPORT));
     fs.writeFileSync(path.join(root, 'report.src'), source);
-    const writer = "require('fs').mkdirSync('reports',{recursive:true});require('fs').copyFileSync('../../report.src','reports/junit.xml');process.exit(1)";
+    // No mkdir: bun, like this writer, needs the report directory to exist already.
+    const writer = "require('fs').copyFileSync('../../report.src','reports/junit.xml');process.exit(1)";
     const evidence = { 'ev-pass': EVIDENCE['ev-pass'], 'ev-fail': EVIDENCE['ev-fail'] };
     const roots = { platform: { path: root, tests: { command: [process.execPath, '-e', writer], cwd: 'apps/api', junit: REPORT } } };
     await withProject(roots, async ({ specs }) => {
