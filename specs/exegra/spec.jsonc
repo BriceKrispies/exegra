@@ -724,7 +724,7 @@
       "responsibilities": [
         "Accept requests only from loopback hosts and origins carrying the x-exegra-client header (events excepted)",
         "Route projects, project, write, generated, export, import and events; map errors to JSON with an HTTP status, answering 409 for a write conflict",
-        "Limit request bodies to 6 MB and keep event streams alive with periodic pings"
+        "Limit request bodies to 20 MB and keep event streams alive with periodic pings"
       ],
       "ports": [
         { "id": "plugin-write-in", "name": "Write file", "direction": "provides", "contract": "write-file", "protocol": "HTTP POST /__exegra/write", "description": "Receives a write and answers 200, 409 conflict or an error." },
@@ -2450,7 +2450,7 @@
         {
           "name": "text",
           "type": "string",
-          "description": "Complete new file text, at most 5 MB."
+          "description": "Complete new file text, at most 16 MB."
         },
         {
           "name": "baseHash",
@@ -2482,7 +2482,7 @@
       "errors": [
         { "name": "conflict", "condition": "The file on disk differs from the base hash." },
         { "name": "name.invalid / path.unsafe", "condition": "The project name is invalid or the path escapes the project." },
-        { "name": "file.unknown / input.invalid / too-large", "condition": "The file is not spec or layout, an input has the wrong type, or the text exceeds 5 MB." },
+        { "name": "file.unknown / input.invalid / too-large", "condition": "The file is not spec or layout, an input has the wrong type, or the text exceeds 16 MB." },
         { "name": "host.forbidden / origin.forbidden / client.header", "condition": "The request is not from a loopback host or origin, or lacks the custom header (HTTP 403)." }
       ],
       "obligations": [

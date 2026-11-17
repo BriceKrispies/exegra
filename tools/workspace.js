@@ -27,7 +27,7 @@ const JOURNAL_REL = '.history/journal.jsonl';
 /** The file that may point a project at a specification stored elsewhere. */
 export const PROJECT_FILE = 'project.jsonc';
 const NAME_RE = /^[a-z0-9][a-z0-9_-]{0,63}$/;
-const MAX_TEXT_BYTES = 5 * 1024 * 1024;
+const MAX_TEXT_BYTES = 16 * 1024 * 1024;
 const RENAME_RETRIES = 5;
 const RENAME_DELAY_MS = 20;
 const DEBOUNCE_MS = 80;
@@ -67,7 +67,7 @@ function assertText(text, what = 'text') {
     throw new WorkspaceError('input.invalid', `${what} must be a string.`);
   }
   if (Buffer.byteLength(text, 'utf8') > MAX_TEXT_BYTES) {
-    throw new WorkspaceError('too-large', `${what} is larger than 5 MB.`);
+    throw new WorkspaceError('too-large', `${what} is larger than 16 MB.`);
   }
 }
 

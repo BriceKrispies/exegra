@@ -10,7 +10,7 @@ import { createWorkspace, WorkspaceError } from './workspace.js';
 const PREFIX = '/__exegra/';
 const EVENTS_PATH = '/__exegra/events';
 const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]']);
-const BODY_LIMIT = 6 * 1024 * 1024;
+const BODY_LIMIT = 20 * 1024 * 1024;
 const PING_MS = 25_000;
 
 class HttpError extends Error {
@@ -84,7 +84,7 @@ function readBody(req) {
       size += chunk.length;
       if (size > BODY_LIMIT) {
         done = true;
-        reject(new HttpError(413, 'body.too-large', 'Request body is larger than 6 MB.'));
+        reject(new HttpError(413, 'body.too-large', 'Request body is larger than 20 MB.'));
         return;
       }
       chunks.push(chunk);
