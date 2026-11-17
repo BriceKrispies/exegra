@@ -140,6 +140,7 @@ Examples recorded there: nothing in the runtime is generated yet; behavioral cla
 - [Transactions and persistence](docs/transactions-and-persistence.md)
 - [Simulation](docs/simulation.md)
 - [Claims and evidence](docs/claims-and-evidence.md)
+- [Integrity rules](docs/integrity-rules.md)
 - [Self-hosting](docs/self-hosting.md)
 - [Verification](docs/verification.md)
 - [Importing a Markdown specification](docs/importing-markdown.md)

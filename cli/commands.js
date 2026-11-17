@@ -20,7 +20,10 @@ import { createWorkspace, WorkspaceError } from '../tools/workspace.js';
 import { checkTraceability } from '../tools/traceability.js';
 import { resolveRoots, splitRootRef, collectExternalResults, RootsError } from '../tools/realisation-roots.js';
 import { Project } from '../src/core/project.js';
-import { OPERATIONS, planDelete } from '../src/core/operations.js';
+import { OPERATIONS, OpError, Tx, planDelete } from '../src/core/operations.js';
+import { analyzeSpec } from '../src/core/analyze.js';
+import { evaluateIntegrity, counterexampleJson } from '../src/core/integrity.js';
+import { proveIntegrity } from '../tools/prove-integrity.js';
 import {
   entityLabel, childrenOf, ancestorsOf, inboundRefs, relationshipsOf, dependencies, contractsOf,
 } from '../src/core/query.js';
@@ -259,6 +262,45 @@ async function readOperations(ctx) {
     throw usage('invalid-argument', 'Each operation must be a JSON object with a "type" field.');
   }
   return list;
+}
+
+/**
+ * The model with the integrity rules of `--rules <file>` (a JSON array of integrityRule entities)
+ * added in memory, so that rules can be tried on a specification without editing it. The ratchet
+ * is not applied: the point is to see what a rule finds.
+ * @param {any} ctx @param {Project} project
+ * @returns {Model}
+ */
+function modelWithRules(ctx, project) {
+  const model = requireModel(project);
+  const file = ctx.values.rules;
+  if (file === undefined) return model;
+  let rules;
+  try {
+    rules = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), file), 'utf8'));
+  } catch (err) {
+    throw usage('invalid-argument', `Cannot read rules file "${file}": ${/** @type {Error} */ (err).message}`);
+  }
+  if (!Array.isArray(rules) || !rules.every((r) => r && typeof r === 'object' && !Array.isArray(r))) throw usage('invalid-argument', 'The rules file must be a JSON array of integrityRule entities.');
+  const tx = new Tx(project.specText, project.layoutText, model);
+  try {
+    for (const data of rules) OPERATIONS.CreateEntity.apply(tx, { type: 'CreateEntity', kind: 'integrityRule', data });
+  } catch (err) {
+    if (err instanceof OpError) throw new CliError(err.code, err.message, { diagnostics: err.diagnostics.map(serializeDiagnostic) });
+    throw err;
+  }
+  const a = analyzeSpec(tx.specText);
+  if (!a.model || a.errorCount) throw new CliError('validation.failed', 'The specification with these rules has validation errors.', { diagnostics: a.diagnostics.filter((d) => d.severity === 'error').map(serializeDiagnostic) });
+  return a.model;
+}
+
+/** Integrity rule ids: the one named, or all. @param {any} ctx @param {Model} model */
+function selectRules(ctx, model) {
+  const id = ctx.positionals[0];
+  const all = (model.byKind.integrityRule ?? []).map((r) => r.id);
+  if (id === undefined) return all;
+  requireEntity(model, id, 'integrityRule');
+  return [id];
 }
 
 /**
@@ -772,6 +814,52 @@ export const COMMANDS = {
         if (err instanceof ProveError) throw new CliError(err.code, err.message);
         throw err;
       }
+    },
+  },
+
+  integrity: {
+    usage: 'integrity [<ruleId>] [--rules <file>] [--limit N]',
+    summary: 'Evaluate the integrity rules (or one): holds with the number of instances checked, or violated with counterexamples (bindings, entity ids, lines); vacuous rules are flagged. --rules adds rules from a JSON file in memory. Fails when an error rule is violated or a rule is invalid.',
+    options: { rules: { type: 'string' }, limit: { type: 'string' } },
+    run: async (ctx) => {
+      const { project } = await loadProject(ctx);
+      const model = modelWithRules(ctx, project);
+      const ids = new Set(selectRules(ctx, model));
+      const limit = ctx.values.limit === undefined ? 20 : Number(ctx.values.limit);
+      if (!Number.isInteger(limit) || limit < 0) throw usage('invalid-argument', '--limit must be a non-negative integer.');
+      const rules = evaluateIntegrity(model).filter((r) => ids.has(r.ruleId)).map((r) => ({
+        ruleId: r.ruleId, severity: r.severity, status: r.status, statement: r.statement,
+        instances: r.instances, vacuous: r.vacuous, counterexampleCount: r.counterexamples.length,
+        counterexamples: r.counterexamples.slice(0, limit).map((c) => counterexampleJson(model, c)),
+        ms: Math.round(r.ms * 10) / 10, ...(r.problem ? { problem: r.problem } : {}),
+      }));
+      const result = { total: rules.length, holds: rules.filter((r) => r.status === 'holds').length, violated: rules.filter((r) => r.status === 'violated').length, invalid: rules.filter((r) => r.status === 'invalid').length, rules };
+      const failing = rules.filter((r) => r.status === 'invalid' || (r.status === 'violated' && r.severity === 'error'));
+      if (failing.length) throw new CliError('integrity.violated', `${failing.length} integrity rule(s) violated or invalid: ${failing.map((r) => r.ruleId).join(', ')}.`, { result });
+      return { result, semanticHash: project.semanticHash };
+    },
+  },
+
+  'prove-integrity': {
+    usage: 'prove-integrity [<ruleId>] [--rules <file>] [--max-witnesses N]',
+    summary: 'Prove or refute integrity rules in Lean: holds (a kernel-checked proof by reflection), violated (a kernel-checked refutation from each concrete witness, up to --max-witnesses, default 10), or incomplete. The Lean checker and the JavaScript evaluator must agree. Needs lake. Fails when a rule is incomplete.',
+    options: { rules: { type: 'string' }, 'max-witnesses': { type: 'string' } },
+    run: async (ctx) => {
+      const { project } = await loadProject(ctx);
+      const model = modelWithRules(ctx, project);
+      const ids = selectRules(ctx, model);
+      const mw = ctx.values['max-witnesses'] === undefined ? undefined : Number(ctx.values['max-witnesses']);
+      if (mw !== undefined && !(Number.isInteger(mw) && mw >= 1)) throw usage('invalid-argument', '--max-witnesses must be a positive integer.');
+      let rules;
+      try {
+        rules = proveIntegrity(model, ids, { maxWitnesses: mw, log: ctx.log });
+      } catch (err) {
+        if (err instanceof ProveError) throw new CliError(err.code, err.message);
+        throw err;
+      }
+      const result = { total: rules.length, holds: rules.filter((r) => r.result === 'holds').length, violated: rules.filter((r) => r.result === 'violated').length, incomplete: rules.filter((r) => r.result === 'incomplete').length, rules };
+      if (result.incomplete) throw new CliError('integrity.incomplete', `${result.incomplete} rule(s) could not be decided in Lean.`, { result });
+      return { result, semanticHash: project.semanticHash };
     },
   },
 

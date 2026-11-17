@@ -19,6 +19,7 @@
     "scenarios": { "entity": "scenario" },
     "assumptions": { "entity": "assumption" },
     "claims": { "entity": "claim" },
+    "integrityRules": { "entity": "integrityRule" },
     "evidence": { "entity": "evidence" },
     "views": { "entity": "view" }
   },
@@ -368,6 +369,18 @@
         "assumptions": { "type": "list", "items": { "type": "ref", "ref": ["assumption"] }, "label": "Assumptions" },
         "faultModel": { "type": "ref", "ref": ["faultModel"], "label": "Fault model", "doc": "The fault model this claim is evaluated under. A result states it in its scope." },
         "evaluate": { "type": "evaluation", "required": true, "label": "Evaluation" }
+      }
+    },
+    "integrityRule": {
+      "label": "Integrity rule",
+      "doc": "A consistency rule over the whole specification, in the rule language of src/core/integrity.js. Evaluated on every edit: a transaction that adds a violation of an error rule is refused. Proved or refuted in Lean by exegra prove-integrity.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "statement": { "type": "text", "required": true, "label": "Statement", "doc": "The rule in plain words." },
+        "severity": { "type": "enum", "values": ["error", "warning"], "required": true, "label": "Severity", "doc": "error: an edit may not add a violation; warning: violations are reported only." },
+        "rule": { "type": "text", "required": true, "label": "Rule", "doc": "The formula, e.g. forall d : decision, forall x in d.closes, x.resolvedBy == d. Entity ids written as literals are not references: a rename does not rewrite them." },
+        "rationale": { "type": "text", "label": "Rationale" },
+        "basis": { "type": "list", "items": { "type": "ref", "ref": ["*"] }, "label": "Basis", "doc": "The entities this rule rests on: decisions, requirements, claims." }
       }
     },
     "evidence": {

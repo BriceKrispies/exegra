@@ -1,0 +1,78 @@
+{
+  // A fixture for integrity rules (tests/core/integrity.test.js, tests/core/formal-integrity.test.js):
+  // a small decision register shaped like a converted specification's (decisions that close or narrow
+  // gaps, design entities resting on them). Every rule holds here; mutations.json lists, per rule, an
+  // edit after which it must fail with a given counterexample.
+  "exegra": "0.1",
+  "system": { "id": "integrity-fixture", "name": "Integrity rule fixture", "illustrative": true },
+
+  "vocabulary": {
+    "entityKinds": {
+      "gap": { "label": "Gap", "section": "gaps", "properties": {
+        "topic": { "type": "text" },
+        "resolvedBy": { "type": "ref", "ref": "decision" },
+        "basis": { "type": "list", "items": { "type": "ref", "ref": ["*"] } },
+        "origin": { "type": "enum", "values": ["proposed"] } } },
+      "decision": { "label": "Decision", "section": "decisions", "properties": {
+        "statement": { "type": "text" },
+        "status": { "type": "enum", "values": ["stated", "confirmed", "superseded"] },
+        "closes": { "type": "list", "items": { "type": "ref", "ref": ["*"] } },
+        "narrows": { "type": "list", "items": { "type": "ref", "ref": ["*"] } },
+        "basis": { "type": "list", "items": { "type": "ref", "ref": ["*"] } },
+        "origin": { "type": "enum", "values": ["proposed"] } } },
+      "seam": { "label": "Seam", "section": "seams", "properties": {
+        "question": { "type": "text" },
+        "basis": { "type": "list", "items": { "type": "ref", "ref": ["*"] } },
+        "encodes": { "type": "list", "items": { "type": "ref", "ref": ["*"] } },
+        "origin": { "type": "enum", "values": ["proposed"] } } },
+      "designArea": { "label": "Design area", "section": "designAreas", "properties": {
+        "title": { "type": "string" },
+        "basis": { "type": "list", "items": { "type": "ref", "ref": ["*"] } },
+        "origin": { "type": "enum", "values": ["proposed"] } } }
+    }
+  },
+
+  "gaps": [
+    { "id": "g-1", "topic": "Who owns tenant settings.", "resolvedBy": "dec-1" },
+    { "id": "g-2", "topic": "How budgets roll over.", "resolvedBy": "dec-2" },
+    { "id": "g-3", "topic": "Which locales ship first." }
+  ],
+
+  "decisions": [
+    // dec-1 rests on the gap it resolves: that is how a decision is made, not staleness (rule 5 holds).
+    { "id": "dec-1", "statement": "Tenant settings belong to the tenant service.", "status": "confirmed", "closes": ["g-1"], "basis": ["g-1"], "origin": "proposed" },
+    { "id": "dec-2", "statement": "Budgets roll over monthly, narrowing the rollover question.", "status": "stated", "narrows": ["g-2"], "basis": ["g-3"], "origin": "proposed" },
+    { "id": "dec-0", "statement": "Settings live in the admin app.", "status": "superseded", "basis": ["g-3"], "origin": "proposed" },
+    // A superseded decision may rest on another superseded one.
+    { "id": "dec-3", "statement": "An earlier draft of the admin app decision.", "status": "superseded", "basis": ["dec-0"], "origin": "proposed" }
+  ],
+
+  "seams": [
+    // Rests on a resolved gap and on its resolver: revisited after the resolution.
+    { "id": "s-1", "question": "Where are tenant settings read?", "basis": ["dec-1", "g-1"], "origin": "proposed" },
+    { "id": "s-2", "question": "Which locale bundle loads first?", "encodes": ["g-3"], "origin": "proposed" }
+  ],
+
+  "designAreas": [
+    // Exempt from the source rule by kind.
+    { "id": "area-1", "title": "Tenancy", "origin": "proposed" }
+  ],
+
+  "integrityRules": [
+    { "id": "no-basis-on-superseded", "severity": "error",
+      "statement": "No entity that is not itself superseded rests on a superseded decision.",
+      "rule": "forall e : * where e.status != \"superseded\", forall b in e.basis, !(kindof b == \"decision\" && b.status == \"superseded\")" },
+    { "id": "closes-agrees-with-resolved-by", "severity": "error",
+      "statement": "Every entity a decision closes names that decision as its resolver.",
+      "rule": "forall d : decision, forall x in d.closes, x.resolvedBy == d" },
+    { "id": "resolved-by-is-closed-or-narrowed", "severity": "error",
+      "statement": "Every entity resolved by a decision is closed or narrowed by it.",
+      "rule": "forall x : *, forall d in x.resolvedBy, x in d.closes || x in d.narrows" },
+    { "id": "proposed-has-source", "severity": "error",
+      "statement": "Every proposed entity has a basis or encodes something, except design areas.",
+      "rule": "forall e : * where e.origin == \"proposed\" && kindof e not in [\"designArea\"], nonempty e.basis || nonempty e.encodes" },
+    { "id": "resolution-revisited", "severity": "error",
+      "statement": "An entity that rests on a resolved item also rests on its resolution, unless it is the resolution.",
+      "rule": "forall e : *, forall b in e.basis where nonempty b.resolvedBy && b.resolvedBy != e, b.resolvedBy in e.basis" }
+  ]
+}

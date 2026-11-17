@@ -2,6 +2,7 @@ import Exegra.Semantics
 import Exegra.Temporal
 import Exegra.Prove
 import Exegra.Format2
+import Exegra.Integrity
 
 /-!
 `exegra-lean`: reads one engine input JSON on stdin and writes one trace JSON on stdout, the
@@ -11,6 +12,10 @@ run gives exit status 1 and the refusal message on stderr.
 `exegra-lean explore` reads one exploration request instead (`Exegra.runExplore`: an engine
 input, state invariants, a bound and a state budget) and writes the explorer's result for each
 invariant; `exegra prove` uses it to find the results its generated proof file then states.
+
+`exegra-lean integrity` reads facts and integrity rules (`Exegra.Integrity.runIntegrity`) and
+writes, per rule, whether it holds and every witness; `exegra prove-integrity` compares that with
+the JavaScript evaluator.
 -/
 
 open Exegra
@@ -26,7 +31,8 @@ def main (args : List String) : IO UInt32 := do
     IO.eprintln "exegra-lean: the input is not JSON: not UTF-8"
     return 1
   | some text =>
-    let run := if args == ["explore"] then runExplore else if args == ["temporal"] then runTemporal else runAny
+    let run := if args == ["explore"] then runExplore else if args == ["temporal"] then runTemporal
+      else if args == ["integrity"] then Integrity.runIntegrity else runAny
     match run text with
     | .ok out =>
       let stdout ← IO.getStdout

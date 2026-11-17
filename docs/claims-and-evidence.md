@@ -114,6 +114,10 @@ The application and CLI read it when evaluating claims. A `fail` records the las
 
 Seeded and real violations are kept visible on purpose. The multiplayer test fixture carries `ack-implies-durable-under-early-ack` (behavioral) and `database-reached-only-by-runtime` (structural), both violated by design, and the browser tests rely on them. The shipped `exegra` project carries `edits-only-via-transactions`, violated because Import bypasses the transaction pipeline.
 
+## Integrity rules
+
+A claim is about components, behaviors and traces. A consistency rule over the specification itself (no live entity rests on a superseded decision; a decision closes only what names it as resolver) is an **integrity rule** instead: an entity of the built-in kind `integrityRule`, evaluated on every edit, enforced by `Project.apply` as a ratchet, and proved (`holds`, by reflection) or refuted (from a concrete witness) in Lean by `exegra prove-integrity`. The same rule that vacuity is not verification applies: a rule whose quantifier ranges over nothing is reported vacuous, and every rule of the test fixture must be falsified by a stated mutation. See [integrity-rules.md](integrity-rules.md).
+
 ## Where results are shown
 
 The *Verification* tab lists claims by status with scope, explanation, assumptions, evidence (declared versus recorded) and counterexample, and selecting a claim highlights its involved entities in the 3D scene; the `claims` projection draws a claim's entities colour-coded by status. Author-entered evidence is never drawn in a verified or supported colour: an evidence edge that supports is steel and one that contradicts is red. `node cli/exegra.js claims --project <name>` and `evaluate [<claimId>]` print the same results; `generate` writes `claims-report.md` and `.json`. The *Verification* panel shows recorded results loaded with the project and cannot execute tests.

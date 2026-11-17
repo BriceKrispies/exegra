@@ -28,7 +28,8 @@ const SPAWN = { encoding: /** @type {const} */ ('utf8'), windowsHide: true, maxB
 
 /** Is Lake on the PATH? */
 export function lakeAvailable() {
-  const probe = spawnSync('lake', ['--version'], SPAWN);
+  // From formal/, so that elan resolves the toolchain pinned there even without a default one.
+  const probe = spawnSync('lake', ['--version'], { ...SPAWN, cwd: FORMAL });
   return probe.status === 0;
 }
 

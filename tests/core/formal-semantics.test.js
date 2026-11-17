@@ -55,7 +55,7 @@ function codeOnly(src) {
 const OPEN_OBLIGATIONS = new Map([[path.join('Exegra', 'Lift.lean'), 1]]);
 
 test('the Lean proofs build with no sorry and only standard axioms', (t) => {
-  const probe = spawnSync('lake', ['--version'], { encoding: 'utf8', shell: process.platform === 'win32', windowsHide: true });
+  const probe = spawnSync('lake', ['--version'], { cwd: FORMAL, encoding: 'utf8', shell: process.platform === 'win32', windowsHide: true });
   if (probe.status !== 0) {
     t.skip('lake is not on the PATH (install elan with the toolchain in formal/lean-toolchain)');
     return;

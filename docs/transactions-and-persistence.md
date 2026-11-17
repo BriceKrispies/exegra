@@ -30,8 +30,9 @@ Each operation computes JSONC edits against the current text with `jsonc-parser`
 3. `op.unknown`: each operation type is known.
 4. `model.unavailable`: if the current text has syntax errors, only `ReplaceSource` and `ReplaceLayout` are accepted.
 5. Each operation's preconditions (`OpError` codes such as `id.duplicate`, `entity.unknown`, `delete.referenced`, `op.param`).
-6. `validation.failed`: the resulting specification text is analysed, and **any validation error rejects the transaction**, with the error diagnostics returned.
-7. `layout.invalid`: the resulting layout must parse.
+6. `validation.failed`: the resulting specification text is analysed, and **any validation error rejects the transaction**, with the error diagnostics returned. Violations of integrity rules (`integrity.violated`) are not counted here; they go to the next step.
+7. `integrity.violated`: the integrity rules are evaluated before and after; a violation of an `error` rule that the project did not have before rejects the transaction, with one diagnostic per new counterexample. Existing violations do not block unrelated edits (the ratchet, [integrity-rules.md](integrity-rules.md#enforcement-on-edit-the-ratchet)).
+8. `layout.invalid`: the resulting layout must parse.
 
 Consequence of step 6: a file that already has validation errors still loads, with its diagnostics, but every edit that leaves any error in place is rejected until the errors are fixed. A source edit that fixes them is accepted. A file with syntax errors has no model; the session keeps the last valid one when the error arrives from disk.
 

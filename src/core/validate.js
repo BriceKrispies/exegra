@@ -11,6 +11,7 @@ import { validateFaultModels } from './fault-model.js';
 import { checkDataConsistency, dataRuleDiagnostics, RULE_IDS } from './data-model.js';
 import { contractFields, contractErrorCodes } from './contract-trace.js';
 import { parseType, typeAssignable, typeText } from './type-expr.js';
+import { integrityDiagnostics } from './integrity.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Entity} Entity */
@@ -307,6 +308,9 @@ export function validateModel(model) {
     }
     if (ev.method === 'eventually' && ev.occurs === undefined && ev.expr === undefined) report('error', 'claim.param.required', c, 'Method "eventually" needs "occurs" or "expr".', ['evaluate']);
   }
+
+  // --- integrity rules: invalid rules, vacuity and every current violation --
+  out.push(...integrityDiagnostics(model));
 
   // --- views --------------------------------------------------------------
   for (const v of kind('view')) {

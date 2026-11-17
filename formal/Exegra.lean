@@ -14,3 +14,4 @@ import Exegra.Prove
 import Exegra.Temporal
 import Exegra.Format2
 import Exegra.Lift
+import Exegra.Integrity

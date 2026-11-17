@@ -19,7 +19,7 @@ A project is the directory `specs/<name>/` (name matches `^[a-z0-9][a-z0-9_-]{0,
 
 ```
 exegra  system  vocabulary  components  relationships  contracts  events
-behaviors  faults  environments  failureModes  faultModels  records  copies  scenarios  assumptions  claims  evidence  views
+behaviors  faults  environments  failureModes  faultModels  records  copies  scenarios  assumptions  claims  integrityRules  evidence  views
 ```
 
 `exegra` is the schema version string, currently `"0.1"`; a missing or different value is an error (`schema.missing`, `schema.version`). `system` is a single object; every other entity section is an array. An unknown top-level section or property is an error: nothing is dropped silently.
@@ -71,6 +71,7 @@ Defined in `metamodel.json`; the parser and the inspector both read it.
 | `scenario` | `scenarios` | Behaviors, timed input `steps`, active `faults`, `maxSteps`; optional `faultModel`. |
 | `assumption` | `assumptions` | A statement accepted without evidence. |
 | `claim` | `claims` | `kind` (`structural`, `invariant`, `temporal`, `measured`, `requirement`), `statement`, `evaluate`; optional `faultModel`. |
+| `integrityRule` | `integrityRules` | `statement`, `severity` (`error`, `warning`), `rule` (a formula of the rule language), `rationale`, `basis`. A consistency rule over the whole specification, evaluated on every edit ([integrity-rules.md](integrity-rules.md)). |
 | `evidence` | `evidence` | `claim`, `kind` (`test`, `measurement`, `document`, `review`), `ref`, `supports`, `observed`. |
 | `view` | `views` | `projection` (`structural`, `claims`, `behavior`, `references`, `data`), `filter` (including `entityKinds`), `display` (`colorBy`, `showPorts`, `depth`, `layout`). |
 
