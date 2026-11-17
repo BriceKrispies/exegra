@@ -1,0 +1,20 @@
+{
+  "//": "Per integrity rule of spec.jsonc: Exegra operations after which the rule must fail, with the counterexample it must report (variable -> entity id). Every rule needs at least one.",
+  "mutations": [
+    { "rule": "no-basis-on-superseded", "note": "a live seam comes to rest on the superseded decision",
+      "ops": [{ "type": "SetProperty", "id": "s-1", "property": "basis", "value": ["dec-0", "dec-1", "g-1"] }],
+      "expect": { "e": "s-1", "b": "dec-0" } },
+    { "rule": "closes-agrees-with-resolved-by", "note": "dec-1 claims to close a gap that dec-2 resolved",
+      "ops": [{ "type": "SetProperty", "id": "dec-1", "property": "closes", "value": ["g-1", "g-2"] }],
+      "expect": { "d": "dec-1", "x": "g-2" } },
+    { "rule": "resolved-by-is-closed-or-narrowed", "note": "g-3 names dec-1 as resolver, which neither closes nor narrows it",
+      "ops": [{ "type": "SetProperty", "id": "g-3", "property": "resolvedBy", "value": "dec-1" }],
+      "expect": { "x": "g-3", "d": "dec-1" } },
+    { "rule": "proposed-has-source", "note": "s-2 loses what it encodes",
+      "ops": [{ "type": "SetProperty", "id": "s-2", "property": "encodes", "value": null }],
+      "expect": { "e": "s-2" } },
+    { "rule": "resolution-revisited", "note": "s-1 rests on resolved g-1 without its resolution",
+      "ops": [{ "type": "SetProperty", "id": "s-1", "property": "basis", "value": ["g-1"] }],
+      "expect": { "e": "s-1", "b": "g-1" } }
+  ]
+}

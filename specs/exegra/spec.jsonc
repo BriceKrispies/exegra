@@ -203,7 +203,8 @@
         "Provide analyzeSpec: parse, then validate only when the structure is sound",
         "Check events that name a contract: a role is required, the payload fields are among the inputs (request) or outputs (response), every input that is not optional is present, an error carries a code among the contract's errors, and declared field types are assignable to the contract's; an unknown contract is a reference error",
         "Run the data model's consistency checks (record keys and copy fields name declared fields, bounds have units) as errors and its five data rules as warnings, each naming the record or copy and the field",
-        "Check each negative of a trace claim: its scenario is one of the claim's scenarios, and its faults are a non-empty list of declared faults none of which that scenario already activates"
+        "Check each negative of a trace claim: its scenario is one of the claim's scenarios, and its faults are a non-empty list of declared faults none of which that scenario already activates",
+        "Report integrity rules: an invalid rule as an error, a vacuous rule as a warning, and each violation with the rule severity (integrity.violated), left out of analyzeSpec's blocking error count"
       ],
       "implementation": { "status": "manual", "modules": ["src/core/validate.js", "src/core/analyze.js"], "notes": "The rules are hard-coded. Claim parameter checks read the claim method registry, the gap rules read `expected` flags of the effective meta-model and view filters are checked against the effective vocabulary." }
     },
@@ -267,12 +268,13 @@
       "purpose": "Applies typed operations atomically as source-preserving text edits, with revisions, undo, redo, reload and commit notification; it is the only place where a project's state changes.",
       "responsibilities": [
         "Check operation preconditions and compute JSONC edits that keep comments and formatting",
-        "Reject any transaction whose resulting specification has validation errors or whose layout would be unreadable; nothing changes on rejection",
+        "Reject any transaction whose resulting specification has validation errors (violations of integrity rules excepted) or whose layout would be unreadable; nothing changes on rejection",
         "Keep presentation edits (layout) out of the specification text",
         "Record history sufficient for undo and redo and increment a revision on every commit",
         "Adopt text that changed outside the process (reload): text with syntax errors is refused, any text that parses is adopted, including text with validation errors; the adoption clears the undo and redo stacks and is itself not undoable",
         "Leave the model and its semantic hash as they were when a commit changes only presentation text",
-        "Notify subscribers synchronously after each commit"
+        "Notify subscribers synchronously after each commit",
+        "Reject a transaction that adds a violation of an integrity rule of severity error that the project did not have before (the ratchet), with the counterexamples; existing violations do not block unrelated edits"
       ],
       "ports": [
         { "id": "transactions-apply-in", "name": "Apply transaction", "direction": "provides", "contract": "apply-transaction", "protocol": "in-process call (Project.apply)", "description": "Submit one operation or an array of operations as one transaction." }
@@ -806,7 +808,7 @@
       "runsIn": "node",
       "purpose": "A command line that prints one JSON document per command so an AI coding agent can read, check, simulate, generate, verify and change a specification through the same pipeline as the UI.",
       "responsibilities": [
-        "Commands: projects, validate, list, show, deps, contracts, claims, evaluate, gaps, ops, apply, plan-delete, simulate, trace, prove, generate, traceability, verify, help",
+        "Commands: projects, validate, list, show, deps, contracts, claims, evaluate, gaps, ops, apply, plan-delete, simulate, trace, prove, integrity, prove-integrity, generate, traceability, verify, help",
         "Print a JSON envelope (ok, command, project, semanticHash, result or error with code and diagnostics) and use exit codes 0 ok, 1 command failed, 2 usage error",
         "Apply operations through Project.apply, then write the changed files with the base hashes read at the start; a stale --expect-hash, an invalid operation or a disk conflict leaves the files unchanged",
         "Run the verification pipeline: validation, traceability, execution of test evidence and recording of the results",
@@ -1634,6 +1636,39 @@
       "responsibilities": [
         "Run a root's tests and write a JUnit XML report"
       ]
+    },
+    {
+      "id": "integrity-rules",
+      "name": "Integrity rules",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Declarative consistency rules over a whole specification (the built-in integrityRule kind), evaluated on every edit with counterexamples, enforced by the transaction system as a ratchet, and proved or refuted in Lean with kernel-checked proofs.",
+      "responsibilities": [
+        "Parse a rule of the rule language: forall and exists over the entities of some kinds, all entities, or the values of a term, with an optional where filter; property access that follows references through lists; kindof; ==, !=, in, not in, nonempty; !, &&, || and =>; string, number and boolean literals and literal sets. No recursion and no arithmetic, so evaluation is total",
+        "Check a rule statically: every variable bound, every kind declared, every property declared on some kind; an invalid rule is a validation error",
+        "Evaluate every rule of a model once (memoized per model): holds with the number of instances checked under its leading universal quantifiers, or violated with every counterexample as variable bindings with entity ids and lines; a rule whose quantifier ranges over nothing is reported vacuous",
+        "Report each violation as a diagnostic of the rule severity at the first entity it names (integrity.violated), left out of the blocking error count",
+        "Tell the transaction system which violations of error rules a transaction adds (the ratchet): a violation is identified by its rule and its bindings",
+        "Export a rule to Lean: only the entities it can reach and the properties it reads, every value interned to a natural number, the entities as a balanced search tree; write formal/generated/integrity/<rule>.lean with holds (proof by reflection) or one refutation per witness, each by decide +kernel",
+        "Run exegra prove-integrity: the Lean checker (exegra-lean integrity) must agree with the JavaScript evaluator on the verdict and every counterexample, Lean must accept the file, and every theorem may depend on the standard axioms only; otherwise the rule is incomplete"
+      ],
+      "unknowns": [
+        "Property access reads top-level properties of entities only: a nested object property such as implementation.status or evaluate.method cannot be addressed (follow-up of WK-396).",
+        "Entity ids written as literals in a rule are not references: a rename does not rewrite them and a delete does not see them (follow-up of WK-396).",
+        "Undo, redo and reload are not checked by the ratchet: they restore or adopt text that was valid before, and may bring back a violation.",
+        "The Lean facts are exported by JavaScript: that they are the specification is checked differentially (exegra-lean integrity against the evaluator), not proved."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/integrity.js",
+          "src/core/integrity-export.js",
+          "tools/prove-integrity.js",
+          "formal/Exegra/Integrity.lean"
+        ],
+        "notes": "formal/Exegra/Integrity.lean: Facts (a search tree), Term, Formula, Sat (the meaning), eval and eval_iff, refutes and refutes_sound, Facts.find_complete, cex and the exegra-lean integrity protocol; axioms pinned with #guard_msgs. The commands are exegra integrity and exegra prove-integrity (cli/commands.js)."
+      }
     }
   ],
 
@@ -2385,6 +2420,41 @@
       "from": "external-realisation",
       "to": "external-test-runner",
       "description": "verify spawns the test command a root declares, without a shell, unless --ingest-only."
+    },
+    {
+      "id": "validator-calls-integrity-rules",
+      "kind": "calls",
+      "from": "validator",
+      "to": "integrity-rules",
+      "description": "Reports invalid rules, vacuous rules and every current violation as diagnostics."
+    },
+    {
+      "id": "transactions-calls-integrity-rules",
+      "kind": "calls",
+      "from": "transactions",
+      "to": "integrity-rules",
+      "description": "Project.apply refuses a transaction that adds a violation of an error rule (the ratchet)."
+    },
+    {
+      "id": "agent-cli-calls-integrity-rules",
+      "kind": "calls",
+      "from": "agent-cli",
+      "to": "integrity-rules",
+      "description": "The integrity and prove-integrity commands."
+    },
+    {
+      "id": "integrity-rules-calls-proof-export",
+      "kind": "calls",
+      "from": "integrity-rules",
+      "to": "proof-export",
+      "description": "prove-integrity uses the Lake runner of exegra prove (lakeAvailable, the exegra-lean binary)."
+    },
+    {
+      "id": "integrity-rules-depends-on-formal-semantics",
+      "kind": "depends-on",
+      "from": "integrity-rules",
+      "to": "formal-semantics",
+      "description": "Rules are proved in the formal/ Lean project, built with it."
     }
   ],
 
@@ -5228,6 +5298,57 @@
       "evaluate": {
         "method": "external-evidence"
       }
+    },
+    {
+      "id": "integrity-rules-evaluated",
+      "kind": "invariant",
+      "statement": "Integrity rules are part of the specification and are evaluated on every model: each holds with the number of instances checked, or is violated with its counterexamples (bindings, entity ids, lines); an invalid rule is a validation error, a rule over nothing is reported vacuous, and every rule of the fixture can be made to fail by a stated mutation.",
+      "rationale": "Evidence is the core test over tests/fixtures/integrity, whose five rules hold and whose mutations.json gives each rule an edit after which it must fail with a stated counterexample; a rule without one fails the test. Supported, not verified: Exegra does not check its own evaluator.",
+      "subjects": [
+        "integrity-rules",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "integrity-ratchet-on-apply",
+      "kind": "invariant",
+      "statement": "A transaction that adds a violation of an integrity rule of severity error is refused with the counterexamples and changes nothing; violations the project already had do not block unrelated edits, a fix is accepted, and violations of warning rules are only reported.",
+      "rationale": "Evidence is the core test of the ratchet on the integrity fixture.",
+      "subjects": [
+        "integrity-rules",
+        "transactions"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "integrity-proved-in-lean",
+      "kind": "invariant",
+      "statement": "exegra prove-integrity establishes a rule that holds by a kernel-checked proof by reflection (eval_iff, decide +kernel) and a violated rule by a kernel-checked refutation from each concrete witness (refutes_sound), with Lean's standard axioms only, and reports a rule incomplete when the Lean checker and the JavaScript evaluator disagree.",
+      "rationale": "Evidence is the formal test on the integrity fixture: every rule proved, every mutation refuted from its stated counterexample, and Lean and JavaScript agreeing on every rule of seeded random mutations. The test is skipped, with a message, without Lake.",
+      "subjects": [
+        "integrity-rules",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
     }
   ],
 
@@ -5461,6 +5582,27 @@
       "kind": "test",
       "ref": "tests/core/external-realisation.test.js#junit",
       "description": "A fixture JUnit report gives pass, fail and not-run per evidence entry, matched by file, describe path and name; verify --ingest-only records them and fails only on a real failure."
+    },
+    {
+      "id": "ev-integrity-core",
+      "claim": "integrity-rules-evaluated",
+      "kind": "test",
+      "ref": "tests/core/integrity.test.js",
+      "description": "The rule language parses and reports syntax errors with positions; every fixture rule holds with its instance count; every mutation makes its rule fail with the stated counterexample; a decision resting on the gap it resolves holds; diagnostics carry the rule severity and the first entity; invalid and vacuous rules; the integrity command and --rules."
+    },
+    {
+      "id": "ev-integrity-ratchet",
+      "claim": "integrity-ratchet-on-apply",
+      "kind": "test",
+      "ref": "tests/core/integrity.test.js#the ratchet",
+      "description": "From a fixture with one existing violation: an unrelated edit is accepted, a second violation is refused, the fix is accepted, a warning rule never blocks, promoting it keeps its old violations and stops new ones, and a new error rule that is already violated cannot be added."
+    },
+    {
+      "id": "ev-integrity-lean",
+      "claim": "integrity-proved-in-lean",
+      "kind": "test",
+      "ref": "tests/core/formal-integrity.test.js",
+      "description": "Every fixture rule holds with a proof by reflection checked by the kernel with standard axioms only; every mutation is refuted from its stated witness; on 25 seeded random mutations the Lean checker and the JavaScript evaluator give the same verdict and counterexamples for every rule, each seen holding and failing. Skipped, with a message, without Lake."
     }
   ],
 
@@ -5688,6 +5830,29 @@
         "mechanism": "npm run generate rewrites them; each document records the semantic hash it was derived from"
       },
       "description": "specs/<project>/generated/: derived documents anyone reading the repository sees."
+    }
+  ],
+  "integrityRules": [
+    {
+      "id": "subsystems-contain-components",
+      "severity": "error",
+      "statement": "Every subsystem contains at least one component.",
+      "rule": "forall s : component where s.kind == \"subsystem\", exists c : component, c.parent == s",
+      "rationale": "An empty subsystem draws a container with nothing in it and makes containment claims hold vacuously."
+    },
+    {
+      "id": "components-state-purpose",
+      "severity": "error",
+      "statement": "Every component states its purpose.",
+      "rule": "forall c : component, nonempty c.purpose",
+      "rationale": "A component is specified by what it is for; traceability and the generated architecture document read the purpose."
+    },
+    {
+      "id": "tested-claims-name-subjects",
+      "severity": "error",
+      "statement": "Every claim that test evidence supports names what it is about.",
+      "rule": "forall e : evidence where e.kind == \"test\", forall c in e.claim, nonempty c.subjects",
+      "rationale": "Selecting a claim highlights its subjects; a tested claim with none cannot be found from the scene."
     }
   ]
 }

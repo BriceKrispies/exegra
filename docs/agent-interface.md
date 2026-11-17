@@ -225,6 +225,18 @@ node cli/exegra.js verify --skip-browser --expect-violated no-direct-db
 {"ok":true,"command":"verify","project":"exegra","semanticHash":"…","result":{"validation":{"errors":0,"warnings":0,"gaps":3},"traceability":{…},"evidence":[{"id":"unit-tests","kind":"test","ref":"tests/core/cli.test.js","outcome":"pass","ranAt":"2026-11-14T10:00:00.000Z"}],"claims":{"summary":{…},"violated":["no-direct-db"],"expectedViolated":["no-direct-db"],"unexpectedViolated":[]}}}
 ```
 
+### `integrity [<ruleId>] [--rules <file>] [--limit N]`
+Evaluates the integrity rules ([integrity-rules.md](integrity-rules.md)): per rule `status` (`holds`, `violated`, `invalid`), `instances`, `vacuous`, `counterexampleCount` and the first `--limit` (default 20) counterexamples as bindings `{variable, entity, kind, line}`. `--rules` adds rules from a JSON array of `integrityRule` entities in memory, without editing the file. Fails with `integrity.violated`, carrying the result, when an error rule is violated or a rule is invalid.
+```
+node cli/exegra.js integrity closes-agrees-with-resolved-by
+```
+```json
+{"ok":true,"command":"integrity","project":"exegra","semanticHash":"…","result":{"total":1,"holds":1,"violated":0,"invalid":0,"rules":[{"ruleId":"closes-agrees-with-resolved-by","severity":"error","status":"holds","instances":4,"vacuous":false,"counterexampleCount":0,"counterexamples":[],"ms":0.7}]}}
+```
+
+### `prove-integrity [<ruleId>] [--rules <file>] [--max-witnesses N]`
+Proves or refutes integrity rules in Lean: per rule `result` (`holds`, `violated` or `incomplete`), the exported `facts`, the `differential` comparison with the JavaScript evaluator, the proof `file`, `theorems`, `axioms` and the times (`evaluateMs`, `exportMs`, `leanEvalMs`, `checkMs`). Needs Lake. Fails with `integrity.incomplete` when a rule could not be decided.
+
 ### `help`
 The list of commands with usage and summary.
 

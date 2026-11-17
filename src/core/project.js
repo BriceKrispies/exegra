@@ -10,6 +10,7 @@ import { analyzeSpec } from './analyze.js';
 import { semanticHash, hashString } from './hash.js';
 import { OPERATIONS, OpError, Tx, parseLayout, EMPTY_LAYOUT } from './operations.js';
 import { own } from './own.js';
+import { newErrorViolations, describeCounterexample } from './integrity.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Diagnostic} Diagnostic */
@@ -130,7 +131,18 @@ export class Project {
     if (tx.specEdited) {
       analysis = analyzeSpec(tx.specText);
       if (analysis.errorCount || !analysis.model) {
-        return this.#fail('validation.failed', `Rejected: the result would have ${analysis.errorCount} validation error(s).`, analysis.diagnostics.filter((d) => d.severity === 'error'));
+        return this.#fail('validation.failed', `Rejected: the result would have ${analysis.errorCount} validation error(s).`, analysis.diagnostics.filter((d) => d.severity === 'error' && d.code !== 'integrity.violated'));
+      }
+      const added = newErrorViolations(this.model, analysis.model);
+      if (added.length) {
+        const after = /** @type {Model} */ (analysis.model);
+        /** @type {Diagnostic[]} */
+        const diagnostics = added.map(({ ruleId, statement, counterexample }) => {
+          const key = counterexample.values.find((k) => k.startsWith('s:') && after.entities.has(k.slice(2)));
+          const at = /** @type {any} */ (after.entities.get(key ? key.slice(2) : ruleId));
+          return { code: 'integrity.violated', severity: 'error', message: `Integrity rule "${ruleId}" would be violated: ${describeCounterexample(after, counterexample)}. ${statement}`, entityId: at.id, loc: at.loc, path: at.path };
+        });
+        return this.#fail('integrity.violated', `Rejected: the result would add ${added.length} violation(s) of integrity rules (${[...new Set(added.map((a) => a.ruleId))].join(', ')}).`, diagnostics);
       }
     }
     if (tx.layoutEdited && !parseLayout(tx.layoutText).ok) return this.#fail('layout.invalid', 'Rejected: the layout would become unreadable.');
