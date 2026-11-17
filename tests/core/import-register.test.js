@@ -22,7 +22,7 @@ test('rowCells splits on unescaped pipes only and keeps the escape', () => {
   assert.equal(sectionKey('Appendix A. Register'), 'sec-appendix-a');
 });
 
-test('the fixture imports, validates and rebuilds line for line', () => {
+test('the fixture imports and validates and rebuilds line for line', () => {
   const r = run();
   assert.ok(r.ok, 'both checks pass');
   assert.ok(r.cov.ok, 'every line held');
@@ -80,7 +80,7 @@ test('every imported entity names its source line', () => {
   for (const c of [...spec.components, ...spec.capabilities, ...spec.interfaces, ...spec.conflicts]) assert.equal(typeof c.ref, 'string', `${c.id} carries ref`);
 });
 
-test('a draft fragment is merged with origin, source and checked basis', () => {
+test('a draft fragment is merged with origin and source and a checked basis', () => {
   const draftText = fs.readFileSync(path.join(FIXTURE, 'repo', 'draft.jsonc'), 'utf8');
   const drafts = [readDraft('draft.jsonc', draftText)];
   const r = buildRegisterSpec({ map, text, file: map.file, commit: 'fixture', drafts });
@@ -99,7 +99,7 @@ test('a draft fragment is merged with origin, source and checked basis', () => {
   assert.ok(analyzeSpec(bad.text).errorCount > 0, 'a basis naming no entity is an error');
 });
 
-test('a map whose JSONC is the authority refuses to import, and render needs only the JSONC', async () => {
+test('a map whose JSONC is the authority refuses to import and render needs only the JSONC', async () => {
   const { spawnSync } = await import('node:child_process');
   const os = await import('node:os');
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'register-authority-'));

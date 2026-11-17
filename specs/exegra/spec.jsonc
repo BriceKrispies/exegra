@@ -5321,7 +5321,7 @@
       "id": "ev-register-import-coverage",
       "claim": "register-import-holds-every-line",
       "kind": "test",
-      "ref": "tests/core/import-register.test.js#the fixture imports, validates and rebuilds line for line",
+      "ref": "tests/core/import-register.test.js#the fixture imports and validates and rebuilds line for line",
       "description": "The fixture converts with both checks passing, the output validates without errors and the sections rebuild the file exactly."
     },
     {
@@ -5342,14 +5342,14 @@
       "id": "ev-register-import-drafts",
       "claim": "register-import-drafts-are-marked",
       "kind": "test",
-      "ref": "tests/core/import-register.test.js#a draft fragment is merged with origin, source and checked basis",
+      "ref": "tests/core/import-register.test.js#a draft fragment is merged with origin and source and a checked basis",
       "description": "A fixture draft merges with origin and source, its basis references are checked by validation, and the rendered Markdown is unchanged."
     },
     {
       "id": "ev-register-import-authority",
       "claim": "register-import-respects-authority",
       "kind": "test",
-      "ref": "tests/core/import-register.test.js#a map whose JSONC is the authority refuses to import, and render needs only the JSONC",
+      "ref": "tests/core/import-register.test.js#a map whose JSONC is the authority refuses to import and render needs only the JSONC",
       "description": "An authority map makes the import exit 1 without writing; --render of a written specification gives the source Markdown."
     }
   ],
