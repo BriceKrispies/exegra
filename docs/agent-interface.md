@@ -203,20 +203,20 @@ node cli/exegra.js traceability
 {"ok":true,"command":"traceability","project":"exegra","semanticHash":"…","result":{"checkedModules":12,"missingModules":[],"unclaimedFiles":["tools/old.js"],"claimedFiles":40}}
 ```
 
-### `verify [--skip-browser] [--expect-violated a,b]`
+### `verify [--skip-browser] [--ingest-only] [--expect-violated a,b]`
 The verification pipeline:
 
 1. Validate.
 2. Check traceability.
-3. Execute every `test` evidence. Its `ref` is `<test file>` or `<test file>#<name pattern>`. Files under `tests/browser/` run through `npx playwright test`. Other files run through `node --test`. A reference may contain only `A-Z a-z 0-9 _ . / - space # :`, and its file must lie inside the repository. Anything else is recorded as `unsafe reference`. A missing file is recorded as `test file not found`. A failure keeps the last 20 lines of output as `detail`.
+3. Execute every `test` evidence. Its `ref` is `<test file>` or `<test file>#<name pattern>`. Files under `tests/browser/` run through `npx playwright test`. Other files run through `node --test`. A reference may contain only `A-Z a-z 0-9 _ . / - space # :`, and its file must lie inside the repository. Anything else is recorded as `unsafe reference`. A missing file is recorded as `test file not found`. A failure keeps the last 20 lines of output as `detail`. A `ref` written `<alias>:<file>[#<describe> > <name>]` points into a realisation root that `project.jsonc` declares: the root's test commands run once and the outcome (`pass`, `fail` or `not-run`) comes from its JUnit report ([verification.md](verification.md#realisation-roots-code-and-tests-in-other-repositories)).
 4. Write the results to `evidence/results.json` with `ranAt` timestamps. Results from earlier runs are replaced.
 5. Re-evaluate the claims with the new results.
 
-`--skip-browser` leaves browser evidence unexecuted. It has no recorded result, so its claims are evaluated as they would be without a run.
+`--ingest-only` runs no realisation root's test command and reads the JUnit reports already on disk. `--skip-browser` leaves browser evidence unexecuted. It has no recorded result, so its claims are evaluated as they would be without a run.
 
 `--expect-violated a,b` names claims that are deliberately violated. The command still succeeds when those are the only violations. Unknown ids are rejected.
 
-The command fails with `verify.failed` when validation has errors, any executed evidence failed, or any claim is violated outside `--expect-violated`. The failure carries the full report in `result`.
+The command fails with `verify.failed` when validation has errors, any executed evidence failed (`not-run` is not a failure), or any claim is violated outside `--expect-violated`. The failure carries the full report in `result`.
 
 ```
 node cli/exegra.js verify --skip-browser --expect-violated no-direct-db

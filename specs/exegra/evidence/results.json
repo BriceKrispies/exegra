@@ -155,12 +155,20 @@
     "ev-formal-explore-temporal": {
       "outcome": "pass",
       "ranAt": "2026-11-16T22:10:01.661Z"
+    },
+    "ev-external-traceability": {
+      "outcome": "pass",
+      "ranAt": "2026-11-17T10:26:51.128Z"
+    },
+    "ev-external-junit": {
+      "outcome": "pass",
+      "ranAt": "2026-11-17T10:26:51.936Z"
     }
   },
   "traceability": {
-    "checkedModules": 138,
+    "checkedModules": 141,
     "missingModules": [],
     "unclaimedFiles": [],
-    "claimedFiles": 100
+    "claimedFiles": 103
   }
 }

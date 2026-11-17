@@ -17,7 +17,7 @@ How to run every check, what it establishes, and where results are recorded. A c
 | `npm run benchmark:generate` | regenerates `specs/benchmark/spec.jsonc` | `specs/benchmark/spec.jsonc` |
 | `node tools/check-spec.js <spec>` | one specification validates; claims and scenarios | terminal |
 | `node tools/conformance.js [--engine "<command>"]` | an engine reproduces every golden trace of `tests/conformance/`: by default the WebAssembly engine through `src/core/engine.js`, or a command reading an input on stdin (the native `engine/target/release/exegra-sim`) | terminal |
-| `node cli/exegra.js traceability` | declared modules exist; every source file is claimed | terminal |
+| `node cli/exegra.js traceability` | declared modules exist; every source file is claimed (per realisation root, when the project declares roots) | terminal |
 | `npm run check` | typecheck, `npm test`, `npm run test:browser` in sequence | terminal |
 
 Typecheck does not cover `src/render`, `src/ui` or `src/app`. Tests run with a limited number of jobs; `npm test` uses `--test-concurrency=2`, and Playwright runs one worker.
@@ -42,6 +42,7 @@ Typecheck does not cover `src/render`, `src/ui` or `src/app`. Tests run with a l
 | `generate.test.js` | Exactly five artifacts, byte-identical on rerun, insensitive to comments and key order, valid JSON carrying the semantic hash, violated claim becomes a high-severity task, every component named. |
 | `import-markdown.test.js` | The Markdown importer: a requirement with every key becomes a claim, retired requirements and unknown keys, unresolved references counted not dropped, component and boundary rows, helpers; a small fixture specification (`tests/fixtures/markdown-import/`) converts through its import map, validates, is covered and deterministic; the importer's command line; a linked project resolved through `project.jsonc` whose documents the `markdown` command renders. |
 | `workspace.test.js` | Name and path validation, base-hash writes, conflicts leave files untouched, only `spec` and `layout` writable, `generated/` confinement, export and import round trip, journal lines. |
+| `external-realisation.test.js` | Realisation roots (fixture `tests/fixtures/external-root`): modules checked per root, an undeclared alias missing, unclaimed files only for roots with include globs, no roots giving the earlier result, malformed roots refused; a bun-shaped JUnit report parsed with its describe path; pass, fail and not-run per evidence entry, environmental failures not-run; `verify --ingest-only`, a root test command run, and a command that writes no report. |
 | `cli.test.js` | `validate`, `list`, `show`, `deps`, `apply` (writes, stale hash, invalid operation, `--dry-run`), `plan-delete`, `simulate`, `ops`, usage errors with exit code 2; the test-count parsing that makes a reference matching no test a failure. |
 
 ## `npm run test:browser`
@@ -96,9 +97,9 @@ Runs `exegra verify` for the self-specification, the only shipped project with t
 node cli/exegra.js verify --project exegra --expect-violated edits-only-via-transactions --pretty
 ```
 
-The pipeline, in order: validate the specification; run the traceability check; execute every `test` evidence reference; write `specs/<project>/evidence/results.json` (`results` keyed by evidence id with `outcome`, `ranAt` and, on failure, `detail`, plus `traceability`); re-evaluate all claims with those results. Exit code 1 results if there are validation errors, a failed test, or a violated claim not listed in `--expect-violated`. A specification with syntax errors fails the command without running anything.
+The pipeline, in order: validate the specification; run the traceability check; execute every `test` evidence reference (evidence in a realisation root is decided from that root's JUnit reports, see [Realisation roots](#realisation-roots-code-and-tests-in-other-repositories)); write `specs/<project>/evidence/results.json` (`results` keyed by evidence id with `outcome`, `ranAt` and, on failure, `detail`, plus `traceability`); re-evaluate all claims with those results. Exit code 1 results if there are validation errors, a failed test, or a violated claim not listed in `--expect-violated`. A specification with syntax errors fails the command without running anything.
 
-An evidence `ref` is `<path>` (run the whole file) or `<path>#<title pattern>` (run matching tests). Files under `tests/browser/` run with `npx playwright test <file> -g <pattern>` and need Chrome; others run with `node --test`. A Node test reference that matches no test (a title pattern that selects nothing, or a file with no tests) is recorded as a failure with the detail "the reference matched no test"; Node itself exits 0 in that case, so the exit code alone is not trusted. References may contain only letters, digits, `_`, `.`, `/`, `-`, space, `#` and `:`. `--skip-browser` skips browser evidence and leaves it without a recorded result.
+An evidence `ref` is `<path>` (run the whole file) or `<path>#<title pattern>` (run matching tests). Files under `tests/browser/` run with `npx playwright test <file> -g <pattern>` and need Chrome; others run with `node --test`. A Node test reference that matches no test (a title pattern that selects nothing, or a file with no tests) is recorded as a failure with the detail "the reference matched no test"; Node itself exits 0 in that case, so the exit code alone is not trusted. References may contain only letters, digits, `_`, `.`, `/`, `-`, space, `#` and `:`. `--skip-browser` skips browser evidence and leaves it without a recorded result. `--ingest-only` reads realisation roots' JUnit reports without running their test commands.
 
 **Why some claims are expected to be violated.** `--expect-violated` names claims that are violated by design or by a known defect, so that a violation you did not expect fails the command and one you did expect does not:
 
@@ -121,7 +122,65 @@ Read-only. Prints diagnostics with line and column, the semantic hash, entity co
 
 ## `node cli/exegra.js traceability`
 
-Compares `implementation.modules` of every component (repository-relative paths; a trailing `/` claims a directory) with disk. It reports `checkedModules`, `missingModules` (declared but absent) and `unclaimedFiles` (files under `src/`, `cli/`, `tools/` with extension `.js`, `.json`, `.css` or `.html`, plus `index.html` and `vite.config.js`, that no component claims). It compares paths only: it does not check that a module implements its component or that relationships match imports.
+Compares `implementation.modules` of every component (repository-relative paths; a trailing `/` claims a directory) with disk. It reports `checkedModules`, `missingModules` (declared but absent) and `unclaimedFiles` (files under `src/`, `cli/`, `tools/` with extension `.js`, `.json`, `.css` or `.html`, plus `index.html` and `vite.config.js`, that no component claims). It compares paths only: it does not check that a module implements its component or that relationships match imports. A project that declares realisation roots is checked against them instead (next section).
+
+## Realisation roots: code and tests in other repositories
+
+A project whose code lives in other repositories (a linked project such as a specification realised in three sibling repositories) declares those repositories as **realisation roots** in its `specs/<project>/project.jsonc`. A module or test evidence reference written `<alias>:<path>` then points into that root.
+
+```jsonc
+// specs/<project>/project.jsonc
+{
+  "spec": "../../../system-specs/system/spec.jsonc",
+  "roots": {
+    "platform": {
+      "path": "../../../platform",                           // relative to this directory, or absolute
+      "include": ["apps/*/src/**/*.ts"],                     // only roots with include globs report unclaimed files
+      "exclude": ["**/*.test.ts", "**/*.d.ts"],
+      "tests": [                                             // one object or a list
+        { "command": ["bun", "test", "--reporter=junit", "--reporter-outfile=.exegra/junit.xml"],
+          "cwd": "apps/api", "junit": "apps/api/.exegra/junit.xml" }
+      ],
+      "notRunWhen": ["ECONNREFUSED", "docker"]              // optional; replaces the default patterns
+    },
+    "database": { "path": "../../../database" }
+  }
+}
+```
+
+In the specification:
+
+```jsonc
+{ "id": "tenant-service", "implementation": { "status": "manual",
+    "modules": ["platform:apps/api/src/tenant/", "database:migrations/0007_tenant.sql"] } }
+{ "id": "ev-ten-2", "claim": "ten-2", "kind": "test",
+  "ref": "platform:apps/api/test/auth/database-adapter.test.ts#database adapter > tenant scoping > rejects a cross-tenant read" }
+```
+
+**Why project.jsonc and not the specification.** A root's path, its globs and the command that runs its tests describe where a checkout sits on one machine and how to run it there; the specification describes the system and is shared. project.jsonc is already the machine-local binding of a project (it names where the specification is), it is ignored by git for linked projects, and keeping roots out of the specification needs no change to the meta-model. The specification carries only the alias, which is stable across machines. A `project.jsonc` may declare `roots` without `spec`; the specification is then `spec.jsonc` in the project directory.
+
+| Field | Meaning |
+|---|---|
+| `path` | The root directory (required). |
+| `include`, `exclude` | Globs (`path.matchesGlob`) over root-relative paths. Without `include` the root is not scanned and reports no unclaimed files; only its declared modules are checked. Only the directories an include glob can reach are walked, and `node_modules` and `.git` never are. |
+| `tests` | Runs that produce JUnit XML: `junit` (the report, root-relative or absolute; required), `command` (program and arguments, run without a shell in `cwd`), `cwd` (root-relative, default the root), `base` (the directory the report's `file` attributes are relative to, default `cwd`). |
+| `notRunWhen` | Case-insensitive regular expressions. A failure whose message matches one is an environmental failure. Default: `ECONNREFUSED`, `ENOTFOUND`, `EAI_AGAIN`, `docker`, `testcontainers`, `container runtime`. |
+
+**Traceability with roots.** A module `<alias>:<path>` (trailing `/` claims a directory) is checked in that root; one naming an alias that is not declared is missing with `reason: "root not declared"`; a module without an alias is checked in this repository as before. Unclaimed files come only from roots with `include`, reported as `<alias>:<path>`; this repository's own surface is not scanned once roots are declared. The result adds `roots`: per alias `path`, `found`, `checkedModules`, `scanned`, `scannedFiles`, `unclaimedFiles`. With no roots the result is unchanged.
+
+**Test evidence in a root.** `verify` runs each `tests` command of a root that has evidence pointing into it, then reads its JUnit report; `verify --ingest-only` runs nothing and reads the reports already on disk, which makes the result a pure function of the reports (`ranAt` is the report's modification time). A report that the command did not rewrite is ignored as stale. The command's exit code is not used: a runner exits non-zero when any test fails.
+
+An external reference is `<alias>:<file>[#<describe> > ... > <test name>]`. The file is matched against the report's `file` attributes (made root-relative through `base`); the name path against the enclosing `testsuite` names (bun nests a suite per `describe`; a suite that stands for the file is skipped) followed by the test name. A path selects the test cases it equals or is a prefix of, so a describe path or a bare file selects all tests beneath it. The outcome of one evidence entry:
+
+| Matched test cases | Outcome |
+|---|---|
+| any `<failure>` whose message matches no `notRunWhen` pattern | `fail` (detail: test path and message) |
+| otherwise any `<error>`, or a `<failure>` matching a `notRunWhen` pattern | `not-run` (the environment, not the requirement) |
+| otherwise at least one pass | `pass` (skipped tests beside it are ignored) |
+| all skipped, none matched, no report, the command could not start or wrote no report, or the alias is not declared | `not-run` with the reason |
+
+`not-run` is recorded in `results.json` but is never a failure: `verify` fails only on `fail`, and the claim evaluator treats `not-run` as no recorded result (a claim resting only on it is *inconclusive*). The verify result lists those ids in `notRun` and each root's `ran`, `reports` and `problems` in `roots`. bun writes JUnit with `bun test --reporter=junit --reporter-outfile=<file>`; a test file that fails to load is absent from bun's report and so is `not-run`.
+
 
 ## Where results live
 

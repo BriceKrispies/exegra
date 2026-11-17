@@ -9,6 +9,7 @@ A project is the directory `specs/<name>/` (name matches `^[a-z0-9][a-z0-9_-]{0,
 | `spec.jsonc` | The specification. The serialized authority. |
 | `layout.jsonc` | Presentation only: pinned node positions per view. Optional; created on the first move. |
 | `evidence/results.json` | Recorded results of executing test evidence, written by `exegra verify`. |
+| `project.jsonc` | Optional, never written by Exegra: `spec` names a specification kept in another repository, and `roots` declares the repositories the project is realised in, which modules and test evidence address as `<alias>:<path>` ([verification.md](verification.md#realisation-roots-code-and-tests-in-other-repositories)). |
 | `generated/` | Artifacts derived from the model ([self-hosting.md](self-hosting.md)). |
 | `.history/journal.jsonl` | Append-only record of each saved write (sequence, file, hash, base hash, label, origin, size). |
 

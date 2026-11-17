@@ -18,6 +18,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { createWorkspace, WorkspaceError } from '../tools/workspace.js';
 import { checkTraceability } from '../tools/traceability.js';
+import { resolveRoots, splitRootRef, collectExternalResults, RootsError } from '../tools/realisation-roots.js';
 import { Project } from '../src/core/project.js';
 import { OPERATIONS, planDelete } from '../src/core/operations.js';
 import {
@@ -203,6 +204,20 @@ async function loadProject(ctx) {
   return { ws, data, project };
 }
 
+/**
+ * The realisation roots project.jsonc declares (none for most projects).
+ * @param {any} ws @param {any} ctx
+ * @returns {import('../tools/realisation-roots.js').RealisationRoot[]}
+ */
+function loadRoots(ws, ctx) {
+  try {
+    return resolveRoots(ws.projectConfig(ctx.projectName));
+  } catch (err) {
+    if (err instanceof RootsError) throw new CliError(err.code, `${ctx.projectName}/project.jsonc: ${err.message}`);
+    throw err;
+  }
+}
+
 /** Text of stdin when it is piped, '' when nothing is piped. */
 async function readStdin(ctx) {
   if (typeof ctx.stdin === 'string') return ctx.stdin;
@@ -370,11 +385,17 @@ async function runVerify(ctx) {
   const validationErrors = project.diagnostics.filter((d) => d.severity === 'error').map(serializeDiagnostic);
 
   // (2) traceability
-  const traceability = checkTraceability(model, ctx.repoRoot);
+  const roots = loadRoots(ws, ctx);
+  const traceability = checkTraceability(model, ctx.repoRoot, roots);
 
-  // (3) execute test evidence
+  // (3) execute test evidence; evidence in a realisation root comes from its JUnit reports
   const skipBrowser = ctx.values['skip-browser'] === true;
-  /** @type {Record<string, {outcome: 'pass'|'fail', detail?: string, ranAt: string}>} */
+  const testEvidence = (model.byKind.evidence ?? []).filter((ev) => ev.data.kind === 'test');
+  const externalEvidence = roots.length
+    ? testEvidence.filter((ev) => splitRootRef(String(ev.data.ref)) !== null).map((ev) => ({ id: ev.id, ref: String(ev.data.ref) }))
+    : [];
+  const external = collectExternalResults(externalEvidence, roots, { ingestOnly: ctx.values['ingest-only'] === true, log: ctx.log });
+  /** @type {Record<string, {outcome: 'pass'|'fail'|'not-run', detail?: string, ranAt?: string}>} */
   const results = {};
   /** @type {Record<string, any>[]} */
   const evidence = [];
@@ -382,6 +403,12 @@ async function runVerify(ctx) {
     const base = { id: ev.id, kind: ev.data.kind, ref: ev.data.ref, claim: ev.data.claim };
     if (ev.data.kind !== 'test') {
       evidence.push({ ...base, outcome: 'not-executed' });
+      continue;
+    }
+    const ext = external.results.get(ev.id);
+    if (ext) {
+      results[ev.id] = ext;
+      evidence.push({ ...base, ...ext });
       continue;
     }
     const run = runTestReference(String(ev.data.ref), { repoRoot: ctx.repoRoot, skipBrowser, log: ctx.log });
@@ -413,6 +440,7 @@ async function runVerify(ctx) {
     validation: { errors: counts.errors, warnings: counts.warnings, gaps: counts.gaps },
     traceability,
     evidence,
+    ...(roots.length ? { roots: external.reports, notRun: evidence.filter((e) => e.outcome === 'not-run').map((e) => e.id) } : {}),
     claims: {
       summary: summarize(claimResults),
       violated,
@@ -772,7 +800,7 @@ export const COMMANDS = {
       const { ws, data, project } = await loadProject(ctx);
       const model = requireModel(project);
       const claimResults = evaluateClaims(model, { recorded: data.recorded ?? undefined });
-      const traceability = checkTraceability(model, ctx.repoRoot);
+      const traceability = checkTraceability(model, ctx.repoRoot, loadRoots(ws, ctx));
       const generatorFile = path.join(HERE, '..', 'src', 'core', 'generate', 'index.js');
       if (!fs.existsSync(generatorFile)) throw new CliError('generate.unavailable', 'src/core/generate/index.js does not exist.');
       const { generateAll } = await import(pathToFileURL(generatorFile).href);
@@ -823,18 +851,18 @@ export const COMMANDS = {
 
   traceability: {
     usage: 'traceability',
-    summary: 'Compare declared implementation modules with the files on disk.',
+    summary: 'Compare declared implementation modules with the files on disk: this repository, or the realisation roots project.jsonc declares.',
     run: async (ctx) => {
-      const { project } = await loadProject(ctx);
+      const { ws, project } = await loadProject(ctx);
       const model = requireModel(project);
-      return { result: checkTraceability(model, ctx.repoRoot), semanticHash: project.semanticHash };
+      return { result: checkTraceability(model, ctx.repoRoot, loadRoots(ws, ctx)), semanticHash: project.semanticHash };
     },
   },
 
   verify: {
-    usage: 'verify [--skip-browser] [--expect-violated a,b]',
-    summary: 'Validate, check traceability, execute test evidence, record the results and re-evaluate the claims.',
-    options: { 'skip-browser': { type: 'boolean' }, 'expect-violated': { type: 'string' } },
+    usage: 'verify [--skip-browser] [--ingest-only] [--expect-violated a,b]',
+    summary: "Validate, check traceability, execute test evidence, record the results and re-evaluate the claims. Evidence in a realisation root is read from its JUnit reports; --ingest-only reads them without running the roots' test commands.",
+    options: { 'skip-browser': { type: 'boolean' }, 'ingest-only': { type: 'boolean' }, 'expect-violated': { type: 'string' } },
     run: async (ctx) => {
       const result = await runVerify(ctx);
       return result;

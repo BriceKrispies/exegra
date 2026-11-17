@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Shaped like bun test --reporter=junit, run in apps/api -->
+<testsuites name="bun test" tests="7" assertions="5" failures="2" skipped="1" time="0.01">
+  <testsuite name="test\tenant.test.ts" file="test\tenant.test.ts" tests="7" assertions="5" failures="2" skipped="1" time="0.002" hostname="">
+    <testsuite name="tenant" file="test\tenant.test.ts" line="2" tests="6" assertions="4" failures="2" skipped="1" time="0" hostname="">
+      <testsuite name="isolation" file="test\tenant.test.ts" line="3" tests="2" assertions="2" failures="1" skipped="0" time="0" hostname="">
+        <testcase name="rejects a cross-tenant read" classname="isolation &gt; tenant" time="0.0001" file="test\tenant.test.ts" line="4" assertions="1" />
+        <testcase name="scopes writes &amp; reads" classname="isolation &gt; tenant" time="0.0003" file="test\tenant.test.ts" line="5" assertions="1">
+          <failure type="AssertionError" message="expect(received).toBe(expected)&#10;&#10;Expected: &quot;t1&quot;&#10;Received: &quot;t2&quot;&#10;">AssertionError: expect(received).toBe(expected)&#10;      at test/tenant.test.ts:5:37&#10;</failure>
+        </testcase>
+      </testsuite>
+      <testcase name="connects to postgres" classname="tenant" time="0.0006" file="test\tenant.test.ts" line="9" assertions="0">
+        <failure type="Error" message="connect ECONNREFUSED 127.0.0.1:5432">Error: connect ECONNREFUSED 127.0.0.1:5432&#10;</failure>
+      </testcase>
+      <testcase name="later" classname="tenant" time="0" file="test\tenant.test.ts" line="10" assertions="0">
+        <skipped message="TODO" />
+      </testcase>
+      <testcase name="loads fixtures" classname="tenant" time="0" file="test\tenant.test.ts" line="11" assertions="0">
+        <error type="Error" message="beforeAll hook timed out"><![CDATA[hook timed out after 5000ms]]></error>
+      </testcase>
+      <testcase name="reads the tenant id" classname="tenant" time="0.0001" file="test\tenant.test.ts" line="12" assertions="1" />
+    </testsuite>
+    <testcase name="top level" classname="" time="0.00001" file="test\tenant.test.ts" line="14" assertions="1" />
+  </testsuite>
+</testsuites>

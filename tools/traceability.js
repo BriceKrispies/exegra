@@ -9,11 +9,18 @@
 // Build output under GENERATED_DIRS is not part of the surface: it is derived from
 // sources that a component claims (src/engine/pkg/ from engine/exegra-engine-wasm,
 // by npm run build:engine) and exists only after a build.
+//
+// With realisation roots (tools/realisation-roots.js), a module "<alias>:<path>"
+// is checked in that root, and unclaimed files come only from roots that declare
+// include globs: this repository's surface is not scanned, since the project is
+// realised elsewhere.
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { traceRoots } from './realisation-roots.js';
 
 /** @typedef {import('../src/core/types.js').Model} Model */
+/** @typedef {import('./realisation-roots.js').RealisationRoot} RealisationRoot */
 
 const SCAN_DIRS = ['src', 'cli', 'tools'];
 const SCAN_EXT = new Set(['.js', '.json', '.css', '.html']);
@@ -73,12 +80,13 @@ function moduleExists(repoRoot, modulePath) {
  * `checkedModules` counts declared module entries (a directory entry counts once).
  * @param {Model} model
  * @param {string} repoRoot absolute path of the repository root
- * @returns {{checkedModules: number, missingModules: {component: string, module: string}[], unclaimedFiles: string[], claimedFiles: number}}
+ * @param {RealisationRoot[]} [roots] realisation roots of the project; none keeps the repository-only check
+ * @returns {{checkedModules: number, missingModules: {component: string, module: string, root?: string, reason?: string}[], unclaimedFiles: string[], claimedFiles: number, roots?: Record<string, any>}}
  */
-export function checkTraceability(model, repoRoot) {
+export function checkTraceability(model, repoRoot, roots = []) {
   const components = model.byKind.component ?? [];
   const declaring = components.filter((c) => c.data.implementation !== undefined && c.data.implementation !== null);
-  if (!declaring.length) return { checkedModules: 0, missingModules: [], unclaimedFiles: [], claimedFiles: 0 };
+  if (!declaring.length && !roots.length) return { checkedModules: 0, missingModules: [], unclaimedFiles: [], claimedFiles: 0 };
 
   /** @type {{component: string, module: string}[]} */
   const declared = [];
@@ -88,6 +96,18 @@ export function checkTraceability(model, repoRoot) {
     for (const m of modules) {
       if (typeof m === 'string' && m !== '') declared.push({ component: c.id, module: slash(m) });
     }
+  }
+
+  if (roots.length) {
+    const traced = traceRoots(declared, roots);
+    const missingModules = [...traced.local.filter((d) => !moduleExists(repoRoot, d.module)), ...traced.missingModules];
+    return {
+      checkedModules: declared.length,
+      missingModules,
+      unclaimedFiles: traced.unclaimedFiles,
+      claimedFiles: traced.claimedFiles,
+      roots: traced.roots,
+    };
   }
 
   const missingModules = declared.filter((d) => !moduleExists(repoRoot, d.module));
