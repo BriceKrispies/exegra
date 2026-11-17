@@ -23,6 +23,7 @@
   .ver__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--none); flex: none; }
   .ver__chip--ok .ver__dot { background: var(--ok); }
   .ver__chip--ok-external .ver__dot { background: var(--ok-external); }
+  .ver__chip--ok-model .ver__dot { background: var(--ok-model); }
   .ver__chip--bad .ver__dot { background: var(--bad); }
   .ver__chip--warn .ver__dot { background: var(--warn); }
   .ver__chip--none .ver__dot { background: transparent; border: 1.5px solid var(--none); }

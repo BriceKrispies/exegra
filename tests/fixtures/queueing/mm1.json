@@ -1,0 +1,171 @@
+{
+  "description": "M/M/1 at the engine-input level: Poisson arrivals at 800/s, exponential service of mean 1 ms on one FIFO server with an unbounded queue, unit us, warm-up 10 s, horizon 90 s. Every parameter is assumed: the fixture tests the engine, the metrics and the claim method against queueing theory, and is not evidence about any system. The twins are faults of the base input: set-capacity 2 (two servers) and replace-demand with a constant 1 ms service (M/D/1).",
+  "base": {
+    "format": "exegra-sim-input",
+    "version": 2,
+    "time": {
+      "unit": "us",
+      "perSecond": 1000000
+    },
+    "events": [
+      {
+        "id": "job"
+      },
+      {
+        "id": "served"
+      }
+    ],
+    "behaviors": [
+      {
+        "id": "station",
+        "initial": "idle",
+        "states": [
+          "idle"
+        ],
+        "variables": [],
+        "transitions": [
+          {
+            "id": "take",
+            "from": "idle",
+            "to": "idle",
+            "on": "job",
+            "guard": null,
+            "faultOnly": false,
+            "effects": [
+              {
+                "use": "server",
+                "demand": {
+                  "lower": {
+                    "exponential": {
+                      "mean": 1000
+                    }
+                  }
+                },
+                "then": "served"
+              }
+            ]
+          },
+          {
+            "id": "done",
+            "from": "idle",
+            "to": "idle",
+            "on": "served",
+            "guard": null,
+            "faultOnly": false,
+            "effects": []
+          }
+        ]
+      }
+    ],
+    "resources": [
+      {
+        "id": "server",
+        "kind": "cpu",
+        "capacity": 1,
+        "discipline": "fifo",
+        "queueBound": null,
+        "overflow": "refuse",
+        "demandFactor": null,
+        "classes": []
+      }
+    ],
+    "workloads": [
+      {
+        "id": "jobs",
+        "kind": "open",
+        "event": "job",
+        "process": "poisson",
+        "phases": [
+          {
+            "from": 0,
+            "until": 90000000,
+            "rate": {
+              "num": 800,
+              "den": 1
+            }
+          }
+        ]
+      }
+    ],
+    "faults": [
+      {
+        "id": "two-servers",
+        "kind": "set-capacity",
+        "resource": "server",
+        "capacity": 2
+      },
+      {
+        "id": "constant-service",
+        "kind": "replace-demand",
+        "behavior": "station",
+        "transition": "take",
+        "effect": 0,
+        "demand": {
+          "kind": "fixed",
+          "value": 1000
+        }
+      }
+    ],
+    "metrics": {
+      "quantiles": [
+        "0.5",
+        "0.99"
+      ]
+    },
+    "scenario": {
+      "id": "mm1",
+      "steps": [],
+      "faults": [],
+      "stepLimit": 9000000000000,
+      "seed": "4715",
+      "warmup": 10000000,
+      "horizon": 90000000,
+      "stopAt": 100000000,
+      "output": "metrics"
+    }
+  },
+  "claims": [
+    {
+      "id": "metrics-reproduce-mm1-utilisation",
+      "metric": {
+        "kind": "utilisation",
+        "of": "server",
+        "statistic": "ratio"
+      },
+      "approx": {
+        "value": "0.8",
+        "tolerance": "0.02"
+      },
+      "negatives": [
+        {
+          "faults": [
+            "two-servers"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "metrics-reproduce-mm1-mean-wait",
+      "metric": {
+        "kind": "waiting-time",
+        "of": "server",
+        "statistic": "mean"
+      },
+      "approx": {
+        "value": "4000",
+        "tolerance": "0.05"
+      },
+      "negatives": [
+        {
+          "faults": [
+            "constant-service"
+          ]
+        }
+      ]
+    }
+  ],
+  "runs": 59,
+  "fraction": "0.95",
+  "confidence": "0.95",
+  "seed": "4715"
+}

@@ -16,6 +16,10 @@
     "faultModels": { "entity": "faultModel" },
     "records": { "entity": "record" },
     "copies": { "entity": "copy" },
+    "resources": { "entity": "resource" },
+    "links": { "entity": "link" },
+    "workloads": { "entity": "workload" },
+    "requestClasses": { "entity": "requestClass" },
     "scenarios": { "entity": "scenario" },
     "assumptions": { "entity": "assumption" },
     "claims": { "entity": "claim" },
@@ -154,7 +158,8 @@
         "initial": { "type": "ref", "ref": ["state"], "required": true, "label": "Initial state" },
         "variables": { "type": "list", "label": "Variables", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "enum", "values": ["boolean", "number", "string"], "required": true }, "initial": { "type": "any", "required": true } } } },
         "states": { "type": "entities", "entity": "state", "label": "States", "required": true },
-        "transitions": { "type": "entities", "entity": "transition", "label": "Transitions" }
+        "transitions": { "type": "entities", "entity": "transition", "label": "Transitions" },
+        "instances": { "type": "map", "label": "Instances", "doc": "Format 2: {count} or {key, max}." }
       }
     },
     "state": {
@@ -187,15 +192,25 @@
       "properties": {
         "id": { "type": "id", "required": true },
         "name": { "type": "string", "required": true, "label": "Name" },
-        "kind": { "type": "enum", "values": ["drop-event", "delay-event", "enable-transition", "disable-transition", "inject-event"], "required": true, "label": "Kind" },
+        "kind": { "type": "enum", "values": ["drop-event", "delay-event", "enable-transition", "disable-transition", "inject-event", "set-capacity", "set-class-limit", "collapse-classes", "scale-demand", "replace-demand"], "required": true, "label": "Kind" },
         "description": { "type": "text", "label": "Description" },
         "event": { "type": "ref", "ref": ["event"], "label": "Event" },
         "transition": { "type": "ref", "ref": ["transition"], "label": "Transition" },
         "occurrence": { "type": "number", "label": "Occurrence", "doc": "1-based occurrence of the event to affect. Omitted means every occurrence." },
-        "by": { "type": "number", "label": "Delay by (logical ticks)" },
-        "at": { "type": "number", "label": "Inject at (logical time)" },
+        "by": { "type": "any", "label": "Delay by", "doc": "Logical ticks (format 1) or a duration (format 2)." },
+        "at": { "type": "any", "label": "Inject at", "doc": "Logical time (format 1) or a duration (format 2)." },
         "payload": { "type": "map", "label": "Payload" },
-        "realises": { "type": "ref", "ref": ["failureMode"], "label": "Realises failure mode", "doc": "The failure mode this injection is an instance of. Not read by the simulation engine." }
+        "realises": { "type": "ref", "ref": ["failureMode"], "label": "Realises failure mode", "doc": "The failure mode this injection is an instance of. Not read by the simulation engine." },
+        "window": { "type": "map", "label": "Window", "doc": "{at, until?}: durations; the fault acts only in [at, until)." },
+        "resource": { "type": "ref", "ref": ["resource"], "label": "Resource" },
+        "class": { "type": "string", "label": "Class" },
+        "capacity": { "type": "number", "label": "Capacity" },
+        "limit": { "type": "number", "label": "Class limit" },
+        "num": { "type": "number", "label": "Scale numerator" },
+        "den": { "type": "number", "label": "Scale denominator" },
+        "behavior": { "type": "ref", "ref": ["behavior"], "label": "Behavior (replace-demand)" },
+        "effect": { "type": "number", "label": "Effect index (replace-demand)" },
+        "demand": { "type": "any", "label": "Demand (replace-demand)" }
       }
     },
     "environment": {
@@ -271,6 +286,83 @@
         "description": { "type": "text", "label": "Description" }
       }
     },
+    "resource": {
+      "label": "Resource",
+      "doc": "A pool of identical units (CPU cores, I/O channels, connections, pool slots, threads) that behaviors use, acquire and release (format 2; docs/simulation.md, \"Resources\").",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "kind": { "type": "enum", "values": ["cpu", "io", "pool", "connection", "threads"], "label": "Kind" },
+        "capacity": { "type": "number", "required": true, "label": "Capacity (units)" },
+        "discipline": { "type": "enum", "values": ["fifo", "priority"], "label": "Discipline" },
+        "queueBound": { "type": "number", "label": "Queue bound" },
+        "overflow": { "type": "enum", "values": ["refuse", "drop", "shed-oldest"], "label": "Overflow" },
+        "demandFactor": { "type": "any", "label": "Demand factor", "doc": "A step table [[n, num, den], ...] or {usl: {alpha, beta}} with exact decimals." },
+        "classes": { "type": "list", "label": "Request classes", "items": { "type": "map" } },
+        "source": { "type": "map", "label": "Source", "doc": "Where the number comes from: {kind: requirement | measurement | assumed | to-be-measured, ref?, date?}." }
+      }
+    },
+    "link": {
+      "label": "Link",
+      "doc": "A message link between two components: a FIFO transfer queue at a bandwidth, then a propagation latency (format 2; docs/simulation.md, \"Links, payload size and bandwidth\").",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "from": { "type": "ref", "ref": ["component"], "label": "From component" },
+        "to": { "type": "ref", "ref": ["component"], "label": "To component" },
+        "latency": { "type": "any", "label": "Latency", "doc": "A duration or a distribution." },
+        "bandwidth": { "type": "string", "label": "Bandwidth", "doc": "\"<decimal> <unit>\": bit/s, kbit/s, Mbit/s, Gbit/s, B/s, kB/s, MB/s or GB/s." },
+        "queueBound": { "type": "number", "label": "Queue bound" },
+        "ordered": { "type": "boolean", "label": "Ordered" },
+        "fanout": { "type": "boolean", "label": "Fan-out" },
+        "source": { "type": "map", "label": "Source", "doc": "Where the number comes from: {kind: requirement | measurement | assumed | to-be-measured, ref?, date?}." }
+      }
+    },
+    "workload": {
+      "label": "Workload",
+      "doc": "Load generated from outside the behaviors: open arrivals, a closed population of clients, or a population of client behavior instances (format 2; docs/simulation.md, \"Workloads\").",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "kind": { "type": "enum", "values": ["open", "closed", "population"], "required": true, "label": "Kind" },
+        "event": { "type": "ref", "ref": ["event"], "label": "Event" },
+        "process": { "type": "enum", "values": ["poisson", "constant"], "label": "Process" },
+        "rate": { "type": "string", "label": "Rate", "doc": "\"<decimal>/s\", \"/min\" or \"/h\", over the whole run." },
+        "phases": { "type": "list", "label": "Phases", "items": { "type": "map" } },
+        "repeat": { "type": "string", "label": "Repeat period" },
+        "batch": { "type": "any", "label": "Batch size" },
+        "clients": { "type": "map", "label": "Clients" },
+        "legitimate": { "type": "boolean", "label": "Legitimate" },
+        "maxArrivals": { "type": "number", "label": "Most arrivals" },
+        "payload": { "type": "map", "label": "Payload" },
+        "requestField": { "type": "string", "label": "Request field" },
+        "clientField": { "type": "string", "label": "Client field" },
+        "addressField": { "type": "string", "label": "Address field" },
+        "population": { "type": "number", "label": "Clients (closed)" },
+        "think": { "type": "any", "label": "Think time" },
+        "start": { "type": "any", "label": "Start" },
+        "reply": { "type": "ref", "ref": ["event"], "label": "Reply event" },
+        "timeout": { "type": "string", "label": "Timeout" },
+        "behavior": { "type": "ref", "ref": ["behavior"], "label": "Client behavior (population)" },
+        "count": { "type": "number", "label": "Client instances (population)" },
+        "source": { "type": "map", "label": "Source", "doc": "Where the number comes from: {kind: requirement | measurement | assumed | to-be-measured, ref?, date?}." }
+      }
+    },
+    "requestClass": {
+      "label": "Request class",
+      "doc": "Requests measured from a start event to the first end event carrying the same key (format 2; docs/simulation.md, \"Request lifecycle\").",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "start": { "type": "map", "required": true, "label": "Start", "doc": "{event, workload?}." },
+        "key": { "type": "string", "required": true, "label": "Key field" },
+        "ends": { "type": "list", "required": true, "label": "Ends", "items": { "type": "map" }, "doc": "[{event, outcome: ok | refused | timeout | error}]." }
+      }
+    },
     "scenario": {
       "label": "Scenario",
       "doc": "A specified sequence of input events and active faults executed over a set of behaviors.",
@@ -282,7 +374,16 @@
         "steps": { "type": "list", "required": true, "label": "Input events", "items": { "type": "object", "fields": { "at": { "type": "number", "required": true }, "event": { "type": "ref", "ref": ["event"], "required": true }, "payload": { "type": "map" }, "note": { "type": "text" } } } },
         "faults": { "type": "list", "items": { "type": "ref", "ref": ["fault"] }, "label": "Active faults" },
         "maxSteps": { "type": "number", "label": "Step limit" },
-        "faultModel": { "type": "ref", "ref": ["faultModel"], "label": "Fault model", "doc": "The fault model this scenario's injected faults are drawn from." }
+        "faultModel": { "type": "ref", "ref": ["faultModel"], "label": "Fault model", "doc": "The fault model this scenario's injected faults are drawn from." },
+        "timeUnit": { "type": "enum", "values": ["tick", "s", "ms", "us", "ns"], "label": "Time unit", "doc": "Format 2: the base unit of times (default us)." },
+        "seed": { "type": "string", "label": "Seed", "doc": "Format 2: an unsigned 64-bit decimal." },
+        "horizon": { "type": "string", "label": "Horizon" },
+        "warmup": { "type": "string", "label": "Warm-up" },
+        "stopAt": { "type": "string", "label": "Stop at" },
+        "workloads": { "type": "list", "items": { "type": "ref", "ref": ["workload"] }, "label": "Workloads" },
+        "routes": { "type": "list", "items": { "type": "map" }, "label": "Routes" },
+        "metrics": { "type": "map", "label": "Metrics", "doc": "{quantiles?, series?: {bucket}}." },
+        "output": { "type": "enum", "values": ["trace", "metrics"], "label": "Output" }
       }
     },
     "assumption": {

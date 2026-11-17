@@ -16,6 +16,7 @@
   .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .tone--ok { color: var(--ok); }
   .tone--ok-external { color: var(--ok-external); }
+  .tone--ok-model { color: var(--ok-model); }
   .tone--warn { color: var(--warn); }
   .tone--bad { color: var(--bad); }
   .tone--none { color: var(--none); }

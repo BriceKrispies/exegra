@@ -22,6 +22,7 @@ pub mod random;
 pub mod trace;
 pub mod v2;
 pub mod value;
+pub mod workload;
 
 pub use engine::{EngineSource, Simulation};
 pub use input::SimInput;

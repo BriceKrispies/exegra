@@ -332,8 +332,8 @@
         }
       ],
       "unknowns": [
-        "Time is logical ticks only, and there is no stochastic or timing-accurate execution. Integer time units, instances with routes and aggregates, resources, workloads, links, latency, timers, meters, timed faults, crash-instance and seeded randomness are specified as engine input and trace format 2 in docs/simulation.md and not built (planned: WG-4664, WG-4715).",
-        "One machine per behavior: no instances, routes, resources or seeded randomness yet (planned: WG-4664; specified in docs/simulation.md).",
+        "Format 2 (integer time units, instances, routes, resources and resource faults, workloads, links, timers, request classes and seeded randomness) runs in the Rust engine; crash-instance, meters and the cost metric do not yet (planned: WG-4741).",
+        "One configuration copy per step dominates the cost of large format-2 runs (about 10 to 40 us per step); the queueing fixtures (about 7 and 15 minutes) are gated by EXEGRA_FIXTURES=1 (planned: WG-4741).",
         "Behaviors are flat: a component cannot yet be simulated at a chosen depth, as its abstract behavior or as its children (planned: WG-4666)."
       ],
       "implementation": {
@@ -1369,9 +1369,9 @@
         "notes": "A Lake project (Lean 4, toolchain pinned in formal/lean-toolchain, standard library only): Exegra/Value, Json, Number, Expr, Input, Trace and Semantics define the semantics, Exegra/Properties proves its properties, Main is the exegra-lean executable (engine input JSON on stdin, trace JSON on stdout). npm run build:formal runs lake build in formal/; formal/.lake/ is build output, ignored by git and outside the traceability surface. tools/differential.js compares the native Rust engine with exegra-lean on the goldens and on seeded inputs from tools/gen-engine-inputs.js."
       },
       "unknowns": [
-        "Format 2 is defined for the WG-4664 constructs only (formal/Exegra/Format2.lean: integer time units, counted and keyed instances, routes, aggregates, resources with use, acquire and release, SplitMix64 streams and integer distributions; formal/Exegra/Resource.lean proves the held-units and queue-bound invariants of a settled resource). Not defined yet: resource faults, windowed faults and crash-instance with incarnations (planned: WG-4664); timers, links, workloads, meters and metrics (planned: WG-4715).",
+        "Format 2 is defined in formal/Exegra/Format2.lean for the constructs built so far (instances, routes, resources and resource faults, windows, workloads, links, timers, request lifecycle and measured outputs); formal/Exegra/Resource.lean proves the held-units and queue-bound invariants of a settled resource, the strict FIFO queue of a collapse included. Not defined yet: crash-instance with incarnations, meters and cost (planned: WG-4741).",
         "lift_agrees is stated in formal/Exegra/Lift.lean with its proof left as sorry (pinned on sorryAx); it is checked differentially by tools/differential.js --lift on every liftable golden and generated input (planned: WG-4664).",
-        "The determinism property over seeds is not stated as a theorem for format 2 yet (planned: WG-4664)."
+        "The determinism property over seeds is not stated as a theorem for format 2 yet (planned: WG-4741)."
       ]
     },
     {
@@ -1474,7 +1474,7 @@
         "Keep held units within class limits and capacity, and waiting requests within their bounds, as invariants proved of the step; deadlock freedom is not guaranteed and is left to claims and the explorer"
       ],
       "unknowns": [
-        "Built for WG-4664 in the Lean semantics and the Rust engine (capacity, classes, reservations, limits, queue bounds, maxWait, overflow, demand factors, use, acquire, release, then and refused answers); not derived by simulationInput from a specification yet, and the resource faults (scale-demand, set-capacity, set-class-limit, collapse-classes, replace-demand), windows and crash-instance are refused by both engines (planned: WG-4664; timed resource faults WG-4715).",
+        "Built (WG-4664, WG-4729) in the Lean semantics and the Rust engine, resource faults included (set-capacity, set-class-limit, collapse-classes, scale-demand, replace-demand; untimed, or windowed through fault-edge steps), and derived from a specification's resources by simulationInput. crash-instance with incarnations is refused by both engines, and the grantable-units check is not repeated after the untimed fault mask (planned: WG-4741).",
         "Processor sharing is not part of format 2; CPU is a FCFS multi-server station (planned: WG-4719).",
         "Credit-based backpressure between components is not represented (planned: WG-4722); autoscaling and cold start are not represented (planned: WG-4720)."
       ],
@@ -1508,14 +1508,18 @@
         "Lower specification-level rates, durations and distributions to integers and tables on unbounded BigInt: the exponential and normal quantile tables defined by integer algorithms (exp and ln in 96-bit fixed point, a 192-bit fixed-point normal CDF with bisection), equal to the correctly rounded values and pinned by the SHA-256 a23cd2a9566c106701375d5cf75ef982b8db6f3e52c199c47e6239649c840950 of their canonical text; log-normal sigma at most 8; a lowered value of 2^53 base units or more is a lowering error"
       ],
       "unknowns": [
-        "Not built: specified as engine input and trace format 2 (planned: WG-4715; time units and seeded randomness from WG-4664).",
+        "Built (WG-4715, WG-4729): open, closed and population workloads, address groups, links (bandwidth, ordering, queue bounds, fan-out, latency) and timers in both engines, derived from a specification's workloads and links by simulationInput (src/core/sim-input.js).",
         "Packet-level networking and packet-rate floods are not represented: a link is a FIFO byte pipe with a latency distribution, one step per message (aggregated mode planned: WG-4718).",
         "Matchmaking gather is writable only as a hand-written behavior (primitive planned: WG-4721)."
       ],
       "implementation": {
-        "status": "not-implemented",
-        "modules": [],
-        "notes": "Planned: WG-4715. Specified in docs/simulation.md, \"Planned: resources, workloads and performance\"; defined in formal/ first, then the Rust engine, then checked differentially. Its claims stay not evaluated until recorded evidence supports them."
+        "status": "manual",
+        "modules": [
+          "src/core/distributions.js",
+          "formal/Exegra/Workload.lean",
+          "engine/exegra-engine/src/workload.rs"
+        ],
+        "notes": "WG-4715, in progress. Built: the integer lowering of distributions (src/core/distributions.js; every reference output of docs/simulation.md and the pinned SHA-256 reproduced, tests/core/distributions.test.js); open workloads (constant and Poisson by inversion of the integrated rate with exact integer square roots, phases, ramps, repetition, batches, clients picked uniformly or round-robin, payload literals, samples, weighted choices and counters, maxArrivals, the first-entry rule with a per-workload count of created instants) defined in formal/Exegra/Workload.lean and Format2.lean, ported to the Rust engine (workload.rs, v2.rs) and checked differentially on generated workload inputs (tools/gen-engine-inputs.js, tools/differential.js). Proved: an instant is always before the horizon (nextTime_lt_horizon) and a workload never creates more arrival entries than maxArrivals (makeInstant_arrivals_le)."
       }
     },
     {
@@ -1536,12 +1540,12 @@
         "Mark a run truncated when it ended at the step limit, in error, or stopped with a measured request open"
       ],
       "unknowns": [
-        "Not built (planned: WG-4715). Warm-up is declared, not detected."
+        "Built (WG-4715, WG-4729): resource metrics; request classes with the request lifecycle, response time, outcomes, throughput, legitimate refusals (false positives) and transition firings, over the window and per series bucket, in both engines. Not built: link and cost metrics, waiting time per class, resource signals per bucket, time-to-first and time-to-recover, meters, and truncation by an open measured request (planned: WG-4741). Warm-up is declared, not detected."
       ],
       "implementation": {
-        "status": "not-implemented",
+        "status": "manual",
         "modules": [],
-        "notes": "Planned: WG-4715. Specified in docs/simulation.md, \"Planned: resources, workloads and performance\"; defined in formal/ first, then the Rust engine, then checked differentially. Its claims stay not evaluated until recorded evidence supports them."
+        "notes": "WG-4715, in progress. Built: the resource metrics of format 2 (utilisation as busy and capacity integrals and max held, queue length as integral and max, waiting time per request enqueued in the window with +infinity for a request removed without a grant or still waiting, nearest-rank quantiles at the input's exact decimals), defined over the step sequence in formal/Exegra/Format2.lean (Measured outputs), accumulated step by step in the Rust engine (v2.rs, Measure), output with the trace or alone with output metrics, and checked differentially on generated workload inputs. The request lifecycle, response time, throughput, outcomes, series, time-to metrics, meters and cost are not built."
       }
     },
     {
@@ -1562,13 +1566,16 @@
         "Refuse at validation a run count that could never hold, and a quantile or mean claim whose expected samples from declared open-workload rates are fewer than 30, per bucket for series claims"
       ],
       "unknowns": [
-        "Not built (planned: WG-4715; the general statistical claims and result ranges of WG-4670 build on it).",
+        "Built (WG-4715, WG-4729): the metric-bound method is registered and evaluated on format-2 scenarios derived from a specification, reporting model-holds, violated or inconclusive with N, the passes, the fraction and the confidence, with negatives and control negatives. Not built: calibration, sensitivity, the operating envelope and revision binding (asOf is only recorded) (planned: WG-4741).",
         "The status model-holds is proposed; its final name and display follow WG-4703."
       ],
       "implementation": {
-        "status": "not-implemented",
-        "modules": [],
-        "notes": "Planned: WG-4715. Specified in docs/simulation.md, \"Planned: resources, workloads and performance\"; defined in formal/ first, then the Rust engine, then checked differentially. Its claims stay not evaluated until recorded evidence supports them."
+        "status": "manual",
+        "modules": [
+          "src/core/metric-stats.js",
+          "src/core/metric-claims.js"
+        ],
+        "notes": "WG-4715, in progress. Built: the statistics (src/core/metric-stats.js: exact binomial tails and verdicts, the minimum run count, passes to hold and to fail, runs to decide, the sign-test interval, underpowered statistics, the margin, run seeds and the claim status with negatives; every figure docs/simulation.md states is reproduced, tests/core/metric-stats.test.js) and the metric-bound runner over engine inputs (src/core/metric-claims.js: one metrics-mode run per run seed, the per-run statistic of a resource metric, approx or op/bound verdicts, negatives and control negatives, status model-holds, violated or inconclusive). Not registered as a claim method of the specification yet, since simulationInput does not derive format 2; calibration, sensitivity, asOf and revision binding are not built."
       }
     }
   ],
@@ -4641,8 +4648,8 @@
     {
       "id": "pool-classes-protect-move-db-leg-under-flood",
       "kind": "measured",
-      "statement": "On the pool fixture (a 20-connection pool with classes money, moves and page-reads, in front of 4 shared database I/O channels; moves at 400/s; a page-read flood of 5,000/s over 10,000 clients from 20 s to 60 s), the p99 of the modelled database leg of a move over the flood window is at most 30 ms, an assumed share of K-32's 250 ms, in at least 95% of runs at 95% confidence over 59 runs, in the base scenario and in its control without the flood; it fails in each of its two negative twins, and each twin fault leaves the control holding.",
-      "rationale": "Fixture specified in docs/simulation.md, Fixtures (database pool with classes under a page-read flood), with base, control and twins; planned (WG-4715). Parameters are tagged assumed or to be measured; a holding result is model-holds, never supported. The model covers only the database leg (pool wait and I/O); network legs, host processing and replication are not modelled, so this is not a K-32 check. Negative twins: collapse-classes on the pool, and set-class-limit page-reads 12 (moves keep their reserved connections but queue behind page reads on the shared I/O channels): both must fail at 95% confidence, the second showing that class reservation does not isolate downstream shared resources; both must hold in the control. Not evaluated until recorded evidence exists.",
+      "statement": "On the pool fixture (tests/fixtures/queueing/pool-flood.json: a 20-connection pool with classes money, moves and page-reads in front of 4 shared database I/O channels; moves at 1,000/s; a page-read flood of 5,000/s from 2 s to 6 s), the p99 of the modelled database leg of a move over the flood window is at most 30 ms in at least 95% of runs at 95% confidence over 59 runs, in the base scenario and in its control without the flood; it fails in each of its two negative twins, and each twin fault leaves the control holding.",
+      "rationale": "Fixture specified in docs/simulation.md, Fixtures (database pool with classes under a page-read flood), with base, control and twins, built at the engine-input level (WG-4729) and sized so a run stays short. Parameters are assumed; a holding result is model-holds, never supported. The model covers only the database leg (pool wait and I/O). Negative twins: collapse-classes on the pool, and set-class-limit page-reads 12 (moves keep their reserved connections but queue behind page reads on the shared I/O channels): both must fail at 95% confidence and hold in the control.",
       "subjects": [
         "metric-claims",
         "resource-model",
@@ -4885,7 +4892,7 @@
       "id": "distribution-lowering-bit-exact",
       "kind": "invariant",
       "statement": "simulationInput lowers distributions with integer arithmetic only: the exponential and normal quantile tables are produced by the integer algorithms of docs/simulation.md and equal the correctly rounded values at the 1,045 grid points, their canonical text hashing to SHA-256 a23cd2a9566c106701375d5cf75ef982b8db6f3e52c199c47e6239649c840950; exp_fp, ln_fp and the exponential, log-normal and empirical constructions reproduce every reference output bit for bit; and a lowered value of 2^53 base units or more, a sigma above 8 or a p99 above 10^6 times the median is refused.",
-      "rationale": "Planned (WG-4715; specified in docs/simulation.md, Lowering distributions). Negative twin: an implementation that evaluates the log-normal quantile with Math.exp or AS 241 in doubles, rounds sigma instead of flooring it, or computes the normal CDF at 2^-96 instead of 2^-192, must fail the table hash or a reference output; a log-normal of median 1 ms and sigma 9 must be refused. Not evaluated until recorded evidence exists.",
+      "rationale": "Built (WG-4715) in src/core/distributions.js. Negative twin: an implementation that evaluates the log-normal quantile with Math.exp or AS 241 in doubles, rounds sigma instead of flooring it, or computes the normal CDF at 2^-96 instead of 2^-192, must fail the table hash or a reference output; a log-normal of median 1 ms and sigma 9 must be refused. The correctly rounded values were checked once against an 80-digit computation when the algorithms were specified; the test pins them through the hash.",
       "subjects": [
         "workload-model",
         "simulation-contract"
@@ -4980,6 +4987,20 @@
       "assumptions": [
         "tests-exercise-shipped-modules",
         "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "metric-claims-in-specifications",
+      "kind": "invariant",
+      "statement": "A specification that declares resources, workloads, request classes and a format-2 scenario derives a version-2 engine input (times in base units, rates exact, distributions lowered), and a metric-bound claim over it evaluates to model-holds, violated or inconclusive with its run count and confidence, never verified or supported.",
+      "rationale": "WG-4729, docs/simulation.md, Specification-level form and Claims over metrics. Negative: a bound the model misses must read violated with a replayable seed.",
+      "subjects": [
+        "metric-claims",
+        "workload-model",
+        "resource-model"
       ],
       "evaluate": {
         "method": "external-evidence"
@@ -5168,6 +5189,41 @@
       "kind": "test",
       "ref": "tests/core/formal-explore.test.js#temporal claims: eventually holds",
       "description": "exegra prove on the race fixture: an eventually holds on every path; an eventually fails with a counterexample run that drops the event and ends without it; a precedes that the scripted run satisfies is violated by a run that reorders simultaneous events. Skipped, with a message, when lake is not on the PATH."
+    },
+    {
+      "id": "ev-distribution-lowering",
+      "claim": "distribution-lowering-bit-exact",
+      "kind": "test",
+      "ref": "tests/core/distributions.test.js",
+      "description": "exp_fp and ln_fp meet their exact checks; Qexp and Qnorm give the reference values and the canonical table text hashes to the pinned SHA-256; the log-normal, exponential, empirical, uniform and constant families lower to the reference tables; values of 2^53 base units or more, sigma above 8 and p99 above 10^6 times the median are refused."
+    },
+    {
+      "id": "ev-mm1-utilisation-fixture",
+      "claim": "metrics-reproduce-mm1-utilisation",
+      "kind": "test",
+      "ref": "tests/core/queueing-fixtures.test.js",
+      "description": "Runs only with EXEGRA_FIXTURES=1 (236 runs of a 90 s horizon, about 7 minutes on the native engine). Recorded 2026-11-17: model-holds, 59/59 runs, sign-test interval [0.7967, 0.8009] inside [0.784, 0.816]; per-run spread 0.7925 / 0.7988 / 0.8096; the twin, the fault set-capacity 2, fails with [0.3983, 0.4005]. A model result on assumed parameters, not evidence about any system."
+    },
+    {
+      "id": "ev-mm1-mean-wait-fixture",
+      "claim": "metrics-reproduce-mm1-mean-wait",
+      "kind": "test",
+      "ref": "tests/core/queueing-fixtures.test.js",
+      "description": "Runs only with EXEGRA_FIXTURES=1. Recorded 2026-11-17 on the native engine at a 90 s horizon: model-holds, 59/59 runs, sign-test interval [3910.6, 4032.3] us inside [3800, 4200]; per-run spread 3708.1 / 3965.1 / 4443.3 us (the median of per-run means sits about 0.9% below the analytic 4 ms); the twin, the fault replace-demand with a constant 1 ms service (M/D/1), fails with [1968.4, 2004.3] us. A model result, not evidence about any system."
+    },
+    {
+      "id": "ev-pool-flood-fixture",
+      "claim": "pool-classes-protect-move-db-leg-under-flood",
+      "kind": "test",
+      "ref": "tests/core/pool-fixture.test.js",
+      "description": "Runs only with EXEGRA_FIXTURES=1 (354 runs, about 15 minutes on the native engine). Recorded 2026-11-17: model-holds. Per-run p99 of the move leg: base holds 59/59 (spread 2987 / 3433 / 4630 us), control holds 59/59 (1584 / 1802 / 2376 us); the twin collapse-classes fails 0/59 (every run +inf: moves are refused at the shared queue), the twin page-read limit 12 fails 0/59 (70839 / 83599 / 105493 us: moves wait behind page reads on the shared I/O channels); both twin faults hold on the control (59/59; spreads up to 21768 and 13969 us). A model result on assumed parameters, not evidence about any system."
+    },
+    {
+      "id": "ev-metric-claims-in-specifications",
+      "claim": "metric-claims-in-specifications",
+      "kind": "test",
+      "ref": "tests/core/metric-spec.test.js",
+      "description": "A small specification with a resource, an open workload, a request class and a metric-bound claim: simulationInput derives version 2; the claim reads model-holds with N = 8, its scale-demand twin fails, and a missed bound reads violated."
     }
   ],
 

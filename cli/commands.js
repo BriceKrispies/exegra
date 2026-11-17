@@ -341,7 +341,12 @@ function runTestReference(ref, env) {
   if (run.status === 0) {
     if (!browser) {
       // node exits 0 when the pattern or file matches no test; that is not a pass.
-      if (countPassingTests(String(run.stdout ?? ''), file) === 0) return { outcome: 'fail', detail: 'the reference matched no test' };
+      if (countPassingTests(String(run.stdout ?? ''), file) === 0) {
+        // A test that matched but skipped itself (a gated fixture, a missing tool) ran nothing: it is not
+        // evidence either way, so it is recorded as skipped rather than as a failure.
+        if (/^ok \d+ - .*#\s*SKIP\b/im.test(String(run.stdout ?? ''))) return { outcome: 'skipped', detail: 'the matching test skipped itself' };
+        return { outcome: 'fail', detail: 'the reference matched no test' };
+      }
     }
     return { outcome: 'pass' };
   }

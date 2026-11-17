@@ -15,6 +15,8 @@ use std::rc::Rc;
 use crate::expr::{eval_expr, expr_refs, parse_expr, Ast};
 use crate::random;
 use crate::value::{JsObject, Value};
+use crate::workload::{self as work, Cursor, Phase, Rate};
+use num_bigint::BigUint;
 
 type R<T> = Result<T, String>;
 
@@ -81,7 +83,44 @@ pub enum Effect {
         class: Option<String>,
         units: u64,
     },
+    /// An emit sent over a link.
+    Send {
+        event: String,
+        size: SizeIn,
+        payload: JsObject,
+        reply: bool,
+        via: String,
+        fanout: bool,
+    },
+    Timer {
+        name: String,
+        after: Dist,
+        event: String,
+        payload: JsObject,
+    },
+    Cancel(String),
     Malformed,
+}
+
+/// The size of a message sent over a link.
+#[derive(Clone, Debug)]
+pub enum SizeIn {
+    None,
+    Expr(String),
+    Dist(Dist),
+}
+
+/// A link (WG-4729).
+#[derive(Clone, Debug)]
+pub struct Link {
+    pub id: String,
+    pub from: String,
+    pub to: String,
+    pub latency: Dist,
+    pub bandwidth: Option<u64>,
+    pub queue_bound: Option<u64>,
+    pub ordered: bool,
+    pub fanout: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -131,12 +170,129 @@ pub struct Fault {
     pub by: u64,
     pub at: u64,
     pub payload: Value,
+    pub window: Option<(u64, Option<u64>)>,
+    pub resource: Option<String>,
+    pub class: Option<String>,
+    pub capacity: u64,
+    pub limit: u64,
+    pub num: u64,
+    pub den: u64,
+    pub behavior: Option<String>,
+    pub effect: u64,
+    pub demand: Dist,
 }
+
+const RESOURCE_KINDS: [&str; 5] = [
+    "set-capacity",
+    "set-class-limit",
+    "collapse-classes",
+    "scale-demand",
+    "replace-demand",
+];
 
 impl Fault {
     fn is_kind(&self, k: &str) -> bool {
         self.kind.as_deref() == Some(k)
     }
+    /// A format-1 fault kind with a window acts only on heads whose time lies in it.
+    fn acts_at(&self, t: u64) -> bool {
+        match self.window {
+            None => true,
+            Some((a, u)) => a <= t && u.is_none_or(|u| t < u),
+        }
+    }
+    fn is_resource_kind(&self) -> bool {
+        self.kind
+            .as_deref()
+            .is_some_and(|k| RESOURCE_KINDS.contains(&k))
+    }
+}
+
+fn active_faults<'f>(faults: &[&'f Fault], active: &[String]) -> Vec<&'f Fault> {
+    faults
+        .iter()
+        .copied()
+        .filter(|f| f.window.is_none() || active.contains(&f.id))
+        .collect()
+}
+
+fn eff_capacity(faults: &[&Fault], active: &[String], d: &Resource) -> u64 {
+    active_faults(faults, active)
+        .iter()
+        .rfind(|f| f.is_kind("set-capacity") && f.resource.as_deref() == Some(d.id.as_str()))
+        .map_or(d.capacity, |f| f.capacity)
+}
+
+/// The resource as the acting faults leave it (Format2.lean, `effDecl`).
+fn eff_decl(faults: &[&Fault], active: &[String], d: &Resource) -> Resource {
+    let act = active_faults(faults, active);
+    let mut e = d.clone();
+    for cl in &mut e.classes {
+        if let Some(f) = act.iter().rfind(|f| {
+            f.is_kind("set-class-limit")
+                && f.resource.as_deref() == Some(d.id.as_str())
+                && f.class.as_deref() == Some(cl.id.as_str())
+        }) {
+            cl.limit = Some(f.limit);
+        }
+    }
+    if act
+        .iter()
+        .any(|f| f.is_kind("collapse-classes") && f.resource.as_deref() == Some(d.id.as_str()))
+    {
+        e.by_priority = false;
+        e.strict = true;
+        for cl in &mut e.classes {
+            cl.reserved = 0;
+            cl.limit = None;
+            cl.queue_bound = None;
+        }
+    }
+    e
+}
+
+/// The combined `scale-demand` factor of a resource, in lowest terms.
+fn eff_scale(faults: &[&Fault], active: &[String], res: &str) -> R<(u64, u64)> {
+    let mut n = BigUint::from(1u32);
+    let mut m = BigUint::from(1u32);
+    for f in active_faults(faults, active) {
+        if f.is_kind("scale-demand") && f.resource.as_deref() == Some(res) {
+            n *= f.num;
+            m *= f.den;
+        }
+    }
+    let g = {
+        let (mut a, mut b) = (n.clone(), m.clone());
+        while b != BigUint::from(0u32) {
+            let r = &a % &b;
+            a = b;
+            b = r;
+        }
+        a
+    };
+    let n = n / &g;
+    let m = m / &g;
+    let lim = BigUint::from(TWO32);
+    if n >= lim || m >= lim {
+        return Err(format!("Value demand scale of \"{res}\" exceeds 2^32."));
+    }
+    Ok((u64::try_from(n).unwrap_or(0), u64::try_from(m).unwrap_or(1)))
+}
+
+/// The demand a `use` draws from (Format2.lean, `effDemand`).
+fn eff_demand<'d>(faults: &[&'d Fault], active: &[String], stream: &str, d: &'d Dist) -> &'d Dist {
+    active_faults(faults, active)
+        .into_iter()
+        .rfind(|f| {
+            f.is_kind("replace-demand")
+                && format!(
+                    "demand:{}:{}:{}",
+                    f.behavior.as_deref().unwrap_or(""),
+                    f.transition.as_deref().unwrap_or(""),
+                    f.effect
+                ) == stream
+        })
+        .map_or(d, |f| &f.demand)
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -173,6 +329,8 @@ pub struct Resource {
     pub overflow: Overflow,
     pub demand_factor: DemandFactor,
     pub classes: Vec<Class>,
+    /// One strict FIFO queue (a `collapse-classes` fault).
+    pub strict: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -196,6 +354,58 @@ pub struct Scenario {
     pub output: String,
 }
 
+/// A generated payload field of a workload.
+#[derive(Clone, Debug)]
+pub enum PField {
+    Lit(Value),
+    Sample(Dist),
+    Choose(Vec<Value>, Vec<u64>),
+    Counter,
+}
+
+#[derive(Clone, Debug)]
+pub struct Clients {
+    pub count: u64,
+    pub round_robin: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WKind {
+    Open,
+    Closed,
+    Population,
+}
+
+/// A workload (WG-4715): open, closed or a population. A population's `event` is its start event.
+#[derive(Clone, Debug)]
+pub struct Workload {
+    pub id: String,
+    pub event: String,
+    pub poisson: bool,
+    pub phases: Vec<Phase>,
+    pub period: Option<u64>,
+    pub batch: Dist,
+    pub clients: Option<Clients>,
+    pub legitimate: bool,
+    pub max_arrivals: Option<u64>,
+    pub payload: Vec<(String, PField)>,
+    pub request_field: String,
+    pub client_field: String,
+    pub address_field: String,
+    pub kind: WKind,
+    /// Closed: the number of clients; population: the number of client instances.
+    pub population: u64,
+    pub think: Dist,
+    /// Closed: the start offset of each client; population: `start.at`.
+    pub start: Dist,
+    pub reply: String,
+    pub timeout: Option<u64>,
+    /// Population: the client behavior.
+    pub behavior: String,
+    /// `clients.addresses.groupSize`.
+    pub group_size: Option<Dist>,
+}
+
 #[derive(Clone, Debug)]
 pub struct Input {
     pub unit: String,
@@ -206,6 +416,31 @@ pub struct Input {
     pub faults: Vec<Fault>,
     pub routes: Vec<Route>,
     pub resources: Vec<Resource>,
+    pub links: Vec<Link>,
+    pub workloads: Vec<Workload>,
+    pub unit_exp: Vec<(u64, u128)>,
+    /// Quantiles of the measured outputs as `(key, num, den)`; `None` when none are asked.
+    pub metrics: Option<Vec<(String, u64, u64)>>,
+    /// `metrics.series.bucket`.
+    pub series: Option<u64>,
+    pub requests: Vec<ReqClass>,
+}
+
+/// A request class.
+#[derive(Clone, Debug)]
+pub struct ReqClass {
+    pub id: String,
+    pub start_event: String,
+    pub start_workload: Option<String>,
+    pub key: String,
+    pub ends: Vec<(String, &'static str)>,
+}
+
+impl Input {
+    /// Whether the run reports measured outputs.
+    fn measures(&self) -> bool {
+        self.metrics.is_some() || self.scenario.output == "metrics" || !self.requests.is_empty()
+    }
 }
 
 // ---- Decoding -------------------------------------------------------------------------------
@@ -367,6 +602,50 @@ fn decode_effect(v: &Value, what: &str) -> R<Effect> {
             }),
         };
     }
+    if fx.contains_key("emit") && fx.contains_key("via") {
+        let event = string(fx, "emit", what)?;
+        let via = string(fx, "via", what)?;
+        if !field(fx, "after").is_nullish() {
+            return Err(format!(
+                "{what}: \"via\" cannot be combined with \"after\"."
+            ));
+        }
+        let size = match field(fx, "size") {
+            Value::Undefined | Value::Null => SizeIn::None,
+            Value::String(src) => SizeIn::Expr(src.clone()),
+            x => SizeIn::Dist(decode_dist(x, &format!("{what}.size"))?),
+        };
+        let payload = payload_obj(fx, what)?;
+        let reply = match field(fx, "target") {
+            Value::Undefined | Value::Null => false,
+            Value::String(s) if s == "reply" => true,
+            _ => return Err(format!("{what}: \"target\" must be \"reply\".")),
+        };
+        let fanout = matches!(field(fx, "fanout"), Value::Bool(true));
+        return Ok(Effect::Send {
+            event,
+            size,
+            payload,
+            reply,
+            via,
+            fanout,
+        });
+    }
+    if fx.contains_key("timer") {
+        let name = string(fx, "timer", what)?;
+        let after = decode_dist(field(fx, "after"), &format!("{what}.after"))?;
+        let event = string(fx, "emit", what)?;
+        let payload = payload_obj(fx, what)?;
+        return Ok(Effect::Timer {
+            name,
+            after,
+            event,
+            payload,
+        });
+    }
+    if fx.contains_key("cancel") {
+        return Ok(Effect::Cancel(string(fx, "cancel", what)?));
+    }
     if fx.contains_key("emit") {
         let after = match field(fx, "after") {
             Value::Undefined | Value::Null => Dist::Fixed(0),
@@ -497,31 +776,24 @@ fn decode_behavior(v: &Value, i: usize) -> R<Behavior> {
     })
 }
 
-const UNSUPPORTED_FAULTS: [&str; 6] = [
-    "scale-demand",
-    "set-capacity",
-    "set-class-limit",
-    "collapse-classes",
-    "replace-demand",
-    "crash-instance",
-];
-
 fn decode_fault(v: &Value, i: usize) -> R<Fault> {
     let what = format!("faults[{i}]");
     let f = object(v, &what)?;
     let kind = opt_str(f, "kind", &what)?;
-    if f.contains_key("window") {
+    if kind.as_deref() == Some("crash-instance") {
         return Err(format!(
-            "{what}: windowed faults are not implemented (WG-4664)."
+            "{what}: fault kind \"crash-instance\" is not implemented (WG-4664)."
         ));
     }
-    if let Some(k) = &kind {
-        if UNSUPPORTED_FAULTS.contains(&k.as_str()) {
-            return Err(format!(
-                "{what}: fault kind \"{k}\" is not implemented (WG-4664)."
-            ));
+    let window = match field(f, "window") {
+        Value::Undefined | Value::Null => None,
+        w => {
+            let wo = object(w, &format!("{what}.window"))?;
+            let a = int_in(field(wo, "at"), &format!("{what}.window.at"), 0, TWO53 - 1)?;
+            let u = opt_int(wo, "until", &format!("{what}.window.until"), 0, TWO53 - 1)?;
+            Some((a, u))
         }
-    }
+    };
     let occurrence = match field(f, "occurrence") {
         Value::Undefined => Occurrence::Any,
         Value::Number(n) => Occurrence::Exactly(*n),
@@ -537,7 +809,56 @@ fn decode_fault(v: &Value, i: usize) -> R<Fault> {
     } else {
         0
     };
+    let k = kind.as_deref();
+    let resource = opt_str(f, "resource", &what)?;
+    let class = opt_str(f, "class", &what)?;
+    let capacity = if k == Some("set-capacity") {
+        int_in(
+            field(f, "capacity"),
+            &format!("{what}.capacity"),
+            1,
+            TWO32 - 1,
+        )?
+    } else {
+        0
+    };
+    let limit = if k == Some("set-class-limit") {
+        int_in(field(f, "limit"), &format!("{what}.limit"), 1, TWO32 - 1)?
+    } else {
+        0
+    };
+    let num = if k == Some("scale-demand") {
+        int_in(field(f, "num"), &format!("{what}.num"), 0, TWO32 - 1)?
+    } else {
+        1
+    };
+    let den = if k == Some("scale-demand") {
+        int_in(field(f, "den"), &format!("{what}.den"), 1, TWO32 - 1)?
+    } else {
+        1
+    };
+    let behavior = opt_str(f, "behavior", &what)?;
+    let effect = if k == Some("replace-demand") {
+        int_in(field(f, "effect"), &format!("{what}.effect"), 0, TWO32 - 1)?
+    } else {
+        0
+    };
+    let demand = if k == Some("replace-demand") {
+        decode_dist(field(f, "demand"), &format!("{what}.demand"))?
+    } else {
+        Dist::Fixed(0)
+    };
     Ok(Fault {
+        window,
+        resource,
+        class,
+        capacity,
+        limit,
+        num,
+        den,
+        behavior,
+        effect,
+        demand,
         id: string(f, "id", &what)?,
         event: opt_str(f, "event", &what)?,
         transition: opt_str(f, "transition", &what)?,
@@ -546,6 +867,36 @@ fn decode_fault(v: &Value, i: usize) -> R<Fault> {
         by,
         at,
         payload: payload_or_empty(field(f, "payload")),
+    })
+}
+
+fn decode_link(v: &Value, i: usize) -> R<Link> {
+    let what = format!("links[{i}]");
+    let o = object(v, &what)?;
+    let id = string(o, "id", &what)?;
+    let from = field(o, "from").as_str().unwrap_or("").to_string();
+    let to = field(o, "to").as_str().unwrap_or("").to_string();
+    let latency = match field(o, "latency") {
+        Value::Undefined | Value::Null => Dist::Fixed(0),
+        x => decode_dist(x, &format!("{what}.latency"))?,
+    };
+    let bandwidth = opt_int(
+        o,
+        "bandwidth",
+        &format!("{what}.bandwidth"),
+        1,
+        (1 << 40) - 1,
+    )?;
+    let queue_bound = opt_int(o, "queueBound", &format!("{what}.queueBound"), 0, TWO32 - 1)?;
+    Ok(Link {
+        id,
+        from,
+        to,
+        latency,
+        bandwidth,
+        queue_bound,
+        ordered: matches!(field(o, "ordered"), Value::Bool(true)),
+        fanout: matches!(field(o, "fanout"), Value::Bool(true)),
     })
 }
 
@@ -700,6 +1051,7 @@ fn decode_resource(v: &Value, i: usize) -> R<Resource> {
         overflow,
         demand_factor,
         classes,
+        strict: false,
     })
 }
 
@@ -731,6 +1083,397 @@ const UNITS: [(&str, Option<u64>); 5] = [
 ];
 
 /// Decode a version-2 engine input (format and version already checked).
+/// A natural number written as a JSON number or as a decimal string, in `[0, hi]`.
+fn big_nat(v: &Value, path: &str, hi: u128) -> R<u128> {
+    let err = || format!("Field \"{path}\" must be an integer in [0, {hi}].");
+    match v {
+        Value::Number(_) => {
+            let h = u64::try_from(hi.min(u128::from(TWO53 - 1))).unwrap_or(TWO53 - 1);
+            int_in(v, path, 0, h).map(u128::from)
+        }
+        Value::String(s) => {
+            let bs = s.as_bytes();
+            if bs.is_empty()
+                || !bs.iter().all(u8::is_ascii_digit)
+                || (bs.len() > 1 && bs[0] == b'0')
+            {
+                return Err(err());
+            }
+            match s.parse::<u128>() {
+                Ok(n) if n <= hi => Ok(n),
+                _ => Err(err()),
+            }
+        }
+        _ => Err(err()),
+    }
+}
+
+fn decode_unit_exp(v: &Value) -> R<Vec<(u64, u128)>> {
+    let malformed = || "Distribution \"unitExponential\" has a malformed table.".to_string();
+    match v {
+        Value::Undefined | Value::Null => Ok(Vec::new()),
+        Value::Array(xs) => {
+            let mut pts = Vec::new();
+            for (i, p) in xs.iter().enumerate() {
+                match p {
+                    Value::Array(ux) if ux.len() == 2 => {
+                        let u = big_nat(&ux[0], &format!("unitExponential[{i}][0]"), 1u128 << 32)?;
+                        let x = big_nat(
+                            &ux[1],
+                            &format!("unitExponential[{i}][1]"),
+                            (1u128 << 72) - 1,
+                        )?;
+                        pts.push((u as u64, x));
+                    }
+                    _ => return Err(malformed()),
+                }
+            }
+            let ok = pts.first().map(|p| p.0) == Some(0)
+                && pts.last().map(|p| p.0) == Some(TWO32)
+                && pts.windows(2).all(|w| w[0].0 < w[1].0 && w[0].1 <= w[1].1);
+            if ok {
+                Ok(pts)
+            } else {
+                Err(malformed())
+            }
+        }
+        _ => Err(malformed()),
+    }
+}
+
+fn decode_rate(v: &Value, path: &str) -> R<(u64, u64)> {
+    let o = object(v, path)?;
+    let num = int_in(field(o, "num"), &format!("{path}.num"), 0, TWO32 - 1)?;
+    let den = int_in(field(o, "den"), &format!("{path}.den"), 1, TWO32 - 1)?;
+    Ok((num, den))
+}
+
+fn decode_pfield(what: &str, k: &str, x: &Value) -> R<PField> {
+    let pw = format!("{what}.payload.{k}");
+    let Value::Object(xo) = x else {
+        return Ok(PField::Lit(x.clone()));
+    };
+    if xo.get("sample").is_some() {
+        return Ok(PField::Sample(decode_dist(
+            field(xo, "sample"),
+            &format!("{pw}.sample"),
+        )?));
+    }
+    if xo.get("choose").is_some() {
+        let vs = array(xo, "choose", &pw)?.to_vec();
+        let mut ws = Vec::new();
+        for (j, w) in array(xo, "weights", &pw)?.iter().enumerate() {
+            ws.push(int_in(w, &format!("{pw}.weights[{j}]"), 0, TWO32 - 1)?);
+        }
+        let total: u64 = ws.iter().sum();
+        if vs.len() != ws.len() || total == 0 || total >= TWO53 {
+            return Err(format!(
+                "Field \"{pw}\" must have one weight per value, with a sum in [1, 2^53)."
+            ));
+        }
+        return Ok(PField::Choose(vs, ws));
+    }
+    if matches!(field(xo, "counter"), Value::Bool(true)) {
+        return Ok(PField::Counter);
+    }
+    Ok(PField::Lit(x.clone()))
+}
+
+fn decode_clients(
+    o: &JsObject,
+    what: &str,
+    count: Option<u64>,
+) -> R<(Option<Clients>, Option<Dist>)> {
+    let c = field(o, "clients");
+    if c.is_nullish() {
+        return Ok((None, None));
+    }
+    let co = object(c, &format!("{what}.clients"))?;
+    let count = match count {
+        Some(n) => n,
+        None => int_in(
+            field(co, "count"),
+            &format!("{what}.clients.count"),
+            1,
+            TWO32 - 1,
+        )?,
+    };
+    let round_robin = match field(co, "pick") {
+        Value::Undefined | Value::Null => false,
+        Value::String(p) if p == "uniform" => false,
+        Value::String(p) if p == "round-robin" => true,
+        _ => {
+            return Err(format!(
+                "{what}.clients: \"pick\" must be uniform or round-robin."
+            ))
+        }
+    };
+    let group_size = match field(co, "addresses") {
+        Value::Undefined | Value::Null => None,
+        a => {
+            let ao = object(a, &format!("{what}.clients.addresses"))?;
+            Some(decode_dist(
+                field(ao, "groupSize"),
+                &format!("{what}.clients.addresses.groupSize"),
+            )?)
+        }
+    };
+    Ok((Some(Clients { count, round_robin }), group_size))
+}
+
+fn opt_dist(o: &JsObject, key: &str, path: &str) -> R<Dist> {
+    match field(o, key) {
+        Value::Undefined | Value::Null => Ok(Dist::Fixed(0)),
+        x => decode_dist(x, path),
+    }
+}
+
+fn decode_workload(v: &Value, i: usize) -> R<Workload> {
+    let what = format!("workloads[{i}]");
+    let o = object(v, &what)?;
+    let id = string(o, "id", &what)?;
+    let kind = string(o, "kind", &what)?;
+    let legitimate = !matches!(field(o, "legitimate"), Value::Bool(false));
+    let payload = match field(o, "payload") {
+        Value::Object(fs) => {
+            let mut out = Vec::new();
+            for (k, x) in fs.iter() {
+                out.push((k.clone(), decode_pfield(&what, k, x)?));
+            }
+            out
+        }
+        x if x.is_nullish() => Vec::new(),
+        _ => return Err(format!("{what}: \"payload\" must be an object.")),
+    };
+    let fname = |k: &str, d: &str| field(o, k).as_str().unwrap_or(d).to_string();
+    let base = Workload {
+        id: id.clone(),
+        event: String::new(),
+        poisson: false,
+        phases: Vec::new(),
+        period: None,
+        batch: Dist::Fixed(1),
+        clients: None,
+        legitimate,
+        max_arrivals: None,
+        payload,
+        request_field: fname("requestField", "request"),
+        client_field: fname("clientField", "client"),
+        address_field: fname("addressField", "address"),
+        kind: WKind::Open,
+        population: 0,
+        think: Dist::Fixed(0),
+        start: Dist::Fixed(0),
+        reply: String::new(),
+        timeout: None,
+        behavior: String::new(),
+        group_size: None,
+    };
+    if kind == "closed" {
+        let event = string(o, "event", &what)?;
+        let population = int_in(
+            field(o, "population"),
+            &format!("{what}.population"),
+            0,
+            TWO32 - 1,
+        )?;
+        let think = opt_dist(o, "think", &format!("{what}.think"))?;
+        let start = opt_dist(o, "start", &format!("{what}.start"))?;
+        let reply = string(o, "reply", &what)?;
+        let timeout = opt_int(o, "timeout", &format!("{what}.timeout"), 1, TWO53 - 1)?;
+        return Ok(Workload {
+            kind: WKind::Closed,
+            event,
+            population,
+            think,
+            start,
+            reply,
+            timeout,
+            clients: Some(Clients {
+                count: population,
+                round_robin: true,
+            }),
+            ..base
+        });
+    }
+    if kind == "population" {
+        let behavior = string(o, "behavior", &what)?;
+        let count = int_in(field(o, "count"), &format!("{what}.count"), 0, TWO32 - 1)?;
+        let so = object(field(o, "start"), &format!("{what}.start"))?;
+        let event = string(so, "event", &format!("{what}.start"))?;
+        let start = opt_dist(so, "at", &format!("{what}.start.at"))?;
+        let (_, group_size) = decode_clients(o, &what, Some(count))?;
+        return Ok(Workload {
+            kind: WKind::Population,
+            event,
+            population: count,
+            start,
+            behavior,
+            group_size,
+            clients: Some(Clients {
+                count,
+                round_robin: true,
+            }),
+            ..base
+        });
+    }
+    if kind != "open" {
+        return Err(format!(
+            "{what}: \"kind\" must be open, closed or population."
+        ));
+    }
+    let event = string(o, "event", &what)?;
+    let poisson = match field(o, "process").as_str() {
+        Some("poisson") => true,
+        Some("constant") => false,
+        _ => return Err(format!("{what}: \"process\" must be poisson or constant.")),
+    };
+    let mut phases = Vec::new();
+    for (k, p) in array(o, "phases", &what)?.iter().enumerate() {
+        let pw = format!("{what}.phases[{k}]");
+        let po = object(p, &pw)?;
+        let start = int_in(field(po, "from"), &format!("{pw}.from"), 0, TWO53 - 1)?;
+        let stop = int_in(field(po, "until"), &format!("{pw}.until"), 0, TWO53 - 1)?;
+        let ro = object(field(po, "rate"), &format!("{pw}.rate"))?;
+        let rate = match (field(ro, "from"), field(ro, "to")) {
+            (Value::Undefined, Value::Undefined) => {
+                let (a, b) = decode_rate(field(po, "rate"), &format!("{pw}.rate"))?;
+                Rate::Const(a, b)
+            }
+            (f, t) => {
+                let (a0, b0) = decode_rate(f, &format!("{pw}.rate.from"))?;
+                let (a1, b1) = decode_rate(t, &format!("{pw}.rate.to"))?;
+                Rate::Ramp(a0, b0, a1, b1)
+            }
+        };
+        phases.push(Phase { start, stop, rate });
+    }
+    let period = opt_int(o, "repeat", &format!("{what}.repeat"), 1, TWO53 - 1)?;
+    let batch = match field(o, "batch") {
+        Value::Undefined | Value::Null => Dist::Fixed(1),
+        b => decode_dist(b, &format!("{what}.batch"))?,
+    };
+    let (clients, group_size) = decode_clients(o, &what, None)?;
+    let max_arrivals = opt_int(
+        o,
+        "maxArrivals",
+        &format!("{what}.maxArrivals"),
+        0,
+        TWO32 - 1,
+    )?;
+    Ok(Workload {
+        event,
+        poisson,
+        phases,
+        period,
+        batch,
+        clients,
+        max_arrivals,
+        group_size,
+        ..base
+    })
+}
+
+/// An exact decimal in (0, 1]: `"1"` or `"0.<digits>"`.
+fn decode_quantile(v: &Value, path: &str) -> R<(String, u64, u64)> {
+    let err = || format!("Field \"{path}\" must be an exact decimal in (0, 1].");
+    match v {
+        Value::String(q) if q == "1" => Ok(("1".into(), 1, 1)),
+        Value::String(q) => {
+            let Some(ds) = q.strip_prefix("0.") else {
+                return Err(err());
+            };
+            if ds.is_empty() || ds.len() > 18 || !ds.bytes().all(|c| c.is_ascii_digit()) {
+                return Err(err());
+            }
+            let n: u64 = ds.parse().map_err(|_| err())?;
+            if n == 0 {
+                return Err(err());
+            }
+            Ok((q.clone(), n, 10u64.pow(ds.len() as u32)))
+        }
+        _ => Err(err()),
+    }
+}
+
+fn default_quantiles() -> Vec<(String, u64, u64)> {
+    vec![
+        ("0.5".into(), 1, 2),
+        ("0.9".into(), 9, 10),
+        ("0.99".into(), 99, 100),
+    ]
+}
+
+fn decode_req_class(v: &Value, i: usize) -> R<ReqClass> {
+    let what = format!("requests[{i}]");
+    let o = object(v, &what)?;
+    let id = string(o, "id", &what)?;
+    let so = object(field(o, "start"), &format!("{what}.start"))?;
+    let start_event = string(so, "event", &format!("{what}.start"))?;
+    let start_workload = opt_str(so, "workload", &format!("{what}.start"))?;
+    let key = string(o, "key", &what)?;
+    let mut ends = Vec::new();
+    for (j, e) in array_or_empty(o, "ends").iter().enumerate() {
+        let ew = format!("{what}.ends[{j}]");
+        let eo = object(e, &ew)?;
+        let ev = string(eo, "event", &ew)?;
+        let out = string(eo, "outcome", &ew)?;
+        let out: &'static str = match out.as_str() {
+            "ok" => "ok",
+            "refused" => "refused",
+            "timeout" => "timeout",
+            "error" => "error",
+            _ => {
+                return Err(format!(
+                    "Request class \"{id}\": outcome must be ok, refused, timeout or error."
+                ))
+            }
+        };
+        ends.push((ev, out));
+    }
+    Ok(ReqClass {
+        id,
+        start_event,
+        start_workload,
+        key,
+        ends,
+    })
+}
+
+fn decode_series(v: &Value) -> R<Option<u64>> {
+    let Value::Object(o) = v else { return Ok(None) };
+    match field(o, "series") {
+        Value::Undefined | Value::Null => Ok(None),
+        s => {
+            let so = object(s, "metrics.series")?;
+            Ok(Some(int_in(
+                field(so, "bucket"),
+                "metrics.series.bucket",
+                1,
+                TWO53 - 1,
+            )?))
+        }
+    }
+}
+
+fn decode_metrics(v: &Value) -> R<Option<Vec<(String, u64, u64)>>> {
+    match v {
+        Value::Undefined | Value::Null => Ok(None),
+        Value::Object(o) => match field(o, "quantiles") {
+            Value::Undefined | Value::Null => Ok(Some(default_quantiles())),
+            Value::Array(qs) => {
+                let mut out = Vec::new();
+                for (i, q) in qs.iter().enumerate() {
+                    out.push(decode_quantile(q, &format!("metrics.quantiles[{i}]"))?);
+                }
+                Ok(Some(out))
+            }
+            _ => Err("Field \"metrics.quantiles\" must be an array.".into()),
+        },
+        _ => Err("Field \"metrics\" must be an object.".into()),
+    }
+}
+
 pub fn decode(root: &JsObject) -> R<Input> {
     let (unit, per_second) = match field(root, "time") {
         Value::Object(t) => match field(t, "unit") {
@@ -742,7 +1485,7 @@ pub fn decode(root: &JsObject) -> R<Input> {
         },
         _ => return Err("Unknown time unit \"undefined\".".into()),
     };
-    for k in ["links", "workloads", "requests", "meters", "prices"] {
+    for k in ["meters", "prices"] {
         if let Value::Array(xs) = field(root, k) {
             if !xs.is_empty() {
                 return Err(format!(
@@ -771,6 +1514,21 @@ pub fn decode(root: &JsObject) -> R<Input> {
     let mut resources = Vec::new();
     for (i, r) in array_or_empty(root, "resources").iter().enumerate() {
         resources.push(decode_resource(r, i)?);
+    }
+    let mut links = Vec::new();
+    for (i, l) in array_or_empty(root, "links").iter().enumerate() {
+        links.push(decode_link(l, i)?);
+    }
+    let mut workloads = Vec::new();
+    for (i, w) in array_or_empty(root, "workloads").iter().enumerate() {
+        workloads.push(decode_workload(w, i)?);
+    }
+    let unit_exp = decode_unit_exp(field(root, "unitExponential"))?;
+    let metrics = decode_metrics(field(root, "metrics"))?;
+    let series = decode_series(field(root, "metrics"))?;
+    let mut requests = Vec::new();
+    for (i, r) in array_or_empty(root, "requests").iter().enumerate() {
+        requests.push(decode_req_class(r, i)?);
     }
     let sc = object(field(root, "scenario"), "scenario")?;
     let id = string(sc, "id", "scenario")?;
@@ -833,6 +1591,12 @@ pub fn decode(root: &JsObject) -> R<Input> {
         faults,
         routes,
         resources,
+        links,
+        workloads,
+        unit_exp,
+        metrics,
+        series,
+        requests,
     })
 }
 
@@ -940,6 +1704,373 @@ fn initial_machine(b: &Behavior) -> Machine {
     }
 }
 
+// ---- Arrivals (Format2.lean, makeInstant) ---------------------------------------------------
+
+/// The address index of user `k`: users fill address 0, then 1, and so on.
+fn group_of(groups: &[u64], mut k: u64) -> u64 {
+    let mut a = 0;
+    for &g in groups {
+        if k < g {
+            return a;
+        }
+        k -= g;
+        a += 1;
+    }
+    a
+}
+
+/// The address of client `k`: `<w>@<a>` with address groups, else the client.
+fn address_of(w: &Workload, st: &WState, k: u64) -> String {
+    match w.group_size {
+        Some(_) => format!("{}@{}", w.id, group_of(&st.groups, k)),
+        None => format!("{}:{k}", w.id),
+    }
+}
+
+/// The generated payload of entry `n` for `client`: payload fields in declaration order, then
+/// the request id, client and address.
+fn gen_payload(
+    i: &Input,
+    w: &Workload,
+    st: &WState,
+    n_: u64,
+    client: Option<u64>,
+    streams: &mut Vec<(String, u64)>,
+    draws: &mut Vec<Draw>,
+) -> JsObject {
+    let seed = i.scenario.seed.unwrap_or(0);
+    let mut fs = JsObject::new();
+    for (f, pf) in &w.payload {
+        let pname = format!("payload:{}:{f}", w.id);
+        match pf {
+            PField::Lit(v) => fs.insert(f.clone(), v.deep_copy()),
+            PField::Counter => fs.insert(f.clone(), Value::Number(n_ as f64)),
+            PField::Sample(d) => {
+                let x = sample(i.scenario.seed, streams, &pname, d, draws);
+                fs.insert(f.clone(), Value::Number(x as f64));
+            }
+            PField::Choose(vs, ws) => {
+                let (r, dr) = draw_next(seed, streams, &pname);
+                draws.push(dr);
+                let v = vs
+                    .get(random::categorical(r, ws))
+                    .cloned()
+                    .unwrap_or(Value::Null);
+                fs.insert(f.clone(), v.deep_copy());
+            }
+        }
+    }
+    fs.insert(
+        w.request_field.clone(),
+        Value::str(format!("{}#{n_}", w.id)),
+    );
+    if let Some(c) = client {
+        fs.insert(w.client_field.clone(), Value::str(format!("{}:{c}", w.id)));
+        fs.insert(w.address_field.clone(), Value::str(address_of(w, st, c)));
+    }
+    fs
+}
+
+/// Create the next arrival instant of an open workload, if any; returns the draws in order and
+/// advances `seq`.
+fn make_instant(
+    i: &Input,
+    w: &Workload,
+    st: &mut WState,
+    streams: &mut Vec<(String, u64)>,
+    seq: &mut u64,
+    q: &mut Vec<Entry>,
+) -> Vec<Draw> {
+    let full = w.max_arrivals.is_some_and(|m| st.arrivals >= m);
+    if st.cursor.done || full {
+        st.cursor.done = true;
+        return Vec::new();
+    }
+    let seed = i.scenario.seed.unwrap_or(0);
+    let aname = format!("arrival:{}", w.id);
+    let base = lookup(streams, &aname);
+    let ex = |k: u64| -> BigUint {
+        BigUint::from(random::sample_table_wide(
+            random::draw(seed, &aname, base + k),
+            &i.unit_exp,
+        ))
+    };
+    let horizon = i.scenario.horizon.unwrap_or(0);
+    let (t, cur, used) = work::next_time(
+        i.per_second.unwrap_or(1),
+        horizon,
+        &w.phases,
+        w.period,
+        w.poisson,
+        &ex,
+        work::fuel_for(horizon, &w.phases),
+        st.cursor.clone(),
+    );
+    let mut draws: Vec<Draw> = (0..used)
+        .map(|k| Draw {
+            stream: aname.clone(),
+            index: base + k,
+            value: random::draw(seed, &aname, base + k),
+        })
+        .collect();
+    for _ in 0..used {
+        bump(streams, &aname);
+    }
+    let Some(t) = t else {
+        st.cursor = cur;
+        return draws;
+    };
+    let b = sample(
+        i.scenario.seed,
+        streams,
+        &format!("batch:{}", w.id),
+        &w.batch,
+        &mut draws,
+    )
+    .max(1);
+    let b = match w.max_arrivals {
+        Some(m) => b.min(m - st.arrivals),
+        None => b,
+    };
+    for k in 0..b {
+        let n_ = st.arrivals + k;
+        let client = match &w.clients {
+            None => None,
+            Some(cl) if cl.round_robin => Some(n_ % cl.count),
+            Some(cl) => {
+                let (r, dr) = draw_next(seed, streams, &format!("client:{}", w.id));
+                draws.push(dr);
+                Some(random::index(r, cl.count as usize) as u64)
+            }
+        };
+        let fs = gen_payload(i, w, st, n_, client, streams, &mut draws);
+        let cname = client.map(|c| format!("{}:{c}", w.id));
+        insert_entry(
+            q,
+            Entry {
+                seq: *seq,
+                time: t,
+                scheduled_at: t,
+                event: w.event.clone(),
+                payload: Value::object(fs),
+                source: Src::Arrival(w.id.clone(), n_, cname),
+                kind: EntryKind::Event,
+                target: None,
+                sender: None,
+                routes: None,
+                first: if k == 0 { Some(st.instants) } else { None },
+                timer: None,
+                copy_of: None,
+            },
+        );
+        *seq += 1;
+    }
+    st.instants += 1;
+    st.arrivals += b;
+    st.cursor = cur;
+    if w.max_arrivals.is_some_and(|m| st.arrivals >= m) {
+        st.cursor.done = true;
+    }
+    draws
+}
+
+/// A closed client `c` issues its next request at `t`, unless `t` is at or after the horizon:
+/// the arrival entry, then its `client-timeout` entry when the workload has a `timeout`.
+#[allow(clippy::too_many_arguments)]
+fn issue(
+    i: &Input,
+    w: &Workload,
+    st: &mut WState,
+    c: u64,
+    t: u64,
+    streams: &mut Vec<(String, u64)>,
+    seq: &mut u64,
+    q: &mut Vec<Entry>,
+    draws: &mut Vec<Draw>,
+) {
+    if t >= i.scenario.horizon.unwrap_or(0) {
+        st.clients[c as usize] = None;
+        return;
+    }
+    let n_ = st.arrivals;
+    let fs = gen_payload(i, w, st, n_, Some(c), streams, draws);
+    let cname = format!("{}:{c}", w.id);
+    insert_entry(
+        q,
+        Entry {
+            seq: *seq,
+            time: t,
+            scheduled_at: t,
+            event: w.event.clone(),
+            payload: Value::object(fs),
+            source: Src::Arrival(w.id.clone(), n_, Some(cname.clone())),
+            kind: EntryKind::Event,
+            target: None,
+            sender: None,
+            routes: None,
+            first: None,
+            timer: None,
+            copy_of: None,
+        },
+    );
+    *seq += 1;
+    if let Some(to) = w.timeout {
+        insert_entry(
+            q,
+            Entry {
+                seq: *seq,
+                time: t + to,
+                scheduled_at: t + to,
+                event: String::new(),
+                payload: Value::Null,
+                source: Src::ClientTimeout(w.id.clone(), n_, cname),
+                kind: EntryKind::ClientTimeout {
+                    workload: w.id.clone(),
+                    client: c,
+                    n: n_,
+                },
+                target: None,
+                sender: None,
+                routes: None,
+                first: None,
+                timer: None,
+                copy_of: None,
+            },
+        );
+        *seq += 1;
+    }
+    st.arrivals = n_ + 1;
+    st.clients[c as usize] = Some(n_);
+}
+
+/// A closed client `c` got its reply or gave up at `now`: it thinks (`think:<w>`) and issues again.
+#[allow(clippy::too_many_arguments)]
+fn rethink(
+    i: &Input,
+    w: &Workload,
+    st: &mut WState,
+    c: u64,
+    now: u64,
+    streams: &mut Vec<(String, u64)>,
+    seq: &mut u64,
+    q: &mut Vec<Entry>,
+    draws: &mut Vec<Draw>,
+) {
+    let d = sample(
+        i.scenario.seed,
+        streams,
+        &format!("think:{}", w.id),
+        &w.think,
+        draws,
+    );
+    st.clients[c as usize] = None;
+    issue(i, w, st, c, now + d, streams, seq, q, draws);
+}
+
+/// The initial entries of a workload, after its address groups (Format2.lean, initialWorkload).
+fn initial_workload(
+    i: &Input,
+    c: &mut Conf,
+    w: &Workload,
+    st: &mut WState,
+    seq: &mut u64,
+) -> Vec<Draw> {
+    let mut draws = Vec::new();
+    if let Some(d) = &w.group_size {
+        let mut left = w.clients.as_ref().map_or(0, |cl| cl.count);
+        let name = format!("groups:{}", w.id);
+        while left > 0 {
+            let g = sample(i.scenario.seed, &mut c.streams, &name, d, &mut draws).max(1);
+            st.groups.push(g);
+            left -= g.min(left);
+        }
+    }
+    match w.kind {
+        WKind::Open => {
+            draws.extend(make_instant(i, w, st, &mut c.streams, seq, &mut c.pending));
+        }
+        WKind::Closed => {
+            st.clients = vec![None; w.population as usize];
+            let sname = format!("start:{}", w.id);
+            for k in 0..w.population {
+                let t = sample(
+                    i.scenario.seed,
+                    &mut c.streams,
+                    &sname,
+                    &w.start,
+                    &mut draws,
+                );
+                issue(
+                    i,
+                    w,
+                    st,
+                    k,
+                    t,
+                    &mut c.streams,
+                    seq,
+                    &mut c.pending,
+                    &mut draws,
+                );
+            }
+        }
+        WKind::Population => {
+            let Some(b) = i.behavior(&w.behavior) else {
+                return draws;
+            };
+            let keys: Vec<Value> = (0..w.population)
+                .map(|k| Value::str(format!("{}:{k}", w.id)))
+                .collect();
+            if let Some((_, xs)) = c.insts.iter_mut().find(|(k, _)| *k == b.id) {
+                xs.extend(keys.iter().cloned());
+            }
+            for v in &keys {
+                c.set_machine(&machine_key(b, v), initial_machine(b));
+            }
+            let sname = format!("start:{}", w.id);
+            for k in 0..w.population {
+                let t = sample(
+                    i.scenario.seed,
+                    &mut c.streams,
+                    &sname,
+                    &w.start,
+                    &mut draws,
+                );
+                if t >= i.scenario.horizon.unwrap_or(0) {
+                    continue;
+                }
+                let cname = format!("{}:{k}", w.id);
+                let mut fs = JsObject::new();
+                fs.insert(w.client_field.clone(), Value::str(cname.clone()));
+                fs.insert(w.address_field.clone(), Value::str(address_of(w, st, k)));
+                insert_entry(
+                    &mut c.pending,
+                    Entry {
+                        seq: *seq,
+                        time: t,
+                        scheduled_at: t,
+                        event: w.event.clone(),
+                        payload: Value::object(fs),
+                        source: Src::Arrival(w.id.clone(), k, Some(cname.clone())),
+                        kind: EntryKind::Event,
+                        target: Some(Addr {
+                            behavior: b.id.clone(),
+                            inst: Value::str(cname),
+                            incarnation: 0,
+                        }),
+                        sender: None,
+                        routes: None,
+                        first: None,
+                        timer: None,
+                        copy_of: None,
+                    },
+                );
+                *seq += 1;
+            }
+        }
+    }
+    draws
+}
+
 // ---- Configuration --------------------------------------------------------------------------
 
 #[derive(Clone, Debug)]
@@ -961,6 +2092,11 @@ pub enum Src {
     Fault(String),
     Transition(String, String),
     Resource(String, u64, String),
+    Arrival(String, u64, Option<String>),
+    /// A closed client's timeout: workload, request number, client.
+    ClientTimeout(String, u64, String),
+    Timer(String, Value, String),
+    Link(String, u64),
 }
 
 #[derive(Clone, Debug)]
@@ -1012,6 +2148,20 @@ pub enum EntryKind {
         res: String,
         request: u64,
     },
+    ClientTimeout {
+        workload: String,
+        client: u64,
+        n: u64,
+    },
+    LinkDone {
+        link: String,
+        key: String,
+        msg: u64,
+    },
+    FaultEdge {
+        fault: String,
+        on: bool,
+    },
 }
 
 #[derive(Clone, Debug)]
@@ -1026,6 +2176,44 @@ pub struct Entry {
     target: Option<Addr>,
     sender: Option<Addr>,
     routes: Option<Vec<(String, Value)>>,
+    /// The instant number, on the original first entry of an arrival instant only.
+    first: Option<u64>,
+    /// The timer id of a timer firing.
+    timer: Option<String>,
+    /// On a delayed copy: the sequence number of the original entry.
+    copy_of: Option<u64>,
+}
+
+/// A message on a link.
+#[derive(Clone, Debug)]
+pub struct Msg {
+    id: u64,
+    event: String,
+    payload: Value,
+    size: u64,
+    sent_at: u64,
+    target: Option<Addr>,
+    sender: Option<Addr>,
+}
+
+/// A link's transfer queue.
+#[derive(Clone, Debug, Default)]
+pub struct LQueue {
+    in_transfer: Option<Msg>,
+    waiting: Vec<Msg>,
+    last_delivery: Option<u64>,
+}
+
+/// The state of an open workload.
+#[derive(Clone, Debug, Default)]
+pub struct WState {
+    instants: u64,
+    arrivals: u64,
+    cursor: Cursor,
+    /// Closed: per client, the number of its outstanding request.
+    clients: Vec<Option<u64>>,
+    /// With `addresses`: the group size of each address.
+    groups: Vec<u64>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -1037,6 +2225,11 @@ pub struct Conf {
     resources: Vec<(String, RState)>,
     route_counters: Vec<(String, u64)>,
     streams: Vec<(String, u64)>,
+    workloads: Vec<(String, WState)>,
+    /// Link queues by (link, key), in creation order.
+    lqueues: Vec<((String, String), LQueue)>,
+    /// The windowed faults acting now, in `faults` order.
+    active: Vec<String>,
 }
 
 impl Conf {
@@ -1061,6 +2254,19 @@ impl Conf {
             .find(|(k, _)| k == b)
             .map(|(_, v)| v.clone())
             .unwrap_or_default()
+    }
+    fn lqueue(&self, l: &str, k: &str) -> LQueue {
+        self.lqueues
+            .iter()
+            .find(|((a, b), _)| a == l && b == k)
+            .map(|(_, q)| q.clone())
+            .unwrap_or_default()
+    }
+    fn set_lqueue(&mut self, l: &str, k: &str, q: LQueue) {
+        match self.lqueues.iter_mut().find(|((a, b), _)| a == l && b == k) {
+            Some((_, slot)) => *slot = q,
+            None => self.lqueues.push(((l.to_string(), k.to_string()), q)),
+        }
     }
     fn resource(&self, r: &str) -> Option<&RState> {
         self.resources.iter().find(|(k, _)| k == r).map(|(_, s)| s)
@@ -1153,13 +2359,16 @@ fn pick(d: &Resource, s: &RState) -> Option<Req> {
         let Some(r) = s.waiting.iter().find(|w| w.cls == c) else {
             continue;
         };
-        if !fits(d, s, r) {
+        if !d.strict && !fits(d, s, r) {
             continue;
         }
         best = match best {
             None => Some(r),
             Some(b) => Some(if before(d, r, b) { r } else { b }),
         };
+    }
+    if d.strict && best.is_some_and(|r| !fits(d, s, r)) {
+        return None;
     }
     best.cloned()
 }
@@ -1368,6 +2577,9 @@ enum Kind {
     Delay,
     ServiceDone,
     WaitTimeout,
+    ClientTimeout,
+    LinkDone,
+    FaultEdge,
 }
 
 impl Kind {
@@ -1378,6 +2590,9 @@ impl Kind {
             Kind::Delay => "delay",
             Kind::ServiceDone => "service-done",
             Kind::WaitTimeout => "wait-timeout",
+            Kind::ClientTimeout => "client-timeout",
+            Kind::LinkDone => "link-done",
+            Kind::FaultEdge => "fault-edge",
         }
     }
 }
@@ -1396,6 +2611,7 @@ struct StepRec {
     draws: Vec<Draw>,
     config: Conf,
     error: Option<String>,
+    links: Vec<LinkRec>,
 }
 
 fn blank(index: u64, head: &Entry, kind: Kind, config: Conf) -> StepRec {
@@ -1412,6 +2628,7 @@ fn blank(index: u64, head: &Entry, kind: Kind, config: Conf) -> StepRec {
         draws: Vec::new(),
         config,
         error: None,
+        links: Vec::new(),
     }
 }
 
@@ -1431,6 +2648,155 @@ struct Work {
     draws: Vec<Draw>,
     ops: Vec<(String, Op)>,
     recs: Vec<ResRecord>,
+    lrecs: Vec<LinkRec>,
+}
+
+#[derive(Clone, Debug)]
+struct LinkRec {
+    link: String,
+    queue: String,
+    message: u64,
+    action: &'static str,
+    at: u64,
+    size: u64,
+}
+
+fn link_rec(l: &str, k: &str, m: &Msg, action: &'static str, now: u64) -> LinkRec {
+    LinkRec {
+        link: l.to_string(),
+        queue: k.to_string(),
+        message: m.id,
+        action,
+        at: now,
+        size: m.size,
+    }
+}
+
+/// Propagation of message `m` at `now` (Format2.lean, `propagate`).
+fn propagate(i: &Input, l: &Link, k: &str, m: &Msg, now: u64, w: &mut Work) -> R<()> {
+    let mut drs = Vec::new();
+    let mut streams = w.next.streams.clone();
+    let lat = sample(
+        i.scenario.seed,
+        &mut streams,
+        &format!("latency:{}", l.id),
+        &l.latency,
+        &mut drs,
+    );
+    let mut q = w.next.lqueue(&l.id, k);
+    let t = if l.ordered {
+        (now + lat).max(q.last_delivery.unwrap_or(0))
+    } else {
+        now + lat
+    };
+    if t >= TWO53 {
+        return Err("Value time exceeds 2^53.".into());
+    }
+    insert_entry(
+        &mut w.next.pending,
+        Entry {
+            seq: w.seq,
+            time: t,
+            scheduled_at: t,
+            event: m.event.clone(),
+            payload: m.payload.clone(),
+            source: Src::Link(l.id.clone(), m.id),
+            kind: EntryKind::Event,
+            target: m.target.clone(),
+            sender: m.sender.clone(),
+            routes: None,
+            first: None,
+            timer: None,
+            copy_of: None,
+        },
+    );
+    w.next.streams = streams;
+    if l.ordered {
+        q.last_delivery = Some(t);
+        w.next.set_lqueue(&l.id, k, q);
+    }
+    w.seq += 1;
+    w.draws.extend(drs);
+    w.lrecs.push(link_rec(&l.id, k, m, "propagated", now));
+    Ok(())
+}
+
+/// Message `m` starts its transfer at `now` (Format2.lean, `startTransfer`).
+fn start_transfer(i: &Input, l: &Link, k: &str, m: Msg, now: u64, w: &mut Work) -> R<()> {
+    let bw = u128::from(l.bandwidth.unwrap_or(1));
+    let tt = (u128::from(m.size) * u128::from(i.per_second.unwrap_or(1))).div_ceil(bw);
+    if u128::from(now) + tt >= u128::from(TWO53) {
+        return Err("Value time exceeds 2^53.".into());
+    }
+    let at = now + tt as u64;
+    insert_entry(
+        &mut w.next.pending,
+        Entry {
+            seq: w.seq,
+            time: at,
+            scheduled_at: at,
+            event: String::new(),
+            payload: Value::Null,
+            source: Src::Link(l.id.clone(), m.id),
+            kind: EntryKind::LinkDone {
+                link: l.id.clone(),
+                key: k.to_string(),
+                msg: m.id,
+            },
+            target: None,
+            sender: None,
+            routes: None,
+            first: None,
+            timer: None,
+            copy_of: None,
+        },
+    );
+    w.seq += 1;
+    w.lrecs.push(link_rec(&l.id, k, &m, "started", now));
+    let mut q = w.next.lqueue(&l.id, k);
+    q.in_transfer = Some(m);
+    w.next.set_lqueue(&l.id, k, q);
+    Ok(())
+}
+
+/// Send message `m` on queue `k` of link `l` (Format2.lean, `sendMsg`).
+fn send_msg(i: &Input, l: &Link, fan: bool, k: &str, m: Msg, now: u64, w: &mut Work) -> R<()> {
+    if l.bandwidth.is_none() || (!l.ordered && m.size == 0) {
+        return propagate(i, l, k, &m, now, w);
+    }
+    let mut q = w.next.lqueue(&l.id, k);
+    if q.in_transfer.is_none() {
+        return start_transfer(i, l, k, m, now, w);
+    }
+    w.lrecs.push(link_rec(&l.id, k, &m, "queued", now));
+    q.waiting.push(m);
+    if let Some(b) = l.queue_bound {
+        if q.waiting.len() as u64 > b {
+            let lost = if fan {
+                q.waiting.remove(0)
+            } else {
+                q.waiting.pop().expect("non-empty")
+            };
+            w.lrecs.push(link_rec(&l.id, k, &lost, "lost", now));
+        }
+    }
+    w.next.set_lqueue(&l.id, k, q);
+    Ok(())
+}
+
+/// The size of a message: an integer in `[0, 2^40)`.
+fn size_of(event: &str, v: &Value) -> R<u64> {
+    match v {
+        Value::Number(x) if x.fract() == 0.0 && *x >= 0.0 && *x < 1099511627776.0 => Ok(*x as u64),
+        Value::Number(_) => Err(format!(
+            "Size of emit \"{event}\" must be an integer in [0, 2^40), got {}.",
+            v.to_json()
+        )),
+        _ => Err(format!(
+            "Size of emit \"{event}\" must be an integer in [0, 2^40), got {}.",
+            v.type_name()
+        )),
+    }
 }
 
 struct Sim<'a> {
@@ -1443,6 +2809,12 @@ struct Sim<'a> {
     attempts: HashMap<String, u64>,
     delayed_by: HashMap<u64, Vec<String>>,
     steps: Vec<StepRec>,
+    initial_draws: Vec<Draw>,
+    /// Steps taken (the steps themselves are kept only for a trace).
+    taken: u64,
+    meter: Measure,
+    /// Whether steps are kept for the trace; without, step records carry no configuration.
+    keep_steps: bool,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -1499,6 +2871,15 @@ fn same_json(a: &Value, b: &Value) -> bool {
 }
 
 impl<'a> Sim<'a> {
+    /// The configuration a step record keeps: none when only metrics are output.
+    fn snap(&self, c: &Conf) -> Conf {
+        if self.keep_steps {
+            c.clone()
+        } else {
+            Conf::default()
+        }
+    }
+
     fn compile(&self, src: &str) -> R<Rc<Ast>> {
         if let Some(ast) = self.compiled.borrow().get(src) {
             return Ok(Rc::clone(ast));
@@ -1819,11 +3200,11 @@ impl<'a> Sim<'a> {
         Ok((acc, drs))
     }
 
-    fn targeting(&self, kind: &str, tid: &str) -> Vec<&'a Fault> {
+    fn targeting(&self, kind: &str, tid: &str, time: u64) -> Vec<&'a Fault> {
         self.faults
             .iter()
             .copied()
-            .filter(|f| f.is_kind(kind) && f.transition.as_deref() == Some(tid))
+            .filter(|f| f.is_kind(kind) && f.transition.as_deref() == Some(tid) && f.acts_at(time))
             .collect()
     }
 
@@ -1846,12 +3227,12 @@ impl<'a> Sim<'a> {
             if Some(&t.from) != state.as_ref() || t.on != head.event {
                 continue;
             }
-            let enablers = self.targeting("enable-transition", &t.id);
+            let enablers = self.targeting("enable-transition", &t.id, head.time);
             if t.fault_only && enablers.is_empty() {
                 continue;
             }
             considered.push(t.id.clone());
-            let disablers = self.targeting("disable-transition", &t.id);
+            let disablers = self.targeting("disable-transition", &t.id, head.time);
             let holds = match &t.guard {
                 None => true,
                 Some(g) => match self.eval(g, cur, cur, &mk, inst, &head.payload, head.time)? {
@@ -2043,6 +3424,9 @@ impl<'a> Sim<'a> {
                                 incarnation: 0,
                             }),
                             routes: None,
+                            first: None,
+                            timer: None,
+                            copy_of: None,
                         },
                     );
                     w.next.streams = streams;
@@ -2106,6 +3490,169 @@ impl<'a> Sim<'a> {
                     w.ops
                         .push((res.clone(), Op::Release(mk.to_string(), ci, *units)));
                 }
+                Effect::Send {
+                    event,
+                    size,
+                    payload,
+                    reply,
+                    via,
+                    fanout,
+                } => {
+                    if !self.input.is_event(event) {
+                        return Err(format!("Effect emits \"{event}\", which is not an event."));
+                    }
+                    let l = self
+                        .input
+                        .links
+                        .iter()
+                        .find(|l| l.id == *via)
+                        .ok_or_else(|| {
+                            format!("Effect sends over \"{via}\", which is not a link.")
+                        })?;
+                    let fan = *fanout || l.fanout;
+                    let mut streams = w.next.streams.clone();
+                    let mut drs = Vec::new();
+                    let sz = match size {
+                        SizeIn::None => 0,
+                        SizeIn::Dist(d) => {
+                            sample(seed, &mut streams, &format!("size:{site}"), d, &mut drs)
+                        }
+                        SizeIn::Expr(src) => {
+                            let v =
+                                self.eval(src, &w.next, start, mk, inst, &head.payload, time)?;
+                            size_of(event, &v)?
+                        }
+                    };
+                    let fs =
+                        self.eval_entries(payload, &w.next, start, mk, inst, &head.payload, time)?;
+                    let target = if *reply {
+                        match &head.sender {
+                            Some(a) => Some(a.clone()),
+                            None => {
+                                return Err(format!(
+                                    "Effect replies to \"{}\", which has no requester.",
+                                    head.event
+                                ))
+                            }
+                        }
+                    } else {
+                        None
+                    };
+                    let receivers: Vec<(String, Option<Addr>)> = if fan {
+                        let mut out = Vec::new();
+                        for rb in &self.input.behaviors {
+                            if rb.subject.as_deref() == Some(l.to.as_str()) {
+                                for v in w.next.insts_of(&rb.id) {
+                                    out.push((
+                                        machine_key(rb, &v),
+                                        Some(Addr {
+                                            behavior: rb.id.clone(),
+                                            inst: v,
+                                            incarnation: 0,
+                                        }),
+                                    ));
+                                }
+                            }
+                        }
+                        out
+                    } else {
+                        vec![(String::new(), target)]
+                    };
+                    w.next.streams = streams;
+                    w.draws.extend(drs);
+                    let sender = Some(Addr {
+                        behavior: b.id.clone(),
+                        inst: inst.clone(),
+                        incarnation: 0,
+                    });
+                    for (key, tg) in receivers {
+                        let m = Msg {
+                            id: w.seq,
+                            event: event.clone(),
+                            payload: Value::object(fs.deep_copy()),
+                            size: sz,
+                            sent_at: time,
+                            target: tg,
+                            sender: sender.clone(),
+                        };
+                        w.seq += 1;
+                        rec.emitted.push(EmitRec {
+                            event: event.clone(),
+                            time,
+                            seq: m.id,
+                            payload: m.payload.deep_copy(),
+                        });
+                        send_msg(self.input, l, fan, &key, m, time, w)?;
+                    }
+                }
+                Effect::Timer {
+                    name,
+                    after,
+                    event,
+                    payload,
+                } => {
+                    if !self.input.is_event(event) {
+                        return Err(format!("Effect emits \"{event}\", which is not an event."));
+                    }
+                    let mut streams = w.next.streams.clone();
+                    let mut drs = Vec::new();
+                    let delay = sample(
+                        seed,
+                        &mut streams,
+                        &format!("after:{site}"),
+                        after,
+                        &mut drs,
+                    );
+                    let at = w.next.time + delay;
+                    if at >= TWO53 {
+                        return Err("Value time exceeds 2^53.".into());
+                    }
+                    let fs =
+                        self.eval_entries(payload, &w.next, start, mk, inst, &head.payload, time)?;
+                    let tid = format!("{mk}/{name}");
+                    let pv = Value::object(fs);
+                    let sq = w.seq;
+                    w.seq += 1;
+                    w.next
+                        .pending
+                        .retain(|e| e.timer.as_deref() != Some(tid.as_str()));
+                    insert_entry(
+                        &mut w.next.pending,
+                        Entry {
+                            seq: sq,
+                            time: at,
+                            scheduled_at: at,
+                            event: event.clone(),
+                            payload: pv.clone(),
+                            source: Src::Timer(b.id.clone(), inst.clone(), name.clone()),
+                            kind: EntryKind::Event,
+                            target: Some(Addr {
+                                behavior: b.id.clone(),
+                                inst: inst.clone(),
+                                incarnation: 0,
+                            }),
+                            sender: None,
+                            routes: None,
+                            first: None,
+                            timer: Some(tid),
+                            copy_of: None,
+                        },
+                    );
+                    w.next.streams = streams;
+                    w.draws.extend(drs);
+                    rec.emitted.push(EmitRec {
+                        event: event.clone(),
+                        time: at,
+                        seq: sq,
+                        payload: pv.deep_copy(),
+                    });
+                }
+                Effect::Cancel(name) => {
+                    let tid = format!("{mk}/{name}");
+                    w.next
+                        .pending
+                        .retain(|e| e.timer.as_deref() != Some(tid.as_str()));
+                }
                 Effect::Malformed => {
                     return Err(format!("Malformed effect in transition \"{}\".", t.id));
                 }
@@ -2146,6 +3693,9 @@ impl<'a> Sim<'a> {
                 target: Some(r.info.requester.clone()),
                 sender: None,
                 routes: None,
+                first: None,
+                timer: None,
+                copy_of: None,
             },
         );
     }
@@ -2216,32 +3766,41 @@ impl<'a> Sim<'a> {
                             target: None,
                             sender: None,
                             routes: None,
+                            first: None,
+                            timer: None,
+                            copy_of: None,
                         },
                     );
                 }
                 w.recs.push(res_rec(res, d, &r, "enqueued", now));
             }
         }
-        let grants = grant_loop(d, &mut s);
+        let de = eff_decl(&self.faults, &w.next.active, d);
+        let grants = grant_loop(&de, &mut s);
         *w.next.resource_mut(res).ok_or("no resource")? = s.clone();
         for (r, occ) in grants {
             let waited = now - r.since;
             Self::remove_timeout(&mut w.next.pending, res, r.id);
             match r.kind {
                 ReqKind::Use => {
+                    let (sn, sd) = eff_scale(&self.faults, &w.next.active, res)?;
+                    let demand =
+                        eff_demand(&self.faults, &w.next.active, &r.info.stream, &r.info.demand);
                     let dd = sample(
                         self.input.scenario.seed,
                         &mut w.next.streams,
                         &r.info.stream,
-                        &r.info.demand,
+                        demand,
                         &mut w.draws,
                     );
-                    let served = if dd == 0 {
+                    let served = if dd == 0 || sn == 0 {
                         Some(0)
                     } else {
                         d.demand_factor.at(occ).and_then(|(num, den)| {
-                            let x = u128::from(dd).checked_mul(num)?;
-                            Some(x.div_ceil(den))
+                            let x = BigUint::from(dd) * BigUint::from(num) * BigUint::from(sn);
+                            let y = BigUint::from(den) * BigUint::from(sd);
+                            let q = (x + &y - 1u32) / y;
+                            u128::try_from(q).ok()
                         })
                     };
                     let served = match served {
@@ -2271,6 +3830,9 @@ impl<'a> Sim<'a> {
                             target: None,
                             sender: None,
                             routes: None,
+                            first: None,
+                            timer: None,
+                            copy_of: None,
                         },
                     );
                 }
@@ -2291,7 +3853,7 @@ impl<'a> Sim<'a> {
             w.recs.push(rec);
         }
         let mut ws = s.waiting.clone();
-        let removed = bounds(d, &mut ws);
+        let removed = bounds(&de, &mut ws);
         if let Some(st) = w.next.resource_mut(res) {
             st.waiting = ws;
         }
@@ -2340,8 +3902,9 @@ impl<'a> Sim<'a> {
         Ok(())
     }
 
-    fn fault_matches(f: &Fault, kind: &str, ev: &str, attempt: u64) -> bool {
+    fn fault_matches(f: &Fault, kind: &str, ev: &str, attempt: u64, time: u64) -> bool {
         f.is_kind(kind)
+            && f.acts_at(time)
             && f.event.as_deref() == Some(ev)
             && match f.occurrence {
                 Occurrence::Any => true,
@@ -2365,10 +3928,10 @@ impl<'a> Sim<'a> {
         attempts: Option<HashMap<String, u64>>,
         pre: Vec<ResRecord>,
     ) -> StepResult {
-        let index = self.steps.len() as u64;
+        let index = self.taken;
         match self.settle(touched, &mut w) {
             Err(msg) => {
-                let mut st = blank(index, head, kind, self.conf.clone());
+                let mut st = blank(index, head, kind, self.snap(&self.conf));
                 st.responsible = if head.event.is_empty() {
                     Vec::new()
                 } else {
@@ -2378,7 +3941,8 @@ impl<'a> Sim<'a> {
                 StepResult::Failed(Box::new(st))
             }
             Ok(()) => {
-                let mut st = blank(index, head, kind, w.next.clone());
+                let mut st = blank(index, head, kind, self.snap(&w.next));
+                st.links = std::mem::take(&mut w.lrecs);
                 st.responsible = self.responsible_of(&head.event, &fired, &faults);
                 st.fired = fired;
                 st.ignored = ignored;
@@ -2391,13 +3955,14 @@ impl<'a> Sim<'a> {
     }
 
     fn step_head(&mut self, mut next: Conf, head: Entry) -> StepResult {
-        let index = self.steps.len() as u64;
+        let index = self.taken;
         let work = |next: Conf, seq: u64| Work {
             next,
             seq,
             draws: Vec::new(),
             ops: Vec::new(),
             recs: Vec::new(),
+            lrecs: Vec::new(),
         };
         match head.kind.clone() {
             EntryKind::ServiceDone {
@@ -2409,7 +3974,7 @@ impl<'a> Sim<'a> {
                 let (Some(d), Some(s)) = (self.input.resource(&res), next.resource_mut(&res))
                 else {
                     return StepResult::Committed(
-                        Box::new(blank(index, &head, Kind::ServiceDone, next.clone())),
+                        Box::new(blank(index, &head, Kind::ServiceDone, self.snap(&next))),
                         next,
                         self.seq,
                         None,
@@ -2452,7 +4017,7 @@ impl<'a> Sim<'a> {
                 );
                 let Some((d, r)) = found else {
                     return StepResult::Committed(
-                        Box::new(blank(index, &head, Kind::WaitTimeout, next.clone())),
+                        Box::new(blank(index, &head, Kind::WaitTimeout, self.snap(&next))),
                         next,
                         self.seq,
                         None,
@@ -2493,36 +4058,227 @@ impl<'a> Sim<'a> {
                     vec![rec],
                 )
             }
-            EntryKind::Event => self.step_event(next, head),
+            EntryKind::FaultEdge { fault, on } => {
+                next.active = self
+                    .faults
+                    .iter()
+                    .filter(|f| {
+                        f.window.is_some()
+                            && ((f.id == fault && on)
+                                || (f.id != fault && next.active.contains(&f.id)))
+                    })
+                    .map(|f| f.id.clone())
+                    .collect();
+                let Some(f) = self.faults.iter().copied().find(|f| f.id == fault) else {
+                    return StepResult::Committed(
+                        Box::new(blank(index, &head, Kind::FaultEdge, self.snap(&next))),
+                        next,
+                        self.seq,
+                        None,
+                    );
+                };
+                let name = match f.kind.as_deref() {
+                    Some("set-capacity") => "capacity",
+                    Some("set-class-limit") => "limit",
+                    Some("collapse-classes") => "collapsed",
+                    Some("scale-demand") => "scaled",
+                    _ => "replaced",
+                };
+                let recs = vec![FaultRec {
+                    fault: fault.clone(),
+                    effect: name,
+                }];
+                match f.resource.as_deref().and_then(|r| self.input.resource(r)) {
+                    Some(d) => {
+                        let cap = eff_capacity(&self.faults, &next.active, d);
+                        if let Some(s) = next.resource_mut(&d.id) {
+                            s.capacity = cap;
+                        }
+                        let w = work(next, self.seq);
+                        self.finish(
+                            &head,
+                            Kind::FaultEdge,
+                            Vec::new(),
+                            Vec::new(),
+                            recs,
+                            Vec::new(),
+                            std::slice::from_ref(&d.id),
+                            w,
+                            None,
+                            Vec::new(),
+                        )
+                    }
+                    None => {
+                        let mut rec = blank(index, &head, Kind::FaultEdge, self.snap(&next));
+                        rec.faults = recs;
+                        rec.responsible = vec![fault.clone()];
+                        StepResult::Committed(Box::new(rec), next, self.seq, None)
+                    }
+                }
+            }
+            EntryKind::LinkDone { link, key, .. } => {
+                let l = self.input.links.iter().find(|l| l.id == link);
+                let q = next.lqueue(&link, &key);
+                let (Some(l), Some(m)) = (l, q.in_transfer.clone()) else {
+                    return StepResult::Committed(
+                        Box::new(blank(index, &head, Kind::LinkDone, self.snap(&next))),
+                        next,
+                        self.seq,
+                        None,
+                    );
+                };
+                let now = next.time;
+                let mut q0 = q;
+                q0.in_transfer = None;
+                next.set_lqueue(&link, &key, q0);
+                let mut w = work(next, self.seq);
+                w.lrecs.push(link_rec(&link, &key, &m, "transferred", now));
+                let r = (|| -> R<()> {
+                    propagate(self.input, l, &key, &m, now, &mut w)?;
+                    let mut q = w.next.lqueue(&link, &key);
+                    if !q.waiting.is_empty() {
+                        let m2 = q.waiting.remove(0);
+                        w.next.set_lqueue(&link, &key, q);
+                        start_transfer(self.input, l, &key, m2, now, &mut w)?;
+                    }
+                    Ok(())
+                })();
+                if let Err(msg) = r {
+                    let mut st = blank(index, &head, Kind::LinkDone, self.snap(&self.conf));
+                    st.error = Some(msg);
+                    return StepResult::Failed(Box::new(st));
+                }
+                let mut rec = blank(index, &head, Kind::LinkDone, self.snap(&w.next));
+                rec.draws = w.draws;
+                rec.links = w.lrecs;
+                StepResult::Committed(Box::new(rec), w.next, w.seq, None)
+            }
+            EntryKind::ClientTimeout {
+                workload,
+                client,
+                n: k,
+            } => {
+                let mut draws = Vec::new();
+                let mut seq = self.seq;
+                if let (Some(w), Some(pos)) = (
+                    self.input.workloads.iter().find(|w| w.id == workload),
+                    next.workloads.iter().position(|(id, _)| *id == workload),
+                ) {
+                    let mut st = next.workloads[pos].1.clone();
+                    if st.clients.get(client as usize).copied().flatten() == Some(k) {
+                        let now = next.time;
+                        rethink(
+                            self.input,
+                            w,
+                            &mut st,
+                            client,
+                            now,
+                            &mut next.streams,
+                            &mut seq,
+                            &mut next.pending,
+                            &mut draws,
+                        );
+                        next.workloads[pos].1 = st;
+                    }
+                }
+                let mut rec = blank(index, &head, Kind::ClientTimeout, self.snap(&next));
+                rec.draws = draws;
+                StepResult::Committed(Box::new(rec), next, seq, None)
+            }
+            EntryKind::Event => {
+                let r = self.step_event(next, head.clone());
+                self.after_deliver(&head, r)
+            }
         }
     }
 
+    /// After a delivery that did not fail: closed clients receive their replies
+    /// (Format2.lean, `replies`).
+    fn after_deliver(&self, head: &Entry, r: StepResult) -> StepResult {
+        let StepResult::Committed(mut rec, mut next, mut seq, attempts) = r else {
+            return r;
+        };
+        if rec.kind != Kind::Deliver {
+            return StepResult::Committed(rec, next, seq, attempts);
+        }
+        let mut draws = Vec::new();
+        for w in &self.input.workloads {
+            if w.kind != WKind::Closed || w.reply != head.event {
+                continue;
+            }
+            let Some(Value::String(r)) = head
+                .payload
+                .as_object()
+                .and_then(|o| o.get(&w.request_field))
+            else {
+                continue;
+            };
+            let Some(pos) = next.workloads.iter().position(|(id, _)| *id == w.id) else {
+                continue;
+            };
+            let mut st = next.workloads[pos].1.clone();
+            let Some(k) = st
+                .clients
+                .iter()
+                .position(|o| o.is_some_and(|m| format!("{}#{m}", w.id) == **r))
+            else {
+                continue;
+            };
+            let n_ = st.clients[k].unwrap_or(0);
+            next.pending.retain(|e| {
+                !matches!(&e.kind, EntryKind::ClientTimeout { workload, client, n: m }
+                    if *workload == w.id && *client == k as u64 && *m == n_)
+            });
+            let now = next.time;
+            rethink(
+                self.input,
+                w,
+                &mut st,
+                k as u64,
+                now,
+                &mut next.streams,
+                &mut seq,
+                &mut next.pending,
+                &mut draws,
+            );
+            next.workloads[pos].1 = st;
+        }
+        rec.config = self.snap(&next);
+        rec.draws.extend(draws);
+        StepResult::Committed(rec, next, seq, attempts)
+    }
+
     fn fail(&self, head: &Entry, kind: Kind, msg: String) -> StepResult {
-        let mut st = blank(self.steps.len() as u64, head, kind, self.conf.clone());
+        let mut st = blank(self.taken, head, kind, self.snap(&self.conf));
         st.responsible = vec![head.event.clone()];
         st.error = Some(msg);
         StepResult::Failed(Box::new(st))
     }
 
     fn step_event(&mut self, mut next: Conf, head: Entry) -> StepResult {
-        let index = self.steps.len() as u64;
+        let index = self.taken;
         let ev = head.event.clone();
         let mut head = head;
-        let mut cur = self.conf.clone();
+        // The start-of-step view: the configuration before the step, copied only when routes
+        // create keyed instances.
+        let mut cur: std::borrow::Cow<Conf> = std::borrow::Cow::Borrowed(&self.conf);
         let mut rdraws = Vec::new();
         // ORDER: routes are decided when the entry is first taken as head, before drop and delay.
         if head.routes.is_none() && head.target.is_none() {
             match self.decide_routes(&mut next, &head) {
                 Err(msg) => return self.fail(&head, Kind::Deliver, msg),
                 Ok((rs, drs)) => {
-                    cur.insts = next.insts.clone();
                     let extra: Vec<(String, Machine)> = next
                         .machines
                         .iter()
                         .filter(|(k, _)| !self.conf.machines.iter().any(|(k2, _)| k2 == k))
                         .cloned()
                         .collect();
-                    cur.machines.extend(extra);
+                    if !extra.is_empty() {
+                        let c = cur.to_mut();
+                        c.insts = next.insts.clone();
+                        c.machines.extend(extra);
+                    }
                     head.routes = Some(rs);
                     rdraws = drs;
                 }
@@ -2534,14 +4290,14 @@ impl<'a> Sim<'a> {
         let drops: Vec<FaultRec> = self
             .faults
             .iter()
-            .filter(|f| Self::fault_matches(f, "drop-event", &ev, attempt))
+            .filter(|f| Self::fault_matches(f, "drop-event", &ev, attempt, head.time))
             .map(|f| FaultRec {
                 fault: f.id.clone(),
                 effect: "dropped",
             })
             .collect();
         if !drops.is_empty() {
-            let mut st = blank(index, &head, Kind::Drop, next.clone());
+            let mut st = blank(index, &head, Kind::Drop, self.snap(&next));
             st.responsible = self.responsible_of(&ev, &[], &drops);
             st.faults = drops;
             st.draws = rdraws;
@@ -2549,7 +4305,8 @@ impl<'a> Sim<'a> {
         }
         let already = self.delayed_by.get(&head.seq).cloned().unwrap_or_default();
         let delay = self.faults.iter().copied().find(|f| {
-            Self::fault_matches(f, "delay-event", &ev, attempt) && !already.contains(&f.id)
+            Self::fault_matches(f, "delay-event", &ev, attempt, head.time)
+                && !already.contains(&f.id)
         });
         if let Some(d) = delay {
             if head.time + d.by >= TWO53 {
@@ -2558,6 +4315,8 @@ impl<'a> Sim<'a> {
             let s = self.seq;
             let mut copy = head.clone();
             copy.seq = s;
+            copy.first = None;
+            copy.copy_of = Some(head.copy_of.unwrap_or(head.seq));
             copy.time = head.time + d.by;
             copy.payload = head.payload.deep_copy();
             insert_entry(&mut next.pending, copy);
@@ -2568,7 +4327,7 @@ impl<'a> Sim<'a> {
                 fault: d.id.clone(),
                 effect: "delayed",
             }];
-            let mut st = blank(index, &head, Kind::Delay, next.clone());
+            let mut st = blank(index, &head, Kind::Delay, self.snap(&next));
             st.responsible = self.responsible_of(&ev, &[], &recs);
             st.faults = recs;
             st.draws = rdraws;
@@ -2605,11 +4364,12 @@ impl<'a> Sim<'a> {
                 }
             }
             let mut w = Work {
-                next: next.clone(),
+                next: std::mem::take(&mut next),
                 seq: self.seq,
                 draws: Vec::new(),
                 ops: Vec::new(),
                 recs: Vec::new(),
+                lrecs: Vec::new(),
             };
             let mut fired = Vec::new();
             for (b, inst, mk, t) in winners {
@@ -2703,6 +4463,8 @@ fn validate(i: &Input) -> R<()> {
         .iter()
         .map(|b| &b.id)
         .chain(i.resources.iter().map(|r| &r.id))
+        .chain(i.workloads.iter().map(|w| &w.id))
+        .chain(i.links.iter().map(|l| &l.id))
         .collect();
     for x in &ids {
         if ids.iter().filter(|y| *y == x).count() > 1 {
@@ -2816,6 +4578,9 @@ fn validate(i: &Input) -> R<()> {
                             return Err(format!("Effect names no class of \"{res}\"."));
                         }
                     }
+                    Effect::Send { via, .. } if !i.links.iter().any(|l| l.id == *via) => {
+                        return Err(format!("Effect sends over \"{via}\", which is not a link."));
+                    }
                     _ => {}
                 }
             }
@@ -2840,13 +4605,233 @@ fn validate(i: &Input) -> R<()> {
             }
         }
     }
+    // Format-2 faults.
+    let sfaults: Vec<&Fault> = seen.iter().filter_map(|id| i.fault(id)).collect();
+    for f in &sfaults {
+        if f.is_kind("inject-event") && f.window.is_some() {
+            return Err(format!("Fault \"{}\": inject-event takes no window.", f.id));
+        }
+        if let Some((a, Some(u))) = f.window {
+            if u <= a {
+                return Err(format!("Fault \"{}\" has an empty window.", f.id));
+            }
+        }
+        if f.is_kind("replace-demand") {
+            let ok = f
+                .behavior
+                .as_deref()
+                .and_then(|b| i.behavior(b))
+                .and_then(|b| {
+                    b.transitions
+                        .iter()
+                        .find(|t| Some(t.id.as_str()) == f.transition.as_deref())
+                })
+                .and_then(|t| t.effects.get(f.effect as usize))
+                .is_some_and(|e| {
+                    matches!(
+                        e,
+                        Effect::Request {
+                            kind: ReqKind::Use,
+                            ..
+                        }
+                    )
+                });
+            if !ok {
+                return Err(format!("Fault \"{}\" names no use effect.", f.id));
+            }
+        } else if f.is_resource_kind() {
+            match f.resource.as_deref().and_then(|r| i.resource(r)) {
+                None => {
+                    return Err(format!(
+                        "Fault \"{}\" names \"{}\", which is not a resource.",
+                        f.id,
+                        f.resource.as_deref().unwrap_or("")
+                    ))
+                }
+                Some(d) => {
+                    if f.is_kind("set-class-limit")
+                        && !d
+                            .classes
+                            .iter()
+                            .any(|c| Some(c.id.as_str()) == f.class.as_deref())
+                    {
+                        return Err(format!(
+                            "Fault \"{}\" names no class of \"{}\".",
+                            f.id, d.id
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    for d in &i.resources {
+        let cap = eff_capacity(&sfaults, &[], d);
+        let total: u64 = d.classes.iter().map(|c| c.reserved).sum();
+        if total > cap {
+            let f = sfaults
+                .iter()
+                .rfind(|f| {
+                    f.window.is_none()
+                        && f.is_kind("set-capacity")
+                        && f.resource.as_deref() == Some(d.id.as_str())
+                })
+                .map_or("", |f| f.id.as_str());
+            return Err(format!(
+                "Fault \"{f}\" leaves \"{}\" with reserved units above capacity.",
+                d.id
+            ));
+        }
+        let de = eff_decl(&sfaults, &[], d);
+        for c in &de.classes {
+            if let Some(l) = c.limit {
+                if c.reserved > l {
+                    let f = sfaults
+                        .iter()
+                        .rfind(|f| {
+                            f.window.is_none()
+                                && f.is_kind("set-class-limit")
+                                && f.resource.as_deref() == Some(d.id.as_str())
+                                && f.class.as_deref() == Some(c.id.as_str())
+                        })
+                        .map_or("", |f| f.id.as_str());
+                    return Err(format!(
+                        "Fault \"{f}\" leaves \"{}\" with reserved units above a class limit.",
+                        d.id
+                    ));
+                }
+            }
+        }
+    }
     if i.unit == "tick" && i.per_second.is_some() {
         return Err("Unit tick has no rate.".into());
+    }
+    for (li, l) in i.links.iter().enumerate() {
+        if i.per_second.is_none() && l.bandwidth.is_some() {
+            return Err(format!("Unit tick has no rate; \"links[{li}]\" needs one."));
+        }
+    }
+    for (wi, w) in i.workloads.iter().enumerate() {
+        if !i.is_event(&w.event) {
+            return Err(format!(
+                "Workload \"{}\" generates \"{}\", which is not an event.",
+                w.id, w.event
+            ));
+        }
+        if w.kind == WKind::Closed {
+            if !i.is_event(&w.reply) {
+                return Err(format!(
+                    "Workload \"{}\" waits for \"{}\", which is not an event.",
+                    w.id, w.reply
+                ));
+            }
+            if let Some(to) = w.timeout {
+                if i.scenario.horizon.unwrap_or(0) + to >= TWO53 {
+                    return Err(format!(
+                        "Workload \"{}\" has a timeout that reaches 2^53 after the horizon.",
+                        w.id
+                    ));
+                }
+            }
+        }
+        if w.kind == WKind::Population {
+            match i.behavior(&w.behavior).map(|b| &b.instances) {
+                Some(Instances::Keyed { max, .. }) => {
+                    let total: u64 = i
+                        .workloads
+                        .iter()
+                        .filter(|x| x.kind == WKind::Population && x.behavior == w.behavior)
+                        .map(|x| x.population)
+                        .sum();
+                    if total > *max {
+                        return Err(format!(
+                            "Population of \"{}\" exceeds its max of {max} instances.",
+                            w.behavior
+                        ));
+                    }
+                }
+                _ => {
+                    return Err(format!(
+                        "Workload \"{}\" names \"{}\", which is not a keyed behavior.",
+                        w.id, w.behavior
+                    ))
+                }
+            }
+        }
+        if w.kind != WKind::Open {
+            continue;
+        }
+        let Some(ps) = i.per_second else {
+            return Err(format!(
+                "Unit tick has no rate; \"workloads[{wi}]\" needs one."
+            ));
+        };
+        let ok = w.phases.iter().all(|ph| ph.start < ph.stop)
+            && w.phases.windows(2).all(|x| x[0].stop <= x[1].start)
+            && w.period
+                .is_none_or(|p| p >= w.phases.last().map_or(0, |ph| ph.stop))
+            && (w.poisson || w.phases.iter().all(|ph| matches!(ph.rate, Rate::Const(..))));
+        if !ok {
+            return Err(format!("Workload \"{}\" has malformed phases.", w.id));
+        }
+        for (pi, ph) in w.phases.iter().enumerate() {
+            let ((a0, b0), (a1, b1)) = ph.rate.ends();
+            let low = |a: u64, b: u64| u128::from(ps) * u128::from(b) < 100 * u128::from(a);
+            if low(a0, b0) || low(a1, b1) {
+                return Err(format!(
+                    "Phase {pi} of workload \"{}\" has a mean interarrival below 100 base units; use a finer unit.",
+                    w.id
+                ));
+            }
+        }
+        if matches!(w.batch, Dist::Fixed(0)) {
+            return Err(format!("Workload \"{}\" has a batch below 1.", w.id));
+        }
+        if w.poisson && i.unit_exp.is_empty() {
+            return Err(
+                "Input field \"unitExponential\" is required by a Poisson workload.".into(),
+            );
+        }
     }
     if i.scenario.seed.is_none() {
         if let Some(s) = sampled_sites(i).first() {
             return Err(format!("Input samples \"{s}\" but declares no seed."));
         }
+    }
+    if !i.workloads.is_empty() && i.scenario.horizon.is_none() {
+        return Err(format!(
+            "Scenario \"{}\" has workloads but no horizon.",
+            i.scenario.id
+        ));
+    }
+    for c in &i.requests {
+        if !i.is_event(&c.start_event) {
+            return Err(format!(
+                "Request class \"{}\" starts on \"{}\", which is not an event.",
+                c.id, c.start_event
+            ));
+        }
+        for (e, _) in &c.ends {
+            if !i.is_event(e) {
+                return Err(format!(
+                    "Request class \"{}\" ends on \"{e}\", which is not an event.",
+                    c.id
+                ));
+            }
+        }
+        if let Some(w) = &c.start_workload {
+            if !i.workloads.iter().any(|x| x.id == *w) {
+                return Err(format!(
+                    "Request class \"{}\" names \"{w}\", which is not a workload.",
+                    c.id
+                ));
+            }
+        }
+    }
+    if i.measures() && i.scenario.horizon.is_none() {
+        return Err(format!(
+            "Scenario \"{}\" measures outputs but has no horizon.",
+            i.scenario.id
+        ));
     }
     if let (Some(h), Some(w)) = (i.scenario.horizon, i.scenario.warmup) {
         if w >= h {
@@ -2856,6 +4841,11 @@ fn validate(i: &Input) -> R<()> {
     if let (Some(h), Some(s)) = (i.scenario.horizon, i.scenario.stop_at) {
         if s < h {
             return Err("Scenario stopAt must be at least its horizon.".into());
+        }
+    }
+    if let (Some(b), Some(h)) = (i.series, i.scenario.horizon) {
+        if h.saturating_sub(i.scenario.warmup.unwrap_or(0)) % b != 0 {
+            return Err("Metrics series bucket must divide the window.".into());
         }
     }
     Ok(())
@@ -2877,13 +4867,52 @@ fn sampled_sites(i: &Input) -> Vec<String> {
                     Effect::Request { demand, .. } if demand.draws() => {
                         out.push(format!("demand:{site}"))
                     }
+                    Effect::Send {
+                        size: SizeIn::Dist(d),
+                        ..
+                    } if d.draws() => out.push(format!("size:{site}")),
+                    Effect::Timer { after, .. } if after.draws() => {
+                        out.push(format!("after:{site}"))
+                    }
                     _ => {}
                 }
             }
         }
     }
+    for l in &i.links {
+        if l.latency.draws() {
+            out.push(format!("latency:{}", l.id));
+        }
+    }
     for r in i.routes.iter().filter(|r| r.by == "random") {
         out.push(format!("route:{}:{}", r.event, r.behavior));
+    }
+    for w in &i.workloads {
+        if w.group_size.as_ref().is_some_and(|d| d.draws()) {
+            out.push(format!("groups:{}", w.id));
+        }
+        if w.kind != WKind::Open && w.start.draws() {
+            out.push(format!("start:{}", w.id));
+        }
+        if w.kind == WKind::Closed && w.think.draws() {
+            out.push(format!("think:{}", w.id));
+        }
+        if w.poisson {
+            out.push(format!("arrival:{}", w.id));
+        }
+        if w.batch.draws() {
+            out.push(format!("batch:{}", w.id));
+        }
+        if w.kind == WKind::Open && w.clients.as_ref().is_some_and(|c| !c.round_robin) {
+            out.push(format!("client:{}", w.id));
+        }
+        for (f, pf) in &w.payload {
+            match pf {
+                PField::Sample(d) if d.draws() => out.push(format!("payload:{}:{f}", w.id)),
+                PField::Choose(..) => out.push(format!("payload:{}:{f}", w.id)),
+                _ => {}
+            }
+        }
     }
     out
 }
@@ -2924,6 +4953,9 @@ fn initial_conf(i: &Input, faults: &[&Fault]) -> (Conf, u64) {
                 target,
                 sender: None,
                 routes: None,
+                first: None,
+                timer: None,
+                copy_of: None,
             }
         };
     for st in &i.scenario.steps {
@@ -2938,7 +4970,11 @@ fn initial_conf(i: &Input, faults: &[&Fault]) -> (Conf, u64) {
         );
         n += 1;
     }
-    for f in faults.iter().filter(|f| f.is_kind("inject-event")) {
+    let inject: Vec<&&Fault> = faults
+        .iter()
+        .filter(|f| f.is_kind("inject-event"))
+        .collect();
+    for f in inject {
         insert_entry(
             &mut q,
             mk(
@@ -2951,6 +4987,38 @@ fn initial_conf(i: &Input, faults: &[&Fault]) -> (Conf, u64) {
             ),
         );
         n += 1;
+    }
+    // The edges of windowed resource faults, in `faults` order: `at`, then `until`.
+    for f in faults.iter().filter(|f| f.is_resource_kind()) {
+        let Some((a, u)) = f.window else { continue };
+        let mut edges = vec![(a, true)];
+        if let Some(u) = u {
+            edges.push((u, false));
+        }
+        for (t, on) in edges {
+            insert_entry(
+                &mut q,
+                Entry {
+                    seq: n,
+                    time: t,
+                    scheduled_at: t,
+                    event: String::new(),
+                    payload: Value::Null,
+                    source: Src::Fault(f.id.clone()),
+                    kind: EntryKind::FaultEdge {
+                        fault: f.id.clone(),
+                        on,
+                    },
+                    target: None,
+                    sender: None,
+                    routes: None,
+                    first: None,
+                    timer: None,
+                    copy_of: None,
+                },
+            );
+            n += 1;
+        }
     }
     (
         Conf {
@@ -2965,7 +5033,7 @@ fn initial_conf(i: &Input, faults: &[&Fault]) -> (Conf, u64) {
                     (
                         d.id.clone(),
                         RState {
-                            capacity: d.capacity,
+                            capacity: eff_capacity(faults, &[], d),
                             ..RState::default()
                         },
                     )
@@ -2973,9 +5041,29 @@ fn initial_conf(i: &Input, faults: &[&Fault]) -> (Conf, u64) {
                 .collect(),
             route_counters: Vec::new(),
             streams: Vec::new(),
+            workloads: i
+                .workloads
+                .iter()
+                .map(|w| (w.id.clone(), WState::default()))
+                .collect(),
+            lqueues: Vec::new(),
+            active: Vec::new(),
         },
         n,
     )
+}
+
+/// Each workload's initial entries, in input order: the initial draws.
+fn initial_instants(i: &Input, c: &mut Conf, seq: &mut u64) -> Vec<Draw> {
+    let mut drs = Vec::new();
+    for w in &i.workloads {
+        if let Some(pos) = c.workloads.iter().position(|(id, _)| *id == w.id) {
+            let mut st = c.workloads[pos].1.clone();
+            drs.extend(initial_workload(i, c, w, &mut st, seq));
+            c.workloads[pos].1 = st;
+        }
+    }
+    drs
 }
 
 /// Run a version-2 input: the refusal message, or the trace as JSON text.
@@ -2989,7 +5077,8 @@ pub fn run(root: &JsObject) -> R<String> {
         }
     }
     let faults: Vec<&Fault> = fault_ids.iter().filter_map(|id| input.fault(id)).collect();
-    let (initial, seq) = initial_conf(&input, &faults);
+    let (mut initial, mut seq) = initial_conf(&input, &faults);
+    let initial_draws = initial_instants(&input, &mut initial, &mut seq);
     let mut sim = Sim {
         input: &input,
         faults,
@@ -3000,7 +5089,12 @@ pub fn run(root: &JsObject) -> R<String> {
         attempts: HashMap::new(),
         delayed_by: HashMap::new(),
         steps: Vec::new(),
+        initial_draws,
+        taken: 0,
+        meter: Measure::new(&input, &initial),
+        keep_steps: input.scenario.output != "metrics",
     };
+    let keep_steps = sim.keep_steps;
     let bound = input.scenario.step_limit;
     let mut outcome = if sim.conf.pending.is_empty() {
         "quiescent"
@@ -3019,16 +5113,49 @@ pub fn run(root: &JsObject) -> R<String> {
         let mut next = sim.conf.deep_copy();
         let head = next.pending.remove(0);
         next.time = head.time;
+        // ORDER: the next arrival instant is created before anything else happens in the step.
+        let mut adraws = Vec::new();
+        if let (Some(k), Src::Arrival(wid, _, _)) = (head.first, &head.source) {
+            if let Some(w) = input.workloads.iter().find(|w| &w.id == wid) {
+                if let Some(pos) = next.workloads.iter().position(|(id, _)| id == wid) {
+                    if next.workloads[pos].1.instants == k + 1 {
+                        let mut st = next.workloads[pos].1.clone();
+                        let mut seq = sim.seq;
+                        adraws = make_instant(
+                            &input,
+                            w,
+                            &mut st,
+                            &mut next.streams,
+                            &mut seq,
+                            &mut next.pending,
+                        );
+                        next.workloads[pos].1 = st;
+                        sim.seq = seq;
+                    }
+                }
+            }
+        }
+        let with_draws = |mut rec: Box<StepRec>| {
+            let mut ds = adraws.clone();
+            ds.append(&mut rec.draws);
+            rec.draws = ds;
+            rec
+        };
         match sim.step_head(next, head) {
             StepResult::Committed(rec, next, seq, attempts) => {
-                sim.steps.push(*rec);
+                let rec = with_draws(rec);
+                sim.meter.observe(&input, &rec, &next);
+                sim.taken += 1;
+                if keep_steps {
+                    sim.steps.push(*rec);
+                }
                 sim.seq = seq;
                 if let Some(a) = attempts {
                     sim.attempts = a;
                 }
                 outcome = if next.pending.is_empty() {
                     "quiescent"
-                } else if sim.steps.len() as u64 >= bound {
+                } else if sim.taken >= bound {
                     "step-limit"
                 } else {
                     "running"
@@ -3036,7 +5163,12 @@ pub fn run(root: &JsObject) -> R<String> {
                 sim.conf = next;
             }
             StepResult::Failed(rec) => {
-                sim.steps.push(*rec);
+                let rec = with_draws(rec);
+                sim.meter.observe(&input, &rec, &sim.conf);
+                sim.taken += 1;
+                if keep_steps {
+                    sim.steps.push(*rec);
+                }
                 outcome = "error";
             }
         }
@@ -3100,6 +5232,29 @@ fn source(src: &Src) -> Value {
             .put("request", n(*q))
             .put("outcome", s(out))
             .done(),
+        Src::Arrival(w, k, cl) => Obj::new()
+            .put("kind", s("arrival"))
+            .put("workload", s(w))
+            .put("n", n(*k))
+            .put("client", cl.as_deref().map_or(Value::Null, s))
+            .done(),
+        Src::ClientTimeout(w, k, cl) => Obj::new()
+            .put("kind", s("client-timeout"))
+            .put("workload", s(w))
+            .put("n", n(*k))
+            .put("client", s(cl))
+            .done(),
+        Src::Timer(b, v, t) => Obj::new()
+            .put("kind", s("timer"))
+            .put("behavior", s(b))
+            .put("instance", v.clone())
+            .put("timer", s(t))
+            .done(),
+        Src::Link(l, m) => Obj::new()
+            .put("kind", s("link"))
+            .put("link", s(l))
+            .put("message", n(*m))
+            .done(),
     }
 }
 
@@ -3118,6 +5273,30 @@ fn entry_fields(mut o: Obj, e: &Entry) -> Obj {
                 .put("resource", s(res))
                 .put("request", n(*request));
         }
+        EntryKind::ClientTimeout {
+            workload,
+            client,
+            n: k,
+        } => {
+            o = o
+                .put("kind", s("client-timeout"))
+                .put("workload", s(workload))
+                .put("client", n(*client))
+                .put("request", n(*k));
+        }
+        EntryKind::LinkDone { link, key, msg } => {
+            o = o
+                .put("kind", s("link-done"))
+                .put("link", s(link))
+                .put("queue", s(key))
+                .put("message", n(*msg));
+        }
+        EntryKind::FaultEdge { fault, on } => {
+            o = o
+                .put("kind", s("fault-edge"))
+                .put("fault", s(fault))
+                .put("edge", s(if *on { "at" } else { "until" }));
+        }
     }
     o = o
         .opt("target", e.target.as_ref().map(addr))
@@ -3131,7 +5310,23 @@ fn entry_fields(mut o: Obj, e: &Entry) -> Obj {
             o = o.put("routes", Value::object(ro));
         }
     }
-    o
+    if e.first.is_some() {
+        o = o.put("first", Value::Bool(true));
+    }
+    o.opt("timer", e.timer.as_deref().map(s))
+        .opt("copyOf", e.copy_of.map(n))
+}
+
+fn msg_value(m: &Msg) -> Value {
+    Obj::new()
+        .put("message", n(m.id))
+        .put("event", s(&m.event))
+        .put("size", n(m.size))
+        .put("sentAt", n(m.sent_at))
+        .put("payload", m.payload.clone())
+        .opt("target", m.target.as_ref().map(addr))
+        .opt("from", m.sender.as_ref().map(addr))
+        .done()
 }
 
 fn event_id(e: &Entry) -> Value {
@@ -3229,14 +5424,92 @@ fn configuration(i: &Input, c: &Conf) -> Value {
             Value::array(c.pending.iter().map(pending).collect()),
         )
         .put("resources", Value::object(resources))
-        .put("links", empty())
-        .put("timers", empty())
-        .put("workloads", empty())
+        .put("links", {
+            let mut lo = JsObject::new();
+            for l in &i.links {
+                let mut qo = JsObject::new();
+                for ((ln, k), q) in &c.lqueues {
+                    if *ln == l.id {
+                        qo.insert(
+                            k.clone(),
+                            Obj::new()
+                                .put(
+                                    "inTransfer",
+                                    q.in_transfer.as_ref().map_or(Value::Null, msg_value),
+                                )
+                                .put(
+                                    "waiting",
+                                    Value::array(q.waiting.iter().map(msg_value).collect()),
+                                )
+                                .put("lastDelivery", q.last_delivery.map_or(Value::Null, n))
+                                .done(),
+                        );
+                    }
+                }
+                lo.insert(l.id.clone(), Value::object(qo));
+            }
+            Value::object(lo)
+        })
+        .put("timers", {
+            let mut to = JsObject::new();
+            for e in &c.pending {
+                if let Some(t) = &e.timer {
+                    to.insert(t.clone(), n(e.seq));
+                }
+            }
+            Value::object(to)
+        })
+        .put("workloads", {
+            let mut wo = JsObject::new();
+            for (id, w) in &c.workloads {
+                wo.insert(
+                    id.clone(),
+                    Obj::new()
+                        .put("instants", n(w.instants))
+                        .put("arrivals", n(w.arrivals))
+                        .put("repetition", n(w.cursor.rep))
+                        .put("phase", n(w.cursor.phase))
+                        .put("j", n(w.cursor.j))
+                        .put("last", w.cursor.last.map_or(Value::Null, n))
+                        .put("done", Value::Bool(w.cursor.done))
+                        .opt(
+                            "clients",
+                            i.workloads
+                                .iter()
+                                .find(|x| x.id == *id && x.kind == WKind::Closed)
+                                .map(|_| {
+                                    Value::array(
+                                        w.clients
+                                            .iter()
+                                            .map(|x| x.map_or(Value::Null, n))
+                                            .collect(),
+                                    )
+                                }),
+                        )
+                        .opt(
+                            "groups",
+                            (!w.groups.is_empty())
+                                .then(|| Value::array(w.groups.iter().map(|g| n(*g)).collect())),
+                        )
+                        .done(),
+                );
+            }
+            Value::object(wo)
+        })
         .put("meters", empty())
         .put("routeCounters", counters(&c.route_counters))
         .put("streams", counters(&c.streams))
         .put("down", Value::array(Vec::new()))
+        .put("activeFaults", strings(&c.active))
         .put("incarnations", Value::object(incarnations))
+        .done()
+}
+
+fn draw_value(d: &Draw) -> Value {
+    Obj::new()
+        .put("stream", s(&d.stream))
+        .put("index", n(d.index))
+        .put("value", s(&d.value.to_string()))
         .done()
 }
 
@@ -3346,17 +5619,7 @@ fn step_value(i: &Input, st: &StepRec) -> Value {
                 .done()
         })
         .collect();
-    let draws = st
-        .draws
-        .iter()
-        .map(|d| {
-            Obj::new()
-                .put("stream", s(&d.stream))
-                .put("index", n(d.index))
-                .put("value", s(&d.value.to_string()))
-                .done()
-        })
-        .collect();
+    let draws = st.draws.iter().map(draw_value).collect();
     Obj::new()
         .put("index", n(st.index))
         .put("time", n(st.time))
@@ -3367,6 +5630,24 @@ fn step_value(i: &Input, st: &StepRec) -> Value {
         .put("faults", Value::array(faults))
         .put("responsible", strings(&st.responsible))
         .put("resources", Value::array(resources))
+        .put(
+            "links",
+            Value::array(
+                st.links
+                    .iter()
+                    .map(|r| {
+                        Obj::new()
+                            .put("link", s(&r.link))
+                            .put("queue", s(&r.queue))
+                            .put("message", n(r.message))
+                            .put("action", s(r.action))
+                            .put("at", n(r.at))
+                            .put("size", n(r.size))
+                            .done()
+                    })
+                    .collect(),
+            ),
+        )
         .put("draws", Value::array(draws))
         .put("config", configuration(i, &st.config))
         .opt(
@@ -3389,19 +5670,516 @@ fn encode_trace(sim: &Sim, initial: &Conf, outcome: &str) -> Value {
         )
         .put("scenarioId", s(&i.scenario.id))
         .put("faults", strings(&sim.fault_ids))
-        .put("initialDraws", Value::array(Vec::new()));
+        .put(
+            "initialDraws",
+            Value::array(sim.initial_draws.iter().map(draw_value).collect()),
+        );
     if i.scenario.output != "metrics" {
         o = o.put("initial", configuration(i, initial)).put(
             "steps",
             Value::array(sim.steps.iter().map(|st| step_value(i, st)).collect()),
         );
     }
-    o.put("stepsTaken", n(sim.steps.len() as u64))
+    let o = o.put("stepsTaken", n(sim.taken));
+    let measured = i.measures();
+    let o = o
         .put("outcome", s(outcome))
         .put(
             "truncated",
             Value::Bool(outcome == "step-limit" || outcome == "error"),
         )
-        .put("final", configuration(i, &sim.conf))
+        .put("final", configuration(i, &sim.conf));
+    if measured {
+        o.put("metrics", sim.meter.encode(i)).done()
+    } else {
+        o.done()
+    }
+}
+
+// ---- The request lifecycle (Format2.lean, "The request lifecycle") -------------------------
+
+#[derive(Clone, Debug)]
+struct Rq {
+    start: u64,
+    orig: u64,
+    legit: Option<bool>,
+    outcome: Option<(&'static str, u64)>,
+}
+
+impl Rq {
+    fn sample(&self) -> Option<u64> {
+        match self.outcome {
+            Some(("ok", t)) => Some(t - self.start),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+struct ClassAcc {
+    reqs: Vec<Rq>,
+    /// Unended requests by key and by the sequence number of their original start entry.
+    open: HashMap<String, usize>,
+    by_orig: HashMap<u64, usize>,
+    keys: Vec<String>,
+    /// Keys that ever started a request.
+    seen: std::collections::HashSet<String>,
+    unkeyed: u64,
+    duplicate: u64,
+    late_ends: u64,
+}
+
+impl ClassAcc {
+    fn end(&mut self, idx: usize, o: &'static str, t: u64) {
+        self.reqs[idx].outcome = Some((o, t));
+        let k = self.keys[idx].clone();
+        self.open.remove(&k);
+        self.by_orig.remove(&self.reqs[idx].orig);
+    }
+    fn end_key(&mut self, k: &str, o: &'static str, t: u64) {
+        if let Some(&idx) = self.open.get(k) {
+            self.end(idx, o, t);
+        }
+    }
+}
+
+fn payload_key(p: &Value, k: &str) -> Option<String> {
+    match p.as_object().and_then(|o| o.get(k)) {
+        None | Some(Value::Undefined) => None,
+        Some(v) => Some(v.to_json()),
+    }
+}
+
+fn starts_class(c: &ReqClass, h: &Entry) -> bool {
+    h.event == c.start_event
+        && matches!(h.kind, EntryKind::Event)
+        && match &c.start_workload {
+            None => true,
+            Some(w) => matches!(&h.source, Src::Arrival(w2, _, _) if w2 == w),
+        }
+}
+
+fn legit_of(i: &Input, h: &Entry) -> Option<bool> {
+    match &h.source {
+        Src::Arrival(w, _, _) => i
+            .workloads
+            .iter()
+            .find(|x| x.id == *w)
+            .map(|x| x.legitimate),
+        Src::Transition(_, b) => match &h.sender {
+            Some(Addr {
+                inst: Value::String(s),
+                ..
+            }) => i
+                .workloads
+                .iter()
+                .find(|w| {
+                    w.kind == WKind::Population
+                        && w.behavior == *b
+                        && s.starts_with(&format!("{}:", w.id))
+                })
+                .map(|w| w.legitimate),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+fn life_step(i: &Input, c: &ReqClass, acc: &mut ClassAcc, st: &StepRec) {
+    let h = &st.head;
+    let failed = st.error.is_some();
+    let is_start = starts_class(c, h);
+    if is_start && h.copy_of.is_none() {
+        match payload_key(&h.payload, &c.key) {
+            None => acc.unkeyed += 1,
+            Some(k) => {
+                if acc.open.contains_key(&k) {
+                    acc.duplicate += 1;
+                } else {
+                    let idx = acc.reqs.len();
+                    acc.reqs.push(Rq {
+                        start: h.scheduled_at,
+                        orig: h.seq,
+                        legit: legit_of(i, h),
+                        outcome: None,
+                    });
+                    acc.keys.push(k.clone());
+                    acc.open.insert(k.clone(), idx);
+                    acc.by_orig.insert(h.seq, idx);
+                    acc.seen.insert(k);
+                }
+            }
+        }
+    }
+    if is_start
+        && !failed
+        && (st.kind == Kind::Drop || (st.kind == Kind::Deliver && st.fired.is_empty()))
+    {
+        let orig = h.copy_of.unwrap_or(h.seq);
+        if let Some(&idx) = acc.by_orig.get(&orig) {
+            acc.end(idx, "error", st.time);
+        }
+    }
+    if st.kind == Kind::Deliver && !failed {
+        if let (Some((_, o)), Some(k)) = (
+            c.ends.iter().find(|(e, _)| *e == h.event),
+            payload_key(&h.payload, &c.key),
+        ) {
+            if acc.open.contains_key(&k) {
+                acc.end_key(&k, o, st.time);
+            } else if acc.seen.contains(&k) {
+                acc.late_ends += 1;
+            }
+        }
+    }
+    if let EntryKind::ClientTimeout { workload, n: k, .. } = &h.kind {
+        if let Some(wl) = i.workloads.iter().find(|x| x.id == *workload) {
+            if wl.event == c.start_event && c.start_workload.as_ref().is_none_or(|x| x == workload)
+            {
+                let key = Value::str(format!("{workload}#{k}")).to_json();
+                acc.end_key(&key, "timeout", st.time);
+            }
+        }
+    }
+}
+
+fn samples_value(samples: &[Option<u64>], qs: &[(String, u64, u64)]) -> Value {
+    let mut fin: Vec<u64> = samples.iter().filter_map(|x| *x).collect();
+    let count = samples.len() as u64;
+    let sum: u128 = fin.iter().map(|&x| u128::from(x)).sum();
+    let max = fin.iter().max().copied();
+    fin.sort_unstable();
+    let mut qo = JsObject::new();
+    for (key, qa, qb) in qs {
+        let v = if count == 0 {
+            Obj::new()
+                .put("value", Value::Null)
+                .put("empty", Value::Bool(true))
+        } else {
+            let rank = (u128::from(*qa) * u128::from(count))
+                .div_ceil(u128::from(*qb))
+                .max(1) as usize;
+            match fin.get(rank - 1) {
+                Some(x) => Obj::new().put("value", n(*x)),
+                None => Obj::new()
+                    .put("value", Value::Null)
+                    .put("infinite", Value::Bool(true)),
+            }
+        };
+        qo.insert(key.clone(), v.done());
+    }
+    Obj::new()
+        .put("count", n(count))
+        .put("finite", n(fin.len() as u64))
+        .put("infinite", n(count - fin.len() as u64))
+        .put("sum", Value::Number(sum as f64))
+        .put("max", max.map_or(Value::Null, n))
+        .put("quantiles", Value::object(qo))
         .done()
+}
+
+fn class_value(qs: &[(String, u64, u64)], acc: &ClassAcc, lo: u64, hi: u64) -> Obj {
+    let ms: Vec<&Rq> = acc
+        .reqs
+        .iter()
+        .filter(|r| lo <= r.start && r.start < hi)
+        .collect();
+    let cnt = |rs: &[&Rq], x: &str| {
+        rs.iter()
+            .filter(|r| r.outcome.is_some_and(|(o, _)| o == x))
+            .count() as u64
+    };
+    let leg: Vec<&Rq> = ms
+        .iter()
+        .copied()
+        .filter(|r| r.legit == Some(true))
+        .collect();
+    let samples: Vec<Option<u64>> = ms.iter().map(|r| r.sample()).collect();
+    Obj::new()
+        .put("measured", n(ms.len() as u64))
+        .put(
+            "outcomes",
+            Obj::new()
+                .put("ok", n(cnt(&ms, "ok")))
+                .put("refused", n(cnt(&ms, "refused")))
+                .put("timeout", n(cnt(&ms, "timeout")))
+                .put("error", n(cnt(&ms, "error")))
+                .put(
+                    "censored",
+                    n(ms.iter().filter(|r| r.outcome.is_none()).count() as u64),
+                )
+                .done(),
+        )
+        .put("responseTime", samples_value(&samples, qs))
+        .put(
+            "legitimate",
+            Obj::new()
+                .put("measured", n(leg.len() as u64))
+                .put("refused", n(cnt(&leg, "refused")))
+                .done(),
+        )
+}
+
+// ---- Measured outputs (Format2.lean, "Measured outputs") ----------------------------------
+
+#[derive(Clone, Debug, Default)]
+struct ResSignals {
+    busy: u128,
+    cap_time: u128,
+    max_held: u64,
+    queue_int: u128,
+    max_waiting: u64,
+}
+
+/// The measured outputs, accumulated step by step: the same function of the run as the Lean
+/// definition over the whole step list.
+struct Measure {
+    w: u64,
+    h: u64,
+    /// Per resource: the last point (time, held, waiting, capacity) and the integrals.
+    last: Vec<(u64, u64, u64, u64)>,
+    sig: Vec<ResSignals>,
+    /// Per resource: requests enqueued in the window, in order, and the first outcome of each.
+    enq: Vec<Vec<u64>>,
+    outcome: Vec<HashMap<u64, Option<u64>>>,
+    /// Per request class, its requests.
+    classes: Vec<ClassAcc>,
+    /// Firings in the window: (time, behavior index, transition index).
+    fired: Vec<(u64, usize, usize)>,
+}
+
+fn signals_at(d: &Resource, c: &Conf) -> (u64, u64, u64) {
+    match c.resource(&d.id) {
+        Some(s) => (held_all(&s.holds), s.waiting.len() as u64, s.capacity),
+        None => (0, 0, 0),
+    }
+}
+
+impl Measure {
+    fn new(i: &Input, initial: &Conf) -> Measure {
+        Measure {
+            w: i.scenario.warmup.unwrap_or(0),
+            h: i.scenario.horizon.unwrap_or(0),
+            last: i
+                .resources
+                .iter()
+                .map(|d| {
+                    let (a, b, c) = signals_at(d, initial);
+                    (0, a, b, c)
+                })
+                .collect(),
+            sig: vec![ResSignals::default(); i.resources.len()],
+            enq: vec![Vec::new(); i.resources.len()],
+            outcome: vec![HashMap::new(); i.resources.len()],
+            classes: vec![ClassAcc::default(); i.requests.len()],
+            fired: Vec::new(),
+        }
+    }
+
+    fn segment(&mut self, k: usize, b: u64) {
+        let (a, held, waiting, cap) = self.last[k];
+        let len = b.min(self.h).saturating_sub(a.max(self.w));
+        if len == 0 {
+            return;
+        }
+        let g = &mut self.sig[k];
+        let len = u128::from(len);
+        g.busy += u128::from(held) * len;
+        g.cap_time += u128::from(cap) * len;
+        g.max_held = g.max_held.max(held);
+        g.queue_int += u128::from(waiting) * len;
+        g.max_waiting = g.max_waiting.max(waiting);
+    }
+
+    fn observe(&mut self, i: &Input, st: &StepRec, conf: &Conf) {
+        for (k, c) in i.requests.iter().enumerate() {
+            life_step(i, c, &mut self.classes[k], st);
+        }
+        if self.w <= st.time && st.time < self.h {
+            for f in &st.fired {
+                if let Some(bi) = i.behaviors.iter().position(|b| b.id == f.behavior) {
+                    if let Some(ti) = i.behaviors[bi]
+                        .transitions
+                        .iter()
+                        .position(|t| t.id == f.transition)
+                    {
+                        self.fired.push((st.time, bi, ti));
+                    }
+                }
+            }
+        }
+        for (k, d) in i.resources.iter().enumerate() {
+            self.segment(k, st.time);
+            let (a, b, c) = signals_at(d, conf);
+            self.last[k] = (st.time, a, b, c);
+        }
+        for r in &st.resources {
+            let Some(k) = i.resources.iter().position(|d| d.id == r.resource) else {
+                continue;
+            };
+            let Some(id) = r.request else { continue };
+            match r.action {
+                "enqueued" => {
+                    if self.w <= r.at && r.at < self.h {
+                        self.enq[k].push(id);
+                    }
+                }
+                "granted" | "refused" | "shed" | "dropped" | "timed-out" => {
+                    let v = if r.action == "granted" {
+                        Some(r.waited.unwrap_or(0))
+                    } else {
+                        None
+                    };
+                    self.outcome[k].entry(id).or_insert(v);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn encode(&self, i: &Input) -> Value {
+        let qs = i.metrics.clone().unwrap_or_else(default_quantiles);
+        let big = |x: u128| Value::Number(x as f64);
+        let mut res = JsObject::new();
+        for (k, d) in i.resources.iter().enumerate() {
+            let mut g = self.sig[k].clone();
+            let (a, held, waiting, cap) = self.last[k];
+            let len = a.max(self.h).min(self.h).saturating_sub(a.max(self.w));
+            if len > 0 {
+                let len = u128::from(len);
+                g.busy += u128::from(held) * len;
+                g.cap_time += u128::from(cap) * len;
+                g.max_held = g.max_held.max(held);
+                g.queue_int += u128::from(waiting) * len;
+                g.max_waiting = g.max_waiting.max(waiting);
+            }
+            let samples: Vec<Option<u64>> = self.enq[k]
+                .iter()
+                .map(|id| self.outcome[k].get(id).copied().flatten())
+                .collect();
+            let mut fin: Vec<u64> = samples.iter().filter_map(|x| *x).collect();
+            let count = samples.len() as u64;
+            let sum: u128 = fin.iter().map(|&x| u128::from(x)).sum();
+            let max = fin.iter().max().copied();
+            fin.sort_unstable();
+            let mut qo = JsObject::new();
+            for (key, qa, qb) in &qs {
+                let v = if count == 0 {
+                    Obj::new()
+                        .put("value", Value::Null)
+                        .put("empty", Value::Bool(true))
+                } else {
+                    let rank = (u128::from(*qa) * u128::from(count))
+                        .div_ceil(u128::from(*qb))
+                        .max(1) as usize;
+                    match fin.get(rank - 1) {
+                        Some(x) => Obj::new().put("value", n(*x)),
+                        None => Obj::new()
+                            .put("value", Value::Null)
+                            .put("infinite", Value::Bool(true)),
+                    }
+                };
+                qo.insert(key.clone(), v.done());
+            }
+            res.insert(
+                d.id.clone(),
+                Obj::new()
+                    .put(
+                        "utilisation",
+                        Obj::new()
+                            .put("busy", big(g.busy))
+                            .put("capacityTime", big(g.cap_time))
+                            .put("max", n(g.max_held))
+                            .done(),
+                    )
+                    .put(
+                        "queueLength",
+                        Obj::new()
+                            .put("integral", big(g.queue_int))
+                            .put("window", n(self.h.saturating_sub(self.w)))
+                            .put("max", n(g.max_waiting))
+                            .done(),
+                    )
+                    .put(
+                        "waitingTime",
+                        Obj::new()
+                            .put("count", n(count))
+                            .put("finite", n(fin.len() as u64))
+                            .put("infinite", n(count - fin.len() as u64))
+                            .put("sum", big(sum))
+                            .put("max", max.map_or(Value::Null, n))
+                            .put("quantiles", Value::object(qo))
+                            .done(),
+                    )
+                    .done(),
+            );
+        }
+        let mut reqs = JsObject::new();
+        for (k, c) in i.requests.iter().enumerate() {
+            let acc = &self.classes[k];
+            reqs.insert(
+                c.id.clone(),
+                class_value(&qs, acc, self.w, self.h)
+                    .put("unkeyed", n(acc.unkeyed))
+                    .put("duplicate", n(acc.duplicate))
+                    .put("lateEnds", n(acc.late_ends))
+                    .put("window", n(self.h.saturating_sub(self.w)))
+                    .done(),
+            );
+        }
+        let transitions = |lo: u64, hi: u64| {
+            let mut to = JsObject::new();
+            for (bi, b) in i.behaviors.iter().enumerate() {
+                for (ti, t) in b.transitions.iter().enumerate() {
+                    let c = self
+                        .fired
+                        .iter()
+                        .filter(|(tm, x, y)| *x == bi && *y == ti && lo <= *tm && *tm < hi)
+                        .count();
+                    to.insert(format!("{}.{}", b.id, t.id), n(c as u64));
+                }
+            }
+            Value::object(to)
+        };
+        let mut o = Obj::new()
+            .put(
+                "window",
+                Obj::new()
+                    .put("from", n(self.w))
+                    .put("until", n(self.h))
+                    .done(),
+            )
+            .put("requests", Value::object(reqs))
+            .put("transitions", transitions(self.w, self.h))
+            .put("resources", Value::object(res));
+        if let Some(b) = i.series {
+            let mut buckets = Vec::new();
+            for k in 0..self.h.saturating_sub(self.w) / b {
+                let lo = self.w + k * b;
+                let mut rq = JsObject::new();
+                for (ci, c) in i.requests.iter().enumerate() {
+                    rq.insert(
+                        c.id.clone(),
+                        class_value(&qs, &self.classes[ci], lo, lo + b).done(),
+                    );
+                }
+                buckets.push(
+                    Obj::new()
+                        .put("from", n(lo))
+                        .put("until", n(lo + b))
+                        .put("requests", Value::object(rq))
+                        .put("transitions", transitions(lo, lo + b))
+                        .done(),
+                );
+            }
+            o = o.put(
+                "series",
+                Obj::new()
+                    .put("bucket", n(b))
+                    .put("buckets", Value::array(buckets))
+                    .done(),
+            );
+        }
+        o.done()
+    }
 }

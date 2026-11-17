@@ -13,7 +13,9 @@ import { own } from './own.js';
 import { componentGraph, selectComponents } from './query.js';
 import { parseExpr, evalExpr, exprRefs, ExprError } from './expr.js';
 import { semanticHash } from './hash.js';
-import { runScenario } from './engine.js';
+import { runScenario, runEngineText } from './engine.js';
+import { evaluateMetricClaim, quantileKey } from './metric-claims.js';
+import { simulationInput, durationIn } from './sim-input.js';
 import { checkContractEvents } from './contract-trace.js';
 import { evaluateDataClaim } from './data-model.js';
 
@@ -25,7 +27,7 @@ import { evaluateDataClaim } from './data-model.js';
  * @typedef {{ id: string, kind: string, ref: string, supports: boolean, recorded: 'pass'|'fail'|'none', detail?: string }} EvidenceItem
  * @typedef {{
  *   claimId: string, kind: string, method: string|null,
- *   status: 'verified'|'supported'|'violated'|'inconclusive'|'not-evaluated',
+ *   status: 'verified'|'supported'|'model-holds'|'violated'|'inconclusive'|'not-evaluated',
  *   evaluator: string, semanticHash: string, scope: string, explanation: string,
  *   assumptions: string[], involved: string[], counterexample?: Counterexample,
  *   evidence: EvidenceItem[], negatives?: NegativeRun[]
@@ -43,6 +45,7 @@ import { evaluateDataClaim } from './data-model.js';
 const STRUCTURAL = 'exegra.structural/0.1';
 const TRACE = 'exegra.trace/0.1';
 const EVIDENCE = 'exegra.evidence/0.1';
+const METRIC = 'exegra.metric/0.1';
 const TRACE_METHODS = ['state-invariant', 'precedes', 'eventually', 'never'];
 
 // ---------------------------------------------------------------------------
@@ -177,6 +180,12 @@ function evaluateOne(model, claim, hash, recorded) {
     }
   } else if (!Object.hasOwn(CLAIM_METHODS, method)) {
     r = { status: 'not-evaluated', evaluator: 'none', scope: `Nothing was checked: this build of Exegra has no evaluator for method "${method}".`, explanation: `Method "${method}" is not supported, so the claim stays not evaluated. It is declared, not established.`, selected: [] };
+  } else if (method === 'metric-bound') {
+    try {
+      r = evaluateMetricBound(model, ev);
+    } catch (e) {
+      r = { status: 'inconclusive', evaluator: METRIC, scope: 'The metric claim could not be completed.', explanation: `The evaluator failed: ${/** @type {Error} */ (e).message}`, selected: [] };
+    }
   } else if (method === 'external-evidence') {
     r = { ...evaluateEvidenceClaim(claim, evidence, recorded), evaluator: EVIDENCE, selected: evidence.map((e) => e.id) };
   } else {
@@ -209,6 +218,70 @@ function evaluateOne(model, claim, hash, recorded) {
   if (r.negatives) result.negatives = r.negatives;
   result.involved = unique([...subjects, ...(r.selected ?? []), ...(r.counterexample?.entities ?? []), ...(r.counterexample?.path ?? [])]);
   return result;
+}
+
+// ---------------------------------------------------------------------------
+// Metric claims (docs/simulation.md, "Claims over metrics")
+// ---------------------------------------------------------------------------
+
+/**
+ * A metric-bound claim: each listed scenario (a format-2 scenario) runs N times with the run
+ * seeds of the claim's seed, through the engine, and the per-run statistic decides by the exact
+ * binomial test or the sign-test interval (src/core/metric-claims.js). A bound written as a
+ * duration is converted to the base unit of the first scenario. The result is `model-holds`,
+ * `violated` or `inconclusive`, never verified, and states N, the passes, β, the confidence and the
+ * seeds' base.
+ * @param {Model} model @param {any} ev
+ */
+function evaluateMetricBound(model, ev) {
+  const sids = Array.isArray(ev.scenarios) ? ev.scenarios : [ev.scenarios];
+  /** @param {string} sid @param {string[]} extra */
+  const inputOf = (sid, extra) => {
+    const sc = /** @type {any} */ (model.entities.get(sid));
+    const own = Array.isArray(sc?.data?.faults) ? sc.data.faults : [];
+    const input = /** @type {any} */ (simulationInput(model, sid, [...own, ...extra]));
+    if (input.version !== 2) throw new Error(`Scenario "${sid}" is not a format-2 scenario: it declares no workloads, seed or horizon.`);
+    const st = String(ev.metric?.statistic ?? '');
+    if (/^p\d/.test(st)) {
+      const qs = input.metrics?.quantiles ?? ['0.5', '0.9', '0.99'];
+      input.metrics = { ...(input.metrics ?? {}), quantiles: [...new Set([...qs, quantileKey(st)])] };
+    }
+    return input;
+  };
+  const first = inputOf(sids[0], []);
+  const unit = first.time.unit;
+  /** @param {any} v */
+  const num = (v) => (typeof v === 'string' && /[a-z]$/.test(v.trim()) ? String(durationIn(v, unit, 'bound')) : String(v));
+  const claim = {
+    metric: ev.metric, op: ev.op, bound: ev.bound === undefined ? undefined : num(ev.bound),
+    approx: ev.approx ? { value: num(ev.approx.value), tolerance: String(ev.approx.tolerance) } : undefined,
+    runs: Number(ev.runs ?? 59), fraction: ev.fraction ?? '0.95', confidence: ev.confidence ?? '0.95', seed: String(ev.seed ?? '0'),
+  };
+  const run = (/** @type {string} */ text) => JSON.parse(runEngineText(text));
+  const neg = (/** @type {any[]} */ xs) => (Array.isArray(xs) ? xs : []).map((n) => inputOf(n.scenario, n.faults ?? []));
+  const res = evaluateMetricClaim(run, { scenarios: sids.map((/** @type {string} */ sid) => inputOf(sid, [])), negatives: neg(ev.negatives), controlNegatives: neg(ev.controlNegatives) }, claim);
+  const show = (/** @type {any} */ s, /** @type {string} */ what) => `${what}: ${s.verdict} over ${s.kept} of ${s.runs} runs${s.passes !== undefined ? ` (${s.passes} pass)` : ''}${s.leftOut ? `, ${s.leftOut} left out as underpowered` : ''}${s.truncated ? `, ${s.truncated} truncated` : ''}`;
+  const parts = [
+    ...res.scenarios.map((s, i) => show(s, `scenario "${sids[i]}"`)),
+    ...res.negatives.map((s, i) => show(s, `negative ${i} (${ev.negatives[i].scenario} with ${ev.negatives[i].faults.join(', ')})`)),
+    ...res.controlNegatives.map((s, i) => show(s, `control negative ${i} (${ev.controlNegatives[i].scenario} with ${ev.controlNegatives[i].faults.join(', ')})`)),
+  ];
+  const head = res.status === 'model-holds'
+    ? `Holds in the model at ${claim.confidence} confidence over ${claim.runs} runs per scenario; parameters assumed, unvalidated.`
+    : res.status === 'violated' ? `Fails in the model at ${claim.confidence} confidence over ${claim.runs} runs.` : `Inconclusive over ${claim.runs} runs: ${res.reason}.`;
+  /** @type {any} */
+  const out = {
+    status: res.status, evaluator: METRIC,
+    scope: `Model only; parameters as stated. Seeded runs: N = ${claim.runs}, β = ${claim.fraction}, confidence ${claim.confidence}, base seed ${claim.seed}${ev.asOf ? `, as of ${ev.asOf}` : ''}. Never verified, never counted as evidence.`,
+    explanation: `${head} ${parts.join('; ')}.`,
+    selected: [...sids],
+  };
+  if (res.status === 'violated') {
+    const s = res.scenarios.find((x) => x.verdict === 'fails');
+    const worst = s?.statistics?.find((/** @type {any} */ x) => x.value === 'inf') ?? s?.statistics?.[0];
+    out.counterexample = { summary: `A failing scenario; replay seed ${worst?.seed ?? '?'} as a trace.`, entities: [...sids] };
+  }
+  return out;
 }
 
 /** @param {EvidenceItem[]} bad */

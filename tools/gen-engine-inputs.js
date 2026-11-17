@@ -624,6 +624,287 @@ function generateResourceInput(r, cov) {
   };
 }
 
+/** A small valid unit-exponential table (three points), and the pinned one's first and last rows. */
+const SMALL_UNIT_EXP = [[0, '0'], [2147483648, '12786308645202655660'], [4294967296, '421948185291687636773']];
+
+/**
+ * A version-2 input centred on open workloads (WG-4715): constant and Poisson processes over
+ * phases with constant rates and ramps, repetition, batches, clients, payload generators and
+ * maxArrivals, delivered to a worker that uses a resource, with drop and delay faults on the
+ * arrivals; sometimes malformed, for the refusals.
+ * @param {Rng} r @param {Coverage} cov
+ * @returns {any}
+ */
+function generateWorkloadInput(r, cov) {
+  count(cov, 'v2 workload inputs');
+  const unit = r.pick([{ unit: 'us', perSecond: 1000000 }, { unit: 'ms', perSecond: 1000 }, ...(r.chance(0.05) ? [{ unit: 'tick', perSecond: null }] : [])]);
+  const ps = unit.perSecond ?? 1;
+  const horizon = 2000 + r.int(30000);
+  /** @type {any[]} */
+  const workloads = [];
+  for (let w = 0; w < 1 + r.int(2); w++) {
+    const poisson = r.chance(0.7);
+    /** @type {any[]} */
+    const phases = [];
+    let t = r.int(500);
+    for (let k = 0; k < 1 + r.int(3); k++) {
+      const len = 1 + r.int(horizon / 2);
+      const maxRate = Math.max(1, Math.floor(ps / 100));
+      const rate = () => ({ num: r.chance(0.1) ? 0 : 1 + r.int(Math.min(maxRate, 5000)), den: 1 + r.int(3) });
+      const ramp = poisson && r.chance(0.35);
+      phases.push({ from: t, until: t + len, rate: ramp ? { from: rate(), to: rate() } : rate() });
+      count(cov, `v2 workload phase ${ramp ? 'ramp' : 'constant rate'}`);
+      t += len + (r.chance(0.5) ? r.int(300) : 0);
+    }
+    if (r.chance(0.04)) { phases.reverse(); count(cov, 'v2 workload phases malformed'); }
+    if (r.chance(0.03)) { phases[0].rate = { num: ps, den: 1 }; count(cov, 'v2 workload phase too fast'); }
+    /** @type {any} */
+    const wl = { id: `w${w}`, kind: 'open', event: r.chance(0.97) ? 'req' : 'nope', process: poisson ? 'poisson' : 'constant', phases };
+    count(cov, `v2 workload ${wl.process}`);
+    if (r.chance(0.3)) { wl.repeat = t + r.int(200); count(cov, 'v2 workload repeat'); }
+    if (r.chance(0.4)) { wl.batch = distribution(r, cov, 'v2 workload batch'); if (wl.batch === 0 || wl.batch?.value === 0) count(cov, 'v2 workload batch zero'); }
+    if (r.chance(0.6)) { wl.clients = { count: 1 + r.int(5), pick: r.pick(['uniform', 'round-robin', undefined]) }; count(cov, `v2 workload clients ${wl.clients.pick ?? 'default'}`); }
+    wl.maxArrivals = r.chance(0.9) ? 1 + r.int(25) : null;
+    if (r.chance(0.6)) {
+      wl.payload = { label: { choose: ['a', 'b', 'c'], weights: [1 + r.int(3), r.int(3), 1] }, k: { counter: true }, size: { sample: distribution(r, cov, 'v2 workload payload sample') }, tag: 'x' };
+      count(cov, 'v2 workload payload');
+    }
+    if (r.chance(0.1)) { wl.requestField = 'rid'; wl.clientField = 'who'; }
+    if (r.chance(0.02)) { wl.kind = 'closed'; count(cov, 'v2 workload closed refused'); }
+    workloads.push(wl);
+  }
+  const res = { id: 'cpu', kind: 'cpu', capacity: 1 + r.int(2), discipline: 'fifo', queueBound: r.chance(0.5) ? r.int(4) : null, overflow: r.pick(['refuse', 'drop']), demandFactor: null, classes: [] };
+  const behaviors = [{
+    id: 'srv', initial: 'idle', states: ['idle'], variables: [{ name: 'n', initial: 0 }],
+    transitions: [
+      { id: 'take', from: 'idle', to: 'idle', on: 'req', effects: [{ use: 'cpu', demand: r.chance(0.5) ? { kind: 'uniform', lo: r.int(100), hi: 100 + r.int(4000) } : distribution(r, cov, 'v2 workload demand'), then: 'done', refused: 'no' }, { set: 'n', to: 'n + 1' }] },
+      { id: 'fin', from: 'idle', to: 'idle', on: 'done', effects: [] },
+    ],
+    ...(r.chance(0.3) ? { instances: { count: 1 + r.int(3) } } : {}),
+  }];
+  const routes = behaviors[0].instances ? [{ event: 'req', behavior: 'srv', by: r.pick(['round-robin', 'random', 'key']), field: 'label' }] : [];
+  /** @type {any[]} */
+  const faults = [];
+  if (r.chance(0.4)) { faults.push({ id: 'f-drop', kind: 'drop-event', event: 'req', occurrence: r.chance(0.5) ? 1 + r.int(4) : null }); count(cov, 'v2 workload fault drop'); }
+  if (r.chance(0.4)) { faults.push({ id: 'f-delay', kind: 'delay-event', event: 'req', occurrence: r.chance(0.5) ? 1 + r.int(4) : null, by: 1 + r.int(2000) }); count(cov, 'v2 workload fault delay'); }
+  const scenario = {
+    id: 'wl', steps: [], faults: faults.map((f) => f.id), stepLimit: 40 + r.int(80),
+    seed: r.chance(0.97) ? r.pick(['42', '7', '4715', '18446744073709551615']) : null,
+    horizon: r.chance(0.97) ? horizon : null,
+  };
+  /** @type {any} */
+  const extra = {};
+  if (r.chance(0.6)) {
+    extra.metrics = r.chance(0.5) ? {} : { quantiles: r.chance(0.95) ? ['0.5', '0.95', '1'] : ['1.5'] };
+    if (r.chance(0.5)) /** @type {any} */ (scenario).warmup = r.int(horizon);
+    if (r.chance(0.3)) /** @type {any} */ (scenario).output = 'metrics';
+    count(cov, `v2 workload metrics${/** @type {any} */ (scenario).output ? ' only' : ''}`);
+  }
+  if (r.chance(0.5)) {
+    const rf = workloads[0].requestField ?? 'request';
+    extra.requests = [{ id: 'job', start: { event: 'req', ...(r.chance(0.3) ? { workload: r.chance(0.95) ? 'w0' : 'nowl' } : {}) }, key: r.chance(0.95) ? rf : 'missing',
+      ends: [{ event: 'done', outcome: 'ok' }, { event: 'no', outcome: r.pick(['refused', 'error', 'bogus']) }] }];
+    behaviors[0].transitions[0].effects[0].payload = { [rf]: `event.${rf}` };
+    count(cov, 'v2 workload request class');
+    if (r.chance(0.4) && scenario.horizon) {
+      const wu = /** @type {any} */ (scenario).warmup ?? 0;
+      const span = scenario.horizon - wu;
+      extra.metrics = { ...(extra.metrics ?? {}), series: { bucket: r.chance(0.9) ? Math.max(1, Math.floor(span / (1 + r.int(4)))) * 0 + (span % 4 === 0 ? span / 4 : span) : 7 } };
+      count(cov, 'v2 workload series');
+    }
+  }
+  return {
+    ...extra,
+    format: 'exegra-sim-input', version: 2, time: unit,
+    events: ['req', 'done', 'no', 'nope-not'].map((id) => ({ id })), behaviors, routes, resources: [res], faults, workloads,
+    ...(workloads.some((w) => w.process === 'poisson') && r.chance(0.97) ? { unitExponential: SMALL_UNIT_EXP } : {}),
+    scenario,
+  };
+}
+
+/**
+ * A version-2 input centred on closed and population workloads and address groups (WG-4729): a
+ * closed workload whose clients issue, wait for a reply, time out and think; a population of
+ * client instances that ask a server and re-ask after a delay; an open workload with clients
+ * grouped onto addresses; with drop and delay faults; sometimes malformed, for the refusals.
+ * @param {Rng} r @param {Coverage} cov
+ * @returns {any}
+ */
+function generateClosedInput(r, cov) {
+  count(cov, 'v2 closed inputs');
+  const unit = r.pick([{ unit: 'us', perSecond: 1000000 }, { unit: 'ms', perSecond: 1000 }, ...(r.chance(0.1) ? [{ unit: 'tick', perSecond: null }] : [])]);
+  const horizon = 500 + r.int(6000);
+  /** @type {any[]} */
+  const workloads = [];
+  const small = () => distribution(r, cov, 'v2 closed dist');
+  if (r.chance(0.8)) {
+    /** @type {any} */
+    const wl = { id: 'cw', kind: 'closed', event: 'req', population: r.int(4), think: r.chance(0.5) ? { kind: 'uniform', lo: 0, hi: 50 + r.int(500) } : small(), reply: r.chance(0.97) ? 'done' : 'nope' };
+    if (r.chance(0.6)) wl.start = r.chance(0.5) ? { kind: 'uniform', lo: 0, hi: 200 } : small();
+    if (r.chance(0.5)) { wl.timeout = 1 + r.int(400); count(cov, 'v2 closed timeout'); }
+    if (r.chance(0.01)) { wl.timeout = 2 ** 53 - 1; count(cov, 'v2 closed timeout too long'); }
+    if (r.chance(0.4)) wl.payload = { k: { counter: true }, label: { choose: ['a', 'b'], weights: [1, 2] } };
+    if (r.chance(0.1)) wl.requestField = 'rid';
+    workloads.push(wl);
+    count(cov, 'v2 closed workload');
+  }
+  const pmax = 1 + r.int(4);
+  if (r.chance(0.6)) {
+    /** @type {any} */
+    const wl = { id: 'pop', kind: 'population', behavior: r.chance(0.97) ? 'cli' : 'srv', count: r.chance(0.95) ? Math.max(0, pmax - r.int(2)) : pmax + 1, start: { event: 'go', ...(r.chance(0.7) ? { at: r.chance(0.5) ? { kind: 'uniform', lo: 0, hi: 300 } : small() } : {}) } };
+    if (r.chance(0.3)) { wl.clients = { addresses: { groupSize: r.chance(0.5) ? { kind: 'uniform', lo: 1, hi: 3 } : small() } }; count(cov, 'v2 population addresses'); }
+    workloads.push(wl);
+    count(cov, 'v2 population workload');
+  }
+  if (r.chance(0.5)) {
+    const n = 1 + r.int(6);
+    /** @type {any} */
+    const wl = { id: 'ow', kind: 'open', event: 'req', process: 'constant', phases: [{ from: 0, until: horizon, rate: { num: 1, den: 1 } }], maxArrivals: 1 + r.int(8),
+      clients: { count: n, pick: r.pick(['uniform', 'round-robin']), addresses: { groupSize: r.chance(0.6) ? { kind: 'uniform', lo: 0, hi: 3 } : small() } } };
+    workloads.push(wl);
+    count(cov, 'v2 open workload addresses');
+  }
+  const res = { id: 'cpu', kind: 'cpu', capacity: 1 + r.int(2), discipline: 'fifo', queueBound: r.chance(0.5) ? r.int(3) : null, overflow: 'refuse', demandFactor: null, classes: [] };
+  const behaviors = [
+    { id: 'srv', initial: 'idle', states: ['idle'], variables: [{ name: 'n', initial: 0 }],
+      transitions: [
+        { id: 'take', from: 'idle', to: 'idle', on: 'req', effects: [{ use: 'cpu', demand: { kind: 'uniform', lo: 0, hi: 300 }, then: 'done', refused: 'no', payload: { request: r.chance(0.9) ? 'event.request' : 'event.rid' } }, { set: 'n', to: 'n + 1' }] },
+        { id: 'ask', from: 'idle', to: 'idle', on: 'ask', effects: [{ emit: 'ans', target: 'reply', after: r.chance(0.5) ? r.int(200) : { kind: 'uniform', lo: 0, hi: 200 }, payload: { client: 'event.client' } }] },
+        { id: 'fin', from: 'idle', to: 'idle', on: 'done', effects: [] },
+      ] },
+    { id: 'cli', initial: 'idle', states: ['idle', 'wait'], variables: [{ name: 'asks', initial: 0 }], instances: { key: 'client', max: pmax },
+      transitions: [
+        { id: 'go', from: 'idle', to: 'wait', on: 'go', effects: [{ emit: 'ask', payload: { client: 'instance', address: 'event.address' } }, { set: 'asks', to: 'asks + 1' }] },
+        { id: 'got', from: 'wait', to: 'idle', on: 'ans', effects: [{ emit: 'go', after: 1 + r.int(300), payload: { client: 'instance' } }] },
+      ] },
+  ];
+  const routes = [{ event: 'go', behavior: 'cli', by: 'key', field: 'client' }];
+  /** @type {any[]} */
+  const faults = [];
+  if (r.chance(0.3)) { faults.push({ id: 'f-drop', kind: 'drop-event', event: r.pick(['done', 'req', 'ans']), occurrence: r.chance(0.5) ? 1 + r.int(4) : null }); count(cov, 'v2 closed fault drop'); }
+  if (r.chance(0.3)) { faults.push({ id: 'f-delay', kind: 'delay-event', event: r.pick(['done', 'req', 'go']), occurrence: r.chance(0.5) ? 1 + r.int(4) : null, by: 1 + r.int(500) }); count(cov, 'v2 closed fault delay'); }
+  const scenario = {
+    id: 'cl', steps: [], faults: faults.map((f) => f.id), stepLimit: 40 + r.int(100),
+    seed: r.chance(0.95) ? r.pick(['42', '7', '4729']) : null, horizon: r.chance(0.97) ? horizon : null,
+  };
+  /** @type {any} */
+  const extra = {};
+  if (r.chance(0.3)) { extra.metrics = {}; count(cov, 'v2 closed metrics'); }
+  if (r.chance(0.6)) {
+    extra.requests = [
+      { id: 'cw-req', start: { event: 'req', ...(r.chance(0.5) ? { workload: 'cw' } : {}) }, key: 'request', ends: [{ event: 'done', outcome: 'ok' }, { event: 'no', outcome: 'refused' }] },
+      { id: 'asks', start: { event: 'ask' }, key: 'client', ends: [{ event: 'ans', outcome: 'ok' }] },
+    ];
+    count(cov, 'v2 closed request classes');
+  }
+  return {
+    ...extra,
+    format: 'exegra-sim-input', version: 2, time: unit,
+    events: ['req', 'done', 'no', 'ask', 'ans', 'go'].map((id) => ({ id })), behaviors, routes, resources: [res], faults, workloads, scenario,
+  };
+}
+
+/**
+ * A version-2 input centred on links and timers (WG-4729): messages sent over links with
+ * bandwidth, queue bounds, ordering, fan-out and latency distributions, sized by literals,
+ * expressions and distributions; replies over a return link; timers set, re-set and cancelled;
+ * with drop and delay faults; sometimes malformed, for the refusals.
+ * @param {Rng} r @param {Coverage} cov
+ * @returns {any}
+ */
+function generateLinkInput(r, cov) {
+  count(cov, 'v2 link inputs');
+  const unit = r.pick([{ unit: 'us', perSecond: 1000000 }, { unit: 'ms', perSecond: 1000 }, ...(r.chance(0.1) ? [{ unit: 'tick', perSecond: null }] : [])]);
+  const lat = () => (r.chance(0.3) ? r.int(50) : distribution(r, cov, 'v2 link latency'));
+  /** @type {any} */
+  const l1 = { id: 'l1', from: 'c-a', to: 'c-b', latency: lat() };
+  if (unit.perSecond && r.chance(0.7) || r.chance(0.05)) { l1.bandwidth = 1 + r.int(unit.perSecond === 1000 ? 2000 : 2000000); count(cov, 'v2 link bandwidth'); }
+  if (r.chance(0.5)) { l1.queueBound = r.int(3); count(cov, 'v2 link queueBound'); }
+  if (r.chance(0.4)) { l1.ordered = true; count(cov, 'v2 link ordered'); }
+  if (r.chance(0.3)) { l1.fanout = true; count(cov, 'v2 link fanout'); }
+  /** @type {any} */
+  const l2 = { id: 'l2', from: 'c-b', to: 'c-a', latency: lat(), ...(r.chance(0.5) && unit.perSecond ? { bandwidth: 1 + r.int(5000) } : {}) };
+  const size = r.pick([0, 1 + r.int(5000), 'event.n', 'n * 100', { kind: 'uniform', lo: 0, hi: 3000 }, distribution(r, cov, 'v2 link size'), ...(r.chance(0.1) ? ['-1', '"x"', '0.5'] : [])]);
+  count(cov, `v2 link size ${typeof size === 'object' ? 'dist' : typeof size}`);
+  /** @type {any} */
+  const send = { emit: 'msg', via: r.chance(0.97) ? 'l1' : 'nolink', size, payload: { k: 'time', n: 'n' } };
+  if (r.chance(0.2)) { send.fanout = true; count(cov, 'v2 emit fanout'); }
+  if (r.chance(0.03)) { send.after = 1; count(cov, 'v2 emit via after'); }
+  /** @type {any[]} */
+  const sndEffects = [{ set: 'n', to: 'n + 1' }, send];
+  if (r.chance(0.7)) { sndEffects.push({ timer: 'tm', after: r.chance(0.5) ? 20 + r.int(200) : distribution(r, cov, 'v2 timer after'), emit: 'tick', payload: { from: '"timer"', n: 'n' } }); count(cov, 'v2 timer set'); }
+  const rcvInst = r.pick([undefined, { count: 1 + r.int(3) }, { key: 'label', max: 2 }]);
+  const behaviors = [
+    { id: 'snd', subject: 'c-a', initial: 'idle', states: ['idle'], variables: [{ name: 'n', initial: 0 }, { name: 'acks', initial: 0 }],
+      transitions: [
+        { id: 'tick', from: 'idle', to: 'idle', on: 'tick', guard: 'n < 6', effects: sndEffects },
+        { id: 'ack', from: 'idle', to: 'idle', on: 'ack', effects: [{ set: 'acks', to: 'acks + 1' }, ...(r.chance(0.4) ? [{ cancel: 'tm' }] : [])] },
+      ] },
+    { id: 'rcv', subject: 'c-b', initial: 'idle', states: ['idle'], variables: [{ name: 'got', initial: 0 }], ...(rcvInst ? { instances: rcvInst } : {}),
+      transitions: [
+        { id: 'take', from: 'idle', to: 'idle', on: 'msg', effects: [{ set: 'got', to: 'got + 1' }, ...(r.chance(0.7) ? [{ emit: 'ack', via: 'l2', target: 'reply', size: r.int(100) }] : [])] },
+      ] },
+  ];
+  /** @type {any[]} */
+  const routes = [];
+  if (rcvInst?.key) routes.push({ event: 'msg', behavior: 'rcv', by: 'key', field: 'label' });
+  else if (rcvInst?.count && r.chance(0.6)) routes.push({ event: 'msg', behavior: 'rcv', by: r.pick(['round-robin', 'random']) });
+  if (rcvInst?.key) send.payload.label = r.pick(['"a"', '"b"']);
+  /** @type {any[]} */
+  const faults = [];
+  if (r.chance(0.3)) { faults.push({ id: 'f-drop', kind: 'drop-event', event: r.pick(['msg', 'tick', 'ack']), occurrence: r.chance(0.5) ? 1 + r.int(3) : null }); count(cov, 'v2 link fault drop'); }
+  if (r.chance(0.3)) { faults.push({ id: 'f-delay', kind: 'delay-event', event: r.pick(['msg', 'tick']), occurrence: r.chance(0.5) ? 1 + r.int(3) : null, by: 1 + r.int(100) }); count(cov, 'v2 link fault delay'); }
+  const steps = Array.from({ length: 1 + r.int(5) }, () => ({ at: r.int(300), event: 'tick', payload: { n: r.int(4) } }));
+  return {
+    format: 'exegra-sim-input', version: 2, time: unit,
+    events: ['tick', 'msg', 'ack'].map((id) => ({ id })), behaviors, routes, links: [l1, l2], faults,
+    scenario: { id: 'ln', steps, faults: faults.map((f) => f.id), stepLimit: 30 + r.int(80), seed: r.chance(0.95) ? r.pick(['42', '7', '4729']) : null },
+  };
+}
+
+/**
+ * A version-2 input centred on format-2 faults (WG-4729): a resource-centred input of
+ * generateResourceInput with untimed and windowed resource faults (set-capacity, set-class-limit,
+ * collapse-classes, scale-demand, replace-demand) and windowed drop and delay faults; sometimes
+ * malformed, for the refusals.
+ * @param {Rng} r @param {Coverage} cov
+ * @returns {any}
+ */
+function generateFaultInput(r, cov) {
+  const input = generateResourceInput(r, {});
+  count(cov, 'v2 fault inputs');
+  const res = input.resources[0];
+  const win = () => {
+    if (!r.chance(0.6)) return undefined;
+    const at = r.int(8);
+    count(cov, 'v2 fault window');
+    return r.chance(0.2) ? { at } : { at, until: r.chance(0.03) ? at : at + 1 + r.int(8) };
+  };
+  /** @type {any[]} */
+  const faults = [];
+  const add = (/** @type {any} */ f) => { const w = win(); if (w) f.window = w; faults.push(f); count(cov, `v2 fault ${f.kind}`); };
+  if (r.chance(0.4)) add({ id: 'cap', kind: 'set-capacity', resource: r.chance(0.97) ? res.id : 'nores', capacity: 1 + r.int(4) });
+  if (r.chance(0.4)) add({ id: 'lim', kind: 'set-class-limit', resource: res.id, class: r.chance(0.97) ? r.pick(res.classes).id : 'noclass', limit: 1 + r.int(3) });
+  if (r.chance(0.4)) add({ id: 'col', kind: 'collapse-classes', resource: res.id });
+  if (r.chance(0.4)) add({ id: 'scl', kind: 'scale-demand', resource: res.id, num: r.int(5), den: 1 + r.int(3) });
+  if (r.chance(0.2)) add({ id: 'scl2', kind: 'scale-demand', resource: res.id, num: 3, den: 2 });
+  const b0 = input.behaviors[0];
+  if (r.chance(0.4)) add({ id: 'rep', kind: 'replace-demand', behavior: b0.id, transition: b0.transitions[0].id, effect: r.chance(0.95) ? 0 : 1, demand: distribution(r, cov, 'v2 replace demand') });
+  if (r.chance(0.3)) add({ id: 'drp', kind: 'drop-event', event: r.pick(['req', 'done', 'got']) });
+  if (r.chance(0.3)) add({ id: 'dly', kind: 'delay-event', event: r.pick(['req', 'done']), by: 1 + r.int(5) });
+  if (r.chance(0.03)) { faults.push({ id: 'inj', kind: 'inject-event', event: 'req', at: 1, window: { at: 0 } }); count(cov, 'v2 fault inject window'); }
+  input.faults = faults;
+  input.scenario.faults = faults.filter(() => r.chance(0.9)).map((f) => f.id);
+  if (r.chance(0.3)) input.metrics = {}, input.scenario.horizon = 30;
+  if (r.chance(0.5)) {
+    input.scenario.horizon = 30;
+    input.requests = [{ id: 'reqs', start: { event: 'req' }, key: 'label', ends: [{ event: 'done', outcome: 'ok' }, { event: 'no', outcome: 'refused' }, { event: 'got', outcome: 'ok' }] }];
+    if (r.chance(0.5)) input.metrics = { series: { bucket: r.pick([5, 10, 30, 7]) } };
+    count(cov, 'v2 fault request class');
+  }
+  return input;
+}
+
 /**
  * Generate `count` version-2 inputs from a seed, alternating generateInputV2 and the resource-centred
  * generateResourceInput (a stream of its own, so version-1 inputs of the same
@@ -637,6 +918,18 @@ export function generateInputsV2(seed, n) {
   const coverage = {};
   const inputs = [];
   for (let i = 0; i < n; i++) inputs.push(i % 2 ? generateResourceInput(r, coverage) : generateInputV2(r, coverage));
+  // Workload inputs (WG-4715) from a stream of their own, so the inputs above are unchanged.
+  const rw = createRng(seed ^ 0x5eed3);
+  for (let i = 0; i < Math.ceil(n / 2); i++) inputs.push(generateWorkloadInput(rw, coverage));
+  // Closed and population workloads and address groups (WG-4729), likewise.
+  const rc = createRng(seed ^ 0x5eed4);
+  for (let i = 0; i < Math.ceil(n / 2); i++) inputs.push(generateClosedInput(rc, coverage));
+  // Links and timers (WG-4729), likewise.
+  const rl = createRng(seed ^ 0x5eed5);
+  for (let i = 0; i < Math.ceil(n / 2); i++) inputs.push(generateLinkInput(rl, coverage));
+  // Format-2 faults (WG-4729), likewise.
+  const rf = createRng(seed ^ 0x5eed6);
+  for (let i = 0; i < Math.ceil(n / 2); i++) inputs.push(generateFaultInput(rf, coverage));
   return { inputs, coverage };
 }
 

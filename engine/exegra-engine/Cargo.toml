@@ -17,3 +17,4 @@ path = "src/main.rs"
 serde = "1"
 # float_roundtrip: decimal numbers parse to the nearest double, as JSON.parse does.
 serde_json = { version = "1", features = ["float_roundtrip"] }
+num-bigint = "0.4"

@@ -58,6 +58,33 @@ pub fn sample_table(r: u64, points: &[(u64, u64)]) -> u64 {
     points.last().map_or(0, |p| p.1)
 }
 
+/// `sample_table` for tables whose values reach 2^72 (the unit exponential).
+pub fn sample_table_wide(r: u64, points: &[(u64, u128)]) -> u128 {
+    let u = r >> 32;
+    for w in points.windows(2) {
+        let ((u0, x0), (u1, x1)) = (w[0], w[1]);
+        if u < u1 {
+            return x0 + u128::from(u - u0) * (x1 - x0) / u128::from(u1 - u0);
+        }
+    }
+    points.last().map_or(0, |p| p.1)
+}
+
+/// Categorical choice with integer weights (`W = Σ w ≥ 1`): `v = uniformInt(0, W − 1)` and the
+/// first `i` with `w_0 + … + w_i > v`.
+pub fn categorical(r: u64, ws: &[u64]) -> usize {
+    let total: u64 = ws.iter().sum();
+    let v = uniform_int(r, 0, total.saturating_sub(1));
+    let mut acc = 0u64;
+    for (i, w) in ws.iter().enumerate() {
+        if acc + w > v {
+            return i;
+        }
+        acc += w;
+    }
+    ws.len()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

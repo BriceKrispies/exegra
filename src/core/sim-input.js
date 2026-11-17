@@ -2,6 +2,11 @@
 // JSON document, and nothing else. It holds no JSONC, meta-model, layout or validation state, so
 // an engine in any language can run from it alone. Pure; no I/O.
 // Format "exegra-sim-input", version 1; see docs/simulation.md, "Engine input and trace format".
+// A scenario that uses a construct of format 2 (workloads, a seed or horizon, instances, resource,
+// timer or link effects) derives version 2 instead (simulationInputV2; docs/simulation.md,
+// "Specification-level form").
+
+import { lowerDistribution, unitExponentialTable } from './distributions.js';
 
 /** @typedef {import('./types.js').Model} Model */
 
@@ -99,7 +104,8 @@ export function simulationInput(model, scenarioId, faults) {
     if (!ev || ev.kind !== 'event') throw new Error(`Fault "${f.id}" injects "${f.event}", which is not an event.`);
   }
 
-  return {
+  /** @type {SimulationInput} */
+  const v1 = {
     format: SIM_INPUT_FORMAT,
     version: SIM_INPUT_VERSION,
     scenario: { id: scenarioId, steps, faults: faultIds, stepLimit: sdata.maxSteps ?? 1000 },
@@ -107,4 +113,275 @@ export function simulationInput(model, scenarioId, faults) {
     events: (model.byKind.event ?? []).map((e) => ({ id: e.id })),
     faults: faultDecls,
   };
+  return needsFormat2(model, sdata) ? simulationInputV2(model, scenarioId, v1) : v1;
+}
+
+// ---------------------------------------------------------------------------
+// Format 2 (docs/simulation.md, "Specification-level form")
+// ---------------------------------------------------------------------------
+
+export const SIM_INPUT_VERSION_2 = 2;
+
+/** Base units per second of each time unit. */
+const PER_SECOND = /** @type {Record<string, bigint|null>} */ ({ tick: null, s: 1n, ms: 1000n, us: 1000000n, ns: 1000000000n });
+/** Nanoseconds per duration unit. */
+const NS = /** @type {Record<string, bigint>} */ ({ ns: 1n, us: 1000n, ms: 1000000n, s: 1000000000n, min: 60000000000n, h: 3600000000000n });
+/** Bytes per size unit. */
+const BYTES = /** @type {Record<string, bigint>} */ ({ B: 1n, kB: 1000n, MB: 1000000n, GB: 1000000000n, KiB: 1024n, MiB: 1048576n, GiB: 1073741824n });
+/** Bytes per second of each bandwidth unit, as [num, den]. */
+const BANDWIDTH = /** @type {Record<string, [bigint, bigint]>} */ ({
+  'bit/s': [1n, 8n], 'kbit/s': [1000n, 8n], 'Mbit/s': [1000000n, 8n], 'Gbit/s': [1000000000n, 8n],
+  'B/s': [1n, 1n], 'kB/s': [1000n, 1n], 'MB/s': [1000000n, 1n], 'GB/s': [1000000000n, 1n],
+});
+const RATE_PER = /** @type {Record<string, bigint>} */ ({ s: 1n, min: 60n, h: 3600n });
+
+/** @param {bigint} a @param {bigint} b @returns {bigint} */
+const gcdBig = (a, b) => (b === 0n ? a : gcdBig(b, a % b));
+
+/** An exact decimal as [num, den]. @param {string} s @param {string} what */
+function decimal(s, what) {
+  const m = /^(\d+)(?:\.(\d+))?$/.exec(s);
+  if (!m) throw new Error(`${what}: "${s}" is not an exact non-negative decimal.`);
+  const frac = m[2] ?? '';
+  return [BigInt(m[1] + frac), 10n ** BigInt(frac.length)];
+}
+
+/**
+ * A duration `"<decimal> <unit>"` in whole base units of `unit`. A bare number is already in base
+ * units.
+ * @param {any} v @param {string} unit @param {string} what
+ * @returns {number}
+ */
+export function durationIn(v, unit, what) {
+  if (typeof v === 'number' && Number.isInteger(v) && v >= 0) return v;
+  const m = typeof v === 'string' ? /^(\S+)\s*(ns|us|ms|s|min|h)$/.exec(v.trim()) : null;
+  if (!m) throw new Error(`${what}: "${v}" is not a duration ("<decimal> <unit>", unit ns, us, ms, s, min or h).`);
+  const [n, d] = decimal(m[1], what);
+  if (unit === 'tick') throw new Error(`${what}: unit tick has no duration; "${v}" needs a time unit.`);
+  const num = n * NS[m[2]];
+  const den = d * NS[unit];
+  if (num % den !== 0n) throw new Error(`${what}: "${v}" is not a whole number of ${unit}.`);
+  const x = num / den;
+  if (x >= 2n ** 53n) throw new Error(`${what}: "${v}" is 2^53 base units or more.`);
+  return Number(x);
+}
+
+/** A rate `"<decimal>/<s|min|h>"` as an exact `{num, den}` per second. @param {any} v @param {string} what */
+export function rateOf(v, what) {
+  if (v && typeof v === 'object' && 'num' in v) return v;
+  const m = typeof v === 'string' ? /^(\S+)\s*\/\s*(s|min|h)$/.exec(v.trim()) : null;
+  if (!m) throw new Error(`${what}: "${v}" is not a rate ("<decimal>/s", "/min" or "/h").`);
+  const [n, d] = decimal(m[1], what);
+  const den = d * RATE_PER[m[2]];
+  const g = gcdBig(n, den) || 1n;
+  return { num: Number(n / g), den: Number(den / g) };
+}
+
+/** A size `"<decimal> <unit>"` in bytes. @param {any} v @param {string} what */
+function sizeOf(v, what) {
+  if (typeof v === 'number') return v;
+  const m = typeof v === 'string' ? /^(\S+)\s*(B|kB|MB|GB|KiB|MiB|GiB)$/.exec(v.trim()) : null;
+  if (!m) throw new Error(`${what}: "${v}" is not a size.`);
+  const [n, d] = decimal(m[1], what);
+  const x = n * BYTES[m[2]];
+  if (x % d !== 0n) throw new Error(`${what}: "${v}" is not a whole number of bytes.`);
+  return Number(x / d);
+}
+
+/** A bandwidth `"<decimal> <unit>"` in whole bytes per second (rounded down). @param {any} v @param {string} what */
+function bandwidthOf(v, what) {
+  if (typeof v === 'number') return v;
+  const m = typeof v === 'string' ? /^(\S+)\s*(bit\/s|kbit\/s|Mbit\/s|Gbit\/s|B\/s|kB\/s|MB\/s|GB\/s)$/.exec(v.trim()) : null;
+  if (!m) throw new Error(`${what}: "${v}" is not a bandwidth.`);
+  const [n, d] = decimal(m[1], what);
+  const [a, b] = BANDWIDTH[m[2]];
+  return Number((n * a) / (d * b));
+}
+
+/**
+ * A distribution as written in a specification, lowered to the engine's integer form: a duration
+ * (fixed), `{constant}`, `{uniform: {lo, hi}}`, `{exponential: {mean}}`, `{lognormal: {median,
+ * p99 | sigma}}`, `{empirical: {samples} | {quantiles}}`, with durations in any unit; or an engine
+ * distribution (`{kind}`) as it is.
+ * @param {any} d @param {string} unit @param {string} what
+ */
+export function lowerSpecDistribution(d, unit, what) {
+  if (d === undefined || d === null) return undefined;
+  if (typeof d === 'number' || typeof d === 'string') return { kind: 'fixed', value: durationIn(d, unit, what) };
+  if (typeof d !== 'object' || 'kind' in d) return d;
+  const dur = (/** @type {any} */ x) => String(durationIn(x, unit, what));
+  if ('constant' in d) return lowerDistribution({ constant: dur(d.constant) }, what);
+  if ('uniform' in d) return lowerDistribution({ uniform: { lo: dur(d.uniform.lo), hi: dur(d.uniform.hi) } }, what);
+  if ('exponential' in d) return lowerDistribution({ exponential: { mean: dur(d.exponential.mean) } }, what);
+  if ('lognormal' in d) {
+    const l = d.lognormal;
+    return lowerDistribution({ lognormal: { median: dur(l.median), ...(l.p99 !== undefined ? { p99: dur(l.p99) } : { sigma: l.sigma }) } }, what);
+  }
+  if ('empirical' in d) {
+    const e = d.empirical;
+    return lowerDistribution({ empirical: e.samples ? { samples: e.samples.map(dur) } : { quantiles: e.quantiles.map((/** @type {any[]} */ [p, x]) => [p, dur(x)]) } }, what);
+  }
+  throw new Error(`${what}: unknown distribution.`);
+}
+
+/** Effects that only format 2 has. */
+const V2_EFFECTS = ['use', 'acquire', 'release', 'timer', 'cancel', 'via'];
+
+/**
+ * Whether a scenario needs format 2: it names workloads, a seed or a horizon, or one of its
+ * behaviors has instances or a format-2 effect. Every other scenario derives version 1, unchanged.
+ * @param {Model} model @param {any} sdata
+ */
+export function needsFormat2(model, sdata) {
+  if ((Array.isArray(sdata.workloads) && sdata.workloads.length) || sdata.seed !== undefined || sdata.horizon !== undefined) return true;
+  for (const bid of sdata.behaviors ?? []) {
+    const b = model.entities.get(bid);
+    if (b?.data?.instances) return true;
+    for (const t of (model.byKind.transition ?? []).filter((x) => x.owner === bid)) {
+      for (const fx of t.data.effects ?? []) if (fx && typeof fx === 'object' && V2_EFFECTS.some((k) => k in fx)) return true;
+    }
+  }
+  return false;
+}
+
+/** @param {any} fx @param {string} unit @param {string} what */
+function effectV2(fx, unit, what) {
+  if (!fx || typeof fx !== 'object' || Array.isArray(fx)) return copy(fx);
+  const out = copy(fx);
+  for (const k of ['source', 'note', 'description']) delete out[k];
+  if ('demand' in out) out.demand = lowerSpecDistribution(out.demand, unit, `${what}.demand`);
+  if ('emit' in out && 'after' in out) out.after = lowerSpecDistribution(out.after, unit, `${what}.after`);
+  if ('timer' in out && 'after' in out) out.after = lowerSpecDistribution(out.after, unit, `${what}.after`);
+  if ('size' in out && typeof out.size === 'object') out.size = lowerSpecDistribution(out.size, unit, `${what}.size`);
+  else if ('size' in out && typeof out.size === 'string' && /^\S+\s*(B|kB|MB|GB|KiB|MiB|GiB)$/.test(out.size)) out.size = sizeOf(out.size, `${what}.size`);
+  if ('to' in out && out.to && typeof out.to === 'object' && 'sample' in out.to) out.to = { sample: lowerSpecDistribution(out.to.sample, unit, `${what}.to.sample`) };
+  return out;
+}
+
+/**
+ * The version-2 engine input of a scenario (docs/simulation.md, "Specification-level form"): the
+ * version-1 fields with times in whole base units of the scenario's `timeUnit` (default `us`),
+ * behaviors with their instances and format-2 effects, the routes, resources, links, workloads and
+ * request classes the model declares, the scenario's seed, horizon, warm-up and stop time, and
+ * distributions lowered to integer tables (`src/core/distributions.js`). Throws on a malformed
+ * unit, rate or distribution, before any engine runs.
+ * @param {Model} model @param {string} scenarioId @param {any} v1 the version-1 input of the scenario
+ * @returns {any}
+ */
+export function simulationInputV2(model, scenarioId, v1) {
+  const sdata = /** @type {any} */ (model.entities.get(scenarioId)).data;
+  const unit = typeof sdata.timeUnit === 'string' ? sdata.timeUnit : 'us';
+  if (!(unit in PER_SECOND)) throw new Error(`Scenario "${scenarioId}": unknown time unit "${unit}".`);
+  const ps = PER_SECOND[unit];
+  const dur = (/** @type {any} */ v, /** @type {string} */ what) => durationIn(v, unit, what);
+  const opt = (/** @type {any} */ v, /** @type {string} */ what) => (v === undefined || v === null ? null : dur(v, what));
+  const behaviors = v1.behaviors.map((/** @type {any} */ b) => {
+    const e = /** @type {any} */ (model.entities.get(b.id));
+    return {
+      ...b,
+      ...(e.data.instances ? { instances: copy(e.data.instances) } : {}),
+      transitions: b.transitions.map((/** @type {any} */ t) => {
+        const te = /** @type {any} */ (model.entities.get(t.id));
+        return { ...t, effects: (Array.isArray(te?.data?.effects) ? te.data.effects : []).map((/** @type {any} */ fx, /** @type {number} */ k) => effectV2(fx, unit, `${t.id}.effects[${k}]`)) };
+      }),
+    };
+  });
+  const horizon = opt(sdata.horizon, `${scenarioId}.horizon`);
+  const resources = (model.byKind.resource ?? []).map((r) => {
+    const d = /** @type {any} */ (r.data);
+    return {
+      id: r.id, kind: d.kind ?? 'pool', capacity: d.capacity, discipline: d.discipline ?? 'fifo', queueBound: d.queueBound ?? null,
+      overflow: d.overflow ?? 'refuse',
+      demandFactor: d.demandFactor?.usl
+        ? { usl: { alpha: ratPair(d.demandFactor.usl.alpha), beta: ratPair(d.demandFactor.usl.beta) } }
+        : (d.demandFactor ?? null),
+      classes: (Array.isArray(d.classes) ? d.classes : []).map((/** @type {any} */ c) => ({
+        id: c.id, priority: c.priority ?? 0, reserved: c.reserved ?? 0, limit: c.limit ?? null, queueBound: c.queueBound ?? null,
+        maxWait: opt(c.maxWait, `${r.id}.${c.id}.maxWait`),
+      })),
+    };
+  });
+  const links = (model.byKind.link ?? []).map((l) => {
+    const d = /** @type {any} */ (l.data);
+    return {
+      id: l.id, from: d.from, to: d.to, latency: lowerSpecDistribution(d.latency, unit, `${l.id}.latency`) ?? { kind: 'fixed', value: 0 },
+      bandwidth: d.bandwidth === undefined ? null : bandwidthOf(d.bandwidth, `${l.id}.bandwidth`),
+      queueBound: d.queueBound ?? null, ordered: d.ordered === true, fanout: d.fanout === true,
+    };
+  });
+  const wanted = Array.isArray(sdata.workloads) ? sdata.workloads : [];
+  const workloads = wanted.map((/** @type {string} */ wid) => {
+    const w = model.entities.get(wid);
+    if (!w || w.kind !== 'workload') throw new Error(`Scenario "${scenarioId}" names "${wid}", which is not a workload.`);
+    const d = /** @type {any} */ (w.data);
+    /** @type {any} */
+    const out = { id: wid, kind: d.kind ?? 'open' };
+    for (const k of ['event', 'legitimate', 'maxArrivals', 'requestField', 'clientField', 'addressField', 'reply', 'population', 'behavior', 'count'])
+      if (d[k] !== undefined) out[k] = copy(d[k]);
+    if (d.payload) out.payload = Object.fromEntries(Object.entries(d.payload).map(([k, v]) => [k, v && typeof v === 'object' && 'sample' in /** @type {any} */ (v)
+      ? { sample: lowerSpecDistribution(/** @type {any} */ (v).sample, unit, `${wid}.payload.${k}`) } : copy(v)]));
+    if (out.kind === 'open') {
+      out.process = d.process ?? 'poisson';
+      out.phases = Array.isArray(d.phases)
+        ? d.phases.map((/** @type {any} */ p, /** @type {number} */ i) => ({ from: dur(p.from, `${wid}.phases[${i}].from`), until: dur(p.until, `${wid}.phases[${i}].until`),
+          rate: p.rate && typeof p.rate === 'object' && 'from' in p.rate ? { from: rateOf(p.rate.from, wid), to: rateOf(p.rate.to, wid) } : rateOf(p.rate, wid) }))
+        : [{ from: 0, until: horizon ?? 0, rate: rateOf(d.rate, `${wid}.rate`) }];
+      if (d.repeat !== undefined) out.repeat = dur(d.repeat, `${wid}.repeat`);
+      if (d.batch !== undefined) out.batch = lowerSpecDistribution(d.batch, 'tick', `${wid}.batch`);
+      if (d.clients) {
+        out.clients = { count: d.clients.count, ...(d.clients.pick ? { pick: d.clients.pick } : {}) };
+        if (d.clients.addresses) out.clients.addresses = { groupSize: lowerSpecDistribution(d.clients.addresses.groupSize, 'tick', `${wid}.groupSize`) };
+      }
+    } else if (out.kind === 'closed') {
+      if (d.think !== undefined) out.think = lowerSpecDistribution(d.think, unit, `${wid}.think`);
+      if (d.start !== undefined) out.start = lowerSpecDistribution(d.start, unit, `${wid}.start`);
+      if (d.timeout !== undefined) out.timeout = dur(d.timeout, `${wid}.timeout`);
+    } else if (out.kind === 'population') {
+      out.start = { event: d.start?.event, ...(d.start?.at !== undefined ? { at: lowerSpecDistribution(d.start.at, unit, `${wid}.start.at`) } : {}) };
+    }
+    return out;
+  });
+  const requests = (model.byKind.requestClass ?? []).map((c) => ({ id: c.id, start: copy(/** @type {any} */ (c.data).start), key: /** @type {any} */ (c.data).key, ends: copy(/** @type {any} */ (c.data).ends ?? []) }));
+  const faults = v1.faults.map((/** @type {any} */ f) => {
+    const e = /** @type {any} */ (model.entities.get(f.id)).data;
+    const out = { ...f };
+    if (out.by !== undefined) out.by = dur(out.by, `${f.id}.by`);
+    if (out.at !== undefined) out.at = dur(out.at, `${f.id}.at`);
+    for (const k of ['resource', 'class', 'capacity', 'limit', 'num', 'den', 'behavior', 'effect']) if (e[k] !== undefined) out[k] = copy(e[k]);
+    if (e.demand !== undefined) out.demand = lowerSpecDistribution(e.demand, unit, `${f.id}.demand`);
+    if (e.window) out.window = { at: dur(e.window.at, `${f.id}.window.at`), ...(e.window.until !== undefined ? { until: dur(e.window.until, `${f.id}.window.until`) } : {}) };
+    return out;
+  });
+  /** @type {any} */
+  const input = {
+    format: SIM_INPUT_FORMAT,
+    version: SIM_INPUT_VERSION_2,
+    time: { unit, perSecond: ps === null ? null : Number(ps) },
+    scenario: {
+      ...v1.scenario,
+      steps: v1.scenario.steps.map((/** @type {any} */ st, /** @type {number} */ i) => ({ ...st, at: dur(st.at, `${scenarioId}.steps[${i}].at`) })),
+      seed: sdata.seed === undefined ? null : String(sdata.seed),
+      horizon, warmup: opt(sdata.warmup, `${scenarioId}.warmup`), stopAt: opt(sdata.stopAt, `${scenarioId}.stopAt`),
+      output: sdata.output ?? 'trace',
+    },
+    behaviors,
+    events: v1.events,
+    faults,
+    routes: copy(Array.isArray(sdata.routes) ? sdata.routes : []),
+    resources,
+    links,
+    workloads,
+    requests,
+  };
+  if (sdata.metrics) input.metrics = copy(sdata.metrics);
+  if (workloads.some((/** @type {any} */ w) => w.process === 'poisson')) input.unitExponential = unitExponentialTable();
+  return input;
+}
+
+/** A USL parameter as `[num, den]` from an exact decimal or a pair. @param {any} v */
+function ratPair(v) {
+  if (Array.isArray(v)) return v;
+  const [n, d] = decimal(String(v), 'demandFactor');
+  const g = gcdBig(n, d) || 1n;
+  return [Number(n / g), Number(d / g)];
 }
