@@ -744,6 +744,7 @@
         "Validate project names and refuse any path that leaves the project directory",
         "Write spec or layout text only if the base hash equals the current file's hash, replacing the file atomically, serialized per project, appending a line to .history/journal.jsonl",
         "Read a project with the hashes of its files and its recorded results",
+        "Read project.jsonc: the specification it links to and the realisation roots it declares, without ever writing it",
         "Write generated artifacts only under generated/, and record verification results",
         "Export and import project bundles, and watch a project's files for external changes"
       ],
@@ -1598,6 +1599,41 @@
         ],
         "notes": "Run by hand when the Markdown file changes; one way, as the Markdown importer."
       }
+    },
+    {
+      "id": "external-realisation",
+      "name": "External realisation",
+      "parent": "tooling",
+      "category": "logical",
+      "runsIn": "node",
+      "purpose": "Lets a project be realised in other repositories: reads the realisation roots a project's project.jsonc names, checks modules declared in a root against that root, and turns a root's JUnit reports into pass, fail or not-run results for test evidence that points into it.",
+      "responsibilities": [
+        "Resolve the roots of project.jsonc (alias, path relative to the project directory or absolute, include and exclude globs, test runs, environmental patterns) and refuse a malformed declaration",
+        "Check a module written <alias>:<path> against that root, report a module naming an undeclared alias as missing, and report unclaimed files only for a root that declares include globs",
+        "Through `verify`: run each test command a root declares (unless --ingest-only), then read its JUnit report, and record each external test evidence as pass, fail or not-run by matching file, describe path and test name",
+        "Record a test as not-run, never as failed, when it is absent from the report, skipped, reported as an error, or failed with a message matching the root's environmental patterns"
+      ],
+      "unknowns": [
+        "Only JUnit XML is read; a root whose runner cannot write JUnit cannot provide test evidence.",
+        "Results are not tied to the commit of the root they were recorded from (WK-393 follow-up)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/realisation-roots.js",
+          "tools/junit.js"
+        ]
+      }
+    },
+    {
+      "id": "external-test-runner",
+      "name": "Root test runner",
+      "category": "external",
+      "runsIn": "node",
+      "purpose": "The test runner of a realisation root (bun test, for example), started by `exegra verify` through the command project.jsonc declares for that root, writing a JUnit report.",
+      "responsibilities": [
+        "Run a root's tests and write a JUnit XML report"
+      ]
     }
   ],
 
@@ -2321,6 +2357,34 @@
       "from": "test-suites",
       "to": "register-importer",
       "description": "Core tests exercise the register importer on a fixture and analyze its output."
+    },
+    {
+      "id": "agent-cli-calls-external-realisation",
+      "kind": "calls",
+      "from": "agent-cli",
+      "to": "external-realisation",
+      "description": "traceability, generate and verify resolve the project's realisation roots; verify records external test evidence from their JUnit reports."
+    },
+    {
+      "id": "verification-pipeline-calls-external-realisation",
+      "kind": "calls",
+      "from": "verification-pipeline",
+      "to": "external-realisation",
+      "description": "The traceability check delegates modules that name a root, and the scan of a root's include globs."
+    },
+    {
+      "id": "external-realisation-calls-filesystem",
+      "kind": "calls",
+      "from": "external-realisation",
+      "to": "filesystem",
+      "description": "Checks modules and scans files in a root; reads JUnit reports."
+    },
+    {
+      "id": "external-realisation-calls-external-test-runner",
+      "kind": "calls",
+      "from": "external-realisation",
+      "to": "external-test-runner",
+      "description": "verify spawns the test command a root declares, without a shell, unless --ingest-only."
     }
   ],
 
@@ -5132,6 +5196,38 @@
       "evaluate": {
         "method": "external-evidence"
       }
+    },
+    {
+      "id": "realisation-roots-traced",
+      "kind": "invariant",
+      "statement": "When project.jsonc declares realisation roots, traceability checks each module written <alias>:<path> against that root's directory, reports a module naming an undeclared alias as missing, and reports unclaimed files only for roots that declare include globs (minus exclude globs); with no roots declared, the traceability result is the same as without the feature.",
+      "subjects": [
+        "external-realisation",
+        "verification-pipeline"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "external-not-run-distinct-from-fail",
+      "kind": "invariant",
+      "statement": "External test evidence is recorded as fail only when a matched JUnit test case reports a failure whose text matches none of the root's environmental patterns; a test absent from the report, skipped, reported as an error, or failing for an environmental reason is recorded as not-run, which `verify` never counts as a failure and the claim evaluator treats as having no result.",
+      "subjects": [
+        "external-realisation",
+        "recorded-results-file"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
     }
   ],
 
@@ -5351,6 +5447,20 @@
       "kind": "test",
       "ref": "tests/core/import-register.test.js#a map whose JSONC is the authority refuses to import and render needs only the JSONC",
       "description": "An authority map makes the import exit 1 without writing; --render of a written specification gives the source Markdown."
+    },
+    {
+      "id": "ev-external-traceability",
+      "claim": "realisation-roots-traced",
+      "kind": "test",
+      "ref": "tests/core/external-realisation.test.js#traceability",
+      "description": "Modules in a fake external root are checked there; an undeclared alias is missing; only roots with include globs report unclaimed files; no roots gives the earlier result."
+    },
+    {
+      "id": "ev-external-junit",
+      "claim": "external-not-run-distinct-from-fail",
+      "kind": "test",
+      "ref": "tests/core/external-realisation.test.js#junit",
+      "description": "A fixture JUnit report gives pass, fail and not-run per evidence entry, matched by file, describe path and name; verify --ingest-only records them and fails only on a real failure."
     }
   ],
 

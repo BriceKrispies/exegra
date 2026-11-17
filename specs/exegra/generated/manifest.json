@@ -2,19 +2,19 @@
   "counts": {
     "assumption": 11,
     "behavior": 12,
-    "claim": 92,
-    "component": 82,
+    "claim": 98,
+    "component": 85,
     "contract": 8,
     "copy": 3,
     "environment": 1,
     "event": 19,
-    "evidence": 39,
+    "evidence": 46,
     "failureMode": 5,
     "fault": 10,
     "faultModel": 1,
     "port": 15,
     "record": 1,
-    "relationship": 255,
+    "relationship": 267,
     "scenario": 5,
     "state": 24,
     "system": 1,
@@ -1498,6 +1498,7 @@
           "Validate project names and refuse any path that leaves the project directory",
           "Write spec or layout text only if the base hash equals the current file's hash, replacing the file atomically, serialized per project, appending a line to .history/journal.jsonl",
           "Read a project with the hashes of its files and its recorded results",
+          "Read project.jsonc: the specification it links to and the realisation roots it declares, without ever writing it",
           "Write generated artifacts only under generated/, and record verification results",
           "Export and import project bundles, and watch a project's files for external changes"
         ],
@@ -1532,7 +1533,7 @@
       "owner": "workspace-service",
       "source": {
         "column": 9,
-        "line": 751
+        "line": 752
       }
     },
     {
@@ -1558,7 +1559,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 760
+        "line": 761
       }
     },
     {
@@ -1581,7 +1582,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 770
+        "line": 771
       }
     },
     {
@@ -1607,7 +1608,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 779
+        "line": 780
       }
     },
     {
@@ -1630,7 +1631,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 789
+        "line": 790
       }
     },
     {
@@ -1668,7 +1669,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 800
+        "line": 801
       }
     },
     {
@@ -1686,7 +1687,7 @@
       "owner": "agent-cli",
       "source": {
         "column": 9,
-        "line": 815
+        "line": 816
       }
     },
     {
@@ -1704,7 +1705,7 @@
       "owner": "agent-cli",
       "source": {
         "column": 9,
-        "line": 823
+        "line": 824
       }
     },
     {
@@ -1732,7 +1733,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 848
+        "line": 849
       }
     },
     {
@@ -1768,7 +1769,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 858
+        "line": 859
       }
     },
     {
@@ -1803,7 +1804,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 873
+        "line": 874
       }
     },
     {
@@ -1827,7 +1828,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 892
+        "line": 893
       }
     },
     {
@@ -1854,7 +1855,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 901
+        "line": 902
       }
     },
     {
@@ -1890,7 +1891,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 911
+        "line": 912
       }
     },
     {
@@ -1914,7 +1915,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 931
+        "line": 932
       }
     },
     {
@@ -1929,6 +1930,7 @@
             "tests/core/fault-model.test.js",
             "tests/core/generate.test.js",
             "tests/core/import-markdown.test.js",
+            "tests/core/import-register.test.js",
             "tests/core/layout.test.js",
             "tests/core/model.test.js",
             "tests/core/projections.test.js",
@@ -1963,7 +1965,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 940
+        "line": 941
       }
     },
     {
@@ -1983,7 +1985,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 981
+        "line": 983
       }
     },
     {
@@ -2003,7 +2005,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 989
+        "line": 991
       }
     },
     {
@@ -2023,7 +2025,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 997
+        "line": 999
       }
     },
     {
@@ -2043,7 +2045,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1005
+        "line": 1007
       }
     },
     {
@@ -2063,7 +2065,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1013
+        "line": 1015
       }
     },
     {
@@ -2083,7 +2085,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1021
+        "line": 1023
       }
     },
     {
@@ -2103,7 +2105,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1029
+        "line": 1031
       }
     },
     {
@@ -2122,7 +2124,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1037
+        "line": 1039
       }
     },
     {
@@ -2142,7 +2144,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1044
+        "line": 1046
       }
     },
     {
@@ -2170,7 +2172,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1052
+        "line": 1054
       }
     },
     {
@@ -2198,7 +2200,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1070
+        "line": 1072
       }
     },
     {
@@ -2226,7 +2228,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1088
+        "line": 1090
       }
     },
     {
@@ -2254,7 +2256,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1106
+        "line": 1108
       }
     },
     {
@@ -2281,7 +2283,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1124
+        "line": 1126
       }
     },
     {
@@ -2308,7 +2310,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1141
+        "line": 1143
       }
     },
     {
@@ -2345,7 +2347,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1158
+        "line": 1160
       }
     },
     {
@@ -2383,7 +2385,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1185
+        "line": 1187
       }
     },
     {
@@ -2414,7 +2416,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1213
+        "line": 1215
       }
     },
     {
@@ -2459,7 +2461,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1234
+        "line": 1236
       }
     },
     {
@@ -2489,7 +2491,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1269
+        "line": 1271
       }
     },
     {
@@ -2519,7 +2521,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1289
+        "line": 1291
       }
     },
     {
@@ -2549,7 +2551,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1309
+        "line": 1311
       }
     },
     {
@@ -2580,7 +2582,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1329
+        "line": 1331
       }
     },
     {
@@ -2617,7 +2619,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1350
+        "line": 1352
       }
     },
     {
@@ -2657,7 +2659,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1377
+        "line": 1379
       }
     },
     {
@@ -2693,7 +2695,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1407
+        "line": 1409
       }
     },
     {
@@ -2729,7 +2731,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1433
+        "line": 1435
       }
     },
     {
@@ -2774,7 +2776,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1459
+        "line": 1461
       }
     },
     {
@@ -2811,7 +2813,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1494
+        "line": 1496
       }
     },
     {
@@ -2847,7 +2849,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1521
+        "line": 1523
       }
     },
     {
@@ -2884,7 +2886,99 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1547
+        "line": 1549
+      }
+    },
+    {
+      "data": {
+        "category": "infrastructure",
+        "id": "register-importer",
+        "implementation": {
+          "modules": [
+            "tools/import-register.js"
+          ],
+          "notes": "Run by hand when the Markdown file changes; one way, as the Markdown importer.",
+          "status": "manual"
+        },
+        "name": "Register importer",
+        "parent": "tooling",
+        "purpose": "A command line tool that converts one large Markdown specification file, written as headings, prose and register tables, into the specification file of a linked project: every table row becomes an entity of a kind the import map declares (or a generic table row), and every entity names the line it came from.",
+        "responsibilities": [
+          "Read one Markdown file and the project's import map (specs/<project>/import-map.jsonc with \"format\": \"register\"), which declares the entity kinds, the table rules (header cells, optional heading scope, the id column or id prefix, a property per column, reference columns), component categories and aliases, and which identifier patterns count as mentions",
+          "Hold every line: headings become sections whose bodies keep prose verbatim, and each imported table row and table header is replaced in its section body by one {{entity:<id>}} marker line; write nothing unless the file rebuilds line for line with each marker expanded to the lines it came from",
+          "Make every row entity render back to its cells: a row rendered from its properties must give the same cells as the source row, or the import fails naming the entity",
+          "Give every imported entity a source property (path:line in the source repository) and, when the row carries an identifier, a ref property with the identifier as written; identifiers and citations named in a row become its mentions (references to imported entities) and citations (as written)",
+          "Record what it recognised but could not map (a row whose cell count differs from its header, an unresolved mention, a duplicate identifier, a reference column naming no entity) as losses with counts and examples, printed and written into the generated specification's system notes",
+          "Merge the draft fragments the map lists (\"drafts\"): authored entities that are not from the Markdown, each given origin \"draft\" and the file and line of its declaration as source, citing in basis the imported entities it answers; drafts never change the Markdown the sections render"
+        ],
+        "runsIn": "node",
+        "unknowns": [
+          "It writes the project's specification file directly with node:fs, not through the workspace service or the transaction system, like the Markdown importer; once a map says \"authority\": \"jsonc\" it refuses to import over that file (only --out writes elsewhere), so edits made in Exegra are not overwritten.",
+          "It does not analyze or validate what it writes; that the output analyzes without errors is checked by the tests and by exegra validate."
+        ]
+      },
+      "id": "register-importer",
+      "kind": "component",
+      "label": "Register importer",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 1576
+      }
+    },
+    {
+      "data": {
+        "category": "logical",
+        "id": "external-realisation",
+        "implementation": {
+          "modules": [
+            "tools/realisation-roots.js",
+            "tools/junit.js"
+          ],
+          "status": "manual"
+        },
+        "name": "External realisation",
+        "parent": "tooling",
+        "purpose": "Lets a project be realised in other repositories: reads the realisation roots a project's project.jsonc names, checks modules declared in a root against that root, and turns a root's JUnit reports into pass, fail or not-run results for test evidence that points into it.",
+        "responsibilities": [
+          "Resolve the roots of project.jsonc (alias, path relative to the project directory or absolute, include and exclude globs, test runs, environmental patterns) and refuse a malformed declaration",
+          "Check a module written <alias>:<path> against that root, report a module naming an undeclared alias as missing, and report unclaimed files only for a root that declares include globs",
+          "Through `verify`: run each test command a root declares (unless --ingest-only), then read its JUnit report, and record each external test evidence as pass, fail or not-run by matching file, describe path and test name",
+          "Record a test as not-run, never as failed, when it is absent from the report, skipped, reported as an error, or failed with a message matching the root's environmental patterns"
+        ],
+        "runsIn": "node",
+        "unknowns": [
+          "Only JUnit XML is read; a root whose runner cannot write JUnit cannot provide test evidence.",
+          "Results are not tied to the commit of the root they were recorded from (WK-393 follow-up)."
+        ]
+      },
+      "id": "external-realisation",
+      "kind": "component",
+      "label": "External realisation",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 1603
+      }
+    },
+    {
+      "data": {
+        "category": "external",
+        "id": "external-test-runner",
+        "name": "Root test runner",
+        "purpose": "The test runner of a realisation root (bun test, for example), started by `exegra verify` through the command project.jsonc declares for that root, writing a JUnit report.",
+        "responsibilities": [
+          "Run a root's tests and write a JUnit XML report"
+        ],
+        "runsIn": "node"
+      },
+      "id": "external-test-runner",
+      "kind": "component",
+      "label": "Root test runner",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 1628
       }
     },
     {
@@ -2901,7 +2995,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1582
+        "line": 1646
       }
     },
     {
@@ -2918,7 +3012,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1583
+        "line": 1647
       }
     },
     {
@@ -2935,7 +3029,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1584
+        "line": 1648
       }
     },
     {
@@ -2952,7 +3046,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1585
+        "line": 1649
       }
     },
     {
@@ -2969,7 +3063,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1586
+        "line": 1650
       }
     },
     {
@@ -2986,7 +3080,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1587
+        "line": 1651
       }
     },
     {
@@ -3003,7 +3097,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1588
+        "line": 1652
       }
     },
     {
@@ -3020,7 +3114,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1589
+        "line": 1653
       }
     },
     {
@@ -3037,7 +3131,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1590
+        "line": 1654
       }
     },
     {
@@ -3054,7 +3148,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1591
+        "line": 1655
       }
     },
     {
@@ -3071,7 +3165,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1592
+        "line": 1656
       }
     },
     {
@@ -3088,7 +3182,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1593
+        "line": 1657
       }
     },
     {
@@ -3105,7 +3199,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1594
+        "line": 1658
       }
     },
     {
@@ -3122,7 +3216,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1595
+        "line": 1659
       }
     },
     {
@@ -3139,7 +3233,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1596
+        "line": 1660
       }
     },
     {
@@ -3156,7 +3250,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1597
+        "line": 1661
       }
     },
     {
@@ -3173,7 +3267,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1598
+        "line": 1662
       }
     },
     {
@@ -3190,7 +3284,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1599
+        "line": 1663
       }
     },
     {
@@ -3207,7 +3301,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1600
+        "line": 1664
       }
     },
     {
@@ -3225,7 +3319,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1601
+        "line": 1665
       }
     },
     {
@@ -3242,7 +3336,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1604
+        "line": 1668
       }
     },
     {
@@ -3260,7 +3354,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1605
+        "line": 1669
       }
     },
     {
@@ -3277,7 +3371,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1606
+        "line": 1670
       }
     },
     {
@@ -3294,7 +3388,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1607
+        "line": 1671
       }
     },
     {
@@ -3311,7 +3405,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1608
+        "line": 1672
       }
     },
     {
@@ -3328,7 +3422,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1609
+        "line": 1673
       }
     },
     {
@@ -3345,7 +3439,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1610
+        "line": 1674
       }
     },
     {
@@ -3362,7 +3456,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1611
+        "line": 1675
       }
     },
     {
@@ -3379,7 +3473,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1612
+        "line": 1676
       }
     },
     {
@@ -3396,7 +3490,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1613
+        "line": 1677
       }
     },
     {
@@ -3413,7 +3507,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1614
+        "line": 1678
       }
     },
     {
@@ -3430,7 +3524,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1615
+        "line": 1679
       }
     },
     {
@@ -3448,7 +3542,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1616
+        "line": 1680
       }
     },
     {
@@ -3465,7 +3559,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1617
+        "line": 1681
       }
     },
     {
@@ -3482,7 +3576,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1618
+        "line": 1682
       }
     },
     {
@@ -3499,7 +3593,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1619
+        "line": 1683
       }
     },
     {
@@ -3516,7 +3610,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1620
+        "line": 1684
       }
     },
     {
@@ -3533,7 +3627,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1621
+        "line": 1685
       }
     },
     {
@@ -3550,7 +3644,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1622
+        "line": 1686
       }
     },
     {
@@ -3567,7 +3661,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1623
+        "line": 1687
       }
     },
     {
@@ -3584,7 +3678,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1624
+        "line": 1688
       }
     },
     {
@@ -3602,7 +3696,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1627
+        "line": 1691
       }
     },
     {
@@ -3619,7 +3713,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1628
+        "line": 1692
       }
     },
     {
@@ -3636,7 +3730,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1629
+        "line": 1693
       }
     },
     {
@@ -3653,7 +3747,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1630
+        "line": 1694
       }
     },
     {
@@ -3671,7 +3765,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1631
+        "line": 1695
       }
     },
     {
@@ -3689,7 +3783,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1632
+        "line": 1696
       }
     },
     {
@@ -3707,7 +3801,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1633
+        "line": 1697
       }
     },
     {
@@ -3724,7 +3818,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1634
+        "line": 1698
       }
     },
     {
@@ -3742,7 +3836,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1635
+        "line": 1699
       }
     },
     {
@@ -3759,7 +3853,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1636
+        "line": 1700
       }
     },
     {
@@ -3776,7 +3870,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1637
+        "line": 1701
       }
     },
     {
@@ -3793,7 +3887,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1638
+        "line": 1702
       }
     },
     {
@@ -3810,7 +3904,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1641
+        "line": 1705
       }
     },
     {
@@ -3827,7 +3921,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1642
+        "line": 1706
       }
     },
     {
@@ -3844,7 +3938,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1643
+        "line": 1707
       }
     },
     {
@@ -3861,7 +3955,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1644
+        "line": 1708
       }
     },
     {
@@ -3878,7 +3972,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1645
+        "line": 1709
       }
     },
     {
@@ -3895,7 +3989,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1646
+        "line": 1710
       }
     },
     {
@@ -3912,7 +4006,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1647
+        "line": 1711
       }
     },
     {
@@ -3930,7 +4024,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1648
+        "line": 1712
       }
     },
     {
@@ -3947,7 +4041,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1649
+        "line": 1713
       }
     },
     {
@@ -3964,7 +4058,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1650
+        "line": 1714
       }
     },
     {
@@ -3981,7 +4075,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1651
+        "line": 1715
       }
     },
     {
@@ -3998,7 +4092,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1652
+        "line": 1716
       }
     },
     {
@@ -4015,7 +4109,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1653
+        "line": 1717
       }
     },
     {
@@ -4032,7 +4126,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1654
+        "line": 1718
       }
     },
     {
@@ -4050,7 +4144,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1655
+        "line": 1719
       }
     },
     {
@@ -4067,7 +4161,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1656
+        "line": 1720
       }
     },
     {
@@ -4084,7 +4178,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1657
+        "line": 1721
       }
     },
     {
@@ -4101,7 +4195,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1658
+        "line": 1722
       }
     },
     {
@@ -4118,7 +4212,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1659
+        "line": 1723
       }
     },
     {
@@ -4135,7 +4229,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1660
+        "line": 1724
       }
     },
     {
@@ -4152,7 +4246,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1661
+        "line": 1725
       }
     },
     {
@@ -4169,7 +4263,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1662
+        "line": 1726
       }
     },
     {
@@ -4186,7 +4280,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1663
+        "line": 1727
       }
     },
     {
@@ -4203,7 +4297,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1664
+        "line": 1728
       }
     },
     {
@@ -4220,7 +4314,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1665
+        "line": 1729
       }
     },
     {
@@ -4237,7 +4331,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1666
+        "line": 1730
       }
     },
     {
@@ -4254,7 +4348,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1667
+        "line": 1731
       }
     },
     {
@@ -4271,7 +4365,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1668
+        "line": 1732
       }
     },
     {
@@ -4288,7 +4382,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1669
+        "line": 1733
       }
     },
     {
@@ -4305,7 +4399,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1670
+        "line": 1734
       }
     },
     {
@@ -4322,7 +4416,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1671
+        "line": 1735
       }
     },
     {
@@ -4339,7 +4433,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1672
+        "line": 1736
       }
     },
     {
@@ -4356,7 +4450,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1673
+        "line": 1737
       }
     },
     {
@@ -4374,7 +4468,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1674
+        "line": 1738
       }
     },
     {
@@ -4391,7 +4485,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1675
+        "line": 1739
       }
     },
     {
@@ -4408,7 +4502,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1676
+        "line": 1740
       }
     },
     {
@@ -4425,7 +4519,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1677
+        "line": 1741
       }
     },
     {
@@ -4442,7 +4536,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1678
+        "line": 1742
       }
     },
     {
@@ -4459,7 +4553,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1679
+        "line": 1743
       }
     },
     {
@@ -4476,7 +4570,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1680
+        "line": 1744
       }
     },
     {
@@ -4493,7 +4587,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1681
+        "line": 1745
       }
     },
     {
@@ -4510,7 +4604,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1682
+        "line": 1746
       }
     },
     {
@@ -4528,7 +4622,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1683
+        "line": 1747
       }
     },
     {
@@ -4545,7 +4639,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1684
+        "line": 1748
       }
     },
     {
@@ -4562,7 +4656,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1685
+        "line": 1749
       }
     },
     {
@@ -4579,7 +4673,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1686
+        "line": 1750
       }
     },
     {
@@ -4596,7 +4690,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1687
+        "line": 1751
       }
     },
     {
@@ -4613,7 +4707,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1688
+        "line": 1752
       }
     },
     {
@@ -4631,7 +4725,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1689
+        "line": 1753
       }
     },
     {
@@ -4648,7 +4742,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1690
+        "line": 1754
       }
     },
     {
@@ -4665,7 +4759,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1691
+        "line": 1755
       }
     },
     {
@@ -4682,7 +4776,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1692
+        "line": 1756
       }
     },
     {
@@ -4699,7 +4793,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1693
+        "line": 1757
       }
     },
     {
@@ -4716,7 +4810,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1694
+        "line": 1758
       }
     },
     {
@@ -4733,7 +4827,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1695
+        "line": 1759
       }
     },
     {
@@ -4750,7 +4844,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1696
+        "line": 1760
       }
     },
     {
@@ -4767,7 +4861,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1697
+        "line": 1761
       }
     },
     {
@@ -4784,7 +4878,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1698
+        "line": 1762
       }
     },
     {
@@ -4801,7 +4895,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1699
+        "line": 1763
       }
     },
     {
@@ -4818,7 +4912,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1700
+        "line": 1764
       }
     },
     {
@@ -4835,7 +4929,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1701
+        "line": 1765
       }
     },
     {
@@ -4852,7 +4946,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1702
+        "line": 1766
       }
     },
     {
@@ -4869,7 +4963,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1703
+        "line": 1767
       }
     },
     {
@@ -4886,7 +4980,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1704
+        "line": 1768
       }
     },
     {
@@ -4903,7 +4997,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1705
+        "line": 1769
       }
     },
     {
@@ -4920,7 +5014,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1706
+        "line": 1770
       }
     },
     {
@@ -4937,7 +5031,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1707
+        "line": 1771
       }
     },
     {
@@ -4954,7 +5048,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1708
+        "line": 1772
       }
     },
     {
@@ -4971,7 +5065,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1709
+        "line": 1773
       }
     },
     {
@@ -4988,7 +5082,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1710
+        "line": 1774
       }
     },
     {
@@ -5005,7 +5099,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1711
+        "line": 1775
       }
     },
     {
@@ -5022,7 +5116,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1712
+        "line": 1776
       }
     },
     {
@@ -5039,7 +5133,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1713
+        "line": 1777
       }
     },
     {
@@ -5056,7 +5150,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1714
+        "line": 1778
       }
     },
     {
@@ -5073,7 +5167,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1715
+        "line": 1779
       }
     },
     {
@@ -5091,7 +5185,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1718
+        "line": 1782
       }
     },
     {
@@ -5108,7 +5202,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1719
+        "line": 1783
       }
     },
     {
@@ -5125,7 +5219,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1720
+        "line": 1784
       }
     },
     {
@@ -5143,7 +5237,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1721
+        "line": 1785
       }
     },
     {
@@ -5160,7 +5254,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1722
+        "line": 1786
       }
     },
     {
@@ -5177,7 +5271,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1723
+        "line": 1787
       }
     },
     {
@@ -5194,7 +5288,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1724
+        "line": 1788
       }
     },
     {
@@ -5211,7 +5305,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1725
+        "line": 1789
       }
     },
     {
@@ -5228,7 +5322,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1726
+        "line": 1790
       }
     },
     {
@@ -5245,7 +5339,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1727
+        "line": 1791
       }
     },
     {
@@ -5262,7 +5356,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1728
+        "line": 1792
       }
     },
     {
@@ -5279,7 +5373,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1729
+        "line": 1793
       }
     },
     {
@@ -5296,7 +5390,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1730
+        "line": 1794
       }
     },
     {
@@ -5313,7 +5407,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1731
+        "line": 1795
       }
     },
     {
@@ -5331,7 +5425,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1734
+        "line": 1798
       }
     },
     {
@@ -5349,7 +5443,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1735
+        "line": 1799
       }
     },
     {
@@ -5366,7 +5460,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1736
+        "line": 1800
       }
     },
     {
@@ -5383,7 +5477,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1737
+        "line": 1801
       }
     },
     {
@@ -5400,7 +5494,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1738
+        "line": 1802
       }
     },
     {
@@ -5418,7 +5512,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1739
+        "line": 1803
       }
     },
     {
@@ -5436,7 +5530,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1740
+        "line": 1804
       }
     },
     {
@@ -5453,7 +5547,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1741
+        "line": 1805
       }
     },
     {
@@ -5470,7 +5564,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1742
+        "line": 1806
       }
     },
     {
@@ -5487,7 +5581,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1743
+        "line": 1807
       }
     },
     {
@@ -5504,7 +5598,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1744
+        "line": 1808
       }
     },
     {
@@ -5521,7 +5615,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1745
+        "line": 1809
       }
     },
     {
@@ -5538,7 +5632,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1746
+        "line": 1810
       }
     },
     {
@@ -5555,7 +5649,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1747
+        "line": 1811
       }
     },
     {
@@ -5572,7 +5666,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1748
+        "line": 1812
       }
     },
     {
@@ -5589,7 +5683,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1749
+        "line": 1813
       }
     },
     {
@@ -5606,7 +5700,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1750
+        "line": 1814
       }
     },
     {
@@ -5623,7 +5717,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1751
+        "line": 1815
       }
     },
     {
@@ -5640,7 +5734,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1752
+        "line": 1816
       }
     },
     {
@@ -5657,7 +5751,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1753
+        "line": 1817
       }
     },
     {
@@ -5674,7 +5768,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1754
+        "line": 1818
       }
     },
     {
@@ -5691,7 +5785,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1755
+        "line": 1819
       }
     },
     {
@@ -5708,7 +5802,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1756
+        "line": 1820
       }
     },
     {
@@ -5725,7 +5819,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1757
+        "line": 1821
       }
     },
     {
@@ -5742,7 +5836,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1758
+        "line": 1822
       }
     },
     {
@@ -5759,7 +5853,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1759
+        "line": 1823
       }
     },
     {
@@ -5776,7 +5870,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1760
+        "line": 1824
       }
     },
     {
@@ -5793,7 +5887,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1761
+        "line": 1825
       }
     },
     {
@@ -5810,7 +5904,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1762
+        "line": 1826
       }
     },
     {
@@ -5827,7 +5921,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1763
+        "line": 1827
       }
     },
     {
@@ -5844,7 +5938,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1764
+        "line": 1828
       }
     },
     {
@@ -5861,7 +5955,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1765
+        "line": 1829
       }
     },
     {
@@ -5878,7 +5972,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1766
+        "line": 1830
       }
     },
     {
@@ -5895,7 +5989,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1767
+        "line": 1831
       }
     },
     {
@@ -5912,7 +6006,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1768
+        "line": 1832
       }
     },
     {
@@ -5929,7 +6023,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1769
+        "line": 1833
       }
     },
     {
@@ -5946,7 +6040,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1770
+        "line": 1834
       }
     },
     {
@@ -5963,7 +6057,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1771
+        "line": 1835
       }
     },
     {
@@ -5980,7 +6074,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1772
+        "line": 1836
       }
     },
     {
@@ -5997,7 +6091,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1773
+        "line": 1837
       }
     },
     {
@@ -6014,7 +6108,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1774
+        "line": 1838
       }
     },
     {
@@ -6031,7 +6125,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1775
+        "line": 1839
       }
     },
     {
@@ -6048,7 +6142,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1776
+        "line": 1840
       }
     },
     {
@@ -6065,7 +6159,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1777
+        "line": 1841
       }
     },
     {
@@ -6082,7 +6176,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1778
+        "line": 1842
       }
     },
     {
@@ -6099,7 +6193,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1779
+        "line": 1843
       }
     },
     {
@@ -6116,7 +6210,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1780
+        "line": 1844
       }
     },
     {
@@ -6133,7 +6227,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1781
+        "line": 1845
       }
     },
     {
@@ -6150,7 +6244,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1782
+        "line": 1846
       }
     },
     {
@@ -6167,7 +6261,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1789
+        "line": 1853
       }
     },
     {
@@ -6184,7 +6278,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1796
+        "line": 1860
       }
     },
     {
@@ -6201,7 +6295,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1803
+        "line": 1867
       }
     },
     {
@@ -6218,7 +6312,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1810
+        "line": 1874
       }
     },
     {
@@ -6235,7 +6329,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1817
+        "line": 1881
       }
     },
     {
@@ -6252,7 +6346,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1824
+        "line": 1888
       }
     },
     {
@@ -6269,7 +6363,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1831
+        "line": 1895
       }
     },
     {
@@ -6286,7 +6380,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1838
+        "line": 1902
       }
     },
     {
@@ -6303,7 +6397,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1845
+        "line": 1909
       }
     },
     {
@@ -6320,7 +6414,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1852
+        "line": 1916
       }
     },
     {
@@ -6337,7 +6431,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1859
+        "line": 1923
       }
     },
     {
@@ -6354,7 +6448,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1866
+        "line": 1930
       }
     },
     {
@@ -6371,7 +6465,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1873
+        "line": 1937
       }
     },
     {
@@ -6388,7 +6482,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1880
+        "line": 1944
       }
     },
     {
@@ -6405,7 +6499,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1887
+        "line": 1951
       }
     },
     {
@@ -6422,7 +6516,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1894
+        "line": 1958
       }
     },
     {
@@ -6439,7 +6533,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1901
+        "line": 1965
       }
     },
     {
@@ -6456,7 +6550,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1908
+        "line": 1972
       }
     },
     {
@@ -6473,7 +6567,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1915
+        "line": 1979
       }
     },
     {
@@ -6490,7 +6584,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1922
+        "line": 1986
       }
     },
     {
@@ -6507,7 +6601,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1929
+        "line": 1993
       }
     },
     {
@@ -6524,7 +6618,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1936
+        "line": 2000
       }
     },
     {
@@ -6541,7 +6635,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1943
+        "line": 2007
       }
     },
     {
@@ -6558,7 +6652,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1950
+        "line": 2014
       }
     },
     {
@@ -6575,7 +6669,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1957
+        "line": 2021
       }
     },
     {
@@ -6592,7 +6686,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1964
+        "line": 2028
       }
     },
     {
@@ -6609,7 +6703,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1971
+        "line": 2035
       }
     },
     {
@@ -6626,7 +6720,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1978
+        "line": 2042
       }
     },
     {
@@ -6643,7 +6737,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1985
+        "line": 2049
       }
     },
     {
@@ -6660,7 +6754,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1992
+        "line": 2056
       }
     },
     {
@@ -6677,7 +6771,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 1999
+        "line": 2063
       }
     },
     {
@@ -6694,7 +6788,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2006
+        "line": 2070
       }
     },
     {
@@ -6711,7 +6805,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2013
+        "line": 2077
       }
     },
     {
@@ -6728,7 +6822,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2020
+        "line": 2084
       }
     },
     {
@@ -6745,7 +6839,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2027
+        "line": 2091
       }
     },
     {
@@ -6762,7 +6856,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2034
+        "line": 2098
       }
     },
     {
@@ -6779,7 +6873,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2041
+        "line": 2105
       }
     },
     {
@@ -6796,7 +6890,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2048
+        "line": 2112
       }
     },
     {
@@ -6813,7 +6907,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2055
+        "line": 2119
       }
     },
     {
@@ -6830,7 +6924,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2062
+        "line": 2126
       }
     },
     {
@@ -6847,7 +6941,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2069
+        "line": 2133
       }
     },
     {
@@ -6864,7 +6958,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2076
+        "line": 2140
       }
     },
     {
@@ -6881,7 +6975,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2083
+        "line": 2147
       }
     },
     {
@@ -6898,7 +6992,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2090
+        "line": 2154
       }
     },
     {
@@ -6915,7 +7009,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2097
+        "line": 2161
       }
     },
     {
@@ -6932,7 +7026,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2104
+        "line": 2168
       }
     },
     {
@@ -6949,7 +7043,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2111
+        "line": 2175
       }
     },
     {
@@ -6966,7 +7060,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2118
+        "line": 2182
       }
     },
     {
@@ -6983,7 +7077,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2125
+        "line": 2189
       }
     },
     {
@@ -7000,7 +7094,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2132
+        "line": 2196
       }
     },
     {
@@ -7017,7 +7111,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2139
+        "line": 2203
       }
     },
     {
@@ -7034,7 +7128,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2146
+        "line": 2210
       }
     },
     {
@@ -7052,7 +7146,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2153
+        "line": 2217
       }
     },
     {
@@ -7069,7 +7163,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2161
+        "line": 2225
       }
     },
     {
@@ -7086,7 +7180,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2168
+        "line": 2232
       }
     },
     {
@@ -7103,7 +7197,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2175
+        "line": 2239
       }
     },
     {
@@ -7121,7 +7215,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2182
+        "line": 2246
       }
     },
     {
@@ -7139,7 +7233,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2190
+        "line": 2254
       }
     },
     {
@@ -7157,7 +7251,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2198
+        "line": 2262
       }
     },
     {
@@ -7174,7 +7268,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2206
+        "line": 2270
       }
     },
     {
@@ -7191,7 +7285,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2213
+        "line": 2277
       }
     },
     {
@@ -7208,7 +7302,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2220
+        "line": 2284
       }
     },
     {
@@ -7225,7 +7319,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2227
+        "line": 2291
       }
     },
     {
@@ -7242,7 +7336,211 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2234
+        "line": 2298
+      }
+    },
+    {
+      "data": {
+        "description": "Reads the Markdown file and the repository's git commit; it never writes there.",
+        "from": "register-importer",
+        "id": "register-importer-reads-markdown-specification-source",
+        "kind": "reads",
+        "to": "markdown-specification-source"
+      },
+      "id": "register-importer-reads-markdown-specification-source",
+      "kind": "relationship",
+      "label": "register-importer-reads-markdown-specification-source",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 2305
+      }
+    },
+    {
+      "data": {
+        "description": "The headings, prose and register tables of the Markdown file travel to the importer, one way.",
+        "from": "markdown-specification-source",
+        "id": "markdown-specification-source-data-flow-register-importer",
+        "kind": "data-flow",
+        "to": "register-importer"
+      },
+      "id": "markdown-specification-source-data-flow-register-importer",
+      "kind": "relationship",
+      "label": "markdown-specification-source-data-flow-register-importer",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 2312
+      }
+    },
+    {
+      "data": {
+        "description": "The generated text of the project's specification file travels to the file, deterministically, with the losses recorded in its system notes.",
+        "from": "register-importer",
+        "id": "register-importer-data-flow-specification-file",
+        "kind": "data-flow",
+        "to": "specification-file"
+      },
+      "id": "register-importer-data-flow-specification-file",
+      "kind": "relationship",
+      "label": "register-importer-data-flow-specification-file",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 2319
+      }
+    },
+    {
+      "data": {
+        "description": "Writes the project's specification file directly with node:fs, bypassing the transaction system.",
+        "from": "register-importer",
+        "id": "register-importer-writes-specification-file",
+        "kind": "writes",
+        "to": "specification-file"
+      },
+      "id": "register-importer-writes-specification-file",
+      "kind": "relationship",
+      "label": "register-importer-writes-specification-file",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 2326
+      }
+    },
+    {
+      "data": {
+        "description": "Reads the import map and re-reads the generated text with the library.",
+        "from": "register-importer",
+        "id": "register-importer-depends-on-jsonc-parser-library",
+        "kind": "depends-on",
+        "to": "jsonc-parser-library"
+      },
+      "id": "register-importer-depends-on-jsonc-parser-library",
+      "kind": "relationship",
+      "label": "register-importer-depends-on-jsonc-parser-library",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 2333
+      }
+    },
+    {
+      "data": {
+        "description": "Reuses the Markdown importer's text helpers, loss collection, coverage comparison and git commit reader.",
+        "from": "register-importer",
+        "id": "register-importer-calls-markdown-importer",
+        "kind": "calls",
+        "to": "markdown-importer"
+      },
+      "id": "register-importer-calls-markdown-importer",
+      "kind": "relationship",
+      "label": "register-importer-calls-markdown-importer",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 2340
+      }
+    },
+    {
+      "data": {
+        "description": "Reads the Markdown file and the import map, and writes or compares the generated file, with node:fs.",
+        "from": "register-importer",
+        "id": "register-importer-calls-filesystem",
+        "kind": "calls",
+        "to": "filesystem"
+      },
+      "id": "register-importer-calls-filesystem",
+      "kind": "relationship",
+      "label": "register-importer-calls-filesystem",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 2347
+      }
+    },
+    {
+      "data": {
+        "description": "Core tests exercise the register importer on a fixture and analyze its output.",
+        "from": "test-suites",
+        "id": "test-suites-calls-register-importer",
+        "kind": "calls",
+        "to": "register-importer"
+      },
+      "id": "test-suites-calls-register-importer",
+      "kind": "relationship",
+      "label": "test-suites-calls-register-importer",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 2354
+      }
+    },
+    {
+      "data": {
+        "description": "traceability, generate and verify resolve the project's realisation roots; verify records external test evidence from their JUnit reports.",
+        "from": "agent-cli",
+        "id": "agent-cli-calls-external-realisation",
+        "kind": "calls",
+        "to": "external-realisation"
+      },
+      "id": "agent-cli-calls-external-realisation",
+      "kind": "relationship",
+      "label": "agent-cli-calls-external-realisation",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 2361
+      }
+    },
+    {
+      "data": {
+        "description": "The traceability check delegates modules that name a root, and the scan of a root's include globs.",
+        "from": "verification-pipeline",
+        "id": "verification-pipeline-calls-external-realisation",
+        "kind": "calls",
+        "to": "external-realisation"
+      },
+      "id": "verification-pipeline-calls-external-realisation",
+      "kind": "relationship",
+      "label": "verification-pipeline-calls-external-realisation",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 2368
+      }
+    },
+    {
+      "data": {
+        "description": "Checks modules and scans files in a root; reads JUnit reports.",
+        "from": "external-realisation",
+        "id": "external-realisation-calls-filesystem",
+        "kind": "calls",
+        "to": "filesystem"
+      },
+      "id": "external-realisation-calls-filesystem",
+      "kind": "relationship",
+      "label": "external-realisation-calls-filesystem",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 2375
+      }
+    },
+    {
+      "data": {
+        "description": "verify spawns the test command a root declares, without a shell, unless --ingest-only.",
+        "from": "external-realisation",
+        "id": "external-realisation-calls-external-test-runner",
+        "kind": "calls",
+        "to": "external-test-runner"
+      },
+      "id": "external-realisation-calls-external-test-runner",
+      "kind": "relationship",
+      "label": "external-realisation-calls-external-test-runner",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 2382
       }
     },
     {
@@ -7353,7 +7651,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2245
+        "line": 2393
       }
     },
     {
@@ -7449,7 +7747,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2287
+        "line": 2435
       }
     },
     {
@@ -7511,7 +7809,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2349
+        "line": 2497
       }
     },
     {
@@ -7563,7 +7861,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2371
+        "line": 2519
       }
     },
     {
@@ -7616,7 +7914,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2395
+        "line": 2543
       }
     },
     {
@@ -7669,7 +7967,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2417
+        "line": 2565
       }
     },
     {
@@ -7817,7 +8115,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2438
+        "line": 2586
       }
     },
     {
@@ -7912,7 +8210,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2576
+        "line": 2724
       }
     },
     {
@@ -7927,7 +8225,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2665
+        "line": 2813
       }
     },
     {
@@ -7942,7 +8240,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2666
+        "line": 2814
       }
     },
     {
@@ -7957,7 +8255,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2667
+        "line": 2815
       }
     },
     {
@@ -7972,7 +8270,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2668
+        "line": 2816
       }
     },
     {
@@ -7987,7 +8285,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2669
+        "line": 2817
       }
     },
     {
@@ -8002,7 +8300,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2670
+        "line": 2818
       }
     },
     {
@@ -8017,7 +8315,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2671
+        "line": 2819
       }
     },
     {
@@ -8038,7 +8336,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2672
+        "line": 2820
       }
     },
     {
@@ -8053,7 +8351,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2673
+        "line": 2821
       }
     },
     {
@@ -8074,7 +8372,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2674
+        "line": 2822
       }
     },
     {
@@ -8095,7 +8393,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2675
+        "line": 2823
       }
     },
     {
@@ -8116,7 +8414,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2676
+        "line": 2824
       }
     },
     {
@@ -8137,7 +8435,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2677
+        "line": 2825
       }
     },
     {
@@ -8152,7 +8450,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2678
+        "line": 2826
       }
     },
     {
@@ -8167,7 +8465,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2679
+        "line": 2827
       }
     },
     {
@@ -8182,7 +8480,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2680
+        "line": 2828
       }
     },
     {
@@ -8217,7 +8515,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2685
+        "line": 2833
       }
     },
     {
@@ -8244,7 +8542,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2710
+        "line": 2858
       }
     },
     {
@@ -8271,7 +8569,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2727
+        "line": 2875
       }
     },
     {
@@ -8295,7 +8593,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2755
+        "line": 2903
       }
     },
     {
@@ -8309,7 +8607,7 @@
       "owner": "interaction-flow",
       "source": {
         "column": 9,
-        "line": 2763
+        "line": 2911
       }
     },
     {
@@ -8323,7 +8621,7 @@
       "owner": "interaction-flow",
       "source": {
         "column": 9,
-        "line": 2764
+        "line": 2912
       }
     },
     {
@@ -8338,7 +8636,7 @@
       "owner": "interaction-flow",
       "source": {
         "column": 9,
-        "line": 2765
+        "line": 2913
       }
     },
     {
@@ -8353,7 +8651,7 @@
       "owner": "interaction-flow",
       "source": {
         "column": 9,
-        "line": 2766
+        "line": 2914
       }
     },
     {
@@ -8374,7 +8672,7 @@
       "owner": "interaction-flow",
       "source": {
         "column": 9,
-        "line": 2769
+        "line": 2917
       }
     },
     {
@@ -8390,7 +8688,7 @@
       "owner": "interaction-flow",
       "source": {
         "column": 9,
-        "line": 2770
+        "line": 2918
       }
     },
     {
@@ -8412,7 +8710,7 @@
       "owner": "interaction-flow",
       "source": {
         "column": 9,
-        "line": 2771
+        "line": 2919
       }
     },
     {
@@ -8436,7 +8734,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2774
+        "line": 2922
       }
     },
     {
@@ -8450,7 +8748,7 @@
       "owner": "source-editor-flow",
       "source": {
         "column": 9,
-        "line": 2782
+        "line": 2930
       }
     },
     {
@@ -8464,7 +8762,7 @@
       "owner": "source-editor-flow",
       "source": {
         "column": 9,
-        "line": 2783
+        "line": 2931
       }
     },
     {
@@ -8479,7 +8777,7 @@
       "owner": "source-editor-flow",
       "source": {
         "column": 9,
-        "line": 2784
+        "line": 2932
       }
     },
     {
@@ -8500,7 +8798,7 @@
       "owner": "source-editor-flow",
       "source": {
         "column": 9,
-        "line": 2787
+        "line": 2935
       }
     },
     {
@@ -8522,7 +8820,7 @@
       "owner": "source-editor-flow",
       "source": {
         "column": 9,
-        "line": 2788
+        "line": 2936
       }
     },
     {
@@ -8538,7 +8836,7 @@
       "owner": "source-editor-flow",
       "source": {
         "column": 9,
-        "line": 2789
+        "line": 2937
       }
     },
     {
@@ -8560,7 +8858,7 @@
       "owner": "source-editor-flow",
       "source": {
         "column": 9,
-        "line": 2790
+        "line": 2938
       }
     },
     {
@@ -8589,7 +8887,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2793
+        "line": 2941
       }
     },
     {
@@ -8603,7 +8901,7 @@
       "owner": "transaction-flow",
       "source": {
         "column": 9,
-        "line": 2804
+        "line": 2952
       }
     },
     {
@@ -8617,7 +8915,7 @@
       "owner": "transaction-flow",
       "source": {
         "column": 9,
-        "line": 2805
+        "line": 2953
       }
     },
     {
@@ -8638,7 +8936,7 @@
       "owner": "transaction-flow",
       "source": {
         "column": 9,
-        "line": 2808
+        "line": 2956
       }
     },
     {
@@ -8671,7 +8969,7 @@
       "owner": "transaction-flow",
       "source": {
         "column": 9,
-        "line": 2809
+        "line": 2957
       }
     },
     {
@@ -8701,7 +8999,7 @@
       "owner": "transaction-flow",
       "source": {
         "column": 9,
-        "line": 2832
+        "line": 2980
       }
     },
     {
@@ -8734,7 +9032,7 @@
       "owner": "transaction-flow",
       "source": {
         "column": 9,
-        "line": 2852
+        "line": 3000
       }
     },
     {
@@ -8760,7 +9058,7 @@
       "owner": "transaction-flow",
       "source": {
         "column": 9,
-        "line": 2853
+        "line": 3001
       }
     },
     {
@@ -8783,7 +9081,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2856
+        "line": 3004
       }
     },
     {
@@ -8797,7 +9095,7 @@
       "owner": "parser-flow",
       "source": {
         "column": 18,
-        "line": 2862
+        "line": 3010
       }
     },
     {
@@ -8822,7 +9120,7 @@
       "owner": "parser-flow",
       "source": {
         "column": 9,
-        "line": 2864
+        "line": 3012
       }
     },
     {
@@ -8846,7 +9144,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2867
+        "line": 3015
       }
     },
     {
@@ -8860,7 +9158,7 @@
       "owner": "validator-flow",
       "source": {
         "column": 18,
-        "line": 2874
+        "line": 3022
       }
     },
     {
@@ -8887,7 +9185,7 @@
       "owner": "validator-flow",
       "source": {
         "column": 9,
-        "line": 2876
+        "line": 3024
       }
     },
     {
@@ -8912,7 +9210,7 @@
       "owner": "validator-flow",
       "source": {
         "column": 9,
-        "line": 2877
+        "line": 3025
       }
     },
     {
@@ -8941,7 +9239,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2880
+        "line": 3028
       }
     },
     {
@@ -8955,7 +9253,7 @@
       "owner": "session-flow",
       "source": {
         "column": 9,
-        "line": 2891
+        "line": 3039
       }
     },
     {
@@ -8969,7 +9267,7 @@
       "owner": "session-flow",
       "source": {
         "column": 9,
-        "line": 2892
+        "line": 3040
       }
     },
     {
@@ -8983,7 +9281,7 @@
       "owner": "session-flow",
       "source": {
         "column": 9,
-        "line": 2893
+        "line": 3041
       }
     },
     {
@@ -8998,7 +9296,7 @@
       "owner": "session-flow",
       "source": {
         "column": 9,
-        "line": 2894
+        "line": 3042
       }
     },
     {
@@ -9021,7 +9319,7 @@
       "owner": "session-flow",
       "source": {
         "column": 9,
-        "line": 2897
+        "line": 3045
       }
     },
     {
@@ -9046,7 +9344,7 @@
       "owner": "session-flow",
       "source": {
         "column": 9,
-        "line": 2910
+        "line": 3058
       }
     },
     {
@@ -9070,7 +9368,7 @@
       "owner": "session-flow",
       "source": {
         "column": 9,
-        "line": 2925
+        "line": 3073
       }
     },
     {
@@ -9106,7 +9404,7 @@
       "owner": "session-flow",
       "source": {
         "column": 9,
-        "line": 2926
+        "line": 3074
       }
     },
     {
@@ -9128,7 +9426,7 @@
       "owner": "session-flow",
       "source": {
         "column": 9,
-        "line": 2927
+        "line": 3075
       }
     },
     {
@@ -9151,7 +9449,7 @@
       "owner": "session-flow",
       "source": {
         "column": 9,
-        "line": 2928
+        "line": 3076
       }
     },
     {
@@ -9174,7 +9472,7 @@
       "owner": "session-flow",
       "source": {
         "column": 9,
-        "line": 2929
+        "line": 3077
       }
     },
     {
@@ -9197,7 +9495,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2932
+        "line": 3080
       }
     },
     {
@@ -9211,7 +9509,7 @@
       "owner": "projection-flow",
       "source": {
         "column": 18,
-        "line": 2938
+        "line": 3086
       }
     },
     {
@@ -9239,7 +9537,7 @@
       "owner": "projection-flow",
       "source": {
         "column": 9,
-        "line": 2940
+        "line": 3088
       }
     },
     {
@@ -9262,7 +9560,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2943
+        "line": 3091
       }
     },
     {
@@ -9276,7 +9574,7 @@
       "owner": "renderer-flow",
       "source": {
         "column": 18,
-        "line": 2949
+        "line": 3097
       }
     },
     {
@@ -9298,7 +9596,7 @@
       "owner": "renderer-flow",
       "source": {
         "column": 9,
-        "line": 2951
+        "line": 3099
       }
     },
     {
@@ -9321,7 +9619,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2954
+        "line": 3102
       }
     },
     {
@@ -9335,7 +9633,7 @@
       "owner": "inspector-flow",
       "source": {
         "column": 18,
-        "line": 2960
+        "line": 3108
       }
     },
     {
@@ -9357,7 +9655,7 @@
       "owner": "inspector-flow",
       "source": {
         "column": 9,
-        "line": 2962
+        "line": 3110
       }
     },
     {
@@ -9386,7 +9684,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 2965
+        "line": 3113
       }
     },
     {
@@ -9400,7 +9698,7 @@
       "owner": "workspace-flow",
       "source": {
         "column": 9,
-        "line": 2976
+        "line": 3124
       }
     },
     {
@@ -9415,7 +9713,7 @@
       "owner": "workspace-flow",
       "source": {
         "column": 9,
-        "line": 2977
+        "line": 3125
       }
     },
     {
@@ -9445,7 +9743,7 @@
       "owner": "workspace-flow",
       "source": {
         "column": 9,
-        "line": 2980
+        "line": 3128
       }
     },
     {
@@ -9472,7 +9770,7 @@
       "owner": "workspace-flow",
       "source": {
         "column": 9,
-        "line": 3000
+        "line": 3148
       }
     },
     {
@@ -9498,7 +9796,7 @@
       "owner": "workspace-flow",
       "source": {
         "column": 9,
-        "line": 3001
+        "line": 3149
       }
     },
     {
@@ -9532,7 +9830,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3004
+        "line": 3152
       }
     },
     {
@@ -9546,7 +9844,7 @@
       "owner": "write-client-flow",
       "source": {
         "column": 9,
-        "line": 3028
+        "line": 3176
       }
     },
     {
@@ -9560,7 +9858,7 @@
       "owner": "write-client-flow",
       "source": {
         "column": 9,
-        "line": 3032
+        "line": 3180
       }
     },
     {
@@ -9575,7 +9873,7 @@
       "owner": "write-client-flow",
       "source": {
         "column": 9,
-        "line": 3036
+        "line": 3184
       }
     },
     {
@@ -9606,7 +9904,7 @@
       "owner": "write-client-flow",
       "source": {
         "column": 9,
-        "line": 3043
+        "line": 3191
       }
     },
     {
@@ -9643,7 +9941,7 @@
       "owner": "write-client-flow",
       "source": {
         "column": 9,
-        "line": 3064
+        "line": 3212
       }
     },
     {
@@ -9665,7 +9963,7 @@
       "owner": "write-client-flow",
       "source": {
         "column": 9,
-        "line": 3091
+        "line": 3239
       }
     },
     {
@@ -9699,7 +9997,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3105
+        "line": 3253
       }
     },
     {
@@ -9713,7 +10011,7 @@
       "owner": "write-endpoint-flow",
       "source": {
         "column": 9,
-        "line": 3129
+        "line": 3277
       }
     },
     {
@@ -9743,7 +10041,7 @@
       "owner": "write-endpoint-flow",
       "source": {
         "column": 9,
-        "line": 3135
+        "line": 3283
       }
     },
     {
@@ -9777,7 +10075,7 @@
       "owner": "write-endpoint-flow",
       "source": {
         "column": 9,
-        "line": 3155
+        "line": 3303
       }
     },
     {
@@ -9794,7 +10092,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3185
+        "line": 3333
       }
     },
     {
@@ -9812,7 +10110,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3186
+        "line": 3334
       }
     },
     {
@@ -9829,7 +10127,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3194
+        "line": 3342
       }
     },
     {
@@ -9850,7 +10148,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3201
+        "line": 3349
       }
     },
     {
@@ -9871,7 +10169,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3212
+        "line": 3360
       }
     },
     {
@@ -9888,7 +10186,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3223
+        "line": 3371
       }
     },
     {
@@ -9905,7 +10203,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3230
+        "line": 3378
       }
     },
     {
@@ -9922,7 +10220,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3237
+        "line": 3385
       }
     },
     {
@@ -9939,7 +10237,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3244
+        "line": 3392
       }
     },
     {
@@ -9956,7 +10254,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3251
+        "line": 3399
       }
     },
     {
@@ -9999,7 +10297,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5186
+        "line": 5479
       }
     },
     {
@@ -10028,7 +10326,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5221
+        "line": 5514
       }
     },
     {
@@ -10051,7 +10349,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5240
+        "line": 5533
       }
     },
     {
@@ -10074,7 +10372,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5253
+        "line": 5546
       }
     },
     {
@@ -10103,7 +10401,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5266
+        "line": 5559
       }
     },
     {
@@ -10132,7 +10430,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5285
+        "line": 5578
       }
     },
     {
@@ -10161,7 +10459,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5306
+        "line": 5599
       }
     },
     {
@@ -10195,7 +10493,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5327
+        "line": 5620
       }
     },
     {
@@ -10219,7 +10517,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5353
+        "line": 5646
       }
     },
     {
@@ -10243,7 +10541,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5367
+        "line": 5660
       }
     },
     {
@@ -10271,7 +10569,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5381
+        "line": 5674
       }
     },
     {
@@ -10306,7 +10604,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3262
+        "line": 3410
       }
     },
     {
@@ -10341,7 +10639,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3276
+        "line": 3424
       }
     },
     {
@@ -10379,7 +10677,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3290
+        "line": 3438
       }
     },
     {
@@ -10417,7 +10715,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3305
+        "line": 3453
       }
     },
     {
@@ -10443,7 +10741,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3320
+        "line": 3468
       }
     },
     {
@@ -10458,7 +10756,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3340
+        "line": 3488
       }
     },
     {
@@ -10473,7 +10771,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3345
+        "line": 3493
       }
     },
     {
@@ -10488,7 +10786,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3350
+        "line": 3498
       }
     },
     {
@@ -10503,7 +10801,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3355
+        "line": 3503
       }
     },
     {
@@ -10518,7 +10816,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3360
+        "line": 3508
       }
     },
     {
@@ -10533,7 +10831,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3365
+        "line": 3513
       }
     },
     {
@@ -10548,7 +10846,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3370
+        "line": 3518
       }
     },
     {
@@ -10563,7 +10861,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3375
+        "line": 3523
       }
     },
     {
@@ -10578,7 +10876,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3380
+        "line": 3528
       }
     },
     {
@@ -10593,7 +10891,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3385
+        "line": 3533
       }
     },
     {
@@ -10608,7 +10906,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3390
+        "line": 3538
       }
     },
     {
@@ -10663,7 +10961,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3400
+        "line": 3548
       }
     },
     {
@@ -10694,7 +10992,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3409
+        "line": 3557
       }
     },
     {
@@ -10742,7 +11040,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3418
+        "line": 3566
       }
     },
     {
@@ -10787,7 +11085,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3427
+        "line": 3575
       }
     },
     {
@@ -10828,7 +11126,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3436
+        "line": 3584
       }
     },
     {
@@ -10861,7 +11159,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3445
+        "line": 3593
       }
     },
     {
@@ -10889,7 +11187,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3453
+        "line": 3601
       }
     },
     {
@@ -10917,7 +11215,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3462
+        "line": 3610
       }
     },
     {
@@ -10972,7 +11270,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3472
+        "line": 3620
       }
     },
     {
@@ -11025,7 +11323,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3503
+        "line": 3651
       }
     },
     {
@@ -11074,7 +11372,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3533
+        "line": 3681
       }
     },
     {
@@ -11125,7 +11423,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3562
+        "line": 3710
       }
     },
     {
@@ -11176,7 +11474,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3593
+        "line": 3741
       }
     },
     {
@@ -11223,7 +11521,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3624
+        "line": 3772
       }
     },
     {
@@ -11265,7 +11563,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3647
+        "line": 3795
       }
     },
     {
@@ -11307,7 +11605,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3672
+        "line": 3820
       }
     },
     {
@@ -11350,7 +11648,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3697
+        "line": 3845
       }
     },
     {
@@ -11393,7 +11691,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3720
+        "line": 3868
       }
     },
     {
@@ -11422,7 +11720,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3746
+        "line": 3894
       }
     },
     {
@@ -11448,7 +11746,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3754
+        "line": 3902
       }
     },
     {
@@ -11474,7 +11772,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3762
+        "line": 3910
       }
     },
     {
@@ -11501,7 +11799,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3770
+        "line": 3918
       }
     },
     {
@@ -11529,7 +11827,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3778
+        "line": 3926
       }
     },
     {
@@ -11555,7 +11853,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3786
+        "line": 3934
       }
     },
     {
@@ -11580,7 +11878,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3796
+        "line": 3944
       }
     },
     {
@@ -11606,7 +11904,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3804
+        "line": 3952
       }
     },
     {
@@ -11632,7 +11930,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3820
+        "line": 3968
       }
     },
     {
@@ -11660,7 +11958,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3836
+        "line": 3984
       }
     },
     {
@@ -11688,7 +11986,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3854
+        "line": 4002
       }
     },
     {
@@ -11715,7 +12013,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3872
+        "line": 4020
       }
     },
     {
@@ -11742,7 +12040,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3889
+        "line": 4037
       }
     },
     {
@@ -11769,7 +12067,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3906
+        "line": 4054
       }
     },
     {
@@ -11795,7 +12093,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3923
+        "line": 4071
       }
     },
     {
@@ -11823,7 +12121,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3939
+        "line": 4087
       }
     },
     {
@@ -11849,7 +12147,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3957
+        "line": 4105
       }
     },
     {
@@ -11875,7 +12173,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3973
+        "line": 4121
       }
     },
     {
@@ -11902,7 +12200,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 3989
+        "line": 4137
       }
     },
     {
@@ -11929,7 +12227,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4006
+        "line": 4154
       }
     },
     {
@@ -11955,7 +12253,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4023
+        "line": 4171
       }
     },
     {
@@ -11982,7 +12280,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4039
+        "line": 4187
       }
     },
     {
@@ -12009,7 +12307,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4056
+        "line": 4204
       }
     },
     {
@@ -12036,7 +12334,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4073
+        "line": 4221
       }
     },
     {
@@ -12063,7 +12361,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4090
+        "line": 4238
       }
     },
     {
@@ -12090,7 +12388,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4107
+        "line": 4255
       }
     },
     {
@@ -12117,7 +12415,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4124
+        "line": 4272
       }
     },
     {
@@ -12144,7 +12442,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4141
+        "line": 4289
       }
     },
     {
@@ -12173,7 +12471,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4158
+        "line": 4306
       }
     },
     {
@@ -12206,7 +12504,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4177
+        "line": 4325
       }
     },
     {
@@ -12233,7 +12531,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4200
+        "line": 4348
       }
     },
     {
@@ -12260,7 +12558,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4217
+        "line": 4365
       }
     },
     {
@@ -12287,7 +12585,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4234
+        "line": 4382
       }
     },
     {
@@ -12313,7 +12611,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4251
+        "line": 4399
       }
     },
     {
@@ -12339,7 +12637,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4267
+        "line": 4415
       }
     },
     {
@@ -12366,7 +12664,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4283
+        "line": 4431
       }
     },
     {
@@ -12392,7 +12690,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4300
+        "line": 4448
       }
     },
     {
@@ -12418,7 +12716,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4316
+        "line": 4464
       }
     },
     {
@@ -12445,7 +12743,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4332
+        "line": 4480
       }
     },
     {
@@ -12471,7 +12769,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4349
+        "line": 4497
       }
     },
     {
@@ -12498,7 +12796,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4365
+        "line": 4513
       }
     },
     {
@@ -12524,7 +12822,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4382
+        "line": 4530
       }
     },
     {
@@ -12552,7 +12850,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4398
+        "line": 4546
       }
     },
     {
@@ -12580,7 +12878,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4416
+        "line": 4564
       }
     },
     {
@@ -12614,7 +12912,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4434
+        "line": 4582
       }
     },
     {
@@ -12642,7 +12940,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4458
+        "line": 4606
       }
     },
     {
@@ -12669,7 +12967,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4476
+        "line": 4624
       }
     },
     {
@@ -12695,7 +12993,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4493
+        "line": 4641
       }
     },
     {
@@ -12726,7 +13024,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4509
+        "line": 4657
       }
     },
     {
@@ -12754,7 +13052,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4530
+        "line": 4678
       }
     },
     {
@@ -12782,7 +13080,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4548
+        "line": 4696
       }
     },
     {
@@ -12810,7 +13108,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4566
+        "line": 4714
       }
     },
     {
@@ -12838,7 +13136,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4584
+        "line": 4732
       }
     },
     {
@@ -12867,7 +13165,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4602
+        "line": 4750
       }
     },
     {
@@ -12897,7 +13195,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4621
+        "line": 4769
       }
     },
     {
@@ -12927,7 +13225,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4641
+        "line": 4789
       }
     },
     {
@@ -12954,7 +13252,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4661
+        "line": 4809
       }
     },
     {
@@ -12982,7 +13280,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4678
+        "line": 4826
       }
     },
     {
@@ -13012,7 +13310,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4696
+        "line": 4844
       }
     },
     {
@@ -13041,7 +13339,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4716
+        "line": 4864
       }
     },
     {
@@ -13070,7 +13368,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4735
+        "line": 4883
       }
     },
     {
@@ -13099,7 +13397,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4754
+        "line": 4902
       }
     },
     {
@@ -13128,7 +13426,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4773
+        "line": 4921
       }
     },
     {
@@ -13157,7 +13455,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4792
+        "line": 4940
       }
     },
     {
@@ -13186,7 +13484,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4811
+        "line": 4959
       }
     },
     {
@@ -13215,7 +13513,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4830
+        "line": 4978
       }
     },
     {
@@ -13242,7 +13540,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4849
+        "line": 4997
       }
     },
     {
@@ -13270,7 +13568,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4866
+        "line": 5014
       }
     },
     {
@@ -13297,7 +13595,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4884
+        "line": 5032
       }
     },
     {
@@ -13324,7 +13622,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4901
+        "line": 5049
       }
     },
     {
@@ -13351,7 +13649,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4918
+        "line": 5066
       }
     },
     {
@@ -13379,7 +13677,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4935
+        "line": 5083
       }
     },
     {
@@ -13407,7 +13705,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4953
+        "line": 5101
       }
     },
     {
@@ -13434,7 +13732,163 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4971
+        "line": 5119
+      }
+    },
+    {
+      "data": {
+        "assumptions": [
+          "tests-exercise-shipped-modules",
+          "recorded-results-reflect-current-code"
+        ],
+        "evaluate": {
+          "method": "external-evidence"
+        },
+        "id": "register-import-holds-every-line",
+        "kind": "invariant",
+        "rationale": "A converted specification replaces its Markdown, so a line the conversion dropped or a cell it changed would be lost silently. The two checks make loss a failed import instead.",
+        "statement": "The register importer writes nothing unless the Markdown file rebuilds line for line from the generated sections with every entity marker expanded to the lines it came from, and every imported table row rendered from its properties gives the cells of its source row.",
+        "subjects": [
+          "register-importer"
+        ]
+      },
+      "id": "register-import-holds-every-line",
+      "kind": "claim",
+      "label": "The register importer writes nothing unless the Markdown file rebuild...",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 5136
+      }
+    },
+    {
+      "data": {
+        "assumptions": [
+          "tests-exercise-shipped-modules",
+          "recorded-results-reflect-current-code"
+        ],
+        "evaluate": {
+          "method": "external-evidence"
+        },
+        "id": "register-import-entities-cite-source",
+        "kind": "invariant",
+        "rationale": "A reader of the converted specification must be able to go from any entity to the words it was made from.",
+        "statement": "Every document, section, table and row entity the register importer writes carries a source property naming the file and line it was imported from, and every row whose rule has an identifier column carries that identifier as written in ref.",
+        "subjects": [
+          "register-importer"
+        ]
+      },
+      "id": "register-import-entities-cite-source",
+      "kind": "claim",
+      "label": "Every document, section, table and row entity the register importer w...",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 5152
+      }
+    },
+    {
+      "data": {
+        "assumptions": [
+          "tests-exercise-shipped-modules",
+          "recorded-results-reflect-current-code"
+        ],
+        "evaluate": {
+          "method": "external-evidence"
+        },
+        "id": "register-import-drafts-are-marked",
+        "kind": "invariant",
+        "rationale": "Authored additions sit in the same file as the converted specification; a reader must always be able to tell them from what the Markdown says.",
+        "statement": "Every entity the register importer takes from a draft fragment carries origin \"draft\" and a source in that fragment, the system notes name the fragment, and the Markdown rendered from the sections is the same with or without drafts.",
+        "subjects": [
+          "register-importer"
+        ]
+      },
+      "id": "register-import-drafts-are-marked",
+      "kind": "claim",
+      "label": "Every entity the register importer takes from a draft fragment carrie...",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 5168
+      }
+    },
+    {
+      "data": {
+        "assumptions": [
+          "tests-exercise-shipped-modules",
+          "recorded-results-reflect-current-code"
+        ],
+        "evaluate": {
+          "method": "external-evidence"
+        },
+        "id": "register-import-respects-authority",
+        "kind": "invariant",
+        "rationale": "After the conversion the JSONC is edited in Exegra; a re-import would silently discard those edits.",
+        "statement": "When the import map says the JSONC is the authority, the register importer writes nothing to the project's specification file, and --render produces the Markdown from the specification file alone.",
+        "subjects": [
+          "register-importer"
+        ]
+      },
+      "id": "register-import-respects-authority",
+      "kind": "claim",
+      "label": "When the import map says the JSONC is the authority, the register imp...",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 5184
+      }
+    },
+    {
+      "data": {
+        "assumptions": [
+          "tests-exercise-shipped-modules",
+          "recorded-results-reflect-current-code"
+        ],
+        "evaluate": {
+          "method": "external-evidence"
+        },
+        "id": "realisation-roots-traced",
+        "kind": "invariant",
+        "statement": "When project.jsonc declares realisation roots, traceability checks each module written <alias>:<path> against that root's directory, reports a module naming an undeclared alias as missing, and reports unclaimed files only for roots that declare include globs (minus exclude globs); with no roots declared, the traceability result is the same as without the feature.",
+        "subjects": [
+          "external-realisation",
+          "verification-pipeline"
+        ]
+      },
+      "id": "realisation-roots-traced",
+      "kind": "claim",
+      "label": "When project.jsonc declares realisation roots, traceability checks ea...",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 5200
+      }
+    },
+    {
+      "data": {
+        "assumptions": [
+          "tests-exercise-shipped-modules",
+          "recorded-results-reflect-current-code"
+        ],
+        "evaluate": {
+          "method": "external-evidence"
+        },
+        "id": "external-not-run-distinct-from-fail",
+        "kind": "invariant",
+        "statement": "External test evidence is recorded as fail only when a matched JUnit test case reports a failure whose text matches none of the root's environmental patterns; a test absent from the report, skipped, reported as an error, or failing for an environmental reason is recorded as not-run, which `verify` never counts as a failure and the claim evaluator treats as having no result.",
+        "subjects": [
+          "external-realisation",
+          "recorded-results-file"
+        ]
+      },
+      "id": "external-not-run-distinct-from-fail",
+      "kind": "claim",
+      "label": "External test evidence is recorded as fail only when a matched JUnit ...",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 5216
       }
     },
     {
@@ -13451,7 +13905,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4995
+        "line": 5239
       }
     },
     {
@@ -13468,7 +13922,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4996
+        "line": 5240
       }
     },
     {
@@ -13485,7 +13939,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4997
+        "line": 5241
       }
     },
     {
@@ -13502,7 +13956,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4998
+        "line": 5242
       }
     },
     {
@@ -13519,7 +13973,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 4999
+        "line": 5243
       }
     },
     {
@@ -13536,7 +13990,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5000
+        "line": 5244
       }
     },
     {
@@ -13553,7 +14007,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5001
+        "line": 5245
       }
     },
     {
@@ -13570,7 +14024,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5002
+        "line": 5246
       }
     },
     {
@@ -13587,7 +14041,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5003
+        "line": 5247
       }
     },
     {
@@ -13604,7 +14058,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5004
+        "line": 5248
       }
     },
     {
@@ -13621,7 +14075,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5005
+        "line": 5249
       }
     },
     {
@@ -13638,7 +14092,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5006
+        "line": 5250
       }
     },
     {
@@ -13655,7 +14109,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5007
+        "line": 5251
       }
     },
     {
@@ -13672,7 +14126,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5008
+        "line": 5252
       }
     },
     {
@@ -13689,7 +14143,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5009
+        "line": 5253
       }
     },
     {
@@ -13706,7 +14160,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5010
+        "line": 5254
       }
     },
     {
@@ -13723,7 +14177,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5011
+        "line": 5255
       }
     },
     {
@@ -13740,7 +14194,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5018
+        "line": 5262
       }
     },
     {
@@ -13757,7 +14211,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5025
+        "line": 5269
       }
     },
     {
@@ -13774,7 +14228,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5032
+        "line": 5276
       }
     },
     {
@@ -13791,7 +14245,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5039
+        "line": 5283
       }
     },
     {
@@ -13808,7 +14262,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5046
+        "line": 5290
       }
     },
     {
@@ -13825,7 +14279,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5053
+        "line": 5297
       }
     },
     {
@@ -13842,7 +14296,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5060
+        "line": 5304
       }
     },
     {
@@ -13859,7 +14313,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5067
+        "line": 5311
       }
     },
     {
@@ -13876,7 +14330,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5074
+        "line": 5318
       }
     },
     {
@@ -13893,7 +14347,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5081
+        "line": 5325
       }
     },
     {
@@ -13910,7 +14364,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5088
+        "line": 5332
       }
     },
     {
@@ -13927,7 +14381,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5095
+        "line": 5339
       }
     },
     {
@@ -13944,7 +14398,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5102
+        "line": 5346
       }
     },
     {
@@ -13961,7 +14415,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5109
+        "line": 5353
       }
     },
     {
@@ -13978,7 +14432,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5116
+        "line": 5360
       }
     },
     {
@@ -13995,7 +14449,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5123
+        "line": 5367
       }
     },
     {
@@ -14012,7 +14466,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5130
+        "line": 5374
       }
     },
     {
@@ -14029,7 +14483,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5137
+        "line": 5381
       }
     },
     {
@@ -14046,7 +14500,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5144
+        "line": 5388
       }
     },
     {
@@ -14063,7 +14517,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5151
+        "line": 5395
       }
     },
     {
@@ -14080,7 +14534,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5158
+        "line": 5402
       }
     },
     {
@@ -14097,7 +14551,126 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5165
+        "line": 5409
+      }
+    },
+    {
+      "data": {
+        "claim": "register-import-holds-every-line",
+        "description": "The fixture converts with both checks passing, the output validates without errors and the sections rebuild the file exactly.",
+        "id": "ev-register-import-coverage",
+        "kind": "test",
+        "ref": "tests/core/import-register.test.js#the fixture imports, validates and rebuilds line for line"
+      },
+      "id": "ev-register-import-coverage",
+      "kind": "evidence",
+      "label": "ev-register-import-coverage",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 5416
+      }
+    },
+    {
+      "data": {
+        "claim": "register-import-holds-every-line",
+        "description": "A row whose rendering differs from its source cells fails the import and is named.",
+        "id": "ev-register-import-lost-cell",
+        "kind": "test",
+        "ref": "tests/core/import-register.test.js#a row that does not render back fails the import"
+      },
+      "id": "ev-register-import-lost-cell",
+      "kind": "evidence",
+      "label": "ev-register-import-lost-cell",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 5423
+      }
+    },
+    {
+      "data": {
+        "claim": "register-import-entities-cite-source",
+        "description": "Every document, section, table and row of the fixture output has a source whose line holds the text it came from, and keyed rows carry ref.",
+        "id": "ev-register-import-sources",
+        "kind": "test",
+        "ref": "tests/core/import-register.test.js#every imported entity names its source line"
+      },
+      "id": "ev-register-import-sources",
+      "kind": "evidence",
+      "label": "ev-register-import-sources",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 5430
+      }
+    },
+    {
+      "data": {
+        "claim": "register-import-drafts-are-marked",
+        "description": "A fixture draft merges with origin and source, its basis references are checked by validation, and the rendered Markdown is unchanged.",
+        "id": "ev-register-import-drafts",
+        "kind": "test",
+        "ref": "tests/core/import-register.test.js#a draft fragment is merged with origin, source and checked basis"
+      },
+      "id": "ev-register-import-drafts",
+      "kind": "evidence",
+      "label": "ev-register-import-drafts",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 5437
+      }
+    },
+    {
+      "data": {
+        "claim": "register-import-respects-authority",
+        "description": "An authority map makes the import exit 1 without writing; --render of a written specification gives the source Markdown.",
+        "id": "ev-register-import-authority",
+        "kind": "test",
+        "ref": "tests/core/import-register.test.js#a map whose JSONC is the authority refuses to import, and render needs only the JSONC"
+      },
+      "id": "ev-register-import-authority",
+      "kind": "evidence",
+      "label": "ev-register-import-authority",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 5444
+      }
+    },
+    {
+      "data": {
+        "claim": "realisation-roots-traced",
+        "description": "Modules in a fake external root are checked there; an undeclared alias is missing; only roots with include globs report unclaimed files; no roots gives the earlier result.",
+        "id": "ev-external-traceability",
+        "kind": "test",
+        "ref": "tests/core/external-realisation.test.js#traceability"
+      },
+      "id": "ev-external-traceability",
+      "kind": "evidence",
+      "label": "ev-external-traceability",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 5451
+      }
+    },
+    {
+      "data": {
+        "claim": "external-not-run-distinct-from-fail",
+        "description": "A fixture JUnit report gives pass, fail and not-run per evidence entry, matched by file, describe path and name; verify --ingest-only records them and fails only on a real failure.",
+        "id": "ev-external-junit",
+        "kind": "test",
+        "ref": "tests/core/external-realisation.test.js#junit"
+      },
+      "id": "ev-external-junit",
+      "kind": "evidence",
+      "label": "ev-external-junit",
+      "owner": null,
+      "source": {
+        "column": 5,
+        "line": 5458
       }
     },
     {
@@ -14116,7 +14689,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5177
+        "line": 5470
       }
     },
     {
@@ -14135,7 +14708,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5178
+        "line": 5471
       }
     },
     {
@@ -14161,7 +14734,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5179
+        "line": 5472
       }
     },
     {
@@ -14180,7 +14753,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5180
+        "line": 5473
       }
     },
     {
@@ -14196,7 +14769,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5181
+        "line": 5474
       }
     },
     {
@@ -14212,7 +14785,7 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5182
+        "line": 5475
       }
     },
     {
@@ -14231,13 +14804,13 @@
       "owner": null,
       "source": {
         "column": 5,
-        "line": 5183
+        "line": 5476
       }
     }
   ],
   "format": "exegra-manifest",
   "schemaVersion": "0.1",
-  "semanticHash": "0929b444e64eb5",
+  "semanticHash": "07b21d0aed6647",
   "system": {
     "id": "exegra",
     "illustrative": false,

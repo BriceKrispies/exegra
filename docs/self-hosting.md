@@ -37,7 +37,7 @@ These are documents and reports. No generator emits code or any part of Exegra's
 
 ## Traceability
 
-`implementation.modules` on a component lists the files that implement it. `exegra traceability` (and every `verify`) compares them with disk: declared modules must exist and every file in `src/`, `cli/` and `tools/` (plus `index.html`, `vite.config.js`) must be claimed by some component. This is a path-level check. It does not show that a module does what its component says, and the declared relationships are maintained by hand, so the structural claims about the code rest on the assumption `relationships-match-imports`.
+`implementation.modules` on a component lists the files that implement it. `exegra traceability` (and every `verify`) compares them with disk: declared modules must exist and every file in `src/`, `cli/` and `tools/` (plus `index.html`, `vite.config.js`) must be claimed by some component. A linked project realised in other repositories declares them as realisation roots in its `project.jsonc` and addresses modules and test evidence as `<alias>:<path>` ([verification.md](verification.md#realisation-roots-code-and-tests-in-other-repositories)). This is a path-level check. It does not show that a module does what its component says, and the declared relationships are maintained by hand, so the structural claims about the code rest on the assumption `relationships-match-imports`.
 
 ## The bootstrap boundary
 

@@ -101,7 +101,7 @@ For `external-evidence` claims the status is:
   "traceability": { /* module/file comparison */ } }
 ```
 
-The application and CLI read it when evaluating claims. A `fail` records the last 20 lines of test output. A Node test reference that matches no test (a title pattern that selects nothing) is recorded as a `fail` with the detail "the reference matched no test", not as a pass. Recorded results are **not bound** to a code or model hash, so a stale result is not detected as stale (a recorded limitation on `recorded-results-file`). Only evidence of kind `test` is executed.
+The application and CLI read it when evaluating claims. A `fail` records the last 20 lines of test output. A Node test reference that matches no test (a title pattern that selects nothing) is recorded as a `fail` with the detail "the reference matched no test", not as a pass. Evidence in a realisation root ([verification.md](verification.md#realisation-roots-code-and-tests-in-other-repositories)) is decided from that root's JUnit reports and records `root` and `reports` too; its outcome may also be `not-run` (absent from the report, skipped, errored, or failed for an environmental reason), which counts as no recorded result, never as a pass or a failure. Recorded results are **not bound** to a code or model hash, so a stale result is not detected as stale (a recorded limitation on `recorded-results-file`). Only evidence of kind `test` is executed.
 
 ## What Exegra can prove, simulate, and only record
 

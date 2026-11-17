@@ -5,7 +5,8 @@
 // directory holds project.jsonc naming another file: {"spec": "<relative path>"}.
 // That lets a project's specification live in the repository it describes while
 // its presentation (layout), recorded results, journal and generated artifacts
-// stay here. project.jsonc is never written through this module.
+// stay here. project.jsonc may also declare realisation roots ({"roots": {...}},
+// see tools/realisation-roots.js). It is never written through this module.
 
 import { createHash } from 'node:crypto';
 import { promises as fs, readFileSync, watch as fsWatch } from 'node:fs';
@@ -251,15 +252,11 @@ export function createWorkspace(rootDir) {
    */
   function specFile(name) {
     const own = resolve(name, WORKSPACE_FILES.spec);
-    /** @type {string} */ let text;
-    try {
-      text = readFileSync(resolve(name, PROJECT_FILE), 'utf8');
-    } catch (err) {
-      const code = /** @type {NodeJS.ErrnoException} */ (err).code;
-      if (code === 'ENOENT' || code === 'ENOTDIR') return own;
-      throw err;
-    }
-    const spec = parseJsonc(text)?.spec;
+    const config = projectConfig(name);
+    if (config === null) return own;
+    const spec = config.value.spec;
+    // A project.jsonc that only declares roots keeps the specification in the project directory.
+    if (spec === undefined && config.value.roots !== undefined) return own;
     if (typeof spec !== 'string' || spec === '' || path.isAbsolute(spec) || !spec.endsWith('.jsonc')) {
       throw new WorkspaceError('project.invalid', `${name}/${PROJECT_FILE} must name the specification as {"spec": "<path relative to the project directory, ending in .jsonc>"}.`);
     }
@@ -269,6 +266,28 @@ export function createWorkspace(rootDir) {
       throw new WorkspaceError('project.invalid', `Project "${name}" has both ${WORKSPACE_FILES.spec} and a ${PROJECT_FILE} naming ${spec}; remove one, so the specification exists once.`);
     }
     return path.resolve(root, name, spec);
+  }
+
+  /**
+   * project.jsonc of project `name` as parsed JSONC, with the directory relative
+   * paths in it resolve against; null when the project has none.
+   * @param {string} name
+   * @returns {{dir: string, value: Record<string, any>}|null}
+   */
+  function projectConfig(name) {
+    /** @type {string} */ let text;
+    try {
+      text = readFileSync(resolve(name, PROJECT_FILE), 'utf8');
+    } catch (err) {
+      const code = /** @type {NodeJS.ErrnoException} */ (err).code;
+      if (code === 'ENOENT' || code === 'ENOTDIR') return null;
+      throw err;
+    }
+    const value = parseJsonc(text);
+    if (!isPlainObject(value)) {
+      throw new WorkspaceError('project.invalid', `${name}/${PROJECT_FILE} must be a JSON object.`);
+    }
+    return { dir: path.resolve(root, name), value };
   }
 
   /** The specification's path as shown to people: relative to the directory holding specs/, forward slashes. @param {string} name */
@@ -567,5 +586,6 @@ export function createWorkspace(rootDir) {
     resolve,
     specFile,
     specLocation,
+    projectConfig,
   };
 }

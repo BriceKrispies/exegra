@@ -33,8 +33,9 @@ import { evaluateDataClaim } from './data-model.js';
  * @typedef {{ scenario: string, faults: string[], violated: boolean, outcome: string, stepIndex?: number, explanation: string }} NegativeRun
  *   one declared negative of a trace claim: its scenario run with the scenario's faults plus `faults`
  * @typedef {Object} Recorded
- * @property {Record<string, { outcome: 'pass'|'fail', detail?: string, ranAt?: string }>} [results]
- *   outcomes of executing evidence entities, keyed by evidence id (written by `exegra verify`)
+ * @property {Record<string, { outcome: 'pass'|'fail'|'not-run', detail?: string, ranAt?: string }>} [results]
+ *   outcomes of executing evidence entities, keyed by evidence id (written by `exegra verify`);
+ *   not-run counts as no result
  * @property {Record<string, { outcome: 'pass'|'fail', status?: string, detail?: string, proofs?: string[] }>} [claims]
  *   outcomes an external verification tool established per claim, keyed by claim id
  * @property {string} [tool]  the tool that wrote `claims`
