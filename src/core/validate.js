@@ -273,6 +273,10 @@ export function validateModel(model) {
         }
       } else if (type === 'string') { if (typeof v !== 'string') report('error', 'claim.param.type', c, `Parameter "${name}" must be a string.`, sub); }
       else if (type === 'strings') { if (!(Array.isArray(v) && v.every((x) => typeof x === 'string'))) report('error', 'claim.param.type', c, `Parameter "${name}" must be an array of strings.`, sub); }
+      else if (type === 'edge-filter') {
+        const ok = v && typeof v === 'object' && !Array.isArray(v) && typeof v.property === 'string' && Array.isArray(v.values) && v.values.length > 0 && v.values.every((/** @type {any} */ x) => typeof x === 'string') && Object.keys(v).every((k) => k === 'property' || k === 'values');
+        if (!ok) report('error', 'claim.param.type', c, `Parameter "${name}" must be {"property": name, "values": [one or more strings]}.`, sub);
+      }
       else if (type === 'boolean') { if (typeof v !== 'boolean') report('error', 'claim.param.type', c, `Parameter "${name}" must be true or false.`, sub); }
       else if (type === 'expr') { if (typeof v !== 'string') report('error', 'claim.param.type', c, `Parameter "${name}" must be an expression string.`, sub); else checkExpr(v, c, sub, { allowedBehaviors }); }
       else if (type === 'matcher') {

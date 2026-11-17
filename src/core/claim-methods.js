@@ -33,6 +33,7 @@ export const CLAIM_METHODS = {
       to: { type: 'selector', required: true },
       kinds: { type: 'strings', doc: 'Relationship kinds considered. Default: every kind.' },
       transitive: { type: 'boolean', doc: 'Also forbid multi-hop paths.' },
+      where: { type: 'edge-filter', doc: 'Only relationships whose property has one of the values, e.g. {"property": "layer", "values": ["current", "target"]}.' },
     },
   },
   reachable: {
@@ -42,6 +43,7 @@ export const CLAIM_METHODS = {
       from: { type: 'selector', required: true },
       to: { type: 'selector', required: true },
       kinds: { type: 'strings', doc: 'Relationship kinds followed. Default: every kind.' },
+      where: { type: 'edge-filter', doc: 'Only relationships whose property has one of the values, e.g. {"property": "layer", "values": ["current", "target"]}.' },
     },
   },
   'only-via': {
@@ -52,6 +54,7 @@ export const CLAIM_METHODS = {
       to: { type: 'selector', required: true },
       via: { type: 'selector', required: true },
       kinds: { type: 'strings' },
+      where: { type: 'edge-filter', doc: 'Only relationships whose property has one of the values, e.g. {"property": "layer", "values": ["current", "target"]}.' },
     },
   },
   'has-port': {
@@ -77,6 +80,7 @@ export const CLAIM_METHODS = {
     doc: 'The directed graph of the given relationship kinds has no cycle.',
     params: {
       kinds: { type: 'strings', doc: 'Default: kinds flagged as dependencies.' },
+      where: { type: 'edge-filter', doc: 'Only relationships whose property has one of the values, e.g. {"property": "layer", "values": ["current", "target"]}.' },
       within: { type: 'selector' },
     },
   },

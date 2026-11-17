@@ -103,7 +103,7 @@ export function relationshipsOf(model, componentId) {
 /**
  * Directed component graph. Edges are relationships resolved to components.
  * @param {Model} model
- * @param {{kinds?: string[]|null, dependencyOnly?: boolean}} [opts]
+ * @param {{kinds?: string[]|null, dependencyOnly?: boolean, where?: {property: string, values: string[]}|null}} [opts]
  * @returns {Map<string, {to: string, rel: string, kind: string}[]>}
  */
 export function componentGraph(model, opts = {}) {
@@ -113,6 +113,7 @@ export function componentGraph(model, opts = {}) {
   for (const r of model.byKind.relationship ?? []) {
     if (opts.kinds && !opts.kinds.includes(r.data.kind)) continue;
     if (opts.dependencyOnly && !own(model.meta.relationshipKinds, r.data.kind)?.dependency) continue;
+    if (opts.where && !opts.where.values.includes(r.data[opts.where.property])) continue;
     const from = componentOf(model, r.data.from);
     const to = componentOf(model, r.data.to);
     if (!from || !to) continue;

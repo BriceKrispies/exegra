@@ -317,21 +317,39 @@ function select(model, selector) {
 }
 
 /**
- * Validate a `kinds` parameter. Returns {kinds} or {error}.
- * @param {Model} model @param {any} kinds
- * @returns {{kinds: string[]|null} | {error: string}}
+ * Validate the `kinds` and `where` parameters. Returns {kinds, where} or {error}.
+ * @param {Model} model @param {any} ev
+ * @returns {{kinds: string[]|null, where: {property: string, values: string[]}|null} | {error: string}}
  */
-function checkKinds(model, kinds) {
-  if (kinds === undefined) return { kinds: null };
+function checkKinds(model, ev) {
+  const w = checkWhere(model, ev.where);
+  if ('error' in w) return w;
+  const kinds = ev.kinds;
+  if (kinds === undefined) return { kinds: null, where: w.where };
   if (!Array.isArray(kinds) || !kinds.every((k) => typeof k === 'string')) return { error: 'The "kinds" parameter is not a list of relationship kind names.' };
   if (!kinds.length) return { error: 'The "kinds" parameter lists no relationship kind, so nothing can be followed.' };
   const unknown = kinds.filter((k) => !Object.hasOwn(model.meta.relationshipKinds, k));
   if (unknown.length) return { error: `Unknown relationship kind${unknown.length === 1 ? '' : 's'} ${list(unknown.map((k) => `"${k}"`))}; a misspelt kind would make the check pass vacuously.` };
-  return { kinds };
+  return { kinds, where: w.where };
 }
 
-/** @param {string[]|null} kinds */
-const kindsText = (kinds) => (kinds ? `kinds ${kinds.join(', ')}` : 'all kinds');
+/**
+ * Validate a `where` filter on relationship properties. A value no relationship
+ * carries is an error: a misspelt value would empty the graph and pass vacuously.
+ * @param {Model} model @param {any} where
+ * @returns {{where: {property: string, values: string[]}|null} | {error: string}}
+ */
+function checkWhere(model, where) {
+  if (where === undefined) return { where: null };
+  if (!where || typeof where !== 'object' || typeof where.property !== 'string' || !Array.isArray(where.values) || !where.values.length || !where.values.every((/** @type {any} */ x) => typeof x === 'string')) return { error: 'The "where" parameter is not {"property": name, "values": [one or more strings]}.' };
+  const carried = new Set((model.byKind.relationship ?? []).map((r) => r.data[where.property]));
+  const unknown = where.values.filter((x) => !carried.has(x));
+  if (unknown.length) return { error: `No relationship has ${where.property} ${list(unknown.map((x) => `"${x}"`))}; a misspelt value would make the check pass vacuously.` };
+  return { where: { property: where.property, values: where.values } };
+}
+
+/** @param {string[]|null} kinds @param {{property: string, values: string[]}|null} [where] */
+const kindsText = (kinds, where) => (kinds ? `kinds ${kinds.join(', ')}` : 'all kinds') + (where ? ` with ${where.property} ${where.values.join(' or ')}` : '');
 
 /** @param {Map<string, {to: string, rel: string}[]>} g */
 const edgeCount = (g) => [...g.values()].reduce((n, es) => n + es.length, 0);
@@ -384,15 +402,15 @@ const pathRels = (path) => path.filter((_, i) => i % 2 === 1);
 
 /** @param {Model} model @param {any} ev @returns {Outcome} */
 function noRelationship(model, ev) {
-  const k = checkKinds(model, ev.kinds);
+  const k = checkKinds(model, ev);
   const from = select(model, ev.from);
   const to = select(model, ev.to);
   if ('error' in k) return inconclusive('Nothing was checked.', k.error, [...from, ...to]);
   if (!from.length || !to.length) return inconclusive('Nothing was checked: a selector selected no component.', `The "${from.length ? 'to' : 'from'}" selector selects no component, so "no relationship" would hold vacuously. It is not reported as verified.`, [...from, ...to]);
-  const g = componentGraph(model, { kinds: k.kinds });
+  const g = componentGraph(model, { kinds: k.kinds, where: k.where });
   const toSet = new Set(to);
   const transitive = ev.transitive === true;
-  const scope = `Checked the ${plural(edgeCount(g), 'relationship', 'relationships')} of ${kindsText(k.kinds)} between ${plural(from.length, 'source component', 'source components')} and ${plural(to.length, 'target component', 'target components')}${transitive ? ', following multi-hop paths too,' : ' (direct relationships only)'} at this model revision.`;
+  const scope = `Checked the ${plural(edgeCount(g), 'relationship', 'relationships')} of ${kindsText(k.kinds, k.where)} between ${plural(from.length, 'source component', 'source components')} and ${plural(to.length, 'target component', 'target components')}${transitive ? ', following multi-hop paths too,' : ' (direct relationships only)'} at this model revision.`;
   const selected = [...from, ...to];
 
   /** @type {{rel: string, from: string, to: string}[]} */
@@ -418,42 +436,42 @@ function noRelationship(model, ev) {
       }
     }
   }
-  return { status: 'verified', scope, selected, explanation: `No ${transitive ? 'directed path' : 'relationship'} of ${kindsText(k.kinds)} leads from any of the ${from.length} source components to any of the ${to.length} target components.` };
+  return { status: 'verified', scope, selected, explanation: `No ${transitive ? 'directed path' : 'relationship'} of ${kindsText(k.kinds, k.where)} leads from any of the ${from.length} source components to any of the ${to.length} target components.` };
 }
 
 /** @param {Model} model @param {any} ev @returns {Outcome} */
 function reachable(model, ev) {
-  const k = checkKinds(model, ev.kinds);
+  const k = checkKinds(model, ev);
   const from = select(model, ev.from);
   const to = select(model, ev.to);
   if ('error' in k) return inconclusive('Nothing was checked.', k.error, [...from, ...to]);
   if (!from.length || !to.length) return inconclusive('Nothing was checked: a selector selected no component.', `The "${from.length ? 'to' : 'from'}" selector selects no component, so reachability cannot be decided. It is not reported as verified.`, [...from, ...to]);
-  const g = componentGraph(model, { kinds: k.kinds });
+  const g = componentGraph(model, { kinds: k.kinds, where: k.where });
   const toSet = new Set(to);
-  const scope = `Checked directed reachability over the ${plural(edgeCount(g), 'relationship', 'relationships')} of ${kindsText(k.kinds)} from ${plural(from.length, 'source component', 'source components')} to ${plural(to.length, 'target component', 'target components')} at this model revision.`;
+  const scope = `Checked directed reachability over the ${plural(edgeCount(g), 'relationship', 'relationships')} of ${kindsText(k.kinds, k.where)} from ${plural(from.length, 'source component', 'source components')} to ${plural(to.length, 'target component', 'target components')} at this model revision.`;
   const selected = [...from, ...to];
   const unreachable = from.filter((f) => !findPath(g, f, (id) => toSet.has(id)));
   if (!unreachable.length) return { status: 'verified', scope, selected, explanation: `Each of the ${from.length} source components reaches a target component along at least one directed relationship (being a target itself does not count).` };
   return {
     status: 'violated', scope, selected,
-    explanation: `${list(unreachable.map((c) => `"${c}"`))} ${unreachable.length === 1 ? 'does' : 'do'} not reach any target component along directed relationships of ${kindsText(k.kinds)}.`,
+    explanation: `${list(unreachable.map((c) => `"${c}"`))} ${unreachable.length === 1 ? 'does' : 'do'} not reach any target component along directed relationships of ${kindsText(k.kinds, k.where)}.`,
     counterexample: { summary: `Unreachable source ${unreachable.length === 1 ? 'component' : 'components'}: ${unreachable.join(', ')}.`, entities: unreachable },
   };
 }
 
 /** @param {Model} model @param {any} ev @returns {Outcome} */
 function onlyVia(model, ev) {
-  const k = checkKinds(model, ev.kinds);
+  const k = checkKinds(model, ev);
   const from = select(model, ev.from);
   const to = select(model, ev.to);
   const via = select(model, ev.via);
   if ('error' in k) return inconclusive('Nothing was checked.', k.error, [...from, ...to, ...via]);
   const empty = !from.length ? 'from' : !to.length ? 'to' : !via.length ? 'via' : null;
   if (empty) return inconclusive('Nothing was checked: a selector selected no component.', `The "${empty}" selector selects no component, so the check would be vacuous. It is not reported as verified.`, [...from, ...to, ...via]);
-  const g = componentGraph(model, { kinds: k.kinds });
+  const g = componentGraph(model, { kinds: k.kinds, where: k.where });
   const viaSet = new Set(via);
   const toSet = new Set(to);
-  const scope = `Checked the ${plural(edgeCount(g), 'relationship', 'relationships')} of ${kindsText(k.kinds)} for directed paths from ${plural(from.length, 'source component', 'source components')} to ${plural(to.length, 'target component', 'target components')} that avoid ${plural(via.length, 'via component', 'via components')} at this model revision.`;
+  const scope = `Checked the ${plural(edgeCount(g), 'relationship', 'relationships')} of ${kindsText(k.kinds, k.where)} for directed paths from ${plural(from.length, 'source component', 'source components')} to ${plural(to.length, 'target component', 'target components')} that avoid ${plural(via.length, 'via component', 'via components')} at this model revision.`;
   const selected = [...from, ...to, ...via];
   for (const f of from) {
     if (viaSet.has(f)) continue;
@@ -523,11 +541,11 @@ const isMissing = (v) => v === undefined || v === null || v === '' || (Array.isA
 
 /** @param {Model} model @param {any} ev @returns {Outcome} */
 function acyclic(model, ev) {
-  const k = checkKinds(model, ev.kinds);
+  const k = checkKinds(model, ev);
   if ('error' in k) return inconclusive('Nothing was checked.', k.error);
-  const full = componentGraph(model, k.kinds ? { kinds: k.kinds } : { dependencyOnly: true });
+  const full = componentGraph(model, k.kinds ? { kinds: k.kinds, where: k.where } : { dependencyOnly: true, where: k.where });
   const depKinds = Object.entries(model.meta.relationshipKinds).filter(([, v]) => /** @type {any} */ (v).dependency).map(([id]) => id);
-  const kindsDesc = k.kinds ? kindsText(k.kinds) : `dependency kinds (${depKinds.join(', ')})`;
+  const kindsDesc = k.kinds ? kindsText(k.kinds, k.where) : `dependency kinds (${depKinds.join(', ')})`;
   /** @type {string[]} */
   let selected = [];
   let g = full;
