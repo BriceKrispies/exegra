@@ -2,7 +2,7 @@
 
 Exegra specifies itself in `specs/exegra/spec.jsonc`: components, ports and contracts, relationships, behaviors, scenarios, claims and evidence entities. The specification changes often, so this document gives no counts; `node cli/exegra.js list --project exegra --kind <kind>` lists the entities of one kind (kinds `component`, `relationship`, `behavior`, `scenario`, `claim`, `evidence`), and its `result` array is the current count. This document describes what that gives today and the order in which more could follow.
 
-**Exegra is not self-hosting today.** Nothing in the running application is generated from the model. No component declares `implementation.status` as `generated`, `partially-generated` or `not-implemented`. The model describes, checks and reports on Exegra; it does not build it.
+**Exegra is not self-hosting today.** Nothing in the running application is generated from the model. No component declares `implementation.status` as `generated` or `partially-generated`. Ten components are declared `not-implemented` (planned simulation aspects, overlays, deployment, reality loop and the implementation refinement), with claims that stay not evaluated. The model describes, checks and reports on Exegra; it does not build it.
 
 ## What is model-driven now
 
@@ -10,9 +10,10 @@ Implementation status as declared by the self-specification (`component.implemen
 
 | Status | Components | Meaning |
 |---|---|---|
-| `model-configured` | `parser`, `projection-system`, `scene-renderer`, `inspector`, `property-controls` | Behaviour driven by data read at runtime, but the code that reads it is hand-written. |
-| `manual` | the 45 other components, subsystems included (validator, expression language, transactions, claim evaluator, simulation engine, layout engine, session, shell, toolbar, dialogs, source editor, workspace service, CLI, generators, ...) | Hand-written. |
-| undeclared | 8 external actors and libraries (Three.js, Vite, the browser platform, browser storage, the file system, `jsonc-parser`, Playwright, and the person or agent who edits code) | Outside the system; `implementation.status` is not applicable and the *Realisation* panel lists them as undeclared. |
+| `model-configured` | `projection-system`, `scene-renderer`, `inspector`, `property-controls` | Behaviour driven by data read at runtime, but the code that reads it is hand-written. (`parser` is `manual`.) |
+| `manual` | 66 components, six subsystems included (validator, expression language, transactions, claim evaluator, simulation engine, layout engine, session, shell, toolbar, dialogs, source editor, workspace service, CLI, generators, ...) | Hand-written. |
+| `not-implemented` | 10 components (simulation aspect registry, refinement checker, chaos, load and cost aspects, simulation overlays, deployment model, infrastructure generator, implementation refinement, reality loop) | Planned, not built. |
+| undeclared | 9 external actors and libraries (Three.js, Vite, the browser platform, browser storage, the file system, `jsonc-parser`, Playwright, the Markdown specification source, and the person or agent who edits code) | Outside the system; `implementation.status` is not applicable and the *Realisation* panel lists them as undeclared. |
 
 What "model-configured" covers, concretely:
 

@@ -9,6 +9,7 @@ import { Project } from '../core/project.js';
 import { listViews, project as projectScene } from '../core/projections.js';
 import { layoutScene, chooseLayout, LAYOUT_METHODS } from '../core/layout.js';
 import { evaluateClaims, checkTrace } from '../core/claims.js';
+import { applyConcordance } from '../core/concordance.js';
 import { createTraceCursor } from '../core/engine.js';
 import { simulationInput } from '../core/sim-input.js';
 import { createEngineRunner } from './engine-runner.js';
@@ -256,13 +257,23 @@ export function createSession() {
         emit('project', { name: session.projectName });
         return;
       }
+      // The model is derived by the Lean kernel; without it no specification can be read.
+      /** @type {Project} */
+      let project;
+      try {
+        project = new Project({ name, specText: files.spec.text, layoutText: files.layout?.text ?? null });
+      } catch (e) {
+        session.note('error', `Could not open project "${name}": ${/** @type {Error} */ (e).message}`);
+        emit('project', { name: session.projectName });
+        return;
+      }
       unwatch?.(); unwatch = null;
       unsubscribeProject?.(); unsubscribeProject = null;
       session.projectName = name;
       // Where the specification is stored, as shown in the source editor.
       session.specLocation = files.spec.path ?? `specs/${name}/spec.jsonc`;
-      session.project = new Project({ name, specText: files.spec.text, layoutText: files.layout?.text ?? null });
-      session.recorded = files.recorded;
+      session.project = project;
+      session.recorded = applyConcordance(project.model, files.recorded, files.concordance).recorded;
       hashes.spec = files.spec.hash;
       hashes.layout = files.layout?.hash ?? null;
       pending.spec = pending.layout = false;
@@ -943,7 +954,7 @@ export function createSession() {
         rec('project-files-read', read);
         if (name !== session.projectName) return;
         rec('recorded-results-adopted', { version: read.recorded });
-        session.recorded = files.recorded;
+        session.recorded = applyConcordance(session.project?.model, files.recorded, files.concordance).recorded;
         evaluate();
         recompute();
         emit('claims', null);

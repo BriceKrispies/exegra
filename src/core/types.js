@@ -46,6 +46,7 @@ export {};
  * @property {{owner:string, path:(string|number)[], src:string, loc:Loc}[]} exprs  every expression string and where it lives
  * @property {any} meta        effective meta-model: {entities, categories, relationshipKinds, projections, sections}
  * @property {any} vocabulary  raw `vocabulary` section
+ * @property {string} [semanticHash]  the semantic hash, computed by the Lean kernel with the model (src/core/hash.js)
  */
 
 /**

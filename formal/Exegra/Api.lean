@@ -1,5 +1,6 @@
 import Exegra.Api.Basic
 import Exegra.Api.Engine
+import Exegra.Api.Model
 
 /-!
 The one entry point of the Lean core for the JavaScript shell (`src/core/lean.js`): a JSON
@@ -17,7 +18,7 @@ a name.
 namespace Exegra.Api
 
 /-- The functions of the module ports, in lookup order. -/
-def modules : List Entry := Engine.entries
+def modules : List Entry := Engine.entries ++ ModelPort.entries
 
 def functionsDoc : String := "The registered functions, [{name, doc}], in lookup order."
 
@@ -87,5 +88,20 @@ theorem runAny_eq_parse_call (text : String) :
     runAny text = (Json.parse text >>= call "engine.run") := by
   rw [← Impl.runAny_eq]
   rfl
+
+/-- `model.derive` at the boundary is the model derivation, written as JSON. -/
+theorem call_model_derive (v : Value) : call "model.derive" v = Model.deriveValue v := rfl
+
+/-- **Model derivation is total at the boundary**: `model.derive` answers every argument value
+with a result, never with an error (and, being a Lean definition, always returns). -/
+theorem call_model_derive_total (v : Value) : ∃ out, call "model.derive" v = .ok out := ⟨_, rfl⟩
+
+/-- `hash.semantic` at the boundary computes the definition of the semantic hash
+(`Exegra.Hash.semanticHash`) of the declarations it is given, by `Hash.semanticHash'_eq`. -/
+theorem call_hash_semantic (v : Value) :
+    call "hash.semantic" v = .ok (Json.quote (Hash.semanticHash (Model.get v "schemaVersion")
+      (Model.get v "vocabulary") (ModelPort.decls v))) := by
+  show ModelPort.semanticValue v = _
+  simp [ModelPort.semanticValue, Hash.semanticHash'_eq]
 
 end Exegra.Api

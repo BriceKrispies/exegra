@@ -17,4 +17,8 @@ import Exegra.Lift
 import Exegra.Integrity
 import Exegra.Impl.Semantics
 import Exegra.Impl.Refinement
+import Exegra.Hash
+import Exegra.Model
+import Exegra.HashProps
+import Exegra.ModelProps
 import Exegra.Api

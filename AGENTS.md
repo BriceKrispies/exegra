@@ -13,8 +13,8 @@ first). Hand edits of the text are allowed for prose, but the result must valida
 What goes into the specification:
 
 - **Components.** A new module gets a component, or joins an existing one: purpose, responsibilities, the files in
-  `implementation.modules`. `node cli/exegra.js traceability` fails on a source file no component claims, and on a
-  declared module that does not exist.
+  `implementation.modules`. `node cli/exegra.js traceability` lists the source files no component claims (`unclaimedFiles`) and the
+  declared modules that do not exist (`missingModules`); it exits 0 either way, so read both lists.
 - **Relationships.** A new dependency between components is a relationship of the right kind (`calls`, `data-flow`,
   `projects`, ...). Claims such as `core-independent-of-ui` and `core-dependencies-acyclic` are evaluated over them.
 - **Behavior.** A change to a pipeline Exegra simulates about itself (scenarios such as `visual-edit-flow`) changes
@@ -36,7 +36,7 @@ A change is done when:
 3. `npm run verify` executes the evidence and records the results, and every claim of the change is **verified** or
    **supported** (or **proved**, for a `lean-theorem` claim); the only violated claims are the ones the script expects
    (`edits-only-via-transactions`, deliberately recorded as a known gap, and `core-logic-in-lean`, which lists the
-   core components not yet ported to Lean until WG-4785 finishes);
+   components of the verified kernel (tag `verdict-kernel`) not yet ported to Lean until WG-4785 finishes);
 4. `npm run generate` has rewritten the derived artifacts under `specs/exegra/generated/`;
 5. the user-visible part has been seen working in the running application, with screenshots.
 

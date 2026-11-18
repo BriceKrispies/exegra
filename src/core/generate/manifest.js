@@ -2,7 +2,8 @@
 // small pure helpers every generator shares (text rendering, table cells, JSON
 // and Markdown finishing), so that the rules live in exactly one place.
 
-import { stableStringify, semanticHash } from '../hash.js';
+import { semanticHash } from '../hash.js';
+import { stableStringify } from '../stable-json.js';
 import { entityLabel } from '../query.js';
 import { CLAIM_STATUSES } from '../claim-methods.js';
 

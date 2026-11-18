@@ -567,3 +567,63 @@ test('negatives: every behavioral claim of the exegra specification is verified 
     assert.ok(r.negatives.every((n) => n.violated), `${r.claimId}: a negative did not violate it`);
   }
 });
+
+// ---------------------------------------------------------------------------
+// Vacuity of only-via and of eventually (WG-4827)
+// ---------------------------------------------------------------------------
+
+const VACUOUS = `{
+  "exegra": "0.1",
+  "system": { "id": "vac", "name": "Vacuity" },
+  "components": [
+    { "id": "a", "name": "A", "category": "logical", "purpose": "p" },
+    { "id": "b", "name": "B", "category": "logical", "purpose": "p" },
+    { "id": "v", "name": "V", "category": "logical", "purpose": "p" }
+  ],
+  "relationships": [ { "id": "a-b", "kind": "calls", "from": "a", "to": "b" } ],
+  "events": [ { "id": "go", "name": "Go" }, { "id": "ack", "name": "Ack" } ],
+  "behaviors": [
+    { "id": "m", "name": "M", "subject": "a", "initial": "idle", "variables": [],
+      "states": [ { "id": "idle", "name": "Idle" }, { "id": "done", "name": "Done" } ],
+      "transitions": [ { "id": "t-go", "from": "idle", "to": "done", "on": "go", "effects": [ { "emit": "ack" } ] } ] }
+  ],
+  "faults": [ { "id": "f-drop-go", "name": "Drop go", "kind": "drop-event", "event": "go" } ],
+  "scenarios": [
+    { "id": "s", "name": "S", "behaviors": ["m"], "steps": [ { "at": 0, "event": "go" } ] }
+  ],
+  "claims": [
+    { "id": "only-no-path", "kind": "structural", "statement": "v is the only way from b to a.", "subjects": ["a"],
+      "evaluate": { "method": "only-via", "from": "b", "to": "a", "via": "v" } },
+    { "id": "only-from-is-via", "kind": "structural", "statement": "Every path from a goes through a.", "subjects": ["a"],
+      "evaluate": { "method": "only-via", "from": "a", "to": "b", "via": "a" } },
+    { "id": "ev-script", "kind": "temporal", "statement": "go is eventually delivered.", "subjects": ["m"],
+      "evaluate": { "method": "eventually", "scenarios": ["s"], "occurs": { "event": "go" },
+        "negatives": [ { "scenario": "s", "faults": ["f-drop-go"] } ] } },
+    { "id": "ev-reaction", "kind": "temporal", "statement": "ack is eventually sent by the system.", "subjects": ["m"],
+      "evaluate": { "method": "eventually", "scenarios": ["s"], "occurs": { "event": "ack" },
+        "negatives": [ { "scenario": "s", "faults": ["f-drop-go"] } ] } }
+  ]
+}`;
+
+const vmodel = load(VACUOUS);
+const vclaim = (id) => evaluateClaim(vmodel, id);
+
+test('only-via: no directed path at all is vacuous, so inconclusive', () => {
+  const r = vclaim('only-no-path');
+  assert.equal(r.status, 'inconclusive');
+  assert.match(r.explanation, /holds vacuously/);
+});
+
+test('only-via: a source that is itself the via component is inconclusive, not verified by construction', () => {
+  assert.equal(vclaim('only-from-is-via').status, 'inconclusive');
+});
+
+test('eventually: a scripted input is not a reaction of the system', () => {
+  const r = vclaim('ev-script');
+  assert.equal(r.status, 'inconclusive');
+  assert.match(r.explanation, /only as the scenario's own scripted input/);
+});
+
+test('eventually: an occurrence the system emits, with a violating negative, is verified', () => {
+  assert.equal(vclaim('ev-reaction').status, 'verified');
+});

@@ -1,426 +1,536 @@
 {
   "results": {
+    "ev-concordance-pass": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:44.176Z",
+      "obtained": "run"
+    },
+    "ev-concordance-fail": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:44.532Z",
+      "obtained": "run"
+    },
+    "ev-concordance-absent": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:44.890Z",
+      "obtained": "run"
+    },
+    "ev-concordance-diagnostics": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:45.254Z",
+      "obtained": "run"
+    },
+    "ev-concordance-unknown-claim": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:45.620Z",
+      "obtained": "run"
+    },
+    "ev-concordance-unconfigured": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:45.979Z",
+      "obtained": "run"
+    },
+    "ev-concordance-directory": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:46.335Z",
+      "obtained": "run"
+    },
+    "ev-concordance-watched": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:46.706Z",
+      "obtained": "run"
+    },
+    "ev-trace-order-decides": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:47.088Z",
+      "obtained": "run"
+    },
+    "ev-trace-precedes-script": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:47.442Z",
+      "obtained": "run"
+    },
+    "ev-trace-never-faultonly": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:47.802Z",
+      "obtained": "run"
+    },
+    "ev-trace-constant-consequent": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:48.139Z",
+      "obtained": "run"
+    },
+    "ev-models-listed": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:48.481Z",
+      "obtained": "run"
+    },
+    "ev-models-validated": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:48.837Z",
+      "obtained": "run"
+    },
+    "ev-validate-inert-negative": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:49.201Z",
+      "obtained": "run"
+    },
+    "ev-validate-not-staged": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:49.558Z",
+      "obtained": "run"
+    },
+    "ev-data-declared-markers": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:02:49.914Z",
+      "obtained": "run"
+    },
     "ev-roundtrip-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:15:08.540Z",
+      "ranAt": "2026-11-18T18:02:51.177Z",
       "obtained": "run"
     },
     "ev-browser-inspector-rename": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:15:18.750Z",
+      "ranAt": "2026-11-18T18:03:09.160Z",
       "obtained": "run"
     },
     "ev-browser-source-edit": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:15:29.081Z",
+      "ranAt": "2026-11-18T18:03:16.033Z",
       "obtained": "run"
     },
     "ev-workspace-write": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:15:29.437Z",
+      "ranAt": "2026-11-18T18:03:16.208Z",
       "obtained": "run"
     },
     "ev-browser-persists": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:15:38.803Z",
+      "ranAt": "2026-11-18T18:03:22.800Z",
       "obtained": "run"
     },
     "ev-roundtrip-rejected": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:15:39.040Z",
+      "ranAt": "2026-11-18T18:03:23.169Z",
       "obtained": "run"
     },
     "ev-browser-rejected-source": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:15:48.951Z",
+      "ranAt": "2026-11-18T18:03:29.941Z",
       "obtained": "run"
     },
     "ev-workspace-conflict": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:15:49.253Z",
+      "ranAt": "2026-11-18T18:03:30.113Z",
       "obtained": "run"
     },
     "ev-layout-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:15:49.560Z",
+      "ranAt": "2026-11-18T18:03:30.523Z",
       "obtained": "run"
     },
     "ev-layout-browser": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:15:58.646Z",
+      "ranAt": "2026-11-18T18:03:37.163Z",
       "obtained": "run"
     },
     "ev-simulation-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:15:59.010Z",
+      "ranAt": "2026-11-18T18:03:37.647Z",
       "obtained": "run"
     },
     "ev-generate-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:15:59.440Z",
+      "ranAt": "2026-11-18T18:03:38.045Z",
       "obtained": "run"
     },
     "ev-workspace-confinement": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:16:00.099Z",
+      "ranAt": "2026-11-18T18:03:38.563Z",
       "obtained": "run"
     },
     "ev-roundtrip-invalid-draft": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:16:00.393Z",
+      "ranAt": "2026-11-18T18:03:38.902Z",
       "obtained": "run"
     },
     "ev-browser-invalid-draft": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:16:11.008Z",
+      "ranAt": "2026-11-18T18:03:45.598Z",
       "obtained": "run"
     },
     "ev-model-unsupported": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:16:11.236Z",
+      "ranAt": "2026-11-18T18:03:45.938Z",
       "obtained": "run"
     },
     "ev-flows-trace": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:16:11.625Z",
+      "ranAt": "2026-11-18T18:03:46.320Z",
       "obtained": "run"
     },
     "ev-flows-edges": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:16:12.017Z",
+      "ranAt": "2026-11-18T18:03:46.716Z",
       "obtained": "run"
     },
     "ev-browser-sim-flow": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:16:23.976Z",
+      "ranAt": "2026-11-18T18:03:56.452Z",
       "obtained": "run"
     },
     "ev-simulation-contract": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:16:31.823Z",
+      "ranAt": "2026-11-18T18:04:00.112Z",
       "obtained": "run"
     },
     "ev-engines-agree": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:16:39.989Z",
+      "ranAt": "2026-11-18T18:04:03.647Z",
       "obtained": "run"
     },
     "ev-simulation-worker-responsive": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:16:54.250Z",
+      "ranAt": "2026-11-18T18:04:17.363Z",
       "obtained": "run"
     },
     "ev-browser-phone-touch-usable": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:17:08.751Z",
+      "ranAt": "2026-11-18T18:04:29.183Z",
       "obtained": "run"
     },
     "ev-browser-phone-every-function": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:17:30.656Z",
+      "ranAt": "2026-11-18T18:04:51.240Z",
       "obtained": "run"
     },
     "ev-browser-tablet-desktop-expand": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:17:41.876Z",
+      "ranAt": "2026-11-18T18:05:00.298Z",
       "obtained": "run"
     },
     "ev-fault-model-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:17:42.257Z",
+      "ranAt": "2026-11-18T18:05:00.993Z",
       "obtained": "run"
     },
     "ev-formal-differential": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:18:54.790Z",
+      "ranAt": "2026-11-18T18:05:28.675Z",
       "obtained": "run"
     },
     "ev-formal-proofs": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:18:55.647Z",
+      "ranAt": "2026-11-18T18:05:29.289Z",
       "obtained": "run"
     },
     "ev-contract-events-static": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:18:56.013Z",
+      "ranAt": "2026-11-18T18:05:29.633Z",
       "obtained": "run"
     },
     "ev-contract-trace-checks": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:18:56.408Z",
+      "ranAt": "2026-11-18T18:05:30.316Z",
       "obtained": "run"
     },
     "ev-contract-request-log": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:18:56.800Z",
+      "ranAt": "2026-11-18T18:05:31.006Z",
       "obtained": "run"
     },
     "ev-browser-requests-section": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:05.991Z",
+      "ranAt": "2026-11-18T18:05:38.178Z",
       "obtained": "run"
     },
     "ev-data-model-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:06.245Z",
+      "ranAt": "2026-11-18T18:05:38.684Z",
+      "obtained": "run"
+    },
+    "ev-record-erasure-core": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:05:39.195Z",
+      "obtained": "run"
+    },
+    "ev-classification-core": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:05:39.695Z",
       "obtained": "run"
     },
     "ev-formal-explore": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:17.765Z",
+      "ranAt": "2026-11-18T18:05:53.259Z",
       "obtained": "run"
     },
     "ev-formal-explore-bounded": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:22.381Z",
+      "ranAt": "2026-11-18T18:05:56.781Z",
       "obtained": "run"
     },
     "ev-negatives-status": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:22.750Z",
+      "ranAt": "2026-11-18T18:05:57.159Z",
       "obtained": "run"
     },
     "ev-negatives-validated": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:23.114Z",
+      "ranAt": "2026-11-18T18:05:58.098Z",
       "obtained": "run"
     },
     "ev-own-claims-falsifiable": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:23.882Z",
+      "ranAt": "2026-11-18T18:05:59.329Z",
       "obtained": "run"
     },
     "ev-formal-explore-temporal": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:28.685Z",
+      "ranAt": "2026-11-18T18:06:02.694Z",
       "obtained": "run"
     },
     "ev-distribution-lowering": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:30.483Z",
+      "ranAt": "2026-11-18T18:06:06.379Z",
       "obtained": "run"
     },
     "ev-metric-claims-in-specifications": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:34.505Z",
+      "ranAt": "2026-11-18T18:06:13.219Z",
       "obtained": "run"
     },
     "ev-runtime-data-complete": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:34.901Z",
+      "ranAt": "2026-11-18T18:06:14.494Z",
       "obtained": "run"
     },
     "ev-verify-reuses-fresh-outcomes": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:35.147Z",
+      "ranAt": "2026-11-18T18:06:14.687Z",
       "obtained": "run"
     },
     "ev-verify-skip-keeps-outcome": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:35.382Z",
+      "ranAt": "2026-11-18T18:06:14.877Z",
       "obtained": "run"
     },
     "ev-journal-append-failure": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:35.601Z",
+      "ranAt": "2026-11-18T18:06:15.042Z",
       "obtained": "run"
     },
     "ev-changes-pairing-by-revision": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:35.827Z",
+      "ranAt": "2026-11-18T18:06:15.193Z",
       "obtained": "run"
     },
     "ev-replay-recorded-stream-clean": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:36.127Z",
+      "ranAt": "2026-11-18T18:06:15.855Z",
       "obtained": "run"
     },
     "ev-replay-wrong-order": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:36.419Z",
+      "ranAt": "2026-11-18T18:06:16.515Z",
       "obtained": "run"
     },
     "ev-replay-unknown-event": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:36.729Z",
+      "ranAt": "2026-11-18T18:06:17.177Z",
       "obtained": "run"
     },
     "ev-replay-missing-response": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:37.064Z",
+      "ranAt": "2026-11-18T18:06:17.848Z",
       "obtained": "run"
     },
     "ev-replay-bound": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:37.374Z",
+      "ranAt": "2026-11-18T18:06:18.512Z",
       "obtained": "run"
     },
     "ev-replay-payload": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:37.723Z",
+      "ranAt": "2026-11-18T18:06:19.179Z",
       "obtained": "run"
     },
     "ev-replay-not-allowed": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:38.023Z",
+      "ranAt": "2026-11-18T18:06:19.837Z",
       "obtained": "run"
     },
     "ev-replay-incremental": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:38.336Z",
+      "ranAt": "2026-11-18T18:06:20.516Z",
       "obtained": "run"
     },
     "ev-live-browser": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:48.927Z",
+      "ranAt": "2026-11-18T18:06:29.831Z",
       "obtained": "run"
     },
     "ev-traffic-bounded": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:19:49.189Z",
+      "ranAt": "2026-11-18T18:06:30.006Z",
       "obtained": "run"
     },
     "ev-traffic-live-seq": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:00.873Z",
+      "ranAt": "2026-11-18T18:06:39.374Z",
       "obtained": "run"
     },
     "ev-traffic-server-events": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:01.278Z",
+      "ranAt": "2026-11-18T18:06:39.646Z",
       "obtained": "run"
     },
     "ev-traffic-engine-runner": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:01.566Z",
+      "ranAt": "2026-11-18T18:06:39.824Z",
       "obtained": "run"
     },
     "ev-traffic-sha256": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:01.864Z",
+      "ranAt": "2026-11-18T18:06:40.007Z",
       "obtained": "run"
     },
     "ev-traffic-browser-producers": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:18.257Z",
+      "ranAt": "2026-11-18T18:06:49.383Z",
       "obtained": "run"
     },
     "ev-evidence-ref-rule": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:18.680Z",
+      "ranAt": "2026-11-18T18:06:49.714Z",
       "obtained": "run"
     },
     "ev-lean-boundary": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:19.164Z",
+      "ranAt": "2026-11-18T18:06:50.033Z",
       "obtained": "run"
     },
     "ev-lean-theorem-method": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:19.514Z",
+      "ranAt": "2026-11-18T18:07:05.641Z",
       "obtained": "run"
     },
     "ev-lean-core-browser": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:32.326Z",
+      "ranAt": "2026-11-18T18:07:14.297Z",
       "obtained": "run"
     },
     "ev-register-import-coverage": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:32.658Z",
+      "ranAt": "2026-11-18T18:07:14.650Z",
       "obtained": "run"
     },
     "ev-register-import-lost-cell": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:33.070Z",
+      "ranAt": "2026-11-18T18:07:14.836Z",
       "obtained": "run"
     },
     "ev-register-import-sources": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:33.513Z",
+      "ranAt": "2026-11-18T18:07:15.024Z",
       "obtained": "run"
     },
     "ev-register-import-drafts": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:33.797Z",
+      "ranAt": "2026-11-18T18:07:15.389Z",
       "obtained": "run"
     },
     "ev-register-import-authority": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:34.267Z",
+      "ranAt": "2026-11-18T18:07:15.712Z",
       "obtained": "run"
     },
     "ev-external-traceability": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:34.797Z",
+      "ranAt": "2026-11-18T18:07:16.100Z",
       "obtained": "run"
     },
     "ev-external-junit": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:39.277Z",
+      "ranAt": "2026-11-18T18:07:17.237Z",
       "obtained": "run"
     },
     "ev-integrity-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:39.660Z",
+      "ranAt": "2026-11-18T18:07:18.396Z",
       "obtained": "run"
     },
     "ev-integrity-ratchet": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:20:40.189Z",
+      "ranAt": "2026-11-18T18:07:18.914Z",
       "obtained": "run"
     },
     "ev-integrity-lean": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:21:21.672Z",
+      "ranAt": "2026-11-18T18:07:34.549Z",
       "obtained": "run"
     },
     "ev-reader-counts": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:21:22.080Z",
+      "ranAt": "2026-11-18T18:07:34.878Z",
       "obtained": "run"
     },
     "ev-reader-table": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:21:22.494Z",
+      "ranAt": "2026-11-18T18:07:35.208Z",
       "obtained": "run"
     },
     "ev-reader-list": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:21:22.766Z",
+      "ranAt": "2026-11-18T18:07:35.540Z",
       "obtained": "run"
     },
     "ev-reader-sections": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:21:23.024Z",
+      "ranAt": "2026-11-18T18:07:35.877Z",
       "obtained": "run"
     },
     "ev-reader-default": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:21:23.416Z",
+      "ranAt": "2026-11-18T18:07:36.206Z",
       "obtained": "run"
     },
     "ev-reader-unknown-field": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:21:23.846Z",
+      "ranAt": "2026-11-18T18:07:36.539Z",
       "obtained": "run"
     },
     "ev-reader-browser-select": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:21:37.194Z",
+      "ranAt": "2026-11-18T18:07:43.077Z",
       "obtained": "run"
     },
     "ev-reader-browser-edit": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T16:21:48.492Z",
+      "ranAt": "2026-11-18T18:07:50.528Z",
+      "obtained": "run"
+    },
+    "ev-model-kernel-corpus": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:07:51.828Z",
+      "obtained": "run"
+    },
+    "ev-model-kernel-cases": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:07:54.733Z",
+      "obtained": "run"
+    },
+    "ev-model-kernel-edges": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T18:07:55.194Z",
       "obtained": "run"
     }
   },
   "traceability": {
-    "checkedModules": 175,
+    "checkedModules": 188,
     "missingModules": [],
     "unclaimedFiles": [],
-    "claimedFiles": 125
+    "claimedFiles": 127
   },
   "theorems": {
     "Exegra.runInput_terminates": {
@@ -439,7 +549,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T10:22:02.356Z"
+      "checkedAt": "2026-11-18T18:07:58.305Z"
     },
     "Exegra.Api.runAny_eq_parse_call": {
       "about": {
@@ -461,7 +571,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T10:22:02.356Z"
+      "checkedAt": "2026-11-18T18:07:58.305Z"
     },
     "Exegra.Api.registry_names_nodup": {
       "about": {
@@ -479,7 +589,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T10:22:02.356Z"
+      "checkedAt": "2026-11-18T18:07:58.305Z"
     },
     "Exegra.Impl.runAnyValue_eq": {
       "about": {
@@ -501,7 +611,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T10:22:02.356Z"
+      "checkedAt": "2026-11-18T18:07:58.305Z"
     },
     "Exegra.Api.call_engine_run_spec": {
       "about": {
@@ -523,7 +633,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T10:22:02.356Z"
+      "checkedAt": "2026-11-18T18:07:58.305Z"
     },
     "Exegra.Impl.JsonOut.write'_eq": {
       "about": {
@@ -545,7 +655,123 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T10:22:02.356Z"
+      "checkedAt": "2026-11-18T18:07:58.305Z"
+    },
+    "Exegra.Model.Model.semanticHash_presentation": {
+      "about": {
+        "Exegra.Model.Model.semanticHash": {
+          "inStatement": true,
+          "kind": "definition"
+        }
+      },
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "found": true,
+      "kernel": "ok",
+      "kind": "theorem",
+      "lean": "4.35.0",
+      "checkedAt": "2026-11-18T18:07:58.305Z"
+    },
+    "Exegra.Hash.semanticHash_key_order": {
+      "about": {
+        "Exegra.Hash.semanticHash": {
+          "inStatement": true,
+          "kind": "definition"
+        }
+      },
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "found": true,
+      "kernel": "ok",
+      "kind": "theorem",
+      "lean": "4.35.0",
+      "checkedAt": "2026-11-18T18:07:58.305Z"
+    },
+    "Exegra.Hash.semanticHash'_eq": {
+      "about": {
+        "Exegra.Hash.semanticHash": {
+          "inStatement": true,
+          "kind": "definition"
+        },
+        "Exegra.Hash.semanticHash'": {
+          "inStatement": true,
+          "kind": "definition"
+        }
+      },
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "found": true,
+      "kernel": "ok",
+      "kind": "theorem",
+      "lean": "4.35.0",
+      "checkedAt": "2026-11-18T18:07:58.305Z"
+    },
+    "Exegra.Api.call_hash_semantic": {
+      "about": {
+        "Exegra.Api.call": {
+          "inStatement": true,
+          "kind": "definition"
+        },
+        "Exegra.Hash.semanticHash": {
+          "inStatement": true,
+          "kind": "definition"
+        }
+      },
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "found": true,
+      "kernel": "ok",
+      "kind": "theorem",
+      "lean": "4.35.0",
+      "checkedAt": "2026-11-18T18:07:58.305Z"
+    },
+    "Exegra.Model.derive_refs_resolve": {
+      "about": {
+        "Exegra.Model.derive": {
+          "inStatement": true,
+          "kind": "definition"
+        }
+      },
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "found": true,
+      "kernel": "ok",
+      "kind": "theorem",
+      "lean": "4.35.0",
+      "checkedAt": "2026-11-18T18:07:58.305Z"
+    },
+    "Exegra.Api.call_model_derive_total": {
+      "about": {
+        "Exegra.Api.call": {
+          "inStatement": true,
+          "kind": "definition"
+        }
+      },
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "found": true,
+      "kernel": "ok",
+      "kind": "theorem",
+      "lean": "4.35.0",
+      "checkedAt": "2026-11-18T18:07:58.305Z"
     }
   }
 }

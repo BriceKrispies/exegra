@@ -415,13 +415,24 @@
               "name": { "type": "string", "required": true, "label": "Name" },
               "type": { "type": "string", "required": true, "label": "Type", "doc": "Free type text such as principal-id, display-name, number or timestamp. A type containing the word name or handle counts as a name." },
               "personal": { "type": "enum", "values": ["identifier", "contact", "name", "credential", "financial", "activity", "location", "other"], "label": "Personal-data class", "doc": "Set when the field is personal data of a principal." },
+              "classification": { "type": "enum", "values": ["public", "internal", "personal", "credential"], "label": "Classification", "doc": "How sensitive the field is. The personal-data class above is the one way to say a field is personal: classification personal is accepted only together with a class, and a field with a class is not classified otherwise. credential is treated as personal by rule record-erasure-point." },
               "refersTo": { "type": "ref", "ref": ["record"], "literals": ["principal"], "label": "Refers to", "doc": "The record this field holds the key of, or \"principal\" for a principal id." },
               "role": { "type": "enum", "values": ["party", "subject", "snapshot"], "label": "Role", "doc": "party: a principal taking part in the act (must refer to the principal by id); subject: the principal the record is about; snapshot: a copy of a value as it was at the time of the act." },
               "description": { "type": "text", "label": "Description" }
             }
           }
         },
-        "retention": { "type": "text", "label": "Retention", "doc": "How long a record is kept and what ends it." },
+        "retention": { "type": "text", "label": "Retention", "doc": "How long a record is kept and what ends it. Prose: the erasure property is what is checked." },
+        "erasure": {
+          "type": "object", "label": "Erasure",
+          "fields": {
+            "point": { "type": "text", "label": "Erasure point", "doc": "When a principal's deletion (or the end of the retention) has removed the record." },
+            "bound": { "type": "number", "label": "Bound", "doc": "How long after that point the record is removed, in the unit; a bounded retention." },
+            "unit": { "type": "enum", "values": ["millisecond", "second", "minute", "hour", "day"], "label": "Unit" },
+            "basis": { "type": "text", "label": "Basis", "doc": "Why the record is kept beyond a deletion, when it is (a legal obligation, a financial record)." },
+            "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+          }
+        },
         "description": { "type": "text", "label": "Description" },
         "source": { "type": "ref", "ref": ["*"], "label": "Source", "doc": "The entity that states this record (a requirement, decision or case)." }
       }

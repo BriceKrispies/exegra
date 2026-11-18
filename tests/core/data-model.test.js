@@ -96,6 +96,7 @@ test('each data rule reports its entity and field on a constructed violation', (
     ['data.no-principal-in-shared', 'cdn-profile', 'dependsOnAuthority'],
     ['data.no-principal-in-shared', 'cdn-profile', 'fields.0'],
     ['data.party-by-id', 'deal', 'fields.0'],
+    ['data.record-erasure-point', 'profile', 'erasure'],
   ]);
   const party = r.diagnostics.find((d) => d.code === 'data.party-by-id');
   assert.match(party?.message ?? '', /"buyer".*does not refer to the principal and has the name type "display-name"/);
@@ -133,4 +134,76 @@ test('the Data view exists only with records or copies and draws them with of, h
   const edges = new Set(scene.edges.map((e) => `${e.from}>${e.to}:${e.label}`));
   for (const e of ['store-page-variant>game:copy of', 'store-page-variant>cdn:held by', 'game>platform-unit:owned by']) assert.ok(edges.has(e), e);
   for (const e of scene.edges) assert.ok(model.entities.has(e.entityId));
+});
+
+const ERASURE_CLAIM = { id: 'records-erase', kind: 'structural', statement: 'x', evaluate: { method: 'data-model', rules: ['record-erasure-point'] } };
+
+test('a record with a personal field and no erasure is reported, and a claim using the rule is violated with the record as counterexample', () => {
+  const r = analyzeSpec(spec({ records: [PROFILE], claims: [ERASURE_CLAIM] }));
+  assert.equal(r.errorCount, 0, r.diagnostics.map((d) => d.message).join('\n'));
+  const found = notInfo(r.diagnostics).filter((d) => d.code === 'data.record-erasure-point');
+  assert.equal(found.length, 1, found.map((d) => d.message).join('\n'));
+  assert.equal(found[0].entityId, 'profile');
+  assert.deepEqual(found[0].path, ['records', 0, 'erasure']);
+  assert.match(found[0].message, /"name" \(personal: name\)/);
+  const status = Object.fromEntries(evaluateClaims(/** @type {any} */ (r.model)).map((c) => [c.claimId, c]));
+  assert.equal(status['records-erase'].status, 'violated');
+  assert.deepEqual(status['records-erase'].counterexample?.entities, ['profile']);
+});
+
+test('a record that states an erasure point, or a bounded retention with its unit, passes the record-erasure-point rule', () => {
+  for (const erasure of [{ point: "the principal's deletion" }, { bound: 30, unit: 'day' }]) {
+    const r = analyzeSpec(spec({ records: [{ ...PROFILE, erasure }], claims: [ERASURE_CLAIM] }));
+    assert.equal(r.errorCount, 0, JSON.stringify(erasure));
+    assert.equal(notInfo(r.diagnostics).filter((d) => d.code === 'data.record-erasure-point').length, 0, JSON.stringify(erasure));
+    const status = Object.fromEntries(evaluateClaims(/** @type {any} */ (r.model)).map((c) => [c.claimId, c.status]));
+    assert.equal(status['records-erase'], 'verified', JSON.stringify(erasure));
+  }
+});
+
+test('a bounded erasure without a unit is an error and does not satisfy the rule', () => {
+  const r = analyzeSpec(spec({ records: [{ ...PROFILE, erasure: { bound: 30 } }] }));
+  assert.ok(r.diagnostics.some((d) => d.code === 'record.bound-unit' && d.severity === 'error' && d.entityId === 'profile'));
+  assert.equal(notInfo(r.diagnostics).filter((d) => d.code === 'data.record-erasure-point').length, 1);
+});
+
+test('a credential field counts as personal for the record erasure rule, and a record with no personal or credential field is not checked', () => {
+  const credential = { id: 'secret', name: 'Secret', owner: 'owner', key: ['id'], fields: [{ name: 'id', type: 'secret-id' }, { name: 'value', type: 'secret-value', classification: 'credential' }] };
+  const plain = { id: 'plain', name: 'Plain', owner: 'owner', key: ['id'], fields: [{ name: 'id', type: 'plain-id' }, { name: 'level', type: 'number', classification: 'public' }] };
+  const r = analyzeSpec(spec({ records: [credential, plain], claims: [{ ...ERASURE_CLAIM, id: 'c2' }] }));
+  assert.equal(r.errorCount, 0, r.diagnostics.map((d) => d.message).join('\n'));
+  const found = notInfo(r.diagnostics).filter((d) => d.code === 'data.record-erasure-point');
+  assert.deepEqual(found.map((d) => d.entityId), ['secret']);
+  const status = Object.fromEntries(evaluateClaims(/** @type {any} */ (r.model)).map((c) => [c.claimId, c]));
+  assert.equal(status.c2.status, 'violated');
+  assert.deepEqual(status.c2.counterexample?.entities, ['secret']);
+});
+
+test('classification is a closed set; personal is stated only through the personal class', () => {
+  const field = (extra) => ({ name: 'level', type: 'number', ...extra });
+  const cases = [
+    [{ classification: 'public' }, null],
+    [{ classification: 'internal' }, null],
+    [{ classification: 'credential' }, null],
+    [{ classification: 'personal', personal: 'activity' }, null],
+    [{ classification: 'secret' }, 'property.enum'],
+    [{ classification: 'personal' }, 'field.classification-personal'],
+    [{ classification: 'internal', personal: 'name' }, 'field.classification-conflict'],
+    [{ classification: 'personal', personal: 'name' }, null],
+  ];
+  for (const [extra, code] of cases) {
+    const r = analyzeSpec(spec({ records: [{ id: 'rec', name: 'Rec', owner: 'owner', key: ['id'], fields: [{ name: 'id', type: 'rec-id' }, field(extra)] }] }));
+    const errs = r.diagnostics.filter((d) => d.severity === 'error');
+    if (code === null) assert.equal(errs.length, 0, `${JSON.stringify(extra)}: ${errs.map((d) => d.message).join('\n')}`);
+    else {
+      assert.ok(errs.some((d) => d.code === code), `${JSON.stringify(extra)}: expected ${code}, got ${errs.map((d) => d.code).join(', ')}`);
+      assert.deepEqual(errs.find((d) => d.code === code)?.path.slice(-1), ['classification']);
+    }
+  }
+});
+
+test('a specification without classifications and with personal fields that state an erasure has no errors', () => {
+  const r = analyzeSpec(spec({ records: [{ ...PROFILE, erasure: { point: 'deletion' } }] }));
+  assert.equal(r.errorCount, 0, r.diagnostics.map((d) => d.message).join('\n'));
+  assert.ok(!r.diagnostics.some((d) => /classification/.test(d.code)));
 });

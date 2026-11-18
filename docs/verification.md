@@ -21,13 +21,15 @@ How to run every check, what it establishes, and where results are recorded. A c
 | `node cli/exegra.js integrity [--project <name>]` | every integrity rule of the project holds, with instances, or is violated with counterexamples ([integrity-rules.md](integrity-rules.md)) | terminal |
 | `node cli/exegra.js prove-integrity [--project <name>]` | each integrity rule is proved in Lean (`holds`, by reflection) or refuted from concrete witnesses, kernel-checked with standard axioms only, after the Lean checker and the JavaScript evaluator agree; needs Lake | terminal, `formal/generated/integrity/` (ignored by git) |
 | `node cli/exegra.js traceability` | declared modules exist; every source file is claimed (per realisation root, when the project declares roots) | terminal |
-| `npm run check` | typecheck, `npm test`, `npm run test:browser` in sequence | terminal |
+| `npm run check` | typecheck, `npm test`, `npm run test:browser`, `npm run verify` in sequence | terminal, `specs/exegra/evidence/results.json` |
 
-Typecheck does not cover `src/render`, `src/ui` or `src/app`. Tests run with a limited number of jobs; `npm test` uses `--test-concurrency=2`, and Playwright runs one worker.
+Typecheck does not cover `src/render`, `src/ui` or `src/app`. Tests run with a limited number of jobs: `npm test` uses `--test-concurrency=2`, and Playwright runs two workers by default (`EXEGRA_TEST_WORKERS` changes it), each with its own scratch projects.
 
 ## `npm test`
 
 `node --test` over `tests/core/*.test.js`. These suites use in-memory specifications, temporary directories and `node:test`; they do not need a browser.
+
+The table below does not list every file. `tests/core` also holds `formal-semantics.test.js` (the Lean build and the differential run), `formal-explore.test.js`, `concordance.test.js`, `traffic.test.js`, `replay.test.js`, `distributions.test.js`, `metric-spec.test.js`, `metric-stats.test.js`, `runtime-data-complete.test.js`, `outcome-reuse.test.js`, `activity-pairing.test.js`, `fault-model.test.js`, `model-kernel.test.js` (Lean derivation against the JavaScript it replaced), `references.test.js`, `queueing-fixtures.test.js` and `pool-fixture.test.js`. The last two are skipped unless `EXEGRA_FIXTURES=1` is set, and their claims stay inconclusive until `verify` records a result.
 
 | File | Covers |
 |---|---|
@@ -54,7 +56,7 @@ Typecheck does not cover `src/render`, `src/ui` or `src/app`. Tests run with a l
 
 ## `npm run test:browser`
 
-Playwright (`playwright.config.js`) starts its own Vite server on port 5199 (reusing one if running), one worker, Chrome via `channel: 'chrome'`, in three projects: `desktop` (1600x1000) runs every file except `mobile.spec.js`; `phone` (iPhone 13, 390x844, touch) and `tablet` (820x1180, touch) run the tests of `mobile.spec.js` tagged `@phone` and `@tablet`. `exegra verify` runs a referenced file without naming a project, so each test runs in the one project that selects it. **Tests never modify the shipped specifications.** `global-setup.js` copies the self-specification to `specs/zz-test-exegra` and the multiplayer example, a test fixture at `tests/fixtures/multiplayer/spec.jsonc`, to `specs/zz-test-multiplayer`; `resetScratch` recreates a copy before every test and `global-teardown.js` removes them. The shipped `benchmark` project is only read, and a local test of a linked project asserts that its file is unchanged afterwards. Tests drive the real UI (canvas clicks at projected positions) and check the model in the page, the DOM and the files on disk, and fail on any uncaught page error.
+Playwright (`playwright.config.js`) starts its own Vite server on port 5199 (reusing one if running), one worker, Chrome via `channel: 'chrome'`, in three projects: `desktop` (1600x1000) runs every file except `mobile.spec.js`; `phone` (iPhone 13, 390x844, touch) and `tablet` (820x1180, touch) run the tests of `mobile.spec.js` tagged `@phone` and `@tablet`. `exegra verify` runs a referenced file without naming a project, so each test runs in the one project that selects it. **Tests never modify the shipped specifications.** `global-setup.js` resets one scratch copy per worker slot of the self-specification (`specs/zz-test-exegra-w<n>`) and of the multiplayer example, a test fixture at `tests/fixtures/multiplayer/spec.jsonc` (`specs/zz-test-multiplayer-w<n>`), through `tests/browser/scratch.js`; `resetScratch` recreates a slot's copy before a test that uses it, and `global-teardown.js` calls `removeScratch`. The shipped `benchmark` project is only read, and a local test of a linked project asserts that its file is unchanged afterwards. Tests drive the real UI (canvas clicks at projected positions) and check the model in the page, the DOM and the files on disk, and fail on any uncaught page error.
 
 `tests/browser/exegra.spec.js`:
 
@@ -115,7 +117,7 @@ An evidence `ref` is `<path>` (run the whole file) or `<path>#<title pattern>` (
 **Why some claims are expected to be violated.** `--expect-violated` names claims that are violated by design or by a known defect, so that a violation you did not expect fails the command and one you did expect does not:
 
 - `edits-only-via-transactions` (exegra): a real discrepancy. Import writes through the persistence service without the transaction pipeline.
-- `core-logic-in-lean` (exegra): the target of WG-4785. It lists the semantic-core components whose `implementation.language` is not yet `lean`, and stays violated until the per-module ports finish; then it is verified and leaves this list.
+- `core-logic-in-lean` (exegra): the target of WG-4785. It lists the components of the verified kernel (tag `verdict-kernel`: model derivation, semantic hash, engine-input derivation, engine, explorer, claim verdicts, transactions) whose `implementation.language` is not yet `lean`, and stays violated until the per-module ports finish; then it is verified and leaves this list. JavaScript outside the kernel is in the trusted base (`trusted-js-shell`), outside the verdict path.
 The multiplayer fixture carries two more such claims, `ack-implies-durable-under-early-ack` (a seeded behavioral defect, kept to demonstrate a counterexample) and `database-reached-only-by-runtime` (a seeded structural defect, `telemetry-reads-game-database`). They are not part of any script; the browser tests rely on them.
 
 Only `test` evidence is executed. Measurement, document and review evidence stay author-entered. The recorded results are not tied to a code revision.

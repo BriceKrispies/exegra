@@ -184,14 +184,15 @@ shell.sceneHost.addEventListener('wheel', cameraMoved, { passive: true });
 // Inspection hook for browser tests and for debugging from the console.
 /** @type {any} */ (window).__exegra = { session, view };
 
-// Claim evaluation runs scenarios on the main thread, so the engine is loaded before the first project opens.
-// If it cannot be loaded the application still opens; the affected claims report why they could not be checked.
+// The Lean core derives every model (src/core/parse.js) and runs claim scenarios on the main thread, so it is
+// loaded before the first project opens. If it cannot be loaded the application shell still opens and says why
+// no specification can be read.
 traffic.record('engine-load-requested');
 initEngine().then(
   () => { traffic.record('engine-load-settled', { ok: true }); traffic.record('session-init-requested', { persistent: session.persistent, project: requestedProject() }); session.init(); },
   (e) => {
     traffic.record('engine-load-settled', { ok: false });
-    session.note('error', `The simulation engine could not be loaded: ${e?.message ?? e}`);
+    session.note('error', `The Lean core could not be loaded, so no specification can be read and no scenario run: ${e?.message ?? e}`);
     traffic.record('session-init-requested', { persistent: session.persistent, project: requestedProject() });
     session.init();
   },

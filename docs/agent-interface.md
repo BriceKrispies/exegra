@@ -82,7 +82,7 @@ node cli/exegra.js list --kind component
 ### `show <id>`
 The entity with `data`, plus `ownedEntities`, `referencedBy` (`[{from, via}]`). Components also get `relationships` (`[{id, kind, direction, other}]`), `children` and `ancestors`.
 ```
-node cli/exegra.js show server
+node cli/exegra.js show semantic-core
 ```
 ```json
 {"ok":true,"command":"show","project":"exegra","semanticHash":"…","result":{"id":"server","kind":"component","data":{"name":"Server","category":"logical"},"ownedEntities":["server-api"],"referencedBy":[{"from":"client-calls-server","via":"to"}],"relationships":[{"id":"client-calls-server","kind":"calls","direction":"in","other":"client"}],"children":[],"ancestors":[]}}
@@ -91,7 +91,7 @@ node cli/exegra.js show server
 ### `deps <id> [--direction out|in] [--transitive] [--kinds a,b]`
 Dependencies of a component. Default: `out` (what it depends on), direct only. Without `--kinds`, only relationship kinds flagged as dependencies are followed.
 ```
-node cli/exegra.js deps client --transitive
+node cli/exegra.js deps visual-interaction --transitive
 ```
 ```json
 {"ok":true,"command":"deps","project":"exegra","semanticHash":"…","result":[{"id":"server","via":"client-calls-server","depth":1}]}
@@ -100,7 +100,7 @@ node cli/exegra.js deps client --transitive
 ### `contracts [<componentId>]`
 All contracts, or the contracts bound to a component through its ports and relationships.
 ```
-node cli/exegra.js contracts server
+node cli/exegra.js contracts session
 ```
 ```json
 {"ok":true,"command":"contracts","project":"exegra","semanticHash":"…","result":{"component":"server","bindings":[{"contract":"request-contract","via":"server-api","role":"provider"}],"contracts":[{"id":"request-contract","kind":"contract","data":{…}}]}}
@@ -118,7 +118,7 @@ node cli/exegra.js claims --status violated
 ### `evaluate [<claimId>]`
 One claim, or all claims. Returns `{results, summary}`. A violated claim is a finding, so the command still succeeds with `ok: true`.
 ```
-node cli/exegra.js evaluate no-direct-db
+node cli/exegra.js evaluate core-dependencies-acyclic
 ```
 ```json
 {"ok":true,"command":"evaluate","project":"exegra","semanticHash":"…","result":{"results":[{"claimId":"no-direct-db","status":"violated","…":"…"}],"summary":{"total":1,"verified":0,"supported":0,"violated":1,"inconclusive":0,"not-evaluated":0}}}
@@ -161,7 +161,7 @@ With `--dry-run` the transaction is fully validated and nothing is written. The 
 ### `plan-delete <id>`
 What a cascade delete would remove (`entities`), repair (`repairs`) and what depends on it (`dependents`). Changes nothing.
 ```
-node cli/exegra.js plan-delete client
+node cli/exegra.js plan-delete hash-binding
 ```
 ```json
 {"ok":true,"command":"plan-delete","project":"exegra","semanticHash":"…","result":{"entities":["client","client-calls-server"],"repairs":[],"dependents":[]}}
@@ -170,7 +170,7 @@ node cli/exegra.js plan-delete client
 ### `simulate <scenarioId> [--faults a,b] [--steps]`
 Runs a scenario and checks the claims that apply to its trace. `--faults` replaces the scenario's own fault list. `--steps` includes the full `steps` array. When the scenario has contract events (events with a `contract` and a `role`), `checks` also holds their automatic conformance checks and `requestLog` lists them as request-log lines (see [simulation.md](simulation.md#contract-events-in-a-trace)).
 ```
-node cli/exegra.js simulate basic-exchange
+node cli/exegra.js simulate visual-edit-flow
 ```
 ```json
 {"ok":true,"command":"simulate","project":"exegra","semanticHash":"…","result":{"scenarioId":"basic-exchange","faults":[],"outcome":"quiescent","stepCount":4,"final":{…},"checks":[]}}
@@ -179,7 +179,7 @@ node cli/exegra.js simulate basic-exchange
 ### `trace <scenarioId> [--faults a,b] [--out <file>]`
 The complete trace. With `--out`, the trace is written as stable JSON (sorted keys, two-space indent) to that file, relative to the current directory. The result is then `{written, stepCount}` with `written` as the absolute path.
 ```
-node cli/exegra.js trace basic-exchange --out ./trace.json
+node cli/exegra.js trace visual-edit-flow --out ./trace.json
 ```
 ```json
 {"ok":true,"command":"trace","project":"exegra","semanticHash":"…","result":{"written":"C:\\dev\\exegra\\trace.json","stepCount":4}}
@@ -203,7 +203,7 @@ node cli/exegra.js traceability
 {"ok":true,"command":"traceability","project":"exegra","semanticHash":"…","result":{"checkedModules":12,"missingModules":[],"unclaimedFiles":["tools/old.js"],"claimedFiles":40}}
 ```
 
-### `verify [--skip-browser] [--ingest-only] [--expect-violated a,b]`
+### `verify [--skip-browser] [--ingest-only] [--fresh] [--expect-violated a,b]`
 The verification pipeline:
 
 1. Validate.
@@ -212,14 +212,14 @@ The verification pipeline:
 4. Write the results to `evidence/results.json` with `ranAt` timestamps. Results from earlier runs are replaced.
 5. Re-evaluate the claims with the new results.
 
-`--ingest-only` runs no realisation root's test command and reads the JUnit reports already on disk. `--skip-browser` leaves browser evidence unexecuted. It has no recorded result, so its claims are evaluated as they would be without a run.
+`--fresh` runs every test again instead of reusing the outcomes recorded on the same tree (reuse happens only while the tree stamp matches; see `tests/core/outcome-reuse.test.js`). `--ingest-only` runs no realisation root's test command and reads the JUnit reports already on disk. `--skip-browser` leaves browser evidence unexecuted. It has no recorded result, so its claims are evaluated as they would be without a run.
 
 `--expect-violated a,b` names claims that are deliberately violated. The command still succeeds when those are the only violations. Unknown ids are rejected.
 
 The command fails with `verify.failed` when validation has errors, any executed evidence failed (`not-run` is not a failure), or any claim is violated outside `--expect-violated`. The failure carries the full report in `result`.
 
 ```
-node cli/exegra.js verify --skip-browser --expect-violated no-direct-db
+node cli/exegra.js verify --skip-browser --expect-violated edits-only-via-transactions
 ```
 ```json
 {"ok":true,"command":"verify","project":"exegra","semanticHash":"…","result":{"validation":{"errors":0,"warnings":0,"gaps":3},"traceability":{…},"evidence":[{"id":"unit-tests","kind":"test","ref":"tests/core/cli.test.js","outcome":"pass","ranAt":"2026-11-14T10:00:00.000Z"}],"claims":{"summary":{…},"violated":["no-direct-db"],"expectedViolated":["no-direct-db"],"unexpectedViolated":[]}}}
@@ -236,6 +236,12 @@ node cli/exegra.js integrity closes-agrees-with-resolved-by
 
 ### `prove-integrity [<ruleId>] [--rules <file>] [--max-witnesses N]`
 Proves or refutes integrity rules in Lean: per rule `result` (`holds`, `violated` or `incomplete`), the exported `facts`, the `differential` comparison with the JavaScript evaluator, the proof `file`, `theorems`, `axioms` and the times (`evaluateMs`, `exportMs`, `leanEvalMs`, `checkMs`). Needs Lake. Fails with `integrity.incomplete` when a rule could not be decided.
+
+### `prove <scenarioId> [--bound N] [--max-states N] [--steps]`
+Explores every configuration of a scenario within a bound with the verified explorer of the Lean semantics, and checks the state-invariant and temporal claims that list the scenario. Needs `lake`. Its output is not written to `results.json`.
+
+### `markdown [<documentPath>] [--out <dir>]`
+Renders the document entities of a specification that holds them (a linked project converted from Markdown). With no argument it lists the document paths; with a path it prints that document; with `--out` it writes every document under the directory.
 
 ### `help`
 The list of commands with usage and summary.

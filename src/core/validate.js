@@ -23,10 +23,12 @@ const VAR_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const RESERVED_VARS = ['state', 'event', 'time', 'true', 'false', 'null'];
 
 /**
- * @param {Model} model
+ * `claimsOnly` runs only the checks of claims (parameters, scenarios, negatives, `models`): they read
+ * what they can resolve and skip what they cannot, so they are safe on a model with unresolved references.
+ * @param {Model} model @param {{claimsOnly?: boolean}} [opts]
  * @returns {Diagnostic[]}
  */
-export function validateModel(model) {
+export function validateModel(model, opts = {}) {
   /** @type {Diagnostic[]} */
   const out = [];
   /**
@@ -103,6 +105,126 @@ export function validateModel(model) {
     }
   };
 
+  /**
+   * The `models` property of a claim links a check over the behavior model to the requirement it restates:
+   * it must name requirements (claims of kind requirement). An id that resolves to nothing is reported by the parser.
+   * @param {Entity} c
+   */
+  const checkModels = (c) => {
+    const v = c.data.models;
+    if (v === undefined) return;
+    (Array.isArray(v) ? v : [v]).forEach((/** @type {any} */ id, /** @type {number} */ i) => {
+      if (typeof id !== 'string') return;
+      const t = get(id);
+      if (t && (t.kind !== 'claim' || t.data.kind !== 'requirement')) {
+        report('error', 'claim.models-not-requirement', c, `"models" names "${id}", which is not a requirement (a claim of kind "requirement").`, Array.isArray(v) ? ['models', i] : ['models']);
+      }
+    });
+  };
+
+  // --- claims -------------------------------------------------------------
+  // A closure so that it can also run alone (see `claimsOnly`).
+  const claimChecks = () => {
+  for (const c of kind('claim')) {
+    checkModels(c);
+    const ev = c.data.evaluate;
+    if (!ev || typeof ev !== 'object') continue;
+    if (typeof ev.method !== 'string') { report('error', 'claim.method.missing', c, 'Claim "evaluate" needs a string "method".', ['evaluate']); continue; }
+    if (own(model.meta.verificationMethods, ev.method)) {
+      // Carried out outside Exegra: nothing to check here beyond the method name.
+      for (const k of Object.keys(ev)) if (k !== 'method') report('error', 'claim.param.unknown', c, `Verification method "${ev.method}" is external and takes no parameters.`, ['evaluate', k]);
+      continue;
+    }
+    const mdef = own(/** @type {any} */ (CLAIM_METHODS), ev.method);
+    if (!mdef) { report('warning', 'claim.method.unsupported', c, `Evaluation method "${ev.method}" is not supported by this build; the claim stays not evaluated.`, ['evaluate', 'method']); continue; }
+    if (!mdef.kinds.includes(c.data.kind)) report('error', 'claim.method.kind', c, `Method "${ev.method}" evaluates ${mdef.kinds.join('/')} claims, not ${c.data.kind} claims.`, ['evaluate', 'method']);
+    for (const k of Object.keys(ev)) if (k !== 'method' && !own(mdef.params, k)) report('error', 'claim.param.unknown', c, `Method "${ev.method}" has no parameter "${k}".`, ['evaluate', k]);
+    if (ev.method === 'metric-bound') {
+      // A metric claim with fewer runs than can ever hold (docs/simulation.md, "Claims over metrics").
+      try {
+        const need = minRuns(parseRational(ev.fraction ?? '0.95'), parseRational(ev.confidence ?? '0.95'));
+        const runs = Number(ev.runs ?? 59);
+        if (!(runs >= need)) report('error', 'claim.metric.runs', c, `Claim "${c.id}" can never hold with ${runs} runs; at least ${need} are needed at fraction ${ev.fraction ?? '0.95'} and confidence ${ev.confidence ?? '0.95'}.`, ['evaluate', 'runs']);
+      } catch (e) {
+        report('error', 'claim.param.value', c, `Claim "${c.id}": ${/** @type {Error} */ (e).message}`, ['evaluate']);
+      }
+      if ((ev.op === undefined) === (ev.approx === undefined)) report('error', 'claim.param.value', c, 'A metric-bound claim needs either "op" and "bound" or "approx".', ['evaluate']);
+    }
+    /** @type {Set<string>|undefined} */
+    let allowedBehaviors;
+    if (Array.isArray(ev.scenarios)) {
+      for (const sid of ev.scenarios) {
+        const sc = get(sid);
+        if (!sc || sc.kind !== 'scenario') continue;
+        const set = new Set(Array.isArray(sc.data.behaviors) ? sc.data.behaviors : []);
+        allowedBehaviors = allowedBehaviors ? new Set([...allowedBehaviors].filter((x) => set.has(x))) : set;
+      }
+      if (!ev.scenarios.length) report('error', 'claim.param.value', c, 'At least one scenario is required.', ['evaluate', 'scenarios']);
+    }
+    for (const [name, pdefRaw] of Object.entries(mdef.params)) {
+      const pdef = /** @type {any} */ (pdefRaw);
+      const v = ev[name];
+      const sub = ['evaluate', name];
+      if (v === undefined) { if (pdef.required) report('error', 'claim.param.required', c, `Method "${ev.method}" needs parameter "${name}".`, ['evaluate']); continue; }
+      const type = pdef.type;
+      if (type === 'selector') {
+        const okIds = typeof v === 'string' || (Array.isArray(v) && v.every((x) => typeof x === 'string'));
+        if (!okIds) {
+          if (!v || typeof v !== 'object' || Array.isArray(v)) { report('error', 'claim.param.type', c, `Parameter "${name}" must be a selector.`, sub); continue; }
+          for (const k of Object.keys(v)) if (!['ids', 'category', 'kind', 'tag', 'trustZone', 'within', 'all'].includes(k)) report('error', 'claim.selector.unknown', c, `Unsupported selector field "${k}".`, [...sub, k]);
+          if (!Object.keys(v).length) report('error', 'claim.selector.empty', c, `Selector "${name}" selects nothing; use {"all": true} to select every component.`, sub);
+        }
+      } else if (type === 'string') { if (typeof v !== 'string') report('error', 'claim.param.type', c, `Parameter "${name}" must be a string.`, sub); }
+      else if (type === 'strings') { if (!(Array.isArray(v) && v.every((x) => typeof x === 'string'))) report('error', 'claim.param.type', c, `Parameter "${name}" must be an array of strings.`, sub); }
+      else if (type === 'edge-filter') {
+        const ok = v && typeof v === 'object' && !Array.isArray(v) && typeof v.property === 'string' && Array.isArray(v.values) && v.values.length > 0 && v.values.every((/** @type {any} */ x) => typeof x === 'string') && Object.keys(v).every((k) => k === 'property' || k === 'values');
+        if (!ok) report('error', 'claim.param.type', c, `Parameter "${name}" must be {"property": name, "values": [one or more strings]}.`, sub);
+      }
+      else if (type === 'boolean') { if (typeof v !== 'boolean') report('error', 'claim.param.type', c, `Parameter "${name}" must be true or false.`, sub); }
+      else if (type === 'expr') { if (typeof v !== 'string') report('error', 'claim.param.type', c, `Parameter "${name}" must be an expression string.`, sub); else checkExpr(v, c, sub, { allowedBehaviors }); }
+      else if (type === 'matcher') {
+        const ok = v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 1 && (typeof v.event === 'string' || typeof v.transition === 'string');
+        if (!ok) report('error', 'claim.param.type', c, `Parameter "${name}" must be {"event": id} or {"transition": id}.`, sub);
+      } else if (type === 'negatives') {
+        if (!Array.isArray(v)) { report('error', 'claim.param.type', c, `Parameter "${name}" must be an array of {"scenario": id, "faults": [ids]}.`, sub); continue; }
+        const listed = Array.isArray(ev.scenarios) ? ev.scenarios : typeof ev.scenarios === 'string' ? [ev.scenarios] : [];
+        v.forEach((/** @type {any} */ neg, /** @type {number} */ i) => {
+          const at = [...sub, i];
+          if (!neg || typeof neg !== 'object' || Array.isArray(neg)) { report('error', 'claim.negative.type', c, `Negative ${i} must be {"scenario": id, "faults": [ids]}.`, at); return; }
+          for (const k of Object.keys(neg)) if (k !== 'scenario' && k !== 'faults' && k !== 'note') report('error', 'claim.negative.unknown', c, `Negative ${i} has no field "${k}" (fields: scenario, faults, note).`, [...at, k]);
+          if (typeof neg.scenario !== 'string') report('error', 'claim.negative.scenario', c, `Negative ${i} needs a "scenario".`, at);
+          else if (!listed.includes(neg.scenario)) report('error', 'claim.negative.scenario', c, `Negative ${i} runs "${neg.scenario}", which is not one of the claim's scenarios; a negative is a listed scenario with extra faults.`, [...at, 'scenario']);
+          if (!Array.isArray(neg.faults) || !neg.faults.length || !neg.faults.every((/** @type {any} */ x) => typeof x === 'string')) {
+            report('error', 'claim.negative.faults', c, `Negative ${i} needs a non-empty "faults" list: a negative removes a protection by injecting at least one fault.`, [...at, 'faults']);
+            return;
+          }
+          const sc = typeof neg.scenario === 'string' ? get(neg.scenario) : undefined;
+          const active = sc && sc.kind === 'scenario' && Array.isArray(sc.data.faults) ? sc.data.faults : [];
+          neg.faults.forEach((/** @type {string} */ fid, /** @type {number} */ j) => {
+            if (active.includes(fid)) report('error', 'claim.negative.faults', c, `Negative ${i}: scenario "${neg.scenario}" already activates fault "${fid}", so adding it changes nothing.`, [...at, 'faults', j]);
+            // A fault that enables or disables a transition of a behavior the scenario does not run changes nothing there.
+            const fd = get(fid);
+            const target = fd && fd.kind === 'fault' && (fd.data.kind === 'enable-transition' || fd.data.kind === 'disable-transition') ? get(fd.data.transition) : undefined;
+            if (target && target.kind === 'transition' && sc && sc.kind === 'scenario' && !(Array.isArray(sc.data.behaviors) ? sc.data.behaviors : []).includes(target.owner)) {
+              report('warning', 'claim.negative.fault-inert', c, `Negative ${i}: fault "${fid}" targets transition "${target.id}" of behavior "${target.owner}", which scenario "${neg.scenario}" does not run, so it changes nothing there.`, [...at, 'faults', j]);
+            }
+          });
+          if (neg.note !== undefined && typeof neg.note !== 'string') report('error', 'claim.negative.type', c, `Negative ${i}: "note" must be a string.`, [...at, 'note']);
+        });
+      } else if (type.startsWith('ids:')) {
+        if (!(typeof v === 'string' || (Array.isArray(v) && v.every((x) => typeof x === 'string')))) report('error', 'claim.param.type', c, `Parameter "${name}" must be an id or an array of ids.`, sub);
+      }
+    }
+    if (ev.method === 'data-model' && Array.isArray(ev.rules)) {
+      ev.rules.forEach((/** @type {any} */ r, /** @type {number} */ i) => { if (!RULE_IDS.includes(r)) report('error', 'claim.param.value', c, `Unknown data rule "${r}"; the rules are ${RULE_IDS.join(', ')}.`, ['evaluate', 'rules', i]); });
+      if (!ev.rules.length) report('error', 'claim.param.value', c, 'At least one data rule is required.', ['evaluate', 'rules']);
+    }
+    if (ev.method === 'eventually' && ev.occurs === undefined && ev.expr === undefined) report('error', 'claim.param.required', c, 'Method "eventually" needs "occurs" or "expr".', ['evaluate']);
+  }
+  };
+
+  if (opts.claimsOnly) { claimChecks(); return out; }
+
   for (const b of kind('behavior')) {
     const initial = get(b.data.initial);
     if (initial && initial.kind === 'state' && initial.owner !== b.id) report('error', 'behavior.initial-foreign', b, `Initial state "${initial.id}" belongs to behavior "${initial.owner}".`, ['initial']);
@@ -117,6 +239,17 @@ export function validateModel(model) {
     // reachability of states from the initial state (ignoring guards)
     const states = kind('state').filter((s) => s.owner === b.id);
     const transitions = kind('transition').filter((t) => t.owner === b.id);
+    // The engine takes the first enabled transition in declaration order: two unguarded transitions on one event
+    // and state leave the order alone to decide which fires.
+    /** @type {Map<string, Entity>} */
+    const firstUnguarded = new Map();
+    for (const t of transitions) {
+      if (t.data.faultOnly === true || (typeof t.data.guard === 'string' && t.data.guard.trim() !== '')) continue;
+      const key = `${t.data.from} ${t.data.on}`;
+      const earlier = firstUnguarded.get(key);
+      if (earlier) report('warning', 'transition.order-decides', t, `Transitions "${earlier.id}" and "${t.id}" are both unguarded on event "${t.data.on}" in state "${t.data.from}": only declaration order decides which fires, and "${t.id}" can fire only while "${earlier.id}" is disabled. Add a guard to one of them.`);
+      else firstUnguarded.set(key, t);
+    }
     const reach = new Set([b.data.initial]);
     let grew = true;
     while (grew) {
@@ -264,100 +397,11 @@ export function validateModel(model) {
 
   out.push(...validateFaultModels(model));
 
-  // --- data model: consistency (errors) and the five data rules (warnings) --
+  // --- data model: consistency (errors) and the six data rules (warnings) --
   out.push(...checkDataConsistency(model));
   out.push(...dataRuleDiagnostics(model));
 
-  // --- claims -------------------------------------------------------------
-  for (const c of kind('claim')) {
-    const ev = c.data.evaluate;
-    if (!ev || typeof ev !== 'object') continue;
-    if (typeof ev.method !== 'string') { report('error', 'claim.method.missing', c, 'Claim "evaluate" needs a string "method".', ['evaluate']); continue; }
-    if (own(model.meta.verificationMethods, ev.method)) {
-      // Carried out outside Exegra: nothing to check here beyond the method name.
-      for (const k of Object.keys(ev)) if (k !== 'method') report('error', 'claim.param.unknown', c, `Verification method "${ev.method}" is external and takes no parameters.`, ['evaluate', k]);
-      continue;
-    }
-    const mdef = own(/** @type {any} */ (CLAIM_METHODS), ev.method);
-    if (!mdef) { report('warning', 'claim.method.unsupported', c, `Evaluation method "${ev.method}" is not supported by this build; the claim stays not evaluated.`, ['evaluate', 'method']); continue; }
-    if (!mdef.kinds.includes(c.data.kind)) report('error', 'claim.method.kind', c, `Method "${ev.method}" evaluates ${mdef.kinds.join('/')} claims, not ${c.data.kind} claims.`, ['evaluate', 'method']);
-    for (const k of Object.keys(ev)) if (k !== 'method' && !own(mdef.params, k)) report('error', 'claim.param.unknown', c, `Method "${ev.method}" has no parameter "${k}".`, ['evaluate', k]);
-    if (ev.method === 'metric-bound') {
-      // A metric claim with fewer runs than can ever hold (docs/simulation.md, "Claims over metrics").
-      try {
-        const need = minRuns(parseRational(ev.fraction ?? '0.95'), parseRational(ev.confidence ?? '0.95'));
-        const runs = Number(ev.runs ?? 59);
-        if (!(runs >= need)) report('error', 'claim.metric.runs', c, `Claim "${c.id}" can never hold with ${runs} runs; at least ${need} are needed at fraction ${ev.fraction ?? '0.95'} and confidence ${ev.confidence ?? '0.95'}.`, ['evaluate', 'runs']);
-      } catch (e) {
-        report('error', 'claim.param.value', c, `Claim "${c.id}": ${/** @type {Error} */ (e).message}`, ['evaluate']);
-      }
-      if ((ev.op === undefined) === (ev.approx === undefined)) report('error', 'claim.param.value', c, 'A metric-bound claim needs either "op" and "bound" or "approx".', ['evaluate']);
-    }
-    /** @type {Set<string>|undefined} */
-    let allowedBehaviors;
-    if (Array.isArray(ev.scenarios)) {
-      for (const sid of ev.scenarios) {
-        const sc = get(sid);
-        if (!sc || sc.kind !== 'scenario') continue;
-        const set = new Set(Array.isArray(sc.data.behaviors) ? sc.data.behaviors : []);
-        allowedBehaviors = allowedBehaviors ? new Set([...allowedBehaviors].filter((x) => set.has(x))) : set;
-      }
-      if (!ev.scenarios.length) report('error', 'claim.param.value', c, 'At least one scenario is required.', ['evaluate', 'scenarios']);
-    }
-    for (const [name, pdefRaw] of Object.entries(mdef.params)) {
-      const pdef = /** @type {any} */ (pdefRaw);
-      const v = ev[name];
-      const sub = ['evaluate', name];
-      if (v === undefined) { if (pdef.required) report('error', 'claim.param.required', c, `Method "${ev.method}" needs parameter "${name}".`, ['evaluate']); continue; }
-      const type = pdef.type;
-      if (type === 'selector') {
-        const okIds = typeof v === 'string' || (Array.isArray(v) && v.every((x) => typeof x === 'string'));
-        if (!okIds) {
-          if (!v || typeof v !== 'object' || Array.isArray(v)) { report('error', 'claim.param.type', c, `Parameter "${name}" must be a selector.`, sub); continue; }
-          for (const k of Object.keys(v)) if (!['ids', 'category', 'kind', 'tag', 'trustZone', 'within', 'all'].includes(k)) report('error', 'claim.selector.unknown', c, `Unsupported selector field "${k}".`, [...sub, k]);
-          if (!Object.keys(v).length) report('error', 'claim.selector.empty', c, `Selector "${name}" selects nothing; use {"all": true} to select every component.`, sub);
-        }
-      } else if (type === 'string') { if (typeof v !== 'string') report('error', 'claim.param.type', c, `Parameter "${name}" must be a string.`, sub); }
-      else if (type === 'strings') { if (!(Array.isArray(v) && v.every((x) => typeof x === 'string'))) report('error', 'claim.param.type', c, `Parameter "${name}" must be an array of strings.`, sub); }
-      else if (type === 'edge-filter') {
-        const ok = v && typeof v === 'object' && !Array.isArray(v) && typeof v.property === 'string' && Array.isArray(v.values) && v.values.length > 0 && v.values.every((/** @type {any} */ x) => typeof x === 'string') && Object.keys(v).every((k) => k === 'property' || k === 'values');
-        if (!ok) report('error', 'claim.param.type', c, `Parameter "${name}" must be {"property": name, "values": [one or more strings]}.`, sub);
-      }
-      else if (type === 'boolean') { if (typeof v !== 'boolean') report('error', 'claim.param.type', c, `Parameter "${name}" must be true or false.`, sub); }
-      else if (type === 'expr') { if (typeof v !== 'string') report('error', 'claim.param.type', c, `Parameter "${name}" must be an expression string.`, sub); else checkExpr(v, c, sub, { allowedBehaviors }); }
-      else if (type === 'matcher') {
-        const ok = v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 1 && (typeof v.event === 'string' || typeof v.transition === 'string');
-        if (!ok) report('error', 'claim.param.type', c, `Parameter "${name}" must be {"event": id} or {"transition": id}.`, sub);
-      } else if (type === 'negatives') {
-        if (!Array.isArray(v)) { report('error', 'claim.param.type', c, `Parameter "${name}" must be an array of {"scenario": id, "faults": [ids]}.`, sub); continue; }
-        const listed = Array.isArray(ev.scenarios) ? ev.scenarios : typeof ev.scenarios === 'string' ? [ev.scenarios] : [];
-        v.forEach((/** @type {any} */ neg, /** @type {number} */ i) => {
-          const at = [...sub, i];
-          if (!neg || typeof neg !== 'object' || Array.isArray(neg)) { report('error', 'claim.negative.type', c, `Negative ${i} must be {"scenario": id, "faults": [ids]}.`, at); return; }
-          for (const k of Object.keys(neg)) if (k !== 'scenario' && k !== 'faults' && k !== 'note') report('error', 'claim.negative.unknown', c, `Negative ${i} has no field "${k}" (fields: scenario, faults, note).`, [...at, k]);
-          if (typeof neg.scenario !== 'string') report('error', 'claim.negative.scenario', c, `Negative ${i} needs a "scenario".`, at);
-          else if (!listed.includes(neg.scenario)) report('error', 'claim.negative.scenario', c, `Negative ${i} runs "${neg.scenario}", which is not one of the claim's scenarios; a negative is a listed scenario with extra faults.`, [...at, 'scenario']);
-          if (!Array.isArray(neg.faults) || !neg.faults.length || !neg.faults.every((/** @type {any} */ x) => typeof x === 'string')) {
-            report('error', 'claim.negative.faults', c, `Negative ${i} needs a non-empty "faults" list: a negative removes a protection by injecting at least one fault.`, [...at, 'faults']);
-            return;
-          }
-          const sc = typeof neg.scenario === 'string' ? get(neg.scenario) : undefined;
-          const active = sc && sc.kind === 'scenario' && Array.isArray(sc.data.faults) ? sc.data.faults : [];
-          neg.faults.forEach((/** @type {string} */ fid, /** @type {number} */ j) => {
-            if (active.includes(fid)) report('error', 'claim.negative.faults', c, `Negative ${i}: scenario "${neg.scenario}" already activates fault "${fid}", so adding it changes nothing.`, [...at, 'faults', j]);
-          });
-          if (neg.note !== undefined && typeof neg.note !== 'string') report('error', 'claim.negative.type', c, `Negative ${i}: "note" must be a string.`, [...at, 'note']);
-        });
-      } else if (type.startsWith('ids:')) {
-        if (!(typeof v === 'string' || (Array.isArray(v) && v.every((x) => typeof x === 'string')))) report('error', 'claim.param.type', c, `Parameter "${name}" must be an id or an array of ids.`, sub);
-      }
-    }
-    if (ev.method === 'data-model' && Array.isArray(ev.rules)) {
-      ev.rules.forEach((/** @type {any} */ r, /** @type {number} */ i) => { if (!RULE_IDS.includes(r)) report('error', 'claim.param.value', c, `Unknown data rule "${r}"; the rules are ${RULE_IDS.join(', ')}.`, ['evaluate', 'rules', i]); });
-      if (!ev.rules.length) report('error', 'claim.param.value', c, 'At least one data rule is required.', ['evaluate', 'rules']);
-    }
-    if (ev.method === 'eventually' && ev.occurs === undefined && ev.expr === undefined) report('error', 'claim.param.required', c, 'Method "eventually" needs "occurs" or "expr".', ['evaluate']);
-  }
+  claimChecks();
 
   // --- integrity rules: invalid rules, vacuity and every current violation --
   out.push(...integrityDiagnostics(model));

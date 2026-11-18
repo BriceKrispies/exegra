@@ -27,7 +27,7 @@ Exegra has one semantic core and several things attached to it. Everything the u
 
 ## Semantic architecture
 
-**Source is the authority.** `Project` (`src/core/project.js`) holds two texts: the specification and the presentation layout. The model, diagnostics, `errorCount` and the semantic hash are derived from the specification text by `analyzeSpec` (`parse.js` then `validate.js`) and are replaced as a whole on every commit. An operation (`operations.js`) never mutates the model. It computes source-preserving JSONC edits (via `jsonc-parser`, plus `text-edit.js` for array insertion), and `Project` re-derives the model from the edited text.
+**Source is the authority.** `Project` (`src/core/project.js`) holds two texts: the specification and the presentation layout. The model, diagnostics, `errorCount` and the semantic hash are derived from the specification text by `analyzeSpec` (`parse.js`, whose model derivation and hash run in the Lean kernel, then `validate.js`) and are replaced as a whole on every commit. An operation (`operations.js`) never mutates the model. It computes source-preserving JSONC edits (via `jsonc-parser`, plus `text-edit.js` for array insertion), and `Project` re-derives the model from the edited text.
 
 **The model** (`Model` in `types.js`) is an immutable snapshot: `entities` by id in declaration order, `byKind`, `refs` (every reference with its source location), `exprs` (every expression string), the effective meta-model `meta` and the raw `vocabulary`. Nested entities (ports, states, transitions) are entities with an `owner`.
 
@@ -37,7 +37,7 @@ Exegra has one semantic core and several things attached to it. Everything the u
 
 | Module | Derives |
 |---|---|
-| `hash.js` | normal form and 53-bit hash of the semantic content (excludes comments, whitespace, key order, top-level declaration order, locations and layout) |
+| `hash.js` (the JavaScript binding; component `hash-binding`) | normal form and 53-bit hash of the semantic content (excludes comments, whitespace, key order, top-level declaration order, locations and layout), computed by the Lean kernel (`formal/Exegra/Hash.lean`) |
 | `query.js` | labels, containment, ownership, inbound references, component graph, dependency traversal, selectors |
 | `claims.js`, `claim-methods.js` | claim results with status, scope and counterexample ([claims-and-evidence.md](claims-and-evidence.md)) |
 | `engine.js`, `sim-input.js` | scenario traces: `sim-input.js` derives the engine input, `engine.js` runs it on the Lean core (`formal/`) compiled to WebAssembly ([simulation.md](simulation.md)) |

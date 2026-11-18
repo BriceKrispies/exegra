@@ -6,7 +6,7 @@
 //
 //   consistency (errors)   a record's key and a copy's fields name declared fields,
 //                          a numeric bound has a unit
-//   data rules (warnings)  the five computed rules below, each finding naming the
+//   data rules (warnings)  the six computed rules below, each finding naming the
 //                          entity and the field
 //
 // The same findings drive validation (validate.js), the data-model claim method
@@ -23,6 +23,7 @@ export const PRINCIPAL = 'principal';
 
 export const DATA_RULES = /** @type {const} */ ({
   'erasure-point': { label: 'Erasure point', doc: 'Every copy that holds a personal field or a principal reference states an erasure point (PER-109).' },
+  'record-erasure-point': { label: 'Record erasure point', doc: 'Every record with a personal field (or a credential field) states an erasure point or a bounded retention (erasure.point, or erasure.bound with a unit).' },
   'no-principal-in-shared': { label: 'No principal data in a shared copy', doc: 'No shared copy holds a field that refers to the principal or is personal, or depends on authority (D-136).' },
   'party-by-id': { label: 'Party fields by principal id', doc: 'Every field with role party refers to the principal and has a type that is not a name (D-137).' },
   'freshness-bound': { label: 'Freshness bound', doc: 'Every copy states a freshness bound.' },
@@ -115,6 +116,20 @@ export function copyFields(model, copy) {
 /** A field names or identifies a principal: personal data, or a principal id. @param {any} f */
 export const isPrincipalData = (f) => typeof f.personal === 'string' || f.refersTo === PRINCIPAL;
 
+/**
+ * A field whose record must state how it is erased: personal data (a personal
+ * class), or a credential. A credential is treated like personal data for this
+ * rule only, because keeping one past the end of its owner is the worse error.
+ * @param {any} f
+ */
+export const isErasableRecordField = (f) => typeof f.personal === 'string' || f.classification === 'personal' || f.classification === 'credential';
+
+/** A record states an erasure point or a bounded retention. @param {any} erasure */
+export const erasureStated = (erasure) => isObj(erasure) && (
+  (typeof erasure.point === 'string' && erasure.point.trim() !== '') ||
+  (typeof erasure.bound === 'number' && Number.isFinite(erasure.bound) && typeof erasure.unit === 'string')
+);
+
 /** A type that is a name rather than an id: its text contains the word name or handle. @param {any} type */
 export const isNameType = (type) => typeof type === 'string' && /(^|[^a-z])(name|handle)s?($|[^a-z])/i.test(type);
 
@@ -142,6 +157,14 @@ export function checkDataConsistency(model) {
     (Array.isArray(r.data.key) ? r.data.key : []).forEach((/** @type {any} */ k, /** @type {number} */ i) => {
       if (typeof k === 'string' && !seen.has(k)) err('record.key-field', r, `Key "${k}" of record "${r.id}" is not one of its fields.`, ['key', i]);
     });
+    // One way to say personal: the personal class. A classification of personal must
+    // go with a class, and a field with a class may only be classified personal.
+    for (const { field, index } of recordFields(r)) {
+      if (field.classification === 'personal' && typeof field.personal !== 'string') err('field.classification-personal', r, `Field "${field.name}" of record "${r.id}" is classified personal but names no personal-data class; give its class in "personal".`, ['fields', index, 'classification']);
+      if (typeof field.personal === 'string' && field.classification !== undefined && field.classification !== 'personal') err('field.classification-conflict', r, `Field "${field.name}" of record "${r.id}" has personal class "${field.personal}" and classification "${field.classification}"; a personal field is classified personal or not at all.`, ['fields', index, 'classification']);
+    }
+    const erasure = r.data.erasure;
+    if (isObj(erasure) && typeof erasure.bound === 'number' && erasure.unit === undefined) err('record.bound-unit', r, `The erasure bound of record "${r.id}" is a number and needs a "unit".`, ['erasure', 'bound']);
   }
   for (const c of model.byKind.copy ?? []) {
     const of = Array.isArray(c.data.of) ? c.data.of : [];
@@ -160,7 +183,7 @@ export function checkDataConsistency(model) {
 }
 
 /**
- * Compute the five data rules.
+ * Compute the six data rules.
  * @param {Model} model
  * @returns {{findings: Finding[], checked: Record<DataRule, number>}}
  *   `checked` counts, per rule, what the rule looked at: copies with principal data,
@@ -170,7 +193,7 @@ export function dataFindings(model) {
   /** @type {Finding[]} */
   const findings = [];
   /** @type {Record<DataRule, number>} */
-  const checked = { 'erasure-point': 0, 'no-principal-in-shared': 0, 'party-by-id': 0, 'freshness-bound': 0, 'holder-reaches-owner': 0 };
+  const checked = { 'erasure-point': 0, 'record-erasure-point': 0, 'no-principal-in-shared': 0, 'party-by-id': 0, 'freshness-bound': 0, 'holder-reaches-owner': 0 };
   const copies = model.byKind.copy ?? [];
   if (!copies.length && !(model.byKind.record ?? []).length) return { findings, checked };
   const graph = componentGraph(model);
@@ -233,6 +256,19 @@ export function dataFindings(model) {
     }
   }
 
+  // 6. Record erasure point: a record with a personal (or credential) field states how it is erased.
+  for (const r of model.byKind.record ?? []) {
+    const erasable = recordFields(r).filter(({ field }) => isErasableRecordField(field));
+    if (!erasable.length) continue;
+    checked['record-erasure-point']++;
+    if (erasureStated(r.data.erasure)) continue;
+    const fields = erasable.map(({ field }) => `${r.id}.${field.name}`);
+    findings.push({
+      rule: 'record-erasure-point', entityId: r.id, fields, records: [r.id], sub: ['erasure'],
+      message: `Record "${r.id}" holds ${describeRecord(erasable.map(({ field }) => field))} but states neither an erasure point nor a bounded retention, so a deletion cannot be shown to remove it.`,
+    });
+  }
+
   // 3. Party fields by principal id (D-137).
   for (const r of model.byKind.record ?? []) {
     for (const { field, index } of recordFields(r)) {
@@ -250,6 +286,12 @@ export function dataFindings(model) {
     }
   }
   return { findings, checked };
+}
+
+/** @param {any[]} fs */
+function describeRecord(fs) {
+  const parts = fs.map((f) => `"${f.name}" (${typeof f.personal === 'string' ? `personal: ${f.personal}` : f.classification})`);
+  return `${parts.length === 1 ? 'field' : 'fields'} ${parts.join(', ')}`;
 }
 
 /** @param {HeldField[]} hs */
@@ -293,7 +335,7 @@ export function dataRuleDiagnostics(model) {
 }
 
 /**
- * Evaluate a data-model claim: `rules` (default: all five), optionally narrowed
+ * Evaluate a data-model claim: `rules` (default: all six), optionally narrowed
  * to the copies and fields of `records`.
  * @param {Model} model @param {any} ev
  * @returns {{status: 'verified'|'violated'|'inconclusive', scope: string, explanation: string, selected: string[], counterexample?: {summary: string, entities: string[]}}}
@@ -309,7 +351,7 @@ export function evaluateDataClaim(model, ev) {
   const mine = findings.filter((f) => rules.includes(f.rule));
   const selected = [...new Set([...(scoped.byKind.record ?? []), ...(scoped.byKind.copy ?? [])].map((e) => e.id))];
   const counts = rules.map((/** @type {DataRule} */ r) => `${r} ${checked[r]}`).join(', ');
-  const scope = `Checked the ${(scoped.byKind.record ?? []).length} records and ${(scoped.byKind.copy ?? []).length} copies${only ? ` of ${[...only].join(', ')}` : ''} at this model revision against ${rules.length === 1 ? 'rule' : 'rules'} ${rules.join(', ')} (items checked per rule: ${counts}).`;
+  const scope = `Checked the ${(scoped.byKind.record ?? []).length} records and ${(scoped.byKind.copy ?? []).length} copies${only ? ` of ${[...only].join(', ')}` : ''} at this model revision against ${rules.length === 1 ? 'rule' : 'rules'} ${rules.join(', ')} (items checked per rule: ${counts}).${declaredMarkersLimit(rules)}`;
   if (mine.length) {
     const first = mine[0];
     return {
@@ -332,4 +374,16 @@ function narrow(model, only) {
   const records = (model.byKind.record ?? []).filter((r) => only.has(r.id));
   const copies = (model.byKind.copy ?? []).filter((c) => Array.isArray(c.data.of) && c.data.of.some((/** @type {any} */ id) => only.has(id)));
   return { ...model, byKind: { ...model.byKind, record: records, copy: copies } };
+}
+
+/**
+ * The scope sentence for the rules that read only what the model declares about a field: a field counts as
+ * personal data only when it declares `personal` or refers to the principal. A field that holds personal data
+ * (an email address, say) without declaring it is invisible to these rules.
+ * @param {DataRule[]} rules
+ */
+function declaredMarkersLimit(rules) {
+  const reads = rules.filter((r) => r === 'erasure-point' || r === 'no-principal-in-shared');
+  if (!reads.length) return '';
+  return ` Rule${reads.length === 1 ? '' : 's'} ${reads.join(' and ')} read only the personal markers the model declares (a field's "personal" value or a reference to the principal): a field that holds personal data but declares neither is not seen, so the absence of a finding shows that the declared markers are absent from the copy, not that it holds no personal data.`;
 }

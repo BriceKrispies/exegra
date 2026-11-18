@@ -26,13 +26,14 @@ core source wins — report the conflict.
 |---|---|
 | `src/core/types.js` | JSDoc typedefs: `Model`, `Entity`, `Ref`, `Diagnostic`, `Loc`, `Operation`, `TransactionResult`, `SceneModel`, `SceneNode`, `SceneEdge`, `Placement` |
 | `src/core/metamodel.json` | entity kinds and property definitions as data |
-| `src/core/parse.js` | `parseSpec(text)`, `SCHEMA_VERSION`, `BASE_METAMODEL` |
+| `src/core/parse.js` | `parseSpec(text)`, `SCHEMA_VERSION`, `BASE_METAMODEL` (the JSONC text layer; the model is derived by `model.derive` in the Lean kernel, `formal/Exegra/Model.lean`) |
 | `src/core/validate.js` | `validateModel(model)` |
 | `src/core/evidence-ref.js` | `testRefProblem(ref)`, `describeTestRefProblem(ref, problem)` (the rule for test evidence references, shared by validate and verify) |
 | `src/core/analyze.js` | `analyzeSpec(text) -> {model, diagnostics, errorCount}` |
 | `src/core/expr.js` | `parseExpr`, `evalExpr`, `exprRefs`, `evaluate`, `ExprError` |
-| `src/core/hash.js` | `stableStringify`, `normalize`, `semanticHash`, `hashString` |
+| `src/core/hash.js` (component `hash-binding`) | `normalize`, `semanticHash` (computed by the Lean kernel, `formal/Exegra/Hash.lean`) |
 | `src/core/reader.js` | `readerPage(model, view)`, `kindPage(model, kind)`, `sectionBlocks(model, sectionId)`, `outline(model, documentId?)`, `resolveBlock`, `classify`, `resolvePath`, `refIndex`, `kindIndex`, `ROW_CAP` (page data for reader views; pure) |
+| `src/core/stable-json.js` | `stableStringify` (sorted-key JSON text for output) |
 | `src/core/query.js` | `entityLabel`, `componentOf`, `childrenOf`, `ancestorsOf`, `descendantsOf`, `ownedBy`, `inboundRefs`, `relationshipsOf`, `componentGraph`, `dependencies`, `selectComponents`, `contractsOf`, `declarationSite` |
 | `src/core/operations.js` | `OPERATIONS`, `planDelete`, `parseLayout`, `OpError`, `EMPTY_LAYOUT` |
 | `src/core/project.js` | `Project` (apply / undo / redo / reload / subscribe / history) |

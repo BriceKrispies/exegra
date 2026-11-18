@@ -28,12 +28,13 @@ import {
   entityLabel, childrenOf, ancestorsOf, inboundRefs, relationshipsOf, dependencies, contractsOf,
 } from '../src/core/query.js';
 import { evaluateClaims, evaluateClaim, checkTrace, theoremRequests } from '../src/core/claims.js';
+import { applyConcordance } from '../src/core/concordance.js';
 import { checkTheorems } from '../tools/lean-theorems.js';
 import { requestLog } from '../src/core/contract-trace.js';
 import { runScenario } from '../src/core/engine.js';
 import { proveScenario, ProveError } from '../tools/prove.js';
 import { CLAIM_STATUSES } from '../src/core/claim-methods.js';
-import { stableStringify } from '../src/core/hash.js';
+import { stableStringify } from '../src/core/stable-json.js';
 import { testRefProblem, describeTestRefProblem } from '../src/core/evidence-ref.js';
 import { treeStamp } from '../tools/tree-stamp.js';
 import { createOutcomeReuse } from './outcomes.js';
@@ -234,6 +235,11 @@ async function loadProject(ctx) {
     specText: data.spec.text,
     layoutText: data.layout?.text ?? null,
   });
+  // Concordance results named by project.jsonc become derived evidence in the recorded results
+  // handed to claim evaluation; their diagnostics are reported by validate.
+  const applied = applyConcordance(project.model, data.recorded, data.concordance);
+  data.recorded = applied.recorded;
+  data.concordanceDiagnostics = applied.diagnostics;
   return { ws, data, project };
 }
 
@@ -549,7 +555,7 @@ async function runVerify(ctx) {
   await ws.writeRecorded(ctx.projectName, { ...kept, results, traceability, ...(Object.keys(theorems).length ? { theorems } : {}) });
 
   // (5) re-evaluate the claims with the new results
-  const claimResults = evaluateClaims(model, { recorded: { results, theorems } });
+  const claimResults = evaluateClaims(model, { recorded: { results, theorems, ...(data.recorded?.derived ? { derived: data.recorded.derived } : {}) } });
   const violated = claimResults.filter((r) => r.status === 'violated').map((r) => r.claimId);
   const unexpectedViolated = violated.filter((id) => !expectViolated.includes(id));
   const failedEvidence = evidence.filter((e) => e.outcome === 'fail');
@@ -600,9 +606,9 @@ export const COMMANDS = {
     usage: 'validate',
     summary: 'Validate the project. ok is true only when there are no errors.',
     run: async (ctx) => {
-      const { project } = await loadProject(ctx);
+      const { data, project } = await loadProject(ctx);
       const counts = countSeverities(project.diagnostics);
-      const result = { ...counts, diagnostics: project.diagnostics.map(serializeDiagnostic) };
+      const result = { ...counts, diagnostics: project.diagnostics.map(serializeDiagnostic), concordance: data.concordanceDiagnostics };
       if (counts.errors > 0) {
         throw new CliError('validation.failed', `${counts.errors} validation error(s).`, { diagnostics: result.diagnostics, result });
       }

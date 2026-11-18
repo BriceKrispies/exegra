@@ -328,7 +328,44 @@ export function createWorkspace(rootDir) {
       spec: { text: specText, hash: hashText(specText), path: specLocation(name) },
       layout: layoutText === null ? null : { text: layoutText, hash: hashText(layoutText) },
       recorded: parseRecorded(recordedText),
+      concordance: await concordanceOf(name, specText),
     };
+  }
+
+  /**
+   * The Concordance results file a project names in project.jsonc ("concordanceResults", relative to
+   * project.jsonc), read but not interpreted: null when the project names none. Its text is null when
+   * the file cannot be read. Interpreting it needs the model, so it is done by src/core/concordance.js.
+   * @param {string} name
+   * @param {string} specText the specification text as read, hashed to name the revision the results must match
+   * @returns {Promise<{file: string, text: string|null, problem?: string, specPath: string, specSha256: string}|null>}
+   */
+  async function concordanceOf(name, specText) {
+    const configText = await readOptional(resolve(name, PROJECT_FILE));
+    if (configText === null) return null;
+    let file;
+    try {
+      file = parseJsonc(configText)?.concordanceResults;
+    } catch {
+      return null;
+    }
+    if (file === undefined) return null;
+    if (typeof file !== 'string' || file === '' || path.isAbsolute(file)) {
+      return { file: String(file), text: null, specPath: specFile(name), specSha256: hashText(specText) };
+    }
+    const target = path.resolve(root, name, file);
+    /** @type {string|null} */
+    let text = null;
+    /** @type {string|undefined} */
+    let problem;
+    try {
+      if ((await fs.stat(target)).isDirectory()) problem = 'is a directory, not a file';
+      else text = await readOptional(target);
+    } catch (err) {
+      const code = /** @type {NodeJS.ErrnoException} */ (err).code;
+      if (code !== 'ENOENT' && code !== 'ENOTDIR') problem = `cannot be read (${code ?? /** @type {Error} */ (err).message})`;
+    }
+    return { file, text, ...(problem ? { problem } : {}), specPath: specFile(name), specSha256: hashText(specText) };
   }
 
   /**
@@ -475,6 +512,20 @@ export function createWorkspace(rootDir) {
   }
 
   /**
+   * The absolute path of the Concordance results file project.jsonc names, or null when it names none
+   * (or the path is not a usable relative path).
+   * @param {string} name @returns {string|null}
+   */
+  function concordanceFileOf(name) {
+    try {
+      const file = parseJsonc(readFileSync(resolve(name, PROJECT_FILE), 'utf8'))?.concordanceResults;
+      return typeof file === 'string' && file !== '' && !path.isAbsolute(file) ? path.resolve(root, name, file) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Watches a project directory. onChange({file, hash}) fires when a tracked file's
    * hash differs from the last hash this subscription saw (own writes included).
    * @param {string} name
@@ -500,6 +551,10 @@ export function createWorkspace(rootDir) {
     for (const { key, abs } of tracked) {
       seen[key] = hashOfFileSync(abs);
     }
+    // The Concordance results file project.jsonc names changes what the claims show, so it is watched too and
+    // reported as a change of the recorded results (the application re-reads them and re-evaluates).
+    const results = concordanceFileOf(name);
+    if (results) seen.concordance = hashOfFileSync(results);
 
     /** @type {Map<string, ReturnType<typeof setTimeout>>} */
     const timers = new Map();
@@ -508,13 +563,15 @@ export function createWorkspace(rootDir) {
     let watcher = null;
     /** @type {import('node:fs').FSWatcher|null} */
     let externalWatcher = null;
+    /** @type {import('node:fs').FSWatcher|null} */
+    let resultsWatcher = null;
 
     const stop = () => {
       if (closed) return;
       closed = true;
       for (const timer of timers.values()) clearTimeout(timer);
       timers.clear();
-      for (const w of [watcher, externalWatcher]) {
+      for (const w of [watcher, externalWatcher, resultsWatcher]) {
         try {
           w?.close();
         } catch {
@@ -534,7 +591,7 @@ export function createWorkspace(rootDir) {
       const hash = text === null ? null : hashText(text);
       if (hash === seen[key]) return;
       seen[key] = hash;
-      onChange({ file: /** @type {'spec'|'layout'|'recorded'} */ (key), hash });
+      onChange({ file: key === 'concordance' ? 'recorded' : /** @type {'spec'|'layout'|'recorded'} */ (key), hash });
     };
 
     const schedule = (key, abs) => {
@@ -570,6 +627,19 @@ export function createWorkspace(rootDir) {
           if (filename == null || String(filename).startsWith(base)) schedule('spec', ext);
         });
         externalWatcher.on('error', stop);
+      }
+      if (results) {
+        // Its directory may not exist (yet); that loses only this watcher, not the project's.
+        try {
+          const base = path.basename(results);
+          resultsWatcher = fsWatch(path.dirname(results), (_eventType, filename) => {
+            if (closed) return;
+            if (filename == null || String(filename).startsWith(base)) schedule('concordance', results);
+          });
+          resultsWatcher.on('error', () => { try { resultsWatcher?.close(); } catch { /* already closed */ } });
+        } catch {
+          resultsWatcher = null;
+        }
       }
     } catch {
       // Project directory missing or unwatchable: nothing to subscribe to.

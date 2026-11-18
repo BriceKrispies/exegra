@@ -21,7 +21,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { analyzeSpec } from '../src/core/analyze.js';
-import { stableStringify } from '../src/core/hash.js';
+import { stableStringify } from '../src/core/stable-json.js';
 import { initEngine, runScenario } from '../src/core/engine.js';
 import { simulationInput } from '../src/core/sim-input.js';
 import { GOLDENS_DIR, REPO_ROOT } from './conformance.js';

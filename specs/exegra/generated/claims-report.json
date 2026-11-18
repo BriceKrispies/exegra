@@ -10,14 +10,14 @@
       "counterexample": null,
       "evaluator": "exegra.structural/0.1",
       "evidence": [],
-      "explanation": "No directed path of kinds depends-on, calls, subscribes, reads, writes, submits-edits leads from any of the 33 source components to any of the 56 target components.",
+      "explanation": "No directed path of kinds depends-on, calls, subscribes, reads, writes, submits-edits leads from any of the 36 source components to any of the 56 target components.",
       "id": "core-independent-of-ui",
       "kind": "structural",
       "method": "no-relationship",
-      "scope": "Checked the 268 relationships of kinds depends-on, calls, subscribes, reads, writes, submits-edits between 33 source components and 56 target components, following multi-hop paths too, at this model revision.",
+      "scope": "Checked the 285 relationships of kinds depends-on, calls, subscribes, reads, writes, submits-edits between 36 source components and 56 target components, following multi-hop paths too, at this model revision.",
       "source": {
         "column": 5,
-        "line": 13706
+        "line": 14064
       },
       "statement": "No component of the semantic core has a dependency relationship (depends-on, calls, subscribes, reads, writes or submits-edits), directly or through any chain of them, to the application, the visualization, the persistence subsystem, the agent interface, the tooling, the DOM and browser platform, browser storage, Three.js, Vite, the file system or the test runner.",
       "status": "verified",
@@ -46,10 +46,10 @@
       "id": "core-dependencies-acyclic",
       "kind": "structural",
       "method": "acyclic",
-      "scope": "Checked the 71 relationships of dependency kinds (depends-on, calls, subscribes, reads, writes, submits-edits) restricted to 33 components for directed cycles at this model revision.",
+      "scope": "Checked the 78 relationships of dependency kinds (depends-on, calls, subscribes, reads, writes, submits-edits) restricted to 36 components for directed cycles at this model revision.",
       "source": {
         "column": 5,
-        "line": 13715
+        "line": 14073
       },
       "statement": "The dependency relationships among the components of the semantic core form no cycle.",
       "status": "verified",
@@ -99,7 +99,7 @@
       "scope": "Checked the 35 relationships of kinds submits-edits, data-flow, writes for directed paths from 6 source components to 1 target component that avoid 1 via component at this model revision.",
       "source": {
         "column": 5,
-        "line": 13724
+        "line": 14094
       },
       "statement": "Following relationships that carry edits and file content (submits-edits, data-flow, writes), every path from the editing surfaces (inspector, source editor, dialogs, visual interaction, toolbar, shell) to the specification file passes through the transaction system.",
       "status": "violated",
@@ -133,7 +133,7 @@
       "scope": "Checked the 35 relationships of kinds submits-edits, data-flow, writes for directed paths from 5 source components to 1 target component that avoid 1 via component at this model revision.",
       "source": {
         "column": 5,
-        "line": 13733
+        "line": 14103
       },
       "statement": "Following submits-edits, data-flow and writes relationships, every path from the inspector, source editor, dialogs, visual interaction and shell to the specification file passes through the transaction system.",
       "status": "verified",
@@ -165,7 +165,7 @@
       "scope": "Checked the 18 relationships of kinds writes, submits-edits between 1 source component and 4 target components (direct relationships only) at this model revision.",
       "source": {
         "column": 5,
-        "line": 13742
+        "line": 14112
       },
       "statement": "The Three.js renderer has no writes or submits-edits relationship to the specification file, the layout file, the transaction system or the session.",
       "status": "verified",
@@ -195,7 +195,7 @@
       "scope": "Checked the declared property \"owner\" of 6 components at this model revision; only whether a non-empty value is present, not whether it is correct.",
       "source": {
         "column": 5,
-        "line": 13751
+        "line": 14121
       },
       "statement": "Every data store (meta-model, claim method registry and the project files) declares an owner.",
       "status": "verified",
@@ -223,10 +223,10 @@
       "id": "agent-interface-uses-transactions",
       "kind": "structural",
       "method": "reachable",
-      "scope": "Checked directed reachability over the 294 relationships of all kinds from 1 source component to 1 target component at this model revision.",
+      "scope": "Checked directed reachability over the 311 relationships of all kinds from 1 source component to 1 target component at this model revision.",
       "source": {
         "column": 5,
-        "line": 13759
+        "line": 14129
       },
       "statement": "The agent command line reaches the transaction system along its relationships.",
       "status": "verified",
@@ -253,7 +253,7 @@
       "scope": "Checked the declared ports of 1 component for a port with direction provides, contract apply-transaction at this model revision.",
       "source": {
         "column": 5,
-        "line": 13768
+        "line": 14138
       },
       "statement": "The transaction system provides a port with the apply-transaction contract.",
       "status": "verified",
@@ -318,7 +318,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios visual-edit-flow (11 steps), source-edit-flow (11 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 13778
+        "line": 14148
       },
       "statement": "After a valid edit, at quiescence the scene (projection and renderer), the inspector and the source editor all show the revision of the transaction system, for a visual edit and for a source edit.",
       "status": "verified",
@@ -385,7 +385,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios visual-edit-flow (11 steps), source-edit-flow (11 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 13809
+        "line": 14179
       },
       "statement": "After a valid edit, at quiescence the file on disk holds the committed revision and the session reports saved, for a visual edit and for a source edit.",
       "status": "verified",
@@ -416,10 +416,10 @@
       "id": "refresh-follows-commit",
       "kind": "temporal",
       "method": "precedes",
-      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios visual-edit-flow (11 steps), source-edit-flow (11 steps). This is a check of these traces, not of all possible executions.",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios visual-edit-flow (11 steps), source-edit-flow (11 steps). This is a check of these traces, not of all possible executions. An occurrence counts as produced by the system when a transition fired or emitted it; a delivery from the scenario script does not, and an ordering between two scripted deliveries is not reported as verified.",
       "source": {
         "column": 5,
-        "line": 13839
+        "line": 14209
       },
       "statement": "Every projection refresh is preceded by a delivered transaction commit: views are refreshed from a committed model, never from a candidate.",
       "status": "verified",
@@ -447,10 +447,10 @@
       "id": "save-follows-refresh",
       "kind": "temporal",
       "method": "precedes",
-      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios visual-edit-flow (11 steps), source-edit-flow (11 steps), edit-with-disk-conflict (11 steps, faults: disk-changed-externally). This is a check of these traces, not of all possible executions.",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios visual-edit-flow (11 steps), source-edit-flow (11 steps), edit-with-disk-conflict (11 steps, faults: disk-changed-externally). This is a check of these traces, not of all possible executions. Declaration order decided which transition fired: \"workspace-detect-conflict\" fired where \"workspace-write\" (unguarded, also enabled) is declared after it on event \"save-requested\" in behavior \"workspace-flow\". Swapping the declaration order of those transitions would change these traces. An occurrence counts as produced by the system when a transition fired or emitted it; a delivery from the scenario script does not, and an ordering between two scripted deliveries is not reported as verified.",
       "source": {
         "column": 5,
-        "line": 13868
+        "line": 14238
       },
       "statement": "Every write request to the file service is preceded by a projection refresh: the write is asynchronous and happens after the views were refreshed, in all three edits that commit.",
       "status": "verified",
@@ -479,10 +479,10 @@
       "id": "commit-only-after-validation",
       "kind": "temporal",
       "method": "precedes",
-      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios visual-edit-flow (11 steps), source-edit-flow (11 steps), edit-with-disk-conflict (11 steps, faults: disk-changed-externally). This is a check of these traces, not of all possible executions.",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios visual-edit-flow (11 steps), source-edit-flow (11 steps), edit-with-disk-conflict (11 steps, faults: disk-changed-externally). This is a check of these traces, not of all possible executions. Declaration order decided which transition fired: \"workspace-detect-conflict\" fired where \"workspace-write\" (unguarded, also enabled) is declared after it on event \"save-requested\" in behavior \"workspace-flow\". Swapping the declaration order of those transitions would change these traces. An occurrence counts as produced by the system when a transition fired or emitted it; a delivery from the scenario script does not, and an ordering between two scripted deliveries is not reported as verified.",
       "source": {
         "column": 5,
-        "line": 13899
+        "line": 14269
       },
       "statement": "Every commit of an operation transaction (the edit flows modelled here) is preceded by a delivered validation-passed: no operation transaction commits without a validation with no errors.",
       "status": "verified",
@@ -542,10 +542,10 @@
       "id": "rejected-edit-changes-nothing",
       "kind": "invariant",
       "method": "state-invariant",
-      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios rejected-edit (6 steps, faults: validation-fails). This is a check of these traces, not of all possible executions.",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios rejected-edit (6 steps, faults: validation-fails). This is a check of these traces, not of all possible executions. Declaration order decided which transition fired: \"validator-reject\" fired where \"validator-accept\" (unguarded, also enabled) is declared after it on event \"model-parsed\" in behavior \"validator-flow\". Swapping the declaration order of those transitions would change these traces.",
       "source": {
         "column": 5,
-        "line": 13930
+        "line": 14300
       },
       "statement": "In the rejected edit, at every step the revision of the transaction system, of the projection, renderer, inspector and source editor and of the file on disk is still the initial revision, and the session still reports saved.",
       "status": "verified",
@@ -578,10 +578,10 @@
       "id": "rejected-edit-never-refreshes",
       "kind": "temporal",
       "method": "never",
-      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios rejected-edit (6 steps, faults: validation-fails). This is a check of these traces, not of all possible executions.",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios rejected-edit (6 steps, faults: validation-fails). This is a check of these traces, not of all possible executions. Declaration order decided which transition fired: \"validator-reject\" fired where \"validator-accept\" (unguarded, also enabled) is declared after it on event \"model-parsed\" in behavior \"validator-flow\". Swapping the declaration order of those transitions would change these traces.",
       "source": {
         "column": 5,
-        "line": 13953
+        "line": 14323
       },
       "statement": "In the rejected edit the projection is never refreshed.",
       "status": "verified",
@@ -606,10 +606,10 @@
       "id": "rejected-edit-never-persists",
       "kind": "temporal",
       "method": "never",
-      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios rejected-edit (6 steps, faults: validation-fails). This is a check of these traces, not of all possible executions.",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios rejected-edit (6 steps, faults: validation-fails). This is a check of these traces, not of all possible executions. Declaration order decided which transition fired: \"validator-reject\" fired where \"validator-accept\" (unguarded, also enabled) is declared after it on event \"model-parsed\" in behavior \"validator-flow\". Swapping the declaration order of those transitions would change these traces.",
       "source": {
         "column": 5,
-        "line": 13978
+        "line": 14348
       },
       "statement": "In the rejected edit no write to the file service is ever requested.",
       "status": "verified",
@@ -655,10 +655,10 @@
       "id": "conflict-never-overwrites",
       "kind": "invariant",
       "method": "state-invariant",
-      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios edit-with-disk-conflict (11 steps, faults: disk-changed-externally). This is a check of these traces, not of all possible executions.",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios edit-with-disk-conflict (11 steps, faults: disk-changed-externally). This is a check of these traces, not of all possible executions. Declaration order decided which transition fired: \"workspace-detect-conflict\" fired where \"workspace-write\" (unguarded, also enabled) is declared after it on event \"save-requested\" in behavior \"workspace-flow\". Swapping the declaration order of those transitions would change these traces.",
       "source": {
         "column": 5,
-        "line": 14003
+        "line": 14373
       },
       "statement": "In the edit whose write conflicts with the disk, at every step, once the conflict is flagged the revision persisted on disk is still the initial one: the conflicting file is never overwritten.",
       "status": "verified",
@@ -688,10 +688,10 @@
       "id": "conflict-is-flagged",
       "kind": "temporal",
       "method": "eventually",
-      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios edit-with-disk-conflict (11 steps, faults: disk-changed-externally). This is a check of these traces, not of all possible executions.",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios edit-with-disk-conflict (11 steps, faults: disk-changed-externally). This is a check of these traces, not of all possible executions. Declaration order decided which transition fired: \"workspace-detect-conflict\" fired where \"workspace-write\" (unguarded, also enabled) is declared after it on event \"save-requested\" in behavior \"workspace-flow\". Swapping the declaration order of those transitions would change these traces.",
       "source": {
         "column": 5,
-        "line": 14026
+        "line": 14396
       },
       "statement": "In the edit whose write conflicts with the disk, at quiescence the session reports a conflict, every view shows the new revision and the file on disk is behind the model.",
       "status": "verified",
@@ -744,7 +744,7 @@
       "scope": "No model evaluation was performed. This rests on 2 evidence entities (ev-layout-core, ev-layout-browser), of which 2 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14052
+        "line": 14422
       },
       "statement": "Moving a node changes only the layout file: the semantic hash and the specification text cannot change.",
       "status": "supported",
@@ -785,7 +785,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-simulation-core), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14060
+        "line": 14430
       },
       "statement": "Running a scenario twice with the same model and faults gives deep-equal traces, and stepping one event at a time gives the same trace as running to the end.",
       "status": "supported",
@@ -824,7 +824,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-generate-core), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14068
+        "line": 14438
       },
       "statement": "Two runs of the generators over the same model and inputs produce byte-identical artifacts.",
       "status": "supported",
@@ -867,7 +867,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-workspace-confinement), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14076
+        "line": 14446
       },
       "statement": "Project names are validated and every path is resolved inside specs/<project>/ before any read or write; names and paths that escape that directory are refused, and generated files can only be written under generated/. The one exception is deliberate: a project.jsonc may name a specification file outside the project directory (a linked project, such as a specification kept in its own repository), which is then read and written there. project.jsonc is not writable through the workspace endpoints (write and import accept only spec.jsonc, layout.jsonc and evidence/results.json), so only a person editing the file on disk can point a project elsewhere.",
       "status": "supported",
@@ -917,7 +917,7 @@
       "scope": "No model evaluation was performed. This rests on 2 evidence entities (ev-roundtrip-invalid-draft, ev-browser-invalid-draft), of which 2 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14084
+        "line": 14454
       },
       "statement": "An invalid source draft is rejected with diagnostics, the committed model is not changed and the draft stays as typed in the source editor.",
       "status": "supported",
@@ -957,7 +957,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-model-unsupported), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14092
+        "line": 14462
       },
       "statement": "A specification construct the meta-model does not describe (an unknown section, entity property, vocabulary field or claim parameter) is reported as a diagnostic and never silently dropped.",
       "status": "supported",
@@ -979,7 +979,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14102
+        "line": 14472
       },
       "statement": "The default structural view of specs/benchmark/spec.jsonc (396 components and 507 relationships) renders at an interactive frame rate on ordinary desktop hardware, measured as the fps reported by the scene view's getStats() while the camera orbits. The threshold for 'interactive' is not defined in this specification.",
       "status": "not-evaluated",
@@ -1020,7 +1020,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-flows-trace), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14110
+        "line": 14480
       },
       "statement": "For every simulation step, the message flow names as sender the component whose behavior emitted the delivered event (outside, for a scenario stimulus or an injected fault) and as receivers the components whose behaviors fired a transition on it.",
       "status": "supported",
@@ -1059,7 +1059,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-flows-edges), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14126
+        "line": 14496
       },
       "statement": "A simulated message is drawn along a scene edge only when that edge connects its sender's and receiver's drawn nodes; when only a relationship the view does not draw connects them the message is marked unshown, and when no relationship connects them it is marked undeclared.",
       "status": "supported",
@@ -1102,7 +1102,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-browser-sim-flow), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14142
+        "line": 14512
       },
       "statement": "Stepping a simulation in a structural view moves a marker labelled with the event's name from the sender's node toward each receiver's node, and the simulator panel states who sent the event to whom.",
       "status": "supported",
@@ -1134,7 +1134,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14160
+        "line": 14530
       },
       "statement": "The same model, scenario, faults and seed give deep-equal traces and metrics, draws included, in the Rust engine and in the Lean semantics; on a fixture that samples, two different seeds give different draws; and the seeds of a claim's runs are the successive SplitMix64 outputs of its base seed, with arithmetic mod 2^64.",
       "status": "not-evaluated",
@@ -1166,7 +1166,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14178
+        "line": 14548
       },
       "statement": "N instances of one behavior keep separate state: an effect of one instance changes no variable or state of another, every fired and ignored entry of a step names its instance, and an event routed to one instance fires on that instance only.",
       "status": "not-evaluated",
@@ -1197,7 +1197,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14195
+        "line": 14565
       },
       "statement": "A specification names simulation aspects with versions and gives their parameters as data; an unknown aspect or version is a validation error, and no specification text is evaluated as code.",
       "status": "not-evaluated",
@@ -1228,7 +1228,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14212
+        "line": 14582
       },
       "statement": "The same specification, aspect versions, parameters and seed give deep-equal traces, including every aspect metric.",
       "status": "not-evaluated",
@@ -1259,7 +1259,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14229
+        "line": 14599
       },
       "statement": "When a component has an abstract behavior and refined child behaviors, the refined trace projected onto the component's boundary is allowed by the abstract behavior, or the first diverging boundary event is reported as a violation.",
       "status": "not-evaluated",
@@ -1289,7 +1289,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14245
+        "line": 14615
       },
       "statement": "Collapsing a subsystem in the view runs its abstract behavior and expanding it runs its children's, and the simulator panel says which level each component ran at.",
       "status": "not-evaluated",
@@ -1321,7 +1321,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14263
+        "line": 14633
       },
       "statement": "The same campaign and seed give deep-equal sets of runs, and every run's check results are reported.",
       "status": "not-evaluated",
@@ -1351,7 +1351,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14279
+        "line": 14649
       },
       "statement": "A chaos campaign injects only the failure kinds and targets its parameters name, and records each injected failure in the trace.",
       "status": "not-evaluated",
@@ -1381,7 +1381,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14295
+        "line": 14665
       },
       "statement": "Single-station M/M/1 and M/M/c queues reproduce the analytic mean waiting time and utilisation within the tolerance and number of seeded runs stated by the test.",
       "status": "not-evaluated",
@@ -1412,7 +1412,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14312
+        "line": 14682
       },
       "statement": "Every load parameter (arrival rate, service time, capacity) names its source, a requirement, a measurement or an assumption, and a parameter without one is a validation error.",
       "status": "not-evaluated",
@@ -1443,7 +1443,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14329
+        "line": 14699
       },
       "statement": "Every price names a source and a date, and a cost that would use an unsourced price is reported as not computed, naming the price.",
       "status": "not-evaluated",
@@ -1473,7 +1473,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14345
+        "line": 14715
       },
       "statement": "A reported cost equals the recorded resource usage multiplied by the price profile, line by line.",
       "status": "not-evaluated",
@@ -1504,7 +1504,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14362
+        "line": 14732
       },
       "statement": "A result over a parameter given as a range is reported as a spread (minimum, maximum and stated percentiles) across a seeded sweep, never as a single figure.",
       "status": "not-evaluated",
@@ -1535,7 +1535,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14379
+        "line": 14749
       },
       "statement": "Every statistical claim result names its number of runs, seed and confidence, is never shown as verified, and a statistical claim without that basis is a validation error.",
       "status": "not-evaluated",
@@ -1566,7 +1566,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14396
+        "line": 14766
       },
       "statement": "Each overlay value shown at a time equals the trace's value for that component at that time, and a component without data shows nothing.",
       "status": "not-evaluated",
@@ -1605,9 +1605,9 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-engines-agree), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14413
+        "line": 14783
       },
-      "statement": "The Rust simulation engine, native and WebAssembly, reproduces every golden trace of the conformance suite exactly, and is the only engine the application and the CLI run.",
+      "statement": "The Rust simulation engine, the differential oracle, native and WebAssembly, reproduces every golden trace of the conformance suite exactly, as the Lean engine does.",
       "status": "supported",
       "statusLabel": "Supported by external evidence",
       "subjects": [
@@ -1644,7 +1644,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-simulation-contract), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14430
+        "line": 14800
       },
       "statement": "For every scenario of the golden conformance suite, the simulation engine reproduces the committed trace exactly, both from the model and from the committed engine input alone, and simulationInput derives exactly the committed input.",
       "status": "supported",
@@ -1683,7 +1683,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-simulation-worker-responsive), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14447
+        "line": 14817
       },
       "statement": "The Simulation tab runs a scenario in a Web Worker: while a long run is in progress the page keeps drawing frames and reacting to input, the tab shows the run as running, and the finished trace is then stepped exactly as before.",
       "status": "supported",
@@ -1722,7 +1722,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-browser-phone-touch-usable), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14464
+        "line": 14834
       },
       "statement": "At a 390 by 844 touch viewport the page never scrolls horizontally, every visible interactive control is at least 44 by 44 CSS pixels, and with no panel expanded the 3D scene covers at least 60% of the screen.",
       "status": "supported",
@@ -1732,51 +1732,6 @@
         "shell",
         "toolbar",
         "stylesheets"
-      ]
-    },
-    {
-      "assumptions": [
-        {
-          "id": "browser-tests-run-real-application",
-          "statement": "The browser tests drive the real application served by the Vite development server, against scratch copies of this specification and of the multiplayer test fixture (one pair per Playwright worker) (and, read-only, a project linked locally), in the locally installed Chrome."
-        },
-        {
-          "id": "recorded-results-reflect-current-code",
-          "statement": "A recorded result of a test in evidence/results.json was produced by the code and the specification as they are now."
-        }
-      ],
-      "counterexample": null,
-      "evaluator": "exegra.evidence/0.1",
-      "evidence": [
-        {
-          "id": "ev-browser-phone-every-function",
-          "kind": "test",
-          "recorded": "pass",
-          "ref": "tests/browser/mobile.spec.js#every function is reachable by touch on a phone",
-          "supports": true
-        }
-      ],
-      "explanation": "Exegra holds a recorded result of executing ev-browser-phone-every-function: pass.",
-      "id": "ui-every-function-at-every-size",
-      "kind": "invariant",
-      "method": "external-evidence",
-      "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-browser-phone-every-function), of which 1 has a recorded execution result; the rest is author-entered.",
-      "source": {
-        "column": 5,
-        "line": 14483
-      },
-      "statement": "Every function the interface offers on a desktop (switching project and view, search, selecting and inspecting, editing, creating, connecting, deleting, undo and redo, simulation, verification, source, realisation, diagnostics, export and import) is reachable by touch at a 390 by 844 viewport.",
-      "status": "supported",
-      "statusLabel": "Supported by external evidence",
-      "subjects": [
-        "responsive-layout",
-        "toolbar",
-        "explorer",
-        "inspector",
-        "simulator-panel",
-        "verification-panel",
-        "source-editor",
-        "dialogs"
       ]
     },
     {
@@ -1808,7 +1763,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-browser-tablet-desktop-expand), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14506
+        "line": 14853
       },
       "statement": "From 768 CSS pixels wide panels open beside the scene instead of over it, and from 1200 CSS pixels the explorer, the scene and the context panel are visible side by side without opening anything.",
       "status": "supported",
@@ -1847,7 +1802,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-fault-model-core), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14523
+        "line": 14870
       },
       "statement": "Every behavioral or reliability claim names the fault model it is evaluated under, every failure-mode rate, duration and bound names its source, and the fault model appears in each such claim result's scope.",
       "status": "supported",
@@ -1886,7 +1841,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-formal-explore), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14540
+        "line": 14887
       },
       "statement": "Exhaustive exploration within stated bounds finds the known race of a fixture protocol with a counterexample run that Lean accepts, reports its fixed version as holding for all N explored configurations, and gives the same N on every run.",
       "status": "supported",
@@ -1917,7 +1872,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14557
+        "line": 14904
       },
       "statement": "Under the fault model and within the stated bounds, no request is served by a version that failed its health gate during a blue-green cutover, and old and new versions are compatible with the schema at every step of an expand/contract migration.",
       "status": "not-evaluated",
@@ -1947,7 +1902,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14573
+        "line": 14920
       },
       "statement": "Under the fault model and within the stated bounds, a rollback loses no committed transaction and returns traffic only to a version that passed its gate.",
       "status": "not-evaluated",
@@ -1977,7 +1932,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14589
+        "line": 14936
       },
       "statement": "The generated infrastructure and pipeline realise exactly the modeled environments, slots, gates and transitions, deterministically, and any edit to the generated output is detected.",
       "status": "not-evaluated",
@@ -2008,7 +1963,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14606
+        "line": 14953
       },
       "statement": "Every implementation trace of a checked system, projected onto the model's boundary events, is allowed by the model, or the first disallowed boundary event is reported.",
       "status": "not-evaluated",
@@ -2038,7 +1993,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14622
+        "line": 14969
       },
       "statement": "Each claim with a declared observable has a generated runtime monitor, and a monitor that fires marks its claim violated with the observation; game-day results are recorded as evidence with their measurements.",
       "status": "not-evaluated",
@@ -2076,7 +2031,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-formal-differential), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14638
+        "line": 14985
       },
       "statement": "The Rust engine and the Lean formal semantics give identical traces on every golden and on every input of a recorded seeded run of the input generator, whose coverage of the language's constructs is stated.",
       "status": "supported",
@@ -2115,7 +2070,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-formal-proofs), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14655
+        "line": 15002
       },
       "statement": "The formal semantics' step function is proved deterministic, fires at most one transition per behavior per step, and terminates every run under the step limit, with no unproved assumption in the proofs.",
       "status": "supported",
@@ -2145,7 +2100,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14671
+        "line": 15018
       },
       "statement": "A state-invariant claim reported as verified by proof has a Lean theorem, building with no unproved assumption, that the invariant holds in every reachable configuration of its scenario under its fault model.",
       "status": "not-evaluated",
@@ -2184,7 +2139,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-contract-events-static), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14688
+        "line": 15035
       },
       "statement": "An event that names a contract has a role, and validation rejects, with the position of the event, a request whose payload has a field that is not an input of the contract, an input that is not optional and missing, or a field type that is not assignable to the input type; a response with a field that is not an output; an error without a code, or with a literal code that is not among the contract's errors; and a correlation field that is not a payload field.",
       "status": "supported",
@@ -2241,7 +2196,7 @@
       "scope": "No model evaluation was performed. This rests on 3 evidence entities (ev-contract-trace-checks, ev-contract-request-log, ev-browser-requests-section), of which 3 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14704
+        "line": 15051
       },
       "statement": "On a simulated trace, every contract event's payload values fit the declared types, an error code is among the contract's errors, and every response or error answers an earlier unanswered request of the same contract (matched by the correlation field when one is declared, otherwise by count); each violation is a failed automatic check of the scenario with its step, shown by exegra simulate and the simulator panel, which also render the contract events as a request log.",
       "status": "supported",
@@ -2267,6 +2222,13 @@
       "evaluator": "exegra.evidence/0.1",
       "evidence": [
         {
+          "id": "ev-data-declared-markers",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/claim-diagnostics.test.js#no-principal-in-shared says it reads only declared personal markers",
+          "supports": true
+        },
+        {
           "id": "ev-data-model-core",
           "kind": "test",
           "recorded": "pass",
@@ -2274,22 +2236,101 @@
           "supports": true
         }
       ],
-      "explanation": "Exegra holds a recorded result of executing ev-data-model-core: pass.",
+      "explanation": "Exegra holds a recorded result of executing ev-data-declared-markers and ev-data-model-core: pass.",
       "id": "data-model-rules-computed",
       "kind": "invariant",
       "method": "external-evidence",
-      "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-data-model-core), of which 1 has a recorded execution result; the rest is author-entered.",
+      "scope": "No model evaluation was performed. This rests on 2 evidence entities (ev-data-declared-markers, ev-data-model-core), of which 2 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14722
+        "line": 15069
       },
-      "statement": "Records and copies are validated with positions, and the five data rules (erasure point, no principal data in a shared copy, party fields by principal id, freshness bound, holder related to owner) are computed from the model and reported per copy, record and field, both as validation warnings and as the result of a data-model claim.",
+      "statement": "Records and copies are validated with positions, and the six data rules (erasure point, record erasure point, no principal data in a shared copy, party fields by principal id, freshness bound, holder related to owner) are computed from the model and reported per copy, record and field, both as validation warnings and as the result of a data-model claim.",
       "status": "supported",
       "statusLabel": "Supported by external evidence",
       "subjects": [
         "data-model",
         "validator",
         "claim-evaluator"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "tests-exercise-shipped-modules",
+          "statement": "The core tests import and run the same modules under src/core and tools that the application and the agent command line run."
+        },
+        {
+          "id": "recorded-results-reflect-current-code",
+          "statement": "A recorded result of a test in evidence/results.json was produced by the code and the specification as they are now."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [
+        {
+          "id": "ev-record-erasure-core",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/data-model.test.js",
+          "supports": true
+        }
+      ],
+      "explanation": "Exegra holds a recorded result of executing ev-record-erasure-core: pass.",
+      "id": "personal-records-state-erasure",
+      "kind": "invariant",
+      "method": "external-evidence",
+      "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-record-erasure-core), of which 1 has a recorded execution result; the rest is author-entered.",
+      "source": {
+        "column": 5,
+        "line": 15087
+      },
+      "statement": "Every record with a field that is personal data or a credential states an erasure point or a bounded retention; a record that states neither is a finding of the record-erasure-point rule, and a data-model claim naming that rule is violated with the record as its counterexample.",
+      "status": "supported",
+      "statusLabel": "Supported by external evidence",
+      "subjects": [
+        "data-model",
+        "validator",
+        "claim-evaluator"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "tests-exercise-shipped-modules",
+          "statement": "The core tests import and run the same modules under src/core and tools that the application and the agent command line run."
+        },
+        {
+          "id": "recorded-results-reflect-current-code",
+          "statement": "A recorded result of a test in evidence/results.json was produced by the code and the specification as they are now."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [
+        {
+          "id": "ev-classification-core",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/data-model.test.js",
+          "supports": true
+        }
+      ],
+      "explanation": "Exegra holds a recorded result of executing ev-classification-core: pass.",
+      "id": "classification-validated",
+      "kind": "invariant",
+      "method": "external-evidence",
+      "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-classification-core), of which 1 has a recorded execution result; the rest is author-entered.",
+      "source": {
+        "column": 5,
+        "line": 15105
+      },
+      "statement": "A field's optional classification is one of public, internal, personal or credential; personal is stated through the personal-data class and classification personal needs that class; an unknown classification is a validation error, and a specification without classifications validates unchanged.",
+      "status": "supported",
+      "statusLabel": "Supported by external evidence",
+      "subjects": [
+        "data-model",
+        "validator"
       ]
     },
     {
@@ -2306,10 +2347,10 @@
       "id": "specification-copies-fresh-and-related",
       "kind": "structural",
       "method": "data-model",
-      "scope": "Checked the 30 records and 23 copies at this model revision against rules freshness-bound, holder-reaches-owner, no-principal-in-shared (items checked per rule: freshness-bound 23, holder-reaches-owner 45, no-principal-in-shared 2).",
+      "scope": "Checked the 30 records and 23 copies at this model revision against rules freshness-bound, holder-reaches-owner, no-principal-in-shared (items checked per rule: freshness-bound 23, holder-reaches-owner 45, no-principal-in-shared 2). Rule no-principal-in-shared read only the personal markers the model declares (a field's \"personal\" value or a reference to the principal): a field that holds personal data but declares neither is not seen, so the absence of a finding shows that the declared markers are absent from the copy, not that it holds no personal data.",
       "source": {
         "column": 5,
-        "line": 14740
+        "line": 15121
       },
       "statement": "Every copy of a project's specification text that Exegra declares (the session model, the command line's project, the generated documents) states a freshness bound, and its holder is related to the specification file through declared relationships; the shared copy holds no principal data.",
       "status": "verified",
@@ -2351,7 +2392,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-formal-explore-bounded), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14764
+        "line": 15145
       },
       "statement": "A state-invariant claim reported by exegra prove as holding has a Lean theorem, accepted by Lean, that the verified explorer visited every configuration of its scenario reachable within the stated bound (over every order of simultaneous events and every subset of the scenario's faults) and found the invariant true in each; the result names the axioms the theorem depends on.",
       "status": "supported",
@@ -2391,7 +2432,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-negatives-status), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14782
+        "line": 15163
       },
       "statement": "A trace claim is reported verified only when it holds on every listed scenario and each of its declared negatives, of which there is at least one, violates it. A claim with no negative, or with a negative that holds or does not finish, is inconclusive.",
       "status": "supported",
@@ -2430,7 +2471,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-negatives-validated), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14799
+        "line": 15180
       },
       "statement": "A negative whose scenario is not one of its claim's scenarios, whose fault list is missing or empty, or that names an undeclared fault or one its scenario already activates, is a validation error; renaming a fault rewrites the negatives that name it.",
       "status": "supported",
@@ -2438,6 +2479,156 @@
       "subjects": [
         "validator",
         "parser"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "tests-exercise-shipped-modules",
+          "statement": "The core tests import and run the same modules under src/core and tools that the application and the agent command line run."
+        },
+        {
+          "id": "recorded-results-reflect-current-code",
+          "statement": "A recorded result of a test in evidence/results.json was produced by the code and the specification as they are now."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [
+        {
+          "id": "ev-trace-order-decides",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/claim-diagnostics.test.js#two unguarded transitions on one event are warned about and the result says the order decided",
+          "supports": true
+        },
+        {
+          "id": "ev-trace-precedes-script",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/claim-diagnostics.test.js#precedes between two scripted deliveries is not verified and one the system produces is",
+          "supports": true
+        },
+        {
+          "id": "ev-trace-never-faultonly",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/claim-diagnostics.test.js#a never over an occurrence only a faultOnly transition produces says it holds for fault-free runs",
+          "supports": true
+        },
+        {
+          "id": "ev-trace-constant-consequent",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/claim-diagnostics.test.js#an implication with a constant consequent is not exercised",
+          "supports": true
+        }
+      ],
+      "explanation": "Exegra holds a recorded result of executing ev-trace-order-decides, ev-trace-precedes-script, ev-trace-never-faultonly and ev-trace-constant-consequent: pass.",
+      "id": "trace-claims-state-how-decided",
+      "kind": "invariant",
+      "method": "external-evidence",
+      "scope": "No model evaluation was performed. This rests on 4 evidence entities (ev-trace-order-decides, ev-trace-precedes-script, ev-trace-never-faultonly, ev-trace-constant-consequent), of which 4 have a recorded execution result; the rest is author-entered.",
+      "source": {
+        "column": 5,
+        "line": 15196
+      },
+      "statement": "A trace claim's result says what its verdict rests on: the declaration order of two unguarded enabled transitions that decided which fired, a precedes ordering that only the scenario script witnesses (not verified), a never over an occurrence only a faultOnly transition can produce (holds for runs without the enabling fault), and an implication whose consequent names no state or variable (not exercised).",
+      "status": "supported",
+      "statusLabel": "Supported by external evidence",
+      "subjects": [
+        "claim-evaluator"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "tests-exercise-shipped-modules",
+          "statement": "The core tests import and run the same modules under src/core and tools that the application and the agent command line run."
+        },
+        {
+          "id": "recorded-results-reflect-current-code",
+          "statement": "A recorded result of a test in evidence/results.json was produced by the code and the specification as they are now."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [
+        {
+          "id": "ev-models-listed",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/claim-diagnostics.test.js#a requirement shows the model claims that name it and their statuses",
+          "supports": true
+        },
+        {
+          "id": "ev-models-validated",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/claim-diagnostics.test.js#a models value that names a claim which is not a requirement is a validation error",
+          "supports": true
+        }
+      ],
+      "explanation": "Exegra holds a recorded result of executing ev-models-listed and ev-models-validated: pass.",
+      "id": "models-property-evaluated",
+      "kind": "invariant",
+      "method": "external-evidence",
+      "scope": "No model evaluation was performed. This rests on 2 evidence entities (ev-models-listed, ev-models-validated), of which 2 have a recorded execution result; the rest is author-entered.",
+      "source": {
+        "column": 5,
+        "line": 15210
+      },
+      "statement": "The models property that links a check over the behavior model to a requirement is evaluated: a requirement's result lists the claims that name it with their statuses (modelledBy, shown by claims and in the inspector), without changing the requirement's own status, and a models value that is not a requirement is a validation error.",
+      "status": "supported",
+      "statusLabel": "Supported by external evidence",
+      "subjects": [
+        "claim-evaluator",
+        "validator"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "tests-exercise-shipped-modules",
+          "statement": "The core tests import and run the same modules under src/core and tools that the application and the agent command line run."
+        },
+        {
+          "id": "recorded-results-reflect-current-code",
+          "statement": "A recorded result of a test in evidence/results.json was produced by the code and the specification as they are now."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [
+        {
+          "id": "ev-validate-inert-negative",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/claim-diagnostics.test.js#a negative whose fault targets a transition the scenario does not run is a warning",
+          "supports": true
+        },
+        {
+          "id": "ev-validate-not-staged",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/claim-diagnostics.test.js#claim-parameter errors are reported although another reference is unresolved",
+          "supports": true
+        }
+      ],
+      "explanation": "Exegra holds a recorded result of executing ev-validate-inert-negative and ev-validate-not-staged: pass.",
+      "id": "claim-parameters-always-validated",
+      "kind": "invariant",
+      "method": "external-evidence",
+      "scope": "No model evaluation was performed. This rests on 2 evidence entities (ev-validate-inert-negative, ev-validate-not-staged), of which 2 have a recorded execution result; the rest is author-entered.",
+      "source": {
+        "column": 5,
+        "line": 15224
+      },
+      "statement": "The checks of claims (parameters, scenarios, negatives, models) run even when another reference of the specification is unresolved, so one error does not hide the others; a negative whose fault targets a transition of a behavior its scenario does not run, and two unguarded transitions on one event and state, are warnings.",
+      "status": "supported",
+      "statusLabel": "Supported by external evidence",
+      "subjects": [
+        "validator"
       ]
     },
     {
@@ -2473,7 +2664,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-own-claims-falsifiable), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14815
+        "line": 15238
       },
       "statement": "Every behavioral claim of this specification declares a negative that violates it, and every one is verified.",
       "status": "supported",
@@ -2507,7 +2698,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14836
+        "line": 15259
       },
       "statement": "At every settled step of every format-2 run, the units a request class holds never exceed its limit, the units held never exceed capacity (except units held across a mid-run capacity cut, which are never preempted), waiting requests never exceed the class and resource bounds, bounds are enforced class by class in declaration order and then for the resource, and the request removed is the one the overflow rule names (refuse and drop: the newest; shed-oldest: the oldest of the class, or for the resource bound the oldest overall under fifo and the oldest of the lowest-priority class under priority), with the matching refused event and reason.",
       "status": "not-evaluated",
@@ -2539,7 +2730,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14854
+        "line": 15277
       },
       "statement": "Service demand conserves work: for every resource and run, the integral of units held over the window never exceeds the integral of the capacity in effect (while no mid-run capacity cut leaves units held above it), a completed use request held its units for exactly ceil(draw times demand factor times scale), and the sum of completed service times equals the busy integral when the window covers the run.",
       "status": "not-evaluated",
@@ -2571,7 +2762,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14872
+        "line": 15295
       },
       "statement": "An engine that implements format 2 reproduces every format-1 golden trace byte for byte from its version-1 input; simulationInput derives the same version-1 input as before for every specification that uses no format-2 construct; and for every version-1 input with integral times in [0, 2^53), no variable or bare reference named instance, no three-part reference whose second part is count, sum, min, max or instances, and a run that never queues an entry at time 2^53 or later, its lift to version 2 gives the version-1 trace once the version-2 fields are removed.",
       "status": "not-evaluated",
@@ -2603,7 +2794,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14890
+        "line": 15313
       },
       "statement": "The Rust engine and the Lean semantics give identical version-2 traces and metrics on every version-2 golden and on every input of a recorded seeded run of the version-2 input generator, whose coverage of instances, routes, timers, resources and their overflow rules, links, workloads, distributions and resource faults is stated.",
       "status": "not-evaluated",
@@ -2639,7 +2830,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14908
+        "line": 15331
       },
       "statement": "Every metric-bound claim result reports its runs, seeds, passes, N', fraction, confidence, the spread of the per-run statistic and its underpowered and truncated runs; a positive result is model-holds, never verified and never supported; samples follow the request lifecycle; an underpowered run (a quantile, mean, or ratio of counts with fewer than 30 expected on its rarer side) is left out only for an open-started class and otherwise does not satisfy the bound; it reads model-holds or fails only when the exact binomial test on the N' runs kept decides it and inconclusive otherwise; and a negative that does not fail, or a control negative that does not hold, makes it inconclusive.",
       "status": "not-evaluated",
@@ -2683,7 +2874,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-mm1-utilisation-fixture), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14927
+        "line": 15350
       },
       "statement": "The M/M/1 fixture (Poisson arrivals at 800/s, exponential service of mean 1 ms, one server, unit us, warm-up 20 s, horizon 220 s) reproduces utilisation 0.8 within 2% by an approx metric claim at 95% confidence over 59 seeded runs.",
       "status": "inconclusive",
@@ -2728,7 +2919,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-pool-flood-fixture), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 14947
+        "line": 15370
       },
       "statement": "On the pool fixture (tests/fixtures/queueing/pool-flood.json: a 20-connection pool with classes money, moves and page-reads in front of 4 shared database I/O channels; moves at 1,000/s; a page-read flood of 5,000/s from 2 s to 6 s), the p99 of the modelled database leg of a move over the flood window is at most 30 ms in at least 95% of runs at 95% confidence over 59 runs, in the base scenario and in its control without the flood; it fails in each of its two negative twins, and each twin fault leaves the control holding.",
       "status": "inconclusive",
@@ -2761,7 +2952,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14967
+        "line": 15390
       },
       "statement": "In every response-time distribution, a measured request that ended refused, timeout or error (a lost start included, by the request lifecycle), or is censored, counts as +infinity, so only ok requests are finite and a mean over a class with any such request is undefined; a claim restricted to outcomes ok reports how many requests it left out.",
       "status": "not-evaluated",
@@ -2792,7 +2983,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 14984
+        "line": 15407
       },
       "statement": "exegra prove on a format-2 scenario reports the seed first, and the scope \"fault times fixed as declared\" when the scenario has windowed faults, and shows a result as verified only when the engine input contains no distribution other than fixed or choice anywhere and no element that draws (no Poisson process; no batch, think, closed start, population start.at, emit size or after, timer delay or restartAfter other than fixed or choice; no uniform client pick, groups, choose or sample payload field, or random route), a check made statically on the input; choice values and any routes are enumerated as nondeterminism.",
       "status": "not-evaluated",
@@ -2836,7 +3027,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-mm1-mean-wait-fixture), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 15002
+        "line": 15425
       },
       "statement": "The M/M/1 fixture reproduces the mean waiting time in queue rho / (mu - lambda) = 4 ms within 5%, by an approx metric claim on the median of the per-run means at 95% confidence over 59 seeded runs (the order statistics 22 and 38), with the measured gap between the median of per-run means and the analytic mean stated beside the tolerance.",
       "status": "inconclusive",
@@ -2873,7 +3064,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 15022
+        "line": 15445
       },
       "statement": "The M/M/2 fixture (lambda = 1600/s, mean service 1 ms, two servers) reproduces the Erlang C mean waiting time C(2, 1.6) / (2 mu - lambda) of about 1.78 ms within 5% at 95% confidence over 59 seeded runs.",
       "status": "not-evaluated",
@@ -2909,7 +3100,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 15041
+        "line": 15464
       },
       "statement": "On the ladder fixture, a behavior reading a meter of refused page reads rises to rung 1 within 10 s of the flood start (time-to-first), makes at most 4 rung transitions during the flood, and returns within 30 s after it (time-to-recover), each at 95% confidence over 59 runs.",
       "status": "not-evaluated",
@@ -2945,7 +3136,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 15060
+        "line": 15483
       },
       "statement": "On the retry fixture (2,000 client behaviors with a 500 ms timeout, a database slowdown of 5 times from 20 s to 30 s), the busiest second of queries reaching the pool during the slowdown, relative to the mean per second over 10 to 20 s (the ratio form of metric-bound), is at most 1.5 when clients retry within a 10% budget, at 95% confidence over 59 runs.",
       "status": "not-evaluated",
@@ -2981,7 +3172,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 15079
+        "line": 15502
       },
       "statement": "On the reconnect fixture (4,000 client behaviors on 4 hosts, host 0 crashed at 30 s with a connection-reset notice and restarted after 2 s), clients that reconnect after a uniform 0 to 5 s stagger keep the p90 wait for the host CPU (TLS handshake demand) at most 200 ms in the window 30 to 40 s, at 95% confidence over 59 runs; about 1,000 handshakes per run leave 100 samples beyond the p90.",
       "status": "not-evaluated",
@@ -3017,7 +3208,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 15098
+        "line": 15521
       },
       "statement": "On the address-limiter fixture (50 attacking addresses at 100/s each, a limiter keyed on address admitting 20/s), at least 90% of attack requests are refused, at 95% confidence over 59 runs.",
       "status": "not-evaluated",
@@ -3053,7 +3244,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 15117
+        "line": 15540
       },
       "statement": "On the address-limiter fixture, legitimate users grouped onto addresses (up to 50 behind one shared address) see a false-positive refusal ratio of at most 0.001, at 95% confidence over 59 runs.",
       "status": "not-evaluated",
@@ -3089,7 +3280,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 15136
+        "line": 15559
       },
       "statement": "On the hold-across fixture (16 API threads held while calling the database, a database slowdown of 10 times from 20 s to 40 s, static requests at 200/s), with database calls limited to 8 threads and a maximum wait, the p99 of static requests in the slowdown window is at most 50 ms, at 95% confidence over 59 runs.",
       "status": "not-evaluated",
@@ -3121,7 +3312,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 15155
+        "line": 15578
       },
       "statement": "A metric claim reads unvalidated when it names no calibration, when a calibration fails on its hold-out load runs (distinct from the fitting runs, with equal workload, capacities and window; the sign-test interval of the model median over at least 6 kept runs, with no truncated run, outside the measurement band widened over repeats), when its evidence has expired at the asOf date recorded in the result or is bound to another component revision, or when a calibration tolerance exceeds the margin computed from the beta-quantile of the per-run statistic; it is flagged extrapolated outside the convex hull of the tested points with the same fault set, decided in exact rational arithmetic; and its result lists first the assumed and to-be-measured parameters, and pairs of flagged parameters, whose variation over their declared ranges flips the verdict.",
       "status": "not-evaluated",
@@ -3152,7 +3343,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 15172
+        "line": 15595
       },
       "statement": "A crash-instance fault stops exactly the named instance at its time: its incarnation is incremented, its timers removed, its waiting requests removed with their timeouts, its in-service requests ended with their service-done entries and its units released, its restart drawn, its notify event broadcast; every targeted entry created for the old incarnation, a reply to a call it made before the crash included, is dropped as stale; a routed entry decided for it is ignored by that behavior only, and a broadcast skips it; instance aggregates exclude it while it is down; round-robin, random, any and least-busy routes skip it; a restart edge restores only its own incarnation; a crash of a missing or already down instance does nothing; and on restart the instance is in its initial state with its initial variables.",
       "status": "not-evaluated",
@@ -3192,7 +3383,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-distribution-lowering), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 15190
+        "line": 15613
       },
       "statement": "simulationInput lowers distributions with integer arithmetic only: the exponential and normal quantile tables are produced by the integer algorithms of docs/simulation.md and equal the correctly rounded values at the 1,045 grid points, their canonical text hashing to SHA-256 a23cd2a9566c106701375d5cf75ef982b8db6f3e52c199c47e6239649c840950; exp_fp, ln_fp and the exponential, log-normal and empirical constructions reproduce every reference output bit for bit; and a lowered value of 2^53 base units or more, a sigma above 8 or a p99 above 10^6 times the median is refused.",
       "status": "supported",
@@ -3223,7 +3414,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 15207
+        "line": 15630
       },
       "statement": "Poisson arrivals, constant or ramped, take exactly one arrival draw per instant, computed by inverting the integrated rate with exact integer square roots and rounding to the nearest base unit; no valid input is refused or fails for rejected candidates, and a draw whose instant falls at or after its phase end or the horizon creates nothing.",
       "status": "not-evaluated",
@@ -3254,7 +3445,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 15224
+        "line": 15647
       },
       "statement": "With windowed faults that overlap on one resource, the value in effect at every fault-edge is the declared function of the active set: the last active set-capacity, set-class-limit or replace-demand in the order of the input's faults list, the product of the active scale-demand factors reduced to lowest terms, and collapsed while any collapse-classes is active; demand and scale are evaluated at the grant against the faults active then; when a collapse ends, waiting requests return to their own classes in (since, seq) order; and under a collapse each request keeps its class for maxWait and metrics.",
       "status": "not-evaluated",
@@ -3285,7 +3476,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 15241
+        "line": 15664
       },
       "statement": "A broadcast reaches the instances that are up when it is delivered (keyed instances created since its creation and instances restarted since included) and skips down ones without an ignored entry; targeted entries keep the instance and incarnation fixed when they were created; routed entries are decided, with their counters, draws and incarnation, when first taken as head, and a delayed copy keeps the decision; and the next arrival instant of a workload is created exactly once, even when a fault delays or drops the first entry of the current instant.",
       "status": "not-evaluated",
@@ -3317,7 +3508,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 15259
+        "line": 15682
       },
       "statement": "Every request of a class follows the request lifecycle of docs/simulation.md: it starts when its start entry is first taken as head; it ends once, at the first delivered end event with its key (a deliver step that does not fail, whether or not a transition fires), as error at once when its start entry is dropped, crashed, stale or handled by no transition, or as timeout on a closed-client timeout; it is censored otherwise; only ok requests are finite samples; and every sample count, bucket power and derived metric is computed from these outcomes.",
       "status": "not-evaluated",
@@ -3357,7 +3548,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-formal-explore-temporal), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 15277
+        "line": 15700
       },
       "statement": "A never, precedes or eventually claim reported by exegra prove as holding has a Lean theorem, accepted by Lean, that the verified explorer found the form true on every complete run of its scenario (every order of simultaneous events, every subset of its faults, each run ending at quiescence, at the step limit or in a failed step); a reported counterexample is a real run that violates it, and a path the bound or the state budget cuts off is reported incomplete.",
       "status": "supported",
@@ -3387,7 +3578,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-metric-claims-in-specifications), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 15294
+        "line": 15717
       },
       "statement": "A specification that declares resources, workloads, request classes and a format-2 scenario derives a version-2 engine input (times in base units, rates exact, distributions lowered), and a metric-bound claim over it evaluates to model-holds, violated or inconclusive with its run count and confidence, never verified or supported.",
       "status": "supported",
@@ -3412,10 +3603,10 @@
       "id": "runtime-data-copies-fresh-and-related",
       "kind": "structural",
       "method": "data-model",
-      "scope": "Checked the 30 records and 23 copies at this model revision against rules freshness-bound, holder-reaches-owner, no-principal-in-shared (items checked per rule: freshness-bound 23, holder-reaches-owner 45, no-principal-in-shared 2).",
+      "scope": "Checked the 30 records and 23 copies at this model revision against rules freshness-bound, holder-reaches-owner, no-principal-in-shared (items checked per rule: freshness-bound 23, holder-reaches-owner 45, no-principal-in-shared 2). Rule no-principal-in-shared read only the personal markers the model declares (a field's \"personal\" value or a reference to the principal): a field that holds personal data but declares neither is not seen, so the absence of a finding shows that the declared markers are absent from the copy, not that it holds no personal data.",
       "source": {
         "column": 5,
-        "line": 15308
+        "line": 15731
       },
       "statement": "Every copy of Exegra's runtime data that this specification declares (session model and claim results, scene, simulation run, browser preferences and camera memory, command-line outputs, generated documents, bundles, proof outputs and the production bundle's embedded specifications) states a freshness bound, its holder is related through declared relationships to the owner of every record it copies, and no shared copy holds principal data.",
       "status": "verified",
@@ -3444,10 +3635,10 @@
       "id": "session-starts-after-engine",
       "kind": "temporal",
       "method": "precedes",
-      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios app-start-and-open (24 steps). This is a check of these traces, not of all possible executions.",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios app-start-and-open (24 steps). This is a check of these traces, not of all possible executions. An occurrence counts as produced by the system when a transition fired or emitted it; a delivery from the scenario script does not, and an ordering between two scripted deliveries is not reported as verified.",
       "source": {
         "column": 5,
-        "line": 15334
+        "line": 15757
       },
       "statement": "At start-up the session is started only after the engine has loaded or failed to load.",
       "status": "verified",
@@ -3476,7 +3667,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios app-start-and-open (24 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15369
+        "line": 15792
       },
       "statement": "After start-up the opened project is saved and its base hash is the hash of the file on disk, so the first write is checked against what was read.",
       "status": "verified",
@@ -3506,7 +3697,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios production-read-only-edit (8 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15400
+        "line": 15823
       },
       "statement": "A production build never asks to write a project file, even after an edit.",
       "status": "verified",
@@ -3534,7 +3725,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios conflict-resolved-by-reload (27 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15431
+        "line": 15854
       },
       "statement": "After a conflict resolved by reloading, the session holds the text on disk, reports saved, and the other process's change was never overwritten.",
       "status": "verified",
@@ -3562,7 +3753,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios conflict-resolved-by-overwrite (35 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15460
+        "line": 15883
       },
       "statement": "After a conflict resolved by overwriting, the file on disk holds the session's text and the session reports saved.",
       "status": "verified",
@@ -3591,7 +3782,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios external-change-adopted (24 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15490
+        "line": 15913
       },
       "statement": "A change made on disk by another process while nothing is pending is adopted: the session ends holding the text on disk with that text as its base hash.",
       "status": "verified",
@@ -3620,7 +3811,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios external-change-adopted (24 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15521
+        "line": 15944
       },
       "statement": "Text adopted from disk is never written back by the session.",
       "status": "verified",
@@ -3647,7 +3838,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios own-write-notice-ignored (23 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15551
+        "line": 15974
       },
       "statement": "The notice of the session's own write never makes it reload the project.",
       "status": "verified",
@@ -3675,7 +3866,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios undo-restores-and-saves (29 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15582
+        "line": 16005
       },
       "statement": "After an edit and its undo, the model holds the original text, the file on disk holds it too and the session reports saved.",
       "status": "verified",
@@ -3704,7 +3895,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios undo-restores-and-saves (29 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15612
+        "line": 16035
       },
       "statement": "Whenever a step can be redone, the model holds the text from before the undone edit.",
       "status": "verified",
@@ -3731,7 +3922,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios undo-restores-and-saves (29 steps), layout-move-saved (20 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15640
+        "line": 16063
       },
       "statement": "In these runs every accepted write of spec.jsonc or layout.jsonc has its journal line.",
       "status": "verified",
@@ -3760,7 +3951,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios layout-move-saved (20 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15672
+        "line": 16095
       },
       "statement": "A dragged node is saved to layout.jsonc and spec.jsonc is not written.",
       "status": "verified",
@@ -3789,7 +3980,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios commit-reevaluates-claims (26 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15702
+        "line": 16125
       },
       "statement": "After a semantic commit the claim results are those of the committed model.",
       "status": "verified",
@@ -3817,7 +4008,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios export-after-save (28 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15731
+        "line": 16154
       },
       "statement": "An export made after an edit was saved holds the session's text.",
       "status": "verified",
@@ -3847,7 +4038,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios import-bundle (39 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15763
+        "line": 16186
       },
       "statement": "After an import into the open project's name, the session shows the imported text, which is what is on disk.",
       "status": "verified",
@@ -3877,7 +4068,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios import-unparseable-bundle (12 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15796
+        "line": 16219
       },
       "statement": "A bundle whose specification has syntax errors is never sent to the server.",
       "status": "verified",
@@ -3905,7 +4096,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios generate-from-panel (27 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15827
+        "line": 16250
       },
       "statement": "Documents generated from the Realisation panel are derived from the session's current model.",
       "status": "verified",
@@ -4007,7 +4198,7 @@
       "scope": "No model evaluation was performed. This rests on 9 evidence entities (ev-replay-recorded-stream-clean, ev-replay-wrong-order, ev-replay-unknown-event, ev-replay-missing-response, ev-replay-bound, ev-replay-payload, ev-replay-not-allowed, ev-replay-incremental, ev-live-browser), of which 9 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 15858
+        "line": 16281
       },
       "statement": "The events a running Exegra really produces (requests and answers of the persistence client with the development server's own events, change notices, engine-worker messages, commits, claim evaluations, simulator controls, preference and camera storage writes) are recorded with their requestId and a logical sequence number and replayed through the behaviors of the scenario live-session; every divergence from the self-model (an event the specification does not name, an event the model does not predict at that point, a predicted event no behavior accepts, a payload value that differs, a predicted event not seen within 200 recorded events or by the end of a closed stream) is reported as a failed check at its step and listed in the simulator panel's Live mode, and a real open, edit and save replays without one.",
       "status": "supported",
@@ -4036,7 +4227,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios simulation-panel-run (18 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15878
+        "line": 16301
       },
       "statement": "The step shown in the Simulation panel is always a recorded step of the trace (or none before the first), however often the user presses step.",
       "status": "verified",
@@ -4061,10 +4252,10 @@
       "id": "pulse-follows-step",
       "kind": "temporal",
       "method": "precedes",
-      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios simulation-panel-run (18 steps). This is a check of these traces, not of all possible executions.",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios simulation-panel-run (18 steps). This is a check of these traces, not of all possible executions. An occurrence counts as produced by the system when a transition fired or emitted it; a delivery from the scenario script does not, and an ordering between two scripted deliveries is not reported as verified.",
       "source": {
         "column": 5,
-        "line": 15907
+        "line": 16330
       },
       "statement": "The scene pulses only steps the session has shown.",
       "status": "verified",
@@ -4092,7 +4283,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios simulation-reload-cancels-run (11 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15941
+        "line": 16364
       },
       "statement": "The Simulation panel only ever shows the trace of the latest load.",
       "status": "verified",
@@ -4121,7 +4312,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios preferences-remembered (9 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 15974
+        "line": 16397
       },
       "statement": "After a reload the session shows the selection and the view the user left.",
       "status": "verified",
@@ -4150,7 +4341,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios camera-remembered (12 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 16005
+        "line": 16428
       },
       "statement": "Coming back to a view restores the camera the user left it with.",
       "status": "verified",
@@ -4179,7 +4370,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios cli-apply (10 steps), cli-apply-partial-write (11 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 16035
+        "line": 16458
       },
       "statement": "Whenever exegra apply reports success, both files on disk hold the texts the transaction produced.",
       "status": "verified",
@@ -4209,7 +4400,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios cli-apply-partial-write (11 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 16067
+        "line": 16490
       },
       "statement": "When the layout write of exegra apply conflicts, the specification has already been written and the failure says so.",
       "status": "verified",
@@ -4235,10 +4426,10 @@
       "id": "verify-records-before-reporting",
       "kind": "temporal",
       "method": "precedes",
-      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios cli-verify-with-open-session (37 steps). This is a check of these traces, not of all possible executions.",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios cli-verify-with-open-session (37 steps). This is a check of these traces, not of all possible executions. An occurrence counts as produced by the system when a transition fired or emitted it; a delivery from the scenario script does not, and an ordering between two scripted deliveries is not reported as verified.",
       "source": {
         "column": 5,
-        "line": 16098
+        "line": 16521
       },
       "statement": "exegra verify prints its envelope only after the recorded results are on disk.",
       "status": "verified",
@@ -4267,7 +4458,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios cli-verify-with-open-session (37 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 16133
+        "line": 16556
       },
       "statement": "An open session adopts the results exegra verify records and re-evaluates its claims with them.",
       "status": "verified",
@@ -4296,7 +4487,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios cli-trace-written (7 steps), cli-trace-refused (7 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 16164
+        "line": 16587
       },
       "statement": "exegra trace writes a trace file only for a run the engine completed.",
       "status": "verified",
@@ -4326,7 +4517,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios prove-accepted (9 steps), prove-lean-rejects (10 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 16196
+        "line": 16619
       },
       "statement": "exegra prove reports a claim result only when Lean accepted its theorem.",
       "status": "verified",
@@ -4356,7 +4547,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios markdown-import (5 steps), markdown-import-coverage-fails (4 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 16228
+        "line": 16651
       },
       "statement": "The Markdown importer writes a specification only when its coverage check passed.",
       "status": "verified",
@@ -4385,7 +4576,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios engine-conformance-agrees (5 steps), engine-conformance-diverges (7 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 16259
+        "line": 16682
       },
       "statement": "The conformance runner reports agreement only when no golden trace differed.",
       "status": "verified",
@@ -4426,7 +4617,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-runtime-data-complete), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16290
+        "line": 16713
       },
       "statement": "Every durable store Exegra's code writes (the project files and journal of the workspace service, evidence/results.json, generated/, the localStorage keys exegra.session and exegra.layout, the sessionStorage keys exegra.camera.<project>.<view>, the bundle download, and the files the command line and the tools write) is named by a record or a copy of this specification.",
       "status": "supported",
@@ -4468,7 +4659,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-verify-reuses-fresh-outcomes), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16314
+        "line": 16737
       },
       "statement": "A verify run takes the outcome of a test evidence entry from a recorded test run only when that run was complete, the tree did not change while it ran, and its tree stamp equals the stamp of the tree verify runs on; a reference matching no recorded test is run, never assumed to pass.",
       "status": "supported",
@@ -4503,7 +4694,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-verify-skip-keeps-outcome), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16330
+        "line": 16753
       },
       "statement": "A verify run that skips a test evidence entry keeps the outcome recorded for that entry before, and records no outcome for it where none was recorded.",
       "status": "supported",
@@ -4538,7 +4729,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-journal-append-failure), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16346
+        "line": 16769
       },
       "statement": "When a spec or layout write replaces its file but the journal line cannot be appended, the write result says the journal line was not written, the CLI apply result lists it in journalWarnings, and the session reports it as an error; the replaced file is not restored.",
       "status": "supported",
@@ -4569,7 +4760,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-changes-pairing-by-revision), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16363
+        "line": 16786
       },
       "statement": "The changes panel pairs each history entry with the log entry of its own commit, matched by revision, so the pairing stays correct after the session log has dropped its oldest entries.",
       "status": "supported",
@@ -4618,7 +4809,7 @@
       "scope": "No model evaluation was performed. This rests on 2 evidence entities (ev-traffic-bounded, ev-traffic-live-seq), of which 2 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16376
+        "line": 16799
       },
       "statement": "The traffic recorder keeps at most 5000 events, numbers them with strictly increasing logical sequence numbers, copies each payload when it is recorded, and hands the replay only the sequence number, the event id and the payload: the wall-clock time it keeps for display never reaches the core.",
       "status": "supported",
@@ -4682,7 +4873,7 @@
       "scope": "No model evaluation was performed. This rests on 4 evidence entities (ev-traffic-server-events, ev-traffic-engine-runner, ev-traffic-sha256, ev-traffic-browser-producers), of which 4 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16393
+        "line": 16816
       },
       "statement": "The producers record the events of this specification where its event descriptions say: the development server returns, for each request that carries a request id, its own events (workspace events and the answer) stamped with that id in the order it produced them, and infers an external edit (marked inferred) for a change notice whose hash it did not write; the engine runner records each message to and from the worker; texts are named by the same sha-256 the workspace computes.",
       "status": "supported",
@@ -4716,7 +4907,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-evidence-ref-rule), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16414
+        "line": 16837
       },
       "statement": "A test evidence reference that exegra verify would refuse as unsafe is reported by validate as an error (evidence.ref-unsafe) with its evidence id and position, so an author learns of it before verify runs. Validate and verify use the same rule.",
       "status": "supported",
@@ -4760,10 +4951,10 @@
       "id": "engine-run-terminates-proved",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-18T10:22:02.356Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-18T18:07:58.305Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
-        "line": 16427
+        "line": 16850
       },
       "statement": "Every run of an engine input that the engine accepts stops: its outcome is never running, and it has at most stepBound(stepLimit) steps.",
       "status": "proved",
@@ -4807,10 +4998,10 @@
       "id": "lean-engine-is-exegra-lean",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-18T10:22:02.356Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-18T18:07:58.305Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
-        "line": 16452
+        "line": 16875
       },
       "statement": "The engine the JavaScript shell calls (engine.run at the Lean call boundary) is the function the native exegra-lean runs: runAny is Json.parse followed by Exegra.Api.call \"engine.run\".",
       "status": "proved",
@@ -4834,10 +5025,10 @@
       "id": "lean-registry-names-unique",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-18T10:22:02.356Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-18T18:07:58.305Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
-        "line": 16478
+        "line": 16901
       },
       "statement": "No two functions registered at the Lean call boundary share a name, so a name selects exactly one function.",
       "status": "proved",
@@ -4875,13 +5066,92 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-lean-boundary), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16497
+        "line": 16920
       },
       "statement": "Every call through the Lean call boundary returns a reply: an unknown function, a malformed request and a refusal come back as an error value, and the boundary lists its registered functions.",
       "status": "supported",
       "statusLabel": "Supported by external evidence",
       "subjects": [
         "lean-call-boundary"
+      ]
+    },
+    {
+      "assumptions": [],
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [
+        {
+          "id": "ev-concordance-pass",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/concordance.test.js#a Concordance pass makes a requirement supported",
+          "supports": true
+        },
+        {
+          "id": "ev-concordance-fail",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/concordance.test.js#a Concordance fail makes a requirement violated",
+          "supports": true
+        },
+        {
+          "id": "ev-concordance-absent",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/concordance.test.js#a claim without a Concordance entry stays not evaluated",
+          "supports": true
+        },
+        {
+          "id": "ev-concordance-diagnostics",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/concordance.test.js#a Concordance file for another tool or specification changes nothing",
+          "supports": true
+        },
+        {
+          "id": "ev-concordance-unknown-claim",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/concordance.test.js#an unknown claim id is a warning and the other entries still apply",
+          "supports": true
+        },
+        {
+          "id": "ev-concordance-unconfigured",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/concordance.test.js#a project without concordanceResults is unchanged",
+          "supports": true
+        },
+        {
+          "id": "ev-concordance-directory",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/concordance.test.js#a results path that is a directory is a warning and not a load failure",
+          "supports": true
+        },
+        {
+          "id": "ev-concordance-watched",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/concordance.test.js#watching a project reports a change to its Concordance results file as a change of the recorded results",
+          "supports": true
+        }
+      ],
+      "explanation": "Exegra holds a recorded result of executing ev-concordance-pass, ev-concordance-fail, ev-concordance-absent, ev-concordance-diagnostics, ev-concordance-unknown-claim, ev-concordance-unconfigured, ev-concordance-directory and ev-concordance-watched: pass.",
+      "id": "concordance-results-are-evidence",
+      "kind": "structural",
+      "method": "external-evidence",
+      "scope": "No model evaluation was performed. This rests on 8 evidence entities (ev-concordance-pass, ev-concordance-fail, ev-concordance-absent, ev-concordance-diagnostics, ev-concordance-unknown-claim, ev-concordance-unconfigured, ev-concordance-directory, ev-concordance-watched), of which 8 have a recorded execution result; the rest is author-entered.",
+      "source": {
+        "column": 5,
+        "line": 16936
+      },
+      "statement": "A linked project's Concordance results (concordanceResults in project.jsonc) become derived test evidence of their claims: a pass makes a requirement supported and never verified, a fail makes it violated, a claim without an entry stays not evaluated, and a results file for another tool or specification, or an entry for an unknown claim, changes no status. A results file that names a specSha256 (the sha-256 of the specification text it was computed from) is not applied when that differs from the current text; one that names none is applied with its revision recorded as unknown, and its explanation says so.",
+      "status": "supported",
+      "statusLabel": "Supported by external evidence",
+      "subjects": [
+        "claim-evaluator",
+        "workspace-service"
       ]
     },
     {
@@ -4909,7 +5179,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-lean-theorem-method), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16513
+        "line": 16950
       },
       "statement": "A lean-theorem claim is proved only when Lean reports a kernel-checked theorem that depends on no axiom beyond propext, Classical.choice and Quot.sound and whose statement mentions every named implementation constant; sorry, native_decide, an axiom of its own and an off-topic statement are refused.",
       "status": "supported",
@@ -4928,41 +5198,31 @@
       ],
       "counterexample": {
         "entities": [
-          "parser",
-          "validator",
           "expression-language",
-          "model-hash",
           "queries",
           "transactions",
           "claim-evaluator",
-          "simulation-engine",
           "simulation-contract",
           "fault-model",
-          "proof-export",
           "contract-conformance",
           "data-model",
-          "resource-model",
           "workload-model",
-          "performance-metrics",
-          "metric-claims",
-          "self-model-replay",
-          "integrity-rules",
-          "reader-pages"
+          "metric-claims"
         ],
-        "summary": "Not yet lean: parser, validator, expression-language, model-hash, queries, transactions, claim-evaluator, simulation-engine, simulation-contract, fault-model, proof-export, contract-conformance, data-model, resource-model, workload-model, performance-metrics, metric-claims, self-model-replay, integrity-rules, reader-pages."
+        "summary": "Not yet lean: expression-language, queries, transactions, claim-evaluator, simulation-contract, fault-model, contract-conformance, data-model, workload-model, metric-claims."
       },
       "evaluator": "exegra.structural/0.1",
       "evidence": [],
-      "explanation": "3 of 23 implemented components are lean; 20 are not yet (js: parser, validator, expression-language, model-hash, queries, transactions, claim-evaluator, simulation-engine, simulation-contract, fault-model, contract-conformance, data-model, metric-claims, self-model-replay, integrity-rules, reader-pages; mixed: proof-export, resource-model, workload-model, performance-metrics). Porting the rest is planned (WG-4785).",
+      "explanation": "4 of 14 implemented components are lean; 10 are not yet (js: expression-language, queries, transactions, claim-evaluator, simulation-contract, fault-model, contract-conformance, data-model, metric-claims; mixed: workload-model). Porting the rest is planned (WG-4785).",
       "id": "core-logic-in-lean",
       "kind": "structural",
       "method": "implementation-language",
-      "scope": "Checked the declared implementation.language of 23 implemented components at this model revision, leaving out 3 components. The declaration is not compared with the files (the assumption that declarations match the code).",
+      "scope": "Checked the declared implementation.language of 14 implemented components at this model revision. The declaration is not compared with the files (the assumption that declarations match the code).",
       "source": {
         "column": 5,
-        "line": 16529
+        "line": 16966
       },
-      "statement": "Every implemented component of the semantic core is implemented in Lean, so the claims about the core are theorems about the code that runs and the JavaScript shell only does I/O.",
+      "statement": "Every implemented component of the verified kernel (tag verdict-kernel: the code that decides whether a claim holds, namely model derivation, the semantic hash, engine-input derivation, the engine, the explorer and temporal checker, claim verdicts and their helpers, and transactions) is implemented in Lean, so the claims about the kernel are theorems about the code that runs. Everything else (layout, projections, scene, generators, UI, live replay, request-log rendering, command-line arguments, workspace I/O, the JSONC text layer) is JavaScript outside the verdict path.",
       "status": "violated",
       "statusLabel": "Violated",
       "subjects": [
@@ -4998,7 +5258,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-lean-core-browser), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16554
+        "line": 16986
       },
       "statement": "The Lean core, compiled to WebAssembly (wasm64), runs in the application page and reproduces golden traces exactly.",
       "status": "supported",
@@ -5042,10 +5302,10 @@
       "id": "engine-run-refines-definition",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-18T10:22:02.356Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-18T18:07:58.305Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
-        "line": 16571
+        "line": 17003
       },
       "statement": "The engine the application runs (Exegra.Impl.runAnyValue, registered as engine.run and run by exegra-lean) returns exactly what the definition of the semantics (Exegra.runAnyValue) returns, on every parsed engine input of format 1 and format 2.",
       "status": "proved",
@@ -5090,10 +5350,10 @@
       "id": "engine-call-computes-definition",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-18T10:22:02.356Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-18T18:07:58.305Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
-        "line": 16598
+        "line": 17030
       },
       "statement": "A call of engine.run at the Lean call boundary computes the definition of the semantics, Exegra.runAnyValue, on its parsed arguments.",
       "status": "proved",
@@ -5121,10 +5381,10 @@
       "id": "fast-json-writer-is-json-write",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-18T10:22:02.356Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-18T18:07:58.305Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
-        "line": 16624
+        "line": 17056
       },
       "statement": "The in-place JSON writer the engine writes traces with (Exegra.Impl.JsonOut.write') gives the text of the definition Exegra.Json.write for every value.",
       "status": "proved",
@@ -5169,7 +5429,7 @@
       "scope": "No model evaluation was performed. This rests on 2 evidence entities (ev-register-import-coverage, ev-register-import-lost-cell), of which 2 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16645
+        "line": 17077
       },
       "statement": "The register importer writes nothing unless the Markdown file rebuilds line for line from the generated sections with every entity marker expanded to the lines it came from, and every imported table row rendered from its properties gives the cells of its source row.",
       "status": "supported",
@@ -5207,7 +5467,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-register-import-sources), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16661
+        "line": 17093
       },
       "statement": "Every document, section, table and row entity the register importer writes carries a source property naming the file and line it was imported from, and every row whose rule has an identifier column carries that identifier as written in ref.",
       "status": "supported",
@@ -5245,7 +5505,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-register-import-drafts), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16677
+        "line": 17109
       },
       "statement": "Every entity the register importer takes from a draft fragment carries origin \"draft\" and a source in that fragment, the system notes name the fragment, and the Markdown rendered from the sections is the same with or without drafts.",
       "status": "supported",
@@ -5283,7 +5543,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-register-import-authority), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16693
+        "line": 17125
       },
       "statement": "When the import map says the JSONC is the authority, the register importer writes nothing to the project's specification file, and --render produces the Markdown from the specification file alone.",
       "status": "supported",
@@ -5321,7 +5581,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-external-traceability), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16709
+        "line": 17141
       },
       "statement": "When project.jsonc declares realisation roots, traceability checks each module written <alias>:<path> against that root's directory, reports a module naming an undeclared alias as missing, and reports unclaimed files only for roots that declare include globs (minus exclude globs); with no roots declared, the traceability result is the same as without the feature.",
       "status": "supported",
@@ -5360,7 +5620,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-external-junit), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16725
+        "line": 17157
       },
       "statement": "External test evidence is recorded as fail only when a matched JUnit test case reports a failure whose text matches none of the root's environmental patterns; a test absent from the report, skipped, reported as an error, or failing for an environmental reason is recorded as not-run, which `verify` never counts as a failure and the claim evaluator treats as having no result.",
       "status": "supported",
@@ -5399,7 +5659,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-integrity-core), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16741
+        "line": 17173
       },
       "statement": "Integrity rules are part of the specification and are evaluated on every model: each holds with the number of instances checked, or is violated with its counterexamples (bindings, entity ids, lines); an invalid rule is a validation error, a rule over nothing is reported vacuous, and every rule of the fixture can be made to fail by a stated mutation.",
       "status": "supported",
@@ -5438,7 +5698,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-integrity-ratchet), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16758
+        "line": 17190
       },
       "statement": "A transaction that adds a violation of an integrity rule of severity error is refused with the counterexamples and changes nothing; violations the project already had do not block unrelated edits, a fix is accepted, and violations of warning rules are only reported.",
       "status": "supported",
@@ -5477,7 +5737,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-integrity-lean), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16775
+        "line": 17207
       },
       "statement": "exegra prove-integrity establishes a rule that holds by a kernel-checked proof by reflection (eval_iff, decide +kernel) and a violated rule by a kernel-checked refutation from each concrete witness (refutes_sound), with Lean's standard axioms only, and reports a rule incomplete when the Lean checker and the JavaScript evaluator disagree.",
       "status": "supported",
@@ -5544,7 +5804,7 @@
       "scope": "No model evaluation was performed. This rests on 5 evidence entities (ev-reader-counts, ev-reader-table, ev-reader-list, ev-reader-sections, ev-reader-default), of which 5 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16792
+        "line": 17224
       },
       "statement": "A reader page is derived from the model and its view alone: every row, count and section it shows is an entity of the model selected by the view's kind and conditions, grouped, classified and faceted by the view's rules, and a view without blocks reads the system, an index of its kinds and its first document.",
       "status": "supported",
@@ -5583,7 +5843,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-reader-unknown-field), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16808
+        "line": 17240
       },
       "statement": "A reader block carrying a field the meta-model does not define is refused with an error, so a page cannot silently ignore part of its definition.",
       "status": "supported",
@@ -5634,7 +5894,7 @@
       "scope": "No model evaluation was performed. This rests on 2 evidence entities (ev-reader-browser-select, ev-reader-browser-edit), of which 2 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 16825
+        "line": 17257
       },
       "statement": "The reader surface replaces the scene only while the current view uses the reader projection, a link on it selects its entity through the session, and the page follows a committed edit.",
       "status": "supported",
@@ -5644,16 +5904,438 @@
         "session",
         "inspector"
       ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "trusted-lean-kernel",
+          "statement": "The Lean 4 kernel of the toolchain formal/lean-toolchain pins (v4.35.0) accepts only well-typed proof terms."
+        },
+        {
+          "id": "trusted-lean-compiler-runtime",
+          "statement": "The Lean compiler translates the Lean core faithfully to C, and the Lean v4.35.0 C/C++ runtime, with the two-hunk patch formal/wasm/patches/lean-v4.35.0-runtime-wasm.patch applied, executes that C as Lean defines it."
+        },
+        {
+          "id": "trusted-emscripten-toolchain",
+          "statement": "Emscripten 7.0.0 (clang/LLVM, wasm-ld, binaryen, musl libc, libc++ and the generated JS loader) compiles and links the C of the Lean core and the runtime to WebAssembly (wasm64, Memory64) without changing its meaning."
+        },
+        {
+          "id": "trusted-libuv",
+          "statement": "libuv v1.48.0, linked into the WebAssembly module because the Lean runtime references it, does not affect the result of a call: the core reaches none of its I/O."
+        },
+        {
+          "id": "trusted-js-glue",
+          "statement": "The glue between JavaScript and the Lean core (src/core/lean.js, formal/wasm/glue.c, the emscripten-generated exegra-lean.mjs) passes request and reply bytes unchanged and reports failures as errors."
+        },
+        {
+          "id": "trusted-wasm-engine",
+          "statement": "The WebAssembly engine of the host (V8 in Node and Chrome, SpiderMonkey in Firefox) executes the module according to the WebAssembly specification, Memory64 and exception handling included."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "lean.kernel/4.35.0",
+      "evidence": [],
+      "explanation": "\"Exegra.Model.Model.semanticHash_presentation\" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Model.Model.semanticHash.",
+      "id": "semantic-hash-ignores-presentation",
+      "kind": "invariant",
+      "method": "lean-theorem",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-18T18:07:58.305Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "source": {
+        "column": 5,
+        "line": 17275
+      },
+      "statement": "The semantic hash of a model depends only on its schema version, its vocabulary and its top-level declarations (id, kind, data) up to order: source positions, JSON paths, nested declarations' records, references, expressions, the effective meta-model and the order of declarations do not change it.",
+      "status": "proved",
+      "statusLabel": "Proved in Lean: a kernel-checked theorem about the code",
+      "subjects": [
+        "model-hash",
+        "model-derivation"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "trusted-lean-kernel",
+          "statement": "The Lean 4 kernel of the toolchain formal/lean-toolchain pins (v4.35.0) accepts only well-typed proof terms."
+        },
+        {
+          "id": "trusted-lean-compiler-runtime",
+          "statement": "The Lean compiler translates the Lean core faithfully to C, and the Lean v4.35.0 C/C++ runtime, with the two-hunk patch formal/wasm/patches/lean-v4.35.0-runtime-wasm.patch applied, executes that C as Lean defines it."
+        },
+        {
+          "id": "trusted-emscripten-toolchain",
+          "statement": "Emscripten 7.0.0 (clang/LLVM, wasm-ld, binaryen, musl libc, libc++ and the generated JS loader) compiles and links the C of the Lean core and the runtime to WebAssembly (wasm64, Memory64) without changing its meaning."
+        },
+        {
+          "id": "trusted-libuv",
+          "statement": "libuv v1.48.0, linked into the WebAssembly module because the Lean runtime references it, does not affect the result of a call: the core reaches none of its I/O."
+        },
+        {
+          "id": "trusted-js-glue",
+          "statement": "The glue between JavaScript and the Lean core (src/core/lean.js, formal/wasm/glue.c, the emscripten-generated exegra-lean.mjs) passes request and reply bytes unchanged and reports failures as errors."
+        },
+        {
+          "id": "trusted-wasm-engine",
+          "statement": "The WebAssembly engine of the host (V8 in Node and Chrome, SpiderMonkey in Firefox) executes the module according to the WebAssembly specification, Memory64 and exception handling included."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "lean.kernel/4.35.0",
+      "evidence": [],
+      "explanation": "\"Exegra.Hash.semanticHash_key_order\" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Hash.semanticHash.",
+      "id": "semantic-hash-ignores-key-order",
+      "kind": "invariant",
+      "method": "lean-theorem",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-18T18:07:58.305Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "source": {
+        "column": 5,
+        "line": 17300
+      },
+      "statement": "Reordering the members of objects, at every depth, in the vocabulary and in the data of every declaration, does not change the semantic hash (for values with distinct keys in every object).",
+      "status": "proved",
+      "statusLabel": "Proved in Lean: a kernel-checked theorem about the code",
+      "subjects": [
+        "model-hash"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "trusted-lean-kernel",
+          "statement": "The Lean 4 kernel of the toolchain formal/lean-toolchain pins (v4.35.0) accepts only well-typed proof terms."
+        },
+        {
+          "id": "trusted-lean-compiler-runtime",
+          "statement": "The Lean compiler translates the Lean core faithfully to C, and the Lean v4.35.0 C/C++ runtime, with the two-hunk patch formal/wasm/patches/lean-v4.35.0-runtime-wasm.patch applied, executes that C as Lean defines it."
+        },
+        {
+          "id": "trusted-emscripten-toolchain",
+          "statement": "Emscripten 7.0.0 (clang/LLVM, wasm-ld, binaryen, musl libc, libc++ and the generated JS loader) compiles and links the C of the Lean core and the runtime to WebAssembly (wasm64, Memory64) without changing its meaning."
+        },
+        {
+          "id": "trusted-libuv",
+          "statement": "libuv v1.48.0, linked into the WebAssembly module because the Lean runtime references it, does not affect the result of a call: the core reaches none of its I/O."
+        },
+        {
+          "id": "trusted-js-glue",
+          "statement": "The glue between JavaScript and the Lean core (src/core/lean.js, formal/wasm/glue.c, the emscripten-generated exegra-lean.mjs) passes request and reply bytes unchanged and reports failures as errors."
+        },
+        {
+          "id": "trusted-wasm-engine",
+          "statement": "The WebAssembly engine of the host (V8 in Node and Chrome, SpiderMonkey in Firefox) executes the module according to the WebAssembly specification, Memory64 and exception handling included."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "lean.kernel/4.35.0",
+      "evidence": [],
+      "explanation": "\"Exegra.Hash.semanticHash'_eq\" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Hash.semanticHash', Exegra.Hash.semanticHash.",
+      "id": "semantic-hash-runs-definition",
+      "kind": "invariant",
+      "method": "lean-theorem",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-18T18:07:58.305Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "source": {
+        "column": 5,
+        "line": 17324
+      },
+      "statement": "The semantic hash that runs (Exegra.Hash.semanticHash': keys converted once for sorting, the in-place JSON writer) equals the definition Exegra.Hash.semanticHash on every input.",
+      "status": "proved",
+      "statusLabel": "Proved in Lean: a kernel-checked theorem about the code",
+      "subjects": [
+        "model-hash"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "trusted-lean-kernel",
+          "statement": "The Lean 4 kernel of the toolchain formal/lean-toolchain pins (v4.35.0) accepts only well-typed proof terms."
+        },
+        {
+          "id": "trusted-lean-compiler-runtime",
+          "statement": "The Lean compiler translates the Lean core faithfully to C, and the Lean v4.35.0 C/C++ runtime, with the two-hunk patch formal/wasm/patches/lean-v4.35.0-runtime-wasm.patch applied, executes that C as Lean defines it."
+        },
+        {
+          "id": "trusted-emscripten-toolchain",
+          "statement": "Emscripten 7.0.0 (clang/LLVM, wasm-ld, binaryen, musl libc, libc++ and the generated JS loader) compiles and links the C of the Lean core and the runtime to WebAssembly (wasm64, Memory64) without changing its meaning."
+        },
+        {
+          "id": "trusted-libuv",
+          "statement": "libuv v1.48.0, linked into the WebAssembly module because the Lean runtime references it, does not affect the result of a call: the core reaches none of its I/O."
+        },
+        {
+          "id": "trusted-js-glue",
+          "statement": "The glue between JavaScript and the Lean core (src/core/lean.js, formal/wasm/glue.c, the emscripten-generated exegra-lean.mjs) passes request and reply bytes unchanged and reports failures as errors."
+        },
+        {
+          "id": "trusted-wasm-engine",
+          "statement": "The WebAssembly engine of the host (V8 in Node and Chrome, SpiderMonkey in Firefox) executes the module according to the WebAssembly specification, Memory64 and exception handling included."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "lean.kernel/4.35.0",
+      "evidence": [],
+      "explanation": "\"Exegra.Api.call_hash_semantic\" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Api.call, Exegra.Hash.semanticHash.",
+      "id": "semantic-hash-call-computes-definition",
+      "kind": "structural",
+      "method": "lean-theorem",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-18T18:07:58.305Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "source": {
+        "column": 5,
+        "line": 17349
+      },
+      "statement": "A call of hash.semantic at the Lean call boundary returns the definition of the semantic hash of the declarations it is given.",
+      "status": "proved",
+      "statusLabel": "Proved in Lean: a kernel-checked theorem about the code",
+      "subjects": [
+        "lean-call-boundary",
+        "model-hash"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "trusted-lean-kernel",
+          "statement": "The Lean 4 kernel of the toolchain formal/lean-toolchain pins (v4.35.0) accepts only well-typed proof terms."
+        },
+        {
+          "id": "trusted-lean-compiler-runtime",
+          "statement": "The Lean compiler translates the Lean core faithfully to C, and the Lean v4.35.0 C/C++ runtime, with the two-hunk patch formal/wasm/patches/lean-v4.35.0-runtime-wasm.patch applied, executes that C as Lean defines it."
+        },
+        {
+          "id": "trusted-emscripten-toolchain",
+          "statement": "Emscripten 7.0.0 (clang/LLVM, wasm-ld, binaryen, musl libc, libc++ and the generated JS loader) compiles and links the C of the Lean core and the runtime to WebAssembly (wasm64, Memory64) without changing its meaning."
+        },
+        {
+          "id": "trusted-libuv",
+          "statement": "libuv v1.48.0, linked into the WebAssembly module because the Lean runtime references it, does not affect the result of a call: the core reaches none of its I/O."
+        },
+        {
+          "id": "trusted-js-glue",
+          "statement": "The glue between JavaScript and the Lean core (src/core/lean.js, formal/wasm/glue.c, the emscripten-generated exegra-lean.mjs) passes request and reply bytes unchanged and reports failures as errors."
+        },
+        {
+          "id": "trusted-wasm-engine",
+          "statement": "The WebAssembly engine of the host (V8 in Node and Chrome, SpiderMonkey in Firefox) executes the module according to the WebAssembly specification, Memory64 and exception handling included."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "lean.kernel/4.35.0",
+      "evidence": [],
+      "explanation": "\"Exegra.Model.derive_refs_resolve\" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Model.derive.",
+      "id": "model-references-resolve",
+      "kind": "invariant",
+      "method": "lean-theorem",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-18T18:07:58.305Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "source": {
+        "column": 5,
+        "line": 17375
+      },
+      "statement": "In a derived model whose diagnostics contain no reference diagnostic (ref.unresolved, ref.kind), every reference names an entity of the model whose kind the reference allows.",
+      "status": "proved",
+      "statusLabel": "Proved in Lean: a kernel-checked theorem about the code",
+      "subjects": [
+        "model-derivation"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "trusted-lean-kernel",
+          "statement": "The Lean 4 kernel of the toolchain formal/lean-toolchain pins (v4.35.0) accepts only well-typed proof terms."
+        },
+        {
+          "id": "trusted-lean-compiler-runtime",
+          "statement": "The Lean compiler translates the Lean core faithfully to C, and the Lean v4.35.0 C/C++ runtime, with the two-hunk patch formal/wasm/patches/lean-v4.35.0-runtime-wasm.patch applied, executes that C as Lean defines it."
+        },
+        {
+          "id": "trusted-emscripten-toolchain",
+          "statement": "Emscripten 7.0.0 (clang/LLVM, wasm-ld, binaryen, musl libc, libc++ and the generated JS loader) compiles and links the C of the Lean core and the runtime to WebAssembly (wasm64, Memory64) without changing its meaning."
+        },
+        {
+          "id": "trusted-libuv",
+          "statement": "libuv v1.48.0, linked into the WebAssembly module because the Lean runtime references it, does not affect the result of a call: the core reaches none of its I/O."
+        },
+        {
+          "id": "trusted-js-glue",
+          "statement": "The glue between JavaScript and the Lean core (src/core/lean.js, formal/wasm/glue.c, the emscripten-generated exegra-lean.mjs) passes request and reply bytes unchanged and reports failures as errors."
+        },
+        {
+          "id": "trusted-wasm-engine",
+          "statement": "The WebAssembly engine of the host (V8 in Node and Chrome, SpiderMonkey in Firefox) executes the module according to the WebAssembly specification, Memory64 and exception handling included."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "lean.kernel/4.35.0",
+      "evidence": [],
+      "explanation": "\"Exegra.Api.call_model_derive_total\" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Api.call.",
+      "id": "model-derivation-total",
+      "kind": "structural",
+      "method": "lean-theorem",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-18T18:07:58.305Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "source": {
+        "column": 5,
+        "line": 17399
+      },
+      "statement": "Model derivation at the Lean call boundary (model.derive) answers every argument value with a result, never with an error, and always returns.",
+      "status": "proved",
+      "statusLabel": "Proved in Lean: a kernel-checked theorem about the code",
+      "subjects": [
+        "model-derivation",
+        "lean-call-boundary"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "trusted-lean-kernel",
+          "statement": "The Lean 4 kernel of the toolchain formal/lean-toolchain pins (v4.35.0) accepts only well-typed proof terms."
+        },
+        {
+          "id": "trusted-lean-compiler-runtime",
+          "statement": "The Lean compiler translates the Lean core faithfully to C, and the Lean v4.35.0 C/C++ runtime, with the two-hunk patch formal/wasm/patches/lean-v4.35.0-runtime-wasm.patch applied, executes that C as Lean defines it."
+        },
+        {
+          "id": "trusted-emscripten-toolchain",
+          "statement": "Emscripten 7.0.0 (clang/LLVM, wasm-ld, binaryen, musl libc, libc++ and the generated JS loader) compiles and links the C of the Lean core and the runtime to WebAssembly (wasm64, Memory64) without changing its meaning."
+        },
+        {
+          "id": "trusted-libuv",
+          "statement": "libuv v1.48.0, linked into the WebAssembly module because the Lean runtime references it, does not affect the result of a call: the core reaches none of its I/O."
+        },
+        {
+          "id": "trusted-js-glue",
+          "statement": "The glue between JavaScript and the Lean core (src/core/lean.js, formal/wasm/glue.c, the emscripten-generated exegra-lean.mjs) passes request and reply bytes unchanged and reports failures as errors."
+        },
+        {
+          "id": "trusted-wasm-engine",
+          "statement": "The WebAssembly engine of the host (V8 in Node and Chrome, SpiderMonkey in Firefox) executes the module according to the WebAssembly specification, Memory64 and exception handling included."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [
+        {
+          "id": "ev-model-kernel-corpus",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/model-kernel.test.js#the specifications and fixtures the tests read derive identically",
+          "supports": true
+        },
+        {
+          "id": "ev-model-kernel-cases",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/model-kernel.test.js#every specification text the core tests parse derives identically",
+          "supports": true
+        },
+        {
+          "id": "ev-model-kernel-edges",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/model-kernel.test.js#edge cases derive identically",
+          "supports": true
+        }
+      ],
+      "explanation": "Exegra holds a recorded result of executing ev-model-kernel-corpus, ev-model-kernel-cases and ev-model-kernel-edges: pass.",
+      "id": "model-derivation-matches-javascript",
+      "kind": "structural",
+      "method": "external-evidence",
+      "scope": "No model evaluation was performed. This rests on 3 evidence entities (ev-model-kernel-corpus, ev-model-kernel-cases, ev-model-kernel-edges), of which 3 have a recorded execution result; the rest is author-entered.",
+      "source": {
+        "column": 5,
+        "line": 17424
+      },
+      "statement": "The Lean model derivation and semantic hash give the diagnostics, model and hash of the JavaScript parser they replaced on every specification the tests read (specs/exegra, specs/benchmark, tests/fixtures) and on every specification text the core tests parse, the invalid ones included.",
+      "status": "supported",
+      "statusLabel": "Supported by external evidence",
+      "subjects": [
+        "model-derivation",
+        "model-hash",
+        "parser"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "tests-exercise-shipped-modules",
+          "statement": "The core tests import and run the same modules under src/core and tools that the application and the agent command line run."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [],
+      "explanation": "Claim \"app-and-cli-run-lean-engine-only\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "id": "app-and-cli-run-lean-engine-only",
+      "kind": "invariant",
+      "method": "external-evidence",
+      "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
+      "source": {
+        "column": 5,
+        "line": 17446
+      },
+      "statement": "The application and the command line run scenarios on the Lean engine only: no module of src/app, src/ui or cli/ loads the Rust engine or runs a scenario any other way.",
+      "status": "not-evaluated",
+      "statusLabel": "Not evaluated",
+      "subjects": [
+        "simulation-engine",
+        "session",
+        "agent-cli"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "browser-tests-run-real-application",
+          "statement": "The browser tests drive the real application served by the Vite development server, against scratch copies of this specification and of the multiplayer test fixture (one pair per Playwright worker) (and, read-only, a project linked locally), in the locally installed Chrome."
+        },
+        {
+          "id": "recorded-results-reflect-current-code",
+          "statement": "A recorded result of a test in evidence/results.json was produced by the code and the specification as they are now."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [
+        {
+          "id": "ev-browser-phone-every-function",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/browser/mobile.spec.js#every function is reachable by touch on a phone",
+          "supports": true
+        }
+      ],
+      "explanation": "Exegra holds a recorded result of executing ev-browser-phone-every-function: pass.",
+      "id": "ui-every-function-on-phone",
+      "kind": "invariant",
+      "method": "external-evidence",
+      "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-browser-phone-every-function), of which 1 has a recorded execution result; the rest is author-entered.",
+      "source": {
+        "column": 5,
+        "line": 17463
+      },
+      "statement": "Every function the interface offers on a desktop (switching project and view, search, selecting and inspecting, editing, creating, connecting, deleting, undo and redo, simulation, verification, source, realisation, diagnostics, export and import) is reachable by touch at a 390 by 844 viewport.",
+      "status": "supported",
+      "statusLabel": "Supported by external evidence",
+      "subjects": [
+        "responsive-layout",
+        "toolbar",
+        "explorer",
+        "inspector",
+        "simulator-panel",
+        "verification-panel",
+        "source-editor",
+        "dialogs"
+      ]
     }
   ],
   "format": "exegra-claims-report",
-  "semanticHash": "175a7a39ce468b",
+  "semanticHash": "0ae7b19b3eac74",
   "summary": {
     "inconclusive": 3,
-    "not-evaluated": 42,
-    "proved": 6,
-    "supported": 53,
-    "total": 155,
+    "not-evaluated": 43,
+    "proved": 12,
+    "supported": 60,
+    "total": 169,
     "verified": 49,
     "violated": 2
   },

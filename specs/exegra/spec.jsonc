@@ -218,27 +218,24 @@
       "parent": "semantic-core",
       "category": "logical",
       "runsIn": "both",
-      "purpose": "Derives the semantic model from JSONC source text and records where every entity is declared.",
+      "purpose": "The text layer of the specification: parses the JSONC source (comments, trailing commas, syntax errors with locations), hands the document to the model derivation in the Lean kernel and maps the raw paths it reports to lines and columns.",
       "responsibilities": [
         "Parse JSONC with comments and trailing commas, reporting syntax errors with locations",
-        "Check structure, types and references against the effective meta-model (built-in meta-model plus the specification's own vocabulary)",
-        "Build the effective meta-model from the vocabulary section: categories, relationship kinds, entity kinds (each with its own top-level section, shape, colour and properties), reference-typed and list-typed properties on any kind, and verification methods; report a malformed, unknown or duplicate definition as a diagnostic",
-        "Look up spec-supplied keys only as own properties, so a key such as constructor never resolves to something inherited",
-        "Index every reference and expression with its source path",
-        "Report unsupported constructs as diagnostics instead of dropping them",
-        "Index the scenario and fault references inside a trace claim's negatives, so rename and delete follow them"
+        "Encode the document for the kernel with every object's members in source order and repeated keys kept, and pass the meta-model and the claim method registry as data",
+        "Map every raw path and part the kernel reports (node, key of a member, first character) to an offset, length, line and column, and put the line of the earlier declaration into an id.duplicate message",
+        "Rebuild the model the rest of the shell reads (entities by id and kind, references, expressions, effective meta-model, vocabulary, semantic hash) from the kernel's reply, with prototype-free data objects as jsonc-parser builds them"
       ],
       "unknowns": [
-        "The whole text is re-parsed on every commit and on every source-editor analysis; there is no incremental parsing and no measurement of its cost on large specifications.",
+        "The whole text is re-parsed on every commit and on every source-editor analysis; there is no incremental parsing. Measured 2026-11-18 in Node 24 on Windows 10 (wasm64, median of 10 warm runs, parse and hash): specs/exegra (788 KB) 243 ms through the Lean kernel against 35 ms for the JavaScript it replaced; specs/benchmark (134 KB) 67 ms against 9 ms. Of the 243 ms about 95 ms is Exegra.Json.parse reading the request (WG-4797), 27 ms the derivation, 10 ms reference resolution, 33 ms the hash and 45 ms writing the reply. In Chromium (Playwright, tests/browser/lean-core.spec.js) the same parse and hash take 312 ms (median of 7).",
         "The schema.version error message tells the user to run an `exegra migrate` command that does not exist."
       ],
       "implementation": {
-        "status": "model-configured",
+        "status": "manual",
+        "language": "js",
         "modules": [
           "src/core/parse.js"
         ],
-        "notes": "Structure checks are driven by metamodel.json and the specification's vocabulary; the parser code itself is hand-written.",
-        "language": "js"
+        "notes": "Outside the verdict path: it only parses text and maps locations; the model is derived by model-derivation in Lean."
       }
     },
     {
@@ -255,7 +252,7 @@
         "Report gaps (missing purpose, unconnected component, unused event, claim that can only rest on external evidence and has none) as info diagnostics; a requirement claim is not reported for lacking evidence",
         "Provide analyzeSpec: parse, then validate only when the structure is sound",
         "Check events that name a contract: a role is required, the payload fields are among the inputs (request) or outputs (response), every input that is not optional is present, an error carries a code among the contract's errors, and declared field types are assignable to the contract's; an unknown contract is a reference error",
-        "Run the data model's consistency checks (record keys and copy fields name declared fields, bounds have units) as errors and its five data rules as warnings, each naming the record or copy and the field",
+        "Run the data model's consistency checks (record keys and copy fields name declared fields, bounds have units) as errors and its six data rules as warnings, each naming the record or copy and the field",
         "Check each negative of a trace claim: its scenario is one of the claim's scenarios, and its faults are a non-empty list of declared faults none of which that scenario already activates",
         "Report integrity rules: an invalid rule as an error, a vacuous rule as a warning, and each violation with the rule severity (integrity.violated), left out of analyzeSpec's blocking error count"
       ],
@@ -287,7 +284,10 @@
         ],
         "notes": "The validator and the claim evaluator use src/core/expr.js. The simulation engine has its own implementation of the same language in Rust (engine/exegra-engine/src/expr.rs), held to the same parse and evaluation semantics and error messages by the conformance goldens.",
         "language": "js"
-      }
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
     },
     {
       "id": "model-hash",
@@ -295,19 +295,36 @@
       "parent": "semantic-core",
       "category": "logical",
       "runsIn": "both",
-      "purpose": "Produces the deterministic normal form of a model (independent of comments, whitespace, key order and top-level declaration order) and its 53-bit semantic hash.",
+      "purpose": "Produces the deterministic normal form of a model (independent of comments, whitespace, key order, top-level declaration order and source positions) and its 53-bit semantic hash, in the verified kernel.",
       "responsibilities": [
-        "Stable JSON stringification with sorted keys",
-        "Semantic hash used for revision identity, optimistic concurrency of transactions and claim results",
-        "String hash used for the text hash of a project"
+        "Normal form: schema version, vocabulary and the top-level declarations sorted by id with every object's keys sorted as JavaScript sorts strings (UTF-16 code units)",
+        "Semantic hash: cyrb53 over the UTF-16 code units of the normal form's JSON text, bit-identical to the JavaScript it replaced; used for revision identity, optimistic concurrency of transactions and claim results",
+        "Prove that the hash depends only on semantic content: declaration order and presentation (Exegra.Model.Model.semanticHash_presentation) and key order at every depth (Exegra.Hash.semanticHash_key_order); what runs is the definition (Exegra.Hash.semanticHash'_eq)"
       ],
-      "unknowns": ["The hash is not cryptographic (cyrb53); it identifies revisions and detects change, it does not resist collisions."],
-      "implementation": { "status": "manual", "modules": [
-          "src/core/hash.js",
-          "src/core/sha256.js"
+      "unknowns": [
+        "The hash is not cryptographic (cyrb53); it identifies revisions and detects change, it does not resist collisions.",
+        "The key-order theorem assumes distinct keys in every object; the derivation produces such values (it assigns members like JavaScript), but that is not itself stated as a theorem yet."
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "lean",
+        "modules": [
+          "formal/Exegra/Hash.lean",
+          "formal/Exegra/HashProps.lean"
         ],
-        "language": "js"
-      }
+        "trusts": [
+          "trusted-lean-kernel",
+          "trusted-lean-compiler-runtime",
+          "trusted-emscripten-toolchain",
+          "trusted-libuv",
+          "trusted-js-glue",
+          "trusted-wasm-engine"
+        ],
+        "notes": "The Lean kernel of the hash only. The JavaScript that calls it is hash-binding (src/core/hash.js), a separate component, so this component's dependencies are only the Lean definitions it uses. Stable JSON output and SHA-256 are stable-serialization."
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
     },
     {
       "id": "queries",
@@ -331,7 +348,10 @@
         ],
         "notes": "own.js is a one-function helper; it is claimed here because the lookup it provides is imported by the other core modules that read spec-supplied keys.",
         "language": "js"
-      }
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
     },
     {
       "id": "transactions",
@@ -351,7 +371,14 @@
         "Reject a transaction that adds a violation of an integrity rule of severity error that the project did not have before (the ratchet), with the counterexamples; existing violations do not block unrelated edits"
       ],
       "ports": [
-        { "id": "transactions-apply-in", "name": "Apply transaction", "direction": "provides", "contract": "apply-transaction", "protocol": "in-process call (Project.apply)", "description": "Submit one operation or an array of operations as one transaction." }
+        {
+          "id": "transactions-apply-in",
+          "name": "Apply transaction",
+          "direction": "provides",
+          "contract": "apply-transaction",
+          "protocol": "in-process call (Project.apply)",
+          "description": "Submit one operation or an array of operations as one transaction."
+        }
       ],
       "unknowns": [
         "History, undo and redo stacks are unbounded in memory and are not persisted: undo is lost on reload and per CLI invocation.",
@@ -367,7 +394,10 @@
         ],
         "notes": "The operation table is hand-written; CreateEntity looks up declaration sites in the meta-model.",
         "language": "js"
-      }
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
     },
     {
       "id": "claim-evaluator",
@@ -377,8 +407,8 @@
       "runsIn": "both",
       "purpose": "Evaluates claims against a model and recorded evidence results, reporting a status, scope and counterexample that never overstate what was checked.",
       "responsibilities": [
-        "Evaluate structural claims (no-relationship, reachable, only-via, has-port, property-defined, acyclic) on the component graph; report a selector that selects nothing as inconclusive, never verified; reachable needs a path of at least one relationship (a target that is also a source does not count)",
-        "Evaluate invariant and temporal claims on traces of the listed scenarios (state-invariant, precedes, eventually, never), stating that only those traces were checked; never report a vacuous trace check as verified: an implication whose antecedent is never true, a never whose event cannot occur, a precedes whose then-event never happens and traces with zero steps are inconclusive",
+        "Evaluate structural claims (no-relationship, reachable, only-via, has-port, property-defined, acyclic) on the component graph; report a selector that selects nothing as inconclusive, never verified; reachable needs a path of at least one relationship (a target that is also a source does not count); only-via is inconclusive when no directed path of the kinds leads from any source to any target at all, and when every source is itself a via component (both hold by construction, not by the model)",
+        "Evaluate invariant and temporal claims on traces of the listed scenarios (state-invariant, precedes, eventually, never), stating that only those traces were checked; never report a vacuous trace check as verified: an implication whose antecedent is never true, a never whose event cannot occur, a precedes whose then-event never happens and traces with zero steps are inconclusive; an eventually whose occurrence is only the scenario's own scripted input is inconclusive, because the input is not a reaction of the system",
         "Derive the status of external-evidence claims only from evidence entities and recorded execution results",
         "Report a claim whose method is a verification method declared by the specification with evaluator external:<method>: Exegra runs nothing and the status comes only from evidence",
         "Check a trace step by step for the simulator panel (checkTrace)",
@@ -387,7 +417,14 @@
         "Run every declared negative of a trace claim (its scenario with the scenario's own faults plus the negative's) and report the claim verified only when it holds on its scenarios and each negative, at least one, violates it; a trace claim with no negative, or with a negative that does not definitely violate it, is inconclusive and the explanation says which"
       ],
       "ports": [
-        { "id": "claims-evaluate-in", "name": "Evaluate claims", "direction": "provides", "contract": "evaluate-claims", "protocol": "in-process call", "description": "Evaluate every claim or one claim of a model." }
+        {
+          "id": "claims-evaluate-in",
+          "name": "Evaluate claims",
+          "direction": "provides",
+          "contract": "evaluate-claims",
+          "protocol": "in-process call",
+          "description": "Evaluate every claim or one claim of a model."
+        }
       ],
       "unknowns": [
         "Behavioral results hold for the listed scenario traces only; there is no exhaustive state-space exploration and no probabilistic evaluation.",
@@ -396,10 +433,14 @@
       "implementation": {
         "status": "manual",
         "modules": [
-          "src/core/claims.js"
+          "src/core/claims.js",
+          "src/core/concordance.js"
         ],
         "language": "js"
-      }
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
     },
     {
       "id": "simulation-engine",
@@ -426,7 +467,7 @@
         }
       ],
       "unknowns": [
-        "Format 2 (integer time units, instances, routes, resources and resource faults, workloads, links, timers, request classes and seeded randomness) runs in the Rust engine; crash-instance, meters and the cost metric do not yet (planned: WG-4741).",
+        "Format 2 (integer time units, instances, routes, resources and resource faults, workloads, links, timers, request classes and seeded randomness) runs in the Lean engine (formal/Exegra/Format2.lean, Api/Engine.lean); the Rust engine implements the same format as the differential oracle. crash-instance, meters and the cost metric are not built yet (planned: WG-4741).",
         "One configuration copy per step dominates the cost of large format-2 runs (about 10 to 40 us per step); the queueing fixtures (about 7 and 15 minutes) are gated by EXEGRA_FIXTURES=1 (planned: WG-4741).",
         "Behaviors are flat: a component cannot yet be simulated at a chosen depth, as its abstract behavior or as its children (planned: WG-4666)."
       ],
@@ -437,7 +478,7 @@
           "src/app/engine-worker.js",
           "src/app/engine-runner.js"
         ],
-        "notes": "engine/ holds the library and native binary (exegra-engine) and the WebAssembly crate (exegra-engine-wasm). npm run build:engine (tools/build-engine.js) compiles the WebAssembly crate and binds it with wasm-bindgen into src/engine/pkg/, which is generated, not committed, and left out of the traceability surface. src/core/engine.js is the only module that loads it; src/app/engine-runner.js and src/app/engine-worker.js run the Simulation tab's runs off the main thread.",
+        "notes": "engine/ holds the library and native binary (exegra-engine) and the WebAssembly crate (exegra-engine-wasm). npm run build:engine (tools/build-engine.js) compiles the WebAssembly crate and binds it with wasm-bindgen into src/engine/pkg/, which is generated, not committed, and left out of the traceability surface. src/core/engine.js is the only module that loads an engine, and it loads the Lean core through the call boundary (src/core/lean.js); the Rust engine in src/engine/pkg/ is loaded only by tools/rust-engine.js, the differential oracle. src/app/engine-runner.js and src/app/engine-worker.js run the Simulation tab's runs off the main thread.",
         "trusts": [
           "trusted-js-glue",
           "trusted-js-shell"
@@ -985,7 +1026,14 @@
         "Export and import project bundles, and watch a project's files for external changes"
       ],
       "ports": [
-        { "id": "workspace-write-in", "name": "Write file", "direction": "provides", "contract": "write-file", "protocol": "in-process call", "description": "Guarded write of spec or layout text." }
+        {
+          "id": "workspace-write-in",
+          "name": "Write file",
+          "direction": "provides",
+          "contract": "write-file",
+          "protocol": "in-process call",
+          "description": "Guarded write of spec or layout text."
+        }
       ],
       "unknowns": [
         "On Windows the atomic rename is retried and then replaced by an in-place write, which is not atomic.",
@@ -1175,7 +1223,7 @@
       ],
       "unknowns": [
         "Only evidence of kind test is executed; measurement, document and review evidence stay author-entered.",
-        "The traceability check compares paths only: it does not check that a module implements what its component claims, nor that relationships match imports.",
+        "The traceability check compares paths only: it does not check that a module implements what its component claims, nor that relationships match imports. Its surface is src/, cli/ and tools/ with the extensions .js, .json, .css and .html, plus index.html and vite.config.js: a .mjs file is outside it (tools/bench-mm1.mjs was unclaimed until this correction), and formal/ and engine/ are outside it too, so an unclaimed Lean or Rust file is not reported.",
         "Browser tests need Chrome and the Vite development server; `verify --skip-browser` skips them and leaves their evidence without a recorded result."
       ],
       "implementation": {
@@ -1293,6 +1341,8 @@
           "tests/browser/scratch.js",
           "tests/browser/simulation-worker.spec.js",
           "tests/core/claims.test.js",
+          "tests/core/claim-diagnostics.test.js",
+          "tests/core/concordance.test.js",
           "tests/core/cli.test.js",
           "tests/core/data-model.test.js",
           "tests/core/fault-model.test.js",
@@ -1300,6 +1350,7 @@
           "tests/core/import-markdown.test.js",
           "tests/core/import-register.test.js",
           "tests/core/layout.test.js",
+          "tests/core/model-kernel.test.js",
           "tests/core/model.test.js",
           "tests/core/outcome-reuse.test.js",
           "tests/core/projections.test.js",
@@ -1311,7 +1362,14 @@
           "tests/core/traffic.test.js",
           "tests/core/vocabulary.test.js",
           "tests/core/workspace.test.js",
-          "tests/fixtures/live/open-edit-save.json"
+          "tests/fixtures/live/open-edit-save.json",
+          "tests/fixtures/parse-corpus/cases.json.gz",
+          "tests/oracle/parse-reference.js",
+          "tools/record-goldens.js",
+          "tools/conformance.js",
+          "tools/bench-mm1.mjs",
+          "tests/core/conformance.test.js",
+          "tools/differential.js"
         ],
         "language": "js"
       }
@@ -1511,9 +1569,6 @@
         "status": "manual",
         "modules": [
           "src/core/sim-input.js",
-          "tools/record-goldens.js",
-          "tools/conformance.js",
-          "tests/core/conformance.test.js",
           "tests/conformance/"
         ],
         "notes": "tests/conformance/ holds the fixture specification, the committed goldens and the README that lists what the fixture covers.",
@@ -1521,6 +1576,9 @@
       },
       "unknowns": [
         "Engine input and trace format 2 (contracts engine-input-v2 and trace-v2) are derived by simulationInput whenever a specification uses a format-2 construct (needsFormat2, simulationInputV2 in src/core/sim-input.js) and run by the engine's version-2 semantics (engine/exegra-engine/src/lib.rs dispatches on the version). Not yet: format-2 goldens (tests/conformance/goldens holds version 1 only), and the WG-4741 items: crash-instance, meters and the cost metric in the engine, and calibration, sensitivity, the operating envelope and revision binding of metric claims. A specification that uses no format-2 construct still derives version 1, unchanged."
+      ],
+      "tags": [
+        "verdict-kernel"
       ]
     },
     {
@@ -1572,7 +1630,10 @@
         ],
         "notes": "The environment, failureMode and faultModel kinds, the faultModel and realises properties and the any-kind reference (\"ref\": [\"*\"]) are declared in the meta-model and checked by the generic parser; fault-model.js holds the specific rules (missing sources, bounds, realises outside the model) and the scope text of a claim result.",
         "language": "js"
-      }
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
     },
     {
       "id": "exhaustive-explorer",
@@ -1608,7 +1669,10 @@
         ],
         "notes": "formal/Exegra/Explore.lean: State (fault mask and Config, with decidable equality and hashing), successors, Reachable, the explorer explore with a Std.HashSet visited set, and the theorems step_mem_successors, explore_sound and explore_counterexample_real, whose axioms are pinned with #guard_msgs. The file sits inside formal/, which formal-semantics also declares. formal/Exegra/Search.lean: the generic breadth-first search over a node type with search_sound and search_counterexample_real. formal/Exegra/Temporal.lean: the forms, the monitor, runs (runRec), the product system, tcheck, tcheck_sound, tcheck_counterexample_real, tverdict and the exegra-lean temporal protocol; axioms pinned with #guard_msgs.",
         "language": "lean"
-      }
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
     },
     {
       "id": "deployment-model",
@@ -1708,8 +1772,7 @@
         "status": "manual",
         "modules": [
           "formal/",
-          "tools/gen-engine-inputs.js",
-          "tools/differential.js"
+          "tools/gen-engine-inputs.js"
         ],
         "notes": "A Lake project (Lean 4, toolchain pinned in formal/lean-toolchain, standard library only): Exegra/Value, Json, Number, Expr, Input, Trace and Semantics define the semantics, Exegra/Properties proves its properties, Main is the exegra-lean executable (engine input JSON on stdin, trace JSON on stdout). npm run build:formal runs lake build in formal/; formal/.lake/ is build output, ignored by git and outside the traceability surface. tools/differential.js compares the native Rust engine with exegra-lean on the goldens and on seeded inputs from tools/gen-engine-inputs.js. Exegra/Impl/ is the implementation the application runs: Impl/Expr.lean (the numeric fast evaluator, eval_numeric), Impl/Json.lean (the in-place writer, write'_eq), Impl/Semantics.lean (the compiled format-1 engine) and Impl/Refinement.lean (runAnyValue_eq and runAny_eq, axioms pinned with #guard_msgs). Expression parses are kept in Thunks: Thunk.get is Lean's memoizing primitive, logically x.fn (), and the implementation declares no implemented_by, extern or csimp of its own.",
         "trusts": [
@@ -1725,6 +1788,9 @@
         "lift_agrees is stated in formal/Exegra/Lift.lean with its proof left as sorry (pinned on sorryAx); it is checked differentially by tools/differential.js --lift on every liftable golden and generated input (planned: WG-4664).",
         "The determinism property over seeds is not stated as a theorem for format 2 yet (planned: WG-4741).",
         "Exegra.Impl optimizes format 1; format 2 runs the definition's step semantics (V2.traceOf) with only the fast JSON writer, so its expressions are still parsed at every evaluation (planned: WG-4798). Exegra.Json.parse is a partial definition, shared by the definition and the implementation, so it is outside every theorem (planned: WG-4797)."
+      ],
+      "tags": [
+        "verdict-kernel"
       ]
     },
     {
@@ -1783,7 +1849,10 @@
           "src/core/contract-trace.js"
         ],
         "language": "js"
-      }
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
     },
     {
       "id": "data-model",
@@ -1795,7 +1864,7 @@
       "responsibilities": [
         "Define the record kind (owner, key, fields with type, personal class, refersTo a record or the principal, role, retention) and the copy kind (of, fields, heldBy, scope, freshness, erasure, dependsOnAuthority), validated by the generic parser with positions",
         "Check that a record's key and a copy's fields name declared fields, and that a numeric freshness or erasure bound has a unit",
-        "Compute the five data rules per copy, record and field: an erasure point on every copy holding a personal field or a principal reference; no shared copy holding a principal reference, a personal field or authority-dependent data; party fields that refer to the principal by a non-name type; a freshness bound on every copy; a relationship path between a copy's holder and the owner of each record it copies",
+        "Compute the six data rules per copy, record and field: an erasure point on every copy holding a personal field or a principal reference; an erasure point or a bounded retention on every record holding a personal or credential field; no shared copy holding a principal reference, a personal field or authority-dependent data; party fields that refer to the principal by a non-name type; a freshness bound on every copy; a relationship path between a copy's holder and the owner of each record it copies",
         "Report every finding as a validation warning naming the entity and the field, and evaluate the data-model claim method from the same findings",
         "Answer the copies of a record and the fields a copy holds for the inspector and the Data projection"
       ],
@@ -1810,7 +1879,10 @@
         ],
         "notes": "The record and copy kinds are built-in meta-model kinds; the rules are hand-written in data-model.js and run from validate.js and claims.js.",
         "language": "js"
-      }
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
     },
     {
       "id": "resource-model",
@@ -1878,7 +1950,10 @@
         ],
         "notes": "WG-4715, in progress. Built: the integer lowering of distributions (src/core/distributions.js; every reference output of docs/simulation.md and the pinned SHA-256 reproduced, tests/core/distributions.test.js); open workloads (constant and Poisson by inversion of the integrated rate with exact integer square roots, phases, ramps, repetition, batches, clients picked uniformly or round-robin, payload literals, samples, weighted choices and counters, maxArrivals, the first-entry rule with a per-workload count of created instants) defined in formal/Exegra/Workload.lean and Format2.lean, ported to the Rust engine (workload.rs, v2.rs) and checked differentially on generated workload inputs (tools/gen-engine-inputs.js, tools/differential.js). Proved: an instant is always before the horizon (nextTime_lt_horizon) and a workload never creates more arrival entries than maxArrivals (makeInstant_arrivals_le).",
         "language": "mixed"
-      }
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
     },
     {
       "id": "performance-metrics",
@@ -1936,7 +2011,10 @@
         ],
         "notes": "Built: the statistics (src/core/metric-stats.js: exact binomial tails and verdicts, the minimum run count, passes to hold and to fail, runs to decide, the sign-test interval, underpowered statistics, the margin, run seeds and the claim status with negatives; tests/core/metric-stats.test.js) and the metric-bound runner over engine inputs (src/core/metric-claims.js: one metrics-mode run per run seed through runEngineText, on the thread that evaluates claims, which in the application is the main thread). The method is registered and simulationInput derives format 2 for it. Calibration, sensitivity, asOf and revision binding are not built (WG-4741).",
         "language": "js"
-      }
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
     },
     {
       "id": "traffic-recorder",
@@ -2196,6 +2274,94 @@
           "src/ui/reader.js"
         ]
       }
+    },
+    {
+      "id": "model-derivation",
+      "name": "Model derivation",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Derives the semantic model from the specification's JSON document, in the verified kernel: the effective meta-model, the entities by kind with their data, every reference and expression, references resolved against the entities, and the meta-model's structural checks, with the diagnostic codes and messages of the JavaScript parser it replaced. Every location is a raw path into the document, which the parser maps to a source position.",
+      "responsibilities": [
+        "Build the effective meta-model from the built-in meta-model and the vocabulary section (categories, relationship kinds, entity kinds with their sections and properties, properties on existing kinds, verification methods), reporting malformed, unknown and duplicate definitions",
+        "Check every section, entity and property against the effective meta-model and report each violation with its code, message, JSON path and raw path",
+        "Index every reference (properties of type ref, effects, claim evaluation parameters) and every expression with its JSON path, and resolve the references against the entities by id and kind",
+        "Follow the JavaScript semantics the parser had exactly: a map of members per object read on every access (property.duplicate each time), getNodeValue for entity data and the vocabulary, String() and template text of arbitrary JSON values",
+        "Prove what the model guarantees: with no reference diagnostic every reference names an entity of an allowed kind (Exegra.Model.derive_refs_resolve), and model.derive answers every argument (Exegra.Api.call_model_derive_total)"
+      ],
+      "tags": [
+        "verdict-kernel"
+      ],
+      "unknowns": [
+        "Two differences from the JavaScript parser where Lean strings cannot follow: a lone surrogate in a string becomes U+FFFD before the call, and the label of a declared entity kind is lower-cased in ASCII only in the entity.type and id.missing messages. The JSON reply carries -0 as 0 and a number beyond the double range as null; the parser then takes entity data and the vocabulary from the syntax tree.",
+        "Recursion over the document is bounded by fuel (twice the document depth plus 8); no theorem states that the bound is never reached, the differential test (tests/core/model-kernel.test.js) is the evidence that it is not.",
+        "The id check implements the pattern ^[a-z][a-z0-9_]*(-[a-z0-9_]+)*$ of src/core/metamodel.json in Lean; it does not read idPattern from the meta-model it is given (it only quotes it in the message)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "lean",
+        "modules": [
+          "formal/Exegra/Model.lean",
+          "formal/Exegra/ModelProps.lean",
+          "formal/Exegra/Api/Model.lean"
+        ],
+        "trusts": [
+          "trusted-lean-kernel",
+          "trusted-lean-compiler-runtime",
+          "trusted-emscripten-toolchain",
+          "trusted-libuv",
+          "trusted-js-glue",
+          "trusted-wasm-engine"
+        ],
+        "notes": "Called by the parser (src/core/parse.js) as model.derive with {spec, metamodel, methods}: the document with every object as {\"o\": [[key, value], ...]} (members in source order, repeated keys kept), the meta-model and the claim method registry as data. The reply carries diagnostics and the model with raw paths (\"3.0.12\") and parts (node, key, start) for every location, and the semantic hash of the model. Differential evidence against the JavaScript it replaced: tests/core/model-kernel.test.js with tests/oracle/parse-reference.js."
+      }
+    },
+    {
+      "id": "stable-serialization",
+      "name": "Stable serialization and text digests",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Deterministic JSON text for written files and command results (object keys sorted at every level) and SHA-256 of texts for recorded events. Output presentation, outside the verdict path.",
+      "responsibilities": [
+        "Stable JSON stringification with sorted keys for generated files, traces and command results",
+        "SHA-256 of a text as lowercase hex, equal to the workspace's hash of the UTF-8 bytes"
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "js",
+        "modules": [
+          "src/core/stable-json.js",
+          "src/core/sha256.js"
+        ]
+      }
+    },
+    {
+      "id": "hash-binding",
+      "name": "Semantic hash binding",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "The JavaScript side of the semantic hash: passes a model that does not carry its hash to the Lean hash function through the call boundary, and returns the hash and the normal form to the callers of src/core/hash.js.",
+      "responsibilities": [
+        "Call hash.semantic and hash.normalize at the Lean call boundary with the top-level declarations of a model that was not derived by parseSpec",
+        "Return the hash Lean computed with the model for a model derived by parseSpec, without recomputing it"
+      ],
+      "unknowns": [
+        "Not in the verdict path in the strict sense: a claim's result is stamped with this binding's hash, so a binding error would misstamp a result without changing a verdict. The stamp is compared with the Lean-derived hash only by the callers that use it (for example transactions' expectHash checks)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "js",
+        "modules": [
+          "src/core/hash.js"
+        ],
+        "trusts": [
+          "trusted-js-glue",
+          "trusted-js-shell"
+        ],
+        "notes": "src/core/hash.js is the binding only; it holds no hash logic. It imports the call boundary (src/core/lean.js) and nothing else from src/core."
+      }
     }
   ],
 
@@ -2207,8 +2373,13 @@
     // -- Semantic core (acyclic by construction)
     { "id": "parser-reads-metamodel", "kind": "reads", "from": "parser", "to": "metamodel", "description": "Checks structure and property types against the entity definitions in metamodel.json." },
     { "id": "parser-reads-claim-method-registry", "kind": "reads", "from": "parser", "to": "claim-method-registry", "description": "Imports CLAIM_METHODS to check evaluation parameters." },
-    { "id": "parser-calls-queries", "kind": "calls", "from": "parser", "to": "queries", "description": "Imports the own-property lookup that keeps spec-supplied keys from resolving inherited properties." },
-    { "id": "validator-calls-queries", "kind": "calls", "from": "validator", "to": "queries", "description": "Imports the own-property lookup for the verification methods, claim methods and relationship kinds a specification names." },
+    {
+      "id": "validator-calls-queries",
+      "kind": "calls",
+      "from": "validator",
+      "to": "queries",
+      "description": "Imports the own-property lookup for the verification methods, claim methods and relationship kinds a specification names."
+    },
     { "id": "parser-depends-on-jsonc-parser", "kind": "depends-on", "from": "parser", "to": "jsonc-parser-library", "description": "Builds the syntax tree and reports syntax errors with the library." },
     { "id": "validator-calls-parser", "kind": "calls", "from": "validator", "to": "parser", "description": "analyzeSpec calls parseSpec, then validates the model." },
     { "id": "validator-calls-expression-language", "kind": "calls", "from": "validator", "to": "expression-language", "description": "Parses guards, effect values and claim expressions and lists their references." },
@@ -2218,13 +2389,24 @@
     { "id": "transactions-calls-expression-language", "kind": "calls", "from": "transactions", "to": "expression-language", "description": "Operations parse expressions when renaming ids that expressions mention." },
     { "id": "transactions-calls-queries", "kind": "calls", "from": "transactions", "to": "queries", "description": "Finds declaration sites and owned entities when creating and deleting." },
     { "id": "transactions-reads-metamodel", "kind": "reads", "from": "transactions", "to": "metamodel", "description": "Reads the id pattern." },
-    { "id": "transactions-calls-model-hash", "kind": "calls", "from": "transactions", "to": "model-hash", "description": "Computes the semantic hash of each committed model and the text hash of a project." },
-    { "id": "transactions-depends-on-jsonc-parser", "kind": "depends-on", "from": "transactions", "to": "jsonc-parser-library", "description": "Computes and applies the minimal text edits that keep comments and formatting." },
+    {
+      "id": "transactions-depends-on-jsonc-parser",
+      "kind": "depends-on",
+      "from": "transactions",
+      "to": "jsonc-parser-library",
+      "description": "Computes and applies the minimal text edits that keep comments and formatting."
+    },
     { "id": "claim-evaluator-reads-claim-method-registry", "kind": "reads", "from": "claim-evaluator", "to": "claim-method-registry", "description": "Dispatches only on registered methods; an unregistered method stays not evaluated." },
     { "id": "claim-evaluator-calls-queries", "kind": "calls", "from": "claim-evaluator", "to": "queries", "description": "Builds the component graph and selects components for structural claims." },
     { "id": "claim-evaluator-calls-expression-language", "kind": "calls", "from": "claim-evaluator", "to": "expression-language", "description": "Evaluates claim expressions against trace configurations." },
-    { "id": "claim-evaluator-calls-model-hash", "kind": "calls", "from": "claim-evaluator", "to": "model-hash", "description": "Stamps every result with the semantic hash it was computed from." },
-    { "id": "claim-evaluator-calls-simulation-engine", "kind": "calls", "from": "claim-evaluator", "to": "simulation-engine", "description": "Runs the listed scenarios for invariant and temporal claims.", "contract": "run-scenario" },
+    {
+      "id": "claim-evaluator-calls-simulation-engine",
+      "kind": "calls",
+      "from": "claim-evaluator",
+      "to": "simulation-engine",
+      "description": "Runs the listed scenarios for invariant and temporal claims.",
+      "contract": "run-scenario"
+    },
 
     // -- Visualization
     { "id": "projection-system-calls-queries", "kind": "calls", "from": "projection-system", "to": "queries", "description": "Resolves components, ancestors and descendants for projection." },
@@ -2364,8 +2546,13 @@
     { "id": "agent-cli-calls-queries", "kind": "calls", "from": "agent-cli", "to": "queries", "description": "Answers list, show, deps, contracts and plan-delete." },
     { "id": "agent-cli-calls-claim-evaluator", "kind": "calls", "from": "agent-cli", "to": "claim-evaluator", "description": "Evaluates claims for claims, evaluate, trace and verify.", "contract": "evaluate-claims" },
     { "id": "agent-cli-calls-simulation-engine", "kind": "calls", "from": "agent-cli", "to": "simulation-engine", "description": "Runs scenarios for simulate and trace.", "contract": "run-scenario" },
-    { "id": "agent-cli-calls-model-hash", "kind": "calls", "from": "agent-cli", "to": "model-hash", "description": "Serialises results deterministically." },
-    { "id": "agent-cli-calls-generators", "kind": "calls", "from": "agent-cli", "to": "generators", "description": "The generate command derives the artifacts." },
+    {
+      "id": "agent-cli-calls-generators",
+      "kind": "calls",
+      "from": "agent-cli",
+      "to": "generators",
+      "description": "The generate command derives the artifacts."
+    },
     { "id": "agent-cli-calls-verification-pipeline", "kind": "calls", "from": "agent-cli", "to": "verification-pipeline", "description": "The traceability and verify commands run the module-to-disk check." },
     { "id": "agent-cli-calls-test-suites", "kind": "calls", "from": "agent-cli", "to": "test-suites", "description": "verify executes test evidence by spawning node --test on a core test file." },
     { "id": "agent-cli-calls-playwright-runner", "kind": "calls", "from": "agent-cli", "to": "playwright-runner", "description": "verify executes browser test evidence by spawning Playwright, unless --skip-browser." },
@@ -2373,15 +2560,25 @@
     { "id": "build-system-depends-on-vite", "kind": "depends-on", "from": "build-system", "to": "vite-dev-server", "description": "Configures the server (127.0.0.1, specs not watched) and the build." },
     { "id": "build-system-calls-dev-server-plugin", "kind": "calls", "from": "build-system", "to": "dev-server-plugin", "description": "Registers the plugin with the specs directory." },
     { "id": "generators-calls-queries", "kind": "calls", "from": "generators", "to": "queries", "description": "Lists children, relationships and contracts for the architecture document." },
-    { "id": "generators-calls-model-hash", "kind": "calls", "from": "generators", "to": "model-hash", "description": "Stamps artifacts with the semantic hash." },
-    { "id": "generators-reads-claim-method-registry", "kind": "reads", "from": "generators", "to": "claim-method-registry", "description": "Reads claim status labels." },
+    {
+      "id": "generators-reads-claim-method-registry",
+      "kind": "reads",
+      "from": "generators",
+      "to": "claim-method-registry",
+      "description": "Reads claim status labels."
+    },
     { "id": "generators-generates-generated-artifacts", "kind": "generates", "from": "generators", "to": "generated-artifacts", "description": "Produces the text of the five generated files; the workspace service writes them." },
     { "id": "verification-pipeline-calls-filesystem", "kind": "calls", "from": "verification-pipeline", "to": "filesystem", "description": "Scans src, cli, tools and the root files and checks that declared modules exist." },
     { "id": "spec-checker-calls-validator", "kind": "calls", "from": "spec-checker", "to": "validator", "description": "Analyzes the file with analyzeSpec." },
     { "id": "spec-checker-calls-claim-evaluator", "kind": "calls", "from": "spec-checker", "to": "claim-evaluator", "description": "Prints the status of every claim." },
     { "id": "spec-checker-calls-simulation-engine", "kind": "calls", "from": "spec-checker", "to": "simulation-engine", "description": "Runs every scenario and optionally prints a trace." },
-    { "id": "spec-checker-calls-model-hash", "kind": "calls", "from": "spec-checker", "to": "model-hash", "description": "Prints the semantic hash." },
-    { "id": "spec-checker-reads-specification-file", "kind": "reads", "from": "spec-checker", "to": "specification-file", "description": "Reads the file given on the command line directly with node:fs." },
+    {
+      "id": "spec-checker-reads-specification-file",
+      "kind": "reads",
+      "from": "spec-checker",
+      "to": "specification-file",
+      "description": "Reads the file given on the command line directly with node:fs."
+    },
     { "id": "benchmark-generator-calls-validator", "kind": "calls", "from": "benchmark-generator", "to": "validator", "description": "Checks that the generated specification analyzes." },
     { "id": "benchmark-generator-writes-specification-file", "kind": "writes", "from": "benchmark-generator", "to": "specification-file", "description": "Writes specs/benchmark/spec.jsonc directly with node:fs." },
     { "id": "markdown-importer-reads-markdown-specification-source", "kind": "reads", "from": "markdown-importer", "to": "markdown-specification-source", "description": "Reads the Markdown documents and the repository's git commit; it never writes there." },
@@ -2467,13 +2664,6 @@
       "from": "simulation-overlays",
       "to": "scene-renderer",
       "description": "Overlay values drawn over the component view."
-    },
-    {
-      "id": "simulation-contract-calls-simulation-engine",
-      "kind": "calls",
-      "from": "simulation-contract",
-      "to": "simulation-engine",
-      "description": "Hands the engine its input and checks the trace it returns against the golden suite (tools/conformance.js, tests/core/conformance.test.js)."
     },
     {
       "id": "session-calls-simulation-contract",
@@ -2935,27 +3125,6 @@
       "description": "Evaluates guards, effect values and emitted payloads."
     },
     {
-      "id": "session-calls-model-hash",
-      "kind": "calls",
-      "from": "session",
-      "to": "model-hash",
-      "description": "Hashes the spec and layout text with sha256Hex for the recorded events."
-    },
-    {
-      "id": "toolbar-calls-model-hash",
-      "kind": "calls",
-      "from": "toolbar",
-      "to": "model-hash",
-      "description": "Hashes the specification of an exported or imported bundle for the recorded events."
-    },
-    {
-      "id": "realisation-panel-calls-model-hash",
-      "kind": "calls",
-      "from": "realisation-panel",
-      "to": "model-hash",
-      "description": "Hashes the generated files for the recorded events."
-    },
-    {
       "id": "simulation-engine-calls-lean-call-boundary",
       "kind": "calls",
       "from": "simulation-engine",
@@ -3136,6 +3305,195 @@
       "from": "reader-pages",
       "to": "queries",
       "description": "Uses own() for keys the specification supplies."
+    },
+    {
+      "id": "parser-calls-lean-call-boundary",
+      "kind": "calls",
+      "from": "parser",
+      "to": "lean-call-boundary",
+      "description": "Derives every model with the Lean function model.derive."
+    },
+    {
+      "id": "lean-call-boundary-calls-model-derivation",
+      "kind": "calls",
+      "from": "lean-call-boundary",
+      "to": "model-derivation",
+      "description": "Dispatches model.derive to Exegra.Model.deriveValue."
+    },
+    {
+      "id": "lean-call-boundary-calls-model-hash",
+      "kind": "calls",
+      "from": "lean-call-boundary",
+      "to": "model-hash",
+      "description": "Dispatches hash.semantic and hash.normalize to the semantic hash and the normal form."
+    },
+    {
+      "id": "model-derivation-calls-model-hash",
+      "kind": "calls",
+      "from": "model-derivation",
+      "to": "model-hash",
+      "description": "Computes the semantic hash of every derived model."
+    },
+    {
+      "id": "session-calls-stable-serialization",
+      "kind": "calls",
+      "from": "session",
+      "to": "stable-serialization",
+      "description": "Hashes the spec and layout text with sha256Hex for the recorded events."
+    },
+    {
+      "id": "toolbar-calls-stable-serialization",
+      "kind": "calls",
+      "from": "toolbar",
+      "to": "stable-serialization",
+      "description": "Hashes the specification of an exported or imported bundle for the recorded events."
+    },
+    {
+      "id": "realisation-panel-calls-stable-serialization",
+      "kind": "calls",
+      "from": "realisation-panel",
+      "to": "stable-serialization",
+      "description": "Hashes the generated files for the recorded events."
+    },
+    {
+      "id": "agent-cli-calls-stable-serialization",
+      "kind": "calls",
+      "from": "agent-cli",
+      "to": "stable-serialization",
+      "description": "Serialises results deterministically."
+    },
+    {
+      "id": "generators-calls-stable-serialization",
+      "kind": "calls",
+      "from": "generators",
+      "to": "stable-serialization",
+      "description": "Writes generated files with sorted keys."
+    },
+    {
+      "id": "simulation-contract-calls-stable-serialization",
+      "kind": "calls",
+      "from": "simulation-contract",
+      "to": "stable-serialization",
+      "description": "Writes the goldens with sorted keys (tools/record-goldens.js)."
+    },
+    {
+      "id": "agent-cli-calls-claim-method-registry",
+      "kind": "calls",
+      "from": "agent-cli",
+      "to": "claim-method-registry",
+      "description": "Reads the registry of claim methods for its usage and validation messages."
+    },
+    {
+      "id": "agent-cli-calls-markdown-importer",
+      "kind": "calls",
+      "from": "agent-cli",
+      "to": "markdown-importer",
+      "description": "The markdown command renders the documents of a linked project through the importer's module."
+    },
+    {
+      "id": "agent-cli-calls-validator",
+      "kind": "calls",
+      "from": "agent-cli",
+      "to": "validator",
+      "description": "Applies the evidence reference rule (src/core/evidence-ref.js) to the commands that run verification."
+    },
+    {
+      "id": "claim-evaluator-calls-simulation-contract",
+      "kind": "calls",
+      "from": "claim-evaluator",
+      "to": "simulation-contract",
+      "description": "Derives the engine input of a scenario from the model before a trace claim runs it."
+    },
+    {
+      "id": "simulation-engine-calls-simulation-contract",
+      "kind": "calls",
+      "from": "simulation-engine",
+      "to": "simulation-contract",
+      "description": "Takes the engine input that simulation-contract derives (sim-input.js) and checks the input before it runs."
+    },
+    {
+      "id": "test-suites-calls-formal-semantics",
+      "kind": "calls",
+      "from": "test-suites",
+      "to": "formal-semantics",
+      "description": "The differential tool (tools/differential.js) runs the Lean executable and the Rust engine on the goldens and on generated inputs."
+    },
+    {
+      "id": "test-suites-calls-simulation-contract",
+      "kind": "calls",
+      "from": "test-suites",
+      "to": "simulation-contract",
+      "description": "The conformance test and the golden runner read the engine input derived by sim-input.js and the goldens of the contract."
+    },
+    {
+      "id": "test-suites-calls-stable-serialization",
+      "kind": "calls",
+      "from": "test-suites",
+      "to": "stable-serialization",
+      "description": "The golden recorder writes its traces with the stable JSON serializer."
+    },
+    {
+      "id": "markdown-importer-calls-workspace-service",
+      "kind": "calls",
+      "from": "markdown-importer",
+      "to": "workspace-service",
+      "description": "Writes the converted specification and its import map through the workspace service (tools/workspace.js)."
+    },
+    {
+      "id": "validator-calls-metric-claims",
+      "kind": "calls",
+      "from": "validator",
+      "to": "metric-claims",
+      "description": "Validates metric-bound claims with the statistics of src/core/metric-stats.js."
+    },
+    {
+      "id": "visual-interaction-calls-persistence-client",
+      "kind": "calls",
+      "from": "visual-interaction",
+      "to": "persistence-client",
+      "description": "The composition root (src/app/main.js) constructs the persistence client and hands it to the session."
+    },
+    {
+      "id": "visual-interaction-calls-simulation-engine",
+      "kind": "calls",
+      "from": "visual-interaction",
+      "to": "simulation-engine",
+      "description": "The composition root initialises the Lean engine (initEngine) before the first project opens."
+    },
+    {
+      "id": "transactions-calls-hash-binding",
+      "kind": "calls",
+      "from": "transactions",
+      "to": "hash-binding",
+      "description": "Computes the semantic hash of each committed model and the text hash of a project."
+    },
+    {
+      "id": "claim-evaluator-calls-hash-binding",
+      "kind": "calls",
+      "from": "claim-evaluator",
+      "to": "hash-binding",
+      "description": "Stamps every result with the semantic hash it was computed from."
+    },
+    {
+      "id": "generators-calls-hash-binding",
+      "kind": "calls",
+      "from": "generators",
+      "to": "hash-binding",
+      "description": "Stamps artifacts with the semantic hash."
+    },
+    {
+      "id": "spec-checker-calls-hash-binding",
+      "kind": "calls",
+      "from": "spec-checker",
+      "to": "hash-binding",
+      "description": "Prints the semantic hash."
+    },
+    {
+      "id": "hash-binding-calls-lean-call-boundary",
+      "kind": "calls",
+      "from": "hash-binding",
+      "to": "lean-call-boundary",
+      "description": "Hashes and normalizes a model that does not carry its hash with hash.semantic and hash.normalize."
     }
   ],
 
@@ -13616,7 +13974,7 @@
     {
       "id": "relationships-match-imports",
       "statement": "The relationships declared in this file match the real imports and calls of the code.",
-      "rationale": "They are maintained by hand. The traceability check compares only the module paths that components declare with the files on disk, so a new import that is not declared here would not be noticed by any structural claim."
+      "rationale": "They are maintained by hand. The traceability check compares only the module paths that components declare with the files on disk, so a new import that is not declared here would not be noticed by any structural claim. Checked by a script when this was corrected (imports of src/core, src/app, src/ui, src/render, src/persist, cli/ and tools/ mapped to components by implementation.modules): 12 import pairs between components had no declared relationship (agent-cli to claim-method-registry, markdown-importer and validator; claim-evaluator and simulation-engine to simulation-contract; validator to metric-claims; markdown-importer to workspace-service; visual-interaction to persistence-client and simulation-engine; formal-semantics to simulation-contract through the differential tool). They are now declared, and the golden tools (tools/conformance.js, tools/record-goldens.js) moved from simulation-contract to test-suites so that declaring them does not close a cycle. In the other direction, 121 declared edges have no import: they are runtime wiring (the composition root main.js, the session and callbacks) or Lean and data relationships, which an import check cannot see. Those are not established by this assumption, and nothing in this file checks them."
     },
     {
       "id": "tests-exercise-shipped-modules",
@@ -13695,8 +14053,8 @@
     },
     {
       "id": "trusted-js-shell",
-      "statement": "The JavaScript shell (the application, the agent command line, the development server and every component not yet ported to Lean) computes what it is specified to compute.",
-      "rationale": "The goal of WG-4785 is that the shell does only I/O and every core computation is a Lean definition with theorems. Until the ports finish, the JavaScript core components are trusted, tested and not proved; claim core-logic-in-lean lists them."
+      "statement": "The JavaScript shell outside the verified kernel (the application UI, layout, projections, scene, generators, live replay, request-log rendering, the agent command line's arguments, workspace I/O, the development server and the JSONC text layer of the parser) computes what it is specified to compute, and the kernel components not yet ported to Lean do too.",
+      "rationale": "These components are outside the verdict path (decision 2026-11-18, WG-4799): no claim's status is decided by them, they present, store and route what the kernel computes. The kernel components still in JavaScript are trusted, tested and not proved until their ports finish; claim core-logic-in-lean lists them."
     }
   ],
 
@@ -13716,10 +14074,22 @@
       "id": "core-dependencies-acyclic",
       "kind": "structural",
       "statement": "The dependency relationships among the components of the semantic core form no cycle.",
-      "rationale": "Checked on the declared component graph. At module level it holds because src/core modules import only lower-level ones: own, query, expr, hash, claim-methods and metamodel at the bottom; parse, validate, analyze, operations, project, sim and claims above them.",
-      "subjects": ["semantic-core", "parser", "validator", "transactions", "claim-evaluator", "simulation-engine"],
-      "assumptions": ["relationships-match-imports"],
-      "evaluate": { "method": "acyclic", "within": "semantic-core" }
+      "rationale": "Checked on the declared component graph. This claim was violated on the previous declaration: the Lean call boundary dispatches model.derive and hash.semantic to the Lean definitions (lean-call-boundary-calls-model-derivation, lean-call-boundary-calls-model-hash), and the semantic hash component also held the JavaScript binding that calls the boundary (src/core/hash.js). The binding is now its own component, hash-binding, so the Lean kernel component model-hash no longer calls the boundary. The module graph of src/core (44 modules) has no cycle, checked by a script when this was corrected; that is not a checked claim, and the match between the declared edges and the imports is the assumption relationships-match-imports.",
+      "subjects": [
+        "semantic-core",
+        "parser",
+        "validator",
+        "transactions",
+        "claim-evaluator",
+        "simulation-engine"
+      ],
+      "assumptions": [
+        "relationships-match-imports"
+      ],
+      "evaluate": {
+        "method": "acyclic",
+        "within": "semantic-core"
+      }
     },
     {
       "id": "edits-only-via-transactions",
@@ -14413,8 +14783,8 @@
     {
       "id": "engines-agree-on-traces",
       "kind": "invariant",
-      "statement": "The Rust simulation engine, native and WebAssembly, reproduces every golden trace of the conformance suite exactly, and is the only engine the application and the CLI run.",
-      "rationale": "Supported by tests/core/conformance.test.js (WG-4672): it runs the WebAssembly engine through src/core/engine.js against every golden under tests/conformance/goldens, from the model and from the input file alone, and the native binary engine/target/release/exegra-sim when it is built (skipped with a message otherwise). That the application and the CLI run no other engine rests on src/core/sim.js having been removed: no other module in the repository executes a scenario.",
+      "statement": "The Rust simulation engine, the differential oracle, native and WebAssembly, reproduces every golden trace of the conformance suite exactly, as the Lean engine does.",
+      "rationale": "Supported by tests/core/conformance.test.js (WG-4672): it runs the Lean WebAssembly engine and the Rust WebAssembly engine (tools/rust-engine.js) against every golden under tests/conformance/goldens, from the model and from the input file alone, compares the Rust and Lean traces byte for byte, and runs the native binary engine/target/release/exegra-sim when it is built (skipped with a message otherwise). The claim that the application and the CLI run only the Lean engine is not tested here: it is a separate claim, app-and-cli-run-lean-engine-only, which has no evidence.",
       "subjects": [
         "simulation-engine",
         "simulation-contract"
@@ -14471,29 +14841,6 @@
         "shell",
         "toolbar",
         "stylesheets"
-      ],
-      "assumptions": [
-        "browser-tests-run-real-application",
-        "recorded-results-reflect-current-code"
-      ],
-      "evaluate": {
-        "method": "external-evidence"
-      }
-    },
-    {
-      "id": "ui-every-function-at-every-size",
-      "kind": "invariant",
-      "statement": "Every function the interface offers on a desktop (switching project and view, search, selecting and inspecting, editing, creating, connecting, deleting, undo and redo, simulation, verification, source, realisation, diagnostics, export and import) is reachable by touch at a 390 by 844 viewport.",
-      "rationale": "Rests on its browser test in tests/browser/mobile.spec.js (WG-4675); not evaluated until a recorded result of that test exists.",
-      "subjects": [
-        "responsive-layout",
-        "toolbar",
-        "explorer",
-        "inspector",
-        "simulator-panel",
-        "verification-panel",
-        "source-editor",
-        "dialogs"
       ],
       "assumptions": [
         "browser-tests-run-real-application",
@@ -14722,12 +15069,46 @@
     {
       "id": "data-model-rules-computed",
       "kind": "invariant",
-      "statement": "Records and copies are validated with positions, and the five data rules (erasure point, no principal data in a shared copy, party fields by principal id, freshness bound, holder related to owner) are computed from the model and reported per copy, record and field, both as validation warnings and as the result of a data-model claim.",
+      "statement": "Records and copies are validated with positions, and the six data rules (erasure point, record erasure point, no principal data in a shared copy, party fields by principal id, freshness bound, holder related to owner) are computed from the model and reported per copy, record and field, both as validation warnings and as the result of a data-model claim.",
       "rationale": "Evidence is the core test over a fixture modelling a slice of a multi-tenant platform, in which the rules find a deliberately missing erasure point. The claim is supported, not verified, because Exegra does not check its own validation rules.",
       "subjects": [
         "data-model",
         "validator",
         "claim-evaluator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "personal-records-state-erasure",
+      "kind": "invariant",
+      "statement": "Every record with a field that is personal data or a credential states an erasure point or a bounded retention; a record that states neither is a finding of the record-erasure-point rule, and a data-model claim naming that rule is violated with the record as its counterexample.",
+      "rationale": "Checked by the tests in tests/core/data-model.test.js over constructed records and the data-model fixture, where every personal record states its erasure. Supported, not verified: Exegra stores no personal data itself, so the rule holds vacuously on its own records and is not listed in any claim of this specification.",
+      "subjects": [
+        "data-model",
+        "validator",
+        "claim-evaluator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "classification-validated",
+      "kind": "invariant",
+      "statement": "A field's optional classification is one of public, internal, personal or credential; personal is stated through the personal-data class and classification personal needs that class; an unknown classification is a validation error, and a specification without classifications validates unchanged.",
+      "subjects": [
+        "data-model",
+        "validator"
       ],
       "assumptions": [
         "tests-exercise-shipped-modules",
@@ -14804,6 +15185,48 @@
         "validator",
         "parser"
       ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "trace-claims-state-how-decided",
+      "kind": "invariant",
+      "statement": "A trace claim's result says what its verdict rests on: the declaration order of two unguarded enabled transitions that decided which fired, a precedes ordering that only the scenario script witnesses (not verified), a never over an occurrence only a faultOnly transition can produce (holds for runs without the enabling fault), and an implication whose consequent names no state or variable (not exercised).",
+      "rationale": "Supported by tests/core/claim-diagnostics.test.js (the ev-trace-* evidence entries). A later transition that has a guard is not examined for order: whether its guard held is not evaluated there.",
+      "subjects": ["claim-evaluator"],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "models-property-evaluated",
+      "kind": "invariant",
+      "statement": "The models property that links a check over the behavior model to a requirement is evaluated: a requirement's result lists the claims that name it with their statuses (modelledBy, shown by claims and in the inspector), without changing the requirement's own status, and a models value that is not a requirement is a validation error.",
+      "rationale": "Supported by tests/core/claim-diagnostics.test.js (ev-models-*).",
+      "subjects": ["claim-evaluator","validator"],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "claim-parameters-always-validated",
+      "kind": "invariant",
+      "statement": "The checks of claims (parameters, scenarios, negatives, models) run even when another reference of the specification is unresolved, so one error does not hide the others; a negative whose fault targets a transition of a behavior its scenario does not run, and two unguarded transitions on one event and state, are warnings.",
+      "rationale": "Supported by tests/core/claim-diagnostics.test.js (ev-validate-*). Only transition faults are checked for being inert in a negative: a drop or delay of an event the scenario never delivers is not.",
+      "subjects": ["validator"],
       "assumptions": [
         "tests-exercise-shipped-modules",
         "recorded-results-reflect-current-code"
@@ -16511,6 +16934,20 @@
       }
     },
     {
+      "id": "concordance-results-are-evidence",
+      "kind": "structural",
+      "statement": "A linked project's Concordance results (concordanceResults in project.jsonc) become derived test evidence of their claims: a pass makes a requirement supported and never verified, a fail makes it violated, a claim without an entry stays not evaluated, and a results file for another tool or specification, or an entry for an unknown claim, changes no status. A results file that names a specSha256 (the sha-256 of the specification text it was computed from) is not applied when that differs from the current text; one that names none is applied with its revision recorded as unknown, and its explanation says so.",
+      "subjects": [
+        "claim-evaluator",
+        "workspace-service"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/concordance.test.js (the ev-concordance-* evidence entries).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
       "id": "lean-theorem-method-refuses-unsound-proofs",
       "kind": "structural",
       "statement": "A lean-theorem claim is proved only when Lean reports a kernel-checked theorem that depends on no axiom beyond propext, Classical.choice and Quot.sound and whose statement mentions every named implementation constant; sorry, native_decide, an axiom of its own and an off-topic statement are refused.",
@@ -16529,24 +16966,19 @@
     {
       "id": "core-logic-in-lean",
       "kind": "structural",
-      "statement": "Every implemented component of the semantic core is implemented in Lean, so the claims about the core are theorems about the code that runs and the JavaScript shell only does I/O.",
+      "statement": "Every implemented component of the verified kernel (tag verdict-kernel: the code that decides whether a claim holds, namely model derivation, the semantic hash, engine-input derivation, the engine, the explorer and temporal checker, claim verdicts and their helpers, and transactions) is implemented in Lean, so the claims about the kernel are theorems about the code that runs. Everything else (layout, projections, scene, generators, UI, live replay, request-log rendering, command-line arguments, workspace I/O, the JSONC text layer) is JavaScript outside the verdict path.",
       "subjects": [
         "semantic-core"
       ],
       "assumptions": [
         "relationships-match-imports"
       ],
-      "rationale": "The goal of the programme WG-4785. Violated until the per-module ports finish: the result lists the components that are not Lean yet, and the verify script expects the violation (like edits-only-via-transactions). The subsystem itself and the meta-model and method registry (data, not logic) are left out.",
+      "rationale": "Decision of 2026-11-18 (WG-4799, programme WG-4785): a small verified kernel. Violated until every kernel component is Lean: the result lists the ones that are not (claim verdicts WG-4801, engine-input derivation WG-4800, transactions WG-4802). The JavaScript outside the kernel is named in the trusted base (trusted-js-shell) as outside the verdict path, not as a gap.",
       "evaluate": {
         "method": "implementation-language",
         "select": {
-          "within": "semantic-core"
+          "tag": "verdict-kernel"
         },
-        "exclude": [
-          "semantic-core",
-          "metamodel",
-          "claim-method-registry"
-        ],
         "language": "lean",
         "plannedBy": "WG-4785"
       }
@@ -16839,6 +17271,217 @@
       "evaluate": {
         "method": "external-evidence"
       }
+    },
+    {
+      "id": "semantic-hash-ignores-presentation",
+      "kind": "invariant",
+      "statement": "The semantic hash of a model depends only on its schema version, its vocabulary and its top-level declarations (id, kind, data) up to order: source positions, JSON paths, nested declarations' records, references, expressions, the effective meta-model and the order of declarations do not change it.",
+      "subjects": [
+        "model-hash",
+        "model-derivation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "Theorem of formal/Exegra/ModelProps.lean (WG-4799), from Exegra.Hash.semanticHash_perm: sorting by id with an order proved total and antisymmetric makes permutations with distinct ids equal.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Model.Model.semanticHash_presentation",
+        "about": [
+          "Exegra.Model.Model.semanticHash"
+        ]
+      }
+    },
+    {
+      "id": "semantic-hash-ignores-key-order",
+      "kind": "invariant",
+      "statement": "Reordering the members of objects, at every depth, in the vocabulary and in the data of every declaration, does not change the semantic hash (for values with distinct keys in every object).",
+      "subjects": [
+        "model-hash"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "Theorem of formal/Exegra/HashProps.lean (WG-4799), for any reordering function that returns a permutation of each member list.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Hash.semanticHash_key_order",
+        "about": [
+          "Exegra.Hash.semanticHash"
+        ]
+      }
+    },
+    {
+      "id": "semantic-hash-runs-definition",
+      "kind": "invariant",
+      "statement": "The semantic hash that runs (Exegra.Hash.semanticHash': keys converted once for sorting, the in-place JSON writer) equals the definition Exegra.Hash.semanticHash on every input.",
+      "subjects": [
+        "model-hash"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "Theorem of formal/Exegra/Hash.lean (WG-4799), from sortKeys'_eq (List.map_mergeSort) and Exegra.Impl.JsonOut.write'_eq.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Hash.semanticHash'_eq",
+        "about": [
+          "Exegra.Hash.semanticHash'",
+          "Exegra.Hash.semanticHash"
+        ]
+      }
+    },
+    {
+      "id": "semantic-hash-call-computes-definition",
+      "kind": "structural",
+      "statement": "A call of hash.semantic at the Lean call boundary returns the definition of the semantic hash of the declarations it is given.",
+      "subjects": [
+        "lean-call-boundary",
+        "model-hash"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "Theorem of formal/Exegra/Api.lean (WG-4799).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Api.call_hash_semantic",
+        "about": [
+          "Exegra.Api.call",
+          "Exegra.Hash.semanticHash"
+        ]
+      }
+    },
+    {
+      "id": "model-references-resolve",
+      "kind": "invariant",
+      "statement": "In a derived model whose diagnostics contain no reference diagnostic (ref.unresolved, ref.kind), every reference names an entity of the model whose kind the reference allows.",
+      "subjects": [
+        "model-derivation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "Theorem of formal/Exegra/ModelProps.lean (WG-4799) about the derivation that runs: the diagnostics are the derivation's own followed by one per reference that does not resolve.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Model.derive_refs_resolve",
+        "about": [
+          "Exegra.Model.derive"
+        ]
+      }
+    },
+    {
+      "id": "model-derivation-total",
+      "kind": "structural",
+      "statement": "Model derivation at the Lean call boundary (model.derive) answers every argument value with a result, never with an error, and always returns.",
+      "subjects": [
+        "model-derivation",
+        "lean-call-boundary"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "Theorem of formal/Exegra/Api.lean (WG-4799). Every definition of the derivation is total (none is partial); recursion over the document is bounded by fuel (see the unknowns of model-derivation).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Api.call_model_derive_total",
+        "about": [
+          "Exegra.Api.call"
+        ]
+      }
+    },
+    {
+      "id": "model-derivation-matches-javascript",
+      "kind": "structural",
+      "statement": "The Lean model derivation and semantic hash give the diagnostics, model and hash of the JavaScript parser they replaced on every specification the tests read (specs/exegra, specs/benchmark, tests/fixtures) and on every specification text the core tests parse, the invalid ones included.",
+      "subjects": [
+        "model-derivation",
+        "model-hash",
+        "parser"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "Differential test against the JavaScript kept as an oracle in tests/oracle/parse-reference.js (WG-4799): 206 captured texts, 81 of them with diagnostics, plus edge cases for repeated keys, array-index keys, non-ASCII keys and unusual numbers. Checked once by hand against the 28 semantic hashes stored in specs/exegra/generated/manifest.json over its history and the 63 versions of the specifications in git: all equal.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "app-and-cli-run-lean-engine-only",
+      "kind": "invariant",
+      "statement": "The application and the command line run scenarios on the Lean engine only: no module of src/app, src/ui or cli/ loads the Rust engine or runs a scenario any other way.",
+      "rationale": "Not evaluated: no evidence attached. Read from the code when this was corrected: src/core/engine.js is the only module that loads an engine, and it calls engine.run through the Lean call boundary (src/core/lean.js); the Rust engine is loaded only by tools/rust-engine.js and tests. A test that lists the imports of src/app, src/ui and cli/ and fails on any reference to the Rust engine would make this claim evidence-backed.",
+      "subjects": [
+        "simulation-engine",
+        "session",
+        "agent-cli"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "ui-every-function-on-phone",
+      "kind": "invariant",
+      "statement": "Every function the interface offers on a desktop (switching project and view, search, selecting and inspecting, editing, creating, connecting, deleting, undo and redo, simulation, verification, source, realisation, diagnostics, export and import) is reachable by touch at a 390 by 844 viewport.",
+      "rationale": "Rests on its browser test in tests/browser/mobile.spec.js (WG-4675); not evaluated until a recorded result of that test exists.",
+      "subjects": [
+        "responsive-layout",
+        "toolbar",
+        "explorer",
+        "inspector",
+        "simulator-panel",
+        "verification-panel",
+        "source-editor",
+        "dialogs"
+      ],
+      "assumptions": [
+        "browser-tests-run-real-application",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
     }
   ],
 
@@ -16847,6 +17490,23 @@
   // execution. A pattern after # is matched against test titles; titles containing a comma or
   // semicolon are referenced by a prefix because verify accepts neither in a reference.
   "evidence": [
+    { "id": "ev-concordance-pass", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#a Concordance pass makes a requirement supported", "description": "A recorded pass of a requirement in the Concordance results is supported, not verified." },
+    { "id": "ev-concordance-fail", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#a Concordance fail makes a requirement violated", "description": "A recorded fail in the Concordance results makes the requirement violated." },
+    { "id": "ev-concordance-absent", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#a claim without a Concordance entry stays not evaluated", "description": "A claim with no entry in the Concordance results stays not evaluated." },
+    { "id": "ev-concordance-diagnostics", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#a Concordance file for another tool or specification changes nothing", "description": "A results file for another tool or another specification, or a missing or invalid one, warns and changes no status." },
+    { "id": "ev-concordance-unknown-claim", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#an unknown claim id is a warning and the other entries still apply", "description": "An entry for an id that is not a claim of the specification warns, naming the id, and the other entries still apply." },
+    { "id": "ev-concordance-unconfigured", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#a project without concordanceResults is unchanged", "description": "A project that names no Concordance results file is evaluated exactly as before." },
+    { "id": "ev-concordance-directory", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#a results path that is a directory is a warning and not a load failure", "description": "A results path that is a directory warns (concordance.unreadable) and the project still loads." },
+    { "id": "ev-concordance-watched", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#watching a project reports a change to its Concordance results file as a change of the recorded results", "description": "A change to the Concordance results file is reported by the file watcher as a change of the recorded results." },
+    { "id": "ev-trace-order-decides", "claim": "trace-claims-state-how-decided", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#two unguarded transitions on one event are warned about and the result says the order decided", "description": "Two unguarded transitions on one event warn, and the claim scope names the transition the declaration order chose; a guard removes both." },
+    { "id": "ev-trace-precedes-script", "claim": "trace-claims-state-how-decided", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#precedes between two scripted deliveries is not verified and one the system produces is", "description": "An ordering between two scripted deliveries is inconclusive; one a transition produces is verified." },
+    { "id": "ev-trace-never-faultonly", "claim": "trace-claims-state-how-decided", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#a never over an occurrence only a faultOnly transition produces says it holds for fault-free runs", "description": "A never over an occurrence only a faultOnly transition emits says so in its scope; it does not when the scenario enables the fault." },
+    { "id": "ev-trace-constant-consequent", "claim": "trace-claims-state-how-decided", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#an implication with a constant consequent is not exercised", "description": "An implication whose consequent names no state or variable is inconclusive." },
+    { "id": "ev-models-listed", "claim": "models-property-evaluated", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#a requirement shows the model claims that name it and their statuses", "description": "A requirement result lists the claims whose models property names it with their statuses, and its own status is unchanged." },
+    { "id": "ev-models-validated", "claim": "models-property-evaluated", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#a models value that names a claim which is not a requirement is a validation error", "description": "A models value that is not a requirement is the error claim.models-not-requirement." },
+    { "id": "ev-validate-inert-negative", "claim": "claim-parameters-always-validated", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#a negative whose fault targets a transition the scenario does not run is a warning", "description": "A negative that enables a transition of a behavior its scenario does not run is warned about." },
+    { "id": "ev-validate-not-staged", "claim": "claim-parameters-always-validated", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#claim-parameter errors are reported although another reference is unresolved", "description": "A claim parameter error is reported together with an unresolved reference elsewhere." },
+    { "id": "ev-data-declared-markers", "claim": "data-model-rules-computed", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#no-principal-in-shared says it reads only declared personal markers", "description": "The scope of a no-principal-in-shared result states that only declared personal markers are read." },
     { "id": "ev-roundtrip-core", "claim": "edit-representations-equivalent", "kind": "test", "ref": "tests/core/roundtrip.test.js", "description": "Visual and textual routes to a change yield equal semantic state; a visual edit changes exactly one value in the source; undo and redo restore the exact text." },
     { "id": "ev-browser-inspector-rename", "claim": "edit-representations-equivalent", "kind": "test", "ref": "tests/browser/exegra.spec.js#inspector rename persists to spec.jsonc and survives reload", "description": "A rename in the inspector reaches the scene, the source and the file on disk, and survives a reload." },
     { "id": "ev-browser-source-edit", "claim": "edit-representations-equivalent", "kind": "test", "ref": "tests/browser/exegra.spec.js#source edit updates the scene", "description": "A source edit updates the scene. The full title continues '; invalid source is rejected and the draft is kept'." },
@@ -16914,7 +17574,7 @@
     },
     {
       "id": "ev-browser-phone-every-function",
-      "claim": "ui-every-function-at-every-size",
+      "claim": "ui-every-function-on-phone",
       "kind": "test",
       "ref": "tests/browser/mobile.spec.js#every function is reachable by touch on a phone",
       "description": "At 390 by 844, by taps: every destination's sheet, search, selection by tapping the canvas, a property edit, undo and redo, create, connect mode, delete with cascade, rename, explorer collapse, isolate and hide, layout, camera, legend and statistics, a scenario stepped with the docked transport, faults and the timeline, verification, source, realisation, diagnostics, changes, export, and view and project switching."
@@ -16981,6 +17641,20 @@
       "kind": "test",
       "ref": "tests/core/data-model.test.js",
       "description": "The data-model fixture validates with exactly one data-rule finding, the missing erasure point; a wrong enum and an unknown key field are errors with their positions; each rule reports its entity and field on a constructed violation; a data-model claim is violated, verified or inconclusive as the findings say; the Data projection draws records, copies and their edges."
+    },
+    {
+      "id": "ev-record-erasure-core",
+      "claim": "personal-records-state-erasure",
+      "kind": "test",
+      "ref": "tests/core/data-model.test.js",
+      "description": "A record with a personal field and no erasure is a record-erasure-point finding, and a data-model claim over it is violated with the record as counterexample; a record that states an erasure point or a bounded erasure passes."
+    },
+    {
+      "id": "ev-classification-core",
+      "claim": "classification-validated",
+      "kind": "test",
+      "ref": "tests/core/data-model.test.js",
+      "description": "A classification is accepted when it is in the closed set and consistent with the personal class, rejected otherwise; the data-model fixture, which carries no classifications, validates unchanged."
     },
     {
       "id": "ev-formal-explore",
@@ -17352,6 +18026,27 @@
       "kind": "test",
       "ref": "tests/browser/reader.spec.js#reader page follows an edit of the model",
       "description": "A committed edit shows on the page."
+    },
+    {
+      "id": "ev-model-kernel-corpus",
+      "claim": "model-derivation-matches-javascript",
+      "kind": "test",
+      "ref": "tests/core/model-kernel.test.js#the specifications and fixtures the tests read derive identically",
+      "description": "specs/exegra, specs/benchmark and every tests/fixtures .jsonc: identical diagnostics, model, normal form and hash."
+    },
+    {
+      "id": "ev-model-kernel-cases",
+      "claim": "model-derivation-matches-javascript",
+      "kind": "test",
+      "ref": "tests/core/model-kernel.test.js#every specification text the core tests parse derives identically",
+      "description": "The 206 texts the core tests parse (81 with diagnostics): identical diagnostics, model, normal form and hash."
+    },
+    {
+      "id": "ev-model-kernel-edges",
+      "claim": "model-derivation-matches-javascript",
+      "kind": "test",
+      "ref": "tests/core/model-kernel.test.js#edge cases derive identically",
+      "description": "Repeated keys, array-index and non-ASCII keys, -0 and out-of-range numbers, malformed vocabularies: identical results."
     }
   ],
 

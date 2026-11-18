@@ -235,6 +235,10 @@ export function mountInspector(el, session) {
         ev.detail ? h('div', { class: 'insp__muted' }, ev.detail) : null,
       ]))));
     }
+    if (res.modelledBy?.length) {
+      parts.push(h('div', { class: 'isub', 'data-testid': 'claim-modelled-by' }, h('h4', { class: 'isub__head' }, 'Checked over the behavior model by'),
+        ul(res.modelledBy.map((/** @type {{claimId: string, status: string}} */ m) => [link(m.claimId, m.claimId), ' ', statusChip(m.status, true)]))));
+    }
     return section('result', 'Evaluation result', [h('div', { 'data-testid': 'claim-result', 'data-status': res.status, 'data-tone': st?.tone ?? 'none' }, ...parts)]);
   }
 

@@ -2,7 +2,8 @@
 // semantic model. Sections are omitted when they have nothing to show.
 
 import { entityLabel, childrenOf, relationshipsOf, contractsOf } from '../query.js';
-import { stableStringify, semanticHash } from '../hash.js';
+import { semanticHash } from '../hash.js';
+import { stableStringify } from '../stable-json.js';
 import { text, oneLine, cell, list, nameOf, markdown, statusLabel } from './manifest.js';
 import { claimRows } from './claims-report.js';
 

@@ -88,9 +88,9 @@ export const CLAIM_METHODS = {
   },
   'data-model': {
     kinds: ['structural'],
-    doc: 'The data rules hold on the records and copies of the model (src/core/data-model.js): erasure-point, no-principal-in-shared, party-by-id, freshness-bound, holder-reaches-owner. Inconclusive when a listed rule has nothing to check.',
+    doc: 'The data rules hold on the records and copies of the model (src/core/data-model.js): erasure-point, record-erasure-point, no-principal-in-shared, party-by-id, freshness-bound, holder-reaches-owner. Inconclusive when a listed rule has nothing to check.',
     params: {
-      rules: { type: 'strings', doc: 'Rules to check. Default: all five.' },
+      rules: { type: 'strings', doc: 'Rules to check. Default: all six.' },
       records: { type: 'ids:record', doc: 'Only these records and the copies of them.' },
     },
   },
