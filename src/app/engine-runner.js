@@ -6,6 +6,10 @@
 
 import { runEngine } from '../core/engine.js';
 
+// Traffic: the messages to and from the worker are recorded, through the `record` callback the session passes
+// (src/app/traffic-recorder.js), as the events of contract engine-worker-run, with the engine input and the
+// trace named by the scenario they belong to (the self-model's abstraction; the texts themselves are not kept).
+
 /** @typedef {import('../core/engine.js').Trace} Trace */
 /** @typedef {import('../core/sim-input.js').SimulationInput} SimulationInput */
 
@@ -13,12 +17,18 @@ import { runEngine } from '../core/engine.js';
  * @typedef {{run: (input: SimulationInput) => Promise<Trace>, dispose: () => void}} EngineRunner
  */
 
-/** @returns {EngineRunner} */
-export function createEngineRunner() {
+/**
+ * @param {{record?: (id: string, payload?: Record<string, any>) => void}} [opts]
+ * @returns {EngineRunner}
+ */
+export function createEngineRunner(opts = {}) {
+  const traffic = { record: opts.record ?? (() => {}) };
   /** @type {Worker|null} */
   let worker = null;
   let workerFailed = typeof Worker === 'undefined';
   let seq = 0;
+  /** Workers terminated so far: a reply is from the current generation only. */
+  let generation = 0;
   /** @type {Map<number, {resolve: (t: Trace) => void, reject: (e: Error) => void, input: SimulationInput}>} */
   const waiting = new Map();
 
@@ -42,6 +52,10 @@ export function createEngineRunner() {
       const job = waiting.get(id);
       if (!job) return;
       waiting.delete(id);
+      const scenario = job.input.scenario.id;
+      traffic.record('worker-run-done', { id, input: scenario, generation });
+      if (ok) traffic.record('engine-run-returned', { id, ok: true, trace: scenario });
+      else traffic.record('engine-run-refused', { code: 'engine.refused', id, error: String(error) });
       if (ok) {
         try { job.resolve(JSON.parse(trace)); } catch (err) { job.reject(/** @type {Error} */ (err)); }
       } else job.reject(new Error(error));
@@ -52,6 +66,7 @@ export function createEngineRunner() {
       worker?.terminate();
       worker = null;
       workerFailed = true;
+      traffic.record('worker-load-failed');
       const jobs = [...waiting.values()];
       waiting.clear();
       for (const job of jobs) onMainThread(job.input).then(job.resolve, job.reject);
@@ -59,6 +74,7 @@ export function createEngineRunner() {
   }
 
   function stop() {
+    if (worker) { generation++; traffic.record('worker-terminated'); }
     worker?.terminate();
     worker = null;
     waiting.clear(); // their promises never settle; the session discards stale runs by token
@@ -75,6 +91,7 @@ export function createEngineRunner() {
       const w = worker;
       return new Promise((resolve, reject) => {
         waiting.set(id, { resolve, reject, input });
+        traffic.record('engine-run-posted', { id, input: input.scenario.id });
         w.postMessage({ id, input: JSON.stringify(input) });
       });
     },

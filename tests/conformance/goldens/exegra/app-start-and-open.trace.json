@@ -5,7 +5,8 @@
    "app-start-flow": {
     "state": "app-started",
     "vars": {
-     "persistentFlag": true
+     "persistentFlag": true,
+     "project": "exegra"
     }
    },
    "claim-evaluation-flow": {
@@ -105,7 +106,8 @@
    "app-start-flow": {
     "state": "app-loading",
     "vars": {
-     "persistentFlag": true
+     "persistentFlag": true,
+     "project": "exegra"
     }
    },
    "claim-evaluation-flow": {
@@ -201,7 +203,8 @@
    {
     "event": "page-loaded",
     "payload": {
-     "persistent": true
+     "persistent": true,
+     "project": "exegra"
     },
     "seq": 0,
     "source": {
@@ -222,7 +225,8 @@
      "app-start-flow": {
       "state": "app-waiting-engine",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -332,7 +336,8 @@
    "event": {
     "id": "page-loaded",
     "payload": {
-     "persistent": true
+     "persistent": true,
+     "project": "exegra"
     },
     "seq": 0,
     "source": {
@@ -359,6 +364,11 @@
        "after": true,
        "before": true,
        "variable": "persistentFlag"
+      },
+      {
+       "after": "exegra",
+       "before": "exegra",
+       "variable": "project"
       }
      ],
      "to": "app-waiting-engine",
@@ -428,7 +438,8 @@
      "app-start-flow": {
       "state": "app-waiting-engine",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -637,7 +648,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -733,7 +745,8 @@
      {
       "event": "session-init-requested",
       "payload": {
-       "persistent": true
+       "persistent": true,
+       "project": "exegra"
       },
       "seq": 3,
       "source": {
@@ -766,7 +779,8 @@
       {
        "event": "session-init-requested",
        "payload": {
-        "persistent": true
+        "persistent": true,
+        "project": "exegra"
        },
        "seq": 3,
        "time": 0
@@ -842,7 +856,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -894,7 +909,7 @@
        "layoutHash": "none",
        "ownNotices": 0,
        "pendingAgain": false,
-       "pendingName": "none",
+       "pendingName": "exegra",
        "persistent": true,
        "projectName": "none",
        "projectsListed": 0,
@@ -954,7 +969,8 @@
    "event": {
     "id": "session-init-requested",
     "payload": {
-     "persistent": true
+     "persistent": true,
+     "project": "exegra"
     },
     "seq": 3,
     "source": {
@@ -980,6 +996,11 @@
      "from": "session-closed",
      "guard": "event.persistent",
      "sets": [
+      {
+       "after": "exegra",
+       "before": "none",
+       "variable": "pendingName"
+      },
       {
        "after": true,
        "before": true,
@@ -1058,7 +1079,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -1110,7 +1132,7 @@
        "layoutHash": "none",
        "ownNotices": 0,
        "pendingAgain": false,
-       "pendingName": "none",
+       "pendingName": "exegra",
        "persistent": true,
        "projectName": "none",
        "projectsListed": 0,
@@ -1269,7 +1291,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -1321,7 +1344,7 @@
        "layoutHash": "none",
        "ownNotices": 0,
        "pendingAgain": false,
-       "pendingName": "none",
+       "pendingName": "exegra",
        "persistent": true,
        "projectName": "none",
        "projectsListed": 0,
@@ -1480,7 +1503,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -1532,7 +1556,7 @@
        "layoutHash": "none",
        "ownNotices": 0,
        "pendingAgain": false,
-       "pendingName": "none",
+       "pendingName": "exegra",
        "persistent": true,
        "projectName": "none",
        "projectsListed": 0,
@@ -1693,7 +1717,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -1745,7 +1770,7 @@
        "layoutHash": "none",
        "ownNotices": 0,
        "pendingAgain": false,
-       "pendingName": "none",
+       "pendingName": "exegra",
        "persistent": true,
        "projectName": "none",
        "projectsListed": 0,
@@ -1910,7 +1935,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -1962,7 +1988,7 @@
        "layoutHash": "none",
        "ownNotices": 0,
        "pendingAgain": false,
-       "pendingName": "none",
+       "pendingName": "exegra",
        "persistent": true,
        "projectName": "none",
        "projectsListed": 0,
@@ -2125,7 +2151,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -2177,7 +2204,7 @@
        "layoutHash": "none",
        "ownNotices": 0,
        "pendingAgain": false,
-       "pendingName": "none",
+       "pendingName": "exegra",
        "persistent": true,
        "projectName": "none",
        "projectsListed": 1,
@@ -2339,7 +2366,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -2483,7 +2511,7 @@
      "sets": [
       {
        "after": "exegra",
-       "before": "none",
+       "before": "exegra",
        "variable": "pendingName"
       },
       {
@@ -2564,7 +2592,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -2779,7 +2808,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -2995,7 +3025,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -3210,7 +3241,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -3425,7 +3457,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -3639,7 +3672,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -3918,7 +3952,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -4177,7 +4212,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -4395,7 +4431,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -4640,7 +4677,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -4871,7 +4909,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -5072,7 +5111,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {
@@ -5279,7 +5319,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": true
+       "persistentFlag": true,
+       "project": "exegra"
       }
      },
      "claim-evaluation-flow": {

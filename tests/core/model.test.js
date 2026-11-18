@@ -148,3 +148,46 @@ test('spec-supplied names that exist on Object.prototype are not treated as know
   const vocab = BASE.replace('"system"', '"vocabulary": { "properties": [ { "entity": "constructor", "name": "tier", "type": "string" } ] }, "system"');
   assert.ok(codes(vocab).includes('vocabulary.entity'));
 });
+
+// Test evidence references: validate and exegra verify use one rule (src/core/evidence-ref.js).
+import { testRefProblem, describeTestRefProblem } from '../../src/core/evidence-ref.js';
+
+/** @param {string[]} refs */
+const specWithTestRefs = (refs) => BASE.replace(/\}\s*$/, `,
+  "claims": [ { "id": "c", "kind": "invariant", "statement": "s", "subjects": ["a"], "assumptions": [],
+    "evaluate": { "method": "external-evidence" } } ],
+  "evidence": [ ${refs.map((ref, i) => `{ "id": "ev${i}", "claim": "c", "kind": "test", "ref": ${JSON.stringify(ref)} }`).join(', ')} ]
+}`);
+
+test('test evidence references: an unsafe one is a validation error and a plain one is not', () => {
+  const bad = analyzeSpec(specWithTestRefs(['tests/core/model.test.js#a title, with a comma']));
+  const errors = bad.diagnostics.filter((d) => d.code === 'evidence.ref-unsafe');
+  assert.equal(errors.length, 1);
+  assert.equal(errors[0].severity, 'error');
+  assert.equal(errors[0].entityId, 'ev0');
+  assert.deepEqual(errors[0].path, ['evidence', 0, 'ref']);
+  assert.match(errors[0].message, /"ev0"|Evidence "ev0"/);
+  assert.match(errors[0].message, /","/);
+  assert.match(errors[0].message, /character 33/);
+  assert.equal(bad.errorCount, 1);
+
+  const good = analyzeSpec(specWithTestRefs(['tests/core/model.test.js#a plain title', 'tests/core/model.test.js']));
+  assert.equal(good.diagnostics.filter((d) => d.code === 'evidence.ref-unsafe').length, 0);
+  assert.equal(good.errorCount, 0);
+});
+
+test('validate and verify share one rule: the validator flags exactly the references the rule refuses', () => {
+  const refs = [
+    'tests/core/a.test.js', 'tests/browser/x.spec.js#a title', 'tests/core/a.test.js#pattern: 1-2_3/4.5',
+    'tests/core/a.test.js#has, comma', 'tests/core/a.test.js#semi;colon', "tests/core/a.test.js#it's",
+    '#no file before the hash', 'tests/core/a.test.js#(parens)',
+  ];
+  const diagnosed = new Set(analyzeSpec(specWithTestRefs(refs)).diagnostics
+    .filter((d) => d.code === 'evidence.ref-unsafe').map((d) => d.entityId));
+  refs.forEach((ref, i) => {
+    assert.equal(diagnosed.has(`ev${i}`), testRefProblem(ref) !== null, `ref ${JSON.stringify(ref)}`);
+  });
+  assert.deepEqual(testRefProblem('tests/core/a.test.js#has, comma'), { reason: 'characters', characters: [','], position: 25 });
+  assert.equal(testRefProblem('#no file before the hash')?.reason, 'no-file');
+  assert.match(describeTestRefProblem('a,b', testRefProblem('a,b') ?? { reason: 'no-file' }), /","|"," /);
+});

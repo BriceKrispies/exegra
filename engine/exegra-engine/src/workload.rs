@@ -59,6 +59,44 @@ fn ceil_sqrt(x: &BigUint) -> BigUint {
     }
 }
 
+/// `interarrival` for a sample `e` that fits 128 bits: machine integers for a constant rate
+/// when nothing overflows, the big integers otherwise.
+#[allow(clippy::too_many_arguments)]
+pub fn interarrival_wide(
+    p: u64,
+    l: u64,
+    a0: u64,
+    b0: u64,
+    a1: u64,
+    b1: u64,
+    d: u64,
+    e: u128,
+) -> Option<u64> {
+    // A constant rate (no growth, `gn = 0`) in machine integers when nothing overflows.
+    if u128::from(a1) * u128::from(b0) == u128::from(a0) * u128::from(b1) {
+        let fast = (|| {
+            let rd = u128::from(b0)
+                .checked_mul(u128::from(b1))?
+                .checked_mul(u128::from(l))?
+                .checked_mul(u128::from(p))?;
+            let rn = u128::from(a0)
+                .checked_mul(u128::from(b1))?
+                .checked_mul(u128::from(l))?;
+            let rn64 = rn.checked_mul(1u128 << 64)?;
+            let num = e.checked_mul(2)?.checked_mul(rd)?.checked_add(rn64)?;
+            let den = rn64.checked_mul(2)?;
+            if den == 0 {
+                return Some(0);
+            }
+            Some(u64::try_from(num / den).unwrap_or(u64::MAX))
+        })();
+        if fast.is_some() {
+            return fast;
+        }
+    }
+    interarrival(p, l, a0, b0, a1, b1, d, &BigUint::from(e))
+}
+
 /// The Poisson interarrival from `d` base units into a phase of length `l` (Workload.lean,
 /// `interarrival`); `None` when the mass left in a falling ramp is below the sample.
 #[allow(clippy::too_many_arguments)]
@@ -119,7 +157,7 @@ pub fn next_time(
     phases: &[Phase],
     period: Option<u64>,
     poisson: bool,
-    ex: &dyn Fn(u64) -> BigUint,
+    ex: &dyn Fn(u64) -> u128,
     mut fuel: u128,
     mut c: Cursor,
 ) -> (Option<u64>, Cursor, u64) {
@@ -184,7 +222,7 @@ pub fn next_time(
         let base = c.last.map_or(start, u128::from);
         let e = ex(used);
         used += 1;
-        match interarrival(
+        match interarrival_wide(
             p,
             ph.stop.saturating_sub(ph.start),
             a0,
@@ -192,7 +230,7 @@ pub fn next_time(
             a1,
             b1,
             (base - start) as u64,
-            &e,
+            e,
         ) {
             None => {
                 advance(&mut c);
@@ -226,17 +264,7 @@ mod tests {
             ..Cursor::default()
         };
         assert_eq!(
-            next_time(
-                1_000_000,
-                10000,
-                &ph,
-                None,
-                false,
-                &|_| BigUint::from(0u32),
-                100,
-                c
-            )
-            .0,
+            next_time(1_000_000, 10000, &ph, None, false, &|_| 0u128, 100, c).0,
             Some(3000)
         );
         let one = BigUint::from(1u32) << 64;

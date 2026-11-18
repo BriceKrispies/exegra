@@ -172,6 +172,223 @@
     {
      "effects": [
       {
+       "set": "cameraArchitecture",
+       "to": "event.camera"
+      }
+     ],
+     "faultOnly": false,
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'architecture'",
+     "id": "tab-storage-save-architecture",
+     "on": "camera-saved",
+     "to": "tab-storage-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "camera-restored",
+       "payload": {
+        "camera": "cameraArchitecture",
+        "view": "event.view"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'architecture' && cameraArchitecture != 'none'",
+     "id": "tab-storage-restore-architecture",
+     "on": "camera-restore-requested",
+     "to": "tab-storage-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "cameraRealisation",
+       "to": "event.camera"
+      }
+     ],
+     "faultOnly": false,
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'realisation'",
+     "id": "tab-storage-save-realisation",
+     "on": "camera-saved",
+     "to": "tab-storage-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "camera-restored",
+       "payload": {
+        "camera": "cameraRealisation",
+        "view": "event.view"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'realisation' && cameraRealisation != 'none'",
+     "id": "tab-storage-restore-realisation",
+     "on": "camera-restore-requested",
+     "to": "tab-storage-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "cameraDataAndEditFlow",
+       "to": "event.camera"
+      }
+     ],
+     "faultOnly": false,
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'data-and-edit-flow'",
+     "id": "tab-storage-save-data-and-edit-flow",
+     "on": "camera-saved",
+     "to": "tab-storage-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "camera-restored",
+       "payload": {
+        "camera": "cameraDataAndEditFlow",
+        "view": "event.view"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'data-and-edit-flow' && cameraDataAndEditFlow != 'none'",
+     "id": "tab-storage-restore-data-and-edit-flow",
+     "on": "camera-restore-requested",
+     "to": "tab-storage-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "cameraSemanticCoreOnly",
+       "to": "event.camera"
+      }
+     ],
+     "faultOnly": false,
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'semantic-core-only'",
+     "id": "tab-storage-save-semantic-core-only",
+     "on": "camera-saved",
+     "to": "tab-storage-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "camera-restored",
+       "payload": {
+        "camera": "cameraSemanticCoreOnly",
+        "view": "event.view"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'semantic-core-only' && cameraSemanticCoreOnly != 'none'",
+     "id": "tab-storage-restore-semantic-core-only",
+     "on": "camera-restore-requested",
+     "to": "tab-storage-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "cameraClaims",
+       "to": "event.camera"
+      }
+     ],
+     "faultOnly": false,
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'claims'",
+     "id": "tab-storage-save-claims",
+     "on": "camera-saved",
+     "to": "tab-storage-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "camera-restored",
+       "payload": {
+        "camera": "cameraClaims",
+        "view": "event.view"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'claims' && cameraClaims != 'none'",
+     "id": "tab-storage-restore-claims",
+     "on": "camera-restore-requested",
+     "to": "tab-storage-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "cameraBehavior",
+       "to": "event.camera"
+      }
+     ],
+     "faultOnly": false,
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'behavior'",
+     "id": "tab-storage-save-behavior",
+     "on": "camera-saved",
+     "to": "tab-storage-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "camera-restored",
+       "payload": {
+        "camera": "cameraBehavior",
+        "view": "event.view"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'behavior' && cameraBehavior != 'none'",
+     "id": "tab-storage-restore-behavior",
+     "on": "camera-restore-requested",
+     "to": "tab-storage-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "cameraReferences",
+       "to": "event.camera"
+      }
+     ],
+     "faultOnly": false,
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'references'",
+     "id": "tab-storage-save-references",
+     "on": "camera-saved",
+     "to": "tab-storage-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "camera-restored",
+       "payload": {
+        "camera": "cameraReferences",
+        "view": "event.view"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'references' && cameraReferences != 'none'",
+     "id": "tab-storage-restore-references",
+     "on": "camera-restore-requested",
+     "to": "tab-storage-ready"
+    },
+    {
+     "effects": [
+      {
        "emit": "camera-none",
        "payload": {
         "view": "event.view"
@@ -194,6 +411,34 @@
     {
      "initial": "none",
      "name": "dataCamera"
+    },
+    {
+     "initial": "none",
+     "name": "cameraArchitecture"
+    },
+    {
+     "initial": "none",
+     "name": "cameraRealisation"
+    },
+    {
+     "initial": "none",
+     "name": "cameraDataAndEditFlow"
+    },
+    {
+     "initial": "none",
+     "name": "cameraSemanticCoreOnly"
+    },
+    {
+     "initial": "none",
+     "name": "cameraClaims"
+    },
+    {
+     "initial": "none",
+     "name": "cameraBehavior"
+    },
+    {
+     "initial": "none",
+     "name": "cameraReferences"
     }
    ]
   }
@@ -672,6 +917,12 @@
   },
   {
    "id": "traffic-step-recorded"
+  },
+  {
+   "id": "sim-reset-requested"
+  },
+  {
+   "id": "sim-seek-requested"
   }
  ],
  "faults": [],

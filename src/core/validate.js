@@ -12,6 +12,7 @@ import { checkDataConsistency, dataRuleDiagnostics, RULE_IDS } from './data-mode
 import { contractFields, contractErrorCodes } from './contract-trace.js';
 import { parseType, typeAssignable, typeText } from './type-expr.js';
 import { minRuns, parseRational } from './metric-stats.js';
+import { testRefProblem, describeTestRefProblem } from './evidence-ref.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Entity} Entity */
@@ -389,6 +390,13 @@ export function validateModel(model) {
     for (const c of kind('claim')) {
       if (['invariant', 'temporal', 'measured'].includes(c.data.kind) && c.data.faultModel === undefined) report('info', 'gap.no-fault-model', c, `Claim "${c.id}" is evaluated under no fault model, though this specification declares ${kind('faultModel').length === 1 ? 'one' : 'some'}.`);
     }
+  }
+  // --- evidence -----------------------------------------------------------
+  // A test reference that exegra verify would refuse as unsafe is an error here, so the author sees it before verify.
+  for (const e of kind('evidence')) {
+    if (e.data.kind !== 'test' || typeof e.data.ref !== 'string') continue;
+    const problem = testRefProblem(e.data.ref);
+    if (problem) report('error', 'evidence.ref-unsafe', e, `Evidence "${e.id}": ${describeTestRefProblem(e.data.ref, problem)}`, ['ref']);
   }
   const evidenced = new Set(kind('evidence').map((e) => e.data.claim));
   for (const c of kind('claim')) {

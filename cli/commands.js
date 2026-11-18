@@ -29,6 +29,7 @@ import { runScenario } from '../src/core/engine.js';
 import { proveScenario, ProveError } from '../tools/prove.js';
 import { CLAIM_STATUSES } from '../src/core/claim-methods.js';
 import { stableStringify } from '../src/core/hash.js';
+import { testRefProblem, describeTestRefProblem } from '../src/core/evidence-ref.js';
 
 /** @typedef {import('../src/core/types.js').Model} Model */
 /** @typedef {import('../src/core/types.js').Entity} Entity */
@@ -42,7 +43,6 @@ export const DEFAULT_PROJECT = 'exegra';
 const TEST_TIMEOUT_MS = 10 * 60 * 1000;
 const TEST_OUTPUT_MAX_BYTES = 64 * 1024 * 1024;
 const TEST_OUTPUT_TAIL_LINES = 20;
-const SAFE_TEST_REF = /^[A-Za-z0-9_./\- #:]+$/;
 const BROWSER_TEST_PREFIX = 'tests/browser/';
 
 /** Failure raised by a command. `code` is stable and machine-readable. */
@@ -325,11 +325,11 @@ export function mergeRecordedResults(prior, runs) {
  * @returns {{outcome: 'pass'|'fail'|'skipped', detail?: string}}
  */
 function runTestReference(ref, env) {
-  if (!SAFE_TEST_REF.test(ref)) return { outcome: 'fail', detail: 'unsafe reference' };
+  const problem = testRefProblem(ref);
+  if (problem) return { outcome: 'fail', detail: `unsafe reference: ${describeTestRefProblem(ref, problem)}` };
   const hashAt = ref.indexOf('#');
   const file = (hashAt < 0 ? ref : ref.slice(0, hashAt)).trim();
   const pattern = hashAt < 0 ? '' : ref.slice(hashAt + 1).trim();
-  if (file === '') return { outcome: 'fail', detail: 'unsafe reference' };
   const abs = path.resolve(env.repoRoot, file);
   if (!isInside(env.repoRoot, abs)) return { outcome: 'fail', detail: 'unsafe reference' };
   if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) return { outcome: 'fail', detail: 'test file not found' };

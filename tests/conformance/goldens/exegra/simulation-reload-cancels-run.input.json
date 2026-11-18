@@ -196,6 +196,60 @@
      "id": "sim-run-to-end",
      "on": "sim-run-to-end-requested",
      "to": "sim-idle"
+    },
+    {
+     "effects": [
+      {
+       "set": "stepIndex",
+       "to": -1
+      }
+     ],
+     "faultOnly": false,
+     "from": "sim-idle",
+     "guard": "stepCount > 0",
+     "id": "sim-reset",
+     "on": "sim-reset-requested",
+     "to": "sim-idle"
+    },
+    {
+     "effects": [
+      {
+       "set": "stepIndex",
+       "to": "event.stepIndex"
+      }
+     ],
+     "faultOnly": false,
+     "from": "sim-idle",
+     "guard": "stepCount > 0",
+     "id": "sim-seek",
+     "on": "sim-seek-requested",
+     "to": "sim-idle"
+    },
+    {
+     "effects": [
+      {
+       "set": "token",
+       "to": "token + 1"
+      },
+      {
+       "set": "scenarioId",
+       "to": "'none'"
+      },
+      {
+       "set": "stepIndex",
+       "to": -1
+      },
+      {
+       "set": "stepCount",
+       "to": 0
+      }
+     ],
+     "faultOnly": false,
+     "from": "sim-idle",
+     "guard": null,
+     "id": "sim-project-opened",
+     "on": "project-opened",
+     "to": "sim-idle"
     }
    ],
    "variables": [
@@ -984,6 +1038,12 @@
   },
   {
    "id": "traffic-step-recorded"
+  },
+  {
+   "id": "sim-reset-requested"
+  },
+  {
+   "id": "sim-seek-requested"
   }
  ],
  "faults": [],

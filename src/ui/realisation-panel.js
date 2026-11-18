@@ -5,6 +5,12 @@ import { h, clear } from './dom.js';
 import { entityLabel } from '../core/query.js';
 import { generateAll } from '../core/generate/index.js';
 import { writeGenerated } from '../persist/client.js';
+import { sha256Hex } from '../core/sha256.js';
+
+/** sha-256 of the generated files with sorted keys: how the self-model names one set of generated documents (the dev server computes the same, tools/vite-plugin-exegra.js hashFiles). @param {Record<string, string>} files */
+function filesHash(files) {
+  return sha256Hex(JSON.stringify(Object.fromEntries(Object.keys(files).sort().map((k) => [k, files[k]]))));
+}
 
 const STATUSES = ['generated', 'partially-generated', 'model-configured', 'manual', 'not-implemented', 'undeclared'];
 const STATUS_LABEL = {
@@ -177,6 +183,7 @@ export function mountRealisationPanel(el, session) {
 
   async function generate() {
     if (gen.busy || !session.model) return;
+    session.traffic?.record('generate-clicked');
     gen = { busy: true, files: null, written: null, note: '', error: '' };
     renderGen();
     try {
@@ -187,7 +194,11 @@ export function mountRealisationPanel(el, session) {
       });
       gen.files = files;
       if (session.persistent) {
-        const res = await writeGenerated(session.projectName, files);
+        const requestId = session.traffic.nextRequestId();
+        const hash = filesHash(files);
+        session.traffic.record('generated-intent', { name: session.projectName, files: hash, requestId });
+        const res = await writeGenerated(session.projectName, files, { requestId, filesHash: hash });
+        if (res?.ok) session.traffic.record('generated-saved', { written: res.written ?? [], requestId });
         if (res?.ok) gen.written = res.written ?? Object.keys(files);
         else gen.error = `Could not write generated files: ${/** @type {any} */ (res)?.error ?? 'unknown error'}`;
         if (!gen.written) gen.note = 'Not written to disk.';

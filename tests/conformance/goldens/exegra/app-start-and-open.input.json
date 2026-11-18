@@ -19,7 +19,8 @@
       {
        "emit": "session-init-requested",
        "payload": {
-        "persistent": "event.persistent"
+        "persistent": "event.persistent",
+        "project": "event.project"
        }
       },
       {
@@ -40,6 +41,10 @@
        "to": "event.persistent"
       },
       {
+       "set": "project",
+       "to": "event.project"
+      },
+      {
        "emit": "engine-load-requested"
       }
      ],
@@ -55,7 +60,8 @@
       {
        "emit": "session-init-requested",
        "payload": {
-        "persistent": "persistentFlag"
+        "persistent": "persistentFlag",
+        "project": "project"
        }
       }
      ],
@@ -71,6 +77,10 @@
     {
      "initial": true,
      "name": "persistentFlag"
+    },
+    {
+     "initial": "exegra",
+     "name": "project"
     }
    ]
   },
@@ -146,6 +156,10 @@
     {
      "effects": [
       {
+       "set": "pendingName",
+       "to": "event.project"
+      },
+      {
        "set": "persistent",
        "to": true
       },
@@ -176,7 +190,7 @@
       {
        "emit": "project-open-requested",
        "payload": {
-        "name": "'exegra'"
+        "name": "event.project"
        }
       }
      ],
@@ -196,7 +210,7 @@
       {
        "emit": "project-open-requested",
        "payload": {
-        "name": "'exegra'"
+        "name": "pendingName"
        }
       }
      ],
@@ -972,6 +986,46 @@
     {
      "effects": [
       {
+       "set": "ownNotices",
+       "to": "ownNotices + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.file == 'layout' && event.hash == layoutBase",
+     "id": "session-ignore-own-layout-write",
+     "on": "external-change-received",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "readPurpose",
+       "to": "'external-layout'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "read-intent",
+       "payload": {
+        "name": "projectName",
+        "purpose": "'external'",
+        "requestId": "reqSeq"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.file == 'layout'",
+     "id": "session-external-layout-read",
+     "on": "external-change-received",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
        "set": "readPurpose",
        "to": "'external'"
       },
@@ -993,6 +1047,31 @@
      "guard": "event.file == 'spec'",
      "id": "session-external-read",
      "on": "external-change-received",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "layoutBase",
+       "to": "event.layoutHash"
+      },
+      {
+       "set": "externalReloads",
+       "to": "externalReloads + 1"
+      },
+      {
+       "emit": "reload-requested",
+       "payload": {
+        "file": "'layout'",
+        "text": "event.layoutHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "readPurpose == 'external-layout' && event.layoutHash != layoutBase",
+     "id": "session-external-layout-adopted",
+     "on": "project-files-read",
      "to": "session-open"
     },
     {
@@ -1053,6 +1132,29 @@
      "id": "session-projects-refreshed",
      "on": "projects-listed",
      "to": "session-open"
+    },
+    {
+     "effects": [],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "readPurpose == 'external' || readPurpose == 'external-layout'",
+     "id": "session-external-unchanged",
+     "on": "project-files-read",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "ownNotices",
+       "to": "ownNotices + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": null,
+     "id": "session-notice-while-saving",
+     "on": "external-change-received",
+     "to": "session-saving"
     }
    ],
    "variables": [
@@ -2444,7 +2546,7 @@
        "emit": "commit-notified",
        "payload": {
         "file": "'spec'",
-        "origin": "'ui'",
+        "origin": "event.origin",
         "text": "event.specHash"
        }
       }
@@ -2620,6 +2722,40 @@
      "guard": "redoDepth > 0",
      "id": "history-redo",
      "on": "redo-requested",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "layoutHash",
+       "to": "event.text"
+      },
+      {
+       "set": "undoDepth",
+       "to": 0
+      },
+      {
+       "set": "redoDepth",
+       "to": 0
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'layout'",
+        "origin": "'external'",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "history-ready",
+     "guard": "event.file == 'layout'",
+     "id": "history-reload-layout",
+     "on": "reload-requested",
      "to": "history-ready"
     },
     {
@@ -3303,6 +3439,12 @@
   },
   {
    "id": "traffic-step-recorded"
+  },
+  {
+   "id": "sim-reset-requested"
+  },
+  {
+   "id": "sim-seek-requested"
   }
  ],
  "faults": [],
@@ -3316,7 +3458,8 @@
     "at": 0,
     "event": "page-loaded",
     "payload": {
-     "persistent": true
+     "persistent": true,
+     "project": "exegra"
     }
    }
   ]

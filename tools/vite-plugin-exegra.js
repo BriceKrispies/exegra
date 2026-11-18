@@ -5,13 +5,72 @@
 // without a preflight, which is never granted).
 
 import fs from 'node:fs';
-import { createWorkspace, WorkspaceError } from './workspace.js';
+import { createWorkspace, WorkspaceError, hashText } from './workspace.js';
 
 const PREFIX = '/__exegra/';
 const EVENTS_PATH = '/__exegra/events';
 const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]']);
 const BODY_LIMIT = 6 * 1024 * 1024;
 const PING_MS = 25_000;
+
+// ---- traffic (WG-4777) ------------------------------------------------------------------------
+// The server's own events, named by the event ids of specs/exegra/spec.jsonc, so that the running
+// application can replay them through its self-model (src/core/replay.js). A request that carries
+// x-exegra-request-id gets its events back in the x-exegra-trace header (URI-encoded JSON), in the
+// order the server produced them; the persistence client appends them to its traffic record. Texts
+// are recorded as their sha-256, as the self-model represents them. Nothing is kept on the server
+// beyond the hashes it wrote itself (to tell its own writes from external edits in change notices).
+
+/** @typedef {{id: string, payload: Record<string, any>, inferred?: boolean}} ServerEvent */
+/** @typedef {{requestId: number|null, events: ServerEvent[], add: (id: string, payload: Record<string, any>, inferred?: boolean) => void}} ServerTrace */
+
+/** @type {WeakMap<import('node:http').ServerResponse, ServerTrace>} */
+const TRACES = new WeakMap();
+
+/** @param {import('node:http').IncomingMessage} req @param {import('node:http').ServerResponse} res @returns {ServerTrace} */
+function startTrace(req, res) {
+  const raw = Number(req.headers['x-exegra-request-id']);
+  const requestId = Number.isInteger(raw) ? raw : null;
+  /** @type {ServerTrace} */
+  const trace = {
+    requestId,
+    events: [],
+    add(id, payload, inferred) {
+      if (requestId === null) return;
+      trace.events.push(inferred ? { id, payload, inferred: true } : { id, payload });
+    },
+  };
+  TRACES.set(res, trace);
+  return trace;
+}
+
+/** The error event of each route, for an answer that is not a success. */
+const ERROR_EVENTS = {
+  '/__exegra/write': 'write-file-failed',
+  '/__exegra/project': 'read-project-failed',
+  '/__exegra/export': 'export-failed',
+  '/__exegra/import': 'import-refused',
+};
+
+/** sha-256 of a JSON value with sorted object keys (the generated files of one request). @param {any} v */
+export function hashFiles(v) {
+  const sort = (/** @type {any} */ x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map((k) => [k, sort(x[k])])) : x);
+  return hashText(JSON.stringify(sort(v ?? {})));
+}
+
+/** @param {unknown} text */
+const textHash = (text) => (typeof text === 'string' ? hashText(text) : text ?? null);
+
+/** Hashes this server wrote, per project file, so a change notice can tell its own writes from external edits. */
+const OWN_WRITES = new Map();
+/** @param {string} name @param {string} file @param {string} hash */
+function rememberWrite(name, file, hash) {
+  const key = `${name}/${file}`;
+  const list = OWN_WRITES.get(key) ?? [];
+  list.push(hash);
+  if (list.length > 32) list.shift();
+  OWN_WRITES.set(key, list);
+}
 
 class HttpError extends Error {
   /**
@@ -66,6 +125,8 @@ function checkRequest(req, url) {
 
 /** @param {import('node:http').ServerResponse} res @param {number} status @param {unknown} body */
 function send(res, status, body) {
+  const trace = TRACES.get(res);
+  if (trace && trace.events.length) res.setHeader('x-exegra-trace', encodeURIComponent(JSON.stringify(trace.events)));
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store');
@@ -127,9 +188,11 @@ async function readJsonBody(req) {
  * @param {Set<{stop: () => void}>} streams
  */
 function openEvents(req, res, url, ws, streams) {
+  const name = /** @type {string} */ (url.searchParams.get('name'));
   // Throws WorkspaceError (name.invalid) before any header is sent.
-  const unwatch = ws.watch(/** @type {string} */ (url.searchParams.get('name')), ({ file, hash }) => {
+  const unwatch = ws.watch(name, ({ file, hash }) => {
     if (!res.writableEnded && !res.destroyed) {
+      res.write(`event: trace\ndata: ${JSON.stringify(changeTrace(name, file, hash))}\n\n`);
       res.write(`event: change\ndata: ${JSON.stringify({ file, hash })}\n\n`);
     }
   });
@@ -139,6 +202,7 @@ function openEvents(req, res, url, ws, streams) {
     Connection: 'keep-alive',
   });
   res.flushHeaders();
+  res.write(`event: trace\ndata: ${JSON.stringify([{ id: 'ws-watch', payload: { name } }])}\n\n`);
   const ping = setInterval(() => {
     if (!res.destroyed) res.write(': ping\n\n');
   }, PING_MS);
@@ -158,6 +222,37 @@ function openEvents(req, res, url, ws, streams) {
 }
 
 /**
+ * The server events of one change notice. A hash this server wrote is its own write, whose
+ * disk-file-replaced was recorded with the write; any other hash is an external edit, which the
+ * server infers (marked inferred): the file was replaced by another process.
+ * @param {string} name @param {'spec'|'layout'|'recorded'} file @param {string|null} hash
+ * @returns {ServerEvent[]}
+ */
+export function changeTrace(name, file, hash) {
+  /** @type {ServerEvent[]} */
+  const out = [];
+  const own = hash !== null && (OWN_WRITES.get(`${name}/${file}`) ?? []).includes(hash);
+  if (!own && hash !== null) {
+    if (file === 'recorded') {
+      out.push({ id: 'ws-write-recorded', payload: { version: hash }, inferred: true });
+      out.push({ id: 'disk-file-replaced', payload: { file, hash }, inferred: true });
+      out.push({ id: 'ws-recorded-done', payload: { version: hash }, inferred: true });
+    } else {
+      out.push({ id: 'disk-edited-externally', payload: { file, hash }, inferred: true });
+      out.push({ id: 'disk-file-replaced', payload: { file, hash }, inferred: true });
+    }
+  }
+  out.push({ id: 'ws-change', payload: { file, hash } });
+  out.push({ id: 'file-change-notice-sent', payload: { file, hash } });
+  return out;
+}
+
+/** @param {ReturnType<typeof createWorkspace>} ws @param {string} name */
+function recordedHash(ws, name) {
+  try { return hashText(fs.readFileSync(ws.resolve(name, 'evidence/results.json'), 'utf8')); } catch { return null; }
+}
+
+/**
  * @param {import('node:http').IncomingMessage} req
  * @param {import('node:http').ServerResponse} res
  * @param {URL} url
@@ -165,30 +260,90 @@ function openEvents(req, res, url, ws, streams) {
  * @param {Set<{stop: () => void}>} streams
  */
 async function route(req, res, url, ws, streams) {
+  const t = TRACES.get(res) ?? startTrace(req, res);
+  const requestId = t.requestId;
   switch (`${req.method} ${url.pathname}`) {
-    case 'GET /__exegra/projects':
-      return send(res, 200, { projects: await ws.listProjects() });
+    case 'GET /__exegra/projects': {
+      t.add('ws-list', { requestId });
+      const projects = await ws.listProjects();
+      const names = projects.map((p) => p.name);
+      t.add('ws-list-done', { projects: names, requestId });
+      t.add('list-projects-ok', { projects: names, requestId });
+      return send(res, 200, { projects });
+    }
 
-    case 'GET /__exegra/project':
-      return send(res, 200, await ws.read(url.searchParams.get('name')));
+    case 'GET /__exegra/project': {
+      const name = url.searchParams.get('name');
+      t.add('ws-read', { name, caller: 'http', requestId });
+      let files;
+      try {
+        files = await ws.read(name);
+      } catch (err) {
+        if (err instanceof WorkspaceError && err.code === 'not-found') t.add('ws-read-missing', { caller: 'http', requestId });
+        throw err;
+      }
+      const shape = { spec: files.spec.hash, layout: files.layout?.hash ?? null, recorded: files.recorded === null ? null : recordedHash(ws, /** @type {string} */ (name)) };
+      t.add('ws-read-done', { ...shape, caller: 'http', requestId });
+      t.add('read-project-ok', { ...shape, requestId });
+      return send(res, 200, files);
+    }
 
     case 'POST /__exegra/write': {
       const body = await readJsonBody(req);
+      t.add('ws-write', { name: body.name, file: body.file, text: textHash(body.text), baseHash: body.baseHash ?? null, caller: 'http', requestId });
       const result = await ws.write(body.name, body.file, body.text, body.baseHash, body.meta);
+      if (result.ok) {
+        rememberWrite(body.name, body.file, /** @type {string} */ (result.hash));
+        t.add('disk-file-replaced', { file: body.file, hash: result.hash });
+        t.add('ws-write-done', { file: body.file, hash: result.hash, caller: 'http', requestId });
+        t.add('write-file-ok', { ok: true, hash: result.hash, requestId });
+      } else if ('conflict' in result && result.conflict) {
+        t.add('ws-write-conflict', { file: body.file, current: result.current.hash, caller: 'http', requestId });
+        t.add('write-file-conflict', { code: 'conflict', current: result.current.hash, requestId });
+      }
       return send(res, result.ok ? 200 : 409, result);
     }
 
     case 'POST /__exegra/generated': {
       const body = await readJsonBody(req);
-      return send(res, 200, await ws.writeGenerated(body.name, body.files));
+      t.add('ws-write-generated', { name: body.name, files: hashFiles(body.files), caller: 'http', requestId });
+      const result = await ws.writeGenerated(body.name, body.files);
+      t.add('ws-generated-done', { written: result.written, caller: 'http', requestId });
+      t.add('generated-write-ok', { ok: true, written: result.written, requestId });
+      return send(res, 200, result);
     }
 
-    case 'GET /__exegra/export':
-      return send(res, 200, await ws.exportProject(url.searchParams.get('name')));
+    case 'GET /__exegra/export': {
+      const name = url.searchParams.get('name');
+      t.add('ws-export', { name, requestId });
+      let bundle;
+      try {
+        bundle = await ws.exportProject(name);
+      } catch (err) {
+        if (err instanceof WorkspaceError && err.code === 'not-found') t.add('ws-export-missing', { requestId });
+        throw err;
+      }
+      const files = hashText(bundle.files['spec.jsonc']);
+      t.add('ws-export-done', { name, files, requestId });
+      t.add('export-ok', { format: bundle.format, version: bundle.version, name, files, requestId });
+      return send(res, 200, bundle);
+    }
 
     case 'POST /__exegra/import': {
       const body = await readJsonBody(req);
+      const specText = body.bundle?.files?.['spec.jsonc'];
+      const bundleHash = typeof specText === 'string' ? hashText(specText) : '';
+      t.add('ws-import', { name: body.name, bundle: bundleHash, requestId });
       const result = await ws.importProject(body.name, body.bundle);
+      if (result.ok) {
+        rememberWrite(body.name, 'spec', bundleHash);
+        t.add('disk-file-replaced', { file: 'spec', hash: bundleHash });
+        t.add('ws-import-done', { requestId });
+        t.add('import-ok', { ok: true, requestId });
+      } else {
+        t.add('ws-import-refused', { requestId });
+        t.add('import-refused', { code: 'bundle.invalid', requestId });
+      }
       return send(res, result.ok ? 200 : 400, result);
     }
 
@@ -254,6 +409,12 @@ export function exegraDevServer({ specsDir }) {
         const url = new URL(req.url ?? '/', 'http://localhost');
         if (!url.pathname.startsWith(PREFIX)) return next();
         (async () => {
+          const trace = startTrace(req, res);
+          /** @param {string} code */
+          const failed = (code) => {
+            const id = ERROR_EVENTS[/** @type {keyof typeof ERROR_EVENTS} */ (url.pathname)];
+            if (id) trace.add(id, { code, requestId: trace.requestId });
+          };
           try {
             checkRequest(req, url);
             await route(req, res, url, ws, streams);
@@ -263,13 +424,16 @@ export function exegraDevServer({ specsDir }) {
               return;
             }
             if (err instanceof HttpError) {
+              failed(err.code);
               if (err.status === 413) res.setHeader('Connection', 'close');
               return send(res, err.status, { ok: false, error: err.message, code: err.code });
             }
             if (err instanceof WorkspaceError) {
+              failed(err.code);
               return send(res, 400, { ok: false, error: err.message, code: err.code });
             }
             server.config.logger.error(`[exegra] ${/** @type {Error} */ (err)?.stack ?? err}`);
+            failed('internal');
             return send(res, 500, { ok: false, error: 'Internal error.', code: 'internal' });
           }
         })();

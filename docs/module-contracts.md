@@ -28,6 +28,7 @@ core source wins — report the conflict.
 | `src/core/metamodel.json` | entity kinds and property definitions as data |
 | `src/core/parse.js` | `parseSpec(text)`, `SCHEMA_VERSION`, `BASE_METAMODEL` |
 | `src/core/validate.js` | `validateModel(model)` |
+| `src/core/evidence-ref.js` | `testRefProblem(ref)`, `describeTestRefProblem(ref, problem)` (the rule for test evidence references, shared by validate and verify) |
 | `src/core/analyze.js` | `analyzeSpec(text) -> {model, diagnostics, errorCount}` |
 | `src/core/expr.js` | `parseExpr`, `evalExpr`, `exprRefs`, `evaluate`, `ExprError` |
 | `src/core/hash.js` | `stableStringify`, `normalize`, `semanticHash`, `hashString` |
@@ -293,6 +294,8 @@ writeGenerated(name, files: Record<string, string>) -> Promise<{ok, written: str
 watchProject(name, onChange: ({file: 'spec'|'layout'|'recorded', hash}) => void) -> () => void   // SSE
 exportProject(name) -> Promise<Bundle>
 importProject(name, bundle) -> Promise<{ok, error?}>
+observeTraffic(fn)              // the session's traffic observer; every call above takes an optional last argument {requestId, ...}
+                                // and, with a requestId, records its request event and the server's events of the answer
 Bundle = { format: 'exegra-project', version: 1, name, files: { 'spec.jsonc': string, 'layout.jsonc'?: string, 'evidence/results.json'?: string } }
 ```
 
@@ -335,6 +338,9 @@ session.sim: { scenarioId: string|null, faults: string[], simulation: Simulation
                stepIndex: number, playing: boolean, checks: checkTrace() result }
 session.simLoad(scenarioId, faults?), session.simStep(), session.simBack(), session.simReset(),
 session.simRunToEnd(), session.simPlay(bool), session.simSeek(stepIndex), session.simSetFaults(ids)
+session.simLive(bool)           // Live source: the recorded stream replayed through live-session (docs/simulation.md, "Live mode")
+session.live: { on, available, divergences, awaiting, at: Map<seq, ms>, fresh, dropped }
+session.traffic                 // the page's traffic recorder (src/app/traffic-recorder.js): record(id, payload), nextRequestId(), events(), forReplay()
 
 session.revealSource(id)        // ask the source editor to show an entity's declaration
 session.requestFit(ids?)        // ask the scene to fit

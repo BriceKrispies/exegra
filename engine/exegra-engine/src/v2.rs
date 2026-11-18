@@ -8,6 +8,9 @@
 //! workloads, timers, meters, request classes, prices, windowed and resource faults and
 //! `crash-instance`.
 
+// Clippy asks for `const` on a thread-local initializer that already is one.
+#![allow(clippy::missing_const_for_thread_local)]
+
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -23,13 +26,156 @@ type R<T> = Result<T, String>;
 const TWO53: u64 = 1 << 53;
 const TWO32: u64 = 1 << 32;
 
+/// A shared immutable string: identifiers are cloned by the step, so cloning must not allocate.
+#[derive(Clone, Eq)]
+pub struct Id(Rc<str>);
+
+// Whether the run keeps its steps: the records only a trace reads are built then.
+static KEEP: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+/// A shared property name: the few names the engine itself puts in payloads are built once.
+fn skey(name: &str) -> Rc<str> {
+    thread_local! {
+        static KEYS: RefCell<Vec<Rc<str>>> = const { RefCell::new(Vec::new()) };
+    }
+    KEYS.with(|ks| {
+        let mut ks = ks.borrow_mut();
+        if let Some(k) = ks.iter().find(|k| &***k == name) {
+            return Rc::clone(k);
+        }
+        let k: Rc<str> = Rc::from(name);
+        ks.push(Rc::clone(&k));
+        k
+    })
+}
+
+fn keep() -> bool {
+    KEEP.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+fn set_keep(on: bool) {
+    KEEP.store(on, std::sync::atomic::Ordering::Relaxed);
+}
+
+impl std::hash::Hash for Id {
+    fn hash<H: std::hash::Hasher>(&self, h: &mut H) {
+        (*self.0).hash(h)
+    }
+}
+
+impl Id {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+impl std::ops::Deref for Id {
+    type Target = str;
+    fn deref(&self) -> &str {
+        &self.0
+    }
+}
+impl std::fmt::Debug for Id {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Debug::fmt(&*self.0, f)
+    }
+}
+impl std::fmt::Display for Id {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&*self.0, f)
+    }
+}
+impl From<&str> for Id {
+    fn from(s: &str) -> Id {
+        Id(Rc::from(s))
+    }
+}
+impl From<String> for Id {
+    fn from(s: String) -> Id {
+        Id(Rc::from(s))
+    }
+}
+impl From<&Id> for Id {
+    fn from(s: &Id) -> Id {
+        s.clone()
+    }
+}
+impl From<&String> for Id {
+    fn from(s: &String) -> Id {
+        Id(Rc::from(s.as_str()))
+    }
+}
+thread_local! {
+    static EMPTY_ID: Id = Id(Rc::from(""));
+}
+impl Default for Id {
+    /// The empty identifier, shared.
+    fn default() -> Id {
+        EMPTY_ID.with(Id::clone)
+    }
+}
+impl std::borrow::Borrow<str> for Id {
+    fn borrow(&self) -> &str {
+        &self.0
+    }
+}
+impl AsRef<str> for Id {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+impl PartialEq for Id {
+    fn eq(&self, o: &Id) -> bool {
+        Rc::ptr_eq(&self.0, &o.0) || *self.0 == *o.0
+    }
+}
+impl PartialEq<str> for Id {
+    fn eq(&self, o: &str) -> bool {
+        &*self.0 == o
+    }
+}
+impl PartialEq<&str> for Id {
+    fn eq(&self, o: &&str) -> bool {
+        &*self.0 == *o
+    }
+}
+impl PartialEq<String> for Id {
+    fn eq(&self, o: &String) -> bool {
+        &*self.0 == o.as_str()
+    }
+}
+impl PartialEq<&String> for Id {
+    fn eq(&self, o: &&String) -> bool {
+        &*self.0 == o.as_str()
+    }
+}
+impl PartialEq<Id> for String {
+    fn eq(&self, o: &Id) -> bool {
+        self.as_str() == &*o.0
+    }
+}
+impl PartialEq<Id> for str {
+    fn eq(&self, o: &Id) -> bool {
+        self == &*o.0
+    }
+}
+impl PartialEq<Id> for &str {
+    fn eq(&self, o: &Id) -> bool {
+        *self == &*o.0
+    }
+}
+impl PartialEq<Id> for &String {
+    fn eq(&self, o: &Id) -> bool {
+        self.as_str() == &*o.0
+    }
+}
+
 // ---- Input ----------------------------------------------------------------------------------
 
 #[derive(Clone, Debug)]
 pub enum Dist {
     Fixed(u64),
     Uniform(u64, u64),
-    Table(Vec<(u64, u64)>),
+    Table(Rc<[(u64, u64)]>),
     Choice(Vec<u64>),
 }
 
@@ -70,16 +216,16 @@ pub enum Effect {
     },
     Request {
         kind: ReqKind,
-        res: String,
+        res: Id,
         class: Option<String>,
         units: u64,
         demand: Dist,
-        then: String,
-        refused: Option<String>,
+        then: Id,
+        refused: Option<Id>,
         payload: JsObject,
     },
     Release {
-        res: String,
+        res: Id,
         class: Option<String>,
         units: u64,
     },
@@ -113,7 +259,7 @@ pub enum SizeIn {
 /// A link (WG-4729).
 #[derive(Clone, Debug)]
 pub struct Link {
-    pub id: String,
+    pub id: Id,
     pub from: String,
     pub to: String,
     pub latency: Dist,
@@ -125,18 +271,29 @@ pub struct Link {
 
 #[derive(Clone, Debug)]
 pub struct Transition {
-    pub id: String,
-    pub from: String,
-    pub to: String,
-    pub on: String,
-    pub guard: Option<String>,
+    pub id: Id,
+    pub from: Id,
+    pub to: Id,
+    pub on: Id,
+    pub guard: Option<Id>,
     pub effects: Vec<Effect>,
     pub fault_only: bool,
+    /// The random-stream names of each effect, in effect order (filled when the behavior is decoded).
+    pub sites: Vec<Site>,
+}
+
+/// The stream names of one effect site `<behavior>:<transition>:<k>`.
+#[derive(Clone, Debug)]
+pub struct Site {
+    pub sample: Id,
+    pub after: Id,
+    pub demand: Id,
+    pub size: Id,
 }
 
 #[derive(Clone, Debug)]
 pub struct Behavior {
-    pub id: String,
+    pub id: Id,
     pub subject: Option<String>,
     pub initial: String,
     pub variables: Vec<(String, Value)>,
@@ -162,7 +319,7 @@ pub enum Occurrence {
 
 #[derive(Clone, Debug)]
 pub struct Fault {
-    pub id: String,
+    pub id: Id,
     pub kind: Option<String>,
     pub event: Option<String>,
     pub transition: Option<String>,
@@ -208,27 +365,39 @@ impl Fault {
     }
 }
 
-fn active_faults<'f>(faults: &[&'f Fault], active: &[String]) -> Vec<&'f Fault> {
+fn active_faults<'a, 'f>(
+    faults: &'a [&'f Fault],
+    active: &'a [Id],
+) -> impl DoubleEndedIterator<Item = &'f Fault> + 'a {
     faults
         .iter()
         .copied()
-        .filter(|f| f.window.is_none() || active.contains(&f.id))
-        .collect()
+        .filter(move |f| f.window.is_none() || active.contains(&f.id))
 }
 
-fn eff_capacity(faults: &[&Fault], active: &[String], d: &Resource) -> u64 {
+fn eff_capacity(faults: &[&Fault], active: &[Id], d: &Resource) -> u64 {
     active_faults(faults, active)
-        .iter()
         .rfind(|f| f.is_kind("set-capacity") && f.resource.as_deref() == Some(d.id.as_str()))
         .map_or(d.capacity, |f| f.capacity)
 }
 
-/// The resource as the acting faults leave it (Format2.lean, `effDecl`).
-fn eff_decl(faults: &[&Fault], active: &[String], d: &Resource) -> Resource {
-    let act = active_faults(faults, active);
+/// The resource as the acting faults leave it (Format2.lean, `effDecl`): the declaration itself
+/// unless a fault changes it.
+fn eff_decl<'d>(
+    faults: &[&Fault],
+    active: &[Id],
+    d: &'d Resource,
+) -> std::borrow::Cow<'d, Resource> {
+    let touches = |f: &Fault| {
+        (f.is_kind("set-class-limit") || f.is_kind("collapse-classes"))
+            && f.resource.as_deref() == Some(d.id.as_str())
+    };
+    if !active_faults(faults, active).any(touches) {
+        return std::borrow::Cow::Borrowed(d);
+    }
     let mut e = d.clone();
     for cl in &mut e.classes {
-        if let Some(f) = act.iter().rfind(|f| {
+        if let Some(f) = active_faults(faults, active).rfind(|f| {
             f.is_kind("set-class-limit")
                 && f.resource.as_deref() == Some(d.id.as_str())
                 && f.class.as_deref() == Some(cl.id.as_str())
@@ -236,8 +405,7 @@ fn eff_decl(faults: &[&Fault], active: &[String], d: &Resource) -> Resource {
             cl.limit = Some(f.limit);
         }
     }
-    if act
-        .iter()
+    if active_faults(faults, active)
         .any(|f| f.is_kind("collapse-classes") && f.resource.as_deref() == Some(d.id.as_str()))
     {
         e.by_priority = false;
@@ -248,11 +416,16 @@ fn eff_decl(faults: &[&Fault], active: &[String], d: &Resource) -> Resource {
             cl.queue_bound = None;
         }
     }
-    e
+    std::borrow::Cow::Owned(e)
 }
 
 /// The combined `scale-demand` factor of a resource, in lowest terms.
-fn eff_scale(faults: &[&Fault], active: &[String], res: &str) -> R<(u64, u64)> {
+fn eff_scale(faults: &[&Fault], active: &[Id], res: &str) -> R<(u64, u64)> {
+    if !active_faults(faults, active)
+        .any(|f| f.is_kind("scale-demand") && f.resource.as_deref() == Some(res))
+    {
+        return Ok((1, 1));
+    }
     let mut n = BigUint::from(1u32);
     let mut m = BigUint::from(1u32);
     for f in active_faults(faults, active) {
@@ -280,9 +453,8 @@ fn eff_scale(faults: &[&Fault], active: &[String], res: &str) -> R<(u64, u64)> {
 }
 
 /// The demand a `use` draws from (Format2.lean, `effDemand`).
-fn eff_demand<'d>(faults: &[&'d Fault], active: &[String], stream: &str, d: &'d Dist) -> &'d Dist {
+fn eff_demand<'d>(faults: &[&'d Fault], active: &[Id], stream: &str, d: &'d Dist) -> &'d Dist {
     active_faults(faults, active)
-        .into_iter()
         .rfind(|f| {
             f.is_kind("replace-demand")
                 && format!(
@@ -311,7 +483,7 @@ pub enum DemandFactor {
 
 #[derive(Clone, Debug)]
 pub struct Class {
-    pub id: String,
+    pub id: Id,
     pub priority: i64,
     pub reserved: u64,
     pub limit: Option<u64>,
@@ -321,7 +493,7 @@ pub struct Class {
 
 #[derive(Clone, Debug)]
 pub struct Resource {
-    pub id: String,
+    pub id: Id,
     pub kind: String,
     pub capacity: u64,
     pub by_priority: bool,
@@ -379,7 +551,7 @@ pub enum WKind {
 /// A workload (WG-4715): open, closed or a population. A population's `event` is its start event.
 #[derive(Clone, Debug)]
 pub struct Workload {
-    pub id: String,
+    pub id: Id,
     pub event: String,
     pub poisson: bool,
     pub phases: Vec<Phase>,
@@ -388,10 +560,10 @@ pub struct Workload {
     pub clients: Option<Clients>,
     pub legitimate: bool,
     pub max_arrivals: Option<u64>,
-    pub payload: Vec<(String, PField)>,
-    pub request_field: String,
-    pub client_field: String,
-    pub address_field: String,
+    pub payload: Vec<(Rc<str>, PField)>,
+    pub request_field: Rc<str>,
+    pub client_field: Rc<str>,
+    pub address_field: Rc<str>,
     pub kind: WKind,
     /// Closed: the number of clients; population: the number of client instances.
     pub population: u64,
@@ -404,6 +576,39 @@ pub struct Workload {
     pub behavior: String,
     /// `clients.addresses.groupSize`.
     pub group_size: Option<Dist>,
+    /// The random-stream names of this workload (filled after decoding).
+    pub names: WNames,
+}
+
+/// The random-stream names of a workload.
+#[derive(Clone, Debug, Default)]
+pub struct WNames {
+    pub arrival: Id,
+    pub batch: Id,
+    pub client: Id,
+    pub think: Id,
+    pub groups: Id,
+    pub start: Id,
+    /// One per payload field, in order.
+    pub payload: Vec<Id>,
+}
+
+impl WNames {
+    fn of(w: &Workload) -> WNames {
+        WNames {
+            arrival: format!("arrival:{}", w.id).into(),
+            batch: format!("batch:{}", w.id).into(),
+            client: format!("client:{}", w.id).into(),
+            think: format!("think:{}", w.id).into(),
+            groups: format!("groups:{}", w.id).into(),
+            start: format!("start:{}", w.id).into(),
+            payload: w
+                .payload
+                .iter()
+                .map(|(f, _)| format!("payload:{}:{f}", w.id).into())
+                .collect(),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -560,7 +765,7 @@ fn decode_dist(v: &Value, path: &str) -> R<Dist> {
                 {
                     return Err(malformed());
                 }
-                Ok(Dist::Table(pts))
+                Ok(Dist::Table(pts.into()))
             }
             Some("choice") => {
                 let missing = || format!("Distribution \"{path}\" must have \"values\".");
@@ -692,12 +897,12 @@ fn decode_effect(v: &Value, what: &str) -> R<Effect> {
         let payload = payload_obj(fx, what)?;
         return Ok(Effect::Request {
             kind,
-            res,
+            res: res.into(),
             class,
             units,
             demand,
-            then,
-            refused,
+            then: then.into(),
+            refused: refused.map(Id::from),
             payload,
         });
     }
@@ -705,7 +910,11 @@ fn decode_effect(v: &Value, what: &str) -> R<Effect> {
         let res = string(fx, "release", what)?;
         let class = opt_str(fx, "class", what)?;
         let units = int_or(fx, "units", &format!("{what}.units"), 1, TWO32 - 1, 1)?;
-        return Ok(Effect::Release { res, class, units });
+        return Ok(Effect::Release {
+            res: res.into(),
+            class,
+            units,
+        });
     }
     Ok(Effect::Malformed)
 }
@@ -717,13 +926,14 @@ fn decode_transition(v: &Value, what: &str) -> R<Transition> {
         effects.push(decode_effect(fx, &format!("{what}.effects[{k}]"))?);
     }
     Ok(Transition {
-        id: string(t, "id", what)?,
-        from: string(t, "from", what)?,
-        to: string(t, "to", what)?,
-        on: string(t, "on", what)?,
-        guard: field(t, "guard").as_str().map(str::to_string),
+        id: string(t, "id", what)?.into(),
+        from: string(t, "from", what)?.into(),
+        to: string(t, "to", what)?.into(),
+        on: string(t, "on", what)?.into(),
+        guard: field(t, "guard").as_str().map(Id::from),
         effects,
         fault_only: matches!(field(t, "faultOnly"), Value::Bool(true)),
+        sites: Vec::new(),
     })
 }
 
@@ -739,7 +949,19 @@ fn decode_behavior(v: &Value, i: usize) -> R<Behavior> {
     }
     let mut transitions = Vec::new();
     for (j, t) in array_or_empty(b, "transitions").iter().enumerate() {
-        transitions.push(decode_transition(t, &format!("{what}.transitions[{j}]"))?);
+        let mut t = decode_transition(t, &format!("{what}.transitions[{j}]"))?;
+        t.sites = (0..t.effects.len())
+            .map(|k| {
+                let site = format!("{id}:{}:{k}", t.id);
+                Site {
+                    sample: format!("sample:{site}").into(),
+                    after: format!("after:{site}").into(),
+                    demand: format!("demand:{site}").into(),
+                    size: format!("size:{site}").into(),
+                }
+            })
+            .collect();
+        transitions.push(t);
     }
     let subject = field(b, "subject").as_str().map(str::to_string);
     let initial = string(b, "initial", &what)?;
@@ -767,7 +989,7 @@ fn decode_behavior(v: &Value, i: usize) -> R<Behavior> {
         _ => return Err(format!("{what}: \"instances\" must be an object.")),
     };
     Ok(Behavior {
-        id,
+        id: id.into(),
         subject,
         initial,
         variables,
@@ -859,7 +1081,7 @@ fn decode_fault(v: &Value, i: usize) -> R<Fault> {
         behavior,
         effect,
         demand,
-        id: string(f, "id", &what)?,
+        id: string(f, "id", &what)?.into(),
         event: opt_str(f, "event", &what)?,
         transition: opt_str(f, "transition", &what)?,
         kind,
@@ -889,7 +1111,7 @@ fn decode_link(v: &Value, i: usize) -> R<Link> {
     )?;
     let queue_bound = opt_int(o, "queueBound", &format!("{what}.queueBound"), 0, TWO32 - 1)?;
     Ok(Link {
-        id,
+        id: id.into(),
         from,
         to,
         latency,
@@ -1017,7 +1239,7 @@ fn decode_resource(v: &Value, i: usize) -> R<Resource> {
                     _ => return Err(perr()),
                 };
                 out.push(Class {
-                    id: cid,
+                    id: cid.into(),
                     priority,
                     reserved: int_or(co, "reserved", &format!("{cw}.reserved"), 0, TWO32 - 1, 0)?,
                     limit: opt_int(co, "limit", &format!("{cw}.limit"), 1, TWO32 - 1)?,
@@ -1043,7 +1265,7 @@ fn decode_resource(v: &Value, i: usize) -> R<Resource> {
         }],
     };
     Ok(Resource {
-        id,
+        id: id.into(),
         kind,
         capacity,
         by_priority,
@@ -1245,9 +1467,9 @@ fn decode_workload(v: &Value, i: usize) -> R<Workload> {
         x if x.is_nullish() => Vec::new(),
         _ => return Err(format!("{what}: \"payload\" must be an object.")),
     };
-    let fname = |k: &str, d: &str| field(o, k).as_str().unwrap_or(d).to_string();
+    let fname = |k: &str, d: &str| -> Rc<str> { Rc::from(field(o, k).as_str().unwrap_or(d)) };
     let base = Workload {
-        id: id.clone(),
+        id: id.as_str().into(),
         event: String::new(),
         poisson: false,
         phases: Vec::new(),
@@ -1268,6 +1490,7 @@ fn decode_workload(v: &Value, i: usize) -> R<Workload> {
         timeout: None,
         behavior: String::new(),
         group_size: None,
+        names: WNames::default(),
     };
     if kind == "closed" {
         let event = string(o, "event", &what)?;
@@ -1521,7 +1744,9 @@ pub fn decode(root: &JsObject) -> R<Input> {
     }
     let mut workloads = Vec::new();
     for (i, w) in array_or_empty(root, "workloads").iter().enumerate() {
-        workloads.push(decode_workload(w, i)?);
+        let mut wl = decode_workload(w, i)?;
+        wl.names = WNames::of(&wl);
+        workloads.push(wl);
     }
     let unit_exp = decode_unit_exp(field(root, "unitExponential"))?;
     let metrics = decode_metrics(field(root, "metrics"))?;
@@ -1642,9 +1867,12 @@ impl Resource {
     fn priority_of(&self, i: usize) -> i64 {
         self.class_at(i).map_or(0, |c| c.priority)
     }
-    fn class_id(&self, i: usize) -> String {
+    fn class_id(&self, i: usize) -> Id {
+        thread_local! {
+            static DEFAULT_CLASS: Id = Id::from("default");
+        }
         self.class_at(i)
-            .map_or_else(|| "default".to_string(), |c| c.id.clone())
+            .map_or_else(|| DEFAULT_CLASS.with(Id::clone), |c| c.id.clone())
     }
     fn class_index(&self, c: Option<&str>) -> Option<usize> {
         match c {
@@ -1686,10 +1914,10 @@ impl DemandFactor {
     }
 }
 
-fn machine_key(b: &Behavior, inst: &Value) -> String {
+fn machine_key(b: &Behavior, inst: &Value) -> Id {
     match b.instances {
         Instances::Single => b.id.clone(),
-        _ => format!("{}#{}", b.id, inst.to_json()),
+        _ => format!("{}#{}", b.id, inst.to_json()).into(),
     }
 }
 
@@ -1699,7 +1927,7 @@ fn initial_machine(b: &Behavior) -> Machine {
         vars.insert(name.clone(), v.clone());
     }
     Machine {
-        state: b.initial.clone(),
+        state: b.initial.as_str().into(),
         vars,
     }
 }
@@ -1735,22 +1963,22 @@ fn gen_payload(
     st: &WState,
     n_: u64,
     client: Option<u64>,
-    streams: &mut Vec<(String, u64)>,
+    streams: &mut Vec<(Rc<str>, u64)>,
     draws: &mut Vec<Draw>,
 ) -> JsObject {
     let seed = i.scenario.seed.unwrap_or(0);
     let mut fs = JsObject::new();
-    for (f, pf) in &w.payload {
-        let pname = format!("payload:{}:{f}", w.id);
+    for (fi, (f, pf)) in w.payload.iter().enumerate() {
+        let pname = &w.names.payload[fi];
         match pf {
             PField::Lit(v) => fs.insert(f.clone(), v.deep_copy()),
             PField::Counter => fs.insert(f.clone(), Value::Number(n_ as f64)),
             PField::Sample(d) => {
-                let x = sample(i.scenario.seed, streams, &pname, d, draws);
+                let x = sample(i.scenario.seed, streams, pname, d, draws);
                 fs.insert(f.clone(), Value::Number(x as f64));
             }
             PField::Choose(vs, ws) => {
-                let (r, dr) = draw_next(seed, streams, &pname);
+                let (r, dr) = draw_next(seed, streams, pname);
                 draws.push(dr);
                 let v = vs
                     .get(random::categorical(r, ws))
@@ -1777,9 +2005,9 @@ fn make_instant(
     i: &Input,
     w: &Workload,
     st: &mut WState,
-    streams: &mut Vec<(String, u64)>,
+    streams: &mut Vec<(Rc<str>, u64)>,
     seq: &mut u64,
-    q: &mut Vec<Entry>,
+    q: &mut Vec<Sh<Entry>>,
 ) -> Vec<Draw> {
     let full = w.max_arrivals.is_some_and(|m| st.arrivals >= m);
     if st.cursor.done || full {
@@ -1787,13 +2015,10 @@ fn make_instant(
         return Vec::new();
     }
     let seed = i.scenario.seed.unwrap_or(0);
-    let aname = format!("arrival:{}", w.id);
-    let base = lookup(streams, &aname);
-    let ex = |k: u64| -> BigUint {
-        BigUint::from(random::sample_table_wide(
-            random::draw(seed, &aname, base + k),
-            &i.unit_exp,
-        ))
+    let aname = &w.names.arrival;
+    let base = lookup(streams, aname);
+    let ex = |k: u64| -> u128 {
+        random::sample_table_wide(random::draw(seed, aname, base + k), &i.unit_exp)
     };
     let horizon = i.scenario.horizon.unwrap_or(0);
     let (t, cur, used) = work::next_time(
@@ -1806,15 +2031,15 @@ fn make_instant(
         work::fuel_for(horizon, &w.phases),
         st.cursor.clone(),
     );
-    let mut draws: Vec<Draw> = (0..used)
+    let mut draws: Vec<Draw> = (0..if keep() { used } else { 0 })
         .map(|k| Draw {
             stream: aname.clone(),
             index: base + k,
-            value: random::draw(seed, &aname, base + k),
+            value: random::draw(seed, aname, base + k),
         })
         .collect();
     for _ in 0..used {
-        bump(streams, &aname);
+        bump(streams, aname);
     }
     let Some(t) = t else {
         st.cursor = cur;
@@ -1823,7 +2048,7 @@ fn make_instant(
     let b = sample(
         i.scenario.seed,
         streams,
-        &format!("batch:{}", w.id),
+        &w.names.batch,
         &w.batch,
         &mut draws,
     )
@@ -1838,20 +2063,20 @@ fn make_instant(
             None => None,
             Some(cl) if cl.round_robin => Some(n_ % cl.count),
             Some(cl) => {
-                let (r, dr) = draw_next(seed, streams, &format!("client:{}", w.id));
+                let (r, dr) = draw_next(seed, streams, &w.names.client);
                 draws.push(dr);
                 Some(random::index(r, cl.count as usize) as u64)
             }
         };
         let fs = gen_payload(i, w, st, n_, client, streams, &mut draws);
-        let cname = client.map(|c| format!("{}:{c}", w.id));
+        let cname: Option<Id> = client.map(|c| format!("{}:{c}", w.id).into());
         insert_entry(
             q,
             Entry {
                 seq: *seq,
                 time: t,
                 scheduled_at: t,
-                event: w.event.clone(),
+                event: w.event.as_str().into(),
                 payload: Value::object(fs),
                 source: Src::Arrival(w.id.clone(), n_, cname),
                 kind: EntryKind::Event,
@@ -1883,9 +2108,9 @@ fn issue(
     st: &mut WState,
     c: u64,
     t: u64,
-    streams: &mut Vec<(String, u64)>,
+    streams: &mut Vec<(Rc<str>, u64)>,
     seq: &mut u64,
-    q: &mut Vec<Entry>,
+    q: &mut Vec<Sh<Entry>>,
     draws: &mut Vec<Draw>,
 ) {
     if t >= i.scenario.horizon.unwrap_or(0) {
@@ -1894,14 +2119,14 @@ fn issue(
     }
     let n_ = st.arrivals;
     let fs = gen_payload(i, w, st, n_, Some(c), streams, draws);
-    let cname = format!("{}:{c}", w.id);
+    let cname: Id = format!("{}:{c}", w.id).into();
     insert_entry(
         q,
         Entry {
             seq: *seq,
             time: t,
             scheduled_at: t,
-            event: w.event.clone(),
+            event: w.event.as_str().into(),
             payload: Value::object(fs),
             source: Src::Arrival(w.id.clone(), n_, Some(cname.clone())),
             kind: EntryKind::Event,
@@ -1921,7 +2146,7 @@ fn issue(
                 seq: *seq,
                 time: t + to,
                 scheduled_at: t + to,
-                event: String::new(),
+                event: Id::default(),
                 payload: Value::Null,
                 source: Src::ClientTimeout(w.id.clone(), n_, cname),
                 kind: EntryKind::ClientTimeout {
@@ -1951,18 +2176,12 @@ fn rethink(
     st: &mut WState,
     c: u64,
     now: u64,
-    streams: &mut Vec<(String, u64)>,
+    streams: &mut Vec<(Rc<str>, u64)>,
     seq: &mut u64,
-    q: &mut Vec<Entry>,
+    q: &mut Vec<Sh<Entry>>,
     draws: &mut Vec<Draw>,
 ) {
-    let d = sample(
-        i.scenario.seed,
-        streams,
-        &format!("think:{}", w.id),
-        &w.think,
-        draws,
-    );
+    let d = sample(i.scenario.seed, streams, &w.names.think, &w.think, draws);
     st.clients[c as usize] = None;
     issue(i, w, st, c, now + d, streams, seq, q, draws);
 }
@@ -1978,9 +2197,9 @@ fn initial_workload(
     let mut draws = Vec::new();
     if let Some(d) = &w.group_size {
         let mut left = w.clients.as_ref().map_or(0, |cl| cl.count);
-        let name = format!("groups:{}", w.id);
+        let name = &w.names.groups;
         while left > 0 {
-            let g = sample(i.scenario.seed, &mut c.streams, &name, d, &mut draws).max(1);
+            let g = sample(i.scenario.seed, &mut c.streams, name, d, &mut draws).max(1);
             st.groups.push(g);
             left -= g.min(left);
         }
@@ -1991,15 +2210,9 @@ fn initial_workload(
         }
         WKind::Closed => {
             st.clients = vec![None; w.population as usize];
-            let sname = format!("start:{}", w.id);
+            let sname = &w.names.start;
             for k in 0..w.population {
-                let t = sample(
-                    i.scenario.seed,
-                    &mut c.streams,
-                    &sname,
-                    &w.start,
-                    &mut draws,
-                );
+                let t = sample(i.scenario.seed, &mut c.streams, sname, &w.start, &mut draws);
                 issue(
                     i,
                     w,
@@ -2020,27 +2233,21 @@ fn initial_workload(
             let keys: Vec<Value> = (0..w.population)
                 .map(|k| Value::str(format!("{}:{k}", w.id)))
                 .collect();
-            if let Some((_, xs)) = c.insts.iter_mut().find(|(k, _)| *k == b.id) {
+            if let Some((_, xs)) = c.insts.iter_mut().find(|(k, _)| **k == *b.id) {
                 xs.extend(keys.iter().cloned());
             }
             for v in &keys {
                 c.set_machine(&machine_key(b, v), initial_machine(b));
             }
-            let sname = format!("start:{}", w.id);
+            let sname = &w.names.start;
             for k in 0..w.population {
-                let t = sample(
-                    i.scenario.seed,
-                    &mut c.streams,
-                    &sname,
-                    &w.start,
-                    &mut draws,
-                );
+                let t = sample(i.scenario.seed, &mut c.streams, sname, &w.start, &mut draws);
                 if t >= i.scenario.horizon.unwrap_or(0) {
                     continue;
                 }
-                let cname = format!("{}:{k}", w.id);
+                let cname: Id = format!("{}:{k}", w.id).into();
                 let mut fs = JsObject::new();
-                fs.insert(w.client_field.clone(), Value::str(cname.clone()));
+                fs.insert(w.client_field.clone(), Value::str(cname.as_str()));
                 fs.insert(w.address_field.clone(), Value::str(address_of(w, st, k)));
                 insert_entry(
                     &mut c.pending,
@@ -2048,13 +2255,13 @@ fn initial_workload(
                         seq: *seq,
                         time: t,
                         scheduled_at: t,
-                        event: w.event.clone(),
+                        event: w.event.as_str().into(),
                         payload: Value::object(fs),
                         source: Src::Arrival(w.id.clone(), k, Some(cname.clone())),
                         kind: EntryKind::Event,
                         target: Some(Addr {
                             behavior: b.id.clone(),
-                            inst: Value::str(cname),
+                            inst: Value::str(cname.as_str()),
                             incarnation: 0,
                         }),
                         sender: None,
@@ -2075,13 +2282,13 @@ fn initial_workload(
 
 #[derive(Clone, Debug)]
 pub struct Machine {
-    pub state: String,
+    pub state: Id,
     pub vars: JsObject,
 }
 
 #[derive(Clone, Debug)]
 pub struct Addr {
-    pub behavior: String,
+    pub behavior: Id,
     pub inst: Value,
     pub incarnation: u64,
 }
@@ -2089,30 +2296,30 @@ pub struct Addr {
 #[derive(Clone, Debug)]
 pub enum Src {
     Scenario(u64),
-    Fault(String),
-    Transition(String, String),
-    Resource(String, u64, String),
-    Arrival(String, u64, Option<String>),
+    Fault(Id),
+    Transition(Id, Id),
+    Resource(Id, u64, &'static str),
+    Arrival(Id, u64, Option<Id>),
     /// A closed client's timeout: workload, request number, client.
-    ClientTimeout(String, u64, String),
-    Timer(String, Value, String),
-    Link(String, u64),
+    ClientTimeout(Id, u64, Id),
+    Timer(Id, Value, Id),
+    Link(Id, u64),
 }
 
 #[derive(Clone, Debug)]
 pub struct ReqInfo {
     requester: Addr,
-    then: String,
-    refused: Option<String>,
+    then: Id,
+    refused: Option<Id>,
     payload: JsObject,
     demand: Dist,
-    stream: String,
+    stream: Id,
 }
 
 #[derive(Clone, Debug)]
 pub struct Req {
     id: u64,
-    owner: String,
+    owner: Rc<str>,
     cls: usize,
     units: u64,
     since: u64,
@@ -2122,7 +2329,7 @@ pub struct Req {
 
 #[derive(Clone, Debug)]
 pub struct Hold {
-    owner: String,
+    owner: Rc<str>,
     cls: usize,
     units: u64,
     req: Option<u64>,
@@ -2139,27 +2346,27 @@ pub struct RState {
 pub enum EntryKind {
     Event,
     ServiceDone {
-        res: String,
+        res: Id,
         req: Req,
         waited: u64,
         served: u64,
     },
     WaitTimeout {
-        res: String,
+        res: Id,
         request: u64,
     },
     ClientTimeout {
-        workload: String,
+        workload: Id,
         client: u64,
         n: u64,
     },
     LinkDone {
-        link: String,
-        key: String,
+        link: Id,
+        key: Id,
         msg: u64,
     },
     FaultEdge {
-        fault: String,
+        fault: Id,
         on: bool,
     },
 }
@@ -2169,13 +2376,13 @@ pub struct Entry {
     seq: u64,
     time: u64,
     scheduled_at: u64,
-    event: String,
+    event: Id,
     payload: Value,
     source: Src,
     kind: EntryKind,
     target: Option<Addr>,
     sender: Option<Addr>,
-    routes: Option<Vec<(String, Value)>>,
+    routes: Option<Vec<(Id, Value)>>,
     /// The instant number, on the original first entry of an arrival instant only.
     first: Option<u64>,
     /// The timer id of a timer firing.
@@ -2216,44 +2423,98 @@ pub struct WState {
     groups: Vec<u64>,
 }
 
+/// A shared value with copy-on-write: cloning is a reference-count bump, and the first write
+/// through `DerefMut` after a clone copies the value.
+#[derive(Debug)]
+pub struct Sh<T>(Rc<T>);
+
+impl<T> Clone for Sh<T> {
+    fn clone(&self) -> Self {
+        Sh(Rc::clone(&self.0))
+    }
+}
+
+impl<T: Default> Default for Sh<T> {
+    fn default() -> Self {
+        Sh(Rc::new(T::default()))
+    }
+}
+
+impl<T> Sh<T> {
+    fn new(v: T) -> Self {
+        Sh(Rc::new(v))
+    }
+}
+
+impl<T: Clone> Sh<Vec<T>> {
+    /// Make this a copy of `src`: into the existing buffer when this is its only owner, else shared.
+    fn copy_from(&mut self, src: &Sh<Vec<T>>) {
+        match Rc::get_mut(&mut self.0) {
+            Some(v) => v.clone_from(&src.0),
+            None => self.0 = Rc::clone(&src.0),
+        }
+    }
+}
+
+impl<T> From<T> for Sh<T> {
+    fn from(v: T) -> Self {
+        Sh(Rc::new(v))
+    }
+}
+
+impl<T> std::ops::Deref for Sh<T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        &self.0
+    }
+}
+
+impl<T: Clone> std::ops::DerefMut for Sh<T> {
+    fn deref_mut(&mut self) -> &mut T {
+        Rc::make_mut(&mut self.0)
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct Conf {
     time: u64,
-    machines: Vec<(String, Machine)>,
-    insts: Vec<(String, Vec<Value>)>,
-    pending: Vec<Entry>,
-    resources: Vec<(String, RState)>,
-    route_counters: Vec<(String, u64)>,
-    streams: Vec<(String, u64)>,
-    workloads: Vec<(String, WState)>,
+    machines: Sh<Vec<(Rc<str>, Sh<Machine>)>>,
+    insts: Sh<Vec<(Rc<str>, Vec<Value>)>>,
+    pending: Sh<Vec<Sh<Entry>>>,
+    resources: Sh<Vec<(Rc<str>, Sh<RState>)>>,
+    route_counters: Sh<Vec<(Rc<str>, u64)>>,
+    streams: Sh<Vec<(Rc<str>, u64)>>,
+    workloads: Sh<Vec<(Rc<str>, Sh<WState>)>>,
     /// Link queues by (link, key), in creation order.
-    lqueues: Vec<((String, String), LQueue)>,
+    lqueues: Sh<Vec<((String, String), LQueue)>>,
     /// The windowed faults acting now, in `faults` order.
-    active: Vec<String>,
+    active: Vec<Id>,
 }
 
 impl Conf {
     fn machine(&self, k: &str) -> Option<&Machine> {
-        self.machines.iter().find(|(id, _)| id == k).map(|(_, m)| m)
+        self.machines
+            .iter()
+            .find(|(id, _)| &**id == k)
+            .map(|(_, m)| &**m)
     }
     fn machine_mut(&mut self, k: &str) -> Option<&mut Machine> {
         self.machines
             .iter_mut()
-            .find(|(id, _)| id == k)
-            .map(|(_, m)| m)
+            .find(|(id, _)| &**id == k)
+            .map(|(_, m)| &mut **m)
     }
     fn set_machine(&mut self, k: &str, m: Machine) {
         match self.machine_mut(k) {
             Some(slot) => *slot = m,
-            None => self.machines.push((k.to_string(), m)),
+            None => self.machines.push((Rc::from(k), Sh::new(m))),
         }
     }
-    fn insts_of(&self, b: &str) -> Vec<Value> {
+    fn insts_of(&self, b: &str) -> &[Value] {
         self.insts
             .iter()
-            .find(|(k, _)| k == b)
-            .map(|(_, v)| v.clone())
-            .unwrap_or_default()
+            .find(|(k, _)| &**k == b)
+            .map_or(&[], |(_, v)| v.as_slice())
     }
     fn lqueue(&self, l: &str, k: &str) -> LQueue {
         self.lqueues
@@ -2269,44 +2530,63 @@ impl Conf {
         }
     }
     fn resource(&self, r: &str) -> Option<&RState> {
-        self.resources.iter().find(|(k, _)| k == r).map(|(_, s)| s)
+        self.resources
+            .iter()
+            .find(|(k, _)| &**k == r)
+            .map(|(_, s)| &**s)
     }
     fn resource_mut(&mut self, r: &str) -> Option<&mut RState> {
         self.resources
             .iter_mut()
-            .find(|(k, _)| k == r)
-            .map(|(_, s)| s)
+            .find(|(k, _)| &**k == r)
+            .map(|(_, s)| &mut **s)
     }
-    /// The deep copy of format 1: machine variables and pending payloads get fresh identities.
+    /// The deep copy of format 1, written into `dst` (whose buffers are reused when it owns
+    /// them): machine variables get fresh identities (pending payloads do too, but only the
+    /// head's is ever observed, so `run` copies that one when it takes it). Only values that
+    /// have an identity (arrays and objects) are copied; everything else is shared until written.
     fn deep_copy(&self) -> Conf {
-        let mut c = self.clone();
-        for (_, m) in &mut c.machines {
-            m.vars = m.vars.deep_copy();
-        }
-        for e in &mut c.pending {
-            e.payload = e.payload.deep_copy();
-        }
+        let mut c = Conf::default();
+        self.deep_copy_into(&mut c);
         c
     }
+
+    fn deep_copy_into(&self, dst: &mut Conf) {
+        dst.time = self.time;
+        dst.machines.copy_from(&self.machines);
+        dst.insts.copy_from(&self.insts);
+        dst.pending.copy_from(&self.pending);
+        dst.resources.copy_from(&self.resources);
+        dst.route_counters.copy_from(&self.route_counters);
+        dst.streams.copy_from(&self.streams);
+        dst.workloads.copy_from(&self.workloads);
+        dst.lqueues.copy_from(&self.lqueues);
+        dst.active.clone_from(&self.active);
+        for i in 0..dst.machines.len() {
+            if dst.machines[i].1.vars.iter().any(|(_, v)| v.has_identity()) {
+                let m = &mut dst.machines[i].1;
+                m.vars = m.vars.deep_copy();
+            }
+        }
+    }
 }
 
-fn lookup(xs: &[(String, u64)], k: &str) -> u64 {
-    xs.iter().find(|(x, _)| x == k).map_or(0, |(_, n)| *n)
+fn lookup(xs: &[(Rc<str>, u64)], k: &str) -> u64 {
+    xs.iter().find(|(x, _)| &**x == k).map_or(0, |(_, n)| *n)
 }
 
-fn bump(xs: &mut Vec<(String, u64)>, k: &str) {
-    match xs.iter_mut().find(|(x, _)| x == k) {
+fn bump(xs: &mut Vec<(Rc<str>, u64)>, k: &str) {
+    match xs.iter_mut().find(|(x, _)| &**x == k) {
         Some((_, n)) => *n += 1,
-        None => xs.push((k.to_string(), 1)),
+        None => xs.push((Rc::from(k), 1)),
     }
 }
 
-fn insert_entry(q: &mut Vec<Entry>, e: Entry) {
-    let mut i = q.len();
-    while i > 0 && q[i - 1].time > e.time {
-        i -= 1;
-    }
-    q.insert(i, e);
+fn insert_entry(q: &mut Vec<Sh<Entry>>, e: Entry) {
+    // The queue is ordered by time and keeps insertion order within a time: an entry goes after
+    // every entry at its time or earlier (the queue is sorted, so a binary search finds it).
+    let i = q.partition_point(|x| x.time <= e.time);
+    q.insert(i, Sh::new(e));
 }
 
 // ---- Resource algebra (formal/Exegra/Resource.lean) -----------------------------------------
@@ -2321,7 +2601,7 @@ fn held_all(hs: &[Hold]) -> u64 {
     sum_units(hs, |_| true)
 }
 fn held_by(hs: &[Hold], owner: &str, c: usize) -> u64 {
-    sum_units(hs, |h| h.owner == owner && h.cls == c && h.req.is_none())
+    sum_units(hs, |h| &*h.owner == owner && h.cls == c && h.req.is_none())
 }
 
 fn shortfall(d: &Resource, hs: &[Hold], c: usize) -> u64 {
@@ -2394,7 +2674,7 @@ fn grant_loop(d: &Resource, s: &mut RState) -> Vec<(Req, u64)> {
 fn consume(owner: &str, c: usize, mut n: u64, hs: Vec<Hold>) -> Vec<Hold> {
     let mut out = Vec::new();
     for mut h in hs {
-        if h.owner == owner && h.cls == c && h.req.is_none() {
+        if &*h.owner == owner && h.cls == c && h.req.is_none() {
             let t = n.min(h.units);
             h.units -= t;
             n -= t;
@@ -2490,15 +2770,15 @@ fn bounds(d: &Resource, ws: &mut Vec<Req>) -> Vec<Req> {
 
 #[derive(Clone, Debug)]
 struct Draw {
-    stream: String,
+    stream: Id,
     index: u64,
     value: u64,
 }
 
 #[derive(Clone, Debug)]
 struct ResRecord {
-    resource: String,
-    class: String,
+    resource: Id,
+    class: Id,
     request: Option<u64>,
     action: &'static str,
     at: u64,
@@ -2508,9 +2788,9 @@ struct ResRecord {
     units: Option<u64>,
 }
 
-fn res_rec(res: &str, d: &Resource, r: &Req, action: &'static str, at: u64) -> ResRecord {
+fn res_rec(res: &Id, d: &Resource, r: &Req, action: &'static str, at: u64) -> ResRecord {
     ResRecord {
-        resource: res.to_string(),
+        resource: res.clone(),
         class: d.class_id(r.cls),
         request: Some(r.id),
         action,
@@ -2539,11 +2819,11 @@ struct EmitRec {
 
 #[derive(Clone, Debug)]
 struct Fired {
-    behavior: String,
-    transition: String,
-    from: String,
-    to: String,
-    guard: Option<String>,
+    behavior: Id,
+    transition: Id,
+    from: Id,
+    to: Id,
+    guard: Option<Id>,
     sets: Vec<SetRec>,
     emitted: Vec<EmitRec>,
     inst: Value,
@@ -2558,15 +2838,15 @@ enum Reason {
 
 #[derive(Clone, Debug)]
 struct Ignored {
-    behavior: String,
+    behavior: Id,
     reason: Reason,
-    considered: Vec<String>,
+    considered: Vec<Id>,
     inst: Option<Value>,
 }
 
 #[derive(Clone, Debug)]
 struct FaultRec {
-    fault: String,
+    fault: Id,
     effect: &'static str,
 }
 
@@ -2602,19 +2882,19 @@ struct StepRec {
     index: u64,
     time: u64,
     kind: Kind,
-    head: Entry,
+    head: Sh<Entry>,
     fired: Vec<Fired>,
     ignored: Vec<Ignored>,
     faults: Vec<FaultRec>,
     responsible: Vec<String>,
     resources: Vec<ResRecord>,
     draws: Vec<Draw>,
-    config: Conf,
+    config: Option<Conf>,
     error: Option<String>,
     links: Vec<LinkRec>,
 }
 
-fn blank(index: u64, head: &Entry, kind: Kind, config: Conf) -> StepRec {
+fn blank(index: u64, head: &Sh<Entry>, kind: Kind, config: Option<Conf>) -> StepRec {
     StepRec {
         index,
         time: head.time,
@@ -2638,7 +2918,7 @@ fn blank(index: u64, head: &Entry, kind: Kind, config: Conf) -> StepRec {
 #[derive(Clone, Debug)]
 enum Op {
     Req(Req, Option<u64>),
-    Release(String, usize, u64),
+    Release(Id, usize, u64),
 }
 
 /// The state phases 2 and settling write.
@@ -2646,7 +2926,7 @@ struct Work {
     next: Conf,
     seq: u64,
     draws: Vec<Draw>,
-    ops: Vec<(String, Op)>,
+    ops: Vec<(Id, Op)>,
     recs: Vec<ResRecord>,
     lrecs: Vec<LinkRec>,
 }
@@ -2698,7 +2978,7 @@ fn propagate(i: &Input, l: &Link, k: &str, m: &Msg, now: u64, w: &mut Work) -> R
             seq: w.seq,
             time: t,
             scheduled_at: t,
-            event: m.event.clone(),
+            event: m.event.as_str().into(),
             payload: m.payload.clone(),
             source: Src::Link(l.id.clone(), m.id),
             kind: EntryKind::Event,
@@ -2735,12 +3015,12 @@ fn start_transfer(i: &Input, l: &Link, k: &str, m: Msg, now: u64, w: &mut Work) 
             seq: w.seq,
             time: at,
             scheduled_at: at,
-            event: String::new(),
+            event: Id::default(),
             payload: Value::Null,
             source: Src::Link(l.id.clone(), m.id),
             kind: EntryKind::LinkDone {
                 link: l.id.clone(),
-                key: k.to_string(),
+                key: k.into(),
                 msg: m.id,
             },
             target: None,
@@ -2799,15 +3079,30 @@ fn size_of(event: &str, v: &Value) -> R<u64> {
     }
 }
 
+/// The machine keys already made for one behavior: by string and by number bits.
+#[derive(Default)]
+struct MKeys {
+    strings: HashMap<String, Id>,
+    numbers: HashMap<u64, Id>,
+}
+
+/// A parsed expression with its reference paths.
+struct Compiled {
+    ast: Ast,
+    refs: Vec<Vec<String>>,
+}
+
 struct Sim<'a> {
     input: &'a Input,
     faults: Vec<&'a Fault>,
     fault_ids: Vec<String>,
-    compiled: RefCell<HashMap<String, Rc<Ast>>>,
+    compiled: RefCell<HashMap<String, Rc<Compiled>>>,
+    /// Machine keys of keyed instances by behavior and instance value (strings and numbers).
+    mkeys: RefCell<HashMap<Id, MKeys>>,
     conf: Conf,
     seq: u64,
-    attempts: HashMap<String, u64>,
-    delayed_by: HashMap<u64, Vec<String>>,
+    attempts: HashMap<Id, u64>,
+    delayed_by: HashMap<u64, Vec<Id>>,
     steps: Vec<StepRec>,
     initial_draws: Vec<Draw>,
     /// Steps taken (the steps themselves are kept only for a trace).
@@ -2819,18 +3114,18 @@ struct Sim<'a> {
 
 #[allow(clippy::large_enum_variant)]
 enum StepResult {
-    Committed(Box<StepRec>, Conf, u64, Option<HashMap<String, u64>>),
+    Committed(Box<StepRec>, Conf, u64, Option<(Id, u64)>),
     Failed(Box<StepRec>),
 }
 
-fn draw_next(seed: u64, streams: &mut Vec<(String, u64)>, name: &str) -> (u64, Draw) {
+fn draw_next(seed: u64, streams: &mut Vec<(Rc<str>, u64)>, name: &str) -> (u64, Draw) {
     let i = lookup(streams, name);
     let r = random::draw(seed, name, i);
     bump(streams, name);
     (
         r,
         Draw {
-            stream: name.to_string(),
+            stream: if keep() { name.into() } else { Id::default() },
             index: i,
             value: r,
         },
@@ -2839,7 +3134,7 @@ fn draw_next(seed: u64, streams: &mut Vec<(String, u64)>, name: &str) -> (u64, D
 
 fn sample(
     seed: Option<u64>,
-    streams: &mut Vec<(String, u64)>,
+    streams: &mut Vec<(Rc<str>, u64)>,
     name: &str,
     d: &Dist,
     draws: &mut Vec<Draw>,
@@ -2867,28 +3162,69 @@ fn sample(
 }
 
 fn same_json(a: &Value, b: &Value) -> bool {
+    // Primitives of one kind compare directly; everything else by its serialization.
+    match (a, b) {
+        (Value::Null, Value::Null) => return true,
+        (Value::Bool(x), Value::Bool(y)) => return x == y,
+        (Value::String(x), Value::String(y)) => return x == y,
+        (Value::Number(x), Value::Number(y)) if x.is_finite() && y.is_finite() => return x == y,
+        _ => {}
+    }
     a.to_json() == b.to_json()
 }
 
 impl<'a> Sim<'a> {
     /// The configuration a step record keeps: none when only metrics are output.
-    fn snap(&self, c: &Conf) -> Conf {
+    fn snap(&self, c: &Conf) -> Option<Conf> {
         if self.keep_steps {
-            c.clone()
+            Some(c.clone())
         } else {
-            Conf::default()
+            None
         }
     }
 
-    fn compile(&self, src: &str) -> R<Rc<Ast>> {
-        if let Some(ast) = self.compiled.borrow().get(src) {
-            return Ok(Rc::clone(ast));
+    /// `machine_key`, remembered for instances that are strings or finite numbers.
+    fn mkey(&self, b: &Behavior, inst: &Value) -> Id {
+        if matches!(b.instances, Instances::Single) {
+            return b.id.clone();
         }
-        let ast = Rc::new(parse_expr(src).map_err(|e| format!("Expression \"{src}\": {e}"))?);
+        let mut all = self.mkeys.borrow_mut();
+        let cache = match all.get_mut(&*b.id) {
+            Some(c) => c,
+            None => all.entry(b.id.clone()).or_default(),
+        };
+        match inst {
+            Value::String(x) => {
+                if let Some(k) = cache.strings.get(x.as_str()) {
+                    return k.clone();
+                }
+                let k = machine_key(b, inst);
+                cache.strings.insert(x.clone(), k.clone());
+                k
+            }
+            Value::Number(x) if x.is_finite() => {
+                if let Some(k) = cache.numbers.get(&x.to_bits()) {
+                    return k.clone();
+                }
+                let k = machine_key(b, inst);
+                cache.numbers.insert(x.to_bits(), k.clone());
+                k
+            }
+            _ => machine_key(b, inst),
+        }
+    }
+
+    fn compile(&self, src: &str) -> R<Rc<Compiled>> {
+        if let Some(c) = self.compiled.borrow().get(src) {
+            return Ok(Rc::clone(c));
+        }
+        let ast = parse_expr(src).map_err(|e| format!("Expression \"{src}\": {e}"))?;
+        let refs = expr_refs(&ast);
+        let c = Rc::new(Compiled { ast, refs });
         self.compiled
             .borrow_mut()
-            .insert(src.to_string(), Rc::clone(&ast));
-        Ok(ast)
+            .insert(src.to_string(), Rc::clone(&c));
+        Ok(c)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -2902,10 +3238,21 @@ impl<'a> Sim<'a> {
         time: u64,
         path: &[String],
     ) -> R<Value> {
-        let p: Vec<&str> = path.iter().map(String::as_str).collect();
-        let joined = path.join(".");
+        // Paths have at most a few segments: no allocation for them.
+        let mut arr = [""; 4];
+        let long: Vec<&str>;
+        let p: &[&str] = if path.len() <= arr.len() {
+            for (slot, seg) in arr.iter_mut().zip(path) {
+                *slot = seg;
+            }
+            &arr[..path.len()]
+        } else {
+            long = path.iter().map(String::as_str).collect();
+            &long
+        };
+        let joined = || path.join(".");
         let undef = Ok(Value::Undefined);
-        match p.as_slice() {
+        match p {
             ["time"] => Ok(Value::Number(time as f64)),
             ["instance"] => Ok(inst.clone()),
             [name] => Ok(view
@@ -2944,14 +3291,15 @@ impl<'a> Sim<'a> {
                 let ks = view.insts_of(b);
                 if ks.len() > 1 {
                     return Err(format!(
-                        "Reference \"{joined}\" is ambiguous: \"{b}\" has {} instances.",
+                        "Reference \"{}\" is ambiguous: \"{b}\" has {} instances.",
+                        joined(),
                         ks.len()
                     ));
                 }
-                match ks.first().and_then(|v| view.machine(&machine_key(bd, v))) {
+                match ks.first().and_then(|v| view.machine(&self.mkey(bd, v))) {
                     None => undef,
                     Some(m) => Ok(if *name == "state" {
-                        Value::str(m.state.clone())
+                        Value::str(m.state.as_str())
                     } else {
                         m.vars.get(name).cloned().unwrap_or(Value::Undefined)
                     }),
@@ -2973,7 +3321,7 @@ impl<'a> Sim<'a> {
                 let ms: Vec<&Machine> = view
                     .insts_of(b)
                     .iter()
-                    .filter_map(|v| view.machine(&machine_key(bd, v)))
+                    .filter_map(|v| view.machine(&self.mkey(bd, v)))
                     .collect();
                 match *agg {
                     "count" => Ok(Value::Number(
@@ -2986,7 +3334,8 @@ impl<'a> Sim<'a> {
                                 Value::Number(n) => ns.push(n),
                                 v => {
                                     return Err(format!(
-                                        "Aggregate \"{joined}\" needs numbers, got {}.",
+                                        "Aggregate \"{}\" needs numbers, got {}.",
+                                        joined(),
                                         v.type_name()
                                     ))
                                 }
@@ -3023,12 +3372,12 @@ impl<'a> Sim<'a> {
         payload: &Value,
         time: u64,
     ) -> R<Value> {
-        let ast = self.compile(src)?;
+        let compiled = self.compile(src)?;
         // ORDER: every reference is resolved first, in source order.
-        for p in expr_refs(&ast) {
-            self.resolve(view, start, mk, inst, payload, time, &p)?;
+        for p in &compiled.refs {
+            self.resolve(view, start, mk, inst, payload, time, p)?;
         }
-        eval_expr(&ast, &|path: &[String]| {
+        eval_expr(&compiled.ast, &|path: &[String]| {
             self.resolve(view, start, mk, inst, payload, time, path)
                 .unwrap_or(Value::Undefined)
         })
@@ -3073,6 +3422,10 @@ impl<'a> Sim<'a> {
     }
 
     fn responsible_of(&self, event: &str, fired: &[Fired], faults: &[FaultRec]) -> Vec<String> {
+        // Only the trace output reads the responsible set.
+        if !self.keep_steps {
+            return Vec::new();
+        }
         let mut out: Vec<String> = if event.is_empty() {
             Vec::new()
         } else {
@@ -3102,23 +3455,21 @@ impl<'a> Sim<'a> {
 
     /// Decide the routed instances of an entry first taken as head, creating keyed instances.
     #[allow(clippy::type_complexity)]
-    fn decide_routes(&self, c: &mut Conf, head: &Entry) -> R<(Vec<(String, Value)>, Vec<Draw>)> {
+    fn decide_routes(&self, c: &mut Conf, head: &Entry) -> R<(Vec<(Id, Value)>, Vec<Draw>)> {
         let mut acc = Vec::new();
         let mut drs = Vec::new();
         for b in &self.input.behaviors {
             let Some(r) = self.input.route(&head.event, &b.id) else {
                 continue;
             };
-            let insts = c.insts_of(&b.id);
-            let ckey = format!("{}:{}", r.event, r.behavior);
-            let stream = format!("route:{}:{}", r.event, r.behavior);
+            let n_insts = c.insts_of(&b.id).len();
             match r.by.as_str() {
                 "key" => {
-                    let f = r.field.clone().unwrap_or_default();
+                    let f = r.field.as_deref().unwrap_or("");
                     let v = head
                         .payload
                         .as_object()
-                        .and_then(|o| o.get(&f))
+                        .and_then(|o| o.get(f))
                         .cloned()
                         .unwrap_or(Value::Undefined);
                     if matches!(v, Value::Undefined) {
@@ -3128,48 +3479,51 @@ impl<'a> Sim<'a> {
                         ));
                     }
                     if let Instances::Keyed { max, .. } = b.instances {
-                        if let Some(k) = insts.iter().find(|k| same_json(k, &v)) {
-                            acc.push((b.id.clone(), k.clone()));
-                        } else if insts.len() as u64 >= max {
+                        let found = c.insts_of(&b.id).iter().find(|k| same_json(k, &v)).cloned();
+                        if let Some(k) = found {
+                            acc.push((b.id.clone(), k));
+                        } else if n_insts as u64 >= max {
                             return Err(format!(
                                 "Behavior \"{}\" would exceed {max} instances.",
                                 b.id
                             ));
                         } else {
                             let key = v.deep_copy();
-                            if let Some((_, xs)) = c.insts.iter_mut().find(|(k, _)| *k == b.id) {
+                            if let Some((_, xs)) = c.insts.iter_mut().find(|(k, _)| **k == *b.id) {
                                 xs.push(key.clone());
                             }
                             c.set_machine(&machine_key(b, &key), initial_machine(b));
                             acc.push((b.id.clone(), key));
                         }
-                    } else if !insts.is_empty() {
+                    } else if n_insts > 0 {
                         let h = random::fnv1a64(&v.to_json());
-                        let i = (h % insts.len() as u64) as usize;
-                        acc.push((b.id.clone(), insts[i].clone()));
+                        let i = (h % n_insts as u64) as usize;
+                        acc.push((b.id.clone(), c.insts_of(&b.id)[i].clone()));
                     }
                 }
                 "round-robin" => {
-                    if insts.is_empty() {
+                    if n_insts == 0 {
                         continue;
                     }
+                    let ckey = format!("{}:{}", r.event, r.behavior);
                     let n = lookup(&c.route_counters, &ckey);
                     acc.push((
                         b.id.clone(),
-                        insts[(n % insts.len() as u64) as usize].clone(),
+                        c.insts_of(&b.id)[(n % n_insts as u64) as usize].clone(),
                     ));
                     bump(&mut c.route_counters, &ckey);
                 }
                 "least-busy" => {
-                    if insts.is_empty() {
+                    if n_insts == 0 {
                         continue;
                     }
+                    let insts = c.insts_of(&b.id);
                     let load = |v: &Value| -> u64 {
                         match r.resource.as_deref().and_then(|x| c.resource(x)) {
                             Some(s) => {
-                                let mk = machine_key(b, v);
-                                sum_units(&s.holds, |h| h.owner == mk)
-                                    + s.waiting.iter().filter(|w| w.owner == mk).count() as u64
+                                let mk = self.mkey(b, v);
+                                sum_units(&s.holds, |h| *h.owner == *mk)
+                                    + s.waiting.iter().filter(|w| *w.owner == *mk).count() as u64
                             }
                             None => 0,
                         }
@@ -3183,15 +3537,19 @@ impl<'a> Sim<'a> {
                     acc.push((b.id.clone(), best.clone()));
                 }
                 _ => {
-                    if insts.is_empty() {
+                    if n_insts == 0 {
                         continue;
                     }
                     match self.input.scenario.seed {
-                        None => acc.push((b.id.clone(), insts[0].clone())),
+                        None => acc.push((b.id.clone(), c.insts_of(&b.id)[0].clone())),
                         Some(seed) => {
+                            let stream = format!("route:{}:{}", r.event, r.behavior);
                             let (x, dr) = draw_next(seed, &mut c.streams, &stream);
                             drs.push(dr);
-                            acc.push((b.id.clone(), insts[random::index(x, insts.len())].clone()));
+                            acc.push((
+                                b.id.clone(),
+                                c.insts_of(&b.id)[random::index(x, n_insts)].clone(),
+                            ));
                         }
                     }
                 }
@@ -3217,8 +3575,8 @@ impl<'a> Sim<'a> {
         inst: &Value,
         head: &Entry,
         faults_out: &mut Vec<FaultRec>,
-    ) -> R<Result<(&'a Transition, String), Ignored>> {
-        let mk = machine_key(b, inst);
+    ) -> R<Result<(&'a Transition, Id), Ignored>> {
+        let mk = self.mkey(b, inst);
         let state = cur.machine(&mk).map(|m| m.state.clone());
         let mut considered = Vec::new();
         let mut dis = false;
@@ -3231,7 +3589,9 @@ impl<'a> Sim<'a> {
             if t.fault_only && enablers.is_empty() {
                 continue;
             }
-            considered.push(t.id.clone());
+            if keep() {
+                considered.push(t.id.clone());
+            }
             let disablers = self.targeting("disable-transition", &t.id, head.time);
             let holds = match &t.guard {
                 None => true,
@@ -3284,16 +3644,21 @@ impl<'a> Sim<'a> {
     }
 
     /// The instances of `b` an entry addresses; `None` when the behavior is not addressed.
-    fn addressed(cur: &Conf, head: &Entry, b: &Behavior) -> Option<Vec<Value>> {
+    fn addressed<'c>(
+        cur: &'c Conf,
+        head: &Entry,
+        b: &Behavior,
+    ) -> Option<std::borrow::Cow<'c, [Value]>> {
+        use std::borrow::Cow;
         if let Some(a) = &head.target {
             if a.behavior != b.id {
                 return None;
             }
             let found = cur.insts_of(&b.id).iter().any(|v| same_json(v, &a.inst));
             return Some(if found {
-                vec![a.inst.clone()]
+                Cow::Owned(vec![a.inst.clone()])
             } else {
-                Vec::new()
+                Cow::Borrowed(&[])
             });
         }
         if let Some((_, v)) = head
@@ -3301,9 +3666,9 @@ impl<'a> Sim<'a> {
             .as_ref()
             .and_then(|rs| rs.iter().find(|(k, _)| *k == b.id))
         {
-            return Some(vec![v.clone()]);
+            return Some(Cow::Owned(vec![v.clone()]));
         }
-        Some(cur.insts_of(&b.id))
+        Some(Cow::Borrowed(cur.insts_of(&b.id)))
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -3321,7 +3686,7 @@ impl<'a> Sim<'a> {
         let seed = self.input.scenario.seed;
         let time = head.time;
         for (k, e) in t.effects.iter().enumerate() {
-            let site = format!("{}:{}:{k}", b.id, t.id);
+            let site = &t.sites[k];
             match e {
                 Effect::Set { var, to } => {
                     if !w.next.machine(mk).is_some_and(|m| m.vars.contains_key(var)) {
@@ -3335,11 +3700,13 @@ impl<'a> Sim<'a> {
                     let m = w.next.machine_mut(mk).ok_or("no machine")?;
                     let before = m.vars.get(var).cloned().unwrap_or(Value::Undefined);
                     m.vars.insert(var.clone(), value.clone());
-                    rec.sets.push(SetRec {
-                        var: var.clone(),
-                        before: before.deep_copy(),
-                        after: value.deep_copy(),
-                    });
+                    if keep() {
+                        rec.sets.push(SetRec {
+                            var: var.clone(),
+                            before: before.deep_copy(),
+                            after: value.deep_copy(),
+                        });
+                    }
                 }
                 Effect::Sample { var, dist } => {
                     if !w.next.machine(mk).is_some_and(|m| m.vars.contains_key(var)) {
@@ -3348,22 +3715,18 @@ impl<'a> Sim<'a> {
                             b.id
                         ));
                     }
-                    let x = sample(
-                        seed,
-                        &mut w.next.streams,
-                        &format!("sample:{site}"),
-                        dist,
-                        &mut w.draws,
-                    );
+                    let x = sample(seed, &mut w.next.streams, &site.sample, dist, &mut w.draws);
                     let value = Value::Number(x as f64);
                     let m = w.next.machine_mut(mk).ok_or("no machine")?;
                     let before = m.vars.get(var).cloned().unwrap_or(Value::Undefined);
                     m.vars.insert(var.clone(), value.clone());
-                    rec.sets.push(SetRec {
-                        var: var.clone(),
-                        before: before.deep_copy(),
-                        after: value,
-                    });
+                    if keep() {
+                        rec.sets.push(SetRec {
+                            var: var.clone(),
+                            before: before.deep_copy(),
+                            after: value,
+                        });
+                    }
                 }
                 Effect::Emit {
                     event,
@@ -3378,13 +3741,7 @@ impl<'a> Sim<'a> {
                     // the requester looked up.
                     let mut streams = w.next.streams.clone();
                     let mut drs = Vec::new();
-                    let delay = sample(
-                        seed,
-                        &mut streams,
-                        &format!("after:{site}"),
-                        after,
-                        &mut drs,
-                    );
+                    let delay = sample(seed, &mut streams, &site.after, after, &mut drs);
                     let at = w.next.time + delay;
                     if at >= TWO53 {
                         return Err("Value time exceeds 2^53.".into());
@@ -3413,7 +3770,7 @@ impl<'a> Sim<'a> {
                             seq: s,
                             time: at,
                             scheduled_at: at,
-                            event: event.clone(),
+                            event: event.as_str().into(),
                             payload: pv.clone(),
                             source: Src::Transition(t.id.clone(), b.id.clone()),
                             kind: EntryKind::Event,
@@ -3431,12 +3788,14 @@ impl<'a> Sim<'a> {
                     );
                     w.next.streams = streams;
                     w.draws.extend(drs);
-                    rec.emitted.push(EmitRec {
-                        event: event.clone(),
-                        time: at,
-                        seq: s,
-                        payload: pv.deep_copy(),
-                    });
+                    if keep() {
+                        rec.emitted.push(EmitRec {
+                            event: event.clone(),
+                            time: at,
+                            seq: s,
+                            payload: pv.deep_copy(),
+                        });
+                    }
                 }
                 Effect::Request {
                     kind,
@@ -3466,11 +3825,11 @@ impl<'a> Sim<'a> {
                         refused: refused.clone(),
                         payload: fs,
                         demand: demand.clone(),
-                        stream: format!("demand:{site}"),
+                        stream: site.demand.clone(),
                     };
                     let r = Req {
                         id: 0,
-                        owner: mk.to_string(),
+                        owner: Rc::from(mk),
                         cls: ci,
                         units: *units,
                         since: time,
@@ -3488,7 +3847,7 @@ impl<'a> Sim<'a> {
                         .class_index(class.as_deref())
                         .ok_or_else(|| format!("Effect names no class of \"{res}\"."))?;
                     w.ops
-                        .push((res.clone(), Op::Release(mk.to_string(), ci, *units)));
+                        .push((res.clone(), Op::Release(mk.into(), ci, *units)));
                 }
                 Effect::Send {
                     event,
@@ -3514,9 +3873,7 @@ impl<'a> Sim<'a> {
                     let mut drs = Vec::new();
                     let sz = match size {
                         SizeIn::None => 0,
-                        SizeIn::Dist(d) => {
-                            sample(seed, &mut streams, &format!("size:{site}"), d, &mut drs)
-                        }
+                        SizeIn::Dist(d) => sample(seed, &mut streams, &site.size, d, &mut drs),
                         SizeIn::Expr(src) => {
                             let v =
                                 self.eval(src, &w.next, start, mk, inst, &head.payload, time)?;
@@ -3538,11 +3895,11 @@ impl<'a> Sim<'a> {
                     } else {
                         None
                     };
-                    let receivers: Vec<(String, Option<Addr>)> = if fan {
+                    let receivers: Vec<(Id, Option<Addr>)> = if fan {
                         let mut out = Vec::new();
                         for rb in &self.input.behaviors {
                             if rb.subject.as_deref() == Some(l.to.as_str()) {
-                                for v in w.next.insts_of(&rb.id) {
+                                for v in w.next.insts_of(&rb.id).iter().cloned() {
                                     out.push((
                                         machine_key(rb, &v),
                                         Some(Addr {
@@ -3556,7 +3913,7 @@ impl<'a> Sim<'a> {
                         }
                         out
                     } else {
-                        vec![(String::new(), target)]
+                        vec![(Id::default(), target)]
                     };
                     w.next.streams = streams;
                     w.draws.extend(drs);
@@ -3576,12 +3933,14 @@ impl<'a> Sim<'a> {
                             sender: sender.clone(),
                         };
                         w.seq += 1;
-                        rec.emitted.push(EmitRec {
-                            event: event.clone(),
-                            time,
-                            seq: m.id,
-                            payload: m.payload.deep_copy(),
-                        });
+                        if keep() {
+                            rec.emitted.push(EmitRec {
+                                event: event.clone(),
+                                time,
+                                seq: m.id,
+                                payload: m.payload.deep_copy(),
+                            });
+                        }
                         send_msg(self.input, l, fan, &key, m, time, w)?;
                     }
                 }
@@ -3596,13 +3955,7 @@ impl<'a> Sim<'a> {
                     }
                     let mut streams = w.next.streams.clone();
                     let mut drs = Vec::new();
-                    let delay = sample(
-                        seed,
-                        &mut streams,
-                        &format!("after:{site}"),
-                        after,
-                        &mut drs,
-                    );
+                    let delay = sample(seed, &mut streams, &site.after, after, &mut drs);
                     let at = w.next.time + delay;
                     if at >= TWO53 {
                         return Err("Value time exceeds 2^53.".into());
@@ -3622,9 +3975,9 @@ impl<'a> Sim<'a> {
                             seq: sq,
                             time: at,
                             scheduled_at: at,
-                            event: event.clone(),
+                            event: event.as_str().into(),
                             payload: pv.clone(),
-                            source: Src::Timer(b.id.clone(), inst.clone(), name.clone()),
+                            source: Src::Timer(b.id.clone(), inst.clone(), name.as_str().into()),
                             kind: EntryKind::Event,
                             target: Some(Addr {
                                 behavior: b.id.clone(),
@@ -3640,12 +3993,14 @@ impl<'a> Sim<'a> {
                     );
                     w.next.streams = streams;
                     w.draws.extend(drs);
-                    rec.emitted.push(EmitRec {
-                        event: event.clone(),
-                        time: at,
-                        seq: sq,
-                        payload: pv.deep_copy(),
-                    });
+                    if keep() {
+                        rec.emitted.push(EmitRec {
+                            event: event.clone(),
+                            time: at,
+                            seq: sq,
+                            payload: pv.deep_copy(),
+                        });
+                    }
                 }
                 Effect::Cancel(name) => {
                     let tid = format!("{mk}/{name}");
@@ -3664,18 +4019,18 @@ impl<'a> Sim<'a> {
     /// The `then` or `refused` entry answering a request, targeted at its requester.
     fn answer(
         w: &mut Work,
-        res: &str,
+        res: &Id,
         d: &Resource,
         r: &Req,
         event: &str,
-        outcome: &str,
+        outcome: &'static str,
         extra: Vec<(&str, Value)>,
     ) {
         let mut fs = r.info.payload.clone();
-        fs.insert("resource", Value::str(res));
-        fs.insert("class", Value::str(d.class_id(r.cls)));
+        fs.insert(skey("resource"), Value::str(res.as_str()));
+        fs.insert(skey("class"), Value::str(d.class_id(r.cls).as_str()));
         for (k, v) in extra {
-            fs.insert(k, v);
+            fs.insert(skey(k), v);
         }
         let s = w.seq;
         w.seq += 1;
@@ -3686,9 +4041,9 @@ impl<'a> Sim<'a> {
                 seq: s,
                 time: now,
                 scheduled_at: now,
-                event: event.to_string(),
+                event: event.into(),
                 payload: Value::object(fs),
-                source: Src::Resource(res.to_string(), r.id, outcome.to_string()),
+                source: Src::Resource(res.into(), r.id, outcome),
                 kind: EntryKind::Event,
                 target: Some(r.info.requester.clone()),
                 sender: None,
@@ -3700,18 +4055,18 @@ impl<'a> Sim<'a> {
         );
     }
 
-    fn remove_timeout(q: &mut Vec<Entry>, res: &str, rid: u64) {
+    fn remove_timeout(q: &mut Vec<Sh<Entry>>, res: &str, rid: u64) {
         q.retain(|e| {
             !matches!(&e.kind, EntryKind::WaitTimeout { res: r, request } if r == res && *request == rid)
         });
     }
 
     /// Settle one resource: releases, enqueues, grants, bounds.
-    fn settle_one(&self, res: &str, ops: &[&Op], w: &mut Work) -> R<()> {
+    fn settle_one(&self, res: &Id, ops: &[&Op], w: &mut Work) -> R<()> {
         let Some(d) = self.input.resource(res) else {
             return Ok(());
         };
-        let Some(mut s) = w.next.resource(res).cloned() else {
+        let Some(mut s) = w.next.resource_mut(res).map(std::mem::take) else {
             return Ok(());
         };
         let now = w.next.time;
@@ -3726,7 +4081,7 @@ impl<'a> Sim<'a> {
                 }
                 s.holds = consume(owner, *c, *n, std::mem::take(&mut s.holds));
                 w.recs.push(ResRecord {
-                    resource: res.to_string(),
+                    resource: res.into(),
                     class: d.class_id(*c),
                     request: None,
                     action: "released",
@@ -3756,11 +4111,11 @@ impl<'a> Sim<'a> {
                             seq,
                             time: now + mw,
                             scheduled_at: now + mw,
-                            event: String::new(),
+                            event: Id::default(),
                             payload: Value::Null,
-                            source: Src::Resource(res.to_string(), r.id, "wait-timeout".into()),
+                            source: Src::Resource(res.into(), r.id, "wait-timeout"),
                             kind: EntryKind::WaitTimeout {
-                                res: res.to_string(),
+                                res: res.into(),
                                 request: r.id,
                             },
                             target: None,
@@ -3777,7 +4132,8 @@ impl<'a> Sim<'a> {
         }
         let de = eff_decl(&self.faults, &w.next.active, d);
         let grants = grant_loop(&de, &mut s);
-        *w.next.resource_mut(res).ok_or("no resource")? = s.clone();
+        // The state is written once, after the grants and bounds below.
+        w.next.resource(res).ok_or("no resource")?;
         for (r, occ) in grants {
             let waited = now - r.since;
             Self::remove_timeout(&mut w.next.pending, res, r.id);
@@ -3797,6 +4153,21 @@ impl<'a> Sim<'a> {
                         Some(0)
                     } else {
                         d.demand_factor.at(occ).and_then(|(num, den)| {
+                            // The ceiling of dd * num * sn / (den * sd), in machine integers when
+                            // they do not overflow, else in big integers.
+                            let fast = (|| {
+                                let x = u128::from(dd)
+                                    .checked_mul(num)?
+                                    .checked_mul(u128::from(sn))?;
+                                let y = den.checked_mul(u128::from(sd))?;
+                                if y == 0 {
+                                    return None;
+                                }
+                                Some(x.checked_add(y - 1)? / y)
+                            })();
+                            if fast.is_some() {
+                                return fast;
+                            }
                             let x = BigUint::from(dd) * BigUint::from(num) * BigUint::from(sn);
                             let y = BigUint::from(den) * BigUint::from(sd);
                             let q = (x + &y - 1u32) / y;
@@ -3818,11 +4189,11 @@ impl<'a> Sim<'a> {
                             seq,
                             time: now + served,
                             scheduled_at: now + served,
-                            event: String::new(),
+                            event: Id::default(),
                             payload: Value::Null,
-                            source: Src::Resource(res.to_string(), r.id, "service-done".into()),
+                            source: Src::Resource(res.into(), r.id, "service-done"),
                             kind: EntryKind::ServiceDone {
-                                res: res.to_string(),
+                                res: res.into(),
                                 req: r.clone(),
                                 waited,
                                 served,
@@ -3852,10 +4223,9 @@ impl<'a> Sim<'a> {
             rec.waited = Some(waited);
             w.recs.push(rec);
         }
-        let mut ws = s.waiting.clone();
-        let removed = bounds(&de, &mut ws);
+        let removed = bounds(&de, &mut s.waiting);
         if let Some(st) = w.next.resource_mut(res) {
-            st.waiting = ws;
+            *st = s;
         }
         for r in removed {
             Self::remove_timeout(&mut w.next.pending, res, r.id);
@@ -3887,7 +4257,7 @@ impl<'a> Sim<'a> {
         Ok(())
     }
 
-    fn settle(&self, touched: &[String], w: &mut Work) -> R<()> {
+    fn settle(&self, touched: &[&str], w: &mut Work) -> R<()> {
         let ops = std::mem::take(&mut w.ops);
         for d in &self.input.resources {
             let mine: Vec<&Op> = ops
@@ -3895,7 +4265,7 @@ impl<'a> Sim<'a> {
                 .filter(|(r, _)| *r == d.id)
                 .map(|(_, o)| o)
                 .collect();
-            if touched.contains(&d.id) || !mine.is_empty() {
+            if touched.iter().any(|t| *t == d.id) || !mine.is_empty() {
                 self.settle_one(&d.id, &mine, w)?;
             }
         }
@@ -3917,15 +4287,15 @@ impl<'a> Sim<'a> {
     #[allow(clippy::too_many_arguments)]
     fn finish(
         &self,
-        head: &Entry,
+        head: &Sh<Entry>,
         kind: Kind,
         fired: Vec<Fired>,
         ignored: Vec<Ignored>,
         faults: Vec<FaultRec>,
         draws: Vec<Draw>,
-        touched: &[String],
+        touched: &[&str],
         mut w: Work,
-        attempts: Option<HashMap<String, u64>>,
+        attempts: Option<(Id, u64)>,
         pre: Vec<ResRecord>,
     ) -> StepResult {
         let index = self.taken;
@@ -3935,7 +4305,7 @@ impl<'a> Sim<'a> {
                 st.responsible = if head.event.is_empty() {
                     Vec::new()
                 } else {
-                    vec![head.event.clone()]
+                    vec![head.event.to_string()]
                 };
                 st.error = Some(msg);
                 StepResult::Failed(Box::new(st))
@@ -3954,7 +4324,7 @@ impl<'a> Sim<'a> {
         }
     }
 
-    fn step_head(&mut self, mut next: Conf, head: Entry) -> StepResult {
+    fn step_head(&mut self, mut next: Conf, head: Sh<Entry>) -> StepResult {
         let index = self.taken;
         let work = |next: Conf, seq: u64| Work {
             next,
@@ -4004,7 +4374,7 @@ impl<'a> Sim<'a> {
                     Vec::new(),
                     Vec::new(),
                     Vec::new(),
-                    std::slice::from_ref(&res),
+                    &[res.as_str()],
                     w,
                     None,
                     vec![rec],
@@ -4052,7 +4422,7 @@ impl<'a> Sim<'a> {
                     Vec::new(),
                     Vec::new(),
                     Vec::new(),
-                    std::slice::from_ref(&res),
+                    &[res.as_str()],
                     w,
                     None,
                     vec![rec],
@@ -4102,7 +4472,7 @@ impl<'a> Sim<'a> {
                             Vec::new(),
                             recs,
                             Vec::new(),
-                            std::slice::from_ref(&d.id),
+                            &[d.id.as_str()],
                             w,
                             None,
                             Vec::new(),
@@ -4111,7 +4481,7 @@ impl<'a> Sim<'a> {
                     None => {
                         let mut rec = blank(index, &head, Kind::FaultEdge, self.snap(&next));
                         rec.faults = recs;
-                        rec.responsible = vec![fault.clone()];
+                        rec.responsible = vec![fault.to_string()];
                         StepResult::Committed(Box::new(rec), next, self.seq, None)
                     }
                 }
@@ -4162,7 +4532,7 @@ impl<'a> Sim<'a> {
                 let mut seq = self.seq;
                 if let (Some(w), Some(pos)) = (
                     self.input.workloads.iter().find(|w| w.id == workload),
-                    next.workloads.iter().position(|(id, _)| *id == workload),
+                    next.workloads.iter().position(|(id, _)| **id == *workload),
                 ) {
                     let mut st = next.workloads[pos].1.clone();
                     if st.clients.get(client as usize).copied().flatten() == Some(k) {
@@ -4213,7 +4583,7 @@ impl<'a> Sim<'a> {
             else {
                 continue;
             };
-            let Some(pos) = next.workloads.iter().position(|(id, _)| *id == w.id) else {
+            let Some(pos) = next.workloads.iter().position(|(id, _)| **id == *w.id) else {
                 continue;
             };
             let mut st = next.workloads[pos].1.clone();
@@ -4248,14 +4618,14 @@ impl<'a> Sim<'a> {
         StepResult::Committed(rec, next, seq, attempts)
     }
 
-    fn fail(&self, head: &Entry, kind: Kind, msg: String) -> StepResult {
+    fn fail(&self, head: &Sh<Entry>, kind: Kind, msg: String) -> StepResult {
         let mut st = blank(self.taken, head, kind, self.snap(&self.conf));
-        st.responsible = vec![head.event.clone()];
+        st.responsible = vec![head.event.to_string()];
         st.error = Some(msg);
         StepResult::Failed(Box::new(st))
     }
 
-    fn step_event(&mut self, mut next: Conf, head: Entry) -> StepResult {
+    fn step_event(&mut self, mut next: Conf, head: Sh<Entry>) -> StepResult {
         let index = self.taken;
         let ev = head.event.clone();
         let mut head = head;
@@ -4268,7 +4638,7 @@ impl<'a> Sim<'a> {
             match self.decide_routes(&mut next, &head) {
                 Err(msg) => return self.fail(&head, Kind::Deliver, msg),
                 Ok((rs, drs)) => {
-                    let extra: Vec<(String, Machine)> = next
+                    let extra: Vec<(Rc<str>, Sh<Machine>)> = next
                         .machines
                         .iter()
                         .filter(|(k, _)| !self.conf.machines.iter().any(|(k2, _)| k2 == k))
@@ -4285,8 +4655,7 @@ impl<'a> Sim<'a> {
             }
         }
         let attempt = self.attempts.get(&ev).copied().unwrap_or(0) + 1;
-        let mut attempts = self.attempts.clone();
-        attempts.insert(ev.clone(), attempt);
+        let attempts = (ev.clone(), attempt);
         let drops: Vec<FaultRec> = self
             .faults
             .iter()
@@ -4313,7 +4682,7 @@ impl<'a> Sim<'a> {
                 return self.fail(&head, Kind::Delay, "Value time exceeds 2^53.".into());
             }
             let s = self.seq;
-            let mut copy = head.clone();
+            let mut copy: Entry = (*head).clone();
             copy.seq = s;
             copy.first = None;
             copy.copy_of = Some(head.copy_of.unwrap_or(head.seq));
@@ -4341,7 +4710,7 @@ impl<'a> Sim<'a> {
                 effect: "injected",
             });
         }
-        let phase = (|| -> R<(Vec<Fired>, Vec<Ignored>, Work)> {
+        let phase = (|next: Conf| -> R<(Vec<Fired>, Vec<Ignored>, Work)> {
             let mut winners = Vec::new();
             let mut ignored = Vec::new();
             for b in &self.input.behaviors {
@@ -4354,7 +4723,7 @@ impl<'a> Sim<'a> {
                         inst: None,
                     }),
                     Some(insts) => {
-                        for inst in insts {
+                        for inst in insts.iter().cloned() {
                             match self.choose_inst(&cur, b, &inst, &head, &mut faults_out)? {
                                 Ok((t, mk)) => winners.push((b, inst, mk, t)),
                                 Err(ig) => ignored.push(ig),
@@ -4364,7 +4733,7 @@ impl<'a> Sim<'a> {
                 }
             }
             let mut w = Work {
-                next: std::mem::take(&mut next),
+                next,
                 seq: self.seq,
                 draws: Vec::new(),
                 ops: Vec::new(),
@@ -4384,13 +4753,15 @@ impl<'a> Sim<'a> {
                     inst: inst.clone(),
                 };
                 self.run_effects(&cur, &head, b, &inst, &mk, t, &mut w, &mut rec)?;
-                if let Some(m) = w.next.machine_mut(&mk) {
-                    m.state = t.to.clone();
+                if w.next.machine(&mk).is_some_and(|m| m.state != t.to) {
+                    if let Some(m) = w.next.machine_mut(&mk) {
+                        m.state = t.to.clone();
+                    }
                 }
                 fired.push(rec);
             }
             Ok((fired, ignored, w))
-        })();
+        })(next);
         match phase {
             Err(msg) => self.fail(&head, Kind::Deliver, msg),
             Ok((fired, ignored, w)) => {
@@ -4458,13 +4829,13 @@ fn validate(i: &Input) -> R<()> {
             }
         }
     }
-    let ids: Vec<&String> = i
+    let ids: Vec<&str> = i
         .behaviors
         .iter()
-        .map(|b| &b.id)
-        .chain(i.resources.iter().map(|r| &r.id))
-        .chain(i.workloads.iter().map(|w| &w.id))
-        .chain(i.links.iter().map(|l| &l.id))
+        .map(|b| b.id.as_str())
+        .chain(i.resources.iter().map(|r| r.id.as_str()))
+        .chain(i.workloads.iter().map(|w| w.id.as_str()))
+        .chain(i.links.iter().map(|l| l.id.as_str()))
         .collect();
     for x in &ids {
         if ids.iter().filter(|y| *y == x).count() > 1 {
@@ -4928,7 +5299,7 @@ fn initial_conf(i: &Input, faults: &[&Fault]) -> (Conf, u64) {
             Instances::Count(n) => (0..n).map(|k| Value::Number(k as f64)).collect(),
             Instances::Keyed { .. } => Vec::new(),
         };
-        insts.push((b.id.clone(), vs));
+        insts.push((b.id.to_string(), vs));
     }
     let mut machines = Vec::new();
     for (bid, vs) in &insts {
@@ -4946,7 +5317,7 @@ fn initial_conf(i: &Input, faults: &[&Fault]) -> (Conf, u64) {
                 seq: n,
                 time,
                 scheduled_at: time,
-                event: event.to_string(),
+                event: event.into(),
                 payload: payload.clone(),
                 source,
                 kind: EntryKind::Event,
@@ -4960,7 +5331,7 @@ fn initial_conf(i: &Input, faults: &[&Fault]) -> (Conf, u64) {
         };
     for st in &i.scenario.steps {
         let target = st.target.as_ref().map(|(b, v)| Addr {
-            behavior: b.clone(),
+            behavior: b.as_str().into(),
             inst: v.clone(),
             incarnation: 0,
         });
@@ -5002,7 +5373,7 @@ fn initial_conf(i: &Input, faults: &[&Fault]) -> (Conf, u64) {
                     seq: n,
                     time: t,
                     scheduled_at: t,
-                    event: String::new(),
+                    event: Id::default(),
                     payload: Value::Null,
                     source: Src::Fault(f.id.clone()),
                     kind: EntryKind::FaultEdge {
@@ -5023,30 +5394,41 @@ fn initial_conf(i: &Input, faults: &[&Fault]) -> (Conf, u64) {
     (
         Conf {
             time: 0,
-            machines,
-            insts,
-            pending: q,
+            machines: machines
+                .into_iter()
+                .map(|(k, m)| (Rc::from(&*k), Sh::new(m)))
+                .collect::<Vec<_>>()
+                .into(),
+            insts: insts
+                .into_iter()
+                .map(|(k, v)| (Rc::from(k), v))
+                .collect::<Vec<_>>()
+                .into(),
+            pending: q.into(),
             resources: i
                 .resources
                 .iter()
                 .map(|d| {
                     (
-                        d.id.clone(),
+                        Rc::from(d.id.as_str()),
                         RState {
                             capacity: eff_capacity(faults, &[], d),
                             ..RState::default()
-                        },
+                        }
+                        .into(),
                     )
                 })
-                .collect(),
-            route_counters: Vec::new(),
-            streams: Vec::new(),
+                .collect::<Vec<_>>()
+                .into(),
+            route_counters: Vec::new().into(),
+            streams: Vec::new().into(),
             workloads: i
                 .workloads
                 .iter()
-                .map(|w| (w.id.clone(), WState::default()))
-                .collect(),
-            lqueues: Vec::new(),
+                .map(|w| (Rc::from(w.id.as_str()), WState::default().into()))
+                .collect::<Vec<_>>()
+                .into(),
+            lqueues: Vec::new().into(),
             active: Vec::new(),
         },
         n,
@@ -5057,7 +5439,7 @@ fn initial_conf(i: &Input, faults: &[&Fault]) -> (Conf, u64) {
 fn initial_instants(i: &Input, c: &mut Conf, seq: &mut u64) -> Vec<Draw> {
     let mut drs = Vec::new();
     for w in &i.workloads {
-        if let Some(pos) = c.workloads.iter().position(|(id, _)| *id == w.id) {
+        if let Some(pos) = c.workloads.iter().position(|(id, _)| **id == *w.id) {
             let mut st = c.workloads[pos].1.clone();
             drs.extend(initial_workload(i, c, w, &mut st, seq));
             c.workloads[pos].1 = st;
@@ -5070,6 +5452,7 @@ fn initial_instants(i: &Input, c: &mut Conf, seq: &mut u64) -> Vec<Draw> {
 pub fn run(root: &JsObject) -> R<String> {
     let input = decode(root)?;
     validate(&input)?;
+    set_keep(true);
     let mut fault_ids: Vec<String> = Vec::new();
     for id in &input.scenario.faults {
         if !fault_ids.contains(id) {
@@ -5084,6 +5467,7 @@ pub fn run(root: &JsObject) -> R<String> {
         faults,
         fault_ids,
         compiled: RefCell::new(HashMap::new()),
+        mkeys: RefCell::new(HashMap::new()),
         conf: initial.deep_copy(),
         seq,
         attempts: HashMap::new(),
@@ -5101,6 +5485,9 @@ pub fn run(root: &JsObject) -> R<String> {
     } else {
         "running"
     };
+    let mut spare: Option<Conf> = None;
+    // The initial draws are output whatever the mode; the steps' records only when kept.
+    set_keep(keep_steps);
     while outcome == "running" {
         let Some(h) = sim.conf.pending.first() else {
             outcome = "quiescent";
@@ -5110,14 +5497,20 @@ pub fn run(root: &JsObject) -> R<String> {
             outcome = "stopped";
             break;
         }
-        let mut next = sim.conf.deep_copy();
-        let head = next.pending.remove(0);
+        let mut next = spare.take().unwrap_or_default();
+        sim.conf.deep_copy_into(&mut next);
+        let mut head = next.pending.remove(0);
+        // The payload object itself is never observed, only the values in it: copy when one of
+        // them has an identity.
+        if head.payload.has_nested_identity() {
+            head.payload = head.payload.deep_copy();
+        }
         next.time = head.time;
         // ORDER: the next arrival instant is created before anything else happens in the step.
         let mut adraws = Vec::new();
         if let (Some(k), Src::Arrival(wid, _, _)) = (head.first, &head.source) {
             if let Some(w) = input.workloads.iter().find(|w| &w.id == wid) {
-                if let Some(pos) = next.workloads.iter().position(|(id, _)| id == wid) {
+                if let Some(pos) = next.workloads.iter().position(|(id, _)| **id == **wid) {
                     if next.workloads[pos].1.instants == k + 1 {
                         let mut st = next.workloads[pos].1.clone();
                         let mut seq = sim.seq;
@@ -5150,8 +5543,8 @@ pub fn run(root: &JsObject) -> R<String> {
                     sim.steps.push(*rec);
                 }
                 sim.seq = seq;
-                if let Some(a) = attempts {
-                    sim.attempts = a;
+                if let Some((ev, n)) = attempts {
+                    sim.attempts.insert(ev, n);
                 }
                 outcome = if next.pending.is_empty() {
                     "quiescent"
@@ -5160,7 +5553,7 @@ pub fn run(root: &JsObject) -> R<String> {
                 } else {
                     "running"
                 };
-                sim.conf = next;
+                spare = Some(std::mem::replace(&mut sim.conf, next));
             }
             StepResult::Failed(rec) => {
                 let rec = with_draws(rec);
@@ -5305,7 +5698,7 @@ fn entry_fields(mut o: Obj, e: &Entry) -> Obj {
         if !rs.is_empty() {
             let mut ro = JsObject::new();
             for (b, v) in rs {
-                ro.insert(b.clone(), v.clone());
+                ro.insert(&**b, v.clone());
             }
             o = o.put("routes", Value::object(ro));
         }
@@ -5354,15 +5747,15 @@ fn pending(e: &Entry) -> Value {
 fn configuration(i: &Input, c: &Conf) -> Value {
     let mut machines = JsObject::new();
     let mut incarnations = JsObject::new();
-    for (id, m) in &c.machines {
+    for (id, m) in c.machines.iter() {
         machines.insert(
-            id.clone(),
+            &**id,
             Obj::new()
                 .put("state", s(&m.state))
                 .put("vars", Value::object(m.vars.clone()))
                 .done(),
         );
-        incarnations.insert(id.clone(), n(0));
+        incarnations.insert(&**id, n(0));
     }
     let mut resources = JsObject::new();
     for d in &i.resources {
@@ -5406,12 +5799,12 @@ fn configuration(i: &Input, c: &Conf) -> Value {
                 )
                 .done(),
         };
-        resources.insert(d.id.clone(), v);
+        resources.insert(d.id.to_string(), v);
     }
-    let counters = |xs: &[(String, u64)]| {
+    let counters = |xs: &[(Rc<str>, u64)]| {
         let mut o = JsObject::new();
         for (k, v) in xs {
-            o.insert(k.clone(), n(*v));
+            o.insert(&**k, n(*v));
         }
         Value::object(o)
     };
@@ -5421,14 +5814,14 @@ fn configuration(i: &Input, c: &Conf) -> Value {
         .put("machines", Value::object(machines))
         .put(
             "pending",
-            Value::array(c.pending.iter().map(pending).collect()),
+            Value::array(c.pending.iter().map(|e| pending(e)).collect()),
         )
         .put("resources", Value::object(resources))
         .put("links", {
             let mut lo = JsObject::new();
             for l in &i.links {
                 let mut qo = JsObject::new();
-                for ((ln, k), q) in &c.lqueues {
+                for ((ln, k), q) in c.lqueues.iter() {
                     if *ln == l.id {
                         qo.insert(
                             k.clone(),
@@ -5446,13 +5839,13 @@ fn configuration(i: &Input, c: &Conf) -> Value {
                         );
                     }
                 }
-                lo.insert(l.id.clone(), Value::object(qo));
+                lo.insert(&*l.id, Value::object(qo));
             }
             Value::object(lo)
         })
         .put("timers", {
             let mut to = JsObject::new();
-            for e in &c.pending {
+            for e in c.pending.iter() {
                 if let Some(t) = &e.timer {
                     to.insert(t.clone(), n(e.seq));
                 }
@@ -5461,9 +5854,9 @@ fn configuration(i: &Input, c: &Conf) -> Value {
         })
         .put("workloads", {
             let mut wo = JsObject::new();
-            for (id, w) in &c.workloads {
+            for (id, w) in c.workloads.iter() {
                 wo.insert(
-                    id.clone(),
+                    &**id,
                     Obj::new()
                         .put("instants", n(w.instants))
                         .put("arrivals", n(w.arrivals))
@@ -5476,7 +5869,7 @@ fn configuration(i: &Input, c: &Conf) -> Value {
                             "clients",
                             i.workloads
                                 .iter()
-                                .find(|x| x.id == *id && x.kind == WKind::Closed)
+                                .find(|x| *x.id == **id && x.kind == WKind::Closed)
                                 .map(|_| {
                                     Value::array(
                                         w.clients
@@ -5500,7 +5893,10 @@ fn configuration(i: &Input, c: &Conf) -> Value {
         .put("routeCounters", counters(&c.route_counters))
         .put("streams", counters(&c.streams))
         .put("down", Value::array(Vec::new()))
-        .put("activeFaults", strings(&c.active))
+        .put(
+            "activeFaults",
+            Value::array(c.active.iter().map(|x| s(x)).collect()),
+        )
         .put("incarnations", Value::object(incarnations))
         .done()
 }
@@ -5587,7 +5983,10 @@ fn step_value(i: &Input, st: &StepRec) -> Value {
             Obj::new()
                 .put("behavior", s(&ig.behavior))
                 .put("reason", s(reason))
-                .put("considered", strings(&ig.considered))
+                .put(
+                    "considered",
+                    Value::array(ig.considered.iter().map(|x| s(x)).collect()),
+                )
                 .opt("instance", ig.inst.clone())
                 .done()
         })
@@ -5649,7 +6048,15 @@ fn step_value(i: &Input, st: &StepRec) -> Value {
             ),
         )
         .put("draws", Value::array(draws))
-        .put("config", configuration(i, &st.config))
+        .put(
+            "config",
+            configuration(
+                i,
+                st.config
+                    .as_ref()
+                    .expect("a kept step has its configuration"),
+            ),
+        )
         .opt(
             "error",
             st.error
@@ -6082,7 +6489,7 @@ impl Measure {
                 qo.insert(key.clone(), v.done());
             }
             res.insert(
-                d.id.clone(),
+                d.id.to_string(),
                 Obj::new()
                     .put(
                         "utilisation",

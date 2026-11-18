@@ -31,7 +31,7 @@ pub enum Value {
 /// An object with JavaScript property order.
 #[derive(Clone, Debug, Default)]
 pub struct JsObject {
-    entries: Vec<(String, Value)>,
+    entries: Vec<(Rc<str>, Value)>,
 }
 
 /// True for a canonical array index ("0", "1", ... up to 2^32 - 2), which JavaScript orders
@@ -58,23 +58,26 @@ impl JsObject {
 
     /// The value of an own property, if present (`hasOwn(o, k) ? o[k] : undefined`).
     pub fn get(&self, key: &str) -> Option<&Value> {
-        self.entries.iter().find(|(k, _)| k == key).map(|(_, v)| v)
+        self.entries
+            .iter()
+            .find(|(k, _)| &**k == key)
+            .map(|(_, v)| v)
     }
 
     pub fn get_mut(&mut self, key: &str) -> Option<&mut Value> {
         self.entries
             .iter_mut()
-            .find(|(k, _)| k == key)
+            .find(|(k, _)| &**k == key)
             .map(|(_, v)| v)
     }
 
     pub fn contains_key(&self, key: &str) -> bool {
-        self.entries.iter().any(|(k, _)| k == key)
+        self.entries.iter().any(|(k, _)| &**k == key)
     }
 
     /// `o[key] = value`: an existing property keeps its position, a new one goes where
     /// JavaScript would put it.
-    pub fn insert(&mut self, key: impl Into<String>, value: Value) {
+    pub fn insert(&mut self, key: impl Into<Rc<str>>, value: Value) {
         let key = key.into();
         if let Some(slot) = self.get_mut(&key) {
             *slot = value;
@@ -92,7 +95,7 @@ impl JsObject {
     }
 
     /// Entries in `Object.entries` order.
-    pub fn iter(&self) -> impl Iterator<Item = (&String, &Value)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&Rc<str>, &Value)> {
         self.entries.iter().map(|(k, v)| (k, v))
     }
 
@@ -135,6 +138,20 @@ impl Value {
             Value::Array(items) => Value::array(items.iter().map(Value::deep_copy).collect()),
             Value::Object(o) => Value::object(o.deep_copy()),
             other => other.clone(),
+        }
+    }
+
+    /// Whether the value has a reference identity (an array or an object).
+    pub fn has_identity(&self) -> bool {
+        matches!(self, Value::Array(_) | Value::Object(_))
+    }
+
+    /// Whether an array or object value holds an element that has an identity.
+    pub fn has_nested_identity(&self) -> bool {
+        match self {
+            Value::Array(xs) => xs.iter().any(Value::has_identity),
+            Value::Object(o) => o.iter().any(|(_, v)| v.has_identity()),
+            _ => false,
         }
     }
 

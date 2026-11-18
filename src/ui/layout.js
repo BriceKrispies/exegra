@@ -16,6 +16,7 @@
 import { h, clear, icon } from './dom.js';
 import { createSheet } from './sheet.js';
 import { createMenu } from './menu.js';
+import { traffic } from '../app/traffic-recorder.js';
 
 /** @typedef {'phone'|'tablet'|'desktop'} LayoutMode */
 /** @typedef {import('./sheet.js').Detent} Detent */
@@ -92,7 +93,15 @@ export function createLayout(els) {
     },
   };
   if (stored.tabletDest && BY_ID.has(stored.tabletDest)) state.dest = String(stored.tabletDest);
+  // The self-model abstracts this store to whether the explorer is open (responsive-layout-flow): a write
+  // that changes it is recorded as panel-toggled and layout-preferences-written; any other write is a stutter step.
+  let storedExplorerOpen = state.explorerOpen;
   const persist = () => {
+    if (state.explorerOpen !== storedExplorerOpen) {
+      storedExplorerOpen = state.explorerOpen;
+      traffic.record('panel-toggled', { open: state.explorerOpen });
+      traffic.record('layout-preferences-written', { explorerOpen: state.explorerOpen });
+    }
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify({
         context: state.context, tabletDest: state.dest, tabletOpen: state.open,

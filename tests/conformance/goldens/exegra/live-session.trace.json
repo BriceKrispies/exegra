@@ -1,0 +1,402 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "app-start-flow": {
+    "state": "app-loading",
+    "vars": {
+     "persistentFlag": true,
+     "project": "exegra"
+    }
+   },
+   "camera-memory-flow": {
+    "state": "camera-live",
+    "vars": {
+     "current": "c0",
+     "view": "structural"
+    }
+   },
+   "claim-evaluation-flow": {
+    "state": "evaluator-ready",
+    "vars": {
+     "evaluations": 0
+    }
+   },
+   "dev-server-flow": {
+    "state": "dev-ready",
+    "vars": {
+     "requests": 0
+    }
+   },
+   "engine-module-flow": {
+    "state": "engine-unloaded",
+    "vars": {
+     "built": true,
+     "loaded": false
+    }
+   },
+   "engine-runner-flow": {
+    "state": "runner-ready",
+    "vars": {
+     "prevId": 0,
+     "prevToken": 0,
+     "seq": 0,
+     "waitingId": 0,
+     "waitingToken": 0
+    }
+   },
+   "engine-worker-flow": {
+    "state": "worker-ready",
+    "vars": {
+     "generation": 0,
+     "runs": 0
+    }
+   },
+   "interaction-prefs-flow": {
+    "state": "prefs-live",
+    "vars": {
+     "restored": false,
+     "selection": "none",
+     "viewId": "structural"
+    }
+   },
+   "local-storage-flow": {
+    "state": "storage-ready",
+    "vars": {
+     "storedExplorerOpen": true,
+     "storedSelection": "none",
+     "storedView": "structural"
+    }
+   },
+   "persistence-client-flow": {
+    "state": "client-ready",
+    "vars": {
+     "calls": 0,
+     "lastFile": "spec"
+    }
+   },
+   "project-history-flow": {
+    "state": "history-ready",
+    "vars": {
+     "layoutHash": "none",
+     "redoDepth": 0,
+     "redoHash": "none",
+     "revision": 1,
+     "specHash": "none",
+     "undoDepth": 0,
+     "undoHash": "none"
+    }
+   },
+   "project-session-flow": {
+    "state": "session-closed",
+    "vars": {
+     "baseHash": "none",
+     "conflictHash": "none",
+     "errorsLogged": 0,
+     "externalReloads": 0,
+     "layoutBase": "none",
+     "layoutHash": "none",
+     "ownNotices": 0,
+     "pendingAgain": false,
+     "pendingName": "none",
+     "persistent": true,
+     "projectName": "none",
+     "projectsListed": 0,
+     "readPurpose": "none",
+     "recordedVersion": "none",
+     "reqSeq": 0,
+     "saveState": "none",
+     "textHash": "none"
+    }
+   },
+   "realisation-generate-flow": {
+    "state": "realisation-ready",
+    "vars": {
+     "lastGenerated": "g1",
+     "reqSeq": 200,
+     "saved": 0
+    }
+   },
+   "responsive-layout-flow": {
+    "state": "layout-prefs-live",
+    "vars": {
+     "explorerOpen": true
+    }
+   },
+   "scene-pulse-flow": {
+    "state": "pulse-ready",
+    "vars": {
+     "pulsedStep": -1,
+     "pulses": 0
+    }
+   },
+   "session-claims-flow": {
+    "state": "claims-ready",
+    "vars": {
+     "evaluations": 0,
+     "modelHash": "none",
+     "resultsHash": "none"
+    }
+   },
+   "session-storage-flow": {
+    "state": "tab-storage-ready",
+    "vars": {
+     "cameraArchitecture": "none",
+     "cameraBehavior": "none",
+     "cameraClaims": "none",
+     "cameraDataAndEditFlow": "none",
+     "cameraRealisation": "none",
+     "cameraReferences": "none",
+     "cameraSemanticCoreOnly": "none",
+     "dataCamera": "none",
+     "structuralCamera": "none"
+    }
+   },
+   "sim-session-flow": {
+    "state": "sim-idle",
+    "vars": {
+     "adoptedToken": 0,
+     "running": false,
+     "scenarioId": "none",
+     "stepCount": 0,
+     "stepIndex": -1,
+     "token": 0
+    }
+   },
+   "toolbar-exchange-flow": {
+    "state": "toolbar-ready",
+    "vars": {
+     "downloadedHash": "none",
+     "exports": 0,
+     "importName": "none",
+     "imports": 0,
+     "refusedLocally": 0,
+     "reqSeq": 100
+    }
+   },
+   "workspace-disk-flow": {
+    "state": "ws-ready",
+    "vars": {
+     "conflicts": 0,
+     "diskLayout": "L1",
+     "diskSpec": "h1",
+     "generatedHash": "g1",
+     "imports": 0,
+     "journalLines": 0,
+     "layoutWrites": 0,
+     "recordedVersion": "r1",
+     "specWrites": 0
+    }
+   },
+   "workspace-watcher-flow": {
+    "state": "watcher-off",
+    "vars": {
+     "notices": 0
+    }
+   }
+  },
+  "pending": [],
+  "time": 0
+ },
+ "initial": {
+  "machines": {
+   "app-start-flow": {
+    "state": "app-loading",
+    "vars": {
+     "persistentFlag": true,
+     "project": "exegra"
+    }
+   },
+   "camera-memory-flow": {
+    "state": "camera-live",
+    "vars": {
+     "current": "c0",
+     "view": "structural"
+    }
+   },
+   "claim-evaluation-flow": {
+    "state": "evaluator-ready",
+    "vars": {
+     "evaluations": 0
+    }
+   },
+   "dev-server-flow": {
+    "state": "dev-ready",
+    "vars": {
+     "requests": 0
+    }
+   },
+   "engine-module-flow": {
+    "state": "engine-unloaded",
+    "vars": {
+     "built": true,
+     "loaded": false
+    }
+   },
+   "engine-runner-flow": {
+    "state": "runner-ready",
+    "vars": {
+     "prevId": 0,
+     "prevToken": 0,
+     "seq": 0,
+     "waitingId": 0,
+     "waitingToken": 0
+    }
+   },
+   "engine-worker-flow": {
+    "state": "worker-ready",
+    "vars": {
+     "generation": 0,
+     "runs": 0
+    }
+   },
+   "interaction-prefs-flow": {
+    "state": "prefs-live",
+    "vars": {
+     "restored": false,
+     "selection": "none",
+     "viewId": "structural"
+    }
+   },
+   "local-storage-flow": {
+    "state": "storage-ready",
+    "vars": {
+     "storedExplorerOpen": true,
+     "storedSelection": "none",
+     "storedView": "structural"
+    }
+   },
+   "persistence-client-flow": {
+    "state": "client-ready",
+    "vars": {
+     "calls": 0,
+     "lastFile": "spec"
+    }
+   },
+   "project-history-flow": {
+    "state": "history-ready",
+    "vars": {
+     "layoutHash": "none",
+     "redoDepth": 0,
+     "redoHash": "none",
+     "revision": 1,
+     "specHash": "none",
+     "undoDepth": 0,
+     "undoHash": "none"
+    }
+   },
+   "project-session-flow": {
+    "state": "session-closed",
+    "vars": {
+     "baseHash": "none",
+     "conflictHash": "none",
+     "errorsLogged": 0,
+     "externalReloads": 0,
+     "layoutBase": "none",
+     "layoutHash": "none",
+     "ownNotices": 0,
+     "pendingAgain": false,
+     "pendingName": "none",
+     "persistent": true,
+     "projectName": "none",
+     "projectsListed": 0,
+     "readPurpose": "none",
+     "recordedVersion": "none",
+     "reqSeq": 0,
+     "saveState": "none",
+     "textHash": "none"
+    }
+   },
+   "realisation-generate-flow": {
+    "state": "realisation-ready",
+    "vars": {
+     "lastGenerated": "g1",
+     "reqSeq": 200,
+     "saved": 0
+    }
+   },
+   "responsive-layout-flow": {
+    "state": "layout-prefs-live",
+    "vars": {
+     "explorerOpen": true
+    }
+   },
+   "scene-pulse-flow": {
+    "state": "pulse-ready",
+    "vars": {
+     "pulsedStep": -1,
+     "pulses": 0
+    }
+   },
+   "session-claims-flow": {
+    "state": "claims-ready",
+    "vars": {
+     "evaluations": 0,
+     "modelHash": "none",
+     "resultsHash": "none"
+    }
+   },
+   "session-storage-flow": {
+    "state": "tab-storage-ready",
+    "vars": {
+     "cameraArchitecture": "none",
+     "cameraBehavior": "none",
+     "cameraClaims": "none",
+     "cameraDataAndEditFlow": "none",
+     "cameraRealisation": "none",
+     "cameraReferences": "none",
+     "cameraSemanticCoreOnly": "none",
+     "dataCamera": "none",
+     "structuralCamera": "none"
+    }
+   },
+   "sim-session-flow": {
+    "state": "sim-idle",
+    "vars": {
+     "adoptedToken": 0,
+     "running": false,
+     "scenarioId": "none",
+     "stepCount": 0,
+     "stepIndex": -1,
+     "token": 0
+    }
+   },
+   "toolbar-exchange-flow": {
+    "state": "toolbar-ready",
+    "vars": {
+     "downloadedHash": "none",
+     "exports": 0,
+     "importName": "none",
+     "imports": 0,
+     "refusedLocally": 0,
+     "reqSeq": 100
+    }
+   },
+   "workspace-disk-flow": {
+    "state": "ws-ready",
+    "vars": {
+     "conflicts": 0,
+     "diskLayout": "L1",
+     "diskSpec": "h1",
+     "generatedHash": "g1",
+     "imports": 0,
+     "journalLines": 0,
+     "layoutWrites": 0,
+     "recordedVersion": "r1",
+     "specWrites": 0
+    }
+   },
+   "workspace-watcher-flow": {
+    "state": "watcher-off",
+    "vars": {
+     "notices": 0
+    }
+   }
+  },
+  "pending": [],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "live-session",
+ "steps": []
+}

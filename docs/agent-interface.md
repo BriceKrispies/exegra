@@ -208,7 +208,7 @@ The verification pipeline:
 
 1. Validate.
 2. Check traceability.
-3. Execute every `test` evidence. Its `ref` is `<test file>` or `<test file>#<name pattern>`. Files under `tests/browser/` run through `npx playwright test`. Other files run through `node --test`. A reference may contain only `A-Z a-z 0-9 _ . / - space # :`, and its file must lie inside the repository. Anything else is recorded as `unsafe reference`. A missing file is recorded as `test file not found`. A failure keeps the last 20 lines of output as `detail`.
+3. Execute every `test` evidence. Its `ref` is `<test file>` or `<test file>#<name pattern>`. Files under `tests/browser/` run through `npx playwright test`. Other files run through `node --test`. A reference may contain only `A-Z a-z 0-9 _ . / - space # :` (the rule of `src/core/evidence-ref.js`, which `exegra validate` also applies as `evidence.ref-unsafe`), and its file must lie inside the repository. Anything else is recorded as `unsafe reference`, with the reason. A missing file is recorded as `test file not found`. A failure keeps the last 20 lines of output as `detail`.
 4. Write the results to `evidence/results.json` with `ranAt` timestamps. Results from earlier runs are replaced.
 5. Re-evaluate the claims with the new results.
 

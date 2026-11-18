@@ -45,9 +45,9 @@
      ],
      "faultOnly": false,
      "from": "prefs-live",
-     "guard": null,
+     "guard": "event.view != viewId",
      "id": "prefs-view",
-     "on": "view-selected",
+     "on": "view-switched",
      "to": "prefs-live"
     },
     {
@@ -697,6 +697,12 @@
   },
   {
    "id": "traffic-step-recorded"
+  },
+  {
+   "id": "sim-reset-requested"
+  },
+  {
+   "id": "sim-seek-requested"
   }
  ],
  "faults": [],
@@ -715,7 +721,7 @@
    },
    {
     "at": 1,
-    "event": "view-selected",
+    "event": "view-switched",
     "payload": {
      "view": "data"
     }

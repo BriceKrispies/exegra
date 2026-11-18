@@ -37,6 +37,15 @@ test('M/M/1 fixture: utilisation and mean wait hold in the model, and their twin
     await initEngine();
     run = (text) => JSON.parse(runEngineText(text));
   }
+  // The claims share the base scenario and its seeds: a run of an input text already run is
+  // answered from the first run (the engine is deterministic), so each distinct run happens once.
+  const engineRun = run;
+  /** @type {Map<string, any>} */
+  const done = new Map();
+  run = (text) => {
+    if (!done.has(text)) done.set(text, engineRun(text));
+    return done.get(text);
+  };
   const base = lowerInput(fx.base);
   for (const c of fx.claims) {
     const negatives = c.negatives.map((/** @type {{faults: string[]}} */ v) => withFaults(base, v.faults));

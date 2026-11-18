@@ -15,6 +15,7 @@ import { entityLabel } from '../core/query.js';
 import { openCreateDialog, openDeleteDialog } from './dialogs.js';
 import { exportProject, importProject } from '../persist/client.js';
 import { analyzeSpec } from '../core/analyze.js';
+import { sha256Hex } from '../core/sha256.js';
 import { createMenu, placeBelow } from './menu.js';
 
 /**
@@ -404,18 +405,28 @@ export function mountToolbar(el, session, shellApi) {
   const mFit = tool({ icon: 'fit', label: 'Fit', onclick: fitNow });
 
   // Exchange.
+  // Traffic (src/app/traffic-recorder.js, through session.traffic): export and import as the self-model names
+  // them; a bundle is recorded as the sha-256 of its specification.
+  const rec = (/** @type {string} */ id, /** @type {Record<string, any>} */ payload = {}) => session.traffic?.record(id, payload);
   const exportBtn = tool({ testid: 'export', icon: 'download', label: 'Export', title: 'Download this project as a .exegra.json bundle', onclick: async () => {
+    rec('export-clicked');
+    const requestId = session.persistent ? session.traffic.nextRequestId() : 0;
     try {
       const name = session.projectName;
+      if (session.persistent) rec('export-intent', { name, requestId });
       // Without the persistence service the bundle is built from the in-memory project (same format).
       const bundle = session.persistent
-        ? await exportProject(name)
+        ? await exportProject(name, { requestId })
         : { format: 'exegra-project', version: 1, name, files: { 'spec.jsonc': session.project.specText, 'layout.jsonc': session.project.layoutText } };
+      const specHash = sha256Hex(String(/** @type {any} */ (bundle).files?.['spec.jsonc'] ?? ''));
+      if (session.persistent) rec('bundle-received', { files: specHash, requestId });
+      rec('bundle-downloaded', { specHash });
       const url = URL.createObjectURL(new Blob([JSON.stringify(bundle, null, 2) + '\n'], { type: 'application/json' }));
       const a = h('a', { href: url, download: `${name}.exegra.json`, hidden: true });
       document.body.append(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 2000);
     } catch (err) {
+      if (session.persistent) rec('export-refused-received', { requestId });
       session.note('error', 'Export failed', String(/** @type {any} */ (err)?.message ?? err));
     }
   } });
@@ -430,12 +441,19 @@ export function mountToolbar(el, session, shellApi) {
       const bundle = JSON.parse(await file.text());
       if (bundle?.format !== 'exegra-project' || typeof bundle.files !== 'object' || !bundle.files) throw new Error('Not an exegra-project bundle.');
       // An import creates project files outside the transaction pipeline, so refuse text that cannot become a model.
-      const check = analyzeSpec(String(bundle.files['spec.jsonc'] ?? ''));
+      const specText = String(bundle.files['spec.jsonc'] ?? '');
+      const specHash = sha256Hex(specText);
+      const check = analyzeSpec(specText);
+      if (!check.model) rec('import-file-chosen', { name: String(bundle.name ?? file.name), specHash, syntaxOk: false });
       if (!check.model) throw new Error(`The bundle's spec.jsonc has syntax errors (${check.diagnostics[0]?.message ?? 'unreadable'}).`);
       if (check.errorCount) session.note('info', `The imported specification has ${check.errorCount} validation error(s); it will load with diagnostics and reject edits until they are fixed.`);
       const name = await askProjectName(String(bundle.name ?? file.name.replace(/\.exegra\.json$|\.json$/i, '')));
       if (!name) return;
-      const res = await importProject(name, bundle);
+      rec('import-file-chosen', { name, specHash, syntaxOk: true });
+      const requestId = session.traffic.nextRequestId();
+      rec('import-intent', { name, bundle: specHash, requestId });
+      const res = await importProject(name, bundle, { requestId, bundleHash: specHash });
+      rec(res?.ok ? 'import-done' : 'import-refused-received', { requestId });
       if (!res?.ok) { session.note('error', 'Import failed', res?.error ?? 'The server refused the bundle.'); return; }
       await session.refreshProjects();
       await session.open(name);

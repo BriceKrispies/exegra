@@ -67,7 +67,7 @@
     "time": 0
    },
    {
-    "event": "view-selected",
+    "event": "view-switched",
     "payload": {
      "view": "data"
     },
@@ -148,7 +148,7 @@
       "time": 0
      },
      {
-      "event": "view-selected",
+      "event": "view-switched",
       "payload": {
        "view": "data"
       },
@@ -273,7 +273,7 @@
     },
     "pending": [
      {
-      "event": "view-selected",
+      "event": "view-switched",
       "payload": {
        "view": "data"
       },
@@ -434,7 +434,7 @@
     "time": 1
    },
    "event": {
-    "id": "view-selected",
+    "id": "view-switched",
     "payload": {
      "view": "data"
     },
@@ -460,7 +460,7 @@
       }
      ],
      "from": "prefs-live",
-     "guard": null,
+     "guard": "event.view != viewId",
      "sets": [
       {
        "after": "data",
@@ -487,7 +487,7 @@
    "index": 2,
    "kind": "deliver",
    "responsible": [
-    "view-selected",
+    "view-switched",
     "prefs-view",
     "interaction-prefs-flow",
     "session"

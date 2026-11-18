@@ -5,7 +5,8 @@
    "app-start-flow": {
     "state": "app-started",
     "vars": {
-     "persistentFlag": false
+     "persistentFlag": false,
+     "project": "exegra"
     }
    },
    "engine-module-flow": {
@@ -58,7 +59,8 @@
    "app-start-flow": {
     "state": "app-loading",
     "vars": {
-     "persistentFlag": true
+     "persistentFlag": true,
+     "project": "exegra"
     }
    },
    "engine-module-flow": {
@@ -107,7 +109,8 @@
    {
     "event": "page-loaded",
     "payload": {
-     "persistent": false
+     "persistent": false,
+     "project": "exegra"
     },
     "seq": 0,
     "source": {
@@ -119,6 +122,7 @@
    {
     "event": "edit-applied",
     "payload": {
+     "origin": "ui",
      "specHash": "h2"
     },
     "seq": 1,
@@ -140,7 +144,8 @@
      "app-start-flow": {
       "state": "app-waiting-engine",
       "vars": {
-       "persistentFlag": false
+       "persistentFlag": false,
+       "project": "exegra"
       }
      },
      "engine-module-flow": {
@@ -200,6 +205,7 @@
      {
       "event": "edit-applied",
       "payload": {
+       "origin": "ui",
        "specHash": "h2"
       },
       "seq": 1,
@@ -215,7 +221,8 @@
    "event": {
     "id": "page-loaded",
     "payload": {
-     "persistent": false
+     "persistent": false,
+     "project": "exegra"
     },
     "seq": 0,
     "source": {
@@ -242,6 +249,11 @@
        "after": false,
        "before": true,
        "variable": "persistentFlag"
+      },
+      {
+       "after": "exegra",
+       "before": "exegra",
+       "variable": "project"
       }
      ],
      "to": "app-waiting-engine",
@@ -281,7 +293,8 @@
      "app-start-flow": {
       "state": "app-waiting-engine",
       "vars": {
-       "persistentFlag": false
+       "persistentFlag": false,
+       "project": "exegra"
       }
      },
      "engine-module-flow": {
@@ -343,6 +356,7 @@
      {
       "event": "edit-applied",
       "payload": {
+       "origin": "ui",
        "specHash": "h2"
       },
       "seq": 1,
@@ -425,7 +439,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": false
+       "persistentFlag": false,
+       "project": "exegra"
       }
      },
      "engine-module-flow": {
@@ -474,7 +489,8 @@
      {
       "event": "session-init-requested",
       "payload": {
-       "persistent": false
+       "persistent": false,
+       "project": "exegra"
       },
       "seq": 4,
       "source": {
@@ -487,6 +503,7 @@
      {
       "event": "edit-applied",
       "payload": {
+       "origin": "ui",
        "specHash": "h2"
       },
       "seq": 1,
@@ -519,7 +536,8 @@
       {
        "event": "session-init-requested",
        "payload": {
-        "persistent": false
+        "persistent": false,
+        "project": "exegra"
        },
        "seq": 4,
        "time": 0
@@ -565,7 +583,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": false
+       "persistentFlag": false,
+       "project": "exegra"
       }
      },
      "engine-module-flow": {
@@ -627,6 +646,7 @@
      {
       "event": "edit-applied",
       "payload": {
+       "origin": "ui",
        "specHash": "h2"
       },
       "seq": 1,
@@ -642,7 +662,8 @@
    "event": {
     "id": "session-init-requested",
     "payload": {
-     "persistent": false
+     "persistent": false,
+     "project": "exegra"
     },
     "seq": 4,
     "source": {
@@ -711,7 +732,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": false
+       "persistentFlag": false,
+       "project": "exegra"
       }
      },
      "engine-module-flow": {
@@ -775,6 +797,7 @@
      {
       "event": "edit-applied",
       "payload": {
+       "origin": "ui",
        "specHash": "h2"
       },
       "seq": 1,
@@ -871,7 +894,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": false
+       "persistentFlag": false,
+       "project": "exegra"
       }
      },
      "engine-module-flow": {
@@ -920,6 +944,7 @@
      {
       "event": "edit-applied",
       "payload": {
+       "origin": "ui",
        "specHash": "h2"
       },
       "seq": 1,
@@ -1017,7 +1042,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": false
+       "persistentFlag": false,
+       "project": "exegra"
       }
      },
      "engine-module-flow": {
@@ -1084,6 +1110,7 @@
    "event": {
     "id": "edit-applied",
     "payload": {
+     "origin": "ui",
      "specHash": "h2"
     },
     "seq": 1,
@@ -1174,7 +1201,8 @@
      "app-start-flow": {
       "state": "app-started",
       "vars": {
-       "persistentFlag": false
+       "persistentFlag": false,
+       "project": "exegra"
       }
      },
      "engine-module-flow": {
