@@ -7,7 +7,7 @@
 // or the resulting model has validation errors, nothing changes.
 
 import { analyzeSpec } from './analyze.js';
-import { semanticHash, hashString } from './hash.js';
+import { semanticHash } from './hash.js';
 import { OPERATIONS, OpError, Tx, parseLayout, EMPTY_LAYOUT } from './operations.js';
 import { own } from './own.js';
 
@@ -71,11 +71,6 @@ export class Project {
     this.errorCount = a.errorCount;
     this.semanticHash = semanticHash(a.model);
     this.layout = parseLayout(this.layoutText);
-  }
-
-  /** Identity of the exact text state, for optimistic concurrency across processes. */
-  get textHash() {
-    return hashString(this.specText) + '.' + hashString(this.layoutText);
   }
 
   get canUndo() { return this.undoStack.length > 0; }

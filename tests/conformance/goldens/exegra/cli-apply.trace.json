@@ -1,0 +1,1246 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "cli-process-flow": {
+    "state": "cli-done",
+    "vars": {
+     "command": "apply",
+     "engineOk": false,
+     "failureNotesSpecWritten": false,
+     "layoutRead": "L1",
+     "option": "--file ops.json",
+     "reportedFailure": false,
+     "reportedOk": true,
+     "reqId": 1,
+     "specRead": "h1",
+     "traceWritten": false,
+     "wroteSpec": true
+    }
+   },
+   "workspace-disk-flow": {
+    "state": "ws-ready",
+    "vars": {
+     "conflicts": 0,
+     "diskLayout": "L2",
+     "diskSpec": "h2",
+     "generatedHash": "g1",
+     "imports": 0,
+     "journalLines": 2,
+     "layoutWrites": 1,
+     "recordedVersion": "r1",
+     "specWrites": 1
+    }
+   }
+  },
+  "pending": [],
+  "time": 2
+ },
+ "initial": {
+  "machines": {
+   "cli-process-flow": {
+    "state": "cli-idle",
+    "vars": {
+     "command": "none",
+     "engineOk": false,
+     "failureNotesSpecWritten": false,
+     "layoutRead": "none",
+     "option": "none",
+     "reportedFailure": false,
+     "reportedOk": false,
+     "reqId": 0,
+     "specRead": "none",
+     "traceWritten": false,
+     "wroteSpec": false
+    }
+   },
+   "workspace-disk-flow": {
+    "state": "ws-ready",
+    "vars": {
+     "conflicts": 0,
+     "diskLayout": "L1",
+     "diskSpec": "h1",
+     "generatedHash": "g1",
+     "imports": 0,
+     "journalLines": 0,
+     "layoutWrites": 0,
+     "recordedVersion": "r1",
+     "specWrites": 0
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "cli-command-request",
+    "payload": {
+     "command": "apply",
+     "options": "--file ops.json",
+     "requestId": 1
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "cli-apply",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "cli-process-flow": {
+      "state": "cli-loading",
+      "vars": {
+       "command": "apply",
+       "engineOk": false,
+       "failureNotesSpecWritten": false,
+       "layoutRead": "none",
+       "option": "--file ops.json",
+       "reportedFailure": false,
+       "reportedOk": false,
+       "reqId": 1,
+       "specRead": "none",
+       "traceWritten": false,
+       "wroteSpec": false
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ws-read",
+      "payload": {
+       "caller": "cli",
+       "name": "exegra",
+       "requestId": 1
+      },
+      "seq": 1,
+      "source": {
+       "behavior": "cli-process-flow",
+       "kind": "transition",
+       "transition": "cli-start"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "cli-command-request",
+    "payload": {
+     "command": "apply",
+     "options": "--file ops.json",
+     "requestId": 1
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "cli-process-flow",
+     "emitted": [
+      {
+       "event": "ws-read",
+       "payload": {
+        "caller": "cli",
+        "name": "exegra",
+        "requestId": 1
+       },
+       "seq": 1,
+       "time": 0
+      }
+     ],
+     "from": "cli-idle",
+     "guard": null,
+     "sets": [
+      {
+       "after": "apply",
+       "before": "none",
+       "variable": "command"
+      },
+      {
+       "after": "--file ops.json",
+       "before": "none",
+       "variable": "option"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "reqId"
+      }
+     ],
+     "to": "cli-loading",
+     "transition": "cli-start"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "cli-command-request",
+    "cli-start",
+    "cli-process-flow",
+    "agent-cli"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "cli-process-flow": {
+      "state": "cli-loading",
+      "vars": {
+       "command": "apply",
+       "engineOk": false,
+       "failureNotesSpecWritten": false,
+       "layoutRead": "none",
+       "option": "--file ops.json",
+       "reportedFailure": false,
+       "reportedOk": false,
+       "reqId": 1,
+       "specRead": "none",
+       "traceWritten": false,
+       "wroteSpec": false
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ws-read-done",
+      "payload": {
+       "caller": "cli",
+       "layout": "L1",
+       "recorded": "r1",
+       "requestId": 1,
+       "spec": "h1"
+      },
+      "seq": 2,
+      "source": {
+       "behavior": "workspace-disk-flow",
+       "kind": "transition",
+       "transition": "ws-read-files"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "ws-read",
+    "payload": {
+     "caller": "cli",
+     "name": "exegra",
+     "requestId": 1
+    },
+    "seq": 1,
+    "source": {
+     "behavior": "cli-process-flow",
+     "kind": "transition",
+     "transition": "cli-start"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "workspace-disk-flow",
+     "emitted": [
+      {
+       "event": "ws-read-done",
+       "payload": {
+        "caller": "cli",
+        "layout": "L1",
+        "recorded": "r1",
+        "requestId": 1,
+        "spec": "h1"
+       },
+       "seq": 2,
+       "time": 0
+      }
+     ],
+     "from": "ws-ready",
+     "guard": null,
+     "sets": [],
+     "to": "ws-ready",
+     "transition": "ws-read-files"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "cli-process-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "ws-read",
+    "ws-read-files",
+    "workspace-disk-flow",
+    "workspace-service"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "cli-process-flow": {
+      "state": "cli-applying",
+      "vars": {
+       "command": "apply",
+       "engineOk": false,
+       "failureNotesSpecWritten": false,
+       "layoutRead": "L1",
+       "option": "--file ops.json",
+       "reportedFailure": false,
+       "reportedOk": false,
+       "reqId": 1,
+       "specRead": "h1",
+       "traceWritten": false,
+       "wroteSpec": false
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ws-write",
+      "payload": {
+       "baseHash": "h1",
+       "caller": "cli",
+       "file": "spec",
+       "name": "exegra",
+       "requestId": 1,
+       "text": "h2"
+      },
+      "seq": 3,
+      "source": {
+       "behavior": "cli-process-flow",
+       "kind": "transition",
+       "transition": "cli-apply-read"
+      },
+      "time": 2
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "ws-read-done",
+    "payload": {
+     "caller": "cli",
+     "layout": "L1",
+     "recorded": "r1",
+     "requestId": 1,
+     "spec": "h1"
+    },
+    "seq": 2,
+    "source": {
+     "behavior": "workspace-disk-flow",
+     "kind": "transition",
+     "transition": "ws-read-files"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "cli-process-flow",
+     "emitted": [
+      {
+       "event": "ws-write",
+       "payload": {
+        "baseHash": "h1",
+        "caller": "cli",
+        "file": "spec",
+        "name": "exegra",
+        "requestId": 1,
+        "text": "h2"
+       },
+       "seq": 3,
+       "time": 2
+      }
+     ],
+     "from": "cli-loading",
+     "guard": "event.caller == 'cli' && command == 'apply'",
+     "sets": [
+      {
+       "after": "h1",
+       "before": "none",
+       "variable": "specRead"
+      },
+      {
+       "after": "L1",
+       "before": "none",
+       "variable": "layoutRead"
+      }
+     ],
+     "to": "cli-applying",
+     "transition": "cli-apply-read"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "ws-read-done",
+    "cli-apply-read",
+    "cli-process-flow",
+    "agent-cli"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "cli-process-flow": {
+      "state": "cli-applying",
+      "vars": {
+       "command": "apply",
+       "engineOk": false,
+       "failureNotesSpecWritten": false,
+       "layoutRead": "L1",
+       "option": "--file ops.json",
+       "reportedFailure": false,
+       "reportedOk": false,
+       "reqId": 1,
+       "specRead": "h1",
+       "traceWritten": false,
+       "wroteSpec": false
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h2",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 1,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "disk-file-replaced",
+      "payload": {
+       "file": "spec",
+       "hash": "h2"
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "workspace-disk-flow",
+       "kind": "transition",
+       "transition": "ws-write-spec"
+      },
+      "time": 2
+     },
+     {
+      "event": "ws-write-done",
+      "payload": {
+       "caller": "cli",
+       "file": "spec",
+       "hash": "h2",
+       "requestId": 1
+      },
+      "seq": 5,
+      "source": {
+       "behavior": "workspace-disk-flow",
+       "kind": "transition",
+       "transition": "ws-write-spec"
+      },
+      "time": 2
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "ws-write",
+    "payload": {
+     "baseHash": "h1",
+     "caller": "cli",
+     "file": "spec",
+     "name": "exegra",
+     "requestId": 1,
+     "text": "h2"
+    },
+    "seq": 3,
+    "source": {
+     "behavior": "cli-process-flow",
+     "kind": "transition",
+     "transition": "cli-apply-read"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "workspace-disk-flow",
+     "emitted": [
+      {
+       "event": "disk-file-replaced",
+       "payload": {
+        "file": "spec",
+        "hash": "h2"
+       },
+       "seq": 4,
+       "time": 2
+      },
+      {
+       "event": "ws-write-done",
+       "payload": {
+        "caller": "cli",
+        "file": "spec",
+        "hash": "h2",
+        "requestId": 1
+       },
+       "seq": 5,
+       "time": 2
+      }
+     ],
+     "from": "ws-ready",
+     "guard": "event.file == 'spec' && event.baseHash == diskSpec",
+     "sets": [
+      {
+       "after": "h2",
+       "before": "h1",
+       "variable": "diskSpec"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "specWrites"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "journalLines"
+      }
+     ],
+     "to": "ws-ready",
+     "transition": "ws-write-spec"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "cli-process-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "ws-write",
+    "ws-write-spec",
+    "workspace-disk-flow",
+    "workspace-service"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "cli-process-flow": {
+      "state": "cli-applying",
+      "vars": {
+       "command": "apply",
+       "engineOk": false,
+       "failureNotesSpecWritten": false,
+       "layoutRead": "L1",
+       "option": "--file ops.json",
+       "reportedFailure": false,
+       "reportedOk": false,
+       "reqId": 1,
+       "specRead": "h1",
+       "traceWritten": false,
+       "wroteSpec": false
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h2",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 1,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ws-write-done",
+      "payload": {
+       "caller": "cli",
+       "file": "spec",
+       "hash": "h2",
+       "requestId": 1
+      },
+      "seq": 5,
+      "source": {
+       "behavior": "workspace-disk-flow",
+       "kind": "transition",
+       "transition": "ws-write-spec"
+      },
+      "time": 2
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "disk-file-replaced",
+    "payload": {
+     "file": "spec",
+     "hash": "h2"
+    },
+    "seq": 4,
+    "source": {
+     "behavior": "workspace-disk-flow",
+     "kind": "transition",
+     "transition": "ws-write-spec"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "cli-process-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 4,
+   "kind": "deliver",
+   "responsible": [
+    "disk-file-replaced"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "cli-process-flow": {
+      "state": "cli-writing-layout",
+      "vars": {
+       "command": "apply",
+       "engineOk": false,
+       "failureNotesSpecWritten": false,
+       "layoutRead": "L1",
+       "option": "--file ops.json",
+       "reportedFailure": false,
+       "reportedOk": false,
+       "reqId": 1,
+       "specRead": "h1",
+       "traceWritten": false,
+       "wroteSpec": true
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h2",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 1,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ws-write",
+      "payload": {
+       "baseHash": "L1",
+       "caller": "cli",
+       "file": "layout",
+       "name": "exegra",
+       "requestId": 1,
+       "text": "L2"
+      },
+      "seq": 6,
+      "source": {
+       "behavior": "cli-process-flow",
+       "kind": "transition",
+       "transition": "cli-apply-spec-written"
+      },
+      "time": 2
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "ws-write-done",
+    "payload": {
+     "caller": "cli",
+     "file": "spec",
+     "hash": "h2",
+     "requestId": 1
+    },
+    "seq": 5,
+    "source": {
+     "behavior": "workspace-disk-flow",
+     "kind": "transition",
+     "transition": "ws-write-spec"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "cli-process-flow",
+     "emitted": [
+      {
+       "event": "ws-write",
+       "payload": {
+        "baseHash": "L1",
+        "caller": "cli",
+        "file": "layout",
+        "name": "exegra",
+        "requestId": 1,
+        "text": "L2"
+       },
+       "seq": 6,
+       "time": 2
+      }
+     ],
+     "from": "cli-applying",
+     "guard": "event.caller == 'cli'",
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "wroteSpec"
+      }
+     ],
+     "to": "cli-writing-layout",
+     "transition": "cli-apply-spec-written"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 5,
+   "kind": "deliver",
+   "responsible": [
+    "ws-write-done",
+    "cli-apply-spec-written",
+    "cli-process-flow",
+    "agent-cli"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "cli-process-flow": {
+      "state": "cli-writing-layout",
+      "vars": {
+       "command": "apply",
+       "engineOk": false,
+       "failureNotesSpecWritten": false,
+       "layoutRead": "L1",
+       "option": "--file ops.json",
+       "reportedFailure": false,
+       "reportedOk": false,
+       "reqId": 1,
+       "specRead": "h1",
+       "traceWritten": false,
+       "wroteSpec": true
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L2",
+       "diskSpec": "h2",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 2,
+       "layoutWrites": 1,
+       "recordedVersion": "r1",
+       "specWrites": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "disk-file-replaced",
+      "payload": {
+       "file": "layout",
+       "hash": "L2"
+      },
+      "seq": 7,
+      "source": {
+       "behavior": "workspace-disk-flow",
+       "kind": "transition",
+       "transition": "ws-write-layout"
+      },
+      "time": 2
+     },
+     {
+      "event": "ws-write-done",
+      "payload": {
+       "caller": "cli",
+       "file": "layout",
+       "hash": "L2",
+       "requestId": 1
+      },
+      "seq": 8,
+      "source": {
+       "behavior": "workspace-disk-flow",
+       "kind": "transition",
+       "transition": "ws-write-layout"
+      },
+      "time": 2
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "ws-write",
+    "payload": {
+     "baseHash": "L1",
+     "caller": "cli",
+     "file": "layout",
+     "name": "exegra",
+     "requestId": 1,
+     "text": "L2"
+    },
+    "seq": 6,
+    "source": {
+     "behavior": "cli-process-flow",
+     "kind": "transition",
+     "transition": "cli-apply-spec-written"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "workspace-disk-flow",
+     "emitted": [
+      {
+       "event": "disk-file-replaced",
+       "payload": {
+        "file": "layout",
+        "hash": "L2"
+       },
+       "seq": 7,
+       "time": 2
+      },
+      {
+       "event": "ws-write-done",
+       "payload": {
+        "caller": "cli",
+        "file": "layout",
+        "hash": "L2",
+        "requestId": 1
+       },
+       "seq": 8,
+       "time": 2
+      }
+     ],
+     "from": "ws-ready",
+     "guard": "event.file == 'layout' && event.baseHash == diskLayout",
+     "sets": [
+      {
+       "after": "L2",
+       "before": "L1",
+       "variable": "diskLayout"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "layoutWrites"
+      },
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "journalLines"
+      }
+     ],
+     "to": "ws-ready",
+     "transition": "ws-write-layout"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "cli-process-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 6,
+   "kind": "deliver",
+   "responsible": [
+    "ws-write",
+    "ws-write-layout",
+    "workspace-disk-flow",
+    "workspace-service"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "cli-process-flow": {
+      "state": "cli-writing-layout",
+      "vars": {
+       "command": "apply",
+       "engineOk": false,
+       "failureNotesSpecWritten": false,
+       "layoutRead": "L1",
+       "option": "--file ops.json",
+       "reportedFailure": false,
+       "reportedOk": false,
+       "reqId": 1,
+       "specRead": "h1",
+       "traceWritten": false,
+       "wroteSpec": true
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L2",
+       "diskSpec": "h2",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 2,
+       "layoutWrites": 1,
+       "recordedVersion": "r1",
+       "specWrites": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ws-write-done",
+      "payload": {
+       "caller": "cli",
+       "file": "layout",
+       "hash": "L2",
+       "requestId": 1
+      },
+      "seq": 8,
+      "source": {
+       "behavior": "workspace-disk-flow",
+       "kind": "transition",
+       "transition": "ws-write-layout"
+      },
+      "time": 2
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "disk-file-replaced",
+    "payload": {
+     "file": "layout",
+     "hash": "L2"
+    },
+    "seq": 7,
+    "source": {
+     "behavior": "workspace-disk-flow",
+     "kind": "transition",
+     "transition": "ws-write-layout"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "cli-process-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 7,
+   "kind": "deliver",
+   "responsible": [
+    "disk-file-replaced"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "cli-process-flow": {
+      "state": "cli-done",
+      "vars": {
+       "command": "apply",
+       "engineOk": false,
+       "failureNotesSpecWritten": false,
+       "layoutRead": "L1",
+       "option": "--file ops.json",
+       "reportedFailure": false,
+       "reportedOk": true,
+       "reqId": 1,
+       "specRead": "h1",
+       "traceWritten": false,
+       "wroteSpec": true
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L2",
+       "diskSpec": "h2",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 2,
+       "layoutWrites": 1,
+       "recordedVersion": "r1",
+       "specWrites": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "cli-command-ok",
+      "payload": {
+       "command": "apply",
+       "ok": true,
+       "project": "exegra",
+       "requestId": 1,
+       "result": "written: spec, layout",
+       "semanticHash": "m2"
+      },
+      "seq": 9,
+      "source": {
+       "behavior": "cli-process-flow",
+       "kind": "transition",
+       "transition": "cli-apply-written"
+      },
+      "time": 2
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "ws-write-done",
+    "payload": {
+     "caller": "cli",
+     "file": "layout",
+     "hash": "L2",
+     "requestId": 1
+    },
+    "seq": 8,
+    "source": {
+     "behavior": "workspace-disk-flow",
+     "kind": "transition",
+     "transition": "ws-write-layout"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "cli-process-flow",
+     "emitted": [
+      {
+       "event": "cli-command-ok",
+       "payload": {
+        "command": "apply",
+        "ok": true,
+        "project": "exegra",
+        "requestId": 1,
+        "result": "written: spec, layout",
+        "semanticHash": "m2"
+       },
+       "seq": 9,
+       "time": 2
+      }
+     ],
+     "from": "cli-writing-layout",
+     "guard": "event.caller == 'cli'",
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "reportedOk"
+      }
+     ],
+     "to": "cli-done",
+     "transition": "cli-apply-written"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 8,
+   "kind": "deliver",
+   "responsible": [
+    "ws-write-done",
+    "cli-apply-written",
+    "cli-process-flow",
+    "agent-cli"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "cli-process-flow": {
+      "state": "cli-done",
+      "vars": {
+       "command": "apply",
+       "engineOk": false,
+       "failureNotesSpecWritten": false,
+       "layoutRead": "L1",
+       "option": "--file ops.json",
+       "reportedFailure": false,
+       "reportedOk": true,
+       "reqId": 1,
+       "specRead": "h1",
+       "traceWritten": false,
+       "wroteSpec": true
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L2",
+       "diskSpec": "h2",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 2,
+       "layoutWrites": 1,
+       "recordedVersion": "r1",
+       "specWrites": 1
+      }
+     }
+    },
+    "pending": [],
+    "time": 2
+   },
+   "event": {
+    "id": "cli-command-ok",
+    "payload": {
+     "command": "apply",
+     "ok": true,
+     "project": "exegra",
+     "requestId": 1,
+     "result": "written: spec, layout",
+     "semanticHash": "m2"
+    },
+    "seq": 9,
+    "source": {
+     "behavior": "cli-process-flow",
+     "kind": "transition",
+     "transition": "cli-apply-written"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "cli-process-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 9,
+   "kind": "deliver",
+   "responsible": [
+    "cli-command-ok"
+   ],
+   "time": 2
+  }
+ ]
+}

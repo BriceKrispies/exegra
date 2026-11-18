@@ -681,6 +681,10 @@ export function createSession() {
         if (res.ok) {
           hashes[file] = res.hash;
           session.note('save', `Saved ${file === 'spec' ? 'spec.jsonc' : 'layout.jsonc'}`, { hash: res.hash });
+          // A written file whose journal line failed is still saved; the history line for it is missing.
+          if (res.journal && res.journal.written === false) {
+            session.note('error', `${file === 'spec' ? 'spec.jsonc' : 'layout.jsonc'} was saved, but ${res.journal.message}`);
+          }
         } else if ('conflict' in res && res.conflict) {
           conflict = { file, current: res.current };
           pending[file] = true;

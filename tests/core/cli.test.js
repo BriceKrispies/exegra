@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { runCommand, exitCodeOf, parseTestCounts, countPassingTests } from '../../cli/commands.js';
+import { runCommand, exitCodeOf, parseTestCounts, countPassingTests, mergeRecordedResults } from '../../cli/commands.js';
 import { Project } from '../../src/core/project.js';
 import { OPERATIONS } from '../../src/core/operations.js';
 
@@ -285,4 +285,33 @@ test('markdown renders a document of a specification that holds documents, and r
   } finally {
     env.cleanup();
   }
+});
+
+test('a skipped verify run keeps the outcome recorded before instead of erasing it', () => {
+  const prior = {
+    'browser-login': { outcome: 'pass', ranAt: '2026-11-10T09:00:00.000Z' },
+    'node-model': { outcome: 'fail', detail: 'old failure', ranAt: '2026-11-10T09:00:00.000Z' },
+  };
+  const runs = [
+    { id: 'browser-login', outcome: 'skipped', ranAt: '2026-11-17T10:00:00.000Z' },
+    { id: 'node-model', outcome: 'pass', ranAt: '2026-11-17T10:00:01.000Z' },
+    { id: 'browser-new', outcome: 'skipped', ranAt: '2026-11-17T10:00:02.000Z' },
+  ];
+  const results = mergeRecordedResults(prior, runs);
+  assert.deepEqual(results, {
+    'browser-login': { outcome: 'pass', ranAt: '2026-11-10T09:00:00.000Z' },
+    'node-model': { outcome: 'pass', ranAt: '2026-11-17T10:00:01.000Z' },
+  });
+});
+
+test('a run that failed records its detail, and an empty prior records only what ran', () => {
+  const results = mergeRecordedResults({}, [
+    { id: 'a', outcome: 'fail', detail: 'boom', ranAt: 't1' },
+    { id: 'b', outcome: 'pass', ranAt: 't2' },
+    { id: 'c', outcome: 'skipped', ranAt: 't3' },
+  ]);
+  assert.deepEqual(results, {
+    a: { outcome: 'fail', detail: 'boom', ranAt: 't1' },
+    b: { outcome: 'pass', ranAt: 't2' },
+  });
 });

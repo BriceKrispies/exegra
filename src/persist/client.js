@@ -65,7 +65,7 @@ export async function readProject(name) {
  * @param {string} text
  * @param {string|null} baseHash
  * @param {{label?: string, origin?: string}} [meta]
- * @returns {Promise<{ok: true, hash: string} | {ok: false, conflict: true, current: {text: string, hash: string|null}} | {ok: false, error: string}>}
+ * @returns {Promise<{ok: true, hash: string, journal?: {written: boolean, seq?: number, message?: string}} | {ok: false, conflict: true, current: {text: string, hash: string|null}} | {ok: false, error: string}>}
  */
 export async function writeFile(name, file, text, baseHash, meta) {
   if (!PERSISTENCE_AVAILABLE) return { ok: false, error: UNAVAILABLE };

@@ -1,0 +1,1110 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "interaction-prefs-flow": {
+    "state": "prefs-live",
+    "vars": {
+     "restored": true,
+     "selection": "session",
+     "viewId": "data"
+    }
+   },
+   "local-storage-flow": {
+    "state": "storage-ready",
+    "vars": {
+     "storedExplorerOpen": false,
+     "storedSelection": "session",
+     "storedView": "data"
+    }
+   },
+   "responsive-layout-flow": {
+    "state": "layout-prefs-live",
+    "vars": {
+     "explorerOpen": false
+    }
+   }
+  },
+  "pending": [],
+  "time": 3
+ },
+ "initial": {
+  "machines": {
+   "interaction-prefs-flow": {
+    "state": "prefs-live",
+    "vars": {
+     "restored": false,
+     "selection": "none",
+     "viewId": "structural"
+    }
+   },
+   "local-storage-flow": {
+    "state": "storage-ready",
+    "vars": {
+     "storedExplorerOpen": true,
+     "storedSelection": "none",
+     "storedView": "structural"
+    }
+   },
+   "responsive-layout-flow": {
+    "state": "layout-prefs-live",
+    "vars": {
+     "explorerOpen": true
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "entity-selected",
+    "payload": {
+     "id": "session"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   },
+   {
+    "event": "view-selected",
+    "payload": {
+     "view": "data"
+    },
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    },
+    "time": 1
+   },
+   {
+    "event": "panel-toggled",
+    "payload": {
+     "open": false
+    },
+    "seq": 2,
+    "source": {
+     "kind": "scenario",
+     "step": 2
+    },
+    "time": 2
+   },
+   {
+    "event": "page-reloaded",
+    "payload": {},
+    "seq": 3,
+    "source": {
+     "kind": "scenario",
+     "step": 3
+    },
+    "time": 3
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "preferences-remembered",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "interaction-prefs-flow": {
+      "state": "prefs-live",
+      "vars": {
+       "restored": false,
+       "selection": "session",
+       "viewId": "structural"
+      }
+     },
+     "local-storage-flow": {
+      "state": "storage-ready",
+      "vars": {
+       "storedExplorerOpen": true,
+       "storedSelection": "none",
+       "storedView": "structural"
+      }
+     },
+     "responsive-layout-flow": {
+      "state": "layout-prefs-live",
+      "vars": {
+       "explorerOpen": true
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "preferences-written",
+      "payload": {
+       "selection": "session",
+       "viewId": "structural"
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "interaction-prefs-flow",
+       "kind": "transition",
+       "transition": "prefs-select"
+      },
+      "time": 0
+     },
+     {
+      "event": "view-selected",
+      "payload": {
+       "view": "data"
+      },
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 1
+     },
+     {
+      "event": "panel-toggled",
+      "payload": {
+       "open": false
+      },
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 2
+     },
+     {
+      "event": "page-reloaded",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 3
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "entity-selected",
+    "payload": {
+     "id": "session"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "interaction-prefs-flow",
+     "emitted": [
+      {
+       "event": "preferences-written",
+       "payload": {
+        "selection": "session",
+        "viewId": "structural"
+       },
+       "seq": 4,
+       "time": 0
+      }
+     ],
+     "from": "prefs-live",
+     "guard": null,
+     "sets": [
+      {
+       "after": "session",
+       "before": "none",
+       "variable": "selection"
+      }
+     ],
+     "to": "prefs-live",
+     "transition": "prefs-select"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "responsive-layout-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "local-storage-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "entity-selected",
+    "prefs-select",
+    "interaction-prefs-flow",
+    "session"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "interaction-prefs-flow": {
+      "state": "prefs-live",
+      "vars": {
+       "restored": false,
+       "selection": "session",
+       "viewId": "structural"
+      }
+     },
+     "local-storage-flow": {
+      "state": "storage-ready",
+      "vars": {
+       "storedExplorerOpen": true,
+       "storedSelection": "session",
+       "storedView": "structural"
+      }
+     },
+     "responsive-layout-flow": {
+      "state": "layout-prefs-live",
+      "vars": {
+       "explorerOpen": true
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "view-selected",
+      "payload": {
+       "view": "data"
+      },
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 1
+     },
+     {
+      "event": "panel-toggled",
+      "payload": {
+       "open": false
+      },
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 2
+     },
+     {
+      "event": "page-reloaded",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 3
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "preferences-written",
+    "payload": {
+     "selection": "session",
+     "viewId": "structural"
+    },
+    "seq": 4,
+    "source": {
+     "behavior": "interaction-prefs-flow",
+     "kind": "transition",
+     "transition": "prefs-select"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "local-storage-flow",
+     "emitted": [],
+     "from": "storage-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": "session",
+       "before": "none",
+       "variable": "storedSelection"
+      },
+      {
+       "after": "structural",
+       "before": "structural",
+       "variable": "storedView"
+      }
+     ],
+     "to": "storage-ready",
+     "transition": "storage-write-session"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-prefs-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "responsive-layout-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "preferences-written",
+    "storage-write-session",
+    "local-storage-flow",
+    "browser-storage"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "interaction-prefs-flow": {
+      "state": "prefs-live",
+      "vars": {
+       "restored": false,
+       "selection": "session",
+       "viewId": "data"
+      }
+     },
+     "local-storage-flow": {
+      "state": "storage-ready",
+      "vars": {
+       "storedExplorerOpen": true,
+       "storedSelection": "session",
+       "storedView": "structural"
+      }
+     },
+     "responsive-layout-flow": {
+      "state": "layout-prefs-live",
+      "vars": {
+       "explorerOpen": true
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "preferences-written",
+      "payload": {
+       "selection": "session",
+       "viewId": "data"
+      },
+      "seq": 5,
+      "source": {
+       "behavior": "interaction-prefs-flow",
+       "kind": "transition",
+       "transition": "prefs-view"
+      },
+      "time": 1
+     },
+     {
+      "event": "panel-toggled",
+      "payload": {
+       "open": false
+      },
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 2
+     },
+     {
+      "event": "page-reloaded",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 3
+     }
+    ],
+    "time": 1
+   },
+   "event": {
+    "id": "view-selected",
+    "payload": {
+     "view": "data"
+    },
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "interaction-prefs-flow",
+     "emitted": [
+      {
+       "event": "preferences-written",
+       "payload": {
+        "selection": "session",
+        "viewId": "data"
+       },
+       "seq": 5,
+       "time": 1
+      }
+     ],
+     "from": "prefs-live",
+     "guard": null,
+     "sets": [
+      {
+       "after": "data",
+       "before": "structural",
+       "variable": "viewId"
+      }
+     ],
+     "to": "prefs-live",
+     "transition": "prefs-view"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "responsive-layout-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "local-storage-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "view-selected",
+    "prefs-view",
+    "interaction-prefs-flow",
+    "session"
+   ],
+   "time": 1
+  },
+  {
+   "config": {
+    "machines": {
+     "interaction-prefs-flow": {
+      "state": "prefs-live",
+      "vars": {
+       "restored": false,
+       "selection": "session",
+       "viewId": "data"
+      }
+     },
+     "local-storage-flow": {
+      "state": "storage-ready",
+      "vars": {
+       "storedExplorerOpen": true,
+       "storedSelection": "session",
+       "storedView": "data"
+      }
+     },
+     "responsive-layout-flow": {
+      "state": "layout-prefs-live",
+      "vars": {
+       "explorerOpen": true
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "panel-toggled",
+      "payload": {
+       "open": false
+      },
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 2
+     },
+     {
+      "event": "page-reloaded",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 3
+     }
+    ],
+    "time": 1
+   },
+   "event": {
+    "id": "preferences-written",
+    "payload": {
+     "selection": "session",
+     "viewId": "data"
+    },
+    "seq": 5,
+    "source": {
+     "behavior": "interaction-prefs-flow",
+     "kind": "transition",
+     "transition": "prefs-view"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "local-storage-flow",
+     "emitted": [],
+     "from": "storage-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": "session",
+       "before": "session",
+       "variable": "storedSelection"
+      },
+      {
+       "after": "data",
+       "before": "structural",
+       "variable": "storedView"
+      }
+     ],
+     "to": "storage-ready",
+     "transition": "storage-write-session"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-prefs-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "responsive-layout-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "preferences-written",
+    "storage-write-session",
+    "local-storage-flow",
+    "browser-storage"
+   ],
+   "time": 1
+  },
+  {
+   "config": {
+    "machines": {
+     "interaction-prefs-flow": {
+      "state": "prefs-live",
+      "vars": {
+       "restored": false,
+       "selection": "session",
+       "viewId": "data"
+      }
+     },
+     "local-storage-flow": {
+      "state": "storage-ready",
+      "vars": {
+       "storedExplorerOpen": true,
+       "storedSelection": "session",
+       "storedView": "data"
+      }
+     },
+     "responsive-layout-flow": {
+      "state": "layout-prefs-live",
+      "vars": {
+       "explorerOpen": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "layout-preferences-written",
+      "payload": {
+       "explorerOpen": false
+      },
+      "seq": 6,
+      "source": {
+       "behavior": "responsive-layout-flow",
+       "kind": "transition",
+       "transition": "layout-prefs-toggle"
+      },
+      "time": 2
+     },
+     {
+      "event": "page-reloaded",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 3
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "panel-toggled",
+    "payload": {
+     "open": false
+    },
+    "seq": 2,
+    "source": {
+     "kind": "scenario",
+     "step": 2
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "responsive-layout-flow",
+     "emitted": [
+      {
+       "event": "layout-preferences-written",
+       "payload": {
+        "explorerOpen": false
+       },
+       "seq": 6,
+       "time": 2
+      }
+     ],
+     "from": "layout-prefs-live",
+     "guard": null,
+     "sets": [
+      {
+       "after": false,
+       "before": true,
+       "variable": "explorerOpen"
+      }
+     ],
+     "to": "layout-prefs-live",
+     "transition": "layout-prefs-toggle"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-prefs-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "local-storage-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 4,
+   "kind": "deliver",
+   "responsible": [
+    "panel-toggled",
+    "layout-prefs-toggle",
+    "responsive-layout-flow",
+    "responsive-layout"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "interaction-prefs-flow": {
+      "state": "prefs-live",
+      "vars": {
+       "restored": false,
+       "selection": "session",
+       "viewId": "data"
+      }
+     },
+     "local-storage-flow": {
+      "state": "storage-ready",
+      "vars": {
+       "storedExplorerOpen": false,
+       "storedSelection": "session",
+       "storedView": "data"
+      }
+     },
+     "responsive-layout-flow": {
+      "state": "layout-prefs-live",
+      "vars": {
+       "explorerOpen": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "page-reloaded",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 3
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "layout-preferences-written",
+    "payload": {
+     "explorerOpen": false
+    },
+    "seq": 6,
+    "source": {
+     "behavior": "responsive-layout-flow",
+     "kind": "transition",
+     "transition": "layout-prefs-toggle"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "local-storage-flow",
+     "emitted": [],
+     "from": "storage-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": false,
+       "before": true,
+       "variable": "storedExplorerOpen"
+      }
+     ],
+     "to": "storage-ready",
+     "transition": "storage-write-layout"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-prefs-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "responsive-layout-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 5,
+   "kind": "deliver",
+   "responsible": [
+    "layout-preferences-written",
+    "storage-write-layout",
+    "local-storage-flow",
+    "browser-storage"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "interaction-prefs-flow": {
+      "state": "prefs-live",
+      "vars": {
+       "restored": false,
+       "selection": "none",
+       "viewId": "structural"
+      }
+     },
+     "local-storage-flow": {
+      "state": "storage-ready",
+      "vars": {
+       "storedExplorerOpen": false,
+       "storedSelection": "session",
+       "storedView": "data"
+      }
+     },
+     "responsive-layout-flow": {
+      "state": "layout-prefs-live",
+      "vars": {
+       "explorerOpen": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "preferences-read",
+      "payload": {},
+      "seq": 7,
+      "source": {
+       "behavior": "interaction-prefs-flow",
+       "kind": "transition",
+       "transition": "prefs-reload"
+      },
+      "time": 3
+     }
+    ],
+    "time": 3
+   },
+   "event": {
+    "id": "page-reloaded",
+    "payload": {},
+    "seq": 3,
+    "source": {
+     "kind": "scenario",
+     "step": 3
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "interaction-prefs-flow",
+     "emitted": [
+      {
+       "event": "preferences-read",
+       "payload": {},
+       "seq": 7,
+       "time": 3
+      }
+     ],
+     "from": "prefs-live",
+     "guard": null,
+     "sets": [
+      {
+       "after": "none",
+       "before": "session",
+       "variable": "selection"
+      },
+      {
+       "after": "structural",
+       "before": "data",
+       "variable": "viewId"
+      },
+      {
+       "after": false,
+       "before": false,
+       "variable": "restored"
+      }
+     ],
+     "to": "prefs-live",
+     "transition": "prefs-reload"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "responsive-layout-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "local-storage-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 6,
+   "kind": "deliver",
+   "responsible": [
+    "page-reloaded",
+    "prefs-reload",
+    "interaction-prefs-flow",
+    "session"
+   ],
+   "time": 3
+  },
+  {
+   "config": {
+    "machines": {
+     "interaction-prefs-flow": {
+      "state": "prefs-live",
+      "vars": {
+       "restored": false,
+       "selection": "none",
+       "viewId": "structural"
+      }
+     },
+     "local-storage-flow": {
+      "state": "storage-ready",
+      "vars": {
+       "storedExplorerOpen": false,
+       "storedSelection": "session",
+       "storedView": "data"
+      }
+     },
+     "responsive-layout-flow": {
+      "state": "layout-prefs-live",
+      "vars": {
+       "explorerOpen": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "preferences-loaded",
+      "payload": {
+       "selection": "session",
+       "viewId": "data"
+      },
+      "seq": 8,
+      "source": {
+       "behavior": "local-storage-flow",
+       "kind": "transition",
+       "transition": "storage-read-session"
+      },
+      "time": 3
+     }
+    ],
+    "time": 3
+   },
+   "event": {
+    "id": "preferences-read",
+    "payload": {},
+    "seq": 7,
+    "source": {
+     "behavior": "interaction-prefs-flow",
+     "kind": "transition",
+     "transition": "prefs-reload"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "local-storage-flow",
+     "emitted": [
+      {
+       "event": "preferences-loaded",
+       "payload": {
+        "selection": "session",
+        "viewId": "data"
+       },
+       "seq": 8,
+       "time": 3
+      }
+     ],
+     "from": "storage-ready",
+     "guard": null,
+     "sets": [],
+     "to": "storage-ready",
+     "transition": "storage-read-session"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-prefs-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "responsive-layout-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 7,
+   "kind": "deliver",
+   "responsible": [
+    "preferences-read",
+    "storage-read-session",
+    "local-storage-flow",
+    "browser-storage"
+   ],
+   "time": 3
+  },
+  {
+   "config": {
+    "machines": {
+     "interaction-prefs-flow": {
+      "state": "prefs-live",
+      "vars": {
+       "restored": true,
+       "selection": "session",
+       "viewId": "data"
+      }
+     },
+     "local-storage-flow": {
+      "state": "storage-ready",
+      "vars": {
+       "storedExplorerOpen": false,
+       "storedSelection": "session",
+       "storedView": "data"
+      }
+     },
+     "responsive-layout-flow": {
+      "state": "layout-prefs-live",
+      "vars": {
+       "explorerOpen": false
+      }
+     }
+    },
+    "pending": [],
+    "time": 3
+   },
+   "event": {
+    "id": "preferences-loaded",
+    "payload": {
+     "selection": "session",
+     "viewId": "data"
+    },
+    "seq": 8,
+    "source": {
+     "behavior": "local-storage-flow",
+     "kind": "transition",
+     "transition": "storage-read-session"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "interaction-prefs-flow",
+     "emitted": [],
+     "from": "prefs-live",
+     "guard": null,
+     "sets": [
+      {
+       "after": "session",
+       "before": "none",
+       "variable": "selection"
+      },
+      {
+       "after": "data",
+       "before": "structural",
+       "variable": "viewId"
+      },
+      {
+       "after": true,
+       "before": false,
+       "variable": "restored"
+      }
+     ],
+     "to": "prefs-live",
+     "transition": "prefs-restore"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "responsive-layout-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "local-storage-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 8,
+   "kind": "deliver",
+   "responsible": [
+    "preferences-loaded",
+    "prefs-restore",
+    "interaction-prefs-flow",
+    "session"
+   ],
+   "time": 3
+  }
+ ]
+}

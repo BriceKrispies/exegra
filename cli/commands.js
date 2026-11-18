@@ -298,6 +298,27 @@ export function countPassingTests(output, file) {
 }
 
 /**
+ * The `results` object to record after a verify run. A run that skipped (browser evidence under --skip-browser,
+ * or a test that skipped itself) did not execute, so it keeps the outcome recorded before rather than erasing it;
+ * with no earlier outcome it records nothing. Outcomes that ran replace the earlier ones.
+ * @param {Record<string, any>} prior the `results` object recorded before this run
+ * @param {{id: string, outcome: 'pass'|'fail'|'skipped', detail?: string, ranAt: string}[]} runs this run, per evidence id
+ * @returns {Record<string, any>}
+ */
+export function mergeRecordedResults(prior, runs) {
+  /** @type {Record<string, any>} */
+  const results = {};
+  for (const run of runs) {
+    if (run.outcome === 'skipped') {
+      if (Object.hasOwn(prior, run.id)) results[run.id] = prior[run.id];
+      continue;
+    }
+    results[run.id] = { outcome: run.outcome, ...(run.detail !== undefined ? { detail: run.detail } : {}), ranAt: run.ranAt };
+  }
+  return results;
+}
+
+/**
  * Execute one test evidence reference.
  * @param {string} ref
  * @param {{repoRoot: string, skipBrowser: boolean, log: (m: string) => void}} env
@@ -379,8 +400,12 @@ async function runVerify(ctx) {
 
   // (3) execute test evidence
   const skipBrowser = ctx.values['skip-browser'] === true;
-  /** @type {Record<string, {outcome: 'pass'|'fail', detail?: string, ranAt: string}>} */
-  const results = {};
+  // Outcomes recorded by earlier runs. A skipped run keeps these rather than erasing them.
+  const priorRecorded = (await ws.read(ctx.projectName)).recorded;
+  const priorResults = priorRecorded && typeof priorRecorded === 'object' && priorRecorded.results && typeof priorRecorded.results === 'object'
+    ? priorRecorded.results : {};
+  /** @type {{id: string, outcome: 'pass'|'fail'|'skipped', detail?: string, ranAt: string}[]} */
+  const runs = [];
   /** @type {Record<string, any>[]} */
   const evidence = [];
   for (const ev of model.byKind.evidence ?? []) {
@@ -390,21 +415,23 @@ async function runVerify(ctx) {
       continue;
     }
     const run = runTestReference(String(ev.data.ref), { repoRoot: ctx.repoRoot, skipBrowser, log: ctx.log });
+    const ranAt = new Date().toISOString();
+    runs.push({ id: ev.id, outcome: run.outcome, ...(run.detail !== undefined ? { detail: run.detail } : {}), ranAt });
     if (run.outcome === 'skipped') {
-      evidence.push({ ...base, outcome: 'skipped' });
+      const kept = priorResults[ev.id];
+      evidence.push({ ...base, outcome: 'skipped', ...(kept ? { recorded: { outcome: kept.outcome, ranAt: kept.ranAt } } : {}) });
       continue;
     }
-    const record = { outcome: run.outcome, ...(run.detail !== undefined ? { detail: run.detail } : {}), ranAt: new Date().toISOString() };
-    results[ev.id] = record;
-    evidence.push({ ...base, ...record });
+    evidence.push({ ...base, outcome: run.outcome, ...(run.detail !== undefined ? { detail: run.detail } : {}), ranAt });
   }
+  const results = mergeRecordedResults(priorResults, runs);
 
   // (4) record the results
   // Outcomes an external verification tool recorded per claim live in the same
   // file; this command owns only `results` and `traceability` and keeps the rest.
   /** @type {Record<string, any>} */
   const kept = {};
-  const prior = (await ws.read(ctx.projectName)).recorded;
+  const prior = priorRecorded;
   if (prior && typeof prior === 'object') for (const k of ['tool', 'version', 'source', 'claims', 'lint']) if (Object.hasOwn(prior, k)) kept[k] = /** @type {any} */ (prior)[k];
   await ws.writeRecorded(ctx.projectName, { ...kept, results, traceability });
 
@@ -659,12 +686,15 @@ export const COMMANDS = {
       const dryRun = ctx.values['dry-run'] === true;
       /** @type {('spec'|'layout')[]} */
       const written = [];
+      /** @type {string[]} */
+      const journalWarnings = [];
       if (!dryRun) {
         const meta = { label: label ?? list.map((o) => o.type).join(', '), origin: 'cli' };
         if (project.specText !== initialSpec) {
           const w = await ws.write(ctx.projectName, 'spec', project.specText, data.spec.hash, meta);
           if (!w.ok) throw new CliError('write.conflict', 'spec.jsonc changed on disk since it was read; nothing was written.');
           written.push('spec');
+          if (w.journal && !w.journal.written) journalWarnings.push(`spec: ${w.journal.message}`);
         }
         if (project.layoutText !== initialLayout) {
           const w = await ws.write(ctx.projectName, 'layout', project.layoutText, data.layout?.hash ?? null, meta);
@@ -673,6 +703,7 @@ export const COMMANDS = {
             throw new CliError('write.conflict', `layout.jsonc changed on disk since it was read.${note}`);
           }
           written.push('layout');
+          if (w.journal && !w.journal.written) journalWarnings.push(`layout: ${w.journal.message}`);
         }
       }
 
@@ -684,6 +715,7 @@ export const COMMANDS = {
         affected: tx.affected,
         written,
         dryRun,
+        ...(journalWarnings.length ? { journalWarnings } : {}),
       };
       return { result, semanticHash: dryRun ? hashBefore : project.semanticHash };
     },

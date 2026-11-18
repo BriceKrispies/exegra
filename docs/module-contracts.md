@@ -147,7 +147,7 @@ Recorded = { results: { [evidenceId]: { outcome: 'pass'|'fail', detail?: string,
 
 ClaimResult = {
   claimId, kind, method: string|null,
-  status: 'verified'|'supported'|'violated'|'inconclusive'|'not-evaluated',
+  status: 'verified'|'supported'|'model-holds'|'violated'|'inconclusive'|'not-evaluated',
   evaluator: string,         // e.g. "exegra.structural/0.1", "exegra.trace/0.1", "exegra.evidence/0.1", "none"
   semanticHash: string,      // hash of the model the result was computed from
   scope: string,             // one sentence: what exactly was checked and what was not
@@ -162,6 +162,9 @@ ClaimResult = {
 Status rules:
 
 - Unsupported method (not in `CLAIM_METHODS`) → `not-evaluated`.
+- `model-holds` is the status of a metric-bound claim over the model, with its stated parameters: it holds
+  in the model at the stated confidence over its runs. It is never `verified` or `supported`, and says nothing
+  about a system until calibrated (docs/simulation.md, Claims over metrics).
 - Structural methods (see `claim-methods.js` for parameters; selectors via
   `selectComponents`; relationship endpoints resolved with `componentOf`):
   holds → `verified`; fails → `violated` with a concrete counterexample

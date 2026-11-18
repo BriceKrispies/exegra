@@ -10,14 +10,14 @@
       "counterexample": null,
       "evaluator": "exegra.structural/0.1",
       "evidence": [],
-      "explanation": "No directed path of kinds depends-on, calls, subscribes, reads, writes, submits-edits leads from any of the 29 source components to any of the 51 target components.",
+      "explanation": "No directed path of kinds depends-on, calls, subscribes, reads, writes, submits-edits leads from any of the 29 source components to any of the 52 target components.",
       "id": "core-independent-of-ui",
       "kind": "structural",
       "method": "no-relationship",
-      "scope": "Checked the 235 relationships of kinds depends-on, calls, subscribes, reads, writes, submits-edits between 29 source components and 51 target components, following multi-hop paths too, at this model revision.",
+      "scope": "Checked the 236 relationships of kinds depends-on, calls, subscribes, reads, writes, submits-edits between 29 source components and 52 target components, following multi-hop paths too, at this model revision.",
       "source": {
         "column": 5,
-        "line": 3400
+        "line": 12356
       },
       "statement": "No component of the semantic core has a dependency relationship (depends-on, calls, subscribes, reads, writes or submits-edits), directly or through any chain of them, to the application, the visualization, the persistence subsystem, the agent interface, the tooling, the DOM and browser platform, browser storage, Three.js, Vite, the file system or the test runner.",
       "status": "verified",
@@ -49,7 +49,7 @@
       "scope": "Checked the 62 relationships of dependency kinds (depends-on, calls, subscribes, reads, writes, submits-edits) restricted to 29 components for directed cycles at this model revision.",
       "source": {
         "column": 5,
-        "line": 3409
+        "line": 12365
       },
       "statement": "The dependency relationships among the components of the semantic core form no cycle.",
       "status": "verified",
@@ -96,10 +96,10 @@
       "id": "edits-only-via-transactions",
       "kind": "structural",
       "method": "only-via",
-      "scope": "Checked the 31 relationships of kinds submits-edits, data-flow, writes for directed paths from 6 source components to 1 target component that avoid 1 via component at this model revision.",
+      "scope": "Checked the 32 relationships of kinds submits-edits, data-flow, writes for directed paths from 6 source components to 1 target component that avoid 1 via component at this model revision.",
       "source": {
         "column": 5,
-        "line": 3418
+        "line": 12374
       },
       "statement": "Following relationships that carry edits and file content (submits-edits, data-flow, writes), every path from the editing surfaces (inspector, source editor, dialogs, visual interaction, toolbar, shell) to the specification file passes through the transaction system.",
       "status": "violated",
@@ -130,10 +130,10 @@
       "id": "editing-surfaces-except-import-via-transactions",
       "kind": "structural",
       "method": "only-via",
-      "scope": "Checked the 31 relationships of kinds submits-edits, data-flow, writes for directed paths from 5 source components to 1 target component that avoid 1 via component at this model revision.",
+      "scope": "Checked the 32 relationships of kinds submits-edits, data-flow, writes for directed paths from 5 source components to 1 target component that avoid 1 via component at this model revision.",
       "source": {
         "column": 5,
-        "line": 3427
+        "line": 12383
       },
       "statement": "Following submits-edits, data-flow and writes relationships, every path from the inspector, source editor, dialogs, visual interaction and shell to the specification file passes through the transaction system.",
       "status": "verified",
@@ -165,7 +165,7 @@
       "scope": "Checked the 17 relationships of kinds writes, submits-edits between 1 source component and 4 target components (direct relationships only) at this model revision.",
       "source": {
         "column": 5,
-        "line": 3436
+        "line": 12392
       },
       "statement": "The Three.js renderer has no writes or submits-edits relationship to the specification file, the layout file, the transaction system or the session.",
       "status": "verified",
@@ -195,7 +195,7 @@
       "scope": "Checked the declared property \"owner\" of 6 components at this model revision; only whether a non-empty value is present, not whether it is correct.",
       "source": {
         "column": 5,
-        "line": 3445
+        "line": 12401
       },
       "statement": "Every data store (meta-model, claim method registry and the project files) declares an owner.",
       "status": "verified",
@@ -223,10 +223,10 @@
       "id": "agent-interface-uses-transactions",
       "kind": "structural",
       "method": "reachable",
-      "scope": "Checked directed reachability over the 255 relationships of all kinds from 1 source component to 1 target component at this model revision.",
+      "scope": "Checked directed reachability over the 260 relationships of all kinds from 1 source component to 1 target component at this model revision.",
       "source": {
         "column": 5,
-        "line": 3453
+        "line": 12409
       },
       "statement": "The agent command line reaches the transaction system along its relationships.",
       "status": "verified",
@@ -253,7 +253,7 @@
       "scope": "Checked the declared ports of 1 component for a port with direction provides, contract apply-transaction at this model revision.",
       "source": {
         "column": 5,
-        "line": 3462
+        "line": 12418
       },
       "statement": "The transaction system provides a port with the apply-transaction contract.",
       "status": "verified",
@@ -318,7 +318,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios visual-edit-flow (11 steps), source-edit-flow (11 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 3472
+        "line": 12428
       },
       "statement": "After a valid edit, at quiescence the scene (projection and renderer), the inspector and the source editor all show the revision of the transaction system, for a visual edit and for a source edit.",
       "status": "verified",
@@ -385,7 +385,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios visual-edit-flow (11 steps), source-edit-flow (11 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 3503
+        "line": 12459
       },
       "statement": "After a valid edit, at quiescence the file on disk holds the committed revision and the session reports saved, for a visual edit and for a source edit.",
       "status": "verified",
@@ -419,7 +419,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios visual-edit-flow (11 steps), source-edit-flow (11 steps). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 3533
+        "line": 12489
       },
       "statement": "Every projection refresh is preceded by a delivered transaction commit: views are refreshed from a committed model, never from a candidate.",
       "status": "verified",
@@ -450,7 +450,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios visual-edit-flow (11 steps), source-edit-flow (11 steps), edit-with-disk-conflict (11 steps, faults: disk-changed-externally). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 3562
+        "line": 12518
       },
       "statement": "Every write request to the file service is preceded by a projection refresh: the write is asynchronous and happens after the views were refreshed, in all three edits that commit.",
       "status": "verified",
@@ -482,7 +482,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios visual-edit-flow (11 steps), source-edit-flow (11 steps), edit-with-disk-conflict (11 steps, faults: disk-changed-externally). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 3593
+        "line": 12549
       },
       "statement": "Every commit of an operation transaction (the edit flows modelled here) is preceded by a delivered validation-passed: no operation transaction commits without a validation with no errors.",
       "status": "verified",
@@ -545,7 +545,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios rejected-edit (6 steps, faults: validation-fails). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 3624
+        "line": 12580
       },
       "statement": "In the rejected edit, at every step the revision of the transaction system, of the projection, renderer, inspector and source editor and of the file on disk is still the initial revision, and the session still reports saved.",
       "status": "verified",
@@ -581,7 +581,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios rejected-edit (6 steps, faults: validation-fails). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 3647
+        "line": 12603
       },
       "statement": "In the rejected edit the projection is never refreshed.",
       "status": "verified",
@@ -609,7 +609,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios rejected-edit (6 steps, faults: validation-fails). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 3672
+        "line": 12628
       },
       "statement": "In the rejected edit no write to the file service is ever requested.",
       "status": "verified",
@@ -658,7 +658,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios edit-with-disk-conflict (11 steps, faults: disk-changed-externally). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 3697
+        "line": 12653
       },
       "statement": "In the edit whose write conflicts with the disk, at every step, once the conflict is flagged the revision persisted on disk is still the initial one: the conflicting file is never overwritten.",
       "status": "verified",
@@ -691,7 +691,7 @@
       "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios edit-with-disk-conflict (11 steps, faults: disk-changed-externally). This is a check of these traces, not of all possible executions.",
       "source": {
         "column": 5,
-        "line": 3720
+        "line": 12676
       },
       "statement": "In the edit whose write conflicts with the disk, at quiescence the session reports a conflict, every view shows the new revision and the file on disk is behind the model.",
       "status": "verified",
@@ -744,7 +744,7 @@
       "scope": "No model evaluation was performed. This rests on 2 evidence entities (ev-layout-core, ev-layout-browser), of which 2 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 3746
+        "line": 12702
       },
       "statement": "Moving a node changes only the layout file: the semantic hash and the specification text cannot change.",
       "status": "supported",
@@ -785,7 +785,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-simulation-core), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 3754
+        "line": 12710
       },
       "statement": "Running a scenario twice with the same model and faults gives deep-equal traces, and stepping one event at a time gives the same trace as running to the end.",
       "status": "supported",
@@ -824,7 +824,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-generate-core), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 3762
+        "line": 12718
       },
       "statement": "Two runs of the generators over the same model and inputs produce byte-identical artifacts.",
       "status": "supported",
@@ -867,7 +867,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-workspace-confinement), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 3770
+        "line": 12726
       },
       "statement": "Project names are validated and every path is resolved inside specs/<project>/ before any read or write; names and paths that escape that directory are refused, and generated files can only be written under generated/.",
       "status": "supported",
@@ -917,7 +917,7 @@
       "scope": "No model evaluation was performed. This rests on 2 evidence entities (ev-roundtrip-invalid-draft, ev-browser-invalid-draft), of which 2 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 3778
+        "line": 12734
       },
       "statement": "An invalid source draft is rejected with diagnostics, the committed model is not changed and the draft stays as typed in the source editor.",
       "status": "supported",
@@ -957,7 +957,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-model-unsupported), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 3786
+        "line": 12742
       },
       "statement": "A specification construct the meta-model does not describe (an unknown section, entity property, vocabulary field or claim parameter) is reported as a diagnostic and never silently dropped.",
       "status": "supported",
@@ -979,7 +979,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 3796
+        "line": 12752
       },
       "statement": "The default structural view of specs/benchmark/spec.jsonc (396 components and 507 relationships) renders at an interactive frame rate on ordinary desktop hardware, measured as the fps reported by the scene view's getStats() while the camera orbits. The threshold for 'interactive' is not defined in this specification.",
       "status": "not-evaluated",
@@ -1020,7 +1020,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-flows-trace), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 3804
+        "line": 12760
       },
       "statement": "For every simulation step, the message flow names as sender the component whose behavior emitted the delivered event (outside, for a scenario stimulus or an injected fault) and as receivers the components whose behaviors fired a transition on it.",
       "status": "supported",
@@ -1059,7 +1059,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-flows-edges), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 3820
+        "line": 12776
       },
       "statement": "A simulated message is drawn along a scene edge only when that edge connects its sender's and receiver's drawn nodes; when only a relationship the view does not draw connects them the message is marked unshown, and when no relationship connects them it is marked undeclared.",
       "status": "supported",
@@ -1102,7 +1102,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-browser-sim-flow), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 3836
+        "line": 12792
       },
       "statement": "Stepping a simulation in a structural view moves a marker labelled with the event's name from the sender's node toward each receiver's node, and the simulator panel states who sent the event to whom.",
       "status": "supported",
@@ -1134,7 +1134,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 3854
+        "line": 12810
       },
       "statement": "The same model, scenario, faults and seed give deep-equal traces and metrics, draws included, in the Rust engine and in the Lean semantics; on a fixture that samples, two different seeds give different draws; and the seeds of a claim's runs are the successive SplitMix64 outputs of its base seed, with arithmetic mod 2^64.",
       "status": "not-evaluated",
@@ -1166,7 +1166,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 3872
+        "line": 12828
       },
       "statement": "N instances of one behavior keep separate state: an effect of one instance changes no variable or state of another, every fired and ignored entry of a step names its instance, and an event routed to one instance fires on that instance only.",
       "status": "not-evaluated",
@@ -1197,7 +1197,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 3889
+        "line": 12845
       },
       "statement": "A specification names simulation aspects with versions and gives their parameters as data; an unknown aspect or version is a validation error, and no specification text is evaluated as code.",
       "status": "not-evaluated",
@@ -1228,7 +1228,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 3906
+        "line": 12862
       },
       "statement": "The same specification, aspect versions, parameters and seed give deep-equal traces, including every aspect metric.",
       "status": "not-evaluated",
@@ -1259,7 +1259,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 3923
+        "line": 12879
       },
       "statement": "When a component has an abstract behavior and refined child behaviors, the refined trace projected onto the component's boundary is allowed by the abstract behavior, or the first diverging boundary event is reported as a violation.",
       "status": "not-evaluated",
@@ -1289,7 +1289,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 3939
+        "line": 12895
       },
       "statement": "Collapsing a subsystem in the view runs its abstract behavior and expanding it runs its children's, and the simulator panel says which level each component ran at.",
       "status": "not-evaluated",
@@ -1321,7 +1321,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 3957
+        "line": 12913
       },
       "statement": "The same campaign and seed give deep-equal sets of runs, and every run's check results are reported.",
       "status": "not-evaluated",
@@ -1351,7 +1351,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 3973
+        "line": 12929
       },
       "statement": "A chaos campaign injects only the failure kinds and targets its parameters name, and records each injected failure in the trace.",
       "status": "not-evaluated",
@@ -1381,7 +1381,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 3989
+        "line": 12945
       },
       "statement": "Single-station M/M/1 and M/M/c queues reproduce the analytic mean waiting time and utilisation within the tolerance and number of seeded runs stated by the test.",
       "status": "not-evaluated",
@@ -1412,7 +1412,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4006
+        "line": 12962
       },
       "statement": "Every load parameter (arrival rate, service time, capacity) names its source, a requirement, a measurement or an assumption, and a parameter without one is a validation error.",
       "status": "not-evaluated",
@@ -1443,7 +1443,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4023
+        "line": 12979
       },
       "statement": "Every price names a source and a date, and a cost that would use an unsourced price is reported as not computed, naming the price.",
       "status": "not-evaluated",
@@ -1473,7 +1473,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4039
+        "line": 12995
       },
       "statement": "A reported cost equals the recorded resource usage multiplied by the price profile, line by line.",
       "status": "not-evaluated",
@@ -1504,7 +1504,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4056
+        "line": 13012
       },
       "statement": "A result over a parameter given as a range is reported as a spread (minimum, maximum and stated percentiles) across a seeded sweep, never as a single figure.",
       "status": "not-evaluated",
@@ -1535,7 +1535,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4073
+        "line": 13029
       },
       "statement": "Every statistical claim result names its number of runs, seed and confidence, is never shown as verified, and a statistical claim without that basis is a validation error.",
       "status": "not-evaluated",
@@ -1566,7 +1566,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4090
+        "line": 13046
       },
       "statement": "Each overlay value shown at a time equals the trace's value for that component at that time, and a component without data shows nothing.",
       "status": "not-evaluated",
@@ -1605,7 +1605,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-engines-agree), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4107
+        "line": 13063
       },
       "statement": "The Rust simulation engine, native and WebAssembly, reproduces every golden trace of the conformance suite exactly, and is the only engine the application and the CLI run.",
       "status": "supported",
@@ -1644,7 +1644,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-simulation-contract), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4124
+        "line": 13080
       },
       "statement": "For every scenario of the golden conformance suite, the simulation engine reproduces the committed trace exactly, both from the model and from the committed engine input alone, and simulationInput derives exactly the committed input.",
       "status": "supported",
@@ -1683,7 +1683,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-simulation-worker-responsive), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4141
+        "line": 13097
       },
       "statement": "The Simulation tab runs a scenario in a Web Worker: while a long run is in progress the page keeps drawing frames and reacting to input, the tab shows the run as running, and the finished trace is then stepped exactly as before.",
       "status": "supported",
@@ -1722,7 +1722,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-browser-phone-touch-usable), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4158
+        "line": 13114
       },
       "statement": "At a 390 by 844 touch viewport the page never scrolls horizontally, every visible interactive control is at least 44 by 44 CSS pixels, and with no panel expanded the 3D scene covers at least 60% of the screen.",
       "status": "supported",
@@ -1763,7 +1763,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-browser-phone-every-function), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4177
+        "line": 13133
       },
       "statement": "Every function the interface offers on a desktop (switching project and view, search, selecting and inspecting, editing, creating, connecting, deleting, undo and redo, simulation, verification, source, realisation, diagnostics, export and import) is reachable by touch at a 390 by 844 viewport.",
       "status": "supported",
@@ -1808,7 +1808,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-browser-tablet-desktop-expand), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4200
+        "line": 13156
       },
       "statement": "From 768 CSS pixels wide panels open beside the scene instead of over it, and from 1200 CSS pixels the explorer, the scene and the context panel are visible side by side without opening anything.",
       "status": "supported",
@@ -1847,7 +1847,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-fault-model-core), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4217
+        "line": 13173
       },
       "statement": "Every behavioral or reliability claim names the fault model it is evaluated under, every failure-mode rate, duration and bound names its source, and the fault model appears in each such claim result's scope.",
       "status": "supported",
@@ -1886,7 +1886,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-formal-explore), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4234
+        "line": 13190
       },
       "statement": "Exhaustive exploration within stated bounds finds the known race of a fixture protocol with a counterexample run that Lean accepts, reports its fixed version as holding for all N explored configurations, and gives the same N on every run.",
       "status": "supported",
@@ -1917,7 +1917,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4251
+        "line": 13207
       },
       "statement": "Under the fault model and within the stated bounds, no request is served by a version that failed its health gate during a blue-green cutover, and old and new versions are compatible with the schema at every step of an expand/contract migration.",
       "status": "not-evaluated",
@@ -1947,7 +1947,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4267
+        "line": 13223
       },
       "statement": "Under the fault model and within the stated bounds, a rollback loses no committed transaction and returns traffic only to a version that passed its gate.",
       "status": "not-evaluated",
@@ -1977,7 +1977,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4283
+        "line": 13239
       },
       "statement": "The generated infrastructure and pipeline realise exactly the modeled environments, slots, gates and transitions, deterministically, and any edit to the generated output is detected.",
       "status": "not-evaluated",
@@ -2008,7 +2008,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4300
+        "line": 13256
       },
       "statement": "Every implementation trace of a checked system, projected onto the model's boundary events, is allowed by the model, or the first disallowed boundary event is reported.",
       "status": "not-evaluated",
@@ -2038,7 +2038,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4316
+        "line": 13272
       },
       "statement": "Each claim with a declared observable has a generated runtime monitor, and a monitor that fires marks its claim violated with the observation; game-day results are recorded as evidence with their measurements.",
       "status": "not-evaluated",
@@ -2076,7 +2076,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-formal-differential), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4332
+        "line": 13288
       },
       "statement": "The Rust engine and the Lean formal semantics give identical traces on every golden and on every input of a recorded seeded run of the input generator, whose coverage of the language's constructs is stated.",
       "status": "supported",
@@ -2115,7 +2115,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-formal-proofs), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4349
+        "line": 13305
       },
       "statement": "The formal semantics' step function is proved deterministic, fires at most one transition per behavior per step, and terminates every run under the step limit, with no unproved assumption in the proofs.",
       "status": "supported",
@@ -2145,7 +2145,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4365
+        "line": 13321
       },
       "statement": "A state-invariant claim reported as verified by proof has a Lean theorem, building with no unproved assumption, that the invariant holds in every reachable configuration of its scenario under its fault model.",
       "status": "not-evaluated",
@@ -2184,7 +2184,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-contract-events-static), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4382
+        "line": 13338
       },
       "statement": "An event that names a contract has a role, and validation rejects, with the position of the event, a request whose payload has a field that is not an input of the contract, an input that is not optional and missing, or a field type that is not assignable to the input type; a response with a field that is not an output; an error without a code, or with a literal code that is not among the contract's errors; and a correlation field that is not a payload field.",
       "status": "supported",
@@ -2241,7 +2241,7 @@
       "scope": "No model evaluation was performed. This rests on 3 evidence entities (ev-contract-trace-checks, ev-contract-request-log, ev-browser-requests-section), of which 3 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4398
+        "line": 13354
       },
       "statement": "On a simulated trace, every contract event's payload values fit the declared types, an error code is among the contract's errors, and every response or error answers an earlier unanswered request of the same contract (matched by the correlation field when one is declared, otherwise by count); each violation is a failed automatic check of the scenario with its step, shown by exegra simulate and the simulator panel, which also render the contract events as a request log.",
       "status": "supported",
@@ -2281,7 +2281,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-data-model-core), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4416
+        "line": 13372
       },
       "statement": "Records and copies are validated with positions, and the five data rules (erasure point, no principal data in a shared copy, party fields by principal id, freshness bound, holder related to owner) are computed from the model and reported per copy, record and field, both as validation warnings and as the result of a data-model claim.",
       "status": "supported",
@@ -2306,10 +2306,10 @@
       "id": "specification-copies-fresh-and-related",
       "kind": "structural",
       "method": "data-model",
-      "scope": "Checked the 1 records and 3 copies at this model revision against rules freshness-bound, holder-reaches-owner, no-principal-in-shared (items checked per rule: freshness-bound 3, holder-reaches-owner 3, no-principal-in-shared 1).",
+      "scope": "Checked the 27 records and 23 copies at this model revision against rules freshness-bound, holder-reaches-owner, no-principal-in-shared (items checked per rule: freshness-bound 23, holder-reaches-owner 45, no-principal-in-shared 2).",
       "source": {
         "column": 5,
-        "line": 4434
+        "line": 13390
       },
       "statement": "Every copy of a project's specification text that Exegra declares (the session model, the command line's project, the generated documents) states a freshness bound, and its holder is related to the specification file through declared relationships; the shared copy holds no principal data.",
       "status": "verified",
@@ -2351,7 +2351,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-formal-explore-bounded), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4458
+        "line": 13414
       },
       "statement": "A state-invariant claim reported by exegra prove as holding has a Lean theorem, accepted by Lean, that the verified explorer visited every configuration of its scenario reachable within the stated bound (over every order of simultaneous events and every subset of the scenario's faults) and found the invariant true in each; the result names the axioms the theorem depends on.",
       "status": "supported",
@@ -2391,7 +2391,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-negatives-status), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4476
+        "line": 13432
       },
       "statement": "A trace claim is reported verified only when it holds on every listed scenario and each of its declared negatives, of which there is at least one, violates it. A claim with no negative, or with a negative that holds or does not finish, is inconclusive.",
       "status": "supported",
@@ -2430,7 +2430,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-negatives-validated), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4493
+        "line": 13449
       },
       "statement": "A negative whose scenario is not one of its claim's scenarios, whose fault list is missing or empty, or that names an undeclared fault or one its scenario already activates, is a validation error; renaming a fault rewrites the negatives that name it.",
       "status": "supported",
@@ -2473,7 +2473,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-own-claims-falsifiable), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4509
+        "line": 13465
       },
       "statement": "Every behavioral claim of this specification declares a negative that violates it, and every one is verified.",
       "status": "supported",
@@ -2507,7 +2507,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4530
+        "line": 13486
       },
       "statement": "At every settled step of every format-2 run, the units a request class holds never exceed its limit, the units held never exceed capacity (except units held across a mid-run capacity cut, which are never preempted), waiting requests never exceed the class and resource bounds, bounds are enforced class by class in declaration order and then for the resource, and the request removed is the one the overflow rule names (refuse and drop: the newest; shed-oldest: the oldest of the class, or for the resource bound the oldest overall under fifo and the oldest of the lowest-priority class under priority), with the matching refused event and reason.",
       "status": "not-evaluated",
@@ -2539,7 +2539,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4548
+        "line": 13504
       },
       "statement": "Service demand conserves work: for every resource and run, the integral of units held over the window never exceeds the integral of the capacity in effect (while no mid-run capacity cut leaves units held above it), a completed use request held its units for exactly ceil(draw times demand factor times scale), and the sum of completed service times equals the busy integral when the window covers the run.",
       "status": "not-evaluated",
@@ -2571,7 +2571,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4566
+        "line": 13522
       },
       "statement": "An engine that implements format 2 reproduces every format-1 golden trace byte for byte from its version-1 input; simulationInput derives the same version-1 input as before for every specification that uses no format-2 construct; and for every version-1 input with integral times in [0, 2^53), no variable or bare reference named instance, no three-part reference whose second part is count, sum, min, max or instances, and a run that never queues an entry at time 2^53 or later, its lift to version 2 gives the version-1 trace once the version-2 fields are removed.",
       "status": "not-evaluated",
@@ -2603,7 +2603,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4584
+        "line": 13540
       },
       "statement": "The Rust engine and the Lean semantics give identical version-2 traces and metrics on every version-2 golden and on every input of a recorded seeded run of the version-2 input generator, whose coverage of instances, routes, timers, resources and their overflow rules, links, workloads, distributions and resource faults is stated.",
       "status": "not-evaluated",
@@ -2639,7 +2639,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4602
+        "line": 13558
       },
       "statement": "Every metric-bound claim result reports its runs, seeds, passes, N', fraction, confidence, the spread of the per-run statistic and its underpowered and truncated runs; a positive result is model-holds, never verified and never supported; samples follow the request lifecycle; an underpowered run (a quantile, mean, or ratio of counts with fewer than 30 expected on its rarer side) is left out only for an open-started class and otherwise does not satisfy the bound; it reads model-holds or fails only when the exact binomial test on the N' runs kept decides it and inconclusive otherwise; and a negative that does not fail, or a control negative that does not hold, makes it inconclusive.",
       "status": "not-evaluated",
@@ -2667,19 +2667,27 @@
       ],
       "counterexample": null,
       "evaluator": "exegra.evidence/0.1",
-      "evidence": [],
-      "explanation": "Claim \"metrics-reproduce-mm1-utilisation\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "evidence": [
+        {
+          "id": "ev-mm1-utilisation-fixture",
+          "kind": "test",
+          "recorded": "none",
+          "ref": "tests/core/queueing-fixtures.test.js",
+          "supports": true
+        }
+      ],
+      "explanation": "Only test evidence (\"ev-mm1-utilisation-fixture\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
       "id": "metrics-reproduce-mm1-utilisation",
       "kind": "measured",
       "method": "external-evidence",
-      "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
+      "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-mm1-utilisation-fixture), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4621
+        "line": 13577
       },
       "statement": "The M/M/1 fixture (Poisson arrivals at 800/s, exponential service of mean 1 ms, one server, unit us, warm-up 20 s, horizon 220 s) reproduces utilisation 0.8 within 2% by an approx metric claim at 95% confidence over 59 seeded runs.",
-      "status": "not-evaluated",
-      "statusLabel": "Not evaluated",
+      "status": "inconclusive",
+      "statusLabel": "Inconclusive",
       "subjects": [
         "performance-metrics",
         "workload-model",
@@ -2704,19 +2712,27 @@
       ],
       "counterexample": null,
       "evaluator": "exegra.evidence/0.1",
-      "evidence": [],
-      "explanation": "Claim \"pool-classes-protect-move-db-leg-under-flood\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "evidence": [
+        {
+          "id": "ev-pool-flood-fixture",
+          "kind": "test",
+          "recorded": "none",
+          "ref": "tests/core/pool-fixture.test.js",
+          "supports": true
+        }
+      ],
+      "explanation": "Only test evidence (\"ev-pool-flood-fixture\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
       "id": "pool-classes-protect-move-db-leg-under-flood",
       "kind": "measured",
       "method": "external-evidence",
-      "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
+      "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-pool-flood-fixture), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4641
+        "line": 13597
       },
-      "statement": "On the pool fixture (a 20-connection pool with classes money, moves and page-reads, in front of 4 shared database I/O channels; moves at 400/s; a page-read flood of 5,000/s over 10,000 clients from 20 s to 60 s), the p99 of the modelled database leg of a move over the flood window is at most 30 ms, an assumed share of K-32's 250 ms, in at least 95% of runs at 95% confidence over 59 runs, in the base scenario and in its control without the flood; it fails in each of its two negative twins, and each twin fault leaves the control holding.",
-      "status": "not-evaluated",
-      "statusLabel": "Not evaluated",
+      "statement": "On the pool fixture (tests/fixtures/queueing/pool-flood.json: a 20-connection pool with classes money, moves and page-reads in front of 4 shared database I/O channels; moves at 1,000/s; a page-read flood of 5,000/s from 2 s to 6 s), the p99 of the modelled database leg of a move over the flood window is at most 30 ms in at least 95% of runs at 95% confidence over 59 runs, in the base scenario and in its control without the flood; it fails in each of its two negative twins, and each twin fault leaves the control holding.",
+      "status": "inconclusive",
+      "statusLabel": "Inconclusive",
       "subjects": [
         "metric-claims",
         "resource-model",
@@ -2745,7 +2761,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4661
+        "line": 13617
       },
       "statement": "In every response-time distribution, a measured request that ended refused, timeout or error (a lost start included, by the request lifecycle), or is censored, counts as +infinity, so only ok requests are finite and a mean over a class with any such request is undefined; a claim restricted to outcomes ok reports how many requests it left out.",
       "status": "not-evaluated",
@@ -2776,7 +2792,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4678
+        "line": 13634
       },
       "statement": "exegra prove on a format-2 scenario reports the seed first, and the scope \"fault times fixed as declared\" when the scenario has windowed faults, and shows a result as verified only when the engine input contains no distribution other than fixed or choice anywhere and no element that draws (no Poisson process; no batch, think, closed start, population start.at, emit size or after, timer delay or restartAfter other than fixed or choice; no uniform client pick, groups, choose or sample payload field, or random route), a check made statically on the input; choice values and any routes are enumerated as nondeterminism.",
       "status": "not-evaluated",
@@ -2804,19 +2820,27 @@
       ],
       "counterexample": null,
       "evaluator": "exegra.evidence/0.1",
-      "evidence": [],
-      "explanation": "Claim \"metrics-reproduce-mm1-mean-wait\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "evidence": [
+        {
+          "id": "ev-mm1-mean-wait-fixture",
+          "kind": "test",
+          "recorded": "none",
+          "ref": "tests/core/queueing-fixtures.test.js",
+          "supports": true
+        }
+      ],
+      "explanation": "Only test evidence (\"ev-mm1-mean-wait-fixture\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
       "id": "metrics-reproduce-mm1-mean-wait",
       "kind": "measured",
       "method": "external-evidence",
-      "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
+      "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-mm1-mean-wait-fixture), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4696
+        "line": 13652
       },
       "statement": "The M/M/1 fixture reproduces the mean waiting time in queue rho / (mu - lambda) = 4 ms within 5%, by an approx metric claim on the median of the per-run means at 95% confidence over 59 seeded runs (the order statistics 22 and 38), with the measured gap between the median of per-run means and the analytic mean stated beside the tolerance.",
-      "status": "not-evaluated",
-      "statusLabel": "Not evaluated",
+      "status": "inconclusive",
+      "statusLabel": "Inconclusive",
       "subjects": [
         "performance-metrics",
         "workload-model",
@@ -2849,7 +2873,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4716
+        "line": 13672
       },
       "statement": "The M/M/2 fixture (lambda = 1600/s, mean service 1 ms, two servers) reproduces the Erlang C mean waiting time C(2, 1.6) / (2 mu - lambda) of about 1.78 ms within 5% at 95% confidence over 59 seeded runs.",
       "status": "not-evaluated",
@@ -2885,7 +2909,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4735
+        "line": 13691
       },
       "statement": "On the ladder fixture, a behavior reading a meter of refused page reads rises to rung 1 within 10 s of the flood start (time-to-first), makes at most 4 rung transitions during the flood, and returns within 30 s after it (time-to-recover), each at 95% confidence over 59 runs.",
       "status": "not-evaluated",
@@ -2921,7 +2945,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4754
+        "line": 13710
       },
       "statement": "On the retry fixture (2,000 client behaviors with a 500 ms timeout, a database slowdown of 5 times from 20 s to 30 s), the busiest second of queries reaching the pool during the slowdown, relative to the mean per second over 10 to 20 s (the ratio form of metric-bound), is at most 1.5 when clients retry within a 10% budget, at 95% confidence over 59 runs.",
       "status": "not-evaluated",
@@ -2957,7 +2981,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4773
+        "line": 13729
       },
       "statement": "On the reconnect fixture (4,000 client behaviors on 4 hosts, host 0 crashed at 30 s with a connection-reset notice and restarted after 2 s), clients that reconnect after a uniform 0 to 5 s stagger keep the p90 wait for the host CPU (TLS handshake demand) at most 200 ms in the window 30 to 40 s, at 95% confidence over 59 runs; about 1,000 handshakes per run leave 100 samples beyond the p90.",
       "status": "not-evaluated",
@@ -2993,7 +3017,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4792
+        "line": 13748
       },
       "statement": "On the address-limiter fixture (50 attacking addresses at 100/s each, a limiter keyed on address admitting 20/s), at least 90% of attack requests are refused, at 95% confidence over 59 runs.",
       "status": "not-evaluated",
@@ -3029,7 +3053,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4811
+        "line": 13767
       },
       "statement": "On the address-limiter fixture, legitimate users grouped onto addresses (up to 50 behind one shared address) see a false-positive refusal ratio of at most 0.001, at 95% confidence over 59 runs.",
       "status": "not-evaluated",
@@ -3065,7 +3089,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4830
+        "line": 13786
       },
       "statement": "On the hold-across fixture (16 API threads held while calling the database, a database slowdown of 10 times from 20 s to 40 s, static requests at 200/s), with database calls limited to 8 threads and a maximum wait, the p99 of static requests in the slowdown window is at most 50 ms, at 95% confidence over 59 runs.",
       "status": "not-evaluated",
@@ -3097,7 +3121,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4849
+        "line": 13805
       },
       "statement": "A metric claim reads unvalidated when it names no calibration, when a calibration fails on its hold-out load runs (distinct from the fitting runs, with equal workload, capacities and window; the sign-test interval of the model median over at least 6 kept runs, with no truncated run, outside the measurement band widened over repeats), when its evidence has expired at the asOf date recorded in the result or is bound to another component revision, or when a calibration tolerance exceeds the margin computed from the beta-quantile of the per-run statistic; it is flagged extrapolated outside the convex hull of the tested points with the same fault set, decided in exact rational arithmetic; and its result lists first the assumed and to-be-measured parameters, and pairs of flagged parameters, whose variation over their declared ranges flips the verdict.",
       "status": "not-evaluated",
@@ -3128,7 +3152,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4866
+        "line": 13822
       },
       "statement": "A crash-instance fault stops exactly the named instance at its time: its incarnation is incremented, its timers removed, its waiting requests removed with their timeouts, its in-service requests ended with their service-done entries and its units released, its restart drawn, its notify event broadcast; every targeted entry created for the old incarnation, a reply to a call it made before the crash included, is dropped as stale; a routed entry decided for it is ignored by that behavior only, and a broadcast skips it; instance aggregates exclude it while it is down; round-robin, random, any and least-busy routes skip it; a restart edge restores only its own incarnation; a crash of a missing or already down instance does nothing; and on restart the instance is in its initial state with its initial variables.",
       "status": "not-evaluated",
@@ -3152,19 +3176,27 @@
       ],
       "counterexample": null,
       "evaluator": "exegra.evidence/0.1",
-      "evidence": [],
-      "explanation": "Claim \"distribution-lowering-bit-exact\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "evidence": [
+        {
+          "id": "ev-distribution-lowering",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/distributions.test.js",
+          "supports": true
+        }
+      ],
+      "explanation": "Exegra holds a recorded result of executing ev-distribution-lowering: pass.",
       "id": "distribution-lowering-bit-exact",
       "kind": "invariant",
       "method": "external-evidence",
-      "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
+      "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-distribution-lowering), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4884
+        "line": 13840
       },
       "statement": "simulationInput lowers distributions with integer arithmetic only: the exponential and normal quantile tables are produced by the integer algorithms of docs/simulation.md and equal the correctly rounded values at the 1,045 grid points, their canonical text hashing to SHA-256 a23cd2a9566c106701375d5cf75ef982b8db6f3e52c199c47e6239649c840950; exp_fp, ln_fp and the exponential, log-normal and empirical constructions reproduce every reference output bit for bit; and a lowered value of 2^53 base units or more, a sigma above 8 or a p99 above 10^6 times the median is refused.",
-      "status": "not-evaluated",
-      "statusLabel": "Not evaluated",
+      "status": "supported",
+      "statusLabel": "Supported by external evidence",
       "subjects": [
         "workload-model",
         "simulation-contract"
@@ -3191,7 +3223,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4901
+        "line": 13857
       },
       "statement": "Poisson arrivals, constant or ramped, take exactly one arrival draw per instant, computed by inverting the integrated rate with exact integer square roots and rounding to the nearest base unit; no valid input is refused or fails for rejected candidates, and a draw whose instant falls at or after its phase end or the horizon creates nothing.",
       "status": "not-evaluated",
@@ -3222,7 +3254,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4918
+        "line": 13874
       },
       "statement": "With windowed faults that overlap on one resource, the value in effect at every fault-edge is the declared function of the active set: the last active set-capacity, set-class-limit or replace-demand in the order of the input's faults list, the product of the active scale-demand factors reduced to lowest terms, and collapsed while any collapse-classes is active; demand and scale are evaluated at the grant against the faults active then; when a collapse ends, waiting requests return to their own classes in (since, seq) order; and under a collapse each request keeps its class for maxWait and metrics.",
       "status": "not-evaluated",
@@ -3253,7 +3285,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4935
+        "line": 13891
       },
       "statement": "A broadcast reaches the instances that are up when it is delivered (keyed instances created since its creation and instances restarted since included) and skips down ones without an ignored entry; targeted entries keep the instance and incarnation fixed when they were created; routed entries are decided, with their counters, draws and incarnation, when first taken as head, and a delayed copy keeps the decision; and the next arrival instant of a workload is created exactly once, even when a fault delays or drops the first entry of the current instant.",
       "status": "not-evaluated",
@@ -3285,7 +3317,7 @@
       "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
       "source": {
         "column": 5,
-        "line": 4953
+        "line": 13909
       },
       "statement": "Every request of a class follows the request lifecycle of docs/simulation.md: it starts when its start entry is first taken as head; it ends once, at the first delivered end event with its key (a deliver step that does not fail, whether or not a transition fires), as error at once when its start entry is dropped, crashed, stale or handled by no transition, or as timeout on a closed-client timeout; it is censored otherwise; only ok requests are finite samples; and every sample count, bucket power and derived metric is computed from these outcomes.",
       "status": "not-evaluated",
@@ -3325,7 +3357,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-formal-explore-temporal), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 4971
+        "line": 13927
       },
       "statement": "A never, precedes or eventually claim reported by exegra prove as holding has a Lean theorem, accepted by Lean, that the verified explorer found the form true on every complete run of its scenario (every order of simultaneous events, every subset of its faults, each run ending at quiescence, at the step limit or in a failed step); a reported counterexample is a real run that violates it, and a path the bound or the state budget cuts off is reported incomplete.",
       "status": "supported",
@@ -3334,16 +3366,1114 @@
         "exhaustive-explorer",
         "proof-export"
       ]
+    },
+    {
+      "assumptions": [],
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [
+        {
+          "id": "ev-metric-claims-in-specifications",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/metric-spec.test.js",
+          "supports": true
+        }
+      ],
+      "explanation": "Exegra holds a recorded result of executing ev-metric-claims-in-specifications: pass.",
+      "id": "metric-claims-in-specifications",
+      "kind": "invariant",
+      "method": "external-evidence",
+      "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-metric-claims-in-specifications), of which 1 has a recorded execution result; the rest is author-entered.",
+      "source": {
+        "column": 5,
+        "line": 13944
+      },
+      "statement": "A specification that declares resources, workloads, request classes and a format-2 scenario derives a version-2 engine input (times in base units, rates exact, distributions lowered), and a metric-bound claim over it evaluates to model-holds, violated or inconclusive with its run count and confidence, never verified or supported.",
+      "status": "supported",
+      "statusLabel": "Supported by external evidence",
+      "subjects": [
+        "metric-claims",
+        "workload-model",
+        "resource-model"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "relationships-match-imports",
+          "statement": "The relationships declared in this file match the real imports and calls of the code."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.structural/0.1",
+      "evidence": [],
+      "explanation": "No finding: Every copy states a freshness bound. A copy's holder is the owner of each record it copies, contains it or is contained in it, or a directed relationship path leads from one to the other. No shared copy holds a field that refers to the principal or is personal, or depends on authority (D-136).",
+      "id": "runtime-data-copies-fresh-and-related",
+      "kind": "structural",
+      "method": "data-model",
+      "scope": "Checked the 27 records and 23 copies at this model revision against rules freshness-bound, holder-reaches-owner, no-principal-in-shared (items checked per rule: freshness-bound 23, holder-reaches-owner 45, no-principal-in-shared 2).",
+      "source": {
+        "column": 5,
+        "line": 13958
+      },
+      "statement": "Every copy of Exegra's runtime data that this specification declares (session model and claim results, scene, simulation run, browser preferences and camera memory, command-line outputs, generated documents, bundles, proof outputs and the production bundle's embedded specifications) states a freshness bound, its holder is related through declared relationships to the owner of every record it copies, and no shared copy holds principal data.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "data-model",
+        "specification-text",
+        "interaction-state",
+        "recorded-results",
+        "session-claim-results",
+        "session-preferences",
+        "shipped-specifications"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "Every occurrence of the \"then\" matcher had an earlier occurrence of the \"first\" matcher in each of the 1 trace of \"app-start-and-open\". Each of its 1 negative violated it: \"app-start-and-open\" with session-started-before-engine at step 1. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "session-starts-after-engine",
+      "kind": "temporal",
+      "method": "precedes",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios app-start-and-open (24 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 13984
+      },
+      "statement": "At start-up the session is started only after the engine has loaded or failed to load.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "visual-interaction",
+        "simulation-engine",
+        "session",
+        "app-start-and-open"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expected occurrence or final state was observed in each of the 1 trace of \"app-start-and-open\". Each of its 1 negative violated it: \"app-start-and-open\" with open-ignores-read-hashes. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "open-takes-disk-hashes",
+      "kind": "temporal",
+      "method": "eventually",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios app-start-and-open (24 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14019
+      },
+      "statement": "After start-up the opened project is saved and its base hash is the hash of the file on disk, so the first write is checked against what was read.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "session",
+        "persistence-client",
+        "workspace-service",
+        "read-project",
+        "app-start-and-open"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The forbidden occurrence did not happen in each of the 1 trace of \"production-read-only-edit\". Each of its 1 negative violated it: \"production-read-only-edit\" with readonly-build-writes at step 8. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "read-only-build-never-writes",
+      "kind": "temporal",
+      "method": "never",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios production-read-only-edit (8 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14050
+      },
+      "statement": "A production build never asks to write a project file, even after an edit.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "session",
+        "build-system",
+        "production-read-only-edit"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expected occurrence or final state was observed in each of the 1 trace of \"conflict-resolved-by-reload\". Each of its 1 negative violated it: \"conflict-resolved-by-reload\" with session-reload-keeps-text. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "reload-adopts-disk-text",
+      "kind": "temporal",
+      "method": "eventually",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios conflict-resolved-by-reload (27 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14081
+      },
+      "statement": "After a conflict resolved by reloading, the session holds the text on disk, reports saved, and the other process's change was never overwritten.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "session",
+        "workspace-service",
+        "conflict-resolved-by-reload"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expected occurrence or final state was observed in each of the 1 trace of \"conflict-resolved-by-overwrite\". Each of its 1 negative violated it: \"conflict-resolved-by-overwrite\" with session-overwrite-keeps-stale-base. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "overwrite-writes-session-text",
+      "kind": "temporal",
+      "method": "eventually",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios conflict-resolved-by-overwrite (35 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14110
+      },
+      "statement": "After a conflict resolved by overwriting, the file on disk holds the session's text and the session reports saved.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "session",
+        "workspace-service",
+        "write-file",
+        "conflict-resolved-by-overwrite"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expected occurrence or final state was observed in each of the 1 trace of \"external-change-adopted\". Each of its 1 negative violated it: \"external-change-adopted\" with change-notice-lost. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "external-change-is-adopted",
+      "kind": "temporal",
+      "method": "eventually",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios external-change-adopted (24 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14140
+      },
+      "statement": "A change made on disk by another process while nothing is pending is adopted: the session ends holding the text on disk with that text as its base hash.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "session",
+        "workspace-service",
+        "file-change-notice",
+        "external-change-adopted"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The forbidden occurrence did not happen in each of the 1 trace of \"external-change-adopted\". Each of its 1 negative violated it: \"external-change-adopted\" with session-writes-back-external-change at step 24. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "adopted-change-never-written-back",
+      "kind": "temporal",
+      "method": "never",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios external-change-adopted (24 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14171
+      },
+      "statement": "Text adopted from disk is never written back by the session.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "session",
+        "external-change-adopted"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The forbidden occurrence did not happen in each of the 1 trace of \"own-write-notice-ignored\". Each of its 1 negative violated it: \"own-write-notice-ignored\" with session-reloads-own-write at step 23. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "own-write-never-reloaded",
+      "kind": "temporal",
+      "method": "never",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios own-write-notice-ignored (23 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14201
+      },
+      "statement": "The notice of the session's own write never makes it reload the project.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "session",
+        "workspace-service",
+        "own-write-notice-ignored"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expected occurrence or final state was observed in each of the 1 trace of \"undo-restores-and-saves\". Each of its 1 negative violated it: \"undo-restores-and-saves\" with session-skips-flush-on-undo. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "undo-saved-to-disk",
+      "kind": "temporal",
+      "method": "eventually",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios undo-restores-and-saves (29 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14232
+      },
+      "statement": "After an edit and its undo, the model holds the original text, the file on disk holds it too and the session reports saved.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "transactions",
+        "session",
+        "workspace-service",
+        "undo-restores-and-saves"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expression held in the initial configuration and after every step of each of the 1 trace of \"undo-restores-and-saves\". Each of its 1 negative violated it: \"undo-restores-and-saves\" with undo-keeps-text at step 20. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "undo-restores-earlier-text",
+      "kind": "invariant",
+      "method": "state-invariant",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios undo-restores-and-saves (29 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14262
+      },
+      "statement": "Whenever a step can be redone, the model holds the text from before the undone edit.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "transactions",
+        "undo-restores-and-saves"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expression held in the initial configuration and after every step of each of the 2 traces of \"undo-restores-and-saves\" and \"layout-move-saved\". Each of its 1 negative violated it: \"undo-restores-and-saves\" with journal-append-fails at step 15. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "accepted-writes-journaled",
+      "kind": "invariant",
+      "method": "state-invariant",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios undo-restores-and-saves (29 steps), layout-move-saved (20 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14290
+      },
+      "statement": "In these runs every accepted write of spec.jsonc or layout.jsonc has its journal line.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "workspace-service",
+        "write-journal",
+        "undo-restores-and-saves",
+        "layout-move-saved"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expected occurrence or final state was observed in each of the 1 trace of \"layout-move-saved\". Each of its 1 negative violated it: \"layout-move-saved\" with move-edits-spec. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "layout-move-writes-layout-only",
+      "kind": "temporal",
+      "method": "eventually",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios layout-move-saved (20 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14322
+      },
+      "statement": "A dragged node is saved to layout.jsonc and spec.jsonc is not written.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "transactions",
+        "session",
+        "layout-file",
+        "layout-move-saved"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expected occurrence or final state was observed in each of the 1 trace of \"commit-reevaluates-claims\". Each of its 1 negative violated it: \"commit-reevaluates-claims\" with claims-reevaluation-skipped. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "claim-results-follow-commits",
+      "kind": "temporal",
+      "method": "eventually",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios commit-reevaluates-claims (26 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14352
+      },
+      "statement": "After a semantic commit the claim results are those of the committed model.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "session",
+        "claim-evaluator",
+        "commit-reevaluates-claims"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expected occurrence or final state was observed in each of the 1 trace of \"export-after-save\". Each of its 1 negative violated it: \"export-after-save\" with save-lands-after-export. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "export-holds-saved-text",
+      "kind": "temporal",
+      "method": "eventually",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios export-after-save (28 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14381
+      },
+      "statement": "An export made after an edit was saved holds the session's text.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "toolbar",
+        "workspace-service",
+        "export-project",
+        "project-bundle",
+        "export-after-save"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expected occurrence or final state was observed in each of the 1 trace of \"import-bundle\". Each of its 1 negative violated it: \"import-bundle\" with toolbar-import-skips-reopen, change-notice-lost. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "import-shows-imported-text",
+      "kind": "temporal",
+      "method": "eventually",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios import-bundle (39 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14413
+      },
+      "statement": "After an import into the open project's name, the session shows the imported text, which is what is on disk.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "toolbar",
+        "session",
+        "workspace-service",
+        "import-project",
+        "import-bundle"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The forbidden occurrence did not happen in each of the 1 trace of \"import-unparseable-bundle\". Each of its 1 negative violated it: \"import-unparseable-bundle\" with toolbar-import-skips-syntax-check at step 13. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "unparseable-bundle-never-sent",
+      "kind": "temporal",
+      "method": "never",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios import-unparseable-bundle (12 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14446
+      },
+      "statement": "A bundle whose specification has syntax errors is never sent to the server.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "toolbar",
+        "import-project",
+        "import-unparseable-bundle"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expected occurrence or final state was observed in each of the 1 trace of \"generate-from-panel\". Each of its 1 negative violated it: \"generate-from-panel\" with generate-from-stale-model. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "generated-documents-match-model",
+      "kind": "temporal",
+      "method": "eventually",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios generate-from-panel (27 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14477
+      },
+      "statement": "Documents generated from the Realisation panel are derived from the session's current model.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "realisation-panel",
+        "generators",
+        "generated-documents",
+        "write-generated",
+        "generate-from-panel"
+      ]
+    },
+    {
+      "assumptions": [],
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [],
+      "explanation": "Claim \"real-runs-replay-through-self-model\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "id": "real-runs-replay-through-self-model",
+      "kind": "invariant",
+      "method": "external-evidence",
+      "scope": "Nothing was checked: the model cannot establish this claim and no evidence is attached to it.",
+      "source": {
+        "column": 5,
+        "line": 14508
+      },
+      "statement": "The contract events a running Exegra really produces (requests and answers of the persistence client, change notices, engine-worker messages, command envelopes) are recorded with their requestId and replayed through this specification, and every divergence from the self-model is reported as a failed check at its step.",
+      "status": "not-evaluated",
+      "statusLabel": "Not evaluated",
+      "subjects": [
+        "traffic-recorder",
+        "contract-conformance",
+        "real-write-recorded"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expression held in the initial configuration and after every step of each of the 1 trace of \"simulation-panel-run\". Each of its 1 negative violated it: \"simulation-panel-run\" with sim-steps-past-end at step 15. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "sim-cursor-stays-in-trace",
+      "kind": "invariant",
+      "method": "state-invariant",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios simulation-panel-run (18 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14523
+      },
+      "statement": "The step shown in the Simulation panel is always a recorded step of the trace (or none before the first), however often the user presses step.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "session",
+        "simulator-panel",
+        "simulation-panel-run"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "Every occurrence of the \"then\" matcher had an earlier occurrence of the \"first\" matcher in each of the 1 trace of \"simulation-panel-run\". Each of its 1 negative violated it: \"simulation-panel-run\" with pulse-without-step at step 1. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "pulse-follows-step",
+      "kind": "temporal",
+      "method": "precedes",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios simulation-panel-run (18 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14552
+      },
+      "statement": "The scene pulses only steps the session has shown.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "visual-interaction",
+        "session",
+        "simulation-panel-run"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expression held in the initial configuration and after every step of each of the 1 trace of \"simulation-reload-cancels-run\". Each of its 1 negative violated it: \"simulation-reload-cancels-run\" with runner-keeps-stale-job, runner-forwards-stale-reply, sim-adopts-stale-trace at step 8. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "only-latest-run-adopted",
+      "kind": "invariant",
+      "method": "state-invariant",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios simulation-reload-cancels-run (11 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14586
+      },
+      "statement": "The Simulation panel only ever shows the trace of the latest load.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "session",
+        "simulation-engine",
+        "engine-worker-run",
+        "simulation-reload-cancels-run"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expected occurrence or final state was observed in each of the 1 trace of \"preferences-remembered\". Each of its 1 negative violated it: \"preferences-remembered\" with preferences-not-stored. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "interaction-state-restored",
+      "kind": "temporal",
+      "method": "eventually",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios preferences-remembered (9 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14619
+      },
+      "statement": "After a reload the session shows the selection and the view the user left.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "session",
+        "browser-storage",
+        "session-preferences",
+        "preferences-remembered"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expected occurrence or final state was observed in each of the 1 trace of \"camera-remembered\". Each of its 1 negative violated it: \"camera-remembered\" with camera-save-lost. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "camera-restored-per-view",
+      "kind": "temporal",
+      "method": "eventually",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios camera-remembered (12 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14650
+      },
+      "statement": "Coming back to a view restores the camera the user left it with.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "visual-interaction",
+        "browser-storage",
+        "camera-memory",
+        "camera-remembered"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expression held in the initial configuration and after every step of each of the 2 traces of \"cli-apply\" and \"cli-apply-partial-write\". Each of its 1 negative violated it: \"cli-apply-partial-write\" with apply-reports-ok-after-layout-conflict at step 9. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "cli-success-means-all-written",
+      "kind": "invariant",
+      "method": "state-invariant",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios cli-apply (10 steps), cli-apply-partial-write (11 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14680
+      },
+      "statement": "Whenever exegra apply reports success, both files on disk hold the texts the transaction produced.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "agent-cli",
+        "workspace-service",
+        "agent-command",
+        "cli-apply",
+        "cli-apply-partial-write"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expected occurrence or final state was observed in each of the 1 trace of \"cli-apply-partial-write\". Each of its 1 negative violated it: \"cli-apply-partial-write\" with cli-failure-omits-partial-write. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "cli-partial-write-reported",
+      "kind": "temporal",
+      "method": "eventually",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios cli-apply-partial-write (11 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14712
+      },
+      "statement": "When the layout write of exegra apply conflicts, the specification has already been written and the failure says so.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "agent-cli",
+        "workspace-service",
+        "specification-file",
+        "cli-apply-partial-write"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "Every occurrence of the \"then\" matcher had an earlier occurrence of the \"first\" matcher in each of the 1 trace of \"cli-verify-with-open-session\". Each of its 1 negative violated it: \"cli-verify-with-open-session\" with verify-reports-before-recording at step 19. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "verify-records-before-reporting",
+      "kind": "temporal",
+      "method": "precedes",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the events delivered and transitions fired in the traces of scenarios cli-verify-with-open-session (37 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14743
+      },
+      "statement": "exegra verify prints its envelope only after the recorded results are on disk.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "agent-cli",
+        "verification-pipeline",
+        "recorded-results",
+        "cli-verify-with-open-session"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expected occurrence or final state was observed in each of the 1 trace of \"cli-verify-with-open-session\". Each of its 1 negative violated it: \"cli-verify-with-open-session\" with change-notice-lost. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "session-adopts-recorded-results",
+      "kind": "temporal",
+      "method": "eventually",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked the final configuration of the traces of scenarios cli-verify-with-open-session (37 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14778
+      },
+      "statement": "An open session adopts the results exegra verify records and re-evaluates its claims with them.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "session",
+        "workspace-service",
+        "session-recorded-results",
+        "cli-verify-with-open-session"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expression held in the initial configuration and after every step of each of the 2 traces of \"cli-trace-written\" and \"cli-trace-refused\". Each of its 1 negative violated it: \"cli-trace-refused\" with trace-written-on-refusal at step 6. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "trace-file-only-from-a-run",
+      "kind": "invariant",
+      "method": "state-invariant",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios cli-trace-written (7 steps), cli-trace-refused (7 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14809
+      },
+      "statement": "exegra trace writes a trace file only for a run the engine completed.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "agent-cli",
+        "simulation-engine",
+        "cli-outputs",
+        "cli-trace-written",
+        "cli-trace-refused"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expression held in the initial configuration and after every step of each of the 2 traces of \"prove-accepted\" and \"prove-lean-rejects\". Each of its 1 negative violated it: \"prove-lean-rejects\" with prove-reports-unchecked at step 8. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "prove-reports-only-lean-accepted",
+      "kind": "invariant",
+      "method": "state-invariant",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios prove-accepted (9 steps), prove-lean-rejects (10 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14841
+      },
+      "statement": "exegra prove reports a claim result only when Lean accepted its theorem.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "proof-export",
+        "formal-semantics",
+        "proof-outputs",
+        "prove-accepted",
+        "prove-lean-rejects"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expression held in the initial configuration and after every step of each of the 2 traces of \"markdown-import\" and \"markdown-import-coverage-fails\". Each of its 1 negative violated it: \"markdown-import-coverage-fails\" with markdown-writes-despite-gate at step 2. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "markdown-written-only-when-covered",
+      "kind": "invariant",
+      "method": "state-invariant",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios markdown-import (5 steps), markdown-import-coverage-fails (4 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14873
+      },
+      "statement": "The Markdown importer writes a specification only when its coverage check passed.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "markdown-importer",
+        "specification-file",
+        "markdown-import",
+        "markdown-import-coverage-fails"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "machines-abstract-the-code",
+          "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.trace/0.1",
+      "evidence": [],
+      "explanation": "The expression held in the initial configuration and after every step of each of the 2 traces of \"engine-conformance-agrees\" and \"engine-conformance-diverges\". Each of its 1 negative violated it: \"engine-conformance-diverges\" with conformance-ignores-mismatch at step 5. Other executions, faults or inputs were not examined. The result holds under fault model \"local-workstation\" only as far as the listed scenarios inject its failure modes: they inject 0 of its 5; the rest were not exercised.",
+      "id": "conformance-never-hides-mismatch",
+      "kind": "invariant",
+      "method": "state-invariant",
+      "scope": "Under fault model Local workstation (5 failure modes; bounds: at most 1 failures at once). Checked every configuration of the traces of scenarios engine-conformance-agrees (5 steps), engine-conformance-diverges (7 steps). This is a check of these traces, not of all possible executions.",
+      "source": {
+        "column": 5,
+        "line": 14904
+      },
+      "statement": "The conformance runner reports agreement only when no golden trace differed.",
+      "status": "verified",
+      "statusLabel": "Verified within the stated model and assumptions",
+      "subjects": [
+        "simulation-contract",
+        "engine-goldens",
+        "engine-conformance-agrees",
+        "engine-conformance-diverges"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "tests-exercise-shipped-modules",
+          "statement": "The core tests import and run the same modules under src/core and tools that the application and the agent command line run."
+        },
+        {
+          "id": "recorded-results-reflect-current-code",
+          "statement": "A recorded result of a test in evidence/results.json was produced by the code and the specification as they are now."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [
+        {
+          "id": "ev-runtime-data-complete",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/runtime-data-complete.test.js",
+          "supports": true
+        }
+      ],
+      "explanation": "Exegra holds a recorded result of executing ev-runtime-data-complete: pass.",
+      "id": "runtime-stores-modelled",
+      "kind": "invariant",
+      "method": "external-evidence",
+      "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-runtime-data-complete), of which 1 has a recorded execution result; the rest is author-entered.",
+      "source": {
+        "column": 5,
+        "line": 14935
+      },
+      "statement": "Every durable store Exegra's code writes (the project files and journal of the workspace service, evidence/results.json, generated/, the localStorage keys exegra.session and exegra.layout, the sessionStorage keys exegra.camera.<project>.<view>, the bundle download, and the files the command line and the tools write) is named by a record or a copy of this specification.",
+      "status": "supported",
+      "statusLabel": "Supported by external evidence",
+      "subjects": [
+        "data-model",
+        "workspace-service",
+        "session",
+        "agent-cli",
+        "specification-text",
+        "recorded-results",
+        "write-journal",
+        "session-preferences",
+        "camera-memory"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "tests-exercise-shipped-modules",
+          "statement": "The core tests import and run the same modules under src/core and tools that the application and the agent command line run."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [
+        {
+          "id": "ev-verify-skip-keeps-outcome",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/cli.test.js#a skipped verify run keeps the outcome recorded before instead of erasing it",
+          "supports": true
+        }
+      ],
+      "explanation": "Exegra holds a recorded result of executing ev-verify-skip-keeps-outcome: pass.",
+      "id": "verify-skip-keeps-recorded-outcome",
+      "kind": "invariant",
+      "method": "external-evidence",
+      "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-verify-skip-keeps-outcome), of which 1 has a recorded execution result; the rest is author-entered.",
+      "source": {
+        "column": 5,
+        "line": 14959
+      },
+      "statement": "A verify run that skips a test evidence entry keeps the outcome recorded for that entry before, and records no outcome for it where none was recorded.",
+      "status": "supported",
+      "statusLabel": "Supported by external evidence",
+      "subjects": [
+        "agent-cli",
+        "recorded-results-file"
+      ]
+    },
+    {
+      "assumptions": [
+        {
+          "id": "filesystem-honours-atomic-rename",
+          "statement": "Renaming a temporary file over the target replaces the target atomically on the file system holding the project."
+        }
+      ],
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [
+        {
+          "id": "ev-journal-append-failure",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/workspace.test.js#a journal line that cannot be appended is reported and the file write still stands",
+          "supports": true
+        }
+      ],
+      "explanation": "Exegra holds a recorded result of executing ev-journal-append-failure: pass.",
+      "id": "journal-failure-reported",
+      "kind": "invariant",
+      "method": "external-evidence",
+      "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-journal-append-failure), of which 1 has a recorded execution result; the rest is author-entered.",
+      "source": {
+        "column": 5,
+        "line": 14975
+      },
+      "statement": "When a spec or layout write replaces its file but the journal line cannot be appended, the write result says the journal line was not written, the CLI apply result lists it in journalWarnings, and the session reports it as an error; the replaced file is not restored.",
+      "status": "supported",
+      "statusLabel": "Supported by external evidence",
+      "subjects": [
+        "workspace-service",
+        "agent-cli",
+        "session"
+      ]
+    },
+    {
+      "assumptions": [],
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [
+        {
+          "id": "ev-changes-pairing-by-revision",
+          "kind": "test",
+          "recorded": "pass",
+          "ref": "tests/core/activity-pairing.test.js",
+          "supports": true
+        }
+      ],
+      "explanation": "Exegra holds a recorded result of executing ev-changes-pairing-by-revision: pass.",
+      "id": "changes-panel-pairs-by-revision",
+      "kind": "invariant",
+      "method": "external-evidence",
+      "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-changes-pairing-by-revision), of which 1 has a recorded execution result; the rest is author-entered.",
+      "source": {
+        "column": 5,
+        "line": 14992
+      },
+      "statement": "The changes panel pairs each history entry with the log entry of its own commit, matched by revision, so the pairing stays correct after the session log has dropped its oldest entries.",
+      "status": "supported",
+      "statusLabel": "Supported by external evidence",
+      "subjects": [
+        "activity-panels"
+      ]
     }
   ],
   "format": "exegra-claims-report",
-  "semanticHash": "0929b444e64eb5",
+  "semanticHash": "1f6372c14d6180",
   "summary": {
-    "inconclusive": 0,
-    "not-evaluated": 46,
-    "supported": 27,
-    "total": 92,
-    "verified": 18,
+    "inconclusive": 3,
+    "not-evaluated": 43,
+    "supported": 33,
+    "total": 129,
+    "verified": 49,
     "violated": 1
   },
   "version": 1

@@ -1,0 +1,712 @@
+{
+ "behaviors": [
+  {
+   "id": "prove-flow",
+   "initial": "prove-idle",
+   "states": [
+    "prove-idle",
+    "prove-building",
+    "prove-exploring",
+    "prove-checking",
+    "prove-done"
+   ],
+   "subject": "proof-export",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "emit": "lake-build-requested"
+      }
+     ],
+     "faultOnly": false,
+     "from": "prove-idle",
+     "guard": null,
+     "id": "prove-start",
+     "on": "prove-requested",
+     "to": "prove-building"
+    },
+    {
+     "effects": [
+      {
+       "emit": "explorer-request-sent",
+       "payload": {
+        "bound": 20
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "prove-building",
+     "guard": null,
+     "id": "prove-explore",
+     "on": "lake-build-finished",
+     "to": "prove-exploring"
+    },
+    {
+     "effects": [
+      {
+       "set": "fileWritten",
+       "to": true
+      },
+      {
+       "emit": "lean-file-written",
+       "payload": {
+        "scenario": "'race'"
+       }
+      },
+      {
+       "emit": "lean-check-requested"
+      }
+     ],
+     "faultOnly": false,
+     "from": "prove-exploring",
+     "guard": null,
+     "id": "prove-write",
+     "on": "explorer-result-returned",
+     "to": "prove-checking"
+    },
+    {
+     "effects": [
+      {
+       "set": "reported",
+       "to": true
+      },
+      {
+       "emit": "prove-finished",
+       "payload": {
+        "claims": 1
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "prove-checking",
+     "guard": null,
+     "id": "prove-report-unchecked",
+     "on": "lean-check-finished",
+     "to": "prove-done"
+    },
+    {
+     "effects": [
+      {
+       "set": "leanAccepted",
+       "to": true
+      },
+      {
+       "set": "reported",
+       "to": true
+      },
+      {
+       "emit": "prove-finished",
+       "payload": {
+        "claims": 1
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "prove-checking",
+     "guard": "event.accepted",
+     "id": "prove-report",
+     "on": "lean-check-finished",
+     "to": "prove-done"
+    },
+    {
+     "effects": [
+      {
+       "emit": "prove-finished",
+       "payload": {
+        "claims": 0
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "prove-checking",
+     "guard": "!event.accepted",
+     "id": "prove-report-nothing",
+     "on": "lean-check-finished",
+     "to": "prove-done"
+    }
+   ],
+   "variables": [
+    {
+     "initial": false,
+     "name": "leanAccepted"
+    },
+    {
+     "initial": false,
+     "name": "reported"
+    },
+    {
+     "initial": false,
+     "name": "fileWritten"
+    }
+   ]
+  },
+  {
+   "id": "lean-toolchain-flow",
+   "initial": "lean-ready",
+   "states": [
+    "lean-ready"
+   ],
+   "subject": "formal-semantics",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "accepts",
+       "to": false
+      }
+     ],
+     "faultOnly": false,
+     "from": "lean-ready",
+     "guard": null,
+     "id": "lean-broken",
+     "on": "lean-rejects-proof",
+     "to": "lean-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "lake-build-finished"
+      }
+     ],
+     "faultOnly": false,
+     "from": "lean-ready",
+     "guard": null,
+     "id": "lean-build",
+     "on": "lake-build-requested",
+     "to": "lean-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "explorer-result-returned",
+       "payload": {
+        "result": "'holds'"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "lean-ready",
+     "guard": null,
+     "id": "lean-explore",
+     "on": "explorer-request-sent",
+     "to": "lean-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "lean-check-finished",
+       "payload": {
+        "accepted": "accepts"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "lean-ready",
+     "guard": null,
+     "id": "lean-check",
+     "on": "lean-check-requested",
+     "to": "lean-ready"
+    }
+   ],
+   "variables": [
+    {
+     "initial": true,
+     "name": "accepts"
+    }
+   ]
+  }
+ ],
+ "events": [
+  {
+   "id": "edit-requested"
+  },
+  {
+   "id": "source-apply-requested"
+  },
+  {
+   "id": "operation-submitted"
+  },
+  {
+   "id": "text-edits-computed"
+  },
+  {
+   "id": "model-parsed"
+  },
+  {
+   "id": "validation-passed"
+  },
+  {
+   "id": "validation-failed"
+  },
+  {
+   "id": "transaction-committed"
+  },
+  {
+   "id": "transaction-rejected"
+  },
+  {
+   "id": "refresh-requested"
+  },
+  {
+   "id": "projection-refreshed"
+  },
+  {
+   "id": "model-published"
+  },
+  {
+   "id": "save-requested"
+  },
+  {
+   "id": "save-succeeded"
+  },
+  {
+   "id": "save-conflicted"
+  },
+  {
+   "id": "write-intent"
+  },
+  {
+   "id": "write-file-request"
+  },
+  {
+   "id": "write-file-ok"
+  },
+  {
+   "id": "write-file-conflict"
+  },
+  {
+   "id": "write-file-failed"
+  },
+  {
+   "id": "read-project-request"
+  },
+  {
+   "id": "read-project-ok"
+  },
+  {
+   "id": "read-project-failed"
+  },
+  {
+   "id": "list-projects-request"
+  },
+  {
+   "id": "list-projects-ok"
+  },
+  {
+   "id": "watch-project-request"
+  },
+  {
+   "id": "file-change-notice-sent"
+  },
+  {
+   "id": "export-request"
+  },
+  {
+   "id": "export-ok"
+  },
+  {
+   "id": "export-failed"
+  },
+  {
+   "id": "import-request"
+  },
+  {
+   "id": "import-ok"
+  },
+  {
+   "id": "import-refused"
+  },
+  {
+   "id": "generated-write-request"
+  },
+  {
+   "id": "generated-write-ok"
+  },
+  {
+   "id": "engine-run-posted"
+  },
+  {
+   "id": "engine-run-returned"
+  },
+  {
+   "id": "engine-run-refused"
+  },
+  {
+   "id": "cli-command-request"
+  },
+  {
+   "id": "cli-command-ok"
+  },
+  {
+   "id": "cli-command-failed"
+  },
+  {
+   "id": "session-init-requested"
+  },
+  {
+   "id": "project-open-requested"
+  },
+  {
+   "id": "open-refused"
+  },
+  {
+   "id": "read-intent"
+  },
+  {
+   "id": "project-files-read"
+  },
+  {
+   "id": "project-read-failed"
+  },
+  {
+   "id": "project-opened"
+  },
+  {
+   "id": "list-intent"
+  },
+  {
+   "id": "projects-listed"
+  },
+  {
+   "id": "watch-intent"
+  },
+  {
+   "id": "external-change-received"
+  },
+  {
+   "id": "disk-edited-externally"
+  },
+  {
+   "id": "reload-requested"
+  },
+  {
+   "id": "commit-notified"
+  },
+  {
+   "id": "edit-applied"
+  },
+  {
+   "id": "node-moved"
+  },
+  {
+   "id": "undo-requested"
+  },
+  {
+   "id": "redo-requested"
+  },
+  {
+   "id": "conflict-resolution-chosen"
+  },
+  {
+   "id": "save-failed"
+  },
+  {
+   "id": "claims-evaluation-requested"
+  },
+  {
+   "id": "claim-scenarios-run"
+  },
+  {
+   "id": "claims-evaluated"
+  },
+  {
+   "id": "recorded-results-adopted"
+  },
+  {
+   "id": "export-clicked"
+  },
+  {
+   "id": "export-intent"
+  },
+  {
+   "id": "bundle-received"
+  },
+  {
+   "id": "export-refused-received"
+  },
+  {
+   "id": "bundle-downloaded"
+  },
+  {
+   "id": "import-file-chosen"
+  },
+  {
+   "id": "import-intent"
+  },
+  {
+   "id": "import-done"
+  },
+  {
+   "id": "import-refused-received"
+  },
+  {
+   "id": "generate-clicked"
+  },
+  {
+   "id": "generated-intent"
+  },
+  {
+   "id": "generated-saved"
+  },
+  {
+   "id": "ws-read"
+  },
+  {
+   "id": "ws-read-done"
+  },
+  {
+   "id": "ws-read-missing"
+  },
+  {
+   "id": "ws-list"
+  },
+  {
+   "id": "ws-list-done"
+  },
+  {
+   "id": "ws-write"
+  },
+  {
+   "id": "ws-write-done"
+  },
+  {
+   "id": "ws-write-conflict"
+  },
+  {
+   "id": "ws-write-error"
+  },
+  {
+   "id": "disk-file-replaced"
+  },
+  {
+   "id": "ws-watch"
+  },
+  {
+   "id": "ws-change"
+  },
+  {
+   "id": "ws-write-recorded"
+  },
+  {
+   "id": "ws-recorded-done"
+  },
+  {
+   "id": "ws-write-generated"
+  },
+  {
+   "id": "ws-generated-done"
+  },
+  {
+   "id": "ws-export"
+  },
+  {
+   "id": "ws-export-done"
+  },
+  {
+   "id": "ws-export-missing"
+  },
+  {
+   "id": "ws-import"
+  },
+  {
+   "id": "ws-import-done"
+  },
+  {
+   "id": "ws-import-refused"
+  },
+  {
+   "id": "verify-tests-run"
+  },
+  {
+   "id": "verify-tests-finished"
+  },
+  {
+   "id": "verify-claims-evaluated"
+  },
+  {
+   "id": "engine-not-built"
+  },
+  {
+   "id": "engine-run-called"
+  },
+  {
+   "id": "engine-run-finished"
+  },
+  {
+   "id": "engine-run-failed"
+  },
+  {
+   "id": "trace-file-written"
+  },
+  {
+   "id": "prove-requested"
+  },
+  {
+   "id": "lake-build-requested"
+  },
+  {
+   "id": "lake-build-finished"
+  },
+  {
+   "id": "explorer-request-sent"
+  },
+  {
+   "id": "explorer-result-returned"
+  },
+  {
+   "id": "lean-file-written"
+  },
+  {
+   "id": "lean-check-requested"
+  },
+  {
+   "id": "lean-check-finished"
+  },
+  {
+   "id": "lean-rejects-proof"
+  },
+  {
+   "id": "prove-finished"
+  },
+  {
+   "id": "markdown-import-run"
+  },
+  {
+   "id": "markdown-source-unmapped"
+  },
+  {
+   "id": "markdown-spec-built"
+  },
+  {
+   "id": "markdown-report-printed"
+  },
+  {
+   "id": "conformance-run"
+  },
+  {
+   "id": "golden-replayed"
+  },
+  {
+   "id": "golden-compared"
+  },
+  {
+   "id": "engine-diverges"
+  },
+  {
+   "id": "conformance-reported"
+  },
+  {
+   "id": "differential-run"
+  },
+  {
+   "id": "differential-mismatch-saved"
+  },
+  {
+   "id": "sim-load-requested"
+  },
+  {
+   "id": "engine-run-intent"
+  },
+  {
+   "id": "worker-terminated"
+  },
+  {
+   "id": "worker-run-done"
+  },
+  {
+   "id": "worker-load-failed"
+  },
+  {
+   "id": "sim-trace-ready"
+  },
+  {
+   "id": "sim-run-failed"
+  },
+  {
+   "id": "sim-step-requested"
+  },
+  {
+   "id": "sim-back-requested"
+  },
+  {
+   "id": "sim-run-to-end-requested"
+  },
+  {
+   "id": "sim-step-shown"
+  },
+  {
+   "id": "step-pulsed"
+  },
+  {
+   "id": "page-loaded"
+  },
+  {
+   "id": "engine-load-requested"
+  },
+  {
+   "id": "engine-load-settled"
+  },
+  {
+   "id": "entity-selected"
+  },
+  {
+   "id": "view-selected"
+  },
+  {
+   "id": "preferences-written"
+  },
+  {
+   "id": "page-reloaded"
+  },
+  {
+   "id": "preferences-read"
+  },
+  {
+   "id": "preferences-loaded"
+  },
+  {
+   "id": "panel-toggled"
+  },
+  {
+   "id": "layout-preferences-written"
+  },
+  {
+   "id": "camera-moved"
+  },
+  {
+   "id": "view-switched"
+  },
+  {
+   "id": "camera-saved"
+  },
+  {
+   "id": "camera-restore-requested"
+  },
+  {
+   "id": "camera-restored"
+  },
+  {
+   "id": "camera-none"
+  },
+  {
+   "id": "traffic-step-recorded"
+  }
+ ],
+ "faults": [],
+ "format": "exegra-sim-input",
+ "scenario": {
+  "faults": [],
+  "id": "prove-accepted",
+  "stepLimit": 1000,
+  "steps": [
+   {
+    "at": 0,
+    "event": "prove-requested",
+    "payload": {
+     "scenario": "lost-update-race"
+    }
+   }
+  ]
+ },
+ "version": 1
+}

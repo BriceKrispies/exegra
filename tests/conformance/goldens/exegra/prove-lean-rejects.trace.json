@@ -1,0 +1,871 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "lean-toolchain-flow": {
+    "state": "lean-ready",
+    "vars": {
+     "accepts": false
+    }
+   },
+   "prove-flow": {
+    "state": "prove-done",
+    "vars": {
+     "fileWritten": true,
+     "leanAccepted": false,
+     "reported": false
+    }
+   }
+  },
+  "pending": [],
+  "time": 0
+ },
+ "initial": {
+  "machines": {
+   "lean-toolchain-flow": {
+    "state": "lean-ready",
+    "vars": {
+     "accepts": true
+    }
+   },
+   "prove-flow": {
+    "state": "prove-idle",
+    "vars": {
+     "fileWritten": false,
+     "leanAccepted": false,
+     "reported": false
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "lean-rejects-proof",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   },
+   {
+    "event": "prove-requested",
+    "payload": {
+     "scenario": "lost-update-race"
+    },
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    },
+    "time": 0
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "prove-lean-rejects",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "lean-toolchain-flow": {
+      "state": "lean-ready",
+      "vars": {
+       "accepts": false
+      }
+     },
+     "prove-flow": {
+      "state": "prove-idle",
+      "vars": {
+       "fileWritten": false,
+       "leanAccepted": false,
+       "reported": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "prove-requested",
+      "payload": {
+       "scenario": "lost-update-race"
+      },
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "lean-rejects-proof",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "lean-toolchain-flow",
+     "emitted": [],
+     "from": "lean-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": false,
+       "before": true,
+       "variable": "accepts"
+      }
+     ],
+     "to": "lean-ready",
+     "transition": "lean-broken"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "prove-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "lean-rejects-proof",
+    "lean-broken",
+    "lean-toolchain-flow",
+    "formal-semantics"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "lean-toolchain-flow": {
+      "state": "lean-ready",
+      "vars": {
+       "accepts": false
+      }
+     },
+     "prove-flow": {
+      "state": "prove-building",
+      "vars": {
+       "fileWritten": false,
+       "leanAccepted": false,
+       "reported": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "lake-build-requested",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "behavior": "prove-flow",
+       "kind": "transition",
+       "transition": "prove-start"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "prove-requested",
+    "payload": {
+     "scenario": "lost-update-race"
+    },
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "prove-flow",
+     "emitted": [
+      {
+       "event": "lake-build-requested",
+       "payload": {},
+       "seq": 2,
+       "time": 0
+      }
+     ],
+     "from": "prove-idle",
+     "guard": null,
+     "sets": [],
+     "to": "prove-building",
+     "transition": "prove-start"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "lean-toolchain-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "prove-requested",
+    "prove-start",
+    "prove-flow",
+    "proof-export"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "lean-toolchain-flow": {
+      "state": "lean-ready",
+      "vars": {
+       "accepts": false
+      }
+     },
+     "prove-flow": {
+      "state": "prove-building",
+      "vars": {
+       "fileWritten": false,
+       "leanAccepted": false,
+       "reported": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "lake-build-finished",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "behavior": "lean-toolchain-flow",
+       "kind": "transition",
+       "transition": "lean-build"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "lake-build-requested",
+    "payload": {},
+    "seq": 2,
+    "source": {
+     "behavior": "prove-flow",
+     "kind": "transition",
+     "transition": "prove-start"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "lean-toolchain-flow",
+     "emitted": [
+      {
+       "event": "lake-build-finished",
+       "payload": {},
+       "seq": 3,
+       "time": 0
+      }
+     ],
+     "from": "lean-ready",
+     "guard": null,
+     "sets": [],
+     "to": "lean-ready",
+     "transition": "lean-build"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "prove-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "lake-build-requested",
+    "lean-build",
+    "lean-toolchain-flow",
+    "formal-semantics"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "lean-toolchain-flow": {
+      "state": "lean-ready",
+      "vars": {
+       "accepts": false
+      }
+     },
+     "prove-flow": {
+      "state": "prove-exploring",
+      "vars": {
+       "fileWritten": false,
+       "leanAccepted": false,
+       "reported": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "explorer-request-sent",
+      "payload": {
+       "bound": 20
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "prove-flow",
+       "kind": "transition",
+       "transition": "prove-explore"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "lake-build-finished",
+    "payload": {},
+    "seq": 3,
+    "source": {
+     "behavior": "lean-toolchain-flow",
+     "kind": "transition",
+     "transition": "lean-build"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "prove-flow",
+     "emitted": [
+      {
+       "event": "explorer-request-sent",
+       "payload": {
+        "bound": 20
+       },
+       "seq": 4,
+       "time": 0
+      }
+     ],
+     "from": "prove-building",
+     "guard": null,
+     "sets": [],
+     "to": "prove-exploring",
+     "transition": "prove-explore"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "lean-toolchain-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "lake-build-finished",
+    "prove-explore",
+    "prove-flow",
+    "proof-export"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "lean-toolchain-flow": {
+      "state": "lean-ready",
+      "vars": {
+       "accepts": false
+      }
+     },
+     "prove-flow": {
+      "state": "prove-exploring",
+      "vars": {
+       "fileWritten": false,
+       "leanAccepted": false,
+       "reported": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "explorer-result-returned",
+      "payload": {
+       "result": "holds"
+      },
+      "seq": 5,
+      "source": {
+       "behavior": "lean-toolchain-flow",
+       "kind": "transition",
+       "transition": "lean-explore"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "explorer-request-sent",
+    "payload": {
+     "bound": 20
+    },
+    "seq": 4,
+    "source": {
+     "behavior": "prove-flow",
+     "kind": "transition",
+     "transition": "prove-explore"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "lean-toolchain-flow",
+     "emitted": [
+      {
+       "event": "explorer-result-returned",
+       "payload": {
+        "result": "holds"
+       },
+       "seq": 5,
+       "time": 0
+      }
+     ],
+     "from": "lean-ready",
+     "guard": null,
+     "sets": [],
+     "to": "lean-ready",
+     "transition": "lean-explore"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "prove-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 4,
+   "kind": "deliver",
+   "responsible": [
+    "explorer-request-sent",
+    "lean-explore",
+    "lean-toolchain-flow",
+    "formal-semantics"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "lean-toolchain-flow": {
+      "state": "lean-ready",
+      "vars": {
+       "accepts": false
+      }
+     },
+     "prove-flow": {
+      "state": "prove-checking",
+      "vars": {
+       "fileWritten": true,
+       "leanAccepted": false,
+       "reported": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "lean-file-written",
+      "payload": {
+       "scenario": "race"
+      },
+      "seq": 6,
+      "source": {
+       "behavior": "prove-flow",
+       "kind": "transition",
+       "transition": "prove-write"
+      },
+      "time": 0
+     },
+     {
+      "event": "lean-check-requested",
+      "payload": {},
+      "seq": 7,
+      "source": {
+       "behavior": "prove-flow",
+       "kind": "transition",
+       "transition": "prove-write"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "explorer-result-returned",
+    "payload": {
+     "result": "holds"
+    },
+    "seq": 5,
+    "source": {
+     "behavior": "lean-toolchain-flow",
+     "kind": "transition",
+     "transition": "lean-explore"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "prove-flow",
+     "emitted": [
+      {
+       "event": "lean-file-written",
+       "payload": {
+        "scenario": "race"
+       },
+       "seq": 6,
+       "time": 0
+      },
+      {
+       "event": "lean-check-requested",
+       "payload": {},
+       "seq": 7,
+       "time": 0
+      }
+     ],
+     "from": "prove-exploring",
+     "guard": null,
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "fileWritten"
+      }
+     ],
+     "to": "prove-checking",
+     "transition": "prove-write"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "lean-toolchain-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 5,
+   "kind": "deliver",
+   "responsible": [
+    "explorer-result-returned",
+    "prove-write",
+    "prove-flow",
+    "proof-export"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "lean-toolchain-flow": {
+      "state": "lean-ready",
+      "vars": {
+       "accepts": false
+      }
+     },
+     "prove-flow": {
+      "state": "prove-checking",
+      "vars": {
+       "fileWritten": true,
+       "leanAccepted": false,
+       "reported": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "lean-check-requested",
+      "payload": {},
+      "seq": 7,
+      "source": {
+       "behavior": "prove-flow",
+       "kind": "transition",
+       "transition": "prove-write"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "lean-file-written",
+    "payload": {
+     "scenario": "race"
+    },
+    "seq": 6,
+    "source": {
+     "behavior": "prove-flow",
+     "kind": "transition",
+     "transition": "prove-write"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "prove-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "lean-toolchain-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 6,
+   "kind": "deliver",
+   "responsible": [
+    "lean-file-written"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "lean-toolchain-flow": {
+      "state": "lean-ready",
+      "vars": {
+       "accepts": false
+      }
+     },
+     "prove-flow": {
+      "state": "prove-checking",
+      "vars": {
+       "fileWritten": true,
+       "leanAccepted": false,
+       "reported": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "lean-check-finished",
+      "payload": {
+       "accepted": false
+      },
+      "seq": 8,
+      "source": {
+       "behavior": "lean-toolchain-flow",
+       "kind": "transition",
+       "transition": "lean-check"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "lean-check-requested",
+    "payload": {},
+    "seq": 7,
+    "source": {
+     "behavior": "prove-flow",
+     "kind": "transition",
+     "transition": "prove-write"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "lean-toolchain-flow",
+     "emitted": [
+      {
+       "event": "lean-check-finished",
+       "payload": {
+        "accepted": false
+       },
+       "seq": 8,
+       "time": 0
+      }
+     ],
+     "from": "lean-ready",
+     "guard": null,
+     "sets": [],
+     "to": "lean-ready",
+     "transition": "lean-check"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "prove-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 7,
+   "kind": "deliver",
+   "responsible": [
+    "lean-check-requested",
+    "lean-check",
+    "lean-toolchain-flow",
+    "formal-semantics"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "lean-toolchain-flow": {
+      "state": "lean-ready",
+      "vars": {
+       "accepts": false
+      }
+     },
+     "prove-flow": {
+      "state": "prove-done",
+      "vars": {
+       "fileWritten": true,
+       "leanAccepted": false,
+       "reported": false
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "prove-finished",
+      "payload": {
+       "claims": 0
+      },
+      "seq": 9,
+      "source": {
+       "behavior": "prove-flow",
+       "kind": "transition",
+       "transition": "prove-report-nothing"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "lean-check-finished",
+    "payload": {
+     "accepted": false
+    },
+    "seq": 8,
+    "source": {
+     "behavior": "lean-toolchain-flow",
+     "kind": "transition",
+     "transition": "lean-check"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "prove-flow",
+     "emitted": [
+      {
+       "event": "prove-finished",
+       "payload": {
+        "claims": 0
+       },
+       "seq": 9,
+       "time": 0
+      }
+     ],
+     "from": "prove-checking",
+     "guard": "!event.accepted",
+     "sets": [],
+     "to": "prove-done",
+     "transition": "prove-report-nothing"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "lean-toolchain-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 8,
+   "kind": "deliver",
+   "responsible": [
+    "lean-check-finished",
+    "prove-report-nothing",
+    "prove-flow",
+    "proof-export"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "lean-toolchain-flow": {
+      "state": "lean-ready",
+      "vars": {
+       "accepts": false
+      }
+     },
+     "prove-flow": {
+      "state": "prove-done",
+      "vars": {
+       "fileWritten": true,
+       "leanAccepted": false,
+       "reported": false
+      }
+     }
+    },
+    "pending": [],
+    "time": 0
+   },
+   "event": {
+    "id": "prove-finished",
+    "payload": {
+     "claims": 0
+    },
+    "seq": 9,
+    "source": {
+     "behavior": "prove-flow",
+     "kind": "transition",
+     "transition": "prove-report-nothing"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "prove-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "lean-toolchain-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 9,
+   "kind": "deliver",
+   "responsible": [
+    "prove-finished"
+   ],
+   "time": 0
+  }
+ ]
+}

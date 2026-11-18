@@ -1,19 +1,19 @@
 {
   "format": "exegra-tasks",
-  "semanticHash": "0929b444e64eb5",
+  "semanticHash": "1f6372c14d6180",
   "summary": {
     "byType": {
-      "gap": 164,
-      "inconclusive-claim": 0,
-      "not-implemented": 13,
+      "gap": 168,
+      "inconclusive-claim": 3,
+      "not-implemented": 11,
       "traceability": 0,
       "undeclared-realisation": 9,
-      "unevaluated-claim": 46,
-      "unknown": 87,
+      "unevaluated-claim": 43,
+      "unknown": 92,
       "validation": 0,
       "violated-claim": 1
     },
-    "total": 320
+    "total": 327
   },
   "tasks": [
     {
@@ -29,7 +29,7 @@
       "severity": "high",
       "source": {
         "column": 5,
-        "line": 3418
+        "line": 12374
       },
       "title": "Claim \"edits-only-via-transactions\" is violated",
       "type": "violated-claim"
@@ -43,7 +43,7 @@
       "severity": "high",
       "source": {
         "column": 5,
-        "line": 1052
+        "line": 1069
       },
       "title": "Component \"Simulation aspect registry\" is declared not-implemented",
       "type": "not-implemented"
@@ -57,7 +57,7 @@
       "severity": "high",
       "source": {
         "column": 5,
-        "line": 1070
+        "line": 1087
       },
       "title": "Component \"Refinement checker\" is declared not-implemented",
       "type": "not-implemented"
@@ -71,7 +71,7 @@
       "severity": "high",
       "source": {
         "column": 5,
-        "line": 1088
+        "line": 1105
       },
       "title": "Component \"Chaos aspect\" is declared not-implemented",
       "type": "not-implemented"
@@ -85,7 +85,7 @@
       "severity": "high",
       "source": {
         "column": 5,
-        "line": 1106
+        "line": 1123
       },
       "title": "Component \"Load aspect\" is declared not-implemented",
       "type": "not-implemented"
@@ -99,7 +99,7 @@
       "severity": "high",
       "source": {
         "column": 5,
-        "line": 1124
+        "line": 1141
       },
       "title": "Component \"Cost aspect\" is declared not-implemented",
       "type": "not-implemented"
@@ -113,7 +113,7 @@
       "severity": "high",
       "source": {
         "column": 5,
-        "line": 1141
+        "line": 1158
       },
       "title": "Component \"Simulation overlays\" is declared not-implemented",
       "type": "not-implemented"
@@ -127,7 +127,7 @@
       "severity": "high",
       "source": {
         "column": 5,
-        "line": 1269
+        "line": 1286
       },
       "title": "Component \"Deployment model\" is declared not-implemented",
       "type": "not-implemented"
@@ -141,7 +141,7 @@
       "severity": "high",
       "source": {
         "column": 5,
-        "line": 1289
+        "line": 1306
       },
       "title": "Component \"Infrastructure generator\" is declared not-implemented",
       "type": "not-implemented"
@@ -155,7 +155,7 @@
       "severity": "high",
       "source": {
         "column": 5,
-        "line": 1309
+        "line": 1326
       },
       "title": "Component \"Implementation refinement checker\" is declared not-implemented",
       "type": "not-implemented"
@@ -169,52 +169,81 @@
       "severity": "high",
       "source": {
         "column": 5,
-        "line": 1329
+        "line": 1346
       },
       "title": "Component \"Game days and runtime monitors\" is declared not-implemented",
       "type": "not-implemented"
     },
     {
-      "detail": "No modules are declared. Planned: WG-4715. Specified in docs/simulation.md, \"Planned: resources, workloads and performance\"; defined in formal/ first, then the Rust engine, then checked differentially. Its claims stay not evaluated until recorded evidence supports them.",
+      "detail": "No modules are declared.",
       "entities": [
-        "workload-model"
+        "traffic-recorder"
       ],
-      "id": "impl:workload-model:not-implemented",
+      "id": "impl:traffic-recorder:not-implemented",
       "severity": "high",
       "source": {
         "column": 5,
-        "line": 1494
+        "line": 1598
       },
-      "title": "Component \"Workload model\" is declared not-implemented",
+      "title": "Component \"Traffic recorder\" is declared not-implemented",
       "type": "not-implemented"
     },
     {
-      "detail": "No modules are declared. Planned: WG-4715. Specified in docs/simulation.md, \"Planned: resources, workloads and performance\"; defined in formal/ first, then the Rust engine, then checked differentially. Its claims stay not evaluated until recorded evidence supports them.",
+      "detail": "Only test evidence (\"ev-mm1-utilisation-fixture\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
       "entities": [
-        "performance-metrics"
+        "metrics-reproduce-mm1-utilisation",
+        "performance-metrics",
+        "workload-model",
+        "resource-model",
+        "metric-claims",
+        "ev-mm1-utilisation-fixture"
       ],
-      "id": "impl:performance-metrics:not-implemented",
-      "severity": "high",
+      "id": "claim:metrics-reproduce-mm1-utilisation:inconclusive",
+      "severity": "medium",
       "source": {
         "column": 5,
-        "line": 1521
+        "line": 13577
       },
-      "title": "Component \"Performance metrics\" is declared not-implemented",
-      "type": "not-implemented"
+      "title": "Claim \"metrics-reproduce-mm1-utilisation\" is inconclusive",
+      "type": "inconclusive-claim"
     },
     {
-      "detail": "No modules are declared. Planned: WG-4715. Specified in docs/simulation.md, \"Planned: resources, workloads and performance\"; defined in formal/ first, then the Rust engine, then checked differentially. Its claims stay not evaluated until recorded evidence supports them.",
+      "detail": "Only test evidence (\"ev-pool-flood-fixture\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
       "entities": [
-        "metric-claims"
+        "pool-classes-protect-move-db-leg-under-flood",
+        "metric-claims",
+        "resource-model",
+        "workload-model",
+        "performance-metrics",
+        "ev-pool-flood-fixture"
       ],
-      "id": "impl:metric-claims:not-implemented",
-      "severity": "high",
+      "id": "claim:pool-classes-protect-move-db-leg-under-flood:inconclusive",
+      "severity": "medium",
       "source": {
         "column": 5,
-        "line": 1547
+        "line": 13597
       },
-      "title": "Component \"Metric claims\" is declared not-implemented",
-      "type": "not-implemented"
+      "title": "Claim \"pool-classes-protect-move-db-leg-under-flood\" is inconclusive",
+      "type": "inconclusive-claim"
+    },
+    {
+      "detail": "Only test evidence (\"ev-mm1-mean-wait-fixture\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "entities": [
+        "metrics-reproduce-mm1-mean-wait",
+        "performance-metrics",
+        "workload-model",
+        "resource-model",
+        "metric-claims",
+        "ev-mm1-mean-wait-fixture"
+      ],
+      "id": "claim:metrics-reproduce-mm1-mean-wait:inconclusive",
+      "severity": "medium",
+      "source": {
+        "column": 5,
+        "line": 13652
+      },
+      "title": "Claim \"metrics-reproduce-mm1-mean-wait\" is inconclusive",
+      "type": "inconclusive-claim"
     },
     {
       "detail": "Claim \"benchmark-scene-interactive\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
@@ -229,7 +258,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3796
+        "line": 12752
       },
       "title": "Claim \"benchmark-scene-interactive\" is not evaluated",
       "type": "unevaluated-claim"
@@ -246,7 +275,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3854
+        "line": 12810
       },
       "title": "Claim \"simulation-seeded-runs-reproducible\" is not evaluated",
       "type": "unevaluated-claim"
@@ -262,7 +291,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3872
+        "line": 12828
       },
       "title": "Claim \"simulation-instances-are-independent\" is not evaluated",
       "type": "unevaluated-claim"
@@ -278,7 +307,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3889
+        "line": 12845
       },
       "title": "Claim \"specs-declare-aspects-as-data\" is not evaluated",
       "type": "unevaluated-claim"
@@ -294,7 +323,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3906
+        "line": 12862
       },
       "title": "Claim \"aspect-runs-reproducible\" is not evaluated",
       "type": "unevaluated-claim"
@@ -309,7 +338,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3923
+        "line": 12879
       },
       "title": "Claim \"refinement-agrees-at-boundary\" is not evaluated",
       "type": "unevaluated-claim"
@@ -326,7 +355,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3939
+        "line": 12895
       },
       "title": "Claim \"simulation-depth-follows-collapse\" is not evaluated",
       "type": "unevaluated-claim"
@@ -341,7 +370,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3957
+        "line": 12913
       },
       "title": "Claim \"chaos-campaigns-reproducible\" is not evaluated",
       "type": "unevaluated-claim"
@@ -356,7 +385,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3973
+        "line": 12929
       },
       "title": "Claim \"chaos-failures-only-as-declared\" is not evaluated",
       "type": "unevaluated-claim"
@@ -372,7 +401,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3989
+        "line": 12945
       },
       "title": "Claim \"load-matches-queueing-theory\" is not evaluated",
       "type": "unevaluated-claim"
@@ -388,7 +417,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4006
+        "line": 12962
       },
       "title": "Claim \"load-parameters-sourced\" is not evaluated",
       "type": "unevaluated-claim"
@@ -403,7 +432,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4023
+        "line": 12979
       },
       "title": "Claim \"cost-prices-sourced\" is not evaluated",
       "type": "unevaluated-claim"
@@ -419,7 +448,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4039
+        "line": 12995
       },
       "title": "Claim \"cost-follows-usage\" is not evaluated",
       "type": "unevaluated-claim"
@@ -435,7 +464,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4056
+        "line": 13012
       },
       "title": "Claim \"results-report-ranges\" is not evaluated",
       "type": "unevaluated-claim"
@@ -451,7 +480,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4073
+        "line": 13029
       },
       "title": "Claim \"statistical-claims-state-their-basis\" is not evaluated",
       "type": "unevaluated-claim"
@@ -467,7 +496,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4090
+        "line": 13046
       },
       "title": "Claim \"overlays-follow-trace\" is not evaluated",
       "type": "unevaluated-claim"
@@ -482,7 +511,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4251
+        "line": 13207
       },
       "title": "Claim \"deployment-cutover-safe\" is not evaluated",
       "type": "unevaluated-claim"
@@ -497,7 +526,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4267
+        "line": 13223
       },
       "title": "Claim \"deployment-rollback-durable\" is not evaluated",
       "type": "unevaluated-claim"
@@ -513,7 +542,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4283
+        "line": 13239
       },
       "title": "Claim \"generated-infrastructure-matches-model\" is not evaluated",
       "type": "unevaluated-claim"
@@ -528,7 +557,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4300
+        "line": 13256
       },
       "title": "Claim \"implementation-refines-model\" is not evaluated",
       "type": "unevaluated-claim"
@@ -543,7 +572,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4316
+        "line": 13272
       },
       "title": "Claim \"claims-monitored-in-production\" is not evaluated",
       "type": "unevaluated-claim"
@@ -559,7 +588,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4365
+        "line": 13321
       },
       "title": "Claim \"invariants-proved-unbounded\" is not evaluated",
       "type": "unevaluated-claim"
@@ -576,7 +605,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4530
+        "line": 13486
       },
       "title": "Claim \"resource-queues-respect-bounds\" is not evaluated",
       "type": "unevaluated-claim"
@@ -593,7 +622,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4548
+        "line": 13504
       },
       "title": "Claim \"resource-utilisation-at-most-one\" is not evaluated",
       "type": "unevaluated-claim"
@@ -610,7 +639,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4566
+        "line": 13522
       },
       "title": "Claim \"format-1-unchanged-under-format-2\" is not evaluated",
       "type": "unevaluated-claim"
@@ -627,7 +656,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4584
+        "line": 13540
       },
       "title": "Claim \"engine-matches-formal-semantics-v2\" is not evaluated",
       "type": "unevaluated-claim"
@@ -644,45 +673,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4602
+        "line": 13558
       },
       "title": "Claim \"metric-claims-report-basis\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Claim \"metrics-reproduce-mm1-utilisation\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
-      "entities": [
-        "metrics-reproduce-mm1-utilisation",
-        "performance-metrics",
-        "workload-model",
-        "resource-model",
-        "metric-claims"
-      ],
-      "id": "claim:metrics-reproduce-mm1-utilisation:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 4621
-      },
-      "title": "Claim \"metrics-reproduce-mm1-utilisation\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Claim \"pool-classes-protect-move-db-leg-under-flood\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
-      "entities": [
-        "pool-classes-protect-move-db-leg-under-flood",
-        "metric-claims",
-        "resource-model",
-        "workload-model",
-        "performance-metrics"
-      ],
-      "id": "claim:pool-classes-protect-move-db-leg-under-flood:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 4641
-      },
-      "title": "Claim \"pool-classes-protect-move-db-leg-under-flood\" is not evaluated",
       "type": "unevaluated-claim"
     },
     {
@@ -696,7 +689,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4661
+        "line": 13617
       },
       "title": "Claim \"response-time-counts-failures-as-unbounded\" is not evaluated",
       "type": "unevaluated-claim"
@@ -713,27 +706,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4678
+        "line": 13634
       },
       "title": "Claim \"sampled-explorations-never-verified\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Claim \"metrics-reproduce-mm1-mean-wait\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
-      "entities": [
-        "metrics-reproduce-mm1-mean-wait",
-        "performance-metrics",
-        "workload-model",
-        "resource-model",
-        "metric-claims"
-      ],
-      "id": "claim:metrics-reproduce-mm1-mean-wait:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 4696
-      },
-      "title": "Claim \"metrics-reproduce-mm1-mean-wait\" is not evaluated",
       "type": "unevaluated-claim"
     },
     {
@@ -748,7 +723,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4716
+        "line": 13672
       },
       "title": "Claim \"metrics-reproduce-mm2-erlang-c\" is not evaluated",
       "type": "unevaluated-claim"
@@ -765,7 +740,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4735
+        "line": 13691
       },
       "title": "Claim \"ladder-reacts-without-flapping\" is not evaluated",
       "type": "unevaluated-claim"
@@ -782,7 +757,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4754
+        "line": 13710
       },
       "title": "Claim \"retry-budget-bounds-amplification\" is not evaluated",
       "type": "unevaluated-claim"
@@ -799,7 +774,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4773
+        "line": 13729
       },
       "title": "Claim \"reconnect-stagger-bounds-handshake-wait\" is not evaluated",
       "type": "unevaluated-claim"
@@ -816,7 +791,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4792
+        "line": 13748
       },
       "title": "Claim \"address-limiter-acts\" is not evaluated",
       "type": "unevaluated-claim"
@@ -833,7 +808,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4811
+        "line": 13767
       },
       "title": "Claim \"address-limiter-false-positives-bounded\" is not evaluated",
       "type": "unevaluated-claim"
@@ -850,7 +825,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4830
+        "line": 13786
       },
       "title": "Claim \"bulkhead-keeps-static-served-under-db-slowdown\" is not evaluated",
       "type": "unevaluated-claim"
@@ -866,7 +841,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4849
+        "line": 13805
       },
       "title": "Claim \"metric-claims-calibrated-or-unvalidated\" is not evaluated",
       "type": "unevaluated-claim"
@@ -883,25 +858,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4866
+        "line": 13822
       },
       "title": "Claim \"crash-instance-loses-state\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Claim \"distribution-lowering-bit-exact\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
-      "entities": [
-        "distribution-lowering-bit-exact",
-        "workload-model",
-        "simulation-contract"
-      ],
-      "id": "claim:distribution-lowering-bit-exact:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 4884
-      },
-      "title": "Claim \"distribution-lowering-bit-exact\" is not evaluated",
       "type": "unevaluated-claim"
     },
     {
@@ -915,7 +874,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4901
+        "line": 13857
       },
       "title": "Claim \"poisson-arrivals-by-inversion\" is not evaluated",
       "type": "unevaluated-claim"
@@ -931,7 +890,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4918
+        "line": 13874
       },
       "title": "Claim \"overlapping-faults-follow-active-set\" is not evaluated",
       "type": "unevaluated-claim"
@@ -948,7 +907,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4935
+        "line": 13891
       },
       "title": "Claim \"broadcasts-evaluated-at-delivery\" is not evaluated",
       "type": "unevaluated-claim"
@@ -965,9 +924,26 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4953
+        "line": 13909
       },
       "title": "Claim \"request-lifecycle-defines-outcomes\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Claim \"real-runs-replay-through-self-model\" relies on external evidence, but no evidence entity refers to it. It is declared, not established.",
+      "entities": [
+        "real-runs-replay-through-self-model",
+        "traffic-recorder",
+        "contract-conformance",
+        "real-write-recorded"
+      ],
+      "id": "claim:real-runs-replay-through-self-model:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 14508
+      },
+      "title": "Claim \"real-runs-replay-through-self-model\" is not evaluated",
       "type": "unevaluated-claim"
     },
     {
@@ -979,7 +955,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 981
+        "line": 998
       },
       "title": "Component \"Three.js\" declares no realisation",
       "type": "undeclared-realisation"
@@ -993,7 +969,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 989
+        "line": 1006
       },
       "title": "Component \"Vite\" declares no realisation",
       "type": "undeclared-realisation"
@@ -1007,7 +983,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 997
+        "line": 1014
       },
       "title": "Component \"Web browser platform\" declares no realisation",
       "type": "undeclared-realisation"
@@ -1021,7 +997,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1005
+        "line": 1022
       },
       "title": "Component \"Browser web storage\" declares no realisation",
       "type": "undeclared-realisation"
@@ -1035,7 +1011,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1013
+        "line": 1030
       },
       "title": "Component \"File system\" declares no realisation",
       "type": "undeclared-realisation"
@@ -1049,7 +1025,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1021
+        "line": 1038
       },
       "title": "Component \"jsonc-parser\" declares no realisation",
       "type": "undeclared-realisation"
@@ -1063,7 +1039,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1029
+        "line": 1046
       },
       "title": "Component \"Playwright\" declares no realisation",
       "type": "undeclared-realisation"
@@ -1077,7 +1053,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1037
+        "line": 1054
       },
       "title": "Component \"AI coding agent\" declares no realisation",
       "type": "undeclared-realisation"
@@ -1091,7 +1067,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1044
+        "line": 1061
       },
       "title": "Component \"Markdown specification\" declares no realisation",
       "type": "undeclared-realisation"
@@ -1223,6 +1199,20 @@
       "type": "unknown"
     },
     {
+      "detail": "Known unknown of Claim evaluator.",
+      "entities": [
+        "claim-evaluator"
+      ],
+      "id": "unknown:claim-evaluator:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 287
+      },
+      "title": "Claim evaluation runs on the caller's thread. In the application session.evaluate runs it on the main thread inside every semantic commit, and trace and metric claims run engine scenarios there (src/core/claims.js), unlike the Simulation tab, which runs its scenario in the engine worker. The cost on large models is not measured (WG-4775, finding F06).",
+      "type": "unknown"
+    },
+    {
       "detail": "Known unknown of Simulation engine.",
       "entities": [
         "simulation-engine"
@@ -1231,9 +1221,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 310
+        "line": 313
       },
-      "title": "Time is logical ticks only, and there is no stochastic or timing-accurate execution. Integer time units, instances with routes and aggregates, resources, workloads, links, latency, timers, meters, timed faults, crash-instance and seeded randomness are specified as engine input and trace format 2 in docs/simulation.md and not built (planned: WG-4664, WG-4715).",
+      "title": "Format 2 (integer time units, instances, routes, resources and resource faults, workloads, links, timers, request classes and seeded randomness) runs in the Rust engine; crash-instance, meters and the cost metric do not yet (planned: WG-4741).",
       "type": "unknown"
     },
     {
@@ -1245,9 +1235,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 310
+        "line": 313
       },
-      "title": "One machine per behavior: no instances, routes, resources or seeded randomness yet (planned: WG-4664; specified in docs/simulation.md).",
+      "title": "One configuration copy per step dominates the cost of large format-2 runs (about 10 to 40 us per step); the queueing fixtures (about 7 and 15 minutes) are gated by EXEGRA_FIXTURES=1 (planned: WG-4741).",
       "type": "unknown"
     },
     {
@@ -1259,7 +1249,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 310
+        "line": 313
       },
       "title": "Behaviors are flat: a component cannot yet be simulated at a chosen depth, as its abstract behavior or as its children (planned: WG-4666).",
       "type": "unknown"
@@ -1273,7 +1263,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 353
+        "line": 356
       },
       "title": "The cost of projection on large models has no recorded measurement; the benchmark specification exists for that purpose but no result is recorded.",
       "type": "unknown"
@@ -1287,7 +1277,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 353
+        "line": 356
       },
       "title": "The references projection draws nothing but a note until an entity is selected, unless the view filters to entity kinds.",
       "type": "unknown"
@@ -1301,7 +1291,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 378
+        "line": 381
       },
       "title": "Pins are absolute positions; nothing re-anchors them when the model changes.",
       "type": "unknown"
@@ -1315,7 +1305,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 378
+        "line": 381
       },
       "title": "The score weights are fixed constants chosen by hand; no recorded measurement shows that the lowest score is the most readable layout. Crossings are counted on at most 400 sampled edges.",
       "type": "unknown"
@@ -1329,7 +1319,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 378
+        "line": 381
       },
       "title": "Automatic layout computes all four methods on every recompute; its cost on large scenes has no recorded measurement.",
       "type": "unknown"
@@ -1343,7 +1333,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 399
+        "line": 402
       },
       "title": "No frame-rate or load-time measurement is recorded for the 396-component benchmark specification.",
       "type": "unknown"
@@ -1357,7 +1347,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 399
+        "line": 402
       },
       "title": "Pointer, drag and connect handling live inside src/render/scene-view.js, which this file assigns to the renderer; the split between rendering and interaction is not a module boundary (see visual-interaction).",
       "type": "unknown"
@@ -1371,7 +1361,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 419
+        "line": 422
       },
       "title": "This component holds the camera rig and the application entry (src/app/main.js) because traceability assigns each file to one component; the picking, drag and connect handling it relies on is in src/render/scene-view.js, claimed by scene-renderer.",
       "type": "unknown"
@@ -1385,7 +1375,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 419
+        "line": 422
       },
       "title": "main.js is also the composition root: it mounts the panels, so this component has dependencies on them that have nothing to do with 3D interaction.",
       "type": "unknown"
@@ -1399,7 +1389,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 440
+        "line": 443
       },
       "title": "A failed save leaves the pending flag set and stops writing until the next commit; there is no automatic retry.",
       "type": "unknown"
@@ -1413,7 +1403,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 440
+        "line": 443
       },
       "title": "The layout method chosen for a view is stored only in the browser's localStorage under the project and view: it is not in the specification or the layout file, is not shared and is lost when storage is cleared.",
       "type": "unknown"
@@ -1427,7 +1417,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 440
+        "line": 443
       },
       "title": "The session writes the current text, not one write per revision; the edit-flow machines in this file abstract that.",
       "type": "unknown"
@@ -1441,7 +1431,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 440
+        "line": 443
       },
       "title": "Claim re-evaluation and re-projection run synchronously inside every commit with no measurement of their cost on large models.",
       "type": "unknown"
@@ -1455,7 +1445,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 488
+        "line": 491
       },
       "title": "Import writes the project's files through the persistence service without passing the transaction system, a validation gate or a base-hash check (analyzeSpec is run on the bundle first, but only syntax errors stop it); the session then opens whatever was written, with its validation errors.",
       "type": "unknown"
@@ -1469,7 +1459,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 507
+        "line": 510
       },
       "title": "Rows beyond the 200-row window of a list can only be reached by narrowing the filter; there is no paging.",
       "type": "unknown"
@@ -1483,7 +1473,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 560
+        "line": 563
       },
       "title": "src/ui/property-controls.js and src/ui/dialogs.js import each other.",
       "type": "unknown"
@@ -1497,7 +1487,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 575
+        "line": 578
       },
       "title": "src/ui/dialogs.js and src/ui/property-controls.js import each other.",
       "type": "unknown"
@@ -1511,7 +1501,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 590
+        "line": 593
       },
       "title": "It is a plain textarea: no syntax highlighting, completion or incremental analysis; the whole draft is analyzed on every pause.",
       "type": "unknown"
@@ -1525,7 +1515,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 623
+        "line": 626
       },
       "title": "It shows recorded results loaded with the project and cannot execute tests; execution happens only through `exegra verify`.",
       "type": "unknown"
@@ -1539,7 +1529,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 623
+        "line": 626
       },
       "title": "Rows beyond the 200-row window can only be reached by filtering; there is no paging.",
       "type": "unknown"
@@ -1553,7 +1543,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 640
+        "line": 643
       },
       "title": "It cannot run the traceability check; without a recorded result it says the check has not been run.",
       "type": "unknown"
@@ -1567,7 +1557,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 699
+        "line": 702
       },
       "title": "No retry, queue or offline buffer: a failed request is reported once to the caller.",
       "type": "unknown"
@@ -1581,7 +1571,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 717
+        "line": 720
       },
       "title": "Protection rests on loopback host, loopback origin and a custom header only; any local process can read and write projects while the development server runs.",
       "type": "unknown"
@@ -1595,7 +1585,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 736
+        "line": 739
       },
       "title": "On Windows the atomic rename is retried and then replaced by an in-place write, which is not atomic.",
       "type": "unknown"
@@ -1609,7 +1599,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 736
+        "line": 739
       },
       "title": "Import and recording of results write without a base-hash check, and import writes its files one after another, not as one atomic unit.",
       "type": "unknown"
@@ -1623,7 +1613,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 736
+        "line": 739
       },
       "title": "The journal is read in full on every write to number its next line and is never truncated.",
       "type": "unknown"
@@ -1637,9 +1627,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 760
+        "line": 763
       },
-      "title": "Besides the workspace service, tools/make-benchmark.js writes specs/benchmark/spec.jsonc and tools/import-markdown.js writes the specification of a linked project directly with node:fs.",
+      "title": "Four paths change project files without a transaction or a journal line (WG-4775, finding F05): the bundle import (tools/workspace.js importProject, scenario import-bundle), tools/import-markdown.js (scenario markdown-import), tools/make-benchmark.js (specs/benchmark/spec.jsonc), and exegra apply when its layout write conflicts after the specification was written (scenario cli-apply-partial-write: the spec write has its journal line, but the transaction's two files are no longer written together). The first three write directly with node:fs or atomicWrite.",
       "type": "unknown"
     },
     {
@@ -1651,9 +1641,37 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 779
+        "line": 784
       },
       "title": "Results are not tied to the model hash or the code revision they were recorded for.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Recorded results file.",
+      "entities": [
+        "recorded-results-file"
+      ],
+      "id": "unknown:recorded-results-file:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 784
+      },
+      "title": "The claims key (record external-claim-outcomes) is read by claim evaluation and kept by exegra verify, but nothing in this repository writes it; only an external tool could (WG-4775, finding F03).",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Recorded results file.",
+      "entities": [
+        "recorded-results-file"
+      ],
+      "id": "unknown:recorded-results-file:2",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 784
+      },
+      "title": "A skipped run keeps the outcome recorded before, which may predate the current code; its ranAt shows when it was recorded.",
       "type": "unknown"
     },
     {
@@ -1665,7 +1683,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 800
+        "line": 813
       },
       "title": "Each invocation builds a fresh Project from disk: there is no undo history across invocations and no long-running session.",
       "type": "unknown"
@@ -1679,7 +1697,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 800
+        "line": 813
       },
       "title": "Writing the spec file and the layout file are two separate writes; if the second conflicts, the first has already been written.",
       "type": "unknown"
@@ -1693,7 +1711,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 800
+        "line": 813
       },
       "title": "No MCP server or other protocol wrapper exists; the command line is the only agent-facing interface.",
       "type": "unknown"
@@ -1707,9 +1725,23 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 848
+        "line": 861
       },
       "title": "The production build contains no persistence service: it bundles the shipped specs and is read-only.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Build and development system.",
+      "entities": [
+        "build-system"
+      ],
+      "id": "unknown:build-system:1",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 861
+      },
+      "title": "dist/ embeds as text the specification, layout and recorded results of every shipped project and the specification of every linked project whose specification lives outside specs/ (copy shipped-specifications); a linked project's specification, which is not in this repository, therefore ends up in the build output (WG-4775, finding F11).",
       "type": "unknown"
     },
     {
@@ -1721,7 +1753,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 858
+        "line": 874
       },
       "title": "No generator emits code or any part of Exegra's own runtime; Exegra generates reports about the model, not the software it describes.",
       "type": "unknown"
@@ -1735,7 +1767,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 873
+        "line": 889
       },
       "title": "Only evidence of kind test is executed; measurement, document and review evidence stay author-entered.",
       "type": "unknown"
@@ -1749,7 +1781,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 873
+        "line": 889
       },
       "title": "The traceability check compares paths only: it does not check that a module implements what its component claims, nor that relationships match imports.",
       "type": "unknown"
@@ -1763,7 +1795,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 873
+        "line": 889
       },
       "title": "Browser tests need Chrome and the Vite development server; `verify --skip-browser` skips them and leaves their evidence without a recorded result.",
       "type": "unknown"
@@ -1777,7 +1809,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 901
+        "line": 917
       },
       "title": "It writes the benchmark specification directly with node:fs, not through the workspace service or the transaction system.",
       "type": "unknown"
@@ -1791,7 +1823,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 911
+        "line": 927
       },
       "title": "It does not analyze, validate or evaluate what it writes (it imports only the jsonc-parser library); that the output analyzes without errors is checked by the tests, not by the tool.",
       "type": "unknown"
@@ -1805,7 +1837,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 911
+        "line": 927
       },
       "title": "It writes the project's specification file directly with node:fs, not through the workspace service or the transaction system, and an edit made to that file through Exegra is overwritten by the next import.",
       "type": "unknown"
@@ -1819,7 +1851,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 911
+        "line": 927
       },
       "title": "It reads no default source: the source directory is given with --source or as \"source\" in the import map, and the project with --project or with --map and --out.",
       "type": "unknown"
@@ -1833,7 +1865,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 940
+        "line": 956
       },
       "title": "Tests are evidence only through `exegra verify`; recorded results are not tied to the code revision.",
       "type": "unknown"
@@ -1847,7 +1879,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 940
+        "line": 956
       },
       "title": "No test measures performance, so no claim about frame rate or load time has evidence.",
       "type": "unknown"
@@ -1861,9 +1893,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1158
+        "line": 1175
       },
-      "title": "Engine input and trace format 2 (contracts engine-input-v2 and trace-v2) are specified but not derived, recorded as goldens or generated for differential checks yet (planned: WG-4664, WG-4715). simulationInput keeps deriving version 1 for every specification that uses none of its constructs.",
+      "title": "Engine input and trace format 2 (contracts engine-input-v2 and trace-v2) are derived by simulationInput whenever a specification uses a format-2 construct (needsFormat2, simulationInputV2 in src/core/sim-input.js) and run by the engine's version-2 semantics (engine/exegra-engine/src/lib.rs dispatches on the version). Not yet: format-2 goldens (tests/conformance/goldens holds version 1 only), and the WG-4741 items: crash-instance, meters and the cost metric in the engine, and calibration, sensitivity, the operating envelope and revision binding of metric claims. A specification that uses no format-2 construct still derives version 1, unchanged.",
       "type": "unknown"
     },
     {
@@ -1875,7 +1907,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1234
+        "line": 1251
       },
       "title": "The engine input (format version 1) carries no bound of a scenario's fault model, so every subset of the scenario's faults is explored; the concurrency bounds of fault models are not applied yet.",
       "type": "unknown"
@@ -1889,7 +1921,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1234
+        "line": 1251
       },
       "title": "A fault acts for the whole run or not at all: a fault without an occurrence cannot act on some deliveries of its event and not on others.",
       "type": "unknown"
@@ -1903,7 +1935,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1234
+        "line": 1251
       },
       "title": "Breadth-first order makes a counterexample one of the fewest steps, but that is not proved.",
       "type": "unknown"
@@ -1917,7 +1949,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1234
+        "line": 1251
       },
       "title": "The Rust explorer for large state spaces is not built yet (planned: WG-4650); it will be checked differentially against this one.",
       "type": "unknown"
@@ -1931,7 +1963,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1234
+        "line": 1251
       },
       "title": "Evaluation errors and failed steps end a path without being reported as such: a configuration whose invariant cannot be evaluated counts as a violation, and a failed step has no successor.",
       "type": "unknown"
@@ -1945,7 +1977,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1234
+        "line": 1251
       },
       "title": "Format 2 inputs are not explored yet (planned: WG-4664, WG-4715). The specified relation adds internal entries to the simultaneous-order choice, the new fault kinds to the mask, and one successor per choice value and per instance of an any route; sampled draws are fixed by a seed named first in the result, and a result is shown as verified only when the scenario has no sampled site. Scenarios with workloads need a short horizon and maxArrivals, and keyed populations of thousands of clients are beyond reach. When a timed fault acts is not explored (WG-4704).",
       "type": "unknown"
@@ -1959,7 +1991,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1234
+        "line": 1251
       },
       "title": "Temporal claims are checked without the claim's negatives and without the trace check's vacuity rules (a never whose matcher cannot occur in the scenario holds here without a note).",
       "type": "unknown"
@@ -1973,7 +2005,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1234
+        "line": 1251
       },
       "title": "A violating prefix of a never or precedes claim is reported as the counterexample, not extended to a complete run; any extension violates it too, but that is not a theorem.",
       "type": "unknown"
@@ -1987,7 +2019,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1269
+        "line": 1286
       },
       "title": "Not built yet (planned: WG-4677).",
       "type": "unknown"
@@ -2001,7 +2033,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1289
+        "line": 1306
       },
       "title": "Not built yet (planned: WG-4678).",
       "type": "unknown"
@@ -2015,7 +2047,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1309
+        "line": 1326
       },
       "title": "Not built yet (planned: WG-4679).",
       "type": "unknown"
@@ -2029,7 +2061,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1329
+        "line": 1346
       },
       "title": "Not built yet (planned: WG-4680).",
       "type": "unknown"
@@ -2043,9 +2075,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1350
+        "line": 1367
       },
-      "title": "Format 2 is defined for the WG-4664 constructs only (formal/Exegra/Format2.lean: integer time units, counted and keyed instances, routes, aggregates, resources with use, acquire and release, SplitMix64 streams and integer distributions; formal/Exegra/Resource.lean proves the held-units and queue-bound invariants of a settled resource). Not defined yet: resource faults, windowed faults and crash-instance with incarnations (planned: WG-4664); timers, links, workloads, meters and metrics (planned: WG-4715).",
+      "title": "Format 2 is defined in formal/Exegra/Format2.lean for the constructs built so far (instances, routes, resources and resource faults, windows, workloads, links, timers, request lifecycle and measured outputs); formal/Exegra/Resource.lean proves the held-units and queue-bound invariants of a settled resource, the strict FIFO queue of a collapse included. Not defined yet: crash-instance with incarnations, meters and cost (planned: WG-4741).",
       "type": "unknown"
     },
     {
@@ -2057,7 +2089,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1350
+        "line": 1367
       },
       "title": "lift_agrees is stated in formal/Exegra/Lift.lean with its proof left as sorry (pinned on sorryAx); it is checked differentially by tools/differential.js --lift on every liftable golden and generated input (planned: WG-4664).",
       "type": "unknown"
@@ -2071,9 +2103,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1350
+        "line": 1367
       },
-      "title": "The determinism property over seeds is not stated as a theorem for format 2 yet (planned: WG-4664).",
+      "title": "The determinism property over seeds is not stated as a theorem for format 2 yet (planned: WG-4741).",
       "type": "unknown"
     },
     {
@@ -2085,7 +2117,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1377
+        "line": 1394
       },
       "title": "Results are established by native_decide, so each theorem depends on an auxiliary axiom that trusts the Lean compiler and runtime. Kernel reduction (decide) is not feasible: the expression language's number literals go through Float.scaleB and the visited set hashes strings with String.hash, both opaque to the kernel.",
       "type": "unknown"
@@ -2099,7 +2131,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1377
+        "line": 1394
       },
       "title": "The unbounded proof of an invariant (by induction over the step relation, with the explorer supplying counterexamples to induction) is not built yet (planned: WG-4686).",
       "type": "unknown"
@@ -2113,7 +2145,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1377
+        "line": 1394
       },
       "title": "Claim results are reported by exegra prove only; evaluate and verify do not show them yet.",
       "type": "unknown"
@@ -2127,7 +2159,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1377
+        "line": 1394
       },
       "title": "Negatives of a claim are not explored in Lean: prove checks that a claim holds on every configuration of its scenarios, not that its negatives violate it (WG-4711).",
       "type": "unknown"
@@ -2141,7 +2173,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1407
+        "line": 1424
       },
       "title": "Object and generic types (for example {text, hash} or Operation[]) are opaque to the type check: their values are accepted unchecked.",
       "type": "unknown"
@@ -2155,7 +2187,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1407
+        "line": 1424
       },
       "title": "A response is paired with its request by one correlation field or by count; there is no timeout or ordering rule for unanswered requests at the end of a run.",
       "type": "unknown"
@@ -2169,7 +2201,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1433
+        "line": 1450
       },
       "title": "A field counts as a name when its type text contains the word name or handle; there is no type system for field types, so a party field typed as an opaque string passes rule party-by-id (WG-4697).",
       "type": "unknown"
@@ -2183,7 +2215,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1433
+        "line": 1450
       },
       "title": "Retention is free text: nothing checks that a record's retention and its copies' erasure points agree, and a copy of a copy cannot be declared, since of names records only (WG-4697).",
       "type": "unknown"
@@ -2197,9 +2229,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1459
+        "line": 1476
       },
-      "title": "Built for WG-4664 in the Lean semantics and the Rust engine (capacity, classes, reservations, limits, queue bounds, maxWait, overflow, demand factors, use, acquire, release, then and refused answers); not derived by simulationInput from a specification yet, and the resource faults (scale-demand, set-capacity, set-class-limit, collapse-classes, replace-demand), windows and crash-instance are refused by both engines (planned: WG-4664; timed resource faults WG-4715).",
+      "title": "Built (WG-4664, WG-4729) in the Lean semantics and the Rust engine, resource faults included (set-capacity, set-class-limit, collapse-classes, scale-demand, replace-demand; untimed, or windowed through fault-edge steps), and derived from a specification's resources by simulationInput. crash-instance with incarnations is refused by both engines, and the grantable-units check is not repeated after the untimed fault mask (planned: WG-4741).",
       "type": "unknown"
     },
     {
@@ -2211,7 +2243,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1459
+        "line": 1476
       },
       "title": "Processor sharing is not part of format 2; CPU is a FCFS multi-server station (planned: WG-4719).",
       "type": "unknown"
@@ -2225,7 +2257,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1459
+        "line": 1476
       },
       "title": "Credit-based backpressure between components is not represented (planned: WG-4722); autoscaling and cold start are not represented (planned: WG-4720).",
       "type": "unknown"
@@ -2239,9 +2271,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1494
+        "line": 1511
       },
-      "title": "Not built: specified as engine input and trace format 2 (planned: WG-4715; time units and seeded randomness from WG-4664).",
+      "title": "Built (WG-4715, WG-4729): open, closed and population workloads, address groups, links (bandwidth, ordering, queue bounds, fan-out, latency) and timers in both engines, derived from a specification's workloads and links by simulationInput (src/core/sim-input.js).",
       "type": "unknown"
     },
     {
@@ -2253,7 +2285,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1494
+        "line": 1511
       },
       "title": "Packet-level networking and packet-rate floods are not represented: a link is a FIFO byte pipe with a latency distribution, one step per message (aggregated mode planned: WG-4718).",
       "type": "unknown"
@@ -2267,7 +2299,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1494
+        "line": 1511
       },
       "title": "Matchmaking gather is writable only as a hand-written behavior (primitive planned: WG-4721).",
       "type": "unknown"
@@ -2281,9 +2313,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1521
+        "line": 1542
       },
-      "title": "Not built (planned: WG-4715). Warm-up is declared, not detected.",
+      "title": "Built (WG-4715, WG-4729): resource metrics; request classes with the request lifecycle, response time, outcomes, throughput, legitimate refusals (false positives) and transition firings, over the window and per series bucket, in both engines. Not built: link and cost metrics, waiting time per class, resource signals per bucket, time-to-first and time-to-recover, meters, and truncation by an open measured request (planned: WG-4741). Warm-up is declared, not detected.",
       "type": "unknown"
     },
     {
@@ -2295,9 +2327,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1547
+        "line": 1568
       },
-      "title": "Not built (planned: WG-4715; the general statistical claims and result ranges of WG-4670 build on it).",
+      "title": "Built (WG-4715, WG-4729): the metric-bound method is registered and evaluated on format-2 scenarios derived from a specification, reporting model-holds, violated or inconclusive with N, the passes, the fraction and the confidence, with negatives and control negatives. Not built: calibration, sensitivity, the operating envelope and revision binding (asOf is only recorded) (planned: WG-4741).",
       "type": "unknown"
     },
     {
@@ -2309,9 +2341,23 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1547
+        "line": 1568
       },
-      "title": "The status model-holds is proposed; its final name and display follow WG-4703.",
+      "title": "The status model-holds is implemented: it is a ClaimResult status of src/core/claims.js and the verdict of src/core/metric-stats.js, and metric-bound claims report it. Its final name and display follow WG-4703.",
+      "type": "unknown"
+    },
+    {
+      "detail": "Known unknown of Traffic recorder.",
+      "entities": [
+        "traffic-recorder"
+      ],
+      "id": "unknown:traffic-recorder:0",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1598
+      },
+      "title": "Not implemented (WG-4775, layer 2): no code records real traffic today. The client keeps no log (src/persist/client.js request()), the endpoint logs only an internal error to the Vite logger, and the contract events of this specification occur only in simulated traces.",
       "type": "unknown"
     },
     {
@@ -2395,7 +2441,7 @@
         "column": 5,
         "line": 287
       },
-      "title": "Component \"claim-evaluator\" records 1 open unknown(s).",
+      "title": "Component \"claim-evaluator\" records 2 open unknown(s).",
       "type": "gap"
     },
     {
@@ -2407,7 +2453,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 310
+        "line": 313
       },
       "title": "Component \"simulation-engine\" records 3 open unknown(s).",
       "type": "gap"
@@ -2421,7 +2467,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 353
+        "line": 356
       },
       "title": "Component \"projection-system\" records 2 open unknown(s).",
       "type": "gap"
@@ -2435,7 +2481,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 378
+        "line": 381
       },
       "title": "Component \"layout-engine\" records 3 open unknown(s).",
       "type": "gap"
@@ -2449,7 +2495,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 399
+        "line": 402
       },
       "title": "Component \"scene-renderer\" records 2 open unknown(s).",
       "type": "gap"
@@ -2463,7 +2509,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 419
+        "line": 422
       },
       "title": "Component \"visual-interaction\" records 2 open unknown(s).",
       "type": "gap"
@@ -2477,7 +2523,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 440
+        "line": 443
       },
       "title": "Component \"session\" records 4 open unknown(s).",
       "type": "gap"
@@ -2491,7 +2537,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 488
+        "line": 491
       },
       "title": "Component \"toolbar\" records 1 open unknown(s).",
       "type": "gap"
@@ -2505,7 +2551,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 507
+        "line": 510
       },
       "title": "Component \"explorer\" records 1 open unknown(s).",
       "type": "gap"
@@ -2519,7 +2565,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 560
+        "line": 563
       },
       "title": "Component \"property-controls\" records 1 open unknown(s).",
       "type": "gap"
@@ -2533,7 +2579,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 575
+        "line": 578
       },
       "title": "Component \"dialogs\" records 1 open unknown(s).",
       "type": "gap"
@@ -2547,7 +2593,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 590
+        "line": 593
       },
       "title": "Component \"source-editor\" records 1 open unknown(s).",
       "type": "gap"
@@ -2561,7 +2607,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 623
+        "line": 626
       },
       "title": "Component \"verification-panel\" records 2 open unknown(s).",
       "type": "gap"
@@ -2575,7 +2621,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 640
+        "line": 643
       },
       "title": "Component \"realisation-panel\" records 1 open unknown(s).",
       "type": "gap"
@@ -2589,7 +2635,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 699
+        "line": 702
       },
       "title": "Component \"persistence-client\" records 1 open unknown(s).",
       "type": "gap"
@@ -2603,7 +2649,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 717
+        "line": 720
       },
       "title": "Component \"dev-server-plugin\" records 1 open unknown(s).",
       "type": "gap"
@@ -2617,7 +2663,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 736
+        "line": 739
       },
       "title": "Component \"workspace-service\" records 3 open unknown(s).",
       "type": "gap"
@@ -2631,7 +2677,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 760
+        "line": 763
       },
       "title": "Component \"specification-file\" records 1 open unknown(s).",
       "type": "gap"
@@ -2645,9 +2691,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 779
+        "line": 784
       },
-      "title": "Component \"recorded-results-file\" records 1 open unknown(s).",
+      "title": "Component \"recorded-results-file\" records 3 open unknown(s).",
       "type": "gap"
     },
     {
@@ -2659,7 +2705,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 800
+        "line": 813
       },
       "title": "Component \"agent-cli\" records 3 open unknown(s).",
       "type": "gap"
@@ -2673,9 +2719,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 848
+        "line": 861
       },
-      "title": "Component \"build-system\" records 1 open unknown(s).",
+      "title": "Component \"build-system\" records 2 open unknown(s).",
       "type": "gap"
     },
     {
@@ -2687,7 +2733,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 858
+        "line": 874
       },
       "title": "Component \"generators\" records 1 open unknown(s).",
       "type": "gap"
@@ -2701,7 +2747,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 873
+        "line": 889
       },
       "title": "Component \"verification-pipeline\" records 3 open unknown(s).",
       "type": "gap"
@@ -2715,7 +2761,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 901
+        "line": 917
       },
       "title": "Component \"benchmark-generator\" records 1 open unknown(s).",
       "type": "gap"
@@ -2729,7 +2775,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 911
+        "line": 927
       },
       "title": "Component \"markdown-importer\" records 3 open unknown(s).",
       "type": "gap"
@@ -2743,7 +2789,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 940
+        "line": 956
       },
       "title": "Component \"test-suites\" records 2 open unknown(s).",
       "type": "gap"
@@ -2757,7 +2803,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1158
+        "line": 1175
       },
       "title": "Component \"simulation-contract\" records 1 open unknown(s).",
       "type": "gap"
@@ -2771,7 +2817,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1234
+        "line": 1251
       },
       "title": "Component \"exhaustive-explorer\" records 8 open unknown(s).",
       "type": "gap"
@@ -2785,7 +2831,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1269
+        "line": 1286
       },
       "title": "Component \"deployment-model\" records 1 open unknown(s).",
       "type": "gap"
@@ -2799,7 +2845,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1289
+        "line": 1306
       },
       "title": "Component \"infrastructure-generator\" records 1 open unknown(s).",
       "type": "gap"
@@ -2813,7 +2859,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1309
+        "line": 1326
       },
       "title": "Component \"implementation-refinement\" records 1 open unknown(s).",
       "type": "gap"
@@ -2827,7 +2873,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1329
+        "line": 1346
       },
       "title": "Component \"reality-loop\" records 1 open unknown(s).",
       "type": "gap"
@@ -2841,7 +2887,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1350
+        "line": 1367
       },
       "title": "Component \"formal-semantics\" records 3 open unknown(s).",
       "type": "gap"
@@ -2855,7 +2901,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1377
+        "line": 1394
       },
       "title": "Component \"proof-export\" records 4 open unknown(s).",
       "type": "gap"
@@ -2869,7 +2915,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1407
+        "line": 1424
       },
       "title": "Component \"contract-conformance\" records 2 open unknown(s).",
       "type": "gap"
@@ -2883,7 +2929,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1433
+        "line": 1450
       },
       "title": "Component \"data-model\" records 2 open unknown(s).",
       "type": "gap"
@@ -2897,7 +2943,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1459
+        "line": 1476
       },
       "title": "Component \"resource-model\" records 3 open unknown(s).",
       "type": "gap"
@@ -2911,7 +2957,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1494
+        "line": 1511
       },
       "title": "Component \"workload-model\" records 3 open unknown(s).",
       "type": "gap"
@@ -2925,7 +2971,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1521
+        "line": 1542
       },
       "title": "Component \"performance-metrics\" records 1 open unknown(s).",
       "type": "gap"
@@ -2939,9 +2985,23 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 1547
+        "line": 1568
       },
       "title": "Component \"metric-claims\" records 2 open unknown(s).",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.unknowns.",
+      "entities": [
+        "traffic-recorder"
+      ],
+      "id": "diag:gap.unknowns:traffic-recorder",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 1598
+      },
+      "title": "Component \"traffic-recorder\" records 1 open unknown(s).",
       "type": "gap"
     },
     {
@@ -2953,7 +3013,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3746
+        "line": 12702
       },
       "title": "Claim \"layout-moves-are-not-semantic\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -2967,7 +3027,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3754
+        "line": 12710
       },
       "title": "Claim \"simulation-deterministic\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -2981,7 +3041,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3762
+        "line": 12718
       },
       "title": "Claim \"generation-deterministic\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -2995,7 +3055,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3770
+        "line": 12726
       },
       "title": "Claim \"persistence-confined-to-workspace\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3009,7 +3069,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3778
+        "line": 12734
       },
       "title": "Claim \"invalid-source-keeps-last-valid-model\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3023,7 +3083,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3786
+        "line": 12742
       },
       "title": "Claim \"unsupported-constructs-are-diagnosed\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3037,7 +3097,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3796
+        "line": 12752
       },
       "title": "Claim \"benchmark-scene-interactive\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3051,7 +3111,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3796
+        "line": 12752
       },
       "title": "Claim \"benchmark-scene-interactive\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3065,7 +3125,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3804
+        "line": 12760
       },
       "title": "Claim \"sim-flow-matches-trace\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3079,7 +3139,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3820
+        "line": 12776
       },
       "title": "Claim \"sim-flow-never-borrows-edges\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3093,7 +3153,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3836
+        "line": 12792
       },
       "title": "Claim \"sim-step-shows-message-moving\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3107,7 +3167,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3854
+        "line": 12810
       },
       "title": "Claim \"simulation-seeded-runs-reproducible\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3121,7 +3181,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3854
+        "line": 12810
       },
       "title": "Claim \"simulation-seeded-runs-reproducible\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3135,7 +3195,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3872
+        "line": 12828
       },
       "title": "Claim \"simulation-instances-are-independent\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3149,7 +3209,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3872
+        "line": 12828
       },
       "title": "Claim \"simulation-instances-are-independent\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3163,7 +3223,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3889
+        "line": 12845
       },
       "title": "Claim \"specs-declare-aspects-as-data\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3177,7 +3237,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3889
+        "line": 12845
       },
       "title": "Claim \"specs-declare-aspects-as-data\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3191,7 +3251,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3906
+        "line": 12862
       },
       "title": "Claim \"aspect-runs-reproducible\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3205,7 +3265,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3906
+        "line": 12862
       },
       "title": "Claim \"aspect-runs-reproducible\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3219,7 +3279,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3923
+        "line": 12879
       },
       "title": "Claim \"refinement-agrees-at-boundary\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3233,7 +3293,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3923
+        "line": 12879
       },
       "title": "Claim \"refinement-agrees-at-boundary\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3247,7 +3307,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3939
+        "line": 12895
       },
       "title": "Claim \"simulation-depth-follows-collapse\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3261,7 +3321,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3939
+        "line": 12895
       },
       "title": "Claim \"simulation-depth-follows-collapse\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3275,7 +3335,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3957
+        "line": 12913
       },
       "title": "Claim \"chaos-campaigns-reproducible\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3289,7 +3349,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3957
+        "line": 12913
       },
       "title": "Claim \"chaos-campaigns-reproducible\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3303,7 +3363,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3973
+        "line": 12929
       },
       "title": "Claim \"chaos-failures-only-as-declared\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3317,7 +3377,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3973
+        "line": 12929
       },
       "title": "Claim \"chaos-failures-only-as-declared\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3331,7 +3391,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3989
+        "line": 12945
       },
       "title": "Claim \"load-matches-queueing-theory\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3345,7 +3405,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 3989
+        "line": 12945
       },
       "title": "Claim \"load-matches-queueing-theory\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3359,7 +3419,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4006
+        "line": 12962
       },
       "title": "Claim \"load-parameters-sourced\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3373,7 +3433,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4006
+        "line": 12962
       },
       "title": "Claim \"load-parameters-sourced\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3387,7 +3447,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4023
+        "line": 12979
       },
       "title": "Claim \"cost-prices-sourced\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3401,7 +3461,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4023
+        "line": 12979
       },
       "title": "Claim \"cost-prices-sourced\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3415,7 +3475,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4039
+        "line": 12995
       },
       "title": "Claim \"cost-follows-usage\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3429,7 +3489,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4039
+        "line": 12995
       },
       "title": "Claim \"cost-follows-usage\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3443,7 +3503,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4056
+        "line": 13012
       },
       "title": "Claim \"results-report-ranges\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3457,7 +3517,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4056
+        "line": 13012
       },
       "title": "Claim \"results-report-ranges\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3471,7 +3531,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4073
+        "line": 13029
       },
       "title": "Claim \"statistical-claims-state-their-basis\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3485,7 +3545,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4073
+        "line": 13029
       },
       "title": "Claim \"statistical-claims-state-their-basis\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3499,7 +3559,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4090
+        "line": 13046
       },
       "title": "Claim \"overlays-follow-trace\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3513,7 +3573,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4090
+        "line": 13046
       },
       "title": "Claim \"overlays-follow-trace\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3527,7 +3587,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4107
+        "line": 13063
       },
       "title": "Claim \"engines-agree-on-traces\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3541,7 +3601,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4124
+        "line": 13080
       },
       "title": "Claim \"simulation-contract-pinned\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3555,7 +3615,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4141
+        "line": 13097
       },
       "title": "Claim \"simulation-runs-off-main-thread\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3569,7 +3629,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4158
+        "line": 13114
       },
       "title": "Claim \"ui-touch-usable-on-phone\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3583,7 +3643,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4177
+        "line": 13133
       },
       "title": "Claim \"ui-every-function-at-every-size\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3597,7 +3657,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4200
+        "line": 13156
       },
       "title": "Claim \"ui-expands-to-desktop\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3611,7 +3671,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4217
+        "line": 13173
       },
       "title": "Claim \"fault-model-scoped-claims\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3625,7 +3685,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4234
+        "line": 13190
       },
       "title": "Claim \"exhaustive-exploration-sound\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3639,7 +3699,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4251
+        "line": 13207
       },
       "title": "Claim \"deployment-cutover-safe\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3653,7 +3713,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4251
+        "line": 13207
       },
       "title": "Claim \"deployment-cutover-safe\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3667,7 +3727,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4267
+        "line": 13223
       },
       "title": "Claim \"deployment-rollback-durable\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3681,7 +3741,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4267
+        "line": 13223
       },
       "title": "Claim \"deployment-rollback-durable\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3695,7 +3755,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4283
+        "line": 13239
       },
       "title": "Claim \"generated-infrastructure-matches-model\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3709,7 +3769,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4283
+        "line": 13239
       },
       "title": "Claim \"generated-infrastructure-matches-model\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3723,7 +3783,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4300
+        "line": 13256
       },
       "title": "Claim \"implementation-refines-model\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3737,7 +3797,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4300
+        "line": 13256
       },
       "title": "Claim \"implementation-refines-model\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3751,7 +3811,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4316
+        "line": 13272
       },
       "title": "Claim \"claims-monitored-in-production\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3765,7 +3825,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4316
+        "line": 13272
       },
       "title": "Claim \"claims-monitored-in-production\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3779,7 +3839,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4332
+        "line": 13288
       },
       "title": "Claim \"engine-matches-formal-semantics\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3793,7 +3853,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4349
+        "line": 13305
       },
       "title": "Claim \"formal-semantics-properties-proved\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3807,7 +3867,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4365
+        "line": 13321
       },
       "title": "Claim \"invariants-proved-unbounded\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3821,7 +3881,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4365
+        "line": 13321
       },
       "title": "Claim \"invariants-proved-unbounded\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3835,7 +3895,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4382
+        "line": 13338
       },
       "title": "Claim \"contract-events-validated\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3849,7 +3909,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4398
+        "line": 13354
       },
       "title": "Claim \"trace-contract-conformance\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3863,7 +3923,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4416
+        "line": 13372
       },
       "title": "Claim \"data-model-rules-computed\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3877,7 +3937,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4458
+        "line": 13414
       },
       "title": "Claim \"invariants-proved-within-bounds\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3891,7 +3951,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4476
+        "line": 13432
       },
       "title": "Claim \"trace-claim-verified-needs-negative\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3905,7 +3965,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4493
+        "line": 13449
       },
       "title": "Claim \"negatives-are-validated\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3919,7 +3979,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4509
+        "line": 13465
       },
       "title": "Claim \"own-behavioral-claims-falsifiable\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3933,7 +3993,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4530
+        "line": 13486
       },
       "title": "Claim \"resource-queues-respect-bounds\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3947,7 +4007,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4530
+        "line": 13486
       },
       "title": "Claim \"resource-queues-respect-bounds\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3961,7 +4021,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4548
+        "line": 13504
       },
       "title": "Claim \"resource-utilisation-at-most-one\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -3975,7 +4035,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4548
+        "line": 13504
       },
       "title": "Claim \"resource-utilisation-at-most-one\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -3989,7 +4049,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4566
+        "line": 13522
       },
       "title": "Claim \"format-1-unchanged-under-format-2\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4003,7 +4063,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4566
+        "line": 13522
       },
       "title": "Claim \"format-1-unchanged-under-format-2\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4017,7 +4077,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4584
+        "line": 13540
       },
       "title": "Claim \"engine-matches-formal-semantics-v2\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4031,7 +4091,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4584
+        "line": 13540
       },
       "title": "Claim \"engine-matches-formal-semantics-v2\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4045,7 +4105,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4602
+        "line": 13558
       },
       "title": "Claim \"metric-claims-report-basis\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4059,23 +4119,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4602
+        "line": 13558
       },
       "title": "Claim \"metric-claims-report-basis\" is evaluated under no fault model, though this specification declares one.",
-      "type": "gap"
-    },
-    {
-      "detail": "Specification gap gap.no-evidence.",
-      "entities": [
-        "metrics-reproduce-mm1-utilisation"
-      ],
-      "id": "diag:gap.no-evidence:metrics-reproduce-mm1-utilisation",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 4621
-      },
-      "title": "Claim \"metrics-reproduce-mm1-utilisation\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
     },
     {
@@ -4087,23 +4133,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4621
+        "line": 13577
       },
       "title": "Claim \"metrics-reproduce-mm1-utilisation\" is evaluated under no fault model, though this specification declares one.",
-      "type": "gap"
-    },
-    {
-      "detail": "Specification gap gap.no-evidence.",
-      "entities": [
-        "pool-classes-protect-move-db-leg-under-flood"
-      ],
-      "id": "diag:gap.no-evidence:pool-classes-protect-move-db-leg-under-flood",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 4641
-      },
-      "title": "Claim \"pool-classes-protect-move-db-leg-under-flood\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
     },
     {
@@ -4115,7 +4147,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4641
+        "line": 13597
       },
       "title": "Claim \"pool-classes-protect-move-db-leg-under-flood\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4129,7 +4161,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4661
+        "line": 13617
       },
       "title": "Claim \"response-time-counts-failures-as-unbounded\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4143,7 +4175,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4661
+        "line": 13617
       },
       "title": "Claim \"response-time-counts-failures-as-unbounded\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4157,7 +4189,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4678
+        "line": 13634
       },
       "title": "Claim \"sampled-explorations-never-verified\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4171,23 +4203,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4678
+        "line": 13634
       },
       "title": "Claim \"sampled-explorations-never-verified\" is evaluated under no fault model, though this specification declares one.",
-      "type": "gap"
-    },
-    {
-      "detail": "Specification gap gap.no-evidence.",
-      "entities": [
-        "metrics-reproduce-mm1-mean-wait"
-      ],
-      "id": "diag:gap.no-evidence:metrics-reproduce-mm1-mean-wait",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 4696
-      },
-      "title": "Claim \"metrics-reproduce-mm1-mean-wait\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
     },
     {
@@ -4199,7 +4217,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4696
+        "line": 13652
       },
       "title": "Claim \"metrics-reproduce-mm1-mean-wait\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4213,7 +4231,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4716
+        "line": 13672
       },
       "title": "Claim \"metrics-reproduce-mm2-erlang-c\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4227,7 +4245,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4716
+        "line": 13672
       },
       "title": "Claim \"metrics-reproduce-mm2-erlang-c\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4241,7 +4259,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4735
+        "line": 13691
       },
       "title": "Claim \"ladder-reacts-without-flapping\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4255,7 +4273,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4735
+        "line": 13691
       },
       "title": "Claim \"ladder-reacts-without-flapping\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4269,7 +4287,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4754
+        "line": 13710
       },
       "title": "Claim \"retry-budget-bounds-amplification\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4283,7 +4301,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4754
+        "line": 13710
       },
       "title": "Claim \"retry-budget-bounds-amplification\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4297,7 +4315,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4773
+        "line": 13729
       },
       "title": "Claim \"reconnect-stagger-bounds-handshake-wait\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4311,7 +4329,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4773
+        "line": 13729
       },
       "title": "Claim \"reconnect-stagger-bounds-handshake-wait\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4325,7 +4343,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4792
+        "line": 13748
       },
       "title": "Claim \"address-limiter-acts\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4339,7 +4357,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4792
+        "line": 13748
       },
       "title": "Claim \"address-limiter-acts\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4353,7 +4371,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4811
+        "line": 13767
       },
       "title": "Claim \"address-limiter-false-positives-bounded\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4367,7 +4385,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4811
+        "line": 13767
       },
       "title": "Claim \"address-limiter-false-positives-bounded\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4381,7 +4399,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4830
+        "line": 13786
       },
       "title": "Claim \"bulkhead-keeps-static-served-under-db-slowdown\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4395,7 +4413,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4830
+        "line": 13786
       },
       "title": "Claim \"bulkhead-keeps-static-served-under-db-slowdown\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4409,7 +4427,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4849
+        "line": 13805
       },
       "title": "Claim \"metric-claims-calibrated-or-unvalidated\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4423,7 +4441,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4849
+        "line": 13805
       },
       "title": "Claim \"metric-claims-calibrated-or-unvalidated\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4437,7 +4455,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4866
+        "line": 13822
       },
       "title": "Claim \"crash-instance-loses-state\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4451,23 +4469,9 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4866
+        "line": 13822
       },
       "title": "Claim \"crash-instance-loses-state\" is evaluated under no fault model, though this specification declares one.",
-      "type": "gap"
-    },
-    {
-      "detail": "Specification gap gap.no-evidence.",
-      "entities": [
-        "distribution-lowering-bit-exact"
-      ],
-      "id": "diag:gap.no-evidence:distribution-lowering-bit-exact",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 4884
-      },
-      "title": "Claim \"distribution-lowering-bit-exact\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
     },
     {
@@ -4479,7 +4483,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4884
+        "line": 13840
       },
       "title": "Claim \"distribution-lowering-bit-exact\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4493,7 +4497,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4901
+        "line": 13857
       },
       "title": "Claim \"poisson-arrivals-by-inversion\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4507,7 +4511,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4901
+        "line": 13857
       },
       "title": "Claim \"poisson-arrivals-by-inversion\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4521,7 +4525,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4918
+        "line": 13874
       },
       "title": "Claim \"overlapping-faults-follow-active-set\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4535,7 +4539,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4918
+        "line": 13874
       },
       "title": "Claim \"overlapping-faults-follow-active-set\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4549,7 +4553,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4935
+        "line": 13891
       },
       "title": "Claim \"broadcasts-evaluated-at-delivery\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4563,7 +4567,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4935
+        "line": 13891
       },
       "title": "Claim \"broadcasts-evaluated-at-delivery\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4577,7 +4581,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4953
+        "line": 13909
       },
       "title": "Claim \"request-lifecycle-defines-outcomes\" can only be supported by external evidence, and none is recorded.",
       "type": "gap"
@@ -4591,7 +4595,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4953
+        "line": 13909
       },
       "title": "Claim \"request-lifecycle-defines-outcomes\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -4605,9 +4609,107 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 4971
+        "line": 13927
       },
       "title": "Claim \"temporal-claims-checked-on-all-runs\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "metric-claims-in-specifications"
+      ],
+      "id": "diag:gap.no-fault-model:metric-claims-in-specifications",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 13944
+      },
+      "title": "Claim \"metric-claims-in-specifications\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-evidence.",
+      "entities": [
+        "real-runs-replay-through-self-model"
+      ],
+      "id": "diag:gap.no-evidence:real-runs-replay-through-self-model",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 14508
+      },
+      "title": "Claim \"real-runs-replay-through-self-model\" can only be supported by external evidence, and none is recorded.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "real-runs-replay-through-self-model"
+      ],
+      "id": "diag:gap.no-fault-model:real-runs-replay-through-self-model",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 14508
+      },
+      "title": "Claim \"real-runs-replay-through-self-model\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "runtime-stores-modelled"
+      ],
+      "id": "diag:gap.no-fault-model:runtime-stores-modelled",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 14935
+      },
+      "title": "Claim \"runtime-stores-modelled\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "verify-skip-keeps-recorded-outcome"
+      ],
+      "id": "diag:gap.no-fault-model:verify-skip-keeps-recorded-outcome",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 14959
+      },
+      "title": "Claim \"verify-skip-keeps-recorded-outcome\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "journal-failure-reported"
+      ],
+      "id": "diag:gap.no-fault-model:journal-failure-reported",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 14975
+      },
+      "title": "Claim \"journal-failure-reported\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
+        "changes-panel-pairs-by-revision"
+      ],
+      "id": "diag:gap.no-fault-model:changes-panel-pairs-by-revision",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 14992
+      },
+      "title": "Claim \"changes-panel-pairs-by-revision\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
     }
   ],

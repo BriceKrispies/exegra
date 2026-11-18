@@ -3,6 +3,23 @@
 import { h, clear, icon } from './dom.js';
 import { detailText } from './detail.js';
 
+/**
+ * Pairs each history entry with the log entry of its commit (the log's 'change' entry whose detail carries the
+ * same revision). The log is capped, so its oldest entries can be gone while history is not: an entry with no
+ * log entry gets key null. Keys of the paired log entries are their seq; the caller orders on them.
+ * @param {{revision: number}[]} history
+ * @param {{seq: number, kind: string, detail?: {revision?: number}}[]} log
+ * @returns {{entry: any, key: number|null}[]}
+ */
+export function pairHistoryWithLog(history, log) {
+  /** @type {Map<number, number>} */
+  const seqByRevision = new Map();
+  for (const l of log) {
+    if (l.kind === 'change' && typeof l.detail?.revision === 'number') seqByRevision.set(l.detail.revision, l.seq);
+  }
+  return history.map((entry) => ({ entry, key: seqByRevision.get(entry.revision) ?? null }));
+}
+
 const SEVERITIES = /** @type {const} */ ([
   ['error', 'Errors', 'error'],
   ['warning', 'Warnings', 'warning'],
@@ -118,15 +135,13 @@ export function mountChanges(el, session) {
     clear(el);
     const history = /** @type {any[]} */ (session.project?.history ?? []);
     const log = /** @type {any[]} */ (session.log ?? []);
-    const changes = log.filter((l) => l.kind === 'change');
     const others = log.filter((l) => l.kind === 'error' || l.kind === 'info' || l.kind === 'save');
-    // History entries carry no sequence number; align them with the 'change' log entries from the end.
-    const offset = changes.length - history.length;
     /** @type {{key: number, node: HTMLElement}[]} */
     const items = [];
-    history.forEach((en, j) => {
-      const c = changes[offset + j];
-      items.push({ key: c ? c.seq : -1 - (history.length - j), node: historyItem(en) });
+    // History entries have no sequence number of their own; each is paired with its log entry by revision.
+    // An entry whose log entry was dropped by the cap is older than every logged entry, so it sorts last.
+    pairHistoryWithLog(history, log).forEach(({ entry, key }, j) => {
+      items.push({ key: key ?? -1 - (history.length - j), node: historyItem(entry) });
     });
     for (const l of others) items.push({ key: l.seq, node: logItem(l) });
     items.sort((a, b) => b.key - a.key);

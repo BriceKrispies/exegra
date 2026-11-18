@@ -223,3 +223,22 @@ test('watching a linked project reports a change to the file in the other reposi
       stop();
     }
   }));
+
+test('a journal line that cannot be appended is reported and the file write still stands', () =>
+  withWorkspace(async (ws, dir) => {
+    // A directory at the journal path makes the append fail after the file was replaced.
+    await fs.mkdir(path.join(dir, 'demo', '.history', 'journal.jsonl'), { recursive: true });
+    const text = '{\n  "system": { "name": "Changed" }\n}\n';
+    const res = await ws.write('demo', 'spec', text, hashText(SPEC), { origin: 'cli' });
+    assert.equal(res.ok, true);
+    assert.equal(res.hash, hashText(text));
+    assert.equal(res.journal.written, false);
+    assert.match(res.journal.message, /^The journal line was not written: /);
+    assert.equal((await ws.read('demo')).spec.text, text);
+  }));
+
+test('a write whose journal line is appended reports the sequence number', () =>
+  withWorkspace(async (ws) => {
+    const first = await ws.write('demo', 'spec', SPEC, hashText(SPEC), { origin: 'cli' });
+    assert.deepEqual(first.journal, { written: true, seq: 1 });
+  }));
