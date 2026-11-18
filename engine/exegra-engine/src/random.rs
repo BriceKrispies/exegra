@@ -48,14 +48,40 @@ pub fn index(r: u64, n: usize) -> usize {
 /// Sample an integer table `[[u, x], ...]` (`u` strictly increasing from 0 to 2^32).
 pub fn sample_table(r: u64, points: &[(u64, u64)]) -> u64 {
     let u = r >> 32;
-    for w in points.windows(2) {
-        let ((u0, x0), (u1, x1)) = (w[0], w[1]);
-        if u < u1 {
-            let d = u128::from(u - u0) * u128::from(x1 - x0) / u128::from(u1 - u0);
-            return x0 + d as u64;
-        }
+    // The first point whose u exceeds `u` (u is strictly increasing).
+    let j = points.partition_point(|p| p.0 <= u);
+    if j >= 1 && j < points.len() {
+        let ((u0, x0), (u1, x1)) = (points[j - 1], points[j]);
+        let d = u128::from(u - u0) * u128::from(x1 - x0) / u128::from(u1 - u0);
+        return x0 + d as u64;
     }
     points.last().map_or(0, |p| p.1)
+}
+
+/// `sample_table` for tables whose values reach 2^72 (the unit exponential).
+pub fn sample_table_wide(r: u64, points: &[(u64, u128)]) -> u128 {
+    let u = r >> 32;
+    let j = points.partition_point(|p| p.0 <= u);
+    if j >= 1 && j < points.len() {
+        let ((u0, x0), (u1, x1)) = (points[j - 1], points[j]);
+        return x0 + u128::from(u - u0) * (x1 - x0) / u128::from(u1 - u0);
+    }
+    points.last().map_or(0, |p| p.1)
+}
+
+/// Categorical choice with integer weights (`W = Σ w ≥ 1`): `v = uniformInt(0, W − 1)` and the
+/// first `i` with `w_0 + … + w_i > v`.
+pub fn categorical(r: u64, ws: &[u64]) -> usize {
+    let total: u64 = ws.iter().sum();
+    let v = uniform_int(r, 0, total.saturating_sub(1));
+    let mut acc = 0u64;
+    for (i, w) in ws.iter().enumerate() {
+        if acc + w > v {
+            return i;
+        }
+        acc += w;
+    }
+    ws.len()
 }
 
 #[cfg(test)]

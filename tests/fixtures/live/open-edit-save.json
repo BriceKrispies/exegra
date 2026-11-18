@@ -1,0 +1,391 @@
+[
+ {
+  "seq": 1,
+  "id": "page-loaded",
+  "payload": {
+   "persistent": true,
+   "project": "zz-test-exegra"
+  }
+ },
+ {
+  "seq": 2,
+  "id": "page-reloaded",
+  "payload": {}
+ },
+ {
+  "seq": 3,
+  "id": "preferences-read",
+  "payload": {}
+ },
+ {
+  "seq": 4,
+  "id": "engine-load-requested",
+  "payload": {}
+ },
+ {
+  "seq": 5,
+  "id": "engine-load-settled",
+  "payload": {
+   "ok": true
+  }
+ },
+ {
+  "seq": 6,
+  "id": "session-init-requested",
+  "payload": {
+   "persistent": true,
+   "project": "zz-test-exegra"
+  }
+ },
+ {
+  "seq": 7,
+  "id": "list-intent",
+  "payload": {
+   "requestId": 1
+  }
+ },
+ {
+  "seq": 8,
+  "id": "list-projects-request",
+  "payload": {
+   "requestId": 1
+  }
+ },
+ {
+  "seq": 9,
+  "id": "ws-list",
+  "payload": {
+   "requestId": 1
+  }
+ },
+ {
+  "seq": 10,
+  "id": "ws-list-done",
+  "payload": {
+   "projects": [
+    "benchmark",
+    "exegra",
+    "zz-test-exegra",
+    "zz-test-multiplayer"
+   ],
+   "requestId": 1
+  }
+ },
+ {
+  "seq": 11,
+  "id": "list-projects-ok",
+  "payload": {
+   "projects": [
+    "benchmark",
+    "exegra",
+    "zz-test-exegra",
+    "zz-test-multiplayer"
+   ],
+   "requestId": 1
+  }
+ },
+ {
+  "seq": 12,
+  "id": "projects-listed",
+  "payload": {
+   "projects": [
+    "benchmark",
+    "exegra",
+    "zz-test-exegra",
+    "zz-test-multiplayer"
+   ]
+  }
+ },
+ {
+  "seq": 13,
+  "id": "project-open-requested",
+  "payload": {
+   "name": "zz-test-exegra"
+  }
+ },
+ {
+  "seq": 14,
+  "id": "read-intent",
+  "payload": {
+   "name": "zz-test-exegra",
+   "requestId": 2,
+   "purpose": "open"
+  }
+ },
+ {
+  "seq": 15,
+  "id": "read-project-request",
+  "payload": {
+   "name": "zz-test-exegra",
+   "requestId": 2
+  }
+ },
+ {
+  "seq": 16,
+  "id": "ws-read",
+  "payload": {
+   "name": "zz-test-exegra",
+   "caller": "http",
+   "requestId": 2
+  }
+ },
+ {
+  "seq": 17,
+  "id": "ws-read-done",
+  "payload": {
+   "spec": "6cd9a647f2efc5c8b21bcc7ff02abbf16b4ffc1c6d39eacfcbfeacea68aba7fe",
+   "layout": null,
+   "recorded": "7640c9ef1cb47d5da2e26a847c51c1e9c8f68519050427908b73dadfc6434719",
+   "caller": "http",
+   "requestId": 2
+  }
+ },
+ {
+  "seq": 18,
+  "id": "read-project-ok",
+  "payload": {
+   "spec": "6cd9a647f2efc5c8b21bcc7ff02abbf16b4ffc1c6d39eacfcbfeacea68aba7fe",
+   "layout": null,
+   "recorded": "7640c9ef1cb47d5da2e26a847c51c1e9c8f68519050427908b73dadfc6434719",
+   "requestId": 2
+  }
+ },
+ {
+  "seq": 19,
+  "id": "project-files-read",
+  "payload": {
+   "specHash": "6cd9a647f2efc5c8b21bcc7ff02abbf16b4ffc1c6d39eacfcbfeacea68aba7fe",
+   "layoutHash": null,
+   "recorded": "7640c9ef1cb47d5da2e26a847c51c1e9c8f68519050427908b73dadfc6434719",
+   "requestId": 2
+  }
+ },
+ {
+  "seq": 20,
+  "id": "preferences-loaded",
+  "payload": {
+   "selection": "none",
+   "viewId": "structural"
+  }
+ },
+ {
+  "seq": 21,
+  "id": "project-opened",
+  "payload": {
+   "name": "zz-test-exegra",
+   "specHash": "6cd9a647f2efc5c8b21bcc7ff02abbf16b4ffc1c6d39eacfcbfeacea68aba7fe",
+   "layoutHash": null
+  }
+ },
+ {
+  "seq": 22,
+  "id": "claims-evaluation-requested",
+  "payload": {
+   "modelHash": "6cd9a647f2efc5c8b21bcc7ff02abbf16b4ffc1c6d39eacfcbfeacea68aba7fe"
+  }
+ },
+ {
+  "seq": 23,
+  "id": "claim-scenarios-run",
+  "payload": {
+   "modelHash": "6cd9a647f2efc5c8b21bcc7ff02abbf16b4ffc1c6d39eacfcbfeacea68aba7fe"
+  }
+ },
+ {
+  "seq": 24,
+  "id": "claims-evaluated",
+  "payload": {
+   "modelHash": "6cd9a647f2efc5c8b21bcc7ff02abbf16b4ffc1c6d39eacfcbfeacea68aba7fe"
+  }
+ },
+ {
+  "seq": 25,
+  "id": "view-switched",
+  "payload": {
+   "view": "architecture"
+  }
+ },
+ {
+  "seq": 26,
+  "id": "camera-restore-requested",
+  "payload": {
+   "view": "architecture"
+  }
+ },
+ {
+  "seq": 27,
+  "id": "camera-none",
+  "payload": {
+   "view": "architecture"
+  }
+ },
+ {
+  "seq": 28,
+  "id": "preferences-written",
+  "payload": {
+   "selection": "none",
+   "viewId": "architecture"
+  }
+ },
+ {
+  "seq": 29,
+  "id": "watch-intent",
+  "payload": {
+   "name": "zz-test-exegra"
+  }
+ },
+ {
+  "seq": 30,
+  "id": "watch-project-request",
+  "payload": {
+   "name": "zz-test-exegra"
+  }
+ },
+ {
+  "seq": 31,
+  "id": "camera-saved",
+  "payload": {
+   "view": "architecture",
+   "camera": "{\"mode\":\"perspective\",\"position\":[-4.4408920985006257e-16,26.04645269039478,20.187988966101138],\"target\":[-4.4408920985006257e-16,0.4749999999999999,0],\"zoom\":1}"
+  }
+ },
+ {
+  "seq": 32,
+  "id": "ws-watch",
+  "payload": {
+   "name": "zz-test-exegra"
+  }
+ },
+ {
+  "seq": 33,
+  "id": "edit-applied",
+  "payload": {
+   "specHash": "11d2b660c7cad160ad1d8550d253d74a3020bb8f59f5adf3a6458308237d99c7",
+   "origin": "ui"
+  }
+ },
+ {
+  "seq": 34,
+  "id": "commit-notified",
+  "payload": {
+   "origin": "ui",
+   "file": "spec",
+   "text": "11d2b660c7cad160ad1d8550d253d74a3020bb8f59f5adf3a6458308237d99c7"
+  }
+ },
+ {
+  "seq": 35,
+  "id": "claims-evaluation-requested",
+  "payload": {
+   "modelHash": "11d2b660c7cad160ad1d8550d253d74a3020bb8f59f5adf3a6458308237d99c7"
+  }
+ },
+ {
+  "seq": 36,
+  "id": "claim-scenarios-run",
+  "payload": {
+   "modelHash": "11d2b660c7cad160ad1d8550d253d74a3020bb8f59f5adf3a6458308237d99c7"
+  }
+ },
+ {
+  "seq": 37,
+  "id": "claims-evaluated",
+  "payload": {
+   "modelHash": "11d2b660c7cad160ad1d8550d253d74a3020bb8f59f5adf3a6458308237d99c7"
+  }
+ },
+ {
+  "seq": 38,
+  "id": "write-intent",
+  "payload": {
+   "name": "zz-test-exegra",
+   "file": "spec",
+   "text": "11d2b660c7cad160ad1d8550d253d74a3020bb8f59f5adf3a6458308237d99c7",
+   "baseHash": "6cd9a647f2efc5c8b21bcc7ff02abbf16b4ffc1c6d39eacfcbfeacea68aba7fe",
+   "requestId": 3
+  }
+ },
+ {
+  "seq": 39,
+  "id": "write-file-request",
+  "payload": {
+   "name": "zz-test-exegra",
+   "file": "spec",
+   "text": "11d2b660c7cad160ad1d8550d253d74a3020bb8f59f5adf3a6458308237d99c7",
+   "baseHash": "6cd9a647f2efc5c8b21bcc7ff02abbf16b4ffc1c6d39eacfcbfeacea68aba7fe",
+   "requestId": 3
+  }
+ },
+ {
+  "seq": 40,
+  "id": "ws-write",
+  "payload": {
+   "name": "zz-test-exegra",
+   "file": "spec",
+   "text": "11d2b660c7cad160ad1d8550d253d74a3020bb8f59f5adf3a6458308237d99c7",
+   "baseHash": "6cd9a647f2efc5c8b21bcc7ff02abbf16b4ffc1c6d39eacfcbfeacea68aba7fe",
+   "caller": "http",
+   "requestId": 3
+  }
+ },
+ {
+  "seq": 41,
+  "id": "disk-file-replaced",
+  "payload": {
+   "file": "spec",
+   "hash": "11d2b660c7cad160ad1d8550d253d74a3020bb8f59f5adf3a6458308237d99c7"
+  }
+ },
+ {
+  "seq": 42,
+  "id": "ws-write-done",
+  "payload": {
+   "file": "spec",
+   "hash": "11d2b660c7cad160ad1d8550d253d74a3020bb8f59f5adf3a6458308237d99c7",
+   "caller": "http",
+   "requestId": 3
+  }
+ },
+ {
+  "seq": 43,
+  "id": "write-file-ok",
+  "payload": {
+   "ok": true,
+   "hash": "11d2b660c7cad160ad1d8550d253d74a3020bb8f59f5adf3a6458308237d99c7",
+   "requestId": 3
+  }
+ },
+ {
+  "seq": 44,
+  "id": "save-succeeded",
+  "payload": {
+   "file": "spec",
+   "hash": "11d2b660c7cad160ad1d8550d253d74a3020bb8f59f5adf3a6458308237d99c7",
+   "requestId": 3
+  }
+ },
+ {
+  "seq": 45,
+  "id": "ws-change",
+  "payload": {
+   "file": "spec",
+   "hash": "11d2b660c7cad160ad1d8550d253d74a3020bb8f59f5adf3a6458308237d99c7"
+  }
+ },
+ {
+  "seq": 46,
+  "id": "file-change-notice-sent",
+  "payload": {
+   "file": "spec",
+   "hash": "11d2b660c7cad160ad1d8550d253d74a3020bb8f59f5adf3a6458308237d99c7"
+  }
+ },
+ {
+  "seq": 47,
+  "id": "external-change-received",
+  "payload": {
+   "file": "spec",
+   "hash": "11d2b660c7cad160ad1d8550d253d74a3020bb8f59f5adf3a6458308237d99c7"
+  }
+ }
+]

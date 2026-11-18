@@ -1,0 +1,1471 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "engine-runner-flow": {
+    "state": "runner-ready",
+    "vars": {
+     "prevId": 0,
+     "prevToken": 0,
+     "seq": 2,
+     "waitingId": 0,
+     "waitingToken": 2
+    }
+   },
+   "engine-worker-flow": {
+    "state": "worker-ready",
+    "vars": {
+     "generation": 1,
+     "runs": 2
+    }
+   },
+   "sim-session-flow": {
+    "state": "sim-idle",
+    "vars": {
+     "adoptedToken": 2,
+     "running": false,
+     "scenarioId": "rejected-edit",
+     "stepCount": 3,
+     "stepIndex": -1,
+     "token": 2
+    }
+   }
+  },
+  "pending": [],
+  "time": 3
+ },
+ "initial": {
+  "machines": {
+   "engine-runner-flow": {
+    "state": "runner-ready",
+    "vars": {
+     "prevId": 0,
+     "prevToken": 0,
+     "seq": 0,
+     "waitingId": 0,
+     "waitingToken": 0
+    }
+   },
+   "engine-worker-flow": {
+    "state": "worker-ready",
+    "vars": {
+     "generation": 0,
+     "runs": 0
+    }
+   },
+   "sim-session-flow": {
+    "state": "sim-idle",
+    "vars": {
+     "adoptedToken": 0,
+     "running": false,
+     "scenarioId": "none",
+     "stepCount": 0,
+     "stepIndex": -1,
+     "token": 0
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "sim-load-requested",
+    "payload": {
+     "scenario": "visual-edit-flow"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   },
+   {
+    "event": "sim-load-requested",
+    "payload": {
+     "scenario": "rejected-edit"
+    },
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    },
+    "time": 1
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "simulation-reload-cancels-run",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 0,
+       "waitingId": 0,
+       "waitingToken": 0
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 0
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 0,
+       "running": true,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 0,
+       "stepIndex": -1,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "engine-run-intent",
+      "payload": {
+       "scenario": "visual-edit-flow",
+       "token": 1
+      },
+      "seq": 2,
+      "source": {
+       "behavior": "sim-session-flow",
+       "kind": "transition",
+       "transition": "sim-load"
+      },
+      "time": 0
+     },
+     {
+      "event": "sim-load-requested",
+      "payload": {
+       "scenario": "rejected-edit"
+      },
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 1
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "sim-load-requested",
+    "payload": {
+     "scenario": "visual-edit-flow"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "sim-session-flow",
+     "emitted": [
+      {
+       "event": "engine-run-intent",
+       "payload": {
+        "scenario": "visual-edit-flow",
+        "token": 1
+       },
+       "seq": 2,
+       "time": 0
+      }
+     ],
+     "from": "sim-idle",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "token"
+      },
+      {
+       "after": "visual-edit-flow",
+       "before": "none",
+       "variable": "scenarioId"
+      },
+      {
+       "after": true,
+       "before": false,
+       "variable": "running"
+      },
+      {
+       "after": -1,
+       "before": -1,
+       "variable": "stepIndex"
+      },
+      {
+       "after": 0,
+       "before": 0,
+       "variable": "stepCount"
+      }
+     ],
+     "to": "sim-idle",
+     "transition": "sim-load"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "sim-load-requested",
+    "sim-load",
+    "sim-session-flow",
+    "session"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 1,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 0
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 0,
+       "running": true,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 0,
+       "stepIndex": -1,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "engine-run-posted",
+      "payload": {
+       "id": 1,
+       "input": "visual-edit-flow"
+      },
+      "seq": 3,
+      "source": {
+       "behavior": "engine-runner-flow",
+       "kind": "transition",
+       "transition": "runner-post"
+      },
+      "time": 0
+     },
+     {
+      "event": "sim-load-requested",
+      "payload": {
+       "scenario": "rejected-edit"
+      },
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 1
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "engine-run-intent",
+    "payload": {
+     "scenario": "visual-edit-flow",
+     "token": 1
+    },
+    "seq": 2,
+    "source": {
+     "behavior": "sim-session-flow",
+     "kind": "transition",
+     "transition": "sim-load"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "engine-runner-flow",
+     "emitted": [
+      {
+       "event": "engine-run-posted",
+       "payload": {
+        "id": 1,
+        "input": "visual-edit-flow"
+       },
+       "seq": 3,
+       "time": 0
+      }
+     ],
+     "from": "runner-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "seq"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "waitingId"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "waitingToken"
+      }
+     ],
+     "to": "runner-ready",
+     "transition": "runner-post"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "engine-run-intent",
+    "runner-post",
+    "engine-runner-flow",
+    "simulation-engine"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 1,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 0,
+       "running": true,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 0,
+       "stepIndex": -1,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "sim-load-requested",
+      "payload": {
+       "scenario": "rejected-edit"
+      },
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 1
+     },
+     {
+      "event": "worker-run-done",
+      "payload": {
+       "generation": 0,
+       "id": 1,
+       "input": "visual-edit-flow"
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "engine-worker-flow",
+       "kind": "transition",
+       "transition": "worker-run"
+      },
+      "time": 2
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "engine-run-posted",
+    "payload": {
+     "id": 1,
+     "input": "visual-edit-flow"
+    },
+    "seq": 3,
+    "source": {
+     "behavior": "engine-runner-flow",
+     "kind": "transition",
+     "transition": "runner-post"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "engine-worker-flow",
+     "emitted": [
+      {
+       "event": "worker-run-done",
+       "payload": {
+        "generation": 0,
+        "id": 1,
+        "input": "visual-edit-flow"
+       },
+       "seq": 4,
+       "time": 2
+      }
+     ],
+     "from": "worker-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "runs"
+      }
+     ],
+     "to": "worker-ready",
+     "transition": "worker-run"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "engine-run-posted",
+    "worker-run",
+    "engine-worker-flow",
+    "simulation-engine"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 1,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 0,
+       "running": true,
+       "scenarioId": "rejected-edit",
+       "stepCount": 0,
+       "stepIndex": -1,
+       "token": 2
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "engine-run-intent",
+      "payload": {
+       "scenario": "rejected-edit",
+       "token": 2
+      },
+      "seq": 5,
+      "source": {
+       "behavior": "sim-session-flow",
+       "kind": "transition",
+       "transition": "sim-load"
+      },
+      "time": 1
+     },
+     {
+      "event": "worker-run-done",
+      "payload": {
+       "generation": 0,
+       "id": 1,
+       "input": "visual-edit-flow"
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "engine-worker-flow",
+       "kind": "transition",
+       "transition": "worker-run"
+      },
+      "time": 2
+     }
+    ],
+    "time": 1
+   },
+   "event": {
+    "id": "sim-load-requested",
+    "payload": {
+     "scenario": "rejected-edit"
+    },
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "sim-session-flow",
+     "emitted": [
+      {
+       "event": "engine-run-intent",
+       "payload": {
+        "scenario": "rejected-edit",
+        "token": 2
+       },
+       "seq": 5,
+       "time": 1
+      }
+     ],
+     "from": "sim-idle",
+     "guard": null,
+     "sets": [
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "token"
+      },
+      {
+       "after": "rejected-edit",
+       "before": "visual-edit-flow",
+       "variable": "scenarioId"
+      },
+      {
+       "after": true,
+       "before": true,
+       "variable": "running"
+      },
+      {
+       "after": -1,
+       "before": -1,
+       "variable": "stepIndex"
+      },
+      {
+       "after": 0,
+       "before": 0,
+       "variable": "stepCount"
+      }
+     ],
+     "to": "sim-idle",
+     "transition": "sim-load"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "sim-load-requested",
+    "sim-load",
+    "sim-session-flow",
+    "session"
+   ],
+   "time": 1
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 2,
+       "waitingId": 2,
+       "waitingToken": 2
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 0,
+       "running": true,
+       "scenarioId": "rejected-edit",
+       "stepCount": 0,
+       "stepIndex": -1,
+       "token": 2
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "worker-terminated",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "behavior": "engine-runner-flow",
+       "kind": "transition",
+       "transition": "runner-restart"
+      },
+      "time": 1
+     },
+     {
+      "event": "engine-run-posted",
+      "payload": {
+       "id": 2,
+       "input": "rejected-edit"
+      },
+      "seq": 7,
+      "source": {
+       "behavior": "engine-runner-flow",
+       "kind": "transition",
+       "transition": "runner-restart"
+      },
+      "time": 1
+     },
+     {
+      "event": "worker-run-done",
+      "payload": {
+       "generation": 0,
+       "id": 1,
+       "input": "visual-edit-flow"
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "engine-worker-flow",
+       "kind": "transition",
+       "transition": "worker-run"
+      },
+      "time": 2
+     }
+    ],
+    "time": 1
+   },
+   "event": {
+    "id": "engine-run-intent",
+    "payload": {
+     "scenario": "rejected-edit",
+     "token": 2
+    },
+    "seq": 5,
+    "source": {
+     "behavior": "sim-session-flow",
+     "kind": "transition",
+     "transition": "sim-load"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "engine-runner-flow",
+     "emitted": [
+      {
+       "event": "worker-terminated",
+       "payload": {},
+       "seq": 6,
+       "time": 1
+      },
+      {
+       "event": "engine-run-posted",
+       "payload": {
+        "id": 2,
+        "input": "rejected-edit"
+       },
+       "seq": 7,
+       "time": 1
+      }
+     ],
+     "from": "runner-ready",
+     "guard": "waitingId != 0",
+     "sets": [
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "seq"
+      },
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "waitingId"
+      },
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "waitingToken"
+      }
+     ],
+     "to": "runner-ready",
+     "transition": "runner-restart"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 4,
+   "kind": "deliver",
+   "responsible": [
+    "engine-run-intent",
+    "runner-restart",
+    "engine-runner-flow",
+    "simulation-engine"
+   ],
+   "time": 1
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 2,
+       "waitingId": 2,
+       "waitingToken": 2
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 1,
+       "runs": 1
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 0,
+       "running": true,
+       "scenarioId": "rejected-edit",
+       "stepCount": 0,
+       "stepIndex": -1,
+       "token": 2
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "engine-run-posted",
+      "payload": {
+       "id": 2,
+       "input": "rejected-edit"
+      },
+      "seq": 7,
+      "source": {
+       "behavior": "engine-runner-flow",
+       "kind": "transition",
+       "transition": "runner-restart"
+      },
+      "time": 1
+     },
+     {
+      "event": "worker-run-done",
+      "payload": {
+       "generation": 0,
+       "id": 1,
+       "input": "visual-edit-flow"
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "engine-worker-flow",
+       "kind": "transition",
+       "transition": "worker-run"
+      },
+      "time": 2
+     }
+    ],
+    "time": 1
+   },
+   "event": {
+    "id": "worker-terminated",
+    "payload": {},
+    "seq": 6,
+    "source": {
+     "behavior": "engine-runner-flow",
+     "kind": "transition",
+     "transition": "runner-restart"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "engine-worker-flow",
+     "emitted": [],
+     "from": "worker-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "generation"
+      }
+     ],
+     "to": "worker-ready",
+     "transition": "worker-terminate"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 5,
+   "kind": "deliver",
+   "responsible": [
+    "worker-terminated",
+    "worker-terminate",
+    "engine-worker-flow",
+    "simulation-engine"
+   ],
+   "time": 1
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 2,
+       "waitingId": 2,
+       "waitingToken": 2
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 1,
+       "runs": 2
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 0,
+       "running": true,
+       "scenarioId": "rejected-edit",
+       "stepCount": 0,
+       "stepIndex": -1,
+       "token": 2
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "worker-run-done",
+      "payload": {
+       "generation": 0,
+       "id": 1,
+       "input": "visual-edit-flow"
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "engine-worker-flow",
+       "kind": "transition",
+       "transition": "worker-run"
+      },
+      "time": 2
+     },
+     {
+      "event": "worker-run-done",
+      "payload": {
+       "generation": 1,
+       "id": 2,
+       "input": "rejected-edit"
+      },
+      "seq": 8,
+      "source": {
+       "behavior": "engine-worker-flow",
+       "kind": "transition",
+       "transition": "worker-run"
+      },
+      "time": 3
+     }
+    ],
+    "time": 1
+   },
+   "event": {
+    "id": "engine-run-posted",
+    "payload": {
+     "id": 2,
+     "input": "rejected-edit"
+    },
+    "seq": 7,
+    "source": {
+     "behavior": "engine-runner-flow",
+     "kind": "transition",
+     "transition": "runner-restart"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "engine-worker-flow",
+     "emitted": [
+      {
+       "event": "worker-run-done",
+       "payload": {
+        "generation": 1,
+        "id": 2,
+        "input": "rejected-edit"
+       },
+       "seq": 8,
+       "time": 3
+      }
+     ],
+     "from": "worker-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "runs"
+      }
+     ],
+     "to": "worker-ready",
+     "transition": "worker-run"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 6,
+   "kind": "deliver",
+   "responsible": [
+    "engine-run-posted",
+    "worker-run",
+    "engine-worker-flow",
+    "simulation-engine"
+   ],
+   "time": 1
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 2,
+       "waitingId": 2,
+       "waitingToken": 2
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 1,
+       "runs": 2
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 0,
+       "running": true,
+       "scenarioId": "rejected-edit",
+       "stepCount": 0,
+       "stepIndex": -1,
+       "token": 2
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "worker-run-done",
+      "payload": {
+       "generation": 1,
+       "id": 2,
+       "input": "rejected-edit"
+      },
+      "seq": 8,
+      "source": {
+       "behavior": "engine-worker-flow",
+       "kind": "transition",
+       "transition": "worker-run"
+      },
+      "time": 3
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "worker-run-done",
+    "payload": {
+     "generation": 0,
+     "id": 1,
+     "input": "visual-edit-flow"
+    },
+    "seq": 4,
+    "source": {
+     "behavior": "engine-worker-flow",
+     "kind": "transition",
+     "transition": "worker-run"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [
+      "worker-reply"
+     ],
+     "reason": "guard-false"
+    }
+   ],
+   "index": 7,
+   "kind": "deliver",
+   "responsible": [
+    "worker-run-done"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 2,
+       "waitingId": 2,
+       "waitingToken": 2
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 1,
+       "runs": 2
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 0,
+       "running": true,
+       "scenarioId": "rejected-edit",
+       "stepCount": 0,
+       "stepIndex": -1,
+       "token": 2
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "engine-run-returned",
+      "payload": {
+       "id": 2,
+       "ok": true,
+       "trace": "rejected-edit"
+      },
+      "seq": 9,
+      "source": {
+       "behavior": "engine-worker-flow",
+       "kind": "transition",
+       "transition": "worker-reply"
+      },
+      "time": 3
+     }
+    ],
+    "time": 3
+   },
+   "event": {
+    "id": "worker-run-done",
+    "payload": {
+     "generation": 1,
+     "id": 2,
+     "input": "rejected-edit"
+    },
+    "seq": 8,
+    "source": {
+     "behavior": "engine-worker-flow",
+     "kind": "transition",
+     "transition": "worker-run"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "engine-worker-flow",
+     "emitted": [
+      {
+       "event": "engine-run-returned",
+       "payload": {
+        "id": 2,
+        "ok": true,
+        "trace": "rejected-edit"
+       },
+       "seq": 9,
+       "time": 3
+      }
+     ],
+     "from": "worker-ready",
+     "guard": "event.generation == generation",
+     "sets": [],
+     "to": "worker-ready",
+     "transition": "worker-reply"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 8,
+   "kind": "deliver",
+   "responsible": [
+    "worker-run-done",
+    "worker-reply",
+    "engine-worker-flow",
+    "simulation-engine"
+   ],
+   "time": 3
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 2,
+       "waitingId": 0,
+       "waitingToken": 2
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 1,
+       "runs": 2
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 0,
+       "running": true,
+       "scenarioId": "rejected-edit",
+       "stepCount": 0,
+       "stepIndex": -1,
+       "token": 2
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "sim-trace-ready",
+      "payload": {
+       "steps": 3,
+       "token": 2
+      },
+      "seq": 10,
+      "source": {
+       "behavior": "engine-runner-flow",
+       "kind": "transition",
+       "transition": "runner-forward"
+      },
+      "time": 3
+     }
+    ],
+    "time": 3
+   },
+   "event": {
+    "id": "engine-run-returned",
+    "payload": {
+     "id": 2,
+     "ok": true,
+     "trace": "rejected-edit"
+    },
+    "seq": 9,
+    "source": {
+     "behavior": "engine-worker-flow",
+     "kind": "transition",
+     "transition": "worker-reply"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "engine-runner-flow",
+     "emitted": [
+      {
+       "event": "sim-trace-ready",
+       "payload": {
+        "steps": 3,
+        "token": 2
+       },
+       "seq": 10,
+       "time": 3
+      }
+     ],
+     "from": "runner-ready",
+     "guard": "event.id == waitingId",
+     "sets": [
+      {
+       "after": 0,
+       "before": 2,
+       "variable": "waitingId"
+      }
+     ],
+     "to": "runner-ready",
+     "transition": "runner-forward"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 9,
+   "kind": "deliver",
+   "responsible": [
+    "engine-run-returned",
+    "runner-forward",
+    "engine-runner-flow",
+    "simulation-engine"
+   ],
+   "time": 3
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 2,
+       "waitingId": 0,
+       "waitingToken": 2
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 1,
+       "runs": 2
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 2,
+       "running": false,
+       "scenarioId": "rejected-edit",
+       "stepCount": 3,
+       "stepIndex": -1,
+       "token": 2
+      }
+     }
+    },
+    "pending": [],
+    "time": 3
+   },
+   "event": {
+    "id": "sim-trace-ready",
+    "payload": {
+     "steps": 3,
+     "token": 2
+    },
+    "seq": 10,
+    "source": {
+     "behavior": "engine-runner-flow",
+     "kind": "transition",
+     "transition": "runner-forward"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "sim-session-flow",
+     "emitted": [],
+     "from": "sim-idle",
+     "guard": "event.token == token",
+     "sets": [
+      {
+       "after": 2,
+       "before": 0,
+       "variable": "adoptedToken"
+      },
+      {
+       "after": false,
+       "before": true,
+       "variable": "running"
+      },
+      {
+       "after": 3,
+       "before": 0,
+       "variable": "stepCount"
+      },
+      {
+       "after": -1,
+       "before": -1,
+       "variable": "stepIndex"
+      }
+     ],
+     "to": "sim-idle",
+     "transition": "sim-adopt"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 10,
+   "kind": "deliver",
+   "responsible": [
+    "sim-trace-ready",
+    "sim-adopt",
+    "sim-session-flow",
+    "session"
+   ],
+   "time": 3
+  }
+ ]
+}

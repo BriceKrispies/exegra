@@ -28,9 +28,11 @@ core source wins — report the conflict.
 | `src/core/metamodel.json` | entity kinds and property definitions as data |
 | `src/core/parse.js` | `parseSpec(text)`, `SCHEMA_VERSION`, `BASE_METAMODEL` |
 | `src/core/validate.js` | `validateModel(model)` |
+| `src/core/evidence-ref.js` | `testRefProblem(ref)`, `describeTestRefProblem(ref, problem)` (the rule for test evidence references, shared by validate and verify) |
 | `src/core/analyze.js` | `analyzeSpec(text) -> {model, diagnostics, errorCount}` |
 | `src/core/expr.js` | `parseExpr`, `evalExpr`, `exprRefs`, `evaluate`, `ExprError` |
 | `src/core/hash.js` | `stableStringify`, `normalize`, `semanticHash`, `hashString` |
+| `src/core/reader.js` | `readerPage(model, view)`, `kindPage(model, kind)`, `sectionBlocks(model, sectionId)`, `outline(model, documentId?)`, `resolveBlock`, `classify`, `resolvePath`, `refIndex`, `kindIndex`, `ROW_CAP` (page data for reader views; pure) |
 | `src/core/query.js` | `entityLabel`, `componentOf`, `childrenOf`, `ancestorsOf`, `descendantsOf`, `ownedBy`, `inboundRefs`, `relationshipsOf`, `componentGraph`, `dependencies`, `selectComponents`, `contractsOf`, `declarationSite` |
 | `src/core/operations.js` | `OPERATIONS`, `planDelete`, `parseLayout`, `OpError`, `EMPTY_LAYOUT` |
 | `src/core/project.js` | `Project` (apply / undo / redo / reload / subscribe / history) |
@@ -45,13 +47,39 @@ are property definitions (`type`: id, string, text, boolean, number, enum, ref, 
 list, object, map, entities, effect, evaluation, any; plus `label`, `doc`, `required`,
 `values`/`valuesFrom`, `ref`, `items`, `fields`, `extension`).
 
-## Simulation — `src/core/engine.js` and the Rust engine (`engine/`)
+## The Lean call boundary — `src/core/lean.js` and `formal/Exegra/Api.lean`
+
+The Lean core (`formal/`) compiled to WebAssembly by `npm run build:formal-wasm` into
+`src/engine/lean/` (wasm64 only). One exported Lean function, `Exegra.Api.handle`, takes a
+JSON request and returns a JSON reply; the functions are registered on the Lean side
+(`Exegra.Api.registry`), so the binding names none of them.
+
+```js
+initLean() -> Promise<void>       // Node: synchronous (already settled); browser/worker: await it
+leanReady() -> boolean
+call(fn, args) -> {ok: true, value} | {ok: false, error: string}          // JS values in and out
+callText(fn, argsJsonText) -> {ok: true, text} | {ok: false, error: string} // JSON text, unparsed
+leanFunctions() -> {name, doc}[]  // the registry, in lookup order
+```
+
+Wire format: request `{"fn": <name>, "args": <JSON>}` (`args` may be left out), reply
+`{"ok": <result JSON>}` or `{"error": <message>}`. Errors are values: an unknown function, a
+malformed request, a refusal by the function, and a trap of the module (caught in `lean.js`,
+which then discards the instance and starts a fresh one on the next call) all come back as
+`{ok: false, error}`. Registered today: `engine.run` (`Exegra.runAnyValue`, format 1 and 2),
+`engine.explore` (`Exegra.exploreValue`), `engine.temporal` (`Exegra.temporalValue`) and
+`api.functions`. A module port adds `formal/Exegra/Api/<Module>.lean` with its `List Entry`
+and appends it to `Exegra.Api.modules`; `Exegra.Api.registry_names_nodup` (by `decide`) fails
+the build on a duplicate name. `Exegra.Api.runAny_eq_parse_call` proves that the native
+`exegra-lean` runs `Json.parse` followed by `call "engine.run"`.
+
+## Simulation — `src/core/engine.js` over the Lean core
 
 Discrete-event execution of the state machines (`behavior` entities) named by a
-`scenario`. Pure and deterministic. The engine is the Rust crate
-`engine/exegra-engine`, compiled to WebAssembly (`engine/exegra-engine-wasm`,
-bound into `src/engine/pkg/` by `npm run build:engine`); `src/core/engine.js` is
-the only module that loads it. It reads the engine input of `src/core/sim-input.js`
+`scenario`. Pure and deterministic. The engine is the Lean semantics of `formal/`,
+called as `engine.run` through the Lean call boundary; `src/core/engine.js` is the only
+module that runs it. The Rust crate `engine/exegra-engine` is a differential oracle in
+the tests (`tools/rust-engine.js`, `tools/differential.js`), not part of the application. It reads the engine input of `src/core/sim-input.js`
 and nothing else ([simulation.md](simulation.md), "Engine input and trace format").
 
 ```js
@@ -143,12 +171,15 @@ checkTrace(model, trace) -> { claimId, holds: boolean, pending?: boolean, stepIn
 //   reported with holds: false but is not a violation.
 
 opts = { recorded?: Recorded }
-Recorded = { results: { [evidenceId]: { outcome: 'pass'|'fail', detail?: string, ranAt?: string } } }
+Recorded = { results: { [evidenceId]: { outcome: 'pass'|'fail', detail?: string, ranAt?: string } },
+             theorems?: { [theoremName]: TheoremCheck } }   // tools/lean-theorems.js, recorded by exegra verify
+TheoremCheck = { found: boolean, kind?: string, kernel?: 'ok'|string, axioms?: string[],
+                 about?: { [constant]: { kind: string, inStatement: boolean } }, lean?: string, checkedAt?: string }
 
 ClaimResult = {
   claimId, kind, method: string|null,
-  status: 'verified'|'supported'|'violated'|'inconclusive'|'not-evaluated',
-  evaluator: string,         // e.g. "exegra.structural/0.1", "exegra.trace/0.1", "exegra.evidence/0.1", "none"
+  status: 'proved'|'verified'|'supported'|'model-holds'|'violated'|'inconclusive'|'not-evaluated',
+  evaluator: string,         // e.g. "lean.kernel/4.35.0", "exegra.structural/0.1", "exegra.trace/0.1", "exegra.evidence/0.1", "none"
   semanticHash: string,      // hash of the model the result was computed from
   scope: string,             // one sentence: what exactly was checked and what was not
   explanation: string,       // why this status
@@ -162,6 +193,21 @@ ClaimResult = {
 Status rules:
 
 - Unsupported method (not in `CLAIM_METHODS`) → `not-evaluated`.
+- `proved` is the status of a `lean-theorem` claim whose recorded Lean check shows a theorem
+  that exists, that the kernel accepts again, that depends on no axiom beyond `propext`,
+  `Classical.choice` and `Quot.sound` (no `sorryAx`, no `Lean.ofReduceBool`/`ofReduceNat` from
+  `native_decide`, no axiom of our own), and whose statement mentions every constant in `about`,
+  each a definition. Any of these failing → `violated` (Lean refuses the proof); no recorded check,
+  or one that did not cover an `about` constant → `not-evaluated`. Contradicting evidence turns
+  `proved` into `violated`. It establishes the statement about the Lean definitions; that the
+  code which runs is those definitions rests on the trusted-base assumptions.
+- `implementation-language`: every selected implemented component (`exclude` taken exactly)
+  records `implementation.language` equal to `language` → `verified`; otherwise `violated`,
+  listing the components by language with progress and `plannedBy`; nothing selected or a
+  component without a language → `inconclusive`.
+- `model-holds` is the status of a metric-bound claim over the model, with its stated parameters: it holds
+  in the model at the stated confidence over its runs. It is never `verified` or `supported`, and says nothing
+  about a system until calibrated (docs/simulation.md, Claims over metrics).
 - Structural methods (see `claim-methods.js` for parameters; selectors via
   `selectComponents`; relationship endpoints resolved with `componentOf`):
   holds → `verified`; fails → `violated` with a concrete counterexample
@@ -290,6 +336,8 @@ writeGenerated(name, files: Record<string, string>) -> Promise<{ok, written: str
 watchProject(name, onChange: ({file: 'spec'|'layout'|'recorded', hash}) => void) -> () => void   // SSE
 exportProject(name) -> Promise<Bundle>
 importProject(name, bundle) -> Promise<{ok, error?}>
+observeTraffic(fn)              // the session's traffic observer; every call above takes an optional last argument {requestId, ...}
+                                // and, with a requestId, records its request event and the server's events of the answer
 Bundle = { format: 'exegra-project', version: 1, name, files: { 'spec.jsonc': string, 'layout.jsonc'?: string, 'evidence/results.json'?: string } }
 ```
 
@@ -332,6 +380,9 @@ session.sim: { scenarioId: string|null, faults: string[], simulation: Simulation
                stepIndex: number, playing: boolean, checks: checkTrace() result }
 session.simLoad(scenarioId, faults?), session.simStep(), session.simBack(), session.simReset(),
 session.simRunToEnd(), session.simPlay(bool), session.simSeek(stepIndex), session.simSetFaults(ids)
+session.simLive(bool)           // Live source: the recorded stream replayed through live-session (docs/simulation.md, "Live mode")
+session.live: { on, available, divergences, awaiting, at: Map<seq, ms>, fresh, dropped }
+session.traffic                 // the page's traffic recorder (src/app/traffic-recorder.js): record(id, payload), nextRequestId(), events(), forReplay()
 
 session.revealSource(id)        // ask the source editor to show an entity's declaration
 session.requestFit(ids?)        // ask the scene to fit

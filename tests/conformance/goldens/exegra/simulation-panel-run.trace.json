@@ -1,0 +1,2967 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "engine-runner-flow": {
+    "state": "runner-ready",
+    "vars": {
+     "prevId": 0,
+     "prevToken": 0,
+     "seq": 1,
+     "waitingId": 0,
+     "waitingToken": 1
+    }
+   },
+   "engine-worker-flow": {
+    "state": "worker-ready",
+    "vars": {
+     "generation": 0,
+     "runs": 1
+    }
+   },
+   "scene-pulse-flow": {
+    "state": "pulse-ready",
+    "vars": {
+     "pulsedStep": 2,
+     "pulses": 3
+    }
+   },
+   "sim-session-flow": {
+    "state": "sim-idle",
+    "vars": {
+     "adoptedToken": 1,
+     "running": false,
+     "scenarioId": "visual-edit-flow",
+     "stepCount": 3,
+     "stepIndex": 2,
+     "token": 1
+    }
+   }
+  },
+  "pending": [],
+  "time": 9
+ },
+ "initial": {
+  "machines": {
+   "engine-runner-flow": {
+    "state": "runner-ready",
+    "vars": {
+     "prevId": 0,
+     "prevToken": 0,
+     "seq": 0,
+     "waitingId": 0,
+     "waitingToken": 0
+    }
+   },
+   "engine-worker-flow": {
+    "state": "worker-ready",
+    "vars": {
+     "generation": 0,
+     "runs": 0
+    }
+   },
+   "scene-pulse-flow": {
+    "state": "pulse-ready",
+    "vars": {
+     "pulsedStep": -1,
+     "pulses": 0
+    }
+   },
+   "sim-session-flow": {
+    "state": "sim-idle",
+    "vars": {
+     "adoptedToken": 0,
+     "running": false,
+     "scenarioId": "none",
+     "stepCount": 0,
+     "stepIndex": -1,
+     "token": 0
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "sim-load-requested",
+    "payload": {
+     "scenario": "visual-edit-flow"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   },
+   {
+    "event": "sim-step-requested",
+    "payload": {},
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    },
+    "time": 4
+   },
+   {
+    "event": "sim-step-requested",
+    "payload": {},
+    "seq": 2,
+    "source": {
+     "kind": "scenario",
+     "step": 2
+    },
+    "time": 5
+   },
+   {
+    "event": "sim-step-requested",
+    "payload": {},
+    "seq": 3,
+    "source": {
+     "kind": "scenario",
+     "step": 3
+    },
+    "time": 6
+   },
+   {
+    "event": "sim-step-requested",
+    "payload": {},
+    "seq": 4,
+    "source": {
+     "kind": "scenario",
+     "step": 4
+    },
+    "time": 7
+   },
+   {
+    "event": "sim-back-requested",
+    "payload": {},
+    "seq": 5,
+    "source": {
+     "kind": "scenario",
+     "step": 5
+    },
+    "time": 8
+   },
+   {
+    "event": "sim-run-to-end-requested",
+    "payload": {},
+    "seq": 6,
+    "source": {
+     "kind": "scenario",
+     "step": 6
+    },
+    "time": 9
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "simulation-panel-run",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 0,
+       "waitingId": 0,
+       "waitingToken": 0
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 0
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": -1,
+       "pulses": 0
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 0,
+       "running": true,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 0,
+       "stepIndex": -1,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "engine-run-intent",
+      "payload": {
+       "scenario": "visual-edit-flow",
+       "token": 1
+      },
+      "seq": 7,
+      "source": {
+       "behavior": "sim-session-flow",
+       "kind": "transition",
+       "transition": "sim-load"
+      },
+      "time": 0
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 4
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 5
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 6
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "kind": "scenario",
+       "step": 4
+      },
+      "time": 7
+     },
+     {
+      "event": "sim-back-requested",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "kind": "scenario",
+       "step": 5
+      },
+      "time": 8
+     },
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "sim-load-requested",
+    "payload": {
+     "scenario": "visual-edit-flow"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "sim-session-flow",
+     "emitted": [
+      {
+       "event": "engine-run-intent",
+       "payload": {
+        "scenario": "visual-edit-flow",
+        "token": 1
+       },
+       "seq": 7,
+       "time": 0
+      }
+     ],
+     "from": "sim-idle",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "token"
+      },
+      {
+       "after": "visual-edit-flow",
+       "before": "none",
+       "variable": "scenarioId"
+      },
+      {
+       "after": true,
+       "before": false,
+       "variable": "running"
+      },
+      {
+       "after": -1,
+       "before": -1,
+       "variable": "stepIndex"
+      },
+      {
+       "after": 0,
+       "before": 0,
+       "variable": "stepCount"
+      }
+     ],
+     "to": "sim-idle",
+     "transition": "sim-load"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "scene-pulse-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "sim-load-requested",
+    "sim-load",
+    "sim-session-flow",
+    "session"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 1,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 0
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": -1,
+       "pulses": 0
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 0,
+       "running": true,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 0,
+       "stepIndex": -1,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "engine-run-posted",
+      "payload": {
+       "id": 1,
+       "input": "visual-edit-flow"
+      },
+      "seq": 8,
+      "source": {
+       "behavior": "engine-runner-flow",
+       "kind": "transition",
+       "transition": "runner-post"
+      },
+      "time": 0
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 4
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 5
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 6
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "kind": "scenario",
+       "step": 4
+      },
+      "time": 7
+     },
+     {
+      "event": "sim-back-requested",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "kind": "scenario",
+       "step": 5
+      },
+      "time": 8
+     },
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "engine-run-intent",
+    "payload": {
+     "scenario": "visual-edit-flow",
+     "token": 1
+    },
+    "seq": 7,
+    "source": {
+     "behavior": "sim-session-flow",
+     "kind": "transition",
+     "transition": "sim-load"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "engine-runner-flow",
+     "emitted": [
+      {
+       "event": "engine-run-posted",
+       "payload": {
+        "id": 1,
+        "input": "visual-edit-flow"
+       },
+       "seq": 8,
+       "time": 0
+      }
+     ],
+     "from": "runner-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "seq"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "waitingId"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "waitingToken"
+      }
+     ],
+     "to": "runner-ready",
+     "transition": "runner-post"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "scene-pulse-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "engine-run-intent",
+    "runner-post",
+    "engine-runner-flow",
+    "simulation-engine"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 1,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": -1,
+       "pulses": 0
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 0,
+       "running": true,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 0,
+       "stepIndex": -1,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "worker-run-done",
+      "payload": {
+       "generation": 0,
+       "id": 1,
+       "input": "visual-edit-flow"
+      },
+      "seq": 9,
+      "source": {
+       "behavior": "engine-worker-flow",
+       "kind": "transition",
+       "transition": "worker-run"
+      },
+      "time": 2
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 4
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 5
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 6
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "kind": "scenario",
+       "step": 4
+      },
+      "time": 7
+     },
+     {
+      "event": "sim-back-requested",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "kind": "scenario",
+       "step": 5
+      },
+      "time": 8
+     },
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "engine-run-posted",
+    "payload": {
+     "id": 1,
+     "input": "visual-edit-flow"
+    },
+    "seq": 8,
+    "source": {
+     "behavior": "engine-runner-flow",
+     "kind": "transition",
+     "transition": "runner-post"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "engine-worker-flow",
+     "emitted": [
+      {
+       "event": "worker-run-done",
+       "payload": {
+        "generation": 0,
+        "id": 1,
+        "input": "visual-edit-flow"
+       },
+       "seq": 9,
+       "time": 2
+      }
+     ],
+     "from": "worker-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "runs"
+      }
+     ],
+     "to": "worker-ready",
+     "transition": "worker-run"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "scene-pulse-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "engine-run-posted",
+    "worker-run",
+    "engine-worker-flow",
+    "simulation-engine"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 1,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": -1,
+       "pulses": 0
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 0,
+       "running": true,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 0,
+       "stepIndex": -1,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "engine-run-returned",
+      "payload": {
+       "id": 1,
+       "ok": true,
+       "trace": "visual-edit-flow"
+      },
+      "seq": 10,
+      "source": {
+       "behavior": "engine-worker-flow",
+       "kind": "transition",
+       "transition": "worker-reply"
+      },
+      "time": 2
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 4
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 5
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 6
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "kind": "scenario",
+       "step": 4
+      },
+      "time": 7
+     },
+     {
+      "event": "sim-back-requested",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "kind": "scenario",
+       "step": 5
+      },
+      "time": 8
+     },
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "worker-run-done",
+    "payload": {
+     "generation": 0,
+     "id": 1,
+     "input": "visual-edit-flow"
+    },
+    "seq": 9,
+    "source": {
+     "behavior": "engine-worker-flow",
+     "kind": "transition",
+     "transition": "worker-run"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "engine-worker-flow",
+     "emitted": [
+      {
+       "event": "engine-run-returned",
+       "payload": {
+        "id": 1,
+        "ok": true,
+        "trace": "visual-edit-flow"
+       },
+       "seq": 10,
+       "time": 2
+      }
+     ],
+     "from": "worker-ready",
+     "guard": "event.generation == generation",
+     "sets": [],
+     "to": "worker-ready",
+     "transition": "worker-reply"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "scene-pulse-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "worker-run-done",
+    "worker-reply",
+    "engine-worker-flow",
+    "simulation-engine"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 0,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": -1,
+       "pulses": 0
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 0,
+       "running": true,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 0,
+       "stepIndex": -1,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "sim-trace-ready",
+      "payload": {
+       "steps": 3,
+       "token": 1
+      },
+      "seq": 11,
+      "source": {
+       "behavior": "engine-runner-flow",
+       "kind": "transition",
+       "transition": "runner-forward"
+      },
+      "time": 2
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 4
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 5
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 6
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "kind": "scenario",
+       "step": 4
+      },
+      "time": 7
+     },
+     {
+      "event": "sim-back-requested",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "kind": "scenario",
+       "step": 5
+      },
+      "time": 8
+     },
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "engine-run-returned",
+    "payload": {
+     "id": 1,
+     "ok": true,
+     "trace": "visual-edit-flow"
+    },
+    "seq": 10,
+    "source": {
+     "behavior": "engine-worker-flow",
+     "kind": "transition",
+     "transition": "worker-reply"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "engine-runner-flow",
+     "emitted": [
+      {
+       "event": "sim-trace-ready",
+       "payload": {
+        "steps": 3,
+        "token": 1
+       },
+       "seq": 11,
+       "time": 2
+      }
+     ],
+     "from": "runner-ready",
+     "guard": "event.id == waitingId",
+     "sets": [
+      {
+       "after": 0,
+       "before": 1,
+       "variable": "waitingId"
+      }
+     ],
+     "to": "runner-ready",
+     "transition": "runner-forward"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "scene-pulse-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 4,
+   "kind": "deliver",
+   "responsible": [
+    "engine-run-returned",
+    "runner-forward",
+    "engine-runner-flow",
+    "simulation-engine"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 0,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": -1,
+       "pulses": 0
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 1,
+       "running": false,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 3,
+       "stepIndex": -1,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 4
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 5
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 6
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "kind": "scenario",
+       "step": 4
+      },
+      "time": 7
+     },
+     {
+      "event": "sim-back-requested",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "kind": "scenario",
+       "step": 5
+      },
+      "time": 8
+     },
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "sim-trace-ready",
+    "payload": {
+     "steps": 3,
+     "token": 1
+    },
+    "seq": 11,
+    "source": {
+     "behavior": "engine-runner-flow",
+     "kind": "transition",
+     "transition": "runner-forward"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "sim-session-flow",
+     "emitted": [],
+     "from": "sim-idle",
+     "guard": "event.token == token",
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "adoptedToken"
+      },
+      {
+       "after": false,
+       "before": true,
+       "variable": "running"
+      },
+      {
+       "after": 3,
+       "before": 0,
+       "variable": "stepCount"
+      },
+      {
+       "after": -1,
+       "before": -1,
+       "variable": "stepIndex"
+      }
+     ],
+     "to": "sim-idle",
+     "transition": "sim-adopt"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "scene-pulse-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 5,
+   "kind": "deliver",
+   "responsible": [
+    "sim-trace-ready",
+    "sim-adopt",
+    "sim-session-flow",
+    "session"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 0,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": -1,
+       "pulses": 0
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 1,
+       "running": false,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 3,
+       "stepIndex": 0,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "sim-step-shown",
+      "payload": {
+       "stepIndex": 0
+      },
+      "seq": 12,
+      "source": {
+       "behavior": "sim-session-flow",
+       "kind": "transition",
+       "transition": "sim-step"
+      },
+      "time": 4
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 5
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 6
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "kind": "scenario",
+       "step": 4
+      },
+      "time": 7
+     },
+     {
+      "event": "sim-back-requested",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "kind": "scenario",
+       "step": 5
+      },
+      "time": 8
+     },
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 4
+   },
+   "event": {
+    "id": "sim-step-requested",
+    "payload": {},
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "sim-session-flow",
+     "emitted": [
+      {
+       "event": "sim-step-shown",
+       "payload": {
+        "stepIndex": 0
+       },
+       "seq": 12,
+       "time": 4
+      }
+     ],
+     "from": "sim-idle",
+     "guard": "stepIndex < stepCount - 1",
+     "sets": [
+      {
+       "after": 0,
+       "before": -1,
+       "variable": "stepIndex"
+      }
+     ],
+     "to": "sim-idle",
+     "transition": "sim-step"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "scene-pulse-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 6,
+   "kind": "deliver",
+   "responsible": [
+    "sim-step-requested",
+    "sim-step",
+    "sim-session-flow",
+    "session"
+   ],
+   "time": 4
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 0,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": 0,
+       "pulses": 1
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 1,
+       "running": false,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 3,
+       "stepIndex": 0,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "step-pulsed",
+      "payload": {
+       "stepIndex": 0
+      },
+      "seq": 13,
+      "source": {
+       "behavior": "scene-pulse-flow",
+       "kind": "transition",
+       "transition": "pulse-step"
+      },
+      "time": 4
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 5
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 6
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "kind": "scenario",
+       "step": 4
+      },
+      "time": 7
+     },
+     {
+      "event": "sim-back-requested",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "kind": "scenario",
+       "step": 5
+      },
+      "time": 8
+     },
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 4
+   },
+   "event": {
+    "id": "sim-step-shown",
+    "payload": {
+     "stepIndex": 0
+    },
+    "seq": 12,
+    "source": {
+     "behavior": "sim-session-flow",
+     "kind": "transition",
+     "transition": "sim-step"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "scene-pulse-flow",
+     "emitted": [
+      {
+       "event": "step-pulsed",
+       "payload": {
+        "stepIndex": 0
+       },
+       "seq": 13,
+       "time": 4
+      }
+     ],
+     "from": "pulse-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 0,
+       "before": -1,
+       "variable": "pulsedStep"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "pulses"
+      }
+     ],
+     "to": "pulse-ready",
+     "transition": "pulse-step"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 7,
+   "kind": "deliver",
+   "responsible": [
+    "sim-step-shown",
+    "pulse-step",
+    "scene-pulse-flow",
+    "visual-interaction"
+   ],
+   "time": 4
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 0,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": 0,
+       "pulses": 1
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 1,
+       "running": false,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 3,
+       "stepIndex": 0,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 5
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 6
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "kind": "scenario",
+       "step": 4
+      },
+      "time": 7
+     },
+     {
+      "event": "sim-back-requested",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "kind": "scenario",
+       "step": 5
+      },
+      "time": 8
+     },
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 4
+   },
+   "event": {
+    "id": "step-pulsed",
+    "payload": {
+     "stepIndex": 0
+    },
+    "seq": 13,
+    "source": {
+     "behavior": "scene-pulse-flow",
+     "kind": "transition",
+     "transition": "pulse-step"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "scene-pulse-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 8,
+   "kind": "deliver",
+   "responsible": [
+    "step-pulsed"
+   ],
+   "time": 4
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 0,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": 0,
+       "pulses": 1
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 1,
+       "running": false,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 3,
+       "stepIndex": 1,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "sim-step-shown",
+      "payload": {
+       "stepIndex": 1
+      },
+      "seq": 14,
+      "source": {
+       "behavior": "sim-session-flow",
+       "kind": "transition",
+       "transition": "sim-step"
+      },
+      "time": 5
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 6
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "kind": "scenario",
+       "step": 4
+      },
+      "time": 7
+     },
+     {
+      "event": "sim-back-requested",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "kind": "scenario",
+       "step": 5
+      },
+      "time": 8
+     },
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 5
+   },
+   "event": {
+    "id": "sim-step-requested",
+    "payload": {},
+    "seq": 2,
+    "source": {
+     "kind": "scenario",
+     "step": 2
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "sim-session-flow",
+     "emitted": [
+      {
+       "event": "sim-step-shown",
+       "payload": {
+        "stepIndex": 1
+       },
+       "seq": 14,
+       "time": 5
+      }
+     ],
+     "from": "sim-idle",
+     "guard": "stepIndex < stepCount - 1",
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "stepIndex"
+      }
+     ],
+     "to": "sim-idle",
+     "transition": "sim-step"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "scene-pulse-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 9,
+   "kind": "deliver",
+   "responsible": [
+    "sim-step-requested",
+    "sim-step",
+    "sim-session-flow",
+    "session"
+   ],
+   "time": 5
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 0,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": 1,
+       "pulses": 2
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 1,
+       "running": false,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 3,
+       "stepIndex": 1,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "step-pulsed",
+      "payload": {
+       "stepIndex": 1
+      },
+      "seq": 15,
+      "source": {
+       "behavior": "scene-pulse-flow",
+       "kind": "transition",
+       "transition": "pulse-step"
+      },
+      "time": 5
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 6
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "kind": "scenario",
+       "step": 4
+      },
+      "time": 7
+     },
+     {
+      "event": "sim-back-requested",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "kind": "scenario",
+       "step": 5
+      },
+      "time": 8
+     },
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 5
+   },
+   "event": {
+    "id": "sim-step-shown",
+    "payload": {
+     "stepIndex": 1
+    },
+    "seq": 14,
+    "source": {
+     "behavior": "sim-session-flow",
+     "kind": "transition",
+     "transition": "sim-step"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "scene-pulse-flow",
+     "emitted": [
+      {
+       "event": "step-pulsed",
+       "payload": {
+        "stepIndex": 1
+       },
+       "seq": 15,
+       "time": 5
+      }
+     ],
+     "from": "pulse-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "pulsedStep"
+      },
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "pulses"
+      }
+     ],
+     "to": "pulse-ready",
+     "transition": "pulse-step"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 10,
+   "kind": "deliver",
+   "responsible": [
+    "sim-step-shown",
+    "pulse-step",
+    "scene-pulse-flow",
+    "visual-interaction"
+   ],
+   "time": 5
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 0,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": 1,
+       "pulses": 2
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 1,
+       "running": false,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 3,
+       "stepIndex": 1,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 6
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "kind": "scenario",
+       "step": 4
+      },
+      "time": 7
+     },
+     {
+      "event": "sim-back-requested",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "kind": "scenario",
+       "step": 5
+      },
+      "time": 8
+     },
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 5
+   },
+   "event": {
+    "id": "step-pulsed",
+    "payload": {
+     "stepIndex": 1
+    },
+    "seq": 15,
+    "source": {
+     "behavior": "scene-pulse-flow",
+     "kind": "transition",
+     "transition": "pulse-step"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "scene-pulse-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 11,
+   "kind": "deliver",
+   "responsible": [
+    "step-pulsed"
+   ],
+   "time": 5
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 0,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": 1,
+       "pulses": 2
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 1,
+       "running": false,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 3,
+       "stepIndex": 2,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "sim-step-shown",
+      "payload": {
+       "stepIndex": 2
+      },
+      "seq": 16,
+      "source": {
+       "behavior": "sim-session-flow",
+       "kind": "transition",
+       "transition": "sim-step"
+      },
+      "time": 6
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "kind": "scenario",
+       "step": 4
+      },
+      "time": 7
+     },
+     {
+      "event": "sim-back-requested",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "kind": "scenario",
+       "step": 5
+      },
+      "time": 8
+     },
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 6
+   },
+   "event": {
+    "id": "sim-step-requested",
+    "payload": {},
+    "seq": 3,
+    "source": {
+     "kind": "scenario",
+     "step": 3
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "sim-session-flow",
+     "emitted": [
+      {
+       "event": "sim-step-shown",
+       "payload": {
+        "stepIndex": 2
+       },
+       "seq": 16,
+       "time": 6
+      }
+     ],
+     "from": "sim-idle",
+     "guard": "stepIndex < stepCount - 1",
+     "sets": [
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "stepIndex"
+      }
+     ],
+     "to": "sim-idle",
+     "transition": "sim-step"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "scene-pulse-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 12,
+   "kind": "deliver",
+   "responsible": [
+    "sim-step-requested",
+    "sim-step",
+    "sim-session-flow",
+    "session"
+   ],
+   "time": 6
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 0,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": 2,
+       "pulses": 3
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 1,
+       "running": false,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 3,
+       "stepIndex": 2,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "step-pulsed",
+      "payload": {
+       "stepIndex": 2
+      },
+      "seq": 17,
+      "source": {
+       "behavior": "scene-pulse-flow",
+       "kind": "transition",
+       "transition": "pulse-step"
+      },
+      "time": 6
+     },
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "kind": "scenario",
+       "step": 4
+      },
+      "time": 7
+     },
+     {
+      "event": "sim-back-requested",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "kind": "scenario",
+       "step": 5
+      },
+      "time": 8
+     },
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 6
+   },
+   "event": {
+    "id": "sim-step-shown",
+    "payload": {
+     "stepIndex": 2
+    },
+    "seq": 16,
+    "source": {
+     "behavior": "sim-session-flow",
+     "kind": "transition",
+     "transition": "sim-step"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "scene-pulse-flow",
+     "emitted": [
+      {
+       "event": "step-pulsed",
+       "payload": {
+        "stepIndex": 2
+       },
+       "seq": 17,
+       "time": 6
+      }
+     ],
+     "from": "pulse-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "pulsedStep"
+      },
+      {
+       "after": 3,
+       "before": 2,
+       "variable": "pulses"
+      }
+     ],
+     "to": "pulse-ready",
+     "transition": "pulse-step"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 13,
+   "kind": "deliver",
+   "responsible": [
+    "sim-step-shown",
+    "pulse-step",
+    "scene-pulse-flow",
+    "visual-interaction"
+   ],
+   "time": 6
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 0,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": 2,
+       "pulses": 3
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 1,
+       "running": false,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 3,
+       "stepIndex": 2,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "sim-step-requested",
+      "payload": {},
+      "seq": 4,
+      "source": {
+       "kind": "scenario",
+       "step": 4
+      },
+      "time": 7
+     },
+     {
+      "event": "sim-back-requested",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "kind": "scenario",
+       "step": 5
+      },
+      "time": 8
+     },
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 6
+   },
+   "event": {
+    "id": "step-pulsed",
+    "payload": {
+     "stepIndex": 2
+    },
+    "seq": 17,
+    "source": {
+     "behavior": "scene-pulse-flow",
+     "kind": "transition",
+     "transition": "pulse-step"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "sim-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "scene-pulse-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 14,
+   "kind": "deliver",
+   "responsible": [
+    "step-pulsed"
+   ],
+   "time": 6
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 0,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": 2,
+       "pulses": 3
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 1,
+       "running": false,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 3,
+       "stepIndex": 2,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "sim-back-requested",
+      "payload": {},
+      "seq": 5,
+      "source": {
+       "kind": "scenario",
+       "step": 5
+      },
+      "time": 8
+     },
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 7
+   },
+   "event": {
+    "id": "sim-step-requested",
+    "payload": {},
+    "seq": 4,
+    "source": {
+     "kind": "scenario",
+     "step": 4
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "sim-session-flow",
+     "emitted": [],
+     "from": "sim-idle",
+     "guard": "stepCount > 0",
+     "sets": [
+      {
+       "after": false,
+       "before": false,
+       "variable": "running"
+      }
+     ],
+     "to": "sim-idle",
+     "transition": "sim-step-at-end"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "scene-pulse-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 15,
+   "kind": "deliver",
+   "responsible": [
+    "sim-step-requested",
+    "sim-step-at-end",
+    "sim-session-flow",
+    "session"
+   ],
+   "time": 7
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 0,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": 2,
+       "pulses": 3
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 1,
+       "running": false,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 3,
+       "stepIndex": 1,
+       "token": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "sim-run-to-end-requested",
+      "payload": {},
+      "seq": 6,
+      "source": {
+       "kind": "scenario",
+       "step": 6
+      },
+      "time": 9
+     }
+    ],
+    "time": 8
+   },
+   "event": {
+    "id": "sim-back-requested",
+    "payload": {},
+    "seq": 5,
+    "source": {
+     "kind": "scenario",
+     "step": 5
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "sim-session-flow",
+     "emitted": [],
+     "from": "sim-idle",
+     "guard": "stepIndex >= 0",
+     "sets": [
+      {
+       "after": 1,
+       "before": 2,
+       "variable": "stepIndex"
+      }
+     ],
+     "to": "sim-idle",
+     "transition": "sim-back"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "scene-pulse-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 16,
+   "kind": "deliver",
+   "responsible": [
+    "sim-back-requested",
+    "sim-back",
+    "sim-session-flow",
+    "session"
+   ],
+   "time": 8
+  },
+  {
+   "config": {
+    "machines": {
+     "engine-runner-flow": {
+      "state": "runner-ready",
+      "vars": {
+       "prevId": 0,
+       "prevToken": 0,
+       "seq": 1,
+       "waitingId": 0,
+       "waitingToken": 1
+      }
+     },
+     "engine-worker-flow": {
+      "state": "worker-ready",
+      "vars": {
+       "generation": 0,
+       "runs": 1
+      }
+     },
+     "scene-pulse-flow": {
+      "state": "pulse-ready",
+      "vars": {
+       "pulsedStep": 2,
+       "pulses": 3
+      }
+     },
+     "sim-session-flow": {
+      "state": "sim-idle",
+      "vars": {
+       "adoptedToken": 1,
+       "running": false,
+       "scenarioId": "visual-edit-flow",
+       "stepCount": 3,
+       "stepIndex": 2,
+       "token": 1
+      }
+     }
+    },
+    "pending": [],
+    "time": 9
+   },
+   "event": {
+    "id": "sim-run-to-end-requested",
+    "payload": {},
+    "seq": 6,
+    "source": {
+     "kind": "scenario",
+     "step": 6
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "sim-session-flow",
+     "emitted": [],
+     "from": "sim-idle",
+     "guard": "stepCount > 0",
+     "sets": [
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "stepIndex"
+      }
+     ],
+     "to": "sim-idle",
+     "transition": "sim-run-to-end"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-runner-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-worker-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "scene-pulse-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 17,
+   "kind": "deliver",
+   "responsible": [
+    "sim-run-to-end-requested",
+    "sim-run-to-end",
+    "sim-session-flow",
+    "session"
+   ],
+   "time": 9
+  }
+ ]
+}

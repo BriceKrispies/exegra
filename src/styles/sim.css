@@ -124,6 +124,16 @@
   .sim__mark--bad { color: var(--bad); border-color: var(--bad); }
   .sim__controls { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: var(--s-2); margin: var(--s-4) 0 var(--s-3); }
   .sim__controls button:disabled, .sim__jump:disabled { opacity: 0.45; cursor: not-allowed; }
+  /* Source: a declared scenario, or Live (this application's own recorded events). */
+  .sim__sources { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-2); margin: 0 0 var(--s-3); }
+  .sim__source { min-height: var(--target); min-width: 0; }
+  .sim__source[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--surface-3); font-weight: 600; }
+  .sim__source:disabled { opacity: 0.45; cursor: not-allowed; }
+  .sim__live { display: block; margin: 0 0 var(--s-3); color: var(--ok); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+  .sim__live--bad { color: var(--bad); }
+  .sim__chip--bad { color: var(--bad); border-color: var(--bad); }
+  .sim__clock { flex: none; font-variant-numeric: tabular-nums; }
+  .sim__divergence .sim__reqtext { white-space: normal; overflow-wrap: anywhere; }
   .sim button:focus-visible, .sim select:focus-visible, .sim input:focus-visible, .sim summary:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
   .sim__status { display: block; color: var(--text-2); font-variant-numeric: tabular-nums; }
   .sim__outcome--error { color: var(--bad); }

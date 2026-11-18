@@ -1,0 +1,5500 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "app-start-flow": {
+    "state": "app-started",
+    "vars": {
+     "persistentFlag": true,
+     "project": "exegra"
+    }
+   },
+   "claim-evaluation-flow": {
+    "state": "evaluator-ready",
+    "vars": {
+     "evaluations": 1
+    }
+   },
+   "dev-server-flow": {
+    "state": "dev-ready",
+    "vars": {
+     "requests": 2
+    }
+   },
+   "engine-module-flow": {
+    "state": "engine-settled",
+    "vars": {
+     "built": true,
+     "loaded": true
+    }
+   },
+   "persistence-client-flow": {
+    "state": "client-ready",
+    "vars": {
+     "calls": 2,
+     "lastFile": "spec"
+    }
+   },
+   "project-history-flow": {
+    "state": "history-ready",
+    "vars": {
+     "layoutHash": "L1",
+     "redoDepth": 0,
+     "redoHash": "none",
+     "revision": 1,
+     "specHash": "h1",
+     "undoDepth": 0,
+     "undoHash": "none"
+    }
+   },
+   "project-session-flow": {
+    "state": "session-open",
+    "vars": {
+     "baseHash": "h1",
+     "conflictHash": "none",
+     "errorsLogged": 0,
+     "externalReloads": 0,
+     "layoutBase": "L1",
+     "layoutHash": "L1",
+     "ownNotices": 0,
+     "pendingAgain": false,
+     "pendingName": "exegra",
+     "persistent": true,
+     "projectName": "exegra",
+     "projectsListed": 1,
+     "readPurpose": "open",
+     "recordedVersion": "r1",
+     "reqSeq": 2,
+     "saveState": "saved",
+     "textHash": "h1"
+    }
+   },
+   "session-claims-flow": {
+    "state": "claims-ready",
+    "vars": {
+     "evaluations": 1,
+     "modelHash": "h1",
+     "resultsHash": "h1"
+    }
+   },
+   "workspace-disk-flow": {
+    "state": "ws-ready",
+    "vars": {
+     "conflicts": 0,
+     "diskLayout": "L1",
+     "diskSpec": "h1",
+     "generatedHash": "g1",
+     "imports": 0,
+     "journalLines": 0,
+     "layoutWrites": 0,
+     "recordedVersion": "r1",
+     "specWrites": 0
+    }
+   },
+   "workspace-watcher-flow": {
+    "state": "watcher-on",
+    "vars": {
+     "notices": 0
+    }
+   }
+  },
+  "pending": [],
+  "time": 0
+ },
+ "initial": {
+  "machines": {
+   "app-start-flow": {
+    "state": "app-loading",
+    "vars": {
+     "persistentFlag": true,
+     "project": "exegra"
+    }
+   },
+   "claim-evaluation-flow": {
+    "state": "evaluator-ready",
+    "vars": {
+     "evaluations": 0
+    }
+   },
+   "dev-server-flow": {
+    "state": "dev-ready",
+    "vars": {
+     "requests": 0
+    }
+   },
+   "engine-module-flow": {
+    "state": "engine-unloaded",
+    "vars": {
+     "built": true,
+     "loaded": false
+    }
+   },
+   "persistence-client-flow": {
+    "state": "client-ready",
+    "vars": {
+     "calls": 0,
+     "lastFile": "spec"
+    }
+   },
+   "project-history-flow": {
+    "state": "history-ready",
+    "vars": {
+     "layoutHash": "none",
+     "redoDepth": 0,
+     "redoHash": "none",
+     "revision": 1,
+     "specHash": "none",
+     "undoDepth": 0,
+     "undoHash": "none"
+    }
+   },
+   "project-session-flow": {
+    "state": "session-closed",
+    "vars": {
+     "baseHash": "none",
+     "conflictHash": "none",
+     "errorsLogged": 0,
+     "externalReloads": 0,
+     "layoutBase": "none",
+     "layoutHash": "none",
+     "ownNotices": 0,
+     "pendingAgain": false,
+     "pendingName": "none",
+     "persistent": true,
+     "projectName": "none",
+     "projectsListed": 0,
+     "readPurpose": "none",
+     "recordedVersion": "none",
+     "reqSeq": 0,
+     "saveState": "none",
+     "textHash": "none"
+    }
+   },
+   "session-claims-flow": {
+    "state": "claims-ready",
+    "vars": {
+     "evaluations": 0,
+     "modelHash": "none",
+     "resultsHash": "none"
+    }
+   },
+   "workspace-disk-flow": {
+    "state": "ws-ready",
+    "vars": {
+     "conflicts": 0,
+     "diskLayout": "L1",
+     "diskSpec": "h1",
+     "generatedHash": "g1",
+     "imports": 0,
+     "journalLines": 0,
+     "layoutWrites": 0,
+     "recordedVersion": "r1",
+     "specWrites": 0
+    }
+   },
+   "workspace-watcher-flow": {
+    "state": "watcher-off",
+    "vars": {
+     "notices": 0
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "page-loaded",
+    "payload": {
+     "persistent": true,
+     "project": "exegra"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "app-start-and-open",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-waiting-engine",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 0
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-unloaded",
+      "vars": {
+       "built": true,
+       "loaded": false
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 0,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-closed",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "none",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 0,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "engine-load-requested",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "behavior": "app-start-flow",
+       "kind": "transition",
+       "transition": "app-load-engine"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "page-loaded",
+    "payload": {
+     "persistent": true,
+     "project": "exegra"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "app-start-flow",
+     "emitted": [
+      {
+       "event": "engine-load-requested",
+       "payload": {},
+       "seq": 1,
+       "time": 0
+      }
+     ],
+     "from": "app-loading",
+     "guard": null,
+     "sets": [
+      {
+       "after": true,
+       "before": true,
+       "variable": "persistentFlag"
+      },
+      {
+       "after": "exegra",
+       "before": "exegra",
+       "variable": "project"
+      }
+     ],
+     "to": "app-waiting-engine",
+     "transition": "app-load-engine"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "page-loaded",
+    "app-load-engine",
+    "app-start-flow",
+    "visual-interaction"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-waiting-engine",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 0
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 0,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-closed",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "none",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 0,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "engine-load-settled",
+      "payload": {
+       "ok": true
+      },
+      "seq": 2,
+      "source": {
+       "behavior": "engine-module-flow",
+       "kind": "transition",
+       "transition": "engine-module-load"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "engine-load-requested",
+    "payload": {},
+    "seq": 1,
+    "source": {
+     "behavior": "app-start-flow",
+     "kind": "transition",
+     "transition": "app-load-engine"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "engine-module-flow",
+     "emitted": [
+      {
+       "event": "engine-load-settled",
+       "payload": {
+        "ok": true
+       },
+       "seq": 2,
+       "time": 0
+      }
+     ],
+     "from": "engine-unloaded",
+     "guard": null,
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "loaded"
+      }
+     ],
+     "to": "engine-settled",
+     "transition": "engine-module-load"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "engine-load-requested",
+    "engine-module-load",
+    "engine-module-flow",
+    "simulation-engine"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 0
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 0,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-closed",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "none",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 0,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "session-init-requested",
+      "payload": {
+       "persistent": true,
+       "project": "exegra"
+      },
+      "seq": 3,
+      "source": {
+       "behavior": "app-start-flow",
+       "kind": "transition",
+       "transition": "app-start-session"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "engine-load-settled",
+    "payload": {
+     "ok": true
+    },
+    "seq": 2,
+    "source": {
+     "behavior": "engine-module-flow",
+     "kind": "transition",
+     "transition": "engine-module-load"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "app-start-flow",
+     "emitted": [
+      {
+       "event": "session-init-requested",
+       "payload": {
+        "persistent": true,
+        "project": "exegra"
+       },
+       "seq": 3,
+       "time": 0
+      }
+     ],
+     "from": "app-waiting-engine",
+     "guard": null,
+     "sets": [],
+     "to": "app-started",
+     "transition": "app-start-session"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "engine-load-settled",
+    "app-start-session",
+    "app-start-flow",
+    "visual-interaction"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 0
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 0,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-closed",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 1,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "list-intent",
+      "payload": {
+       "requestId": 1
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "project-session-flow",
+       "kind": "transition",
+       "transition": "session-init"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "session-init-requested",
+    "payload": {
+     "persistent": true,
+     "project": "exegra"
+    },
+    "seq": 3,
+    "source": {
+     "behavior": "app-start-flow",
+     "kind": "transition",
+     "transition": "app-start-session"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "project-session-flow",
+     "emitted": [
+      {
+       "event": "list-intent",
+       "payload": {
+        "requestId": 1
+       },
+       "seq": 4,
+       "time": 0
+      }
+     ],
+     "from": "session-closed",
+     "guard": "event.persistent",
+     "sets": [
+      {
+       "after": "exegra",
+       "before": "none",
+       "variable": "pendingName"
+      },
+      {
+       "after": true,
+       "before": true,
+       "variable": "persistent"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "reqSeq"
+      }
+     ],
+     "to": "session-closed",
+     "transition": "session-init"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "session-init-requested",
+    "session-init",
+    "project-session-flow",
+    "session"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 0
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 1,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-closed",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 1,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "list-projects-request",
+      "payload": {
+       "requestId": 1
+      },
+      "seq": 5,
+      "source": {
+       "behavior": "persistence-client-flow",
+       "kind": "transition",
+       "transition": "client-list"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "list-intent",
+    "payload": {
+     "requestId": 1
+    },
+    "seq": 4,
+    "source": {
+     "behavior": "project-session-flow",
+     "kind": "transition",
+     "transition": "session-init"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "persistence-client-flow",
+     "emitted": [
+      {
+       "event": "list-projects-request",
+       "payload": {
+        "requestId": 1
+       },
+       "seq": 5,
+       "time": 0
+      }
+     ],
+     "from": "client-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "calls"
+      }
+     ],
+     "to": "client-ready",
+     "transition": "client-list"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 4,
+   "kind": "deliver",
+   "responsible": [
+    "list-intent",
+    "client-list",
+    "persistence-client-flow",
+    "persistence-client"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 1
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 1,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-closed",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 1,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ws-list",
+      "payload": {
+       "requestId": 1
+      },
+      "seq": 6,
+      "source": {
+       "behavior": "dev-server-flow",
+       "kind": "transition",
+       "transition": "dev-list"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "list-projects-request",
+    "payload": {
+     "requestId": 1
+    },
+    "seq": 5,
+    "source": {
+     "behavior": "persistence-client-flow",
+     "kind": "transition",
+     "transition": "client-list"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "dev-server-flow",
+     "emitted": [
+      {
+       "event": "ws-list",
+       "payload": {
+        "requestId": 1
+       },
+       "seq": 6,
+       "time": 0
+      }
+     ],
+     "from": "dev-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "requests"
+      }
+     ],
+     "to": "dev-ready",
+     "transition": "dev-list"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 5,
+   "kind": "deliver",
+   "responsible": [
+    "list-projects-request",
+    "dev-list",
+    "dev-server-flow",
+    "dev-server-plugin"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 1
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 1,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-closed",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 1,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ws-list-done",
+      "payload": {
+       "projects": [
+        "exegra",
+        "benchmark"
+       ],
+       "requestId": 1
+      },
+      "seq": 7,
+      "source": {
+       "behavior": "workspace-disk-flow",
+       "kind": "transition",
+       "transition": "ws-list-projects"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "ws-list",
+    "payload": {
+     "requestId": 1
+    },
+    "seq": 6,
+    "source": {
+     "behavior": "dev-server-flow",
+     "kind": "transition",
+     "transition": "dev-list"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "workspace-disk-flow",
+     "emitted": [
+      {
+       "event": "ws-list-done",
+       "payload": {
+        "projects": [
+         "exegra",
+         "benchmark"
+        ],
+        "requestId": 1
+       },
+       "seq": 7,
+       "time": 0
+      }
+     ],
+     "from": "ws-ready",
+     "guard": null,
+     "sets": [],
+     "to": "ws-ready",
+     "transition": "ws-list-projects"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 6,
+   "kind": "deliver",
+   "responsible": [
+    "ws-list",
+    "ws-list-projects",
+    "workspace-disk-flow",
+    "workspace-service"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 1
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 1,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-closed",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 1,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "list-projects-ok",
+      "payload": {
+       "projects": [
+        "exegra",
+        "benchmark"
+       ],
+       "requestId": 1
+      },
+      "seq": 8,
+      "source": {
+       "behavior": "dev-server-flow",
+       "kind": "transition",
+       "transition": "dev-listed"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "ws-list-done",
+    "payload": {
+     "projects": [
+      "exegra",
+      "benchmark"
+     ],
+     "requestId": 1
+    },
+    "seq": 7,
+    "source": {
+     "behavior": "workspace-disk-flow",
+     "kind": "transition",
+     "transition": "ws-list-projects"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "dev-server-flow",
+     "emitted": [
+      {
+       "event": "list-projects-ok",
+       "payload": {
+        "projects": [
+         "exegra",
+         "benchmark"
+        ],
+        "requestId": 1
+       },
+       "seq": 8,
+       "time": 0
+      }
+     ],
+     "from": "dev-ready",
+     "guard": null,
+     "sets": [],
+     "to": "dev-ready",
+     "transition": "dev-listed"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 7,
+   "kind": "deliver",
+   "responsible": [
+    "ws-list-done",
+    "dev-listed",
+    "dev-server-flow",
+    "dev-server-plugin"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 1
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 1,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-closed",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 1,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "projects-listed",
+      "payload": {
+       "projects": [
+        "exegra",
+        "benchmark"
+       ]
+      },
+      "seq": 9,
+      "source": {
+       "behavior": "persistence-client-flow",
+       "kind": "transition",
+       "transition": "client-listed"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "list-projects-ok",
+    "payload": {
+     "projects": [
+      "exegra",
+      "benchmark"
+     ],
+     "requestId": 1
+    },
+    "seq": 8,
+    "source": {
+     "behavior": "dev-server-flow",
+     "kind": "transition",
+     "transition": "dev-listed"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "persistence-client-flow",
+     "emitted": [
+      {
+       "event": "projects-listed",
+       "payload": {
+        "projects": [
+         "exegra",
+         "benchmark"
+        ]
+       },
+       "seq": 9,
+       "time": 0
+      }
+     ],
+     "from": "client-ready",
+     "guard": null,
+     "sets": [],
+     "to": "client-ready",
+     "transition": "client-listed"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 8,
+   "kind": "deliver",
+   "responsible": [
+    "list-projects-ok",
+    "client-listed",
+    "persistence-client-flow",
+    "persistence-client"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 1
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 1,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-closed",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 1,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 1,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "project-open-requested",
+      "payload": {
+       "name": "exegra"
+      },
+      "seq": 10,
+      "source": {
+       "behavior": "project-session-flow",
+       "kind": "transition",
+       "transition": "session-listed-open"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "projects-listed",
+    "payload": {
+     "projects": [
+      "exegra",
+      "benchmark"
+     ]
+    },
+    "seq": 9,
+    "source": {
+     "behavior": "persistence-client-flow",
+     "kind": "transition",
+     "transition": "client-listed"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "project-session-flow",
+     "emitted": [
+      {
+       "event": "project-open-requested",
+       "payload": {
+        "name": "exegra"
+       },
+       "seq": 10,
+       "time": 0
+      }
+     ],
+     "from": "session-closed",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "projectsListed"
+      }
+     ],
+     "to": "session-closed",
+     "transition": "session-listed-open"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 9,
+   "kind": "deliver",
+   "responsible": [
+    "projects-listed",
+    "session-listed-open",
+    "project-session-flow",
+    "session"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 1
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 1,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-opening",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 1,
+       "readPurpose": "open",
+       "recordedVersion": "none",
+       "reqSeq": 2,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "read-intent",
+      "payload": {
+       "name": "exegra",
+       "purpose": "open",
+       "requestId": 2
+      },
+      "seq": 11,
+      "source": {
+       "behavior": "project-session-flow",
+       "kind": "transition",
+       "transition": "session-open-read"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "project-open-requested",
+    "payload": {
+     "name": "exegra"
+    },
+    "seq": 10,
+    "source": {
+     "behavior": "project-session-flow",
+     "kind": "transition",
+     "transition": "session-listed-open"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "project-session-flow",
+     "emitted": [
+      {
+       "event": "read-intent",
+       "payload": {
+        "name": "exegra",
+        "purpose": "open",
+        "requestId": 2
+       },
+       "seq": 11,
+       "time": 0
+      }
+     ],
+     "from": "session-closed",
+     "guard": "persistent",
+     "sets": [
+      {
+       "after": "exegra",
+       "before": "exegra",
+       "variable": "pendingName"
+      },
+      {
+       "after": "open",
+       "before": "none",
+       "variable": "readPurpose"
+      },
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "reqSeq"
+      }
+     ],
+     "to": "session-opening",
+     "transition": "session-open-read"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 10,
+   "kind": "deliver",
+   "responsible": [
+    "project-open-requested",
+    "session-open-read",
+    "project-session-flow",
+    "session"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 1
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 2,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-opening",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 1,
+       "readPurpose": "open",
+       "recordedVersion": "none",
+       "reqSeq": 2,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "read-project-request",
+      "payload": {
+       "name": "exegra",
+       "requestId": 2
+      },
+      "seq": 12,
+      "source": {
+       "behavior": "persistence-client-flow",
+       "kind": "transition",
+       "transition": "client-read"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "read-intent",
+    "payload": {
+     "name": "exegra",
+     "purpose": "open",
+     "requestId": 2
+    },
+    "seq": 11,
+    "source": {
+     "behavior": "project-session-flow",
+     "kind": "transition",
+     "transition": "session-open-read"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "persistence-client-flow",
+     "emitted": [
+      {
+       "event": "read-project-request",
+       "payload": {
+        "name": "exegra",
+        "requestId": 2
+       },
+       "seq": 12,
+       "time": 0
+      }
+     ],
+     "from": "client-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "calls"
+      }
+     ],
+     "to": "client-ready",
+     "transition": "client-read"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 11,
+   "kind": "deliver",
+   "responsible": [
+    "read-intent",
+    "client-read",
+    "persistence-client-flow",
+    "persistence-client"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 2
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 2,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-opening",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 1,
+       "readPurpose": "open",
+       "recordedVersion": "none",
+       "reqSeq": 2,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ws-read",
+      "payload": {
+       "caller": "http",
+       "name": "exegra",
+       "requestId": 2
+      },
+      "seq": 13,
+      "source": {
+       "behavior": "dev-server-flow",
+       "kind": "transition",
+       "transition": "dev-read"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "read-project-request",
+    "payload": {
+     "name": "exegra",
+     "requestId": 2
+    },
+    "seq": 12,
+    "source": {
+     "behavior": "persistence-client-flow",
+     "kind": "transition",
+     "transition": "client-read"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "dev-server-flow",
+     "emitted": [
+      {
+       "event": "ws-read",
+       "payload": {
+        "caller": "http",
+        "name": "exegra",
+        "requestId": 2
+       },
+       "seq": 13,
+       "time": 0
+      }
+     ],
+     "from": "dev-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "requests"
+      }
+     ],
+     "to": "dev-ready",
+     "transition": "dev-read"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 12,
+   "kind": "deliver",
+   "responsible": [
+    "read-project-request",
+    "dev-read",
+    "dev-server-flow",
+    "dev-server-plugin"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 2
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 2,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-opening",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 1,
+       "readPurpose": "open",
+       "recordedVersion": "none",
+       "reqSeq": 2,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ws-read-done",
+      "payload": {
+       "caller": "http",
+       "layout": "L1",
+       "recorded": "r1",
+       "requestId": 2,
+       "spec": "h1"
+      },
+      "seq": 14,
+      "source": {
+       "behavior": "workspace-disk-flow",
+       "kind": "transition",
+       "transition": "ws-read-files"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "ws-read",
+    "payload": {
+     "caller": "http",
+     "name": "exegra",
+     "requestId": 2
+    },
+    "seq": 13,
+    "source": {
+     "behavior": "dev-server-flow",
+     "kind": "transition",
+     "transition": "dev-read"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "workspace-disk-flow",
+     "emitted": [
+      {
+       "event": "ws-read-done",
+       "payload": {
+        "caller": "http",
+        "layout": "L1",
+        "recorded": "r1",
+        "requestId": 2,
+        "spec": "h1"
+       },
+       "seq": 14,
+       "time": 0
+      }
+     ],
+     "from": "ws-ready",
+     "guard": null,
+     "sets": [],
+     "to": "ws-ready",
+     "transition": "ws-read-files"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 13,
+   "kind": "deliver",
+   "responsible": [
+    "ws-read",
+    "ws-read-files",
+    "workspace-disk-flow",
+    "workspace-service"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 2
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 2,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-opening",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 1,
+       "readPurpose": "open",
+       "recordedVersion": "none",
+       "reqSeq": 2,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "read-project-ok",
+      "payload": {
+       "layout": "L1",
+       "recorded": "r1",
+       "requestId": 2,
+       "spec": "h1"
+      },
+      "seq": 15,
+      "source": {
+       "behavior": "dev-server-flow",
+       "kind": "transition",
+       "transition": "dev-read-ok"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "ws-read-done",
+    "payload": {
+     "caller": "http",
+     "layout": "L1",
+     "recorded": "r1",
+     "requestId": 2,
+     "spec": "h1"
+    },
+    "seq": 14,
+    "source": {
+     "behavior": "workspace-disk-flow",
+     "kind": "transition",
+     "transition": "ws-read-files"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "dev-server-flow",
+     "emitted": [
+      {
+       "event": "read-project-ok",
+       "payload": {
+        "layout": "L1",
+        "recorded": "r1",
+        "requestId": 2,
+        "spec": "h1"
+       },
+       "seq": 15,
+       "time": 0
+      }
+     ],
+     "from": "dev-ready",
+     "guard": "event.caller == 'http'",
+     "sets": [],
+     "to": "dev-ready",
+     "transition": "dev-read-ok"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 14,
+   "kind": "deliver",
+   "responsible": [
+    "ws-read-done",
+    "dev-read-ok",
+    "dev-server-flow",
+    "dev-server-plugin"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 2
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 2,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-opening",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 1,
+       "readPurpose": "open",
+       "recordedVersion": "none",
+       "reqSeq": 2,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "project-files-read",
+      "payload": {
+       "layoutHash": "L1",
+       "recorded": "r1",
+       "requestId": 2,
+       "specHash": "h1"
+      },
+      "seq": 16,
+      "source": {
+       "behavior": "persistence-client-flow",
+       "kind": "transition",
+       "transition": "client-read-ok"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "read-project-ok",
+    "payload": {
+     "layout": "L1",
+     "recorded": "r1",
+     "requestId": 2,
+     "spec": "h1"
+    },
+    "seq": 15,
+    "source": {
+     "behavior": "dev-server-flow",
+     "kind": "transition",
+     "transition": "dev-read-ok"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "persistence-client-flow",
+     "emitted": [
+      {
+       "event": "project-files-read",
+       "payload": {
+        "layoutHash": "L1",
+        "recorded": "r1",
+        "requestId": 2,
+        "specHash": "h1"
+       },
+       "seq": 16,
+       "time": 0
+      }
+     ],
+     "from": "client-ready",
+     "guard": null,
+     "sets": [],
+     "to": "client-ready",
+     "transition": "client-read-ok"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 15,
+   "kind": "deliver",
+   "responsible": [
+    "read-project-ok",
+    "client-read-ok",
+    "persistence-client-flow",
+    "persistence-client"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 2
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 2,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 1,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 2,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "none",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "project-opened",
+      "payload": {
+       "layoutHash": "L1",
+       "name": "exegra",
+       "specHash": "h1"
+      },
+      "seq": 17,
+      "source": {
+       "behavior": "project-session-flow",
+       "kind": "transition",
+       "transition": "session-opened"
+      },
+      "time": 0
+     },
+     {
+      "event": "watch-intent",
+      "payload": {
+       "name": "exegra"
+      },
+      "seq": 18,
+      "source": {
+       "behavior": "project-session-flow",
+       "kind": "transition",
+       "transition": "session-opened"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "project-files-read",
+    "payload": {
+     "layoutHash": "L1",
+     "recorded": "r1",
+     "requestId": 2,
+     "specHash": "h1"
+    },
+    "seq": 16,
+    "source": {
+     "behavior": "persistence-client-flow",
+     "kind": "transition",
+     "transition": "client-read-ok"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "project-session-flow",
+     "emitted": [
+      {
+       "event": "project-opened",
+       "payload": {
+        "layoutHash": "L1",
+        "name": "exegra",
+        "specHash": "h1"
+       },
+       "seq": 17,
+       "time": 0
+      },
+      {
+       "event": "watch-intent",
+       "payload": {
+        "name": "exegra"
+       },
+       "seq": 18,
+       "time": 0
+      }
+     ],
+     "from": "session-opening",
+     "guard": null,
+     "sets": [
+      {
+       "after": "exegra",
+       "before": "none",
+       "variable": "projectName"
+      },
+      {
+       "after": "h1",
+       "before": "none",
+       "variable": "baseHash"
+      },
+      {
+       "after": "h1",
+       "before": "none",
+       "variable": "textHash"
+      },
+      {
+       "after": "L1",
+       "before": "none",
+       "variable": "layoutBase"
+      },
+      {
+       "after": "L1",
+       "before": "none",
+       "variable": "layoutHash"
+      },
+      {
+       "after": "r1",
+       "before": "none",
+       "variable": "recordedVersion"
+      },
+      {
+       "after": "saved",
+       "before": "none",
+       "variable": "saveState"
+      },
+      {
+       "after": false,
+       "before": false,
+       "variable": "pendingAgain"
+      },
+      {
+       "after": "none",
+       "before": "none",
+       "variable": "conflictHash"
+      }
+     ],
+     "to": "session-open",
+     "transition": "session-opened"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 16,
+   "kind": "deliver",
+   "responsible": [
+    "project-files-read",
+    "session-opened",
+    "project-session-flow",
+    "session"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 2
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 2,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 1,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 2,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "h1",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "watch-intent",
+      "payload": {
+       "name": "exegra"
+      },
+      "seq": 18,
+      "source": {
+       "behavior": "project-session-flow",
+       "kind": "transition",
+       "transition": "session-opened"
+      },
+      "time": 0
+     },
+     {
+      "event": "claims-evaluation-requested",
+      "payload": {
+       "modelHash": "h1"
+      },
+      "seq": 19,
+      "source": {
+       "behavior": "session-claims-flow",
+       "kind": "transition",
+       "transition": "claims-on-open"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "project-opened",
+    "payload": {
+     "layoutHash": "L1",
+     "name": "exegra",
+     "specHash": "h1"
+    },
+    "seq": 17,
+    "source": {
+     "behavior": "project-session-flow",
+     "kind": "transition",
+     "transition": "session-opened"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "project-history-flow",
+     "emitted": [],
+     "from": "history-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": "h1",
+       "before": "none",
+       "variable": "specHash"
+      },
+      {
+       "after": "L1",
+       "before": "none",
+       "variable": "layoutHash"
+      },
+      {
+       "after": 0,
+       "before": 0,
+       "variable": "undoDepth"
+      },
+      {
+       "after": 0,
+       "before": 0,
+       "variable": "redoDepth"
+      },
+      {
+       "after": 1,
+       "before": 1,
+       "variable": "revision"
+      }
+     ],
+     "to": "history-ready",
+     "transition": "history-open"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "emitted": [
+      {
+       "event": "claims-evaluation-requested",
+       "payload": {
+        "modelHash": "h1"
+       },
+       "seq": 19,
+       "time": 0
+      }
+     ],
+     "from": "claims-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": "h1",
+       "before": "none",
+       "variable": "modelHash"
+      }
+     ],
+     "to": "claims-ready",
+     "transition": "claims-on-open"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 17,
+   "kind": "deliver",
+   "responsible": [
+    "project-opened",
+    "history-open",
+    "project-history-flow",
+    "transactions",
+    "claims-on-open",
+    "session-claims-flow",
+    "session"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 0
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 2
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 2,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 1,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 2,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "h1",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "claims-evaluation-requested",
+      "payload": {
+       "modelHash": "h1"
+      },
+      "seq": 19,
+      "source": {
+       "behavior": "session-claims-flow",
+       "kind": "transition",
+       "transition": "claims-on-open"
+      },
+      "time": 0
+     },
+     {
+      "event": "watch-project-request",
+      "payload": {
+       "name": "exegra"
+      },
+      "seq": 20,
+      "source": {
+       "behavior": "persistence-client-flow",
+       "kind": "transition",
+       "transition": "client-watch"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "watch-intent",
+    "payload": {
+     "name": "exegra"
+    },
+    "seq": 18,
+    "source": {
+     "behavior": "project-session-flow",
+     "kind": "transition",
+     "transition": "session-opened"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "persistence-client-flow",
+     "emitted": [
+      {
+       "event": "watch-project-request",
+       "payload": {
+        "name": "exegra"
+       },
+       "seq": 20,
+       "time": 0
+      }
+     ],
+     "from": "client-ready",
+     "guard": null,
+     "sets": [],
+     "to": "client-ready",
+     "transition": "client-watch"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 18,
+   "kind": "deliver",
+   "responsible": [
+    "watch-intent",
+    "client-watch",
+    "persistence-client-flow",
+    "persistence-client"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 1
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 2
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 2,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 1,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 2,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "h1",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "watch-project-request",
+      "payload": {
+       "name": "exegra"
+      },
+      "seq": 20,
+      "source": {
+       "behavior": "persistence-client-flow",
+       "kind": "transition",
+       "transition": "client-watch"
+      },
+      "time": 0
+     },
+     {
+      "event": "claim-scenarios-run",
+      "payload": {
+       "modelHash": "h1"
+      },
+      "seq": 21,
+      "source": {
+       "behavior": "claim-evaluation-flow",
+       "kind": "transition",
+       "transition": "evaluator-run"
+      },
+      "time": 0
+     },
+     {
+      "event": "claims-evaluated",
+      "payload": {
+       "modelHash": "h1"
+      },
+      "seq": 22,
+      "source": {
+       "behavior": "claim-evaluation-flow",
+       "kind": "transition",
+       "transition": "evaluator-run"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "claims-evaluation-requested",
+    "payload": {
+     "modelHash": "h1"
+    },
+    "seq": 19,
+    "source": {
+     "behavior": "session-claims-flow",
+     "kind": "transition",
+     "transition": "claims-on-open"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "claim-evaluation-flow",
+     "emitted": [
+      {
+       "event": "claim-scenarios-run",
+       "payload": {
+        "modelHash": "h1"
+       },
+       "seq": 21,
+       "time": 0
+      },
+      {
+       "event": "claims-evaluated",
+       "payload": {
+        "modelHash": "h1"
+       },
+       "seq": 22,
+       "time": 0
+      }
+     ],
+     "from": "evaluator-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "evaluations"
+      }
+     ],
+     "to": "evaluator-ready",
+     "transition": "evaluator-run"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 19,
+   "kind": "deliver",
+   "responsible": [
+    "claims-evaluation-requested",
+    "evaluator-run",
+    "claim-evaluation-flow",
+    "claim-evaluator"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 1
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 2
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 2,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 1,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 2,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "h1",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "claim-scenarios-run",
+      "payload": {
+       "modelHash": "h1"
+      },
+      "seq": 21,
+      "source": {
+       "behavior": "claim-evaluation-flow",
+       "kind": "transition",
+       "transition": "evaluator-run"
+      },
+      "time": 0
+     },
+     {
+      "event": "claims-evaluated",
+      "payload": {
+       "modelHash": "h1"
+      },
+      "seq": 22,
+      "source": {
+       "behavior": "claim-evaluation-flow",
+       "kind": "transition",
+       "transition": "evaluator-run"
+      },
+      "time": 0
+     },
+     {
+      "event": "ws-watch",
+      "payload": {
+       "name": "exegra"
+      },
+      "seq": 23,
+      "source": {
+       "behavior": "dev-server-flow",
+       "kind": "transition",
+       "transition": "dev-watch"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "watch-project-request",
+    "payload": {
+     "name": "exegra"
+    },
+    "seq": 20,
+    "source": {
+     "behavior": "persistence-client-flow",
+     "kind": "transition",
+     "transition": "client-watch"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "dev-server-flow",
+     "emitted": [
+      {
+       "event": "ws-watch",
+       "payload": {
+        "name": "exegra"
+       },
+       "seq": 23,
+       "time": 0
+      }
+     ],
+     "from": "dev-ready",
+     "guard": null,
+     "sets": [],
+     "to": "dev-ready",
+     "transition": "dev-watch"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 20,
+   "kind": "deliver",
+   "responsible": [
+    "watch-project-request",
+    "dev-watch",
+    "dev-server-flow",
+    "dev-server-plugin"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 1
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 2
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 2,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 1,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 2,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 0,
+       "modelHash": "h1",
+       "resultsHash": "none"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "claims-evaluated",
+      "payload": {
+       "modelHash": "h1"
+      },
+      "seq": 22,
+      "source": {
+       "behavior": "claim-evaluation-flow",
+       "kind": "transition",
+       "transition": "evaluator-run"
+      },
+      "time": 0
+     },
+     {
+      "event": "ws-watch",
+      "payload": {
+       "name": "exegra"
+      },
+      "seq": 23,
+      "source": {
+       "behavior": "dev-server-flow",
+       "kind": "transition",
+       "transition": "dev-watch"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "claim-scenarios-run",
+    "payload": {
+     "modelHash": "h1"
+    },
+    "seq": 21,
+    "source": {
+     "behavior": "claim-evaluation-flow",
+     "kind": "transition",
+     "transition": "evaluator-run"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 21,
+   "kind": "deliver",
+   "responsible": [
+    "claim-scenarios-run"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 1
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 2
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 2,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 1,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 2,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 1,
+       "modelHash": "h1",
+       "resultsHash": "h1"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-off",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ws-watch",
+      "payload": {
+       "name": "exegra"
+      },
+      "seq": 23,
+      "source": {
+       "behavior": "dev-server-flow",
+       "kind": "transition",
+       "transition": "dev-watch"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "claims-evaluated",
+    "payload": {
+     "modelHash": "h1"
+    },
+    "seq": 22,
+    "source": {
+     "behavior": "claim-evaluation-flow",
+     "kind": "transition",
+     "transition": "evaluator-run"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "session-claims-flow",
+     "emitted": [],
+     "from": "claims-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": "h1",
+       "before": "none",
+       "variable": "resultsHash"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "evaluations"
+      }
+     ],
+     "to": "claims-ready",
+     "transition": "claims-results"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-watcher-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 22,
+   "kind": "deliver",
+   "responsible": [
+    "claims-evaluated",
+    "claims-results",
+    "session-claims-flow",
+    "session"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": true,
+       "project": "exegra"
+      }
+     },
+     "claim-evaluation-flow": {
+      "state": "evaluator-ready",
+      "vars": {
+       "evaluations": 1
+      }
+     },
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 2
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 2,
+       "lastFile": "spec"
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 1,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 2,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
+     "session-claims-flow": {
+      "state": "claims-ready",
+      "vars": {
+       "evaluations": 1,
+       "modelHash": "h1",
+       "resultsHash": "h1"
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     },
+     "workspace-watcher-flow": {
+      "state": "watcher-on",
+      "vars": {
+       "notices": 0
+      }
+     }
+    },
+    "pending": [],
+    "time": 0
+   },
+   "event": {
+    "id": "ws-watch",
+    "payload": {
+     "name": "exegra"
+    },
+    "seq": 23,
+    "source": {
+     "behavior": "dev-server-flow",
+     "kind": "transition",
+     "transition": "dev-watch"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "workspace-watcher-flow",
+     "emitted": [],
+     "from": "watcher-off",
+     "guard": null,
+     "sets": [],
+     "to": "watcher-on",
+     "transition": "watcher-subscribe"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-claims-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "claim-evaluation-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 23,
+   "kind": "deliver",
+   "responsible": [
+    "ws-watch",
+    "watcher-subscribe",
+    "workspace-watcher-flow",
+    "workspace-service"
+   ],
+   "time": 0
+  }
+ ]
+}

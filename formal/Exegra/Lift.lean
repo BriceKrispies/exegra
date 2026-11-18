@@ -102,14 +102,14 @@ def overKey (key : String) (f : Value → Value) : Value → Value
 
 def configKeys : List String :=
   ["resources", "links", "timers", "workloads", "meters", "routeCounters", "streams", "down",
-   "incarnations"]
+   "incarnations", "activeFaults"]
 
 def stripConfig (c : Value) : Value :=
-  overKey "pending" (overArr (drop ["scheduledAt", "routes", "from", "target"])) (drop configKeys c)
+  overKey "pending" (overArr (drop ["scheduledAt", "routes", "from", "target", "copyOf"])) (drop configKeys c)
 
 def stripStep (s : Value) : Value :=
-  let s := drop ["resources", "draws"] s
-  let s := overKey "event" (drop ["scheduledAt", "routes", "from", "target"]) s
+  let s := drop ["resources", "draws", "links"] s
+  let s := overKey "event" (drop ["scheduledAt", "routes", "from", "target", "copyOf"]) s
   let s := overKey "fired" (overArr (drop ["instance"])) s
   let s := overKey "ignored" (overArr (drop ["instance"])) s
   overKey "config" stripConfig s

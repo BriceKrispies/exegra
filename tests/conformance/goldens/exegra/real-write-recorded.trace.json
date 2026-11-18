@@ -1,0 +1,1257 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "dev-server-flow": {
+    "state": "dev-ready",
+    "vars": {
+     "requests": 1
+    }
+   },
+   "persistence-client-flow": {
+    "state": "client-ready",
+    "vars": {
+     "calls": 1,
+     "lastFile": "spec"
+    }
+   },
+   "traffic-recorder-flow": {
+    "state": "recorder-on",
+    "vars": {
+     "lines": 2
+    }
+   },
+   "workspace-disk-flow": {
+    "state": "ws-ready",
+    "vars": {
+     "conflicts": 0,
+     "diskLayout": "L1",
+     "diskSpec": "h2",
+     "generatedHash": "g1",
+     "imports": 0,
+     "journalLines": 1,
+     "layoutWrites": 0,
+     "recordedVersion": "r1",
+     "specWrites": 1
+    }
+   }
+  },
+  "pending": [],
+  "time": 0
+ },
+ "initial": {
+  "machines": {
+   "dev-server-flow": {
+    "state": "dev-ready",
+    "vars": {
+     "requests": 0
+    }
+   },
+   "persistence-client-flow": {
+    "state": "client-ready",
+    "vars": {
+     "calls": 0,
+     "lastFile": "spec"
+    }
+   },
+   "traffic-recorder-flow": {
+    "state": "recorder-on",
+    "vars": {
+     "lines": 0
+    }
+   },
+   "workspace-disk-flow": {
+    "state": "ws-ready",
+    "vars": {
+     "conflicts": 0,
+     "diskLayout": "L1",
+     "diskSpec": "h1",
+     "generatedHash": "g1",
+     "imports": 0,
+     "journalLines": 0,
+     "layoutWrites": 0,
+     "recordedVersion": "r1",
+     "specWrites": 0
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "write-intent",
+    "payload": {
+     "baseHash": "h1",
+     "file": "spec",
+     "name": "exegra",
+     "requestId": 1,
+     "text": "h2"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "real-write-recorded",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 0
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 1,
+       "lastFile": "spec"
+      }
+     },
+     "traffic-recorder-flow": {
+      "state": "recorder-on",
+      "vars": {
+       "lines": 0
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "write-file-request",
+      "payload": {
+       "baseHash": "h1",
+       "file": "spec",
+       "name": "exegra",
+       "requestId": 1,
+       "text": "h2"
+      },
+      "seq": 1,
+      "source": {
+       "behavior": "persistence-client-flow",
+       "kind": "transition",
+       "transition": "client-write"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "write-intent",
+    "payload": {
+     "baseHash": "h1",
+     "file": "spec",
+     "name": "exegra",
+     "requestId": 1,
+     "text": "h2"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "persistence-client-flow",
+     "emitted": [
+      {
+       "event": "write-file-request",
+       "payload": {
+        "baseHash": "h1",
+        "file": "spec",
+        "name": "exegra",
+        "requestId": 1,
+        "text": "h2"
+       },
+       "seq": 1,
+       "time": 0
+      }
+     ],
+     "from": "client-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "calls"
+      },
+      {
+       "after": "spec",
+       "before": "spec",
+       "variable": "lastFile"
+      }
+     ],
+     "to": "client-ready",
+     "transition": "client-write"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "traffic-recorder-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "write-intent",
+    "client-write",
+    "persistence-client-flow",
+    "persistence-client"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 1
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 1,
+       "lastFile": "spec"
+      }
+     },
+     "traffic-recorder-flow": {
+      "state": "recorder-on",
+      "vars": {
+       "lines": 1
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ws-write",
+      "payload": {
+       "baseHash": "h1",
+       "caller": "http",
+       "file": "spec",
+       "name": "exegra",
+       "requestId": 1,
+       "text": "h2"
+      },
+      "seq": 2,
+      "source": {
+       "behavior": "dev-server-flow",
+       "kind": "transition",
+       "transition": "dev-write"
+      },
+      "time": 0
+     },
+     {
+      "event": "traffic-step-recorded",
+      "payload": {
+       "event": "write-file-request"
+      },
+      "seq": 3,
+      "source": {
+       "behavior": "traffic-recorder-flow",
+       "kind": "transition",
+       "transition": "recorder-request"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "write-file-request",
+    "payload": {
+     "baseHash": "h1",
+     "file": "spec",
+     "name": "exegra",
+     "requestId": 1,
+     "text": "h2"
+    },
+    "seq": 1,
+    "source": {
+     "behavior": "persistence-client-flow",
+     "kind": "transition",
+     "transition": "client-write"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "dev-server-flow",
+     "emitted": [
+      {
+       "event": "ws-write",
+       "payload": {
+        "baseHash": "h1",
+        "caller": "http",
+        "file": "spec",
+        "name": "exegra",
+        "requestId": 1,
+        "text": "h2"
+       },
+       "seq": 2,
+       "time": 0
+      }
+     ],
+     "from": "dev-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "requests"
+      }
+     ],
+     "to": "dev-ready",
+     "transition": "dev-write"
+    },
+    {
+     "behavior": "traffic-recorder-flow",
+     "emitted": [
+      {
+       "event": "traffic-step-recorded",
+       "payload": {
+        "event": "write-file-request"
+       },
+       "seq": 3,
+       "time": 0
+      }
+     ],
+     "from": "recorder-on",
+     "guard": null,
+     "sets": [
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "lines"
+      }
+     ],
+     "to": "recorder-on",
+     "transition": "recorder-request"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "write-file-request",
+    "dev-write",
+    "dev-server-flow",
+    "dev-server-plugin",
+    "recorder-request",
+    "traffic-recorder-flow",
+    "traffic-recorder"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 1
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 1,
+       "lastFile": "spec"
+      }
+     },
+     "traffic-recorder-flow": {
+      "state": "recorder-on",
+      "vars": {
+       "lines": 1
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h2",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 1,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "traffic-step-recorded",
+      "payload": {
+       "event": "write-file-request"
+      },
+      "seq": 3,
+      "source": {
+       "behavior": "traffic-recorder-flow",
+       "kind": "transition",
+       "transition": "recorder-request"
+      },
+      "time": 0
+     },
+     {
+      "event": "disk-file-replaced",
+      "payload": {
+       "file": "spec",
+       "hash": "h2"
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "workspace-disk-flow",
+       "kind": "transition",
+       "transition": "ws-write-spec"
+      },
+      "time": 0
+     },
+     {
+      "event": "ws-write-done",
+      "payload": {
+       "caller": "http",
+       "file": "spec",
+       "hash": "h2",
+       "requestId": 1
+      },
+      "seq": 5,
+      "source": {
+       "behavior": "workspace-disk-flow",
+       "kind": "transition",
+       "transition": "ws-write-spec"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "ws-write",
+    "payload": {
+     "baseHash": "h1",
+     "caller": "http",
+     "file": "spec",
+     "name": "exegra",
+     "requestId": 1,
+     "text": "h2"
+    },
+    "seq": 2,
+    "source": {
+     "behavior": "dev-server-flow",
+     "kind": "transition",
+     "transition": "dev-write"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "workspace-disk-flow",
+     "emitted": [
+      {
+       "event": "disk-file-replaced",
+       "payload": {
+        "file": "spec",
+        "hash": "h2"
+       },
+       "seq": 4,
+       "time": 0
+      },
+      {
+       "event": "ws-write-done",
+       "payload": {
+        "caller": "http",
+        "file": "spec",
+        "hash": "h2",
+        "requestId": 1
+       },
+       "seq": 5,
+       "time": 0
+      }
+     ],
+     "from": "ws-ready",
+     "guard": "event.file == 'spec' && event.baseHash == diskSpec",
+     "sets": [
+      {
+       "after": "h2",
+       "before": "h1",
+       "variable": "diskSpec"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "specWrites"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "journalLines"
+      }
+     ],
+     "to": "ws-ready",
+     "transition": "ws-write-spec"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "traffic-recorder-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "ws-write",
+    "ws-write-spec",
+    "workspace-disk-flow",
+    "workspace-service"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 1
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 1,
+       "lastFile": "spec"
+      }
+     },
+     "traffic-recorder-flow": {
+      "state": "recorder-on",
+      "vars": {
+       "lines": 1
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h2",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 1,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "disk-file-replaced",
+      "payload": {
+       "file": "spec",
+       "hash": "h2"
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "workspace-disk-flow",
+       "kind": "transition",
+       "transition": "ws-write-spec"
+      },
+      "time": 0
+     },
+     {
+      "event": "ws-write-done",
+      "payload": {
+       "caller": "http",
+       "file": "spec",
+       "hash": "h2",
+       "requestId": 1
+      },
+      "seq": 5,
+      "source": {
+       "behavior": "workspace-disk-flow",
+       "kind": "transition",
+       "transition": "ws-write-spec"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "traffic-step-recorded",
+    "payload": {
+     "event": "write-file-request"
+    },
+    "seq": 3,
+    "source": {
+     "behavior": "traffic-recorder-flow",
+     "kind": "transition",
+     "transition": "recorder-request"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "traffic-recorder-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "traffic-step-recorded"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 1
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 1,
+       "lastFile": "spec"
+      }
+     },
+     "traffic-recorder-flow": {
+      "state": "recorder-on",
+      "vars": {
+       "lines": 1
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h2",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 1,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "ws-write-done",
+      "payload": {
+       "caller": "http",
+       "file": "spec",
+       "hash": "h2",
+       "requestId": 1
+      },
+      "seq": 5,
+      "source": {
+       "behavior": "workspace-disk-flow",
+       "kind": "transition",
+       "transition": "ws-write-spec"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "disk-file-replaced",
+    "payload": {
+     "file": "spec",
+     "hash": "h2"
+    },
+    "seq": 4,
+    "source": {
+     "behavior": "workspace-disk-flow",
+     "kind": "transition",
+     "transition": "ws-write-spec"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "traffic-recorder-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 4,
+   "kind": "deliver",
+   "responsible": [
+    "disk-file-replaced"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 1
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 1,
+       "lastFile": "spec"
+      }
+     },
+     "traffic-recorder-flow": {
+      "state": "recorder-on",
+      "vars": {
+       "lines": 1
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h2",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 1,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "write-file-ok",
+      "payload": {
+       "hash": "h2",
+       "ok": true,
+       "requestId": 1
+      },
+      "seq": 6,
+      "source": {
+       "behavior": "dev-server-flow",
+       "kind": "transition",
+       "transition": "dev-write-ok"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "ws-write-done",
+    "payload": {
+     "caller": "http",
+     "file": "spec",
+     "hash": "h2",
+     "requestId": 1
+    },
+    "seq": 5,
+    "source": {
+     "behavior": "workspace-disk-flow",
+     "kind": "transition",
+     "transition": "ws-write-spec"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "dev-server-flow",
+     "emitted": [
+      {
+       "event": "write-file-ok",
+       "payload": {
+        "hash": "h2",
+        "ok": true,
+        "requestId": 1
+       },
+       "seq": 6,
+       "time": 0
+      }
+     ],
+     "from": "dev-ready",
+     "guard": "event.caller == 'http'",
+     "sets": [],
+     "to": "dev-ready",
+     "transition": "dev-write-ok"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "traffic-recorder-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 5,
+   "kind": "deliver",
+   "responsible": [
+    "ws-write-done",
+    "dev-write-ok",
+    "dev-server-flow",
+    "dev-server-plugin"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 1
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 1,
+       "lastFile": "spec"
+      }
+     },
+     "traffic-recorder-flow": {
+      "state": "recorder-on",
+      "vars": {
+       "lines": 2
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h2",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 1,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "save-succeeded",
+      "payload": {
+       "file": "spec",
+       "hash": "h2",
+       "requestId": 1
+      },
+      "seq": 7,
+      "source": {
+       "behavior": "persistence-client-flow",
+       "kind": "transition",
+       "transition": "client-write-ok"
+      },
+      "time": 0
+     },
+     {
+      "event": "traffic-step-recorded",
+      "payload": {
+       "event": "write-file-ok"
+      },
+      "seq": 8,
+      "source": {
+       "behavior": "traffic-recorder-flow",
+       "kind": "transition",
+       "transition": "recorder-ok"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "write-file-ok",
+    "payload": {
+     "hash": "h2",
+     "ok": true,
+     "requestId": 1
+    },
+    "seq": 6,
+    "source": {
+     "behavior": "dev-server-flow",
+     "kind": "transition",
+     "transition": "dev-write-ok"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "persistence-client-flow",
+     "emitted": [
+      {
+       "event": "save-succeeded",
+       "payload": {
+        "file": "spec",
+        "hash": "h2",
+        "requestId": 1
+       },
+       "seq": 7,
+       "time": 0
+      }
+     ],
+     "from": "client-ready",
+     "guard": null,
+     "sets": [],
+     "to": "client-ready",
+     "transition": "client-write-ok"
+    },
+    {
+     "behavior": "traffic-recorder-flow",
+     "emitted": [
+      {
+       "event": "traffic-step-recorded",
+       "payload": {
+        "event": "write-file-ok"
+       },
+       "seq": 8,
+       "time": 0
+      }
+     ],
+     "from": "recorder-on",
+     "guard": null,
+     "sets": [
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "lines"
+      }
+     ],
+     "to": "recorder-on",
+     "transition": "recorder-ok"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 6,
+   "kind": "deliver",
+   "responsible": [
+    "write-file-ok",
+    "client-write-ok",
+    "persistence-client-flow",
+    "persistence-client",
+    "recorder-ok",
+    "traffic-recorder-flow",
+    "traffic-recorder"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 1
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 1,
+       "lastFile": "spec"
+      }
+     },
+     "traffic-recorder-flow": {
+      "state": "recorder-on",
+      "vars": {
+       "lines": 2
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h2",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 1,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 1
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "traffic-step-recorded",
+      "payload": {
+       "event": "write-file-ok"
+      },
+      "seq": 8,
+      "source": {
+       "behavior": "traffic-recorder-flow",
+       "kind": "transition",
+       "transition": "recorder-ok"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "save-succeeded",
+    "payload": {
+     "file": "spec",
+     "hash": "h2",
+     "requestId": 1
+    },
+    "seq": 7,
+    "source": {
+     "behavior": "persistence-client-flow",
+     "kind": "transition",
+     "transition": "client-write-ok"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "traffic-recorder-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 7,
+   "kind": "deliver",
+   "responsible": [
+    "save-succeeded"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "dev-server-flow": {
+      "state": "dev-ready",
+      "vars": {
+       "requests": 1
+      }
+     },
+     "persistence-client-flow": {
+      "state": "client-ready",
+      "vars": {
+       "calls": 1,
+       "lastFile": "spec"
+      }
+     },
+     "traffic-recorder-flow": {
+      "state": "recorder-on",
+      "vars": {
+       "lines": 2
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h2",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 1,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 1
+      }
+     }
+    },
+    "pending": [],
+    "time": 0
+   },
+   "event": {
+    "id": "traffic-step-recorded",
+    "payload": {
+     "event": "write-file-ok"
+    },
+    "seq": 8,
+    "source": {
+     "behavior": "traffic-recorder-flow",
+     "kind": "transition",
+     "transition": "recorder-ok"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "persistence-client-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "dev-server-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "traffic-recorder-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 8,
+   "kind": "deliver",
+   "responsible": [
+    "traffic-step-recorded"
+   ],
+   "time": 0
+  }
+ ]
+}

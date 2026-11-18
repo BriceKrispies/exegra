@@ -107,11 +107,13 @@ structure Ignored where
 
 inductive FaultEffect where
   | dropped | delayed | enabled | disabled | injected
+  /-- A format-2 effect (`capacity`, `limit`, `collapsed`, `scaled`, `replaced`, ...). -/
+  | other (name : String)
   deriving DecidableEq, Inhabited
 
 def FaultEffect.name : FaultEffect → String
   | .dropped => "dropped" | .delayed => "delayed" | .enabled => "enabled"
-  | .disabled => "disabled" | .injected => "injected"
+  | .disabled => "disabled" | .injected => "injected" | .other n => n
 
 structure FaultRecord where
   fault : String

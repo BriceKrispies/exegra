@@ -168,8 +168,7 @@ def fieldOr (o : List (String × Value)) (k : String) : Value := (objGet? o k).g
 /-- One request: `{input, claims: [{id, expr}], bound, maxStates, emitLean?}`. The answer holds
 the active fault ids, the result of each claim and, when `emitLean` is true, the Lean term of
 the input. -/
-def runExplore (text : String) : Except String String := do
-  let req ← Json.parse text
+def exploreValue (req : Value) : Except String String := do
   let root ← match req with
     | .obj _ fs => pure fs
     | _ => throw "explore: the request must be an object"
@@ -197,5 +196,10 @@ def runExplore (text : String) : Except String String := do
       ("results", Encode.a results)] ++
       (if emitLean then [("leanInput", .str i.toLean)] else []))
   pure (Json.write out)
+
+/-- `exploreValue` on JSON text: what `exegra-lean explore` runs. -/
+def runExplore (text : String) : Except String String := do
+  let req ← Json.parse text
+  exploreValue req
 
 end Exegra

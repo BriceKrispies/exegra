@@ -1,0 +1,76 @@
+{
+  "description": "Database pool with request classes under a page-read flood, at the engine-input level (docs/simulation.md, Fixtures). A pool of 20 connections with classes money (reserved 2), moves (reserved 6) and page-reads (limit 3, bound 50) sits in front of 4 FIFO I/O channels with a USL demand factor; every query holds its connection while it uses the I/O. Base: a page-read flood of 5,000/s from 2 s to 6 s over 1,000 moves per second; control: page reads at 50/s. The claim is the p99 of the database leg of a move (pool wait plus I/O) within 30 ms over the flood window. Twins: collapse-classes on the pool, and the page-read limit raised to 12; each must fail the claim in the base and hold in the control. Every number is assumed and sized so that a run stays short: the fixture tests the engine, the metrics and the claim method, and is not evidence about any system.",
+  "base": {
+    "format": "exegra-sim-input", "version": 2,
+    "time": { "unit": "us", "perSecond": 1000000 },
+    "events": [
+      { "id": "move-requested" }, { "id": "move-connection" }, { "id": "move-written" }, { "id": "move-acked" }, { "id": "move-refused" },
+      { "id": "page-requested" }, { "id": "page-connection" }, { "id": "page-read" }, { "id": "page-served" }, { "id": "page-refused" }
+    ],
+    "behaviors": [
+      { "id": "host-flow", "initial": "idle", "states": ["idle"], "variables": [], "instances": { "count": 4 },
+        "transitions": [
+          { "id": "host-take-move", "from": "idle", "to": "idle", "on": "move-requested", "guard": null, "faultOnly": false,
+            "effects": [{ "acquire": "db-pool", "class": "moves", "then": "move-connection", "refused": "move-refused", "payload": { "request": "event.request" } }] },
+          { "id": "host-commit", "from": "idle", "to": "idle", "on": "move-connection", "guard": null, "faultOnly": false,
+            "effects": [{ "use": "db-io", "demand": { "lower": { "lognormal": { "median": 400, "p99": 1600 } } }, "then": "move-written", "payload": { "request": "event.request" } }] },
+          { "id": "host-ack", "from": "idle", "to": "idle", "on": "move-written", "guard": null, "faultOnly": false,
+            "effects": [{ "release": "db-pool", "class": "moves" }, { "emit": "move-acked", "payload": { "request": "event.request" } }] },
+          { "id": "host-refused", "from": "idle", "to": "idle", "on": "move-refused", "guard": null, "faultOnly": false, "effects": [] }
+        ] },
+      { "id": "api-flow", "initial": "idle", "states": ["idle"], "variables": [], "instances": { "count": 4 },
+        "transitions": [
+          { "id": "api-take-page", "from": "idle", "to": "idle", "on": "page-requested", "guard": null, "faultOnly": false,
+            "effects": [{ "acquire": "db-pool", "class": "page-reads", "then": "page-connection", "refused": "page-refused", "payload": { "request": "event.request" } }] },
+          { "id": "api-read", "from": "idle", "to": "idle", "on": "page-connection", "guard": null, "faultOnly": false,
+            "effects": [{ "use": "db-io", "demand": { "lower": { "lognormal": { "median": 10000, "p99": 60000 } } }, "then": "page-read", "payload": { "request": "event.request" } }] },
+          { "id": "api-serve", "from": "idle", "to": "idle", "on": "page-read", "guard": null, "faultOnly": false,
+            "effects": [{ "release": "db-pool", "class": "page-reads" }, { "emit": "page-served", "payload": { "request": "event.request" } }] },
+          { "id": "api-refused", "from": "idle", "to": "idle", "on": "page-refused", "guard": null, "faultOnly": false, "effects": [] }
+        ] }
+    ],
+    "routes": [
+      { "event": "move-requested", "behavior": "host-flow", "by": "round-robin" },
+      { "event": "page-requested", "behavior": "api-flow", "by": "round-robin" }
+    ],
+    "resources": [
+      { "id": "db-pool", "kind": "pool", "capacity": 20, "discipline": "priority", "queueBound": 200, "overflow": "refuse", "demandFactor": null,
+        "classes": [
+          { "id": "money", "priority": 3, "reserved": 2, "limit": null, "queueBound": null, "maxWait": 200000 },
+          { "id": "moves", "priority": 2, "reserved": 6, "limit": null, "queueBound": null, "maxWait": 200000 },
+          { "id": "page-reads", "priority": 1, "reserved": 0, "limit": 3, "queueBound": 50, "maxWait": 100000 }
+        ] },
+      { "id": "db-io", "kind": "io", "capacity": 4, "discipline": "fifo", "queueBound": null, "overflow": "refuse",
+        "demandFactor": { "usl": { "alpha": [3, 100], "beta": [1, 1000] } }, "classes": [] }
+    ],
+    "workloads": [
+      { "id": "moves", "kind": "open", "event": "move-requested", "process": "poisson",
+        "phases": [{ "from": 0, "until": 6000000, "rate": { "num": 1000, "den": 1 } }], "clients": { "count": 1000 }, "legitimate": true },
+      { "id": "page-reads", "kind": "open", "event": "page-requested", "process": "poisson",
+        "phases": [{ "from": 0, "until": 2000000, "rate": { "num": 50, "den": 1 } }, { "from": 2000000, "until": 6000000, "rate": { "num": 5000, "den": 1 } }],
+        "clients": { "count": 10000 }, "legitimate": false }
+    ],
+    "requests": [
+      { "id": "move-db-leg", "start": { "event": "move-requested" }, "key": "request",
+        "ends": [{ "event": "move-acked", "outcome": "ok" }, { "event": "move-refused", "outcome": "refused" }] }
+    ],
+    "faults": [
+      { "id": "pool-classes-collapsed", "kind": "collapse-classes", "resource": "db-pool" },
+      { "id": "page-read-limit-raised", "kind": "set-class-limit", "resource": "db-pool", "class": "page-reads", "limit": 12 }
+    ],
+    "metrics": { "quantiles": ["0.5", "0.99"] },
+    "scenario": { "id": "page-read-flood", "steps": [], "faults": [], "stepLimit": 9000000000000, "seed": "4715", "warmup": 2000000, "horizon": 6000000, "stopAt": 7000000, "output": "metrics" }
+  },
+  "control": [
+    { "path": ["workloads", 1, "phases"], "value": [{ "from": 0, "until": 6000000, "rate": { "num": 50, "den": 1 } }] },
+    { "path": ["scenario", "id"], "value": "page-read-normal" }
+  ],
+  "claims": [
+    { "id": "pool-classes-protect-move-db-leg-under-flood",
+      "metric": { "kind": "response-time", "of": "move-db-leg", "statistic": "p99" },
+      "op": "<=", "bound": "30000",
+      "negatives": [{ "faults": ["pool-classes-collapsed"] }, { "faults": ["page-read-limit-raised"] }],
+      "controlNegatives": [{ "faults": ["pool-classes-collapsed"] }, { "faults": ["page-read-limit-raised"] }] }
+  ],
+  "runs": 59, "fraction": "0.95", "confidence": "0.95", "seed": "4715"
+}

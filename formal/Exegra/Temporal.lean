@@ -668,8 +668,7 @@ def temporalJson (env : Env) (id : String) (f : Form) (r : Gen.Result Node) : Va
 
 /-- One request: `{input, claims: [{id, evaluate}], bound, maxStates, emitLean?}`; the answer is
 shaped like that of `runExplore`. -/
-def runTemporal (text : String) : Except String String := do
-  let req ← Json.parse text
+def temporalValue (req : Value) : Except String String := do
   let root ← match req with
     | .obj _ fs => pure fs
     | _ => throw "temporal: the request must be an object"
@@ -697,5 +696,10 @@ def runTemporal (text : String) : Except String String := do
       ("results", Encode.a results)] ++
       (if emitLean then [("leanInput", .str i.toLean)] else []))
   pure (Json.write out)
+
+/-- `temporalValue` on JSON text: what `exegra-lean temporal` runs. -/
+def runTemporal (text : String) : Except String String := do
+  let req ← Json.parse text
+  temporalValue req
 
 end Exegra

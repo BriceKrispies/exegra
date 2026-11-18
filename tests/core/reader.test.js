@@ -71,7 +71,7 @@ test('counts classify text and group by a reference', () => {
   assert.deepEqual(counts.groups.map((/** @type {any} */ g) => [g.label, g.total]), [['Shelf A', 2], ['Shelf B', 1]]);
 });
 
-test('a table groups rows, classifies the status column, links references and offers facets', () => {
+test('a table groups and classifies rows with links and facets', () => {
   const t = readerPage(model, model.entities.get('books')?.data).blocks[1];
   assert.equal(t.type, 'table');
   assert.deepEqual(t.groups.map((/** @type {any} */ g) => g.label), ['Shelf A', 'Shelf B']);
@@ -96,7 +96,7 @@ test('section bodies split into prose and the tables their markers place', () =>
   assert.deepEqual(outline(model).sections.map((s) => [s.id, s.level]), [['sec-intro', 1], ['sec-rules', 2]]);
 });
 
-test('a view without blocks reads the system, an index of kinds and the document', () => {
+test('a view without blocks reads the system and its kinds and its document', () => {
   const page = readerPage(model, { name: 'Reader' });
   assert.deepEqual(page.blocks.map((b) => b.type), ['text', 'index', 'document']);
   const kinds = page.blocks[1].kinds.map((/** @type {any} */ k) => k.kind);

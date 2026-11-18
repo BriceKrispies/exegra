@@ -69,6 +69,8 @@
   :where(.inspector, .dialog) .chip__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--none); }
   :where(.inspector, .dialog) .chip[data-tone="ok"] .chip__dot { background: var(--ok); }
   :where(.inspector, .dialog) .chip[data-tone="ok-external"] .chip__dot { background: var(--ok-external); }
+  :where(.inspector, .dialog) .chip[data-tone="ok-model"] .chip__dot { background: var(--ok-model); }
+  :where(.inspector, .dialog) .chip[data-tone="ok-proof"] .chip__dot { background: var(--ok-proof); }
   :where(.inspector, .dialog) .chip[data-tone="bad"] .chip__dot { background: var(--bad); }
   :where(.inspector, .dialog) .chip[data-tone="warn"] .chip__dot { background: var(--warn); }
   :where(.inspector, .dialog) .chip[data-tone="none"] .chip__dot { background: var(--none); }

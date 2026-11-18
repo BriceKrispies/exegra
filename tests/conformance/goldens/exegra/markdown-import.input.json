@@ -1,0 +1,1069 @@
+{
+ "behaviors": [
+  {
+   "id": "markdown-import-flow",
+   "initial": "md-idle",
+   "states": [
+    "md-idle",
+    "md-done"
+   ],
+   "subject": "markdown-importer",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "coverageOk",
+       "to": false
+      }
+     ],
+     "faultOnly": false,
+     "from": "md-idle",
+     "guard": null,
+     "id": "md-unmapped",
+     "on": "markdown-source-unmapped",
+     "to": "md-idle"
+    },
+    {
+     "effects": [
+      {
+       "emit": "markdown-spec-built",
+       "payload": {
+        "coverage": "coverageOk"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "md-idle",
+     "guard": null,
+     "id": "md-build",
+     "on": "markdown-import-run",
+     "to": "md-idle"
+    },
+    {
+     "effects": [
+      {
+       "set": "written",
+       "to": true
+      },
+      {
+       "emit": "disk-edited-externally",
+       "payload": {
+        "file": "'spec'",
+        "hash": "'hmd'"
+       }
+      },
+      {
+       "emit": "markdown-report-printed"
+      }
+     ],
+     "faultOnly": true,
+     "from": "md-idle",
+     "guard": null,
+     "id": "md-write-despite-gate",
+     "on": "markdown-spec-built",
+     "to": "md-done"
+    },
+    {
+     "effects": [
+      {
+       "set": "written",
+       "to": true
+      },
+      {
+       "emit": "disk-edited-externally",
+       "payload": {
+        "file": "'spec'",
+        "hash": "'hmd'"
+       }
+      },
+      {
+       "emit": "markdown-report-printed"
+      }
+     ],
+     "faultOnly": false,
+     "from": "md-idle",
+     "guard": "event.coverage",
+     "id": "md-write",
+     "on": "markdown-spec-built",
+     "to": "md-done"
+    },
+    {
+     "effects": [
+      {
+       "emit": "markdown-report-printed"
+      }
+     ],
+     "faultOnly": false,
+     "from": "md-idle",
+     "guard": "!event.coverage",
+     "id": "md-refuse",
+     "on": "markdown-spec-built",
+     "to": "md-done"
+    }
+   ],
+   "variables": [
+    {
+     "initial": true,
+     "name": "coverageOk"
+    },
+    {
+     "initial": false,
+     "name": "written"
+    }
+   ]
+  },
+  {
+   "id": "workspace-disk-flow",
+   "initial": "ws-ready",
+   "states": [
+    "ws-ready"
+   ],
+   "subject": "workspace-service",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "emit": "ws-read-missing",
+       "payload": {
+        "caller": "event.caller",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.name == 'missing'",
+     "id": "ws-read-missing-project",
+     "on": "ws-read",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "ws-read-done",
+       "payload": {
+        "caller": "event.caller",
+        "layout": "diskLayout",
+        "recorded": "recordedVersion",
+        "requestId": "event.requestId",
+        "spec": "diskSpec"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": null,
+     "id": "ws-read-files",
+     "on": "ws-read",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "ws-list-done",
+       "payload": {
+        "projects": [
+         "exegra",
+         "benchmark"
+        ],
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": null,
+     "id": "ws-list-projects",
+     "on": "ws-list",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "conflicts",
+       "to": "conflicts + 1"
+      },
+      {
+       "emit": "ws-write-conflict",
+       "payload": {
+        "caller": "event.caller",
+        "current": "diskSpec",
+        "file": "'spec'",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.file == 'spec' && event.baseHash != diskSpec",
+     "id": "ws-conflict-spec",
+     "on": "ws-write",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "conflicts",
+       "to": "conflicts + 1"
+      },
+      {
+       "emit": "ws-write-conflict",
+       "payload": {
+        "caller": "event.caller",
+        "current": "diskLayout",
+        "file": "'layout'",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.file == 'layout' && event.baseHash != diskLayout",
+     "id": "ws-conflict-layout",
+     "on": "ws-write",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskSpec",
+       "to": "event.text"
+      },
+      {
+       "set": "specWrites",
+       "to": "specWrites + 1"
+      },
+      {
+       "emit": "disk-file-replaced",
+       "payload": {
+        "file": "'spec'",
+        "hash": "event.text"
+       }
+      },
+      {
+       "emit": "ws-write-error",
+       "payload": {
+        "caller": "event.caller",
+        "file": "'spec'",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "ws-ready",
+     "guard": "event.file == 'spec' && event.baseHash == diskSpec",
+     "id": "ws-write-journal-append-fails",
+     "on": "ws-write",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskSpec",
+       "to": "event.text"
+      },
+      {
+       "set": "specWrites",
+       "to": "specWrites + 1"
+      },
+      {
+       "set": "journalLines",
+       "to": "journalLines + 1"
+      },
+      {
+       "emit": "disk-file-replaced",
+       "payload": {
+        "file": "'spec'",
+        "hash": "event.text"
+       }
+      },
+      {
+       "emit": "ws-write-done",
+       "payload": {
+        "caller": "event.caller",
+        "file": "'spec'",
+        "hash": "event.text",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.file == 'spec' && event.baseHash == diskSpec",
+     "id": "ws-write-spec",
+     "on": "ws-write",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskLayout",
+       "to": "event.text"
+      },
+      {
+       "set": "layoutWrites",
+       "to": "layoutWrites + 1"
+      },
+      {
+       "set": "journalLines",
+       "to": "journalLines + 1"
+      },
+      {
+       "emit": "disk-file-replaced",
+       "payload": {
+        "file": "'layout'",
+        "hash": "event.text"
+       }
+      },
+      {
+       "emit": "ws-write-done",
+       "payload": {
+        "caller": "event.caller",
+        "file": "'layout'",
+        "hash": "event.text",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.file == 'layout' && event.baseHash == diskLayout",
+     "id": "ws-write-layout",
+     "on": "ws-write",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskSpec",
+       "to": "event.hash"
+      },
+      {
+       "emit": "disk-file-replaced",
+       "payload": {
+        "file": "'spec'",
+        "hash": "event.hash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.file == 'spec'",
+     "id": "ws-external-spec",
+     "on": "disk-edited-externally",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskLayout",
+       "to": "event.hash"
+      },
+      {
+       "emit": "disk-file-replaced",
+       "payload": {
+        "file": "'layout'",
+        "hash": "event.hash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.file == 'layout'",
+     "id": "ws-external-layout",
+     "on": "disk-edited-externally",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "recordedVersion",
+       "to": "event.version"
+      },
+      {
+       "emit": "disk-file-replaced",
+       "payload": {
+        "file": "'recorded'",
+        "hash": "event.version"
+       }
+      },
+      {
+       "emit": "ws-recorded-done",
+       "payload": {
+        "version": "event.version"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": null,
+     "id": "ws-recorded",
+     "on": "ws-write-recorded",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "ws-generated-done",
+       "payload": {
+        "caller": "event.caller",
+        "requestId": "event.requestId",
+        "written": []
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.files == generatedHash",
+     "id": "ws-generated-unchanged",
+     "on": "ws-write-generated",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "generatedHash",
+       "to": "event.files"
+      },
+      {
+       "emit": "ws-generated-done",
+       "payload": {
+        "caller": "event.caller",
+        "requestId": "event.requestId",
+        "written": [
+         "ARCHITECTURE.md",
+         "claims-report.json",
+         "claims-report.md",
+         "manifest.json",
+         "tasks.json"
+        ]
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": null,
+     "id": "ws-generated",
+     "on": "ws-write-generated",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "ws-export-missing",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.name == 'missing'",
+     "id": "ws-export-missing-project",
+     "on": "ws-export",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "ws-export-done",
+       "payload": {
+        "files": "diskSpec",
+        "name": "event.name",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": null,
+     "id": "ws-export-files",
+     "on": "ws-export",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "ws-import-refused",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.bundle == 'malformed'",
+     "id": "ws-import-refused-bundle",
+     "on": "ws-import",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskSpec",
+       "to": "event.bundle"
+      },
+      {
+       "set": "imports",
+       "to": "imports + 1"
+      },
+      {
+       "emit": "disk-file-replaced",
+       "payload": {
+        "file": "'spec'",
+        "hash": "event.bundle"
+       }
+      },
+      {
+       "emit": "ws-import-done",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": null,
+     "id": "ws-import-bundle",
+     "on": "ws-import",
+     "to": "ws-ready"
+    }
+   ],
+   "variables": [
+    {
+     "initial": "h1",
+     "name": "diskSpec"
+    },
+    {
+     "initial": "L1",
+     "name": "diskLayout"
+    },
+    {
+     "initial": "r1",
+     "name": "recordedVersion"
+    },
+    {
+     "initial": "g1",
+     "name": "generatedHash"
+    },
+    {
+     "initial": 0,
+     "name": "journalLines"
+    },
+    {
+     "initial": 0,
+     "name": "specWrites"
+    },
+    {
+     "initial": 0,
+     "name": "layoutWrites"
+    },
+    {
+     "initial": 0,
+     "name": "conflicts"
+    },
+    {
+     "initial": 0,
+     "name": "imports"
+    }
+   ]
+  }
+ ],
+ "events": [
+  {
+   "id": "edit-requested"
+  },
+  {
+   "id": "source-apply-requested"
+  },
+  {
+   "id": "operation-submitted"
+  },
+  {
+   "id": "text-edits-computed"
+  },
+  {
+   "id": "model-parsed"
+  },
+  {
+   "id": "validation-passed"
+  },
+  {
+   "id": "validation-failed"
+  },
+  {
+   "id": "transaction-committed"
+  },
+  {
+   "id": "transaction-rejected"
+  },
+  {
+   "id": "refresh-requested"
+  },
+  {
+   "id": "projection-refreshed"
+  },
+  {
+   "id": "model-published"
+  },
+  {
+   "id": "save-requested"
+  },
+  {
+   "id": "save-succeeded"
+  },
+  {
+   "id": "save-conflicted"
+  },
+  {
+   "id": "write-intent"
+  },
+  {
+   "id": "write-file-request"
+  },
+  {
+   "id": "write-file-ok"
+  },
+  {
+   "id": "write-file-conflict"
+  },
+  {
+   "id": "write-file-failed"
+  },
+  {
+   "id": "read-project-request"
+  },
+  {
+   "id": "read-project-ok"
+  },
+  {
+   "id": "read-project-failed"
+  },
+  {
+   "id": "list-projects-request"
+  },
+  {
+   "id": "list-projects-ok"
+  },
+  {
+   "id": "watch-project-request"
+  },
+  {
+   "id": "file-change-notice-sent"
+  },
+  {
+   "id": "export-request"
+  },
+  {
+   "id": "export-ok"
+  },
+  {
+   "id": "export-failed"
+  },
+  {
+   "id": "import-request"
+  },
+  {
+   "id": "import-ok"
+  },
+  {
+   "id": "import-refused"
+  },
+  {
+   "id": "generated-write-request"
+  },
+  {
+   "id": "generated-write-ok"
+  },
+  {
+   "id": "engine-run-posted"
+  },
+  {
+   "id": "engine-run-returned"
+  },
+  {
+   "id": "engine-run-refused"
+  },
+  {
+   "id": "cli-command-request"
+  },
+  {
+   "id": "cli-command-ok"
+  },
+  {
+   "id": "cli-command-failed"
+  },
+  {
+   "id": "session-init-requested"
+  },
+  {
+   "id": "project-open-requested"
+  },
+  {
+   "id": "open-refused"
+  },
+  {
+   "id": "read-intent"
+  },
+  {
+   "id": "project-files-read"
+  },
+  {
+   "id": "project-read-failed"
+  },
+  {
+   "id": "project-opened"
+  },
+  {
+   "id": "list-intent"
+  },
+  {
+   "id": "projects-listed"
+  },
+  {
+   "id": "watch-intent"
+  },
+  {
+   "id": "external-change-received"
+  },
+  {
+   "id": "disk-edited-externally"
+  },
+  {
+   "id": "reload-requested"
+  },
+  {
+   "id": "commit-notified"
+  },
+  {
+   "id": "edit-applied"
+  },
+  {
+   "id": "node-moved"
+  },
+  {
+   "id": "undo-requested"
+  },
+  {
+   "id": "redo-requested"
+  },
+  {
+   "id": "conflict-resolution-chosen"
+  },
+  {
+   "id": "save-failed"
+  },
+  {
+   "id": "claims-evaluation-requested"
+  },
+  {
+   "id": "claim-scenarios-run"
+  },
+  {
+   "id": "claims-evaluated"
+  },
+  {
+   "id": "recorded-results-adopted"
+  },
+  {
+   "id": "export-clicked"
+  },
+  {
+   "id": "export-intent"
+  },
+  {
+   "id": "bundle-received"
+  },
+  {
+   "id": "export-refused-received"
+  },
+  {
+   "id": "bundle-downloaded"
+  },
+  {
+   "id": "import-file-chosen"
+  },
+  {
+   "id": "import-intent"
+  },
+  {
+   "id": "import-done"
+  },
+  {
+   "id": "import-refused-received"
+  },
+  {
+   "id": "generate-clicked"
+  },
+  {
+   "id": "generated-intent"
+  },
+  {
+   "id": "generated-saved"
+  },
+  {
+   "id": "ws-read"
+  },
+  {
+   "id": "ws-read-done"
+  },
+  {
+   "id": "ws-read-missing"
+  },
+  {
+   "id": "ws-list"
+  },
+  {
+   "id": "ws-list-done"
+  },
+  {
+   "id": "ws-write"
+  },
+  {
+   "id": "ws-write-done"
+  },
+  {
+   "id": "ws-write-conflict"
+  },
+  {
+   "id": "ws-write-error"
+  },
+  {
+   "id": "disk-file-replaced"
+  },
+  {
+   "id": "ws-watch"
+  },
+  {
+   "id": "ws-change"
+  },
+  {
+   "id": "ws-write-recorded"
+  },
+  {
+   "id": "ws-recorded-done"
+  },
+  {
+   "id": "ws-write-generated"
+  },
+  {
+   "id": "ws-generated-done"
+  },
+  {
+   "id": "ws-export"
+  },
+  {
+   "id": "ws-export-done"
+  },
+  {
+   "id": "ws-export-missing"
+  },
+  {
+   "id": "ws-import"
+  },
+  {
+   "id": "ws-import-done"
+  },
+  {
+   "id": "ws-import-refused"
+  },
+  {
+   "id": "verify-tests-run"
+  },
+  {
+   "id": "verify-tests-finished"
+  },
+  {
+   "id": "verify-claims-evaluated"
+  },
+  {
+   "id": "engine-not-built"
+  },
+  {
+   "id": "engine-run-called"
+  },
+  {
+   "id": "engine-run-finished"
+  },
+  {
+   "id": "engine-run-failed"
+  },
+  {
+   "id": "trace-file-written"
+  },
+  {
+   "id": "prove-requested"
+  },
+  {
+   "id": "lake-build-requested"
+  },
+  {
+   "id": "lake-build-finished"
+  },
+  {
+   "id": "explorer-request-sent"
+  },
+  {
+   "id": "explorer-result-returned"
+  },
+  {
+   "id": "lean-file-written"
+  },
+  {
+   "id": "lean-check-requested"
+  },
+  {
+   "id": "lean-check-finished"
+  },
+  {
+   "id": "lean-rejects-proof"
+  },
+  {
+   "id": "prove-finished"
+  },
+  {
+   "id": "markdown-import-run"
+  },
+  {
+   "id": "markdown-source-unmapped"
+  },
+  {
+   "id": "markdown-spec-built"
+  },
+  {
+   "id": "markdown-report-printed"
+  },
+  {
+   "id": "conformance-run"
+  },
+  {
+   "id": "golden-replayed"
+  },
+  {
+   "id": "golden-compared"
+  },
+  {
+   "id": "engine-diverges"
+  },
+  {
+   "id": "conformance-reported"
+  },
+  {
+   "id": "differential-run"
+  },
+  {
+   "id": "differential-mismatch-saved"
+  },
+  {
+   "id": "sim-load-requested"
+  },
+  {
+   "id": "engine-run-intent"
+  },
+  {
+   "id": "worker-terminated"
+  },
+  {
+   "id": "worker-run-done"
+  },
+  {
+   "id": "worker-load-failed"
+  },
+  {
+   "id": "sim-trace-ready"
+  },
+  {
+   "id": "sim-run-failed"
+  },
+  {
+   "id": "sim-step-requested"
+  },
+  {
+   "id": "sim-back-requested"
+  },
+  {
+   "id": "sim-run-to-end-requested"
+  },
+  {
+   "id": "sim-step-shown"
+  },
+  {
+   "id": "step-pulsed"
+  },
+  {
+   "id": "page-loaded"
+  },
+  {
+   "id": "engine-load-requested"
+  },
+  {
+   "id": "engine-load-settled"
+  },
+  {
+   "id": "entity-selected"
+  },
+  {
+   "id": "view-selected"
+  },
+  {
+   "id": "preferences-written"
+  },
+  {
+   "id": "page-reloaded"
+  },
+  {
+   "id": "preferences-read"
+  },
+  {
+   "id": "preferences-loaded"
+  },
+  {
+   "id": "panel-toggled"
+  },
+  {
+   "id": "layout-preferences-written"
+  },
+  {
+   "id": "camera-moved"
+  },
+  {
+   "id": "view-switched"
+  },
+  {
+   "id": "camera-saved"
+  },
+  {
+   "id": "camera-restore-requested"
+  },
+  {
+   "id": "camera-restored"
+  },
+  {
+   "id": "camera-none"
+  },
+  {
+   "id": "traffic-step-recorded"
+  },
+  {
+   "id": "sim-reset-requested"
+  },
+  {
+   "id": "sim-seek-requested"
+  }
+ ],
+ "faults": [],
+ "format": "exegra-sim-input",
+ "scenario": {
+  "faults": [],
+  "id": "markdown-import",
+  "stepLimit": 1000,
+  "steps": [
+   {
+    "at": 0,
+    "event": "markdown-import-run",
+    "payload": {}
+   }
+  ]
+ },
+ "version": 1
+}

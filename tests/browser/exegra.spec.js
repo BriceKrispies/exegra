@@ -126,6 +126,18 @@ test('inspector rename persists to spec.jsonc and survives reload', async ({ pag
   await expect(page.locator('.scene-label[data-entity-id="api-service"]')).toContainText('Command gateway');
 });
 
+/**
+ * Put a whole text into the source editor as one paste. Locator.fill on a long multi-line text makes the browser
+ * emit one input event per line and lay the textarea out after each (about 2 s for the 650 line fixture); a paste is
+ * one input event, which is what the editor reacts to.
+ * @param {import('@playwright/test').Locator} editor @param {string} text
+ */
+const pasteSource = (editor, text) => editor.evaluate((/** @type {HTMLTextAreaElement} */ ta, /** @type {string} */ t) => {
+  ta.focus();
+  ta.value = t;
+  ta.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertFromPaste' }));
+}, text);
+
 test('source edit updates the scene; invalid source is rejected and the draft is kept', async ({ page }) => {
   await open(page, 'multiplayer');
   await page.getByTestId('tab-btn-source').click();
@@ -136,7 +148,7 @@ test('source edit updates the scene; invalid source is rejected and the draft is
   // A valid textual edit reaches the model, the scene and the disk.
   const edited = original.replace(`"name": ${JSON.stringify(oldName)}`, '"name": "Session cache"');
   expect(edited).not.toBe(original);
-  await editor.fill(edited);
+  await pasteSource(editor, edited);
   await expect(page.getByTestId('source-state')).toContainText(/draft/i);
   await page.getByTestId('source-apply').click();
   await page.waitForFunction(() => /** @type {any} */ (window).__exegra.session.model.entities.get('shared-cache').data.name === 'Session cache');
@@ -147,7 +159,7 @@ test('source edit updates the scene; invalid source is rejected and the draft is
   // Malformed source: rejected, nothing lost, last valid model intact.
   const hashBefore = await ex(page, `return session.project.semanticHash;`);
   const malformed = edited.replace('"components": [', '"components": ');
-  await editor.fill(malformed);
+  await pasteSource(editor, malformed);
   await page.getByTestId('source-apply').click();
   await expect(page.getByTestId('source-rejection')).toBeVisible();
   await expect(editor).toHaveValue(malformed);
@@ -158,7 +170,7 @@ test('source edit updates the scene; invalid source is rejected and the draft is
   // Inconsistent (well-formed JSON, dangling reference): also rejected with a located diagnostic.
   const dangling = edited.replace('"to": "game-database"', '"to": "no-such-thing"');
   expect(dangling).not.toBe(edited);
-  await editor.fill(dangling);
+  await pasteSource(editor, dangling);
   await expect(page.getByTestId('source-diagnostics')).toContainText('no-such-thing');
   await page.getByTestId('source-apply').click();
   await expect(page.getByTestId('source-rejection')).toBeVisible();
@@ -264,6 +276,8 @@ test('views switch and keep the selected entity', async ({ page }) => {
     const s = /** @type {any} */ (await ex(page, `return { selection: session.selection, projection: session.scene.projection, nodes: session.scene.nodes.length, kinds: [...new Set(session.scene.nodes.map((n) => n.entityKind))] };`));
     expect(s.selection, `selection survives switching to ${v.id}`).toBe('game-database');
     expect(s.projection).toBe(v.projection);
+    // The reader projection draws no scene; its page replaces it.
+    if (v.projection === 'reader') { await expect(page.locator('#reader-host')).toBeVisible(); continue; }
     expect(s.nodes).toBeGreaterThan(0);
     seen.add(s.kinds.sort().join(','));
     await page.waitForTimeout(450);

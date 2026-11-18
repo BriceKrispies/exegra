@@ -18,7 +18,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { REPO_ROOT, describeFailure, runConformance, runEngineCommand } from '../../tools/conformance.js';
-import { LEAN_BIN, RUST_BIN, checkInputs, generatedInputs, goldenInputs, saveMismatches, DEFAULT_OUT } from '../../tools/differential.js';
+import { LEAN_BIN, RUST_BIN, checkInputs, generatedInputs, generatedInputsV2, goldenInputs, saveMismatches, DEFAULT_OUT } from '../../tools/differential.js';
 
 const FORMAL = path.join(REPO_ROOT, 'formal');
 /** The fixed seed and size of the generated part of the differential check. */
@@ -105,5 +105,22 @@ test('the Rust engine and the Lean semantics agree on the goldens and on generat
   for (const key of ['outcome quiescent', 'outcome step-limit', 'outcome error', 'step drop', 'step delay', 'fault effect enabled', 'fault effect disabled', 'fault effect injected']) {
     assert.ok((result.traceCoverage[key] ?? 0) > 0, `the traces do not cover ${key}`);
   }
+  assert.deepEqual(result.mismatches.map((m) => `${m.name}: ${m.detail}`), [], files.length ? `mismatching inputs saved under ${DEFAULT_OUT}` : undefined);
+});
+
+test('the Rust engine and the Lean semantics agree on generated version-2 inputs, workloads and metrics included', (t) => {
+  for (const [bin, how] of [[RUST_BIN, 'cargo build --release in engine/'], [LEAN_BIN, 'npm run build:formal']]) {
+    if (!fs.existsSync(bin)) {
+      t.skip(`${path.relative(REPO_ROOT, bin)} is not built (${how})`);
+      return;
+    }
+  }
+  const gen = generatedInputsV2(SEED, 60);
+  const result = checkInputs({ inputs: gen.inputs });
+  const files = saveMismatches(result.mismatches, DEFAULT_OUT);
+  for (const key of ['v2 workload poisson', 'v2 workload constant', 'v2 workload phase ramp', 'v2 workload repeat', 'v2 workload clients uniform', 'v2 workload clients round-robin', 'v2 workload payload', 'v2 workload fault delay', 'v2 workload fault drop', 'v2 workload metrics']) {
+    assert.ok((gen.coverage[key] ?? 0) > 0, `the generated inputs do not cover ${key}`);
+  }
+  assert.ok((result.traceCoverage['trace with metrics'] ?? 0) > 0, 'no trace reports metrics');
   assert.deepEqual(result.mismatches.map((m) => `${m.name}: ${m.detail}`), [], files.length ? `mismatching inputs saved under ${DEFAULT_OUT}` : undefined);
 });

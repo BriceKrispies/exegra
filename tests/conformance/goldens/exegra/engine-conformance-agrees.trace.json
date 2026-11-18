@@ -1,0 +1,515 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "conformance-flow": {
+    "state": "conformance-done",
+    "vars": {
+     "mismatches": 0,
+     "reportedAgree": true
+    }
+   },
+   "differential-flow": {
+    "state": "diff-idle",
+    "vars": {
+     "saved": 0
+    }
+   },
+   "engine-under-test-flow": {
+    "state": "eut-ready",
+    "vars": {
+     "agrees": true
+    }
+   }
+  },
+  "pending": [],
+  "time": 0
+ },
+ "initial": {
+  "machines": {
+   "conformance-flow": {
+    "state": "conformance-idle",
+    "vars": {
+     "mismatches": 0,
+     "reportedAgree": false
+    }
+   },
+   "differential-flow": {
+    "state": "diff-idle",
+    "vars": {
+     "saved": 0
+    }
+   },
+   "engine-under-test-flow": {
+    "state": "eut-ready",
+    "vars": {
+     "agrees": true
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "conformance-run",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   },
+   {
+    "event": "differential-run",
+    "payload": {},
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    },
+    "time": 0
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "engine-conformance-agrees",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "conformance-flow": {
+      "state": "conformance-idle",
+      "vars": {
+       "mismatches": 0,
+       "reportedAgree": false
+      }
+     },
+     "differential-flow": {
+      "state": "diff-idle",
+      "vars": {
+       "saved": 0
+      }
+     },
+     "engine-under-test-flow": {
+      "state": "eut-ready",
+      "vars": {
+       "agrees": true
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "differential-run",
+      "payload": {},
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 0
+     },
+     {
+      "event": "golden-replayed",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "behavior": "conformance-flow",
+       "kind": "transition",
+       "transition": "conformance-start"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "conformance-run",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "conformance-flow",
+     "emitted": [
+      {
+       "event": "golden-replayed",
+       "payload": {},
+       "seq": 2,
+       "time": 0
+      }
+     ],
+     "from": "conformance-idle",
+     "guard": null,
+     "sets": [],
+     "to": "conformance-idle",
+     "transition": "conformance-start"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-under-test-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "differential-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "conformance-run",
+    "conformance-start",
+    "conformance-flow",
+    "simulation-contract"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "conformance-flow": {
+      "state": "conformance-idle",
+      "vars": {
+       "mismatches": 0,
+       "reportedAgree": false
+      }
+     },
+     "differential-flow": {
+      "state": "diff-idle",
+      "vars": {
+       "saved": 0
+      }
+     },
+     "engine-under-test-flow": {
+      "state": "eut-ready",
+      "vars": {
+       "agrees": true
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "golden-replayed",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "behavior": "conformance-flow",
+       "kind": "transition",
+       "transition": "conformance-start"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "differential-run",
+    "payload": {},
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "differential-flow",
+     "emitted": [],
+     "from": "diff-idle",
+     "guard": "engine-under-test-flow.agrees",
+     "sets": [],
+     "to": "diff-idle",
+     "transition": "diff-run-agree"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "conformance-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-under-test-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "differential-run",
+    "diff-run-agree",
+    "differential-flow",
+    "formal-semantics"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "conformance-flow": {
+      "state": "conformance-idle",
+      "vars": {
+       "mismatches": 0,
+       "reportedAgree": false
+      }
+     },
+     "differential-flow": {
+      "state": "diff-idle",
+      "vars": {
+       "saved": 0
+      }
+     },
+     "engine-under-test-flow": {
+      "state": "eut-ready",
+      "vars": {
+       "agrees": true
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "golden-compared",
+      "payload": {
+       "matches": true
+      },
+      "seq": 3,
+      "source": {
+       "behavior": "engine-under-test-flow",
+       "kind": "transition",
+       "transition": "eut-replay"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "golden-replayed",
+    "payload": {},
+    "seq": 2,
+    "source": {
+     "behavior": "conformance-flow",
+     "kind": "transition",
+     "transition": "conformance-start"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "engine-under-test-flow",
+     "emitted": [
+      {
+       "event": "golden-compared",
+       "payload": {
+        "matches": true
+       },
+       "seq": 3,
+       "time": 0
+      }
+     ],
+     "from": "eut-ready",
+     "guard": null,
+     "sets": [],
+     "to": "eut-ready",
+     "transition": "eut-replay"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "conformance-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "differential-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "golden-replayed",
+    "eut-replay",
+    "engine-under-test-flow",
+    "simulation-engine"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "conformance-flow": {
+      "state": "conformance-done",
+      "vars": {
+       "mismatches": 0,
+       "reportedAgree": true
+      }
+     },
+     "differential-flow": {
+      "state": "diff-idle",
+      "vars": {
+       "saved": 0
+      }
+     },
+     "engine-under-test-flow": {
+      "state": "eut-ready",
+      "vars": {
+       "agrees": true
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "conformance-reported",
+      "payload": {
+       "ok": true
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "conformance-flow",
+       "kind": "transition",
+       "transition": "conformance-agree"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "golden-compared",
+    "payload": {
+     "matches": true
+    },
+    "seq": 3,
+    "source": {
+     "behavior": "engine-under-test-flow",
+     "kind": "transition",
+     "transition": "eut-replay"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "conformance-flow",
+     "emitted": [
+      {
+       "event": "conformance-reported",
+       "payload": {
+        "ok": true
+       },
+       "seq": 4,
+       "time": 0
+      }
+     ],
+     "from": "conformance-idle",
+     "guard": "event.matches",
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "reportedAgree"
+      }
+     ],
+     "to": "conformance-done",
+     "transition": "conformance-agree"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-under-test-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "differential-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "golden-compared",
+    "conformance-agree",
+    "conformance-flow",
+    "simulation-contract"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "conformance-flow": {
+      "state": "conformance-done",
+      "vars": {
+       "mismatches": 0,
+       "reportedAgree": true
+      }
+     },
+     "differential-flow": {
+      "state": "diff-idle",
+      "vars": {
+       "saved": 0
+      }
+     },
+     "engine-under-test-flow": {
+      "state": "eut-ready",
+      "vars": {
+       "agrees": true
+      }
+     }
+    },
+    "pending": [],
+    "time": 0
+   },
+   "event": {
+    "id": "conformance-reported",
+    "payload": {
+     "ok": true
+    },
+    "seq": 4,
+    "source": {
+     "behavior": "conformance-flow",
+     "kind": "transition",
+     "transition": "conformance-agree"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "conformance-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-under-test-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "differential-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 4,
+   "kind": "deliver",
+   "responsible": [
+    "conformance-reported"
+   ],
+   "time": 0
+  }
+ ]
+}

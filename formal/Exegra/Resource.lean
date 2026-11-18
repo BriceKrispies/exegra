@@ -53,6 +53,8 @@ structure ResourceDecl where
   overflow : Overflow
   demandFactor : DemandFactor
   classes : List ClassDecl
+  /-- One strict FIFO queue (a `collapse-classes` fault): the oldest head is granted or nothing. -/
+  strict : Bool := false
   deriving Inhabited
 
 def ResourceDecl.classAt? (d : ResourceDecl) (i : Nat) : Option ClassDecl := d.classes[i]?
@@ -148,16 +150,40 @@ def before {α} (d : ResourceDecl) (a b : Req α) : Bool :=
   else older
 
 /-- The next request to grant: the best eligible class head. -/
-def pick {α} (d : ResourceDecl) (s : RState α) : Option (Req α) :=
-  let heads := (List.range d.classes.length).filterMap fun c => s.waiting.find? (·.cls == c)
+def pickAmong {α} (d : ResourceDecl) (s : RState α) (heads : List (Req α)) : Option (Req α) :=
   (heads.filter (fits d s)).foldl (fun acc r =>
     match acc with
     | none => some r
     | some b => if before d r b then some r else some b) none
 
+/-- Strict FIFO: the oldest head, if it fits. -/
+def pickStrict {α} (d : ResourceDecl) (s : RState α) (heads : List (Req α)) : Option (Req α) :=
+  match heads.foldl (fun acc r =>
+      match acc with
+      | none => some r
+      | some b => if before d r b then some r else some b) none with
+  | some r => if fits d s r then some r else none
+  | none => none
+
+def pick {α} (d : ResourceDecl) (s : RState α) : Option (Req α) :=
+  let heads := (List.range d.classes.length).filterMap fun c => s.waiting.find? (·.cls == c)
+  if d.strict then pickStrict d s heads else pickAmong d s heads
+
+theorem pickStrict_fits {α} {d : ResourceDecl} {s : RState α} {heads : List (Req α)} {r : Req α}
+    (h : pickStrict d s heads = some r) : fits d s r = true := by
+  unfold pickStrict at h
+  split at h
+  · split at h
+    · simp at h; subst h; assumption
+    · simp at h
+  · simp at h
+
 theorem pick_fits {α} {d : ResourceDecl} {s : RState α} {r : Req α} (h : pick d s = some r) :
     fits d s r = true := by
   unfold pick at h
+  split at h
+  · exact pickStrict_fits h
+  unfold pickAmong at h
   generalize (List.filterMap _ _) = heads at h
   suffices ∀ (xs : List (Req α)) (acc : Option (Req α)),
       (∀ b, acc = some b → fits d s b = true) → (∀ x ∈ xs, fits d s x = true) →

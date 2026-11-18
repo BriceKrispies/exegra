@@ -113,7 +113,7 @@ export function mountShell(session) {
     layout.setSummary('explorer', model ? `${plural(model.byKind.component?.length ?? 0, 'component')} · ${plural(model.byKind.relationship?.length ?? 0, 'relationship')}` : '');
     const results = /** @type {any[]} */ (session.claimResults ?? []);
     const st = (/** @type {string} */ s) => results.filter((r) => r.status === s).length;
-    layout.setSummary('verification', results.length ? `${plural(results.length, 'claim')} · ${st('verified')} verified · ${st('supported')} supported · ${st('violated')} violated` : 'No claims');
+    layout.setSummary('verification', results.length ? `${plural(results.length, 'claim')} · ${st('proved')} proved · ${st('verified')} verified · ${st('supported')} supported · ${st('violated')} violated` : 'No claims');
     layout.setSummary('diagnostics', `${plural(count('error'), 'error')} · ${plural(count('warning'), 'warning')} · ${plural(count('info'), 'gap')}`);
     const commits = session.project?.history?.length ?? 0;
     layout.setSummary('changes', `${plural(commits, 'commit')} this session`);

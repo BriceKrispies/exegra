@@ -6,6 +6,7 @@ import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, SCRATCH, resetScratch } from './scratch.js';
+import { settled } from './settle.js';
 
 const SHOTS = path.join(ROOT, 'screenshots');
 fs.mkdirSync(SHOTS, { recursive: true });
@@ -33,7 +34,7 @@ async function open(page, which) {
     const x = /** @type {any} */ (window).__exegra;
     return x?.session.projectName === name && x.session.model && x.view.getStats().nodes > 0;
   }, SCRATCH[which]);
-  await page.waitForTimeout(600); // initial fit animation
+  await settled(page); // initial fit animation
 }
 
 /** Run a function against window.__exegra. @param {Page} page @param {string} body */
@@ -212,6 +213,9 @@ async function searchAndPick(page, id) {
 }
 
 test('phone layout has no horizontal scroll and 44 px targets and the scene covers most of the screen', { tag: '@phone' }, async ({ page }) => {
+  // This test is about the layout at rest, checked after every sheet change; with motion reduced the sheets
+  // land at once instead of after their 300 ms transition (the touch test below keeps the motion on).
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await open(page, 'multiplayer');
   expect(page.viewportSize()).toEqual({ width: 390, height: 844 });
 
@@ -230,18 +234,18 @@ test('phone layout has no horizontal scroll and 44 px targets and the scene cove
     const which = dest === 'explorer' ? 'explorer' : 'context';
     const panel = page.locator(`#panel-${which}`);
     await expect(panel).toHaveAttribute('data-detent', 'half');
-    await page.waitForTimeout(350); // sheet motion
+    await settled(page); // sheet motion
     await expectFrameStill(page, base, `${dest} at half`);
     await page.locator(`#panel-${which} .panel__handle`).tap();
     await expect(panel).toHaveAttribute('data-detent', 'full');
-    await page.waitForTimeout(350);
+    await settled(page);
     await expectFrameStill(page, base, `${dest} at full`);
     await expectNoHorizontalScroll(page, dest);
     await expectTouchTargets(page, dest);
     await page.screenshot({ path: path.join(SHOTS, `test-phone-${dest}.png`) });
     await page.locator(`#panel-${which} .panel__handle`).tap(); // full -> peek
     await expect(panel).toHaveAttribute('data-detent', 'peek');
-    await page.waitForTimeout(350);
+    await settled(page);
     await expectFrameStill(page, base, `${dest} at peek`);
     await closeSheet(page, which);
   }
@@ -249,7 +253,7 @@ test('phone layout has no horizontal scroll and 44 px targets and the scene cove
   const any = /** @type {string} */ (await ex(page, `return session.model.byKind.component[0].id;`));
   await ex(page, `session.select(${JSON.stringify(any)});`);
   await expect(page.locator('#panel-context')).toHaveAttribute('data-detent', 'peek');
-  await page.waitForTimeout(350);
+  await settled(page);
   await expectFrameStill(page, base, 'inspector after a selection');
   await closeSheet(page);
   for (const dest of ['changes', 'diagnostics', 'source', 'realisation']) {
@@ -257,7 +261,7 @@ test('phone layout has no horizontal scroll and 44 px targets and the scene cove
     await expectTouchTargets(page, 'more menu');
     await page.getByTestId(`more-${dest}`).tap();
     await expect(page.locator(`#tab-${dest}`)).toBeVisible();
-    await page.waitForTimeout(350);
+    await settled(page);
     await expectFrameStill(page, base, dest);
     await expectNoHorizontalScroll(page, dest);
     await expectTouchTargets(page, dest);
@@ -313,7 +317,7 @@ test('every function is reachable by touch on a phone', { tag: '@phone' }, async
 
   // Select by tapping the canvas.
   await page.getByTestId('fit').tap();
-  await page.waitForTimeout(700);
+  await settled(page);
   const visible = await tappableComponents(page);
   expect(visible.length, 'some components are drawn on the uncovered scene').toBeGreaterThan(1);
   const target = visible.includes('api-service') ? 'api-service' : visible[0];
@@ -346,7 +350,7 @@ test('every function is reachable by touch on a phone', { tag: '@phone' }, async
   // Connect mode: two taps on the canvas open the connect dialog.
   if (await detent(page) !== 'closed') await closeSheet(page);
   await page.getByTestId('fit').tap();
-  await page.waitForTimeout(800);
+  await settled(page);
   await overflow(page, 'mode-connect');
   await expect(page.getByTestId('connect-indicator')).toBeVisible();
   const ends = await tappableComponents(page);
@@ -510,7 +514,7 @@ test('panels open beside the scene on a tablet and the desktop shows explorer sc
     await page.getByTestId(`tab-btn-${dest}`).tap();
     const panel = page.locator(dest === 'explorer' ? '#panel-explorer' : '#panel-context');
     await expect(panel).toBeVisible();
-    await page.waitForTimeout(250);
+    await settled(page);
     const p = /** @type {any} */ (await panel.boundingBox());
     const c = /** @type {any} */ (await page.getByTestId('scene-canvas').boundingBox());
     expect(overlap(p, c), `${dest}: the panel and the scene do not overlap`).toBeLessThanOrEqual(1);

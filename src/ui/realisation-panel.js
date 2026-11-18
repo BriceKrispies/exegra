@@ -5,6 +5,12 @@ import { h, clear } from './dom.js';
 import { entityLabel } from '../core/query.js';
 import { generateAll } from '../core/generate/index.js';
 import { writeGenerated } from '../persist/client.js';
+import { sha256Hex } from '../core/sha256.js';
+
+/** sha-256 of the generated files with sorted keys: how the self-model names one set of generated documents (the dev server computes the same, tools/vite-plugin-exegra.js hashFiles). @param {Record<string, string>} files */
+function filesHash(files) {
+  return sha256Hex(JSON.stringify(Object.fromEntries(Object.keys(files).sort().map((k) => [k, files[k]]))));
+}
 
 const STATUSES = ['generated', 'partially-generated', 'model-configured', 'manual', 'not-implemented', 'undeclared'];
 const STATUS_LABEL = {
@@ -87,10 +93,10 @@ export function mountRealisationPanel(el, session) {
       const impl = c.data.implementation;
       const results = session.claimResults.filter((/** @type {any} */ r) => r.involved.includes(c.id));
       const n = (/** @type {string} */ s) => results.filter((/** @type {any} */ r) => r.status === s).length;
-      const other = results.length - n('verified') - n('supported') - n('violated');
+      const other = results.length - n('proved') - n('verified') - n('supported') - n('violated');
       const verif = !results.length
         ? h('span', { class: 'real__muted' }, 'no claims')
-        : h('span', null, `${n('verified')} verified, ${n('supported')} supported, `,
+        : h('span', null, `${n('proved') ? `${n('proved')} proved, ` : ''}${n('verified')} verified, ${n('supported')} supported, `,
           h('span', { class: n('violated') ? 'real__bad' : '' }, `${n('violated')} violated`), `, ${other} other`);
       const mods = h('td', { class: 'real__mono', 'data-label': 'Modules' });
       for (const m of impl?.modules ?? []) {
@@ -177,6 +183,7 @@ export function mountRealisationPanel(el, session) {
 
   async function generate() {
     if (gen.busy || !session.model) return;
+    session.traffic?.record('generate-clicked');
     gen = { busy: true, files: null, written: null, note: '', error: '' };
     renderGen();
     try {
@@ -187,7 +194,11 @@ export function mountRealisationPanel(el, session) {
       });
       gen.files = files;
       if (session.persistent) {
-        const res = await writeGenerated(session.projectName, files);
+        const requestId = session.traffic.nextRequestId();
+        const hash = filesHash(files);
+        session.traffic.record('generated-intent', { name: session.projectName, files: hash, requestId });
+        const res = await writeGenerated(session.projectName, files, { requestId, filesHash: hash });
+        if (res?.ok) session.traffic.record('generated-saved', { written: res.written ?? [], requestId });
         if (res?.ok) gen.written = res.written ?? Object.keys(files);
         else gen.error = `Could not write generated files: ${/** @type {any} */ (res)?.error ?? 'unknown error'}`;
         if (!gen.written) gen.note = 'Not written to disk.';

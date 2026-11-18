@@ -2,8 +2,10 @@
 // Three.js scene, and wires them together. No business rules live here; this
 // file only routes session events to views and view callbacks to the session.
 
-import { createSession } from './session.js';
+import { createSession, requestedProject } from './session.js';
 import { initEngine } from '../core/engine.js';
+import { traffic } from './traffic-recorder.js';
+import { PERSISTENCE_AVAILABLE } from '../persist/client.js';
 import { mountShell } from '../ui/shell.js';
 import { mountInspector } from '../ui/inspector.js';
 import { mountSourceEditor } from '../ui/source-editor.js';
@@ -14,6 +16,8 @@ import { mountRealisationPanel } from '../ui/realisation-panel.js';
 import { mountReader } from '../ui/reader.js';
 import { createSceneView } from '../render/scene-view.js';
 
+// The first real event of the page (src/app/traffic-recorder.js): the application module starts.
+traffic.record('page-loaded', { persistent: PERSISTENCE_AVAILABLE, project: requestedProject() });
 const session = createSession();
 const shell = mountShell(session);
 
@@ -80,16 +84,29 @@ function pushScene() {
   view.setHighlight(highlightIds());
   if (restoredCameraFor !== cameraKey()) {
     restoredCameraFor = cameraKey();
+    const viewId = session.viewId;
+    let saved = null;
+    if (session.projectName) traffic.record('camera-restore-requested', { view: viewId });
     try {
-      const saved = sessionStorage.getItem(cameraKey());
+      saved = sessionStorage.getItem(cameraKey());
       if (saved) view.setCamera(JSON.parse(saved));
-    } catch { /* no stored camera */ }
+    } catch { saved = null; /* no stored camera */ }
+    if (session.projectName) traffic.record(saved ? 'camera-restored' : 'camera-none', saved ? { view: viewId, camera: saved } : { view: viewId });
   }
 }
 
 function saveCamera() {
   if (!session.projectName) return;
-  try { sessionStorage.setItem(cameraKey(), JSON.stringify(view.getCamera())); } catch { /* not remembered */ }
+  const camera = JSON.stringify(view.getCamera());
+  traffic.record('camera-saved', { view: session.viewId, camera });
+  try { sessionStorage.setItem(cameraKey(), camera); } catch { /* not remembered */ }
+}
+
+/** Pointer or wheel input that moved the camera ends: camera-moved, then the camera is saved. */
+function cameraMoved() {
+  if (!session.projectName) return;
+  traffic.record('camera-moved', { camera: JSON.stringify(view.getCamera()) });
+  saveCamera();
 }
 
 session.on('scene', pushScene);
@@ -123,8 +140,23 @@ session.on('fit', ({ ids }) => {
 session.on('sim', (payload) => {
   if (!payload?.pulse) return;
   const s = session.sim;
+  // Live mode: the real events just recorded pulse the components responsible for them (no step-pulsed:
+  // that event is the scene's answer to a simulated step, and recording it here would feed itself).
+  if (payload.live) {
+    const fresh = session.live.fresh;
+    const ids = new Set();
+    for (const st of fresh) { for (const id of st.responsible) ids.add(id); for (const f of st.fired) { ids.add(f.transition); ids.add(f.to); } }
+    view.pulse([...ids].filter((id) => id in session.placement || session.scene.edges.some((e) => e.id === id)));
+    const last = session.simFlow();
+    if (last?.paths.length) {
+      const ev = session.model?.entities.get(last.flow.event);
+      view.flow(last.paths, typeof ev?.data?.name === 'string' ? ev.data.name : last.flow.event);
+    }
+    return;
+  }
   const step = s.simulation?.steps[s.stepIndex];
   if (!step) return;
+  traffic.record('step-pulsed', { stepIndex: s.stepIndex });
   const ids = new Set(step.responsible);
   for (const f of step.fired) { ids.add(f.transition); ids.add(f.to); }
   view.pulse([...ids].filter((id) => id in session.placement || session.scene.edges.some((e) => e.id === id)));
@@ -146,15 +178,21 @@ new ResizeObserver(() => { clearTimeout(aspectTimer); aspectTimer = window.setTi
 reportAspect();
 
 window.addEventListener('pagehide', saveCamera);
-shell.sceneHost.addEventListener('pointerup', saveCamera);
-shell.sceneHost.addEventListener('wheel', saveCamera, { passive: true });
+shell.sceneHost.addEventListener('pointerup', cameraMoved);
+shell.sceneHost.addEventListener('wheel', cameraMoved, { passive: true });
 
 // Inspection hook for browser tests and for debugging from the console.
 /** @type {any} */ (window).__exegra = { session, view };
 
 // Claim evaluation runs scenarios on the main thread, so the engine is loaded before the first project opens.
 // If it cannot be loaded the application still opens; the affected claims report why they could not be checked.
+traffic.record('engine-load-requested');
 initEngine().then(
-  () => session.init(),
-  (e) => { session.note('error', `The simulation engine could not be loaded: ${e?.message ?? e}`); session.init(); },
+  () => { traffic.record('engine-load-settled', { ok: true }); traffic.record('session-init-requested', { persistent: session.persistent, project: requestedProject() }); session.init(); },
+  (e) => {
+    traffic.record('engine-load-settled', { ok: false });
+    session.note('error', `The simulation engine could not be loaded: ${e?.message ?? e}`);
+    traffic.record('session-init-requested', { persistent: session.persistent, project: requestedProject() });
+    session.init();
+  },
 );

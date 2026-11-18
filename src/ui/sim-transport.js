@@ -49,12 +49,13 @@ export function mountSimTransport(el, session, env) {
     }
     const total = s.steps.length;
     const idx = sim.stepIndex ?? -1;
-    const canAdvance = s.outcome === 'running' || idx < total - 1;
+    // Live: every recorded event is already a step; forward moves only within them, and there is nothing to play.
+    const canAdvance = s.live ? idx < total - 1 : s.outcome === 'running' || idx < total - 1;
     /** @type {HTMLButtonElement} */ (back).disabled = idx < 0;
     back.title = idx < 0 ? 'Already at the initial configuration' : 'Step back';
     /** @type {HTMLButtonElement} */ (step).disabled = !canAdvance;
     step.title = canAdvance ? 'Step' : `Run ended: ${s.outcome}`;
-    /** @type {HTMLButtonElement} */ (play).disabled = !canAdvance && !sim.playing;
+    /** @type {HTMLButtonElement} */ (play).disabled = s.live || (!canAdvance && !sim.playing);
     play.title = sim.playing ? 'Pause' : canAdvance ? 'Play' : `Run ended: ${s.outcome}`;
     play.setAttribute('aria-label', sim.playing ? 'Pause' : 'Play');
     play.setAttribute('aria-pressed', String(!!sim.playing));

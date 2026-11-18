@@ -15,6 +15,9 @@ import { createEngineRunner } from './engine-runner.js';
 import { stepFlow, flowPaths, describeFlow } from '../core/flows.js';
 import { requestLog } from '../core/contract-trace.js';
 import * as persist from '../persist/client.js';
+import { traffic } from './traffic-recorder.js';
+import { sha256Hex } from '../core/sha256.js';
+import { createReplay, replayChecks, REPLAY_SCENARIO } from '../core/replay.js';
 // @ts-ignore provided by tools/vite-plugin-exegra.js
 import LINKED from 'virtual:exegra-linked-specs';
 
@@ -37,7 +40,25 @@ function loadStore() {
   try { return JSON.parse(localStorage.getItem(STORE_KEY) ?? '{}') ?? {}; } catch { return {}; }
 }
 
+/** @param {any} saved @returns {{selection: string, viewId: string}} */
+function prefsOf(saved) {
+  return { selection: typeof saved.selection === 'string' ? saved.selection : 'none', viewId: typeof saved.viewId === 'string' ? saved.viewId : 'structural' };
+}
+
+/** The project the page asks for: ?project=, else the one remembered, else exegra (recorded with page-loaded). */
+export function requestedProject() {
+  return new URLSearchParams(location.search).get('project') ?? loadStore().projectName ?? 'exegra';
+}
+
 export function createSession() {
+  // Traffic: every real event of the session goes to the recorder of this page (src/app/traffic-recorder.js),
+  // named by the event ids of Exegra's own specification. The persistence client records its requests and the
+  // development server's events through the observer.
+  const rec = (/** @type {string} */ id, /** @type {Record<string, any>} */ payload = {}) => traffic.record(id, payload);
+  persist.observeTraffic((id, payload, meta) => { traffic.record(id, payload, meta); });
+  // A page load is a (re)load of the tab: in-memory state is gone and the stored preferences are read.
+  rec('page-reloaded');
+  rec('preferences-read');
   /** @type {Map<string, Set<(payload: any) => void>>} */
   const listeners = new Map();
   const emit = (/** @type {string} */ type, /** @type {any} */ payload) => {
@@ -48,6 +69,12 @@ export function createSession() {
 
   const store = loadStore();
   store.perProject ??= {};
+  /** The selection and view last written to the store, as the self-model abstracts it; a write that leaves both unchanged is not a new event. */
+  let lastPrefs = prefsOf(store.perProject[store.projectName] ?? {});
+  /** The view last announced with view-switched (null after an open: the opened project's view is announced anew). @type {string|null} */
+  let announcedView = null;
+  /** sha-256 of the spec and layout text in memory: the self-model names texts by their hash. */
+  const textHashes = { spec: /** @type {string|null} */ (null), layout: /** @type {string|null} */ (null) };
   let logSeq = 0;
   /** @type {(() => void)|null} */
   let unwatch = null;
@@ -56,7 +83,7 @@ export function createSession() {
   /** @type {ReturnType<typeof setInterval>|null} */
   let playTimer = null;
   // The Simulation tab's runs execute off the main thread. Started now so the engine is loaded before the first run.
-  const runner = createEngineRunner();
+  const runner = createEngineRunner({ record: (id, payload) => { traffic.record(id, payload); } });
   /** Increases with every load; a run whose token is no longer current is discarded. */
   let simToken = 0;
   /** Server-side content hashes of the files as last read or written by us. */
@@ -134,6 +161,25 @@ export function createSession() {
     },
     /** @type {{seq: number, kind: string, message: string, detail?: any, diagnostics?: any[]}[]} */
     log: [],
+    /** The recorder of this page's real events (src/app/traffic-recorder.js). */
+    traffic,
+    /**
+     * Live mode of the simulator panel: the recorded stream replayed through the self-model's scenario
+     * live-session (src/core/replay.js). `available` is false when the open specification has no such scenario.
+     */
+    live: {
+      on: false,
+      available: false,
+      /** @type {import('../core/replay.js').Divergence[]} */
+      divergences: /** @type {any[]} */ ([]),
+      /** Predictions still waiting for their event. @type {any[]} */
+      awaiting: /** @type {any[]} */ ([]),
+      /** Wall-clock times of the replayed events by seq, for display only. @type {Map<number, number>} */
+      at: new Map(),
+      /** The steps added by the last update, for the scene's pulses. @type {any[]} */
+      fresh: /** @type {any[]} */ ([]),
+      dropped: 0,
+    },
 
     /** @param {string} type @param {(payload: any) => void} fn */
     on(type, fn) {
@@ -155,7 +201,12 @@ export function createSession() {
     // ---- project lifecycle ------------------------------------------------
     async init() {
       if (session.persistent) {
-        try { session.projects = await persist.listProjects(); }
+        try {
+          const requestId = traffic.nextRequestId();
+          rec('list-intent', { requestId });
+          session.projects = await persist.listProjects({ requestId });
+          rec('projects-listed', { projects: session.projects.map((p) => p.name) });
+        }
         catch (e) { session.note('error', `Could not list projects: ${/** @type {Error} */ (e).message}`); }
       } else {
         const names = [...new Set(Object.keys(SHIPPED).map((p) => p.split('/')[2]))].sort();
@@ -170,24 +221,36 @@ export function createSession() {
     /** Re-read the list of projects (after an import). */
     async refreshProjects() {
       if (!session.persistent) return;
-      try { session.projects = await persist.listProjects(); emit('project', { name: session.projectName }); }
+      try {
+        const requestId = traffic.nextRequestId();
+        rec('list-intent', { requestId });
+        session.projects = await persist.listProjects({ requestId });
+        rec('projects-listed', { projects: session.projects.map((p) => p.name) });
+        emit('project', { name: session.projectName });
+      }
       catch (e) { session.note('error', `Could not list projects: ${/** @type {Error} */ (e).message}`); }
     },
 
     /** @param {string} name */
     async open(name) {
+      rec('project-open-requested', { name });
       if (session.project && (pending.spec || pending.layout || conflict || saving || session.saveState === 'error' || session.saveState === 'conflict')) {
+        rec('open-refused', { name });
         session.note('error', 'Resolve or wait for the pending save before switching projects.');
         emit('project', { name: session.projectName });
         return;
       }
       session.simPlay(false);
       let files;
+      const requestId = session.persistent ? traffic.nextRequestId() : 0;
       try {
+        if (session.persistent) rec('read-intent', { name, requestId, purpose: 'open' });
         files = session.persistent
-          ? await persist.readProject(name)
+          ? await persist.readProject(name, { requestId })
           : { spec: { text: /** @type {string} */ (SHIPPED[`/specs/${name}/spec.jsonc`]), hash: null }, layout: SHIPPED[`/specs/${name}/layout.jsonc`] ? { text: /** @type {string} */ (SHIPPED[`/specs/${name}/layout.jsonc`]), hash: null } : null, recorded: SHIPPED_RECORDED[`/specs/${name}/evidence/results.json`] ?? null };
+        if (session.persistent) rec('project-files-read', filesRead(files, requestId));
       } catch (e) {
+        if (session.persistent) rec('project-read-failed', { requestId });
         // The current project stays fully functional (subscription and watcher untouched).
         session.note('error', `Could not open project "${name}": ${/** @type {Error} */ (e).message}`);
         emit('project', { name: session.projectName });
@@ -226,13 +289,19 @@ export function createSession() {
       session.viewId = typeof saved.viewId === 'string' ? saved.viewId : 'structural';
       session.sim = emptySim();
       simToken++;
+      textHashes.spec = hashes.spec ?? sha256Hex(session.project.specText);
+      textHashes.layout = hashes.layout;
+      rec('preferences-loaded', { selection: session.selection ?? 'none', viewId: session.viewId });
+      announcedView = null;
+      rec('project-opened', { name, specHash: textHashes.spec, layoutHash: hashes.layout });
 
       evaluate();
       if (has(saved.simScenario)) loadSim(saved.simScenario, undefined, false);
       recompute();
       store.projectName = name;
       persistUi();
-      if (session.persistent) unwatch = persist.watchProject(name, onExternalChange);
+      if (session.persistent) { rec('watch-intent', { name }); unwatch = persist.watchProject(name, onExternalChange); }
+      if (session.live.on) liveRebuild();
       if (session.project.errorCount) session.note('error', `"${name}" loaded with ${session.project.errorCount} validation error(s). Edits are rejected until they are fixed.`, { diagnostics: session.diagnostics.filter((d) => d.severity === 'error') });
       emit('project', { name });
       emit('model', { result: null, entry: null });
@@ -256,17 +325,19 @@ export function createSession() {
       }
       return result;
     },
-    undo() { return session.project.undo(); },
-    redo() { return session.project.redo(); },
+    undo() { rec('undo-requested'); return session.project.undo(); },
+    redo() { rec('redo-requested'); return session.project.redo(); },
 
     /** @param {'reload'|'overwrite'} how */
     async resolveConflict(how) {
       if (!conflict) return;
+      rec('conflict-resolution-chosen', { how });
       const c = conflict;
       conflict = null;
       if (how === 'reload') {
         hashes[c.file] = c.current.hash;
         pending[c.file] = false;
+        rec('reload-requested', { file: c.file, text: c.current.hash });
         const r = session.project.reload(c.file === 'spec' ? { specText: c.current.text } : { layoutText: c.current.text });
         if (!r.ok) {
           session.note('error', r.message ?? 'Reload failed.', { diagnostics: r.diagnostics });
@@ -293,6 +364,7 @@ export function createSession() {
       if (entity?.kind === 'claim' && session.ui.focusClaim !== id) { session.ui.focusClaim = id; sceneDirty = true; }
       if (entity?.kind === 'scenario' && session.ui.focusScenario !== id) { session.ui.focusScenario = id; sceneDirty = true; }
       const changed = session.selection !== id;
+      if (changed) rec('entity-selected', { id: id ?? 'none' });
       session.selection = id;
       const refocus = changed && session.scene.projection === 'references';
       if (refocus) sceneDirty = true;
@@ -311,6 +383,7 @@ export function createSession() {
     setView(viewId) {
       const view = session.views.find((v) => v.id === viewId);
       if (!view) return;
+      if (viewId !== session.viewId) rec('view-selected', { view: viewId });
       session.viewId = viewId;
       const sel = session.selection ? session.model?.entities.get(session.selection) : null;
       // Carry the context across: pick the focus the new projection needs from what is selected.
@@ -381,26 +454,33 @@ export function createSession() {
 
     // ---- simulation ------------------------------------------------------------
     /** @param {string|null} scenarioId @param {string[]} [faults] */
-    simLoad(scenarioId, faults) { loadSim(scenarioId, faults, true); },
+    simLoad(scenarioId, faults) { if (session.live.on) liveOff(); loadSim(scenarioId, faults, true); },
     /** @param {string[]} ids */
-    simSetFaults(ids) { loadSim(session.sim.scenarioId, ids, true); },
+    simSetFaults(ids) { if (session.live.on) return; loadSim(session.sim.scenarioId, ids, true); },
     simStep() {
       const s = session.sim;
       if (!s.simulation) return;
+      if (session.live.on) { if (s.stepIndex < s.simulation.steps.length - 1) { s.stepIndex++; liveChanged(); } return; }
+      rec('sim-step-requested');
       if (s.stepIndex < s.simulation.steps.length - 1) s.stepIndex++;
       else if (s.simulation.step()) s.stepIndex = s.simulation.steps.length - 1;
       else { session.simPlay(false); return; }
+      rec('sim-step-shown', { stepIndex: s.stepIndex });
       simChanged(true);
     },
     simBack() {
       const s = session.sim;
       if (!s.simulation || s.stepIndex < 0) return;
+      if (session.live.on) { s.stepIndex--; liveChanged(); return; }
+      rec('sim-back-requested');
       s.stepIndex--;
       simChanged(false);
     },
     simReset() {
       const s = session.sim;
       if (!s.simulation) return;
+      if (session.live.on) { s.stepIndex = -1; liveChanged(); return; }
+      rec('sim-reset-requested');
       session.simPlay(false);
       s.simulation.reset();
       s.stepIndex = -1;
@@ -409,6 +489,8 @@ export function createSession() {
     simRunToEnd() {
       const s = session.sim;
       if (!s.simulation) return;
+      if (session.live.on) { s.stepIndex = s.simulation.steps.length - 1; liveChanged(); return; }
+      rec('sim-run-to-end-requested');
       session.simPlay(false);
       s.simulation.run();
       s.stepIndex = s.simulation.steps.length - 1;
@@ -418,6 +500,8 @@ export function createSession() {
     simSeek(index) {
       const s = session.sim;
       if (!s.simulation) return;
+      if (session.live.on) { s.stepIndex = Math.max(-1, Math.min(index, s.simulation.steps.length - 1)); liveChanged(); return; }
+      rec('sim-seek-requested', { stepIndex: index });
       while (s.simulation.steps.length <= index && s.simulation.step()) { /* advance */ }
       s.stepIndex = Math.max(-1, Math.min(index, s.simulation.steps.length - 1));
       simChanged(false);
@@ -427,7 +511,7 @@ export function createSession() {
       const s = session.sim;
       if (playTimer) { clearInterval(playTimer); playTimer = null; }
       const was = s.playing;
-      s.playing = playing && !!s.simulation;
+      s.playing = playing && !!s.simulation && !session.live.on;
       if (s.playing) playTimer = setInterval(() => session.simStep(), PLAY_INTERVAL_MS);
       if (was !== s.playing) emit('sim', { pulse: false });
     },
@@ -454,7 +538,17 @@ export function createSession() {
       return { ...full, steps, outcome: atEnd ? full.outcome : 'running', final: steps.length ? steps[steps.length - 1].config : full.initial };
     },
 
+    /**
+     * Turn the simulator's Live source on or off. While on, the panel and the scene show this application's
+     * own recorded events replayed through the self-model (scenario live-session), as they happen.
+     * @param {boolean} on
+     */
+    simLive(on) {
+      if (on) liveOn(); else liveOff();
+    },
+
     dispose() {
+      liveUnsub?.();
       session.simPlay(false);
       simToken++;
       runner.dispose();
@@ -464,10 +558,111 @@ export function createSession() {
     },
   };
 
+  // ---- live mode: the recorded stream replayed through the self-model ---------------------
+  /** @type {ReturnType<typeof createReplay>|null} */
+  let replay = null;
+  /** How many recorded events (by seq) the replay has consumed. */
+  let replayedSeq = 0;
+  /** @type {(() => void)|null} */
+  let liveUnsub = null;
+  let liveScheduled = false;
+
+  /** Whether the open specification can replay this application's events. */
+  const liveAvailable = () => session.model?.entities.get(REPLAY_SCENARIO)?.kind === 'scenario';
+
+  function liveOn() {
+    session.live.available = liveAvailable();
+    if (!session.live.available) { session.note('error', `Live mode needs the scenario "${REPLAY_SCENARIO}", which Exegra's own specification declares; the open specification has none.`); emit('sim', { pulse: false }); return; }
+    session.simPlay(false);
+    session.live.on = true;
+    session.sim = { ...emptySim(), scenarioId: REPLAY_SCENARIO, running: false };
+    liveRebuild();
+    liveUnsub = traffic.subscribe(() => {
+      if (liveScheduled) return;
+      liveScheduled = true;
+      // Batched: a burst of events (a save round trip) becomes one update of the panel and the scene.
+      queueMicrotask(() => { liveScheduled = false; liveAdvance(); });
+    });
+  }
+
+  function liveOff() {
+    liveUnsub?.(); liveUnsub = null;
+    replay = null;
+    if (!session.live.on) return;
+    session.live.on = false;
+    session.live.divergences = [];
+    session.live.awaiting = [];
+    session.live.fresh = [];
+    session.sim = emptySim();
+    simChanged(false);
+  }
+
+  /** Replay the whole kept stream again (on, or after the self-model changed). */
+  function liveRebuild() {
+    if (!session.live.on) return;
+    session.live.available = liveAvailable();
+    if (!session.live.available || !session.model) { liveOff(); return; }
+    try { replay = createReplay(session.model, { scenarioId: REPLAY_SCENARIO }); }
+    catch (e) { session.note('error', `Live replay could not start: ${/** @type {Error} */ (e).message}`); liveOff(); return; }
+    replayedSeq = 0;
+    session.sim.stepIndex = -1;
+    session.live.at = new Map();
+    liveAdvance(true);
+  }
+
+  /** Feed the replay the events recorded since the last update. @param {boolean} [rebuilt] */
+  function liveAdvance(rebuilt = false) {
+    if (!session.live.on || !replay || !session.model) return;
+    const s = session.sim;
+    const following = rebuilt || s.stepIndex === (s.simulation?.steps.length ?? 0) - 1;
+    // The replay keeps a configuration per step; past the recorder's bound it starts again from the kept stream.
+    if (!rebuilt && replay.steps.length > traffic.limit) { liveRebuild(); return; }
+    const before = replay.steps.length;
+    for (const e of traffic.events()) {
+      if (e.seq <= replayedSeq) continue;
+      replayedSeq = e.seq;
+      session.live.at.set(e.seq, e.at);
+      // Only the logical sequence number and the payload reach the core; the wall-clock time stays here.
+      replay.consume(e.inferred ? { seq: e.seq, id: e.id, payload: e.payload, inferred: true } : { seq: e.seq, id: e.id, payload: e.payload });
+    }
+    const trace = replay.trace();
+    s.simulation = liveCursor(trace);
+    if (following) s.stepIndex = trace.steps.length - 1;
+    session.live.divergences = replay.divergences.slice();
+    session.live.awaiting = replay.pending;
+    session.live.dropped = traffic.dropped;
+    session.live.fresh = rebuilt ? [] : trace.steps.slice(before);
+    liveChanged(!rebuilt && session.live.fresh.length > 0);
+  }
+
+  /** A Simulation-shaped view of the live trace: every recorded step is revealed. @param {any} trace */
+  function liveCursor(trace) {
+    return {
+      scenarioId: trace.scenarioId, faults: [], initial: trace.initial, config: trace.final, steps: trace.steps, outcome: 'running', live: true,
+      step: () => null, run: () => trace, reset: () => {}, trace: () => trace,
+    };
+  }
+
+  /** @param {boolean} [pulse] */
+  function liveChanged(pulse = false) {
+    const s = session.sim;
+    const trace = s.simulation?.trace();
+    try {
+      const shown = trace ? { ...trace, steps: trace.steps.slice(0, s.stepIndex + 1) } : null;
+      s.checks = shown && session.model ? [...checkTrace(session.model, shown), ...replayChecks(session.model, session.live.divergences.filter((d) => d.stepIndex <= s.stepIndex), shown.steps.length)] : [];
+    } catch (e) { s.checks = []; console.error(e); }
+    try { s.requestLog = trace && session.model ? requestLog(session.model, trace) : []; } catch { s.requestLog = []; }
+    emit('sim', { pulse, live: true });
+  }
+
   // ---- derivation ------------------------------------------------------------
   function evaluate() {
+    const modelHash = textHashes.spec;
+    rec('claims-evaluation-requested', { modelHash });
     try {
       session.claimResults = session.model ? evaluateClaims(session.model, { recorded: session.recorded ?? undefined }) : [];
+      rec('claim-scenarios-run', { modelHash });
+      rec('claims-evaluated', { modelHash });
     } catch (e) {
       session.claimResults = [];
       session.note('error', `Claim evaluation failed: ${/** @type {Error} */ (e).message}`);
@@ -508,6 +703,9 @@ export function createSession() {
     try {
       session.views = listViews(model);
       if (!session.views.some((v) => v.id === session.viewId)) session.viewId = session.views[0]?.id ?? 'structural';
+      // The view the scene is about to show, once per change (an open, setView, or a view replaced because the
+      // specification has no such view): pushScene then restores the camera stored for it.
+      if (session.viewId !== announcedView) { announcedView = session.viewId; rec('view-switched', { view: session.viewId }); }
       const view = session.views.find((v) => v.id === session.viewId);
       const s = session.sim;
       const showTrace = view?.projection === 'behavior' && s.simulation && (!session.ui.focusScenario || session.ui.focusScenario === s.scenarioId);
@@ -561,9 +759,15 @@ export function createSession() {
       cameraMode: session.ui.cameraMode,
       focusClaim: session.ui.focusClaim,
       focusScenario: session.ui.focusScenario,
-      simScenario: session.sim.scenarioId,
+      simScenario: session.live.on ? store.perProject[session.projectName]?.simScenario ?? null : session.sim.scenarioId,
     };
     try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch { /* storage unavailable: state is simply not remembered */ }
+    // The self-model abstracts the store to the selection and the view; a write that changes neither is a stutter step.
+    const prefs = prefsOf(store.perProject[session.projectName]);
+    if (prefs.selection !== lastPrefs.selection || prefs.viewId !== lastPrefs.viewId) {
+      lastPrefs = prefs;
+      rec('preferences-written', prefs);
+    }
   }
 
   function emptySim() {
@@ -600,14 +804,18 @@ export function createSession() {
     else updateChecks();
     if (!input) return;
     const id = /** @type {string} */ (session.sim.scenarioId);
+    rec('sim-load-requested', { scenario: id });
+    rec('engine-run-intent', { token, scenario: id });
     runner.run(input).then((trace) => {
-      if (token !== simToken) return;
+      rec('sim-trace-ready', { token, steps: trace.steps.length });
+      if (token !== simToken || session.live.on) return;
       session.sim.simulation = createTraceCursor(trace);
       session.sim.running = false;
       session.sim.stepIndex = -1;
       simChanged(false);
     }, (e) => {
-      if (token !== simToken) return;
+      rec('sim-run-failed', { token });
+      if (token !== simToken || session.live.on) return;
       session.note('error', `Scenario "${id}" could not be run: ${/** @type {Error} */ (e).message}`);
       session.sim = emptySim();
       simChanged(false);
@@ -635,6 +843,18 @@ export function createSession() {
   /** @param {{type: string, result: TransactionResult, entry: import('../core/project.js').HistoryEntry}} event */
   function onCommit(event) {
     const { entry } = event;
+    // The commit as the self-model names it: its cause (undo, redo and reloads record theirs where they start),
+    // then commit-notified with the hash of the text that changed.
+    if (entry.specChanged) textHashes.spec = sha256Hex(session.project.specText);
+    if (entry.layoutChanged) textHashes.layout = session.project.layoutText === null ? null : sha256Hex(session.project.layoutText);
+    if (entry.specChanged || entry.layoutChanged) {
+      const file = entry.specChanged ? 'spec' : 'layout';
+      if (!['undo', 'redo', 'external'].includes(entry.origin)) {
+        if (entry.specChanged) rec('edit-applied', { specHash: textHashes.spec, origin: entry.origin });
+        else rec('node-moved', { layoutHash: textHashes.layout });
+      }
+      rec('commit-notified', { origin: entry.origin, file, text: textHashes[file] });
+    }
     if (session.selection && !session.model?.entities.has(session.selection)) session.selection = null;
     for (const set of [session.ui.collapsed, session.ui.hidden]) for (const id of [...set]) if (!session.model?.entities.has(id)) set.delete(id);
     for (const key of /** @type {const} */ (['isolate', 'focusClaim', 'focusScenario'])) {
@@ -643,7 +863,9 @@ export function createSession() {
     }
     if (entry.semanticChanged) {
       evaluate();
-      if (session.sim.scenarioId) loadSim(session.sim.scenarioId, session.sim.faults, false);
+      if (session.sim.scenarioId && !session.live.on) loadSim(session.sim.scenarioId, session.sim.faults, false);
+      // The self-model may have changed: replay the kept stream through the new one (after this commit's own events).
+      if (session.live.on) queueMicrotask(liveRebuild);
     } else updateHighlight();
     recompute();
     session.note('change', entry.label, { revision: entry.revision, origin: entry.origin, affected: entry.affected, semanticChanged: entry.semanticChanged });
@@ -676,17 +898,27 @@ export function createSession() {
         pending[file] = false;
         setSaveState('saving');
         const text = file === 'spec' ? session.project.specText : session.project.layoutText;
-        const res = await persist.writeFile(name, file, text, hashes[file], lastMeta);
+        const requestId = traffic.nextRequestId();
+        const textHash = textHashes[file] ?? sha256Hex(text ?? '');
+        rec('write-intent', { name, file, text: textHash, baseHash: hashes[file], requestId });
+        const res = await persist.writeFile(name, file, text, hashes[file], lastMeta, { requestId, textHash });
         if (name !== session.projectName) break;
         if (res.ok) {
+          rec('save-succeeded', { file, hash: res.hash, requestId });
           hashes[file] = res.hash;
           session.note('save', `Saved ${file === 'spec' ? 'spec.jsonc' : 'layout.jsonc'}`, { hash: res.hash });
+          // A written file whose journal line failed is still saved; the history line for it is missing.
+          if (res.journal && res.journal.written === false) {
+            session.note('error', `${file === 'spec' ? 'spec.jsonc' : 'layout.jsonc'} was saved, but ${res.journal.message}`);
+          }
         } else if ('conflict' in res && res.conflict) {
+          rec('save-conflicted', { file, currentHash: res.current.hash, requestId });
           conflict = { file, current: res.current };
           pending[file] = true;
           session.note('error', `${file === 'spec' ? 'spec.jsonc' : 'layout.jsonc'} changed on disk since it was loaded. Nothing was overwritten; choose "Reload from disk" or "Overwrite disk".`);
           setSaveState('conflict');
         } else {
+          rec('save-failed', { file, requestId });
           pending[file] = true;
           session.note('error', `Saving failed: ${'error' in res ? res.error : 'unknown error'}`);
           setSaveState('error');
@@ -703,9 +935,14 @@ export function createSession() {
   async function onExternalChange(change) {
     const name = session.projectName;
     if (change.file === 'recorded') {
+      const requestId = traffic.nextRequestId();
       try {
-        const files = await persist.readProject(name);
+        rec('read-intent', { name, requestId, purpose: 'recorded' });
+        const files = await persist.readProject(name, { requestId });
+        const read = filesRead(files, requestId);
+        rec('project-files-read', read);
         if (name !== session.projectName) return;
+        rec('recorded-results-adopted', { version: read.recorded });
         session.recorded = files.recorded;
         evaluate();
         recompute();
@@ -716,12 +953,16 @@ export function createSession() {
     }
     if (change.hash === hashes[change.file]) return; // our own write
     if (saving || pending[change.file] || conflict) return; // the pending write will surface the conflict
+    const requestId = traffic.nextRequestId();
     try {
-      const files = await persist.readProject(name);
+      rec('read-intent', { name, requestId, purpose: 'external' });
+      const files = await persist.readProject(name, { requestId });
+      rec('project-files-read', filesRead(files, requestId));
       if (name !== session.projectName) return;
       const current = change.file === 'spec' ? files.spec : files.layout;
       if (!current || current.hash === hashes[change.file]) return;
       if (saving || pending[change.file] || conflict) return; // an edit was made during the round trip; do not replace it
+      rec('reload-requested', { file: change.file, text: current.hash });
       const r = session.project.reload(change.file === 'spec' ? { specText: current.text } : { layoutText: current.text });
       if (r.ok) {
         hashes[change.file] = current.hash;
@@ -733,6 +974,16 @@ export function createSession() {
     } catch (e) {
       session.note('error', `Could not re-read the project after an external change: ${/** @type {Error} */ (e).message}`);
     }
+  }
+
+  /**
+   * project-files-read as the self-model names it: the hashes of the files read, and the version of the recorded
+   * results that the server reported in its read-project-ok for the same request.
+   * @param {any} files @param {number} requestId
+   */
+  function filesRead(files, requestId) {
+    const answer = traffic.answer('read-project-ok', requestId);
+    return { specHash: files.spec.hash, layoutHash: files.layout?.hash ?? null, recorded: answer ? answer.payload.recorded ?? null : null, requestId };
   }
 
   return session;

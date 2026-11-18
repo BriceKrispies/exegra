@@ -38,8 +38,8 @@ const IMPLEMENTATION_COLORS = {
   'not-implemented': ['red', 'Not implemented'],
 };
 const ZONE_PALETTE = ['blue', 'amber', 'teal', 'violet', 'rose', 'green', 'steel'];
-const CLAIM_COLORS = { verified: 'green', supported: 'teal', violated: 'red', inconclusive: 'amber', 'not-evaluated': 'neutral' };
-const CLAIM_STATUS_LABELS = { verified: 'verified', supported: 'supported', violated: 'violated', inconclusive: 'inconclusive', 'not-evaluated': 'not evaluated' };
+const CLAIM_COLORS = { proved: 'blue', verified: 'green', supported: 'teal', violated: 'red', inconclusive: 'amber', 'not-evaluated': 'neutral' };
+const CLAIM_STATUS_LABELS = { proved: 'proved', verified: 'verified', supported: 'supported', violated: 'violated', inconclusive: 'inconclusive', 'not-evaluated': 'not evaluated' };
 
 /**
  * Register (or replace) a projection by name. `opts.available` limits its implicit view to models it returns true for.

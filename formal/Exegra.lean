@@ -15,3 +15,6 @@ import Exegra.Temporal
 import Exegra.Format2
 import Exegra.Lift
 import Exegra.Integrity
+import Exegra.Impl.Semantics
+import Exegra.Impl.Refinement
+import Exegra.Api

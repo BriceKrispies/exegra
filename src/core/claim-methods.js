@@ -17,10 +17,12 @@
 // scenarios and each negative, at least one, violates it (claims.js).
 
 export const CLAIM_STATUSES = /** @type {const} */ ({
+  proved: { label: 'Proved in Lean: a kernel-checked theorem about the code', tone: 'ok-proof' },
   verified: { label: 'Verified within the stated model and assumptions', tone: 'ok' },
   supported: { label: 'Supported by external evidence', tone: 'ok-external' },
   violated: { label: 'Violated', tone: 'bad' },
   inconclusive: { label: 'Inconclusive', tone: 'warn' },
+  'model-holds': { label: 'Holds in the model (parameters assumed)', tone: 'ok-model' },
   'not-evaluated': { label: 'Not evaluated', tone: 'none' },
 });
 
@@ -128,6 +130,42 @@ export const CLAIM_METHODS = {
       scenarios: { type: 'ids:scenario', required: true },
       negatives: { type: 'negatives', doc: 'Runs that must violate the claim: [{scenario, faults}], one of the listed scenarios with extra faults. Verified needs at least one, and every one must violate the claim.' },
       occurs: { type: 'matcher', required: true },
+    },
+  },
+  'metric-bound': {
+    kinds: ['measured'],
+    doc: 'A measured output of seeded format-2 runs (response time, outcomes, throughput, false positives, transitions, utilisation, queue length, waiting time) meets a bound (op and bound: exact binomial test over the runs) or agrees with an analytic value (approx: sign-test interval of the median). Model results only: model-holds, violated or inconclusive with N, k and the confidence; never verified or supported (docs/simulation.md, "Claims over metrics").',
+    params: {
+      scenarios: { type: 'ids:scenario', required: true },
+      metric: { type: 'any', required: true, doc: '{kind, of, statistic, outcomes?}.' },
+      op: { type: 'string', doc: '<=, <, >= or >.' },
+      bound: { type: 'string', doc: 'The bound, a duration ("30 ms") or an exact decimal.' },
+      approx: { type: 'any', doc: '{value, tolerance} instead of op and bound.' },
+      fraction: { type: 'string', doc: 'Fraction of runs that must satisfy the bound. Default 0.95.' },
+      confidence: { type: 'string', doc: 'Default 0.95.' },
+      runs: { type: 'any', doc: 'N, fixed before the runs. Default 59.' },
+      seed: { type: 'string', doc: 'Base seed of the runs.' },
+      asOf: { type: 'string', doc: 'The date the evaluation is made for (recorded in the result).' },
+      negatives: { type: 'negatives', doc: 'Runs that must fail: [{scenario, faults}].' },
+      controlNegatives: { type: 'negatives', doc: "Runs that must hold: a twin's faults on a control scenario." },
+    },
+  },
+  'lean-theorem': {
+    kinds: ['structural', 'invariant', 'temporal', 'requirement'],
+    doc: 'A theorem of the Lean core (formal/) states the claim. Lean checks it (tools/lean-theorems.js, recorded by exegra verify): the theorem exists, the kernel accepts its proof again, it depends on no axiom beyond propext, Classical.choice and Quot.sound (no sorry, no native_decide, no axiom of our own), and each named implementation constant occurs in its statement. Proved when all hold; violated when Lean refuses; not evaluated without a recorded check.',
+    params: {
+      theorem: { type: 'string', required: true, doc: 'The fully qualified theorem name, e.g. Exegra.runInput_terminates.' },
+      about: { type: 'strings', doc: 'Implementation constants (compiled definitions) the statement must mention, e.g. Exegra.runInput.' },
+    },
+  },
+  'implementation-language': {
+    kinds: ['structural'],
+    doc: 'Every selected component that is implemented (implementation.status other than not-implemented) records implementation.language equal to `language`. Violated with the components that are not, listed with progress; inconclusive when nothing is selected or a selected component records no language.',
+    params: {
+      select: { type: 'selector', required: true },
+      language: { type: 'string', required: true },
+      exclude: { type: 'selector', doc: 'Components left out (exactly these: a subsystem named here does not take its children with it).' },
+      plannedBy: { type: 'string', doc: 'The Workgraph task that ports the rest, named in the result.' },
     },
   },
   'external-evidence': {

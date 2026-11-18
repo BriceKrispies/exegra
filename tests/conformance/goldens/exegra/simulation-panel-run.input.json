@@ -1,0 +1,1140 @@
+{
+ "behaviors": [
+  {
+   "id": "sim-session-flow",
+   "initial": "sim-idle",
+   "states": [
+    "sim-idle"
+   ],
+   "subject": "session",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "token",
+       "to": "token + 1"
+      },
+      {
+       "set": "scenarioId",
+       "to": "event.scenario"
+      },
+      {
+       "set": "running",
+       "to": true
+      },
+      {
+       "set": "stepIndex",
+       "to": -1
+      },
+      {
+       "set": "stepCount",
+       "to": 0
+      },
+      {
+       "emit": "engine-run-intent",
+       "payload": {
+        "scenario": "event.scenario",
+        "token": "token"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "sim-idle",
+     "guard": null,
+     "id": "sim-load",
+     "on": "sim-load-requested",
+     "to": "sim-idle"
+    },
+    {
+     "effects": [
+      {
+       "set": "adoptedToken",
+       "to": "event.token"
+      },
+      {
+       "set": "running",
+       "to": false
+      },
+      {
+       "set": "stepCount",
+       "to": "event.steps"
+      },
+      {
+       "set": "stepIndex",
+       "to": -1
+      }
+     ],
+     "faultOnly": true,
+     "from": "sim-idle",
+     "guard": null,
+     "id": "sim-adopt-stale",
+     "on": "sim-trace-ready",
+     "to": "sim-idle"
+    },
+    {
+     "effects": [
+      {
+       "set": "adoptedToken",
+       "to": "event.token"
+      },
+      {
+       "set": "running",
+       "to": false
+      },
+      {
+       "set": "stepCount",
+       "to": "event.steps"
+      },
+      {
+       "set": "stepIndex",
+       "to": -1
+      }
+     ],
+     "faultOnly": false,
+     "from": "sim-idle",
+     "guard": "event.token == token",
+     "id": "sim-adopt",
+     "on": "sim-trace-ready",
+     "to": "sim-idle"
+    },
+    {
+     "effects": [
+      {
+       "set": "running",
+       "to": false
+      },
+      {
+       "set": "scenarioId",
+       "to": "'none'"
+      }
+     ],
+     "faultOnly": false,
+     "from": "sim-idle",
+     "guard": "event.token == token",
+     "id": "sim-failed",
+     "on": "sim-run-failed",
+     "to": "sim-idle"
+    },
+    {
+     "effects": [
+      {
+       "set": "stepIndex",
+       "to": "stepIndex + 1"
+      },
+      {
+       "emit": "sim-step-shown",
+       "payload": {
+        "stepIndex": "stepIndex"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "sim-idle",
+     "guard": "stepCount > 0",
+     "id": "sim-step-past-end",
+     "on": "sim-step-requested",
+     "to": "sim-idle"
+    },
+    {
+     "effects": [
+      {
+       "set": "stepIndex",
+       "to": "stepIndex + 1"
+      },
+      {
+       "emit": "sim-step-shown",
+       "payload": {
+        "stepIndex": "stepIndex"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "sim-idle",
+     "guard": "stepIndex < stepCount - 1",
+     "id": "sim-step",
+     "on": "sim-step-requested",
+     "to": "sim-idle"
+    },
+    {
+     "effects": [
+      {
+       "set": "running",
+       "to": false
+      }
+     ],
+     "faultOnly": false,
+     "from": "sim-idle",
+     "guard": "stepCount > 0",
+     "id": "sim-step-at-end",
+     "on": "sim-step-requested",
+     "to": "sim-idle"
+    },
+    {
+     "effects": [
+      {
+       "set": "stepIndex",
+       "to": "stepIndex - 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "sim-idle",
+     "guard": "stepIndex >= 0",
+     "id": "sim-back",
+     "on": "sim-back-requested",
+     "to": "sim-idle"
+    },
+    {
+     "effects": [
+      {
+       "set": "stepIndex",
+       "to": "stepCount - 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "sim-idle",
+     "guard": "stepCount > 0",
+     "id": "sim-run-to-end",
+     "on": "sim-run-to-end-requested",
+     "to": "sim-idle"
+    },
+    {
+     "effects": [
+      {
+       "set": "stepIndex",
+       "to": -1
+      }
+     ],
+     "faultOnly": false,
+     "from": "sim-idle",
+     "guard": "stepCount > 0",
+     "id": "sim-reset",
+     "on": "sim-reset-requested",
+     "to": "sim-idle"
+    },
+    {
+     "effects": [
+      {
+       "set": "stepIndex",
+       "to": "event.stepIndex"
+      }
+     ],
+     "faultOnly": false,
+     "from": "sim-idle",
+     "guard": "stepCount > 0",
+     "id": "sim-seek",
+     "on": "sim-seek-requested",
+     "to": "sim-idle"
+    },
+    {
+     "effects": [
+      {
+       "set": "token",
+       "to": "token + 1"
+      },
+      {
+       "set": "scenarioId",
+       "to": "'none'"
+      },
+      {
+       "set": "stepIndex",
+       "to": -1
+      },
+      {
+       "set": "stepCount",
+       "to": 0
+      }
+     ],
+     "faultOnly": false,
+     "from": "sim-idle",
+     "guard": null,
+     "id": "sim-project-opened",
+     "on": "project-opened",
+     "to": "sim-idle"
+    }
+   ],
+   "variables": [
+    {
+     "initial": 0,
+     "name": "token"
+    },
+    {
+     "initial": 0,
+     "name": "adoptedToken"
+    },
+    {
+     "initial": "none",
+     "name": "scenarioId"
+    },
+    {
+     "initial": -1,
+     "name": "stepIndex"
+    },
+    {
+     "initial": 0,
+     "name": "stepCount"
+    },
+    {
+     "initial": false,
+     "name": "running"
+    }
+   ]
+  },
+  {
+   "id": "engine-runner-flow",
+   "initial": "runner-ready",
+   "states": [
+    "runner-ready"
+   ],
+   "subject": "simulation-engine",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "prevId",
+       "to": "waitingId"
+      },
+      {
+       "set": "prevToken",
+       "to": "waitingToken"
+      },
+      {
+       "set": "seq",
+       "to": "seq + 1"
+      },
+      {
+       "set": "waitingId",
+       "to": "seq"
+      },
+      {
+       "set": "waitingToken",
+       "to": "event.token"
+      },
+      {
+       "emit": "engine-run-posted",
+       "payload": {
+        "id": "seq",
+        "input": "event.scenario"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "runner-ready",
+     "guard": "waitingId != 0",
+     "id": "runner-keep-stale-job",
+     "on": "engine-run-intent",
+     "to": "runner-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "seq",
+       "to": "seq + 1"
+      },
+      {
+       "set": "waitingId",
+       "to": "seq"
+      },
+      {
+       "set": "waitingToken",
+       "to": "event.token"
+      },
+      {
+       "emit": "worker-terminated"
+      },
+      {
+       "emit": "engine-run-posted",
+       "payload": {
+        "id": "seq",
+        "input": "event.scenario"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "runner-ready",
+     "guard": "waitingId != 0",
+     "id": "runner-restart",
+     "on": "engine-run-intent",
+     "to": "runner-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "seq",
+       "to": "seq + 1"
+      },
+      {
+       "set": "waitingId",
+       "to": "seq"
+      },
+      {
+       "set": "waitingToken",
+       "to": "event.token"
+      },
+      {
+       "emit": "engine-run-posted",
+       "payload": {
+        "id": "seq",
+        "input": "event.scenario"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "runner-ready",
+     "guard": null,
+     "id": "runner-post",
+     "on": "engine-run-intent",
+     "to": "runner-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "sim-trace-ready",
+       "payload": {
+        "steps": 3,
+        "token": "prevToken"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "runner-ready",
+     "guard": "prevId != 0 && event.id == prevId",
+     "id": "runner-forward-stale",
+     "on": "engine-run-returned",
+     "to": "runner-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "waitingId",
+       "to": 0
+      },
+      {
+       "emit": "sim-trace-ready",
+       "payload": {
+        "steps": 3,
+        "token": "waitingToken"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "runner-ready",
+     "guard": "event.id == waitingId",
+     "id": "runner-forward",
+     "on": "engine-run-returned",
+     "to": "runner-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "waitingId",
+       "to": 0
+      },
+      {
+       "emit": "sim-run-failed",
+       "payload": {
+        "token": "waitingToken"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "runner-ready",
+     "guard": "event.id == waitingId",
+     "id": "runner-refused",
+     "on": "engine-run-refused",
+     "to": "runner-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "waitingId",
+       "to": 0
+      },
+      {
+       "emit": "sim-trace-ready",
+       "payload": {
+        "steps": 3,
+        "token": "waitingToken"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "runner-ready",
+     "guard": "waitingId != 0",
+     "id": "runner-main-thread",
+     "on": "worker-load-failed",
+     "to": "runner-ready"
+    }
+   ],
+   "variables": [
+    {
+     "initial": 0,
+     "name": "seq"
+    },
+    {
+     "initial": 0,
+     "name": "waitingId"
+    },
+    {
+     "initial": 0,
+     "name": "waitingToken"
+    },
+    {
+     "initial": 0,
+     "name": "prevId"
+    },
+    {
+     "initial": 0,
+     "name": "prevToken"
+    }
+   ]
+  },
+  {
+   "id": "engine-worker-flow",
+   "initial": "worker-ready",
+   "states": [
+    "worker-ready"
+   ],
+   "subject": "simulation-engine",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "runs",
+       "to": "runs + 1"
+      },
+      {
+       "after": 2,
+       "emit": "worker-run-done",
+       "payload": {
+        "generation": "generation",
+        "id": "event.id",
+        "input": "event.input"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "worker-ready",
+     "guard": null,
+     "id": "worker-run",
+     "on": "engine-run-posted",
+     "to": "worker-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "generation",
+       "to": "generation + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "worker-ready",
+     "guard": null,
+     "id": "worker-terminate",
+     "on": "worker-terminated",
+     "to": "worker-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "engine-run-returned",
+       "payload": {
+        "id": "event.id",
+        "ok": true,
+        "trace": "event.input"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "worker-ready",
+     "guard": "event.generation == generation",
+     "id": "worker-reply",
+     "on": "worker-run-done",
+     "to": "worker-ready"
+    }
+   ],
+   "variables": [
+    {
+     "initial": 0,
+     "name": "generation"
+    },
+    {
+     "initial": 0,
+     "name": "runs"
+    }
+   ]
+  },
+  {
+   "id": "scene-pulse-flow",
+   "initial": "pulse-ready",
+   "states": [
+    "pulse-ready"
+   ],
+   "subject": "visual-interaction",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "pulsedStep",
+       "to": "event.stepIndex"
+      },
+      {
+       "set": "pulses",
+       "to": "pulses + 1"
+      },
+      {
+       "emit": "step-pulsed",
+       "payload": {
+        "stepIndex": "event.stepIndex"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "pulse-ready",
+     "guard": null,
+     "id": "pulse-step",
+     "on": "sim-step-shown",
+     "to": "pulse-ready"
+    }
+   ],
+   "variables": [
+    {
+     "initial": -1,
+     "name": "pulsedStep"
+    },
+    {
+     "initial": 0,
+     "name": "pulses"
+    }
+   ]
+  }
+ ],
+ "events": [
+  {
+   "id": "edit-requested"
+  },
+  {
+   "id": "source-apply-requested"
+  },
+  {
+   "id": "operation-submitted"
+  },
+  {
+   "id": "text-edits-computed"
+  },
+  {
+   "id": "model-parsed"
+  },
+  {
+   "id": "validation-passed"
+  },
+  {
+   "id": "validation-failed"
+  },
+  {
+   "id": "transaction-committed"
+  },
+  {
+   "id": "transaction-rejected"
+  },
+  {
+   "id": "refresh-requested"
+  },
+  {
+   "id": "projection-refreshed"
+  },
+  {
+   "id": "model-published"
+  },
+  {
+   "id": "save-requested"
+  },
+  {
+   "id": "save-succeeded"
+  },
+  {
+   "id": "save-conflicted"
+  },
+  {
+   "id": "write-intent"
+  },
+  {
+   "id": "write-file-request"
+  },
+  {
+   "id": "write-file-ok"
+  },
+  {
+   "id": "write-file-conflict"
+  },
+  {
+   "id": "write-file-failed"
+  },
+  {
+   "id": "read-project-request"
+  },
+  {
+   "id": "read-project-ok"
+  },
+  {
+   "id": "read-project-failed"
+  },
+  {
+   "id": "list-projects-request"
+  },
+  {
+   "id": "list-projects-ok"
+  },
+  {
+   "id": "watch-project-request"
+  },
+  {
+   "id": "file-change-notice-sent"
+  },
+  {
+   "id": "export-request"
+  },
+  {
+   "id": "export-ok"
+  },
+  {
+   "id": "export-failed"
+  },
+  {
+   "id": "import-request"
+  },
+  {
+   "id": "import-ok"
+  },
+  {
+   "id": "import-refused"
+  },
+  {
+   "id": "generated-write-request"
+  },
+  {
+   "id": "generated-write-ok"
+  },
+  {
+   "id": "engine-run-posted"
+  },
+  {
+   "id": "engine-run-returned"
+  },
+  {
+   "id": "engine-run-refused"
+  },
+  {
+   "id": "cli-command-request"
+  },
+  {
+   "id": "cli-command-ok"
+  },
+  {
+   "id": "cli-command-failed"
+  },
+  {
+   "id": "session-init-requested"
+  },
+  {
+   "id": "project-open-requested"
+  },
+  {
+   "id": "open-refused"
+  },
+  {
+   "id": "read-intent"
+  },
+  {
+   "id": "project-files-read"
+  },
+  {
+   "id": "project-read-failed"
+  },
+  {
+   "id": "project-opened"
+  },
+  {
+   "id": "list-intent"
+  },
+  {
+   "id": "projects-listed"
+  },
+  {
+   "id": "watch-intent"
+  },
+  {
+   "id": "external-change-received"
+  },
+  {
+   "id": "disk-edited-externally"
+  },
+  {
+   "id": "reload-requested"
+  },
+  {
+   "id": "commit-notified"
+  },
+  {
+   "id": "edit-applied"
+  },
+  {
+   "id": "node-moved"
+  },
+  {
+   "id": "undo-requested"
+  },
+  {
+   "id": "redo-requested"
+  },
+  {
+   "id": "conflict-resolution-chosen"
+  },
+  {
+   "id": "save-failed"
+  },
+  {
+   "id": "claims-evaluation-requested"
+  },
+  {
+   "id": "claim-scenarios-run"
+  },
+  {
+   "id": "claims-evaluated"
+  },
+  {
+   "id": "recorded-results-adopted"
+  },
+  {
+   "id": "export-clicked"
+  },
+  {
+   "id": "export-intent"
+  },
+  {
+   "id": "bundle-received"
+  },
+  {
+   "id": "export-refused-received"
+  },
+  {
+   "id": "bundle-downloaded"
+  },
+  {
+   "id": "import-file-chosen"
+  },
+  {
+   "id": "import-intent"
+  },
+  {
+   "id": "import-done"
+  },
+  {
+   "id": "import-refused-received"
+  },
+  {
+   "id": "generate-clicked"
+  },
+  {
+   "id": "generated-intent"
+  },
+  {
+   "id": "generated-saved"
+  },
+  {
+   "id": "ws-read"
+  },
+  {
+   "id": "ws-read-done"
+  },
+  {
+   "id": "ws-read-missing"
+  },
+  {
+   "id": "ws-list"
+  },
+  {
+   "id": "ws-list-done"
+  },
+  {
+   "id": "ws-write"
+  },
+  {
+   "id": "ws-write-done"
+  },
+  {
+   "id": "ws-write-conflict"
+  },
+  {
+   "id": "ws-write-error"
+  },
+  {
+   "id": "disk-file-replaced"
+  },
+  {
+   "id": "ws-watch"
+  },
+  {
+   "id": "ws-change"
+  },
+  {
+   "id": "ws-write-recorded"
+  },
+  {
+   "id": "ws-recorded-done"
+  },
+  {
+   "id": "ws-write-generated"
+  },
+  {
+   "id": "ws-generated-done"
+  },
+  {
+   "id": "ws-export"
+  },
+  {
+   "id": "ws-export-done"
+  },
+  {
+   "id": "ws-export-missing"
+  },
+  {
+   "id": "ws-import"
+  },
+  {
+   "id": "ws-import-done"
+  },
+  {
+   "id": "ws-import-refused"
+  },
+  {
+   "id": "verify-tests-run"
+  },
+  {
+   "id": "verify-tests-finished"
+  },
+  {
+   "id": "verify-claims-evaluated"
+  },
+  {
+   "id": "engine-not-built"
+  },
+  {
+   "id": "engine-run-called"
+  },
+  {
+   "id": "engine-run-finished"
+  },
+  {
+   "id": "engine-run-failed"
+  },
+  {
+   "id": "trace-file-written"
+  },
+  {
+   "id": "prove-requested"
+  },
+  {
+   "id": "lake-build-requested"
+  },
+  {
+   "id": "lake-build-finished"
+  },
+  {
+   "id": "explorer-request-sent"
+  },
+  {
+   "id": "explorer-result-returned"
+  },
+  {
+   "id": "lean-file-written"
+  },
+  {
+   "id": "lean-check-requested"
+  },
+  {
+   "id": "lean-check-finished"
+  },
+  {
+   "id": "lean-rejects-proof"
+  },
+  {
+   "id": "prove-finished"
+  },
+  {
+   "id": "markdown-import-run"
+  },
+  {
+   "id": "markdown-source-unmapped"
+  },
+  {
+   "id": "markdown-spec-built"
+  },
+  {
+   "id": "markdown-report-printed"
+  },
+  {
+   "id": "conformance-run"
+  },
+  {
+   "id": "golden-replayed"
+  },
+  {
+   "id": "golden-compared"
+  },
+  {
+   "id": "engine-diverges"
+  },
+  {
+   "id": "conformance-reported"
+  },
+  {
+   "id": "differential-run"
+  },
+  {
+   "id": "differential-mismatch-saved"
+  },
+  {
+   "id": "sim-load-requested"
+  },
+  {
+   "id": "engine-run-intent"
+  },
+  {
+   "id": "worker-terminated"
+  },
+  {
+   "id": "worker-run-done"
+  },
+  {
+   "id": "worker-load-failed"
+  },
+  {
+   "id": "sim-trace-ready"
+  },
+  {
+   "id": "sim-run-failed"
+  },
+  {
+   "id": "sim-step-requested"
+  },
+  {
+   "id": "sim-back-requested"
+  },
+  {
+   "id": "sim-run-to-end-requested"
+  },
+  {
+   "id": "sim-step-shown"
+  },
+  {
+   "id": "step-pulsed"
+  },
+  {
+   "id": "page-loaded"
+  },
+  {
+   "id": "engine-load-requested"
+  },
+  {
+   "id": "engine-load-settled"
+  },
+  {
+   "id": "entity-selected"
+  },
+  {
+   "id": "view-selected"
+  },
+  {
+   "id": "preferences-written"
+  },
+  {
+   "id": "page-reloaded"
+  },
+  {
+   "id": "preferences-read"
+  },
+  {
+   "id": "preferences-loaded"
+  },
+  {
+   "id": "panel-toggled"
+  },
+  {
+   "id": "layout-preferences-written"
+  },
+  {
+   "id": "camera-moved"
+  },
+  {
+   "id": "view-switched"
+  },
+  {
+   "id": "camera-saved"
+  },
+  {
+   "id": "camera-restore-requested"
+  },
+  {
+   "id": "camera-restored"
+  },
+  {
+   "id": "camera-none"
+  },
+  {
+   "id": "traffic-step-recorded"
+  },
+  {
+   "id": "sim-reset-requested"
+  },
+  {
+   "id": "sim-seek-requested"
+  }
+ ],
+ "faults": [],
+ "format": "exegra-sim-input",
+ "scenario": {
+  "faults": [],
+  "id": "simulation-panel-run",
+  "stepLimit": 1000,
+  "steps": [
+   {
+    "at": 0,
+    "event": "sim-load-requested",
+    "payload": {
+     "scenario": "visual-edit-flow"
+    }
+   },
+   {
+    "at": 4,
+    "event": "sim-step-requested",
+    "payload": {}
+   },
+   {
+    "at": 5,
+    "event": "sim-step-requested",
+    "payload": {}
+   },
+   {
+    "at": 6,
+    "event": "sim-step-requested",
+    "payload": {}
+   },
+   {
+    "at": 7,
+    "event": "sim-step-requested",
+    "payload": {}
+   },
+   {
+    "at": 8,
+    "event": "sim-back-requested",
+    "payload": {}
+   },
+   {
+    "at": 9,
+    "event": "sim-run-to-end-requested",
+    "payload": {}
+   }
+  ]
+ },
+ "version": 1
+}

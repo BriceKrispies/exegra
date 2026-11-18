@@ -12,6 +12,8 @@ import { checkDataConsistency, dataRuleDiagnostics, RULE_IDS } from './data-mode
 import { contractFields, contractErrorCodes } from './contract-trace.js';
 import { parseType, typeAssignable, typeText } from './type-expr.js';
 import { integrityDiagnostics } from './integrity.js';
+import { minRuns, parseRational } from './metric-stats.js';
+import { testRefProblem, describeTestRefProblem } from './evidence-ref.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Entity} Entity */
@@ -144,17 +146,50 @@ export function validateModel(model) {
         if (!v) { report('error', 'effect.variable', t, `Effect sets "${fx.set}", which is not a variable of behavior "${b.id}".`, sub); return; }
         if (!('to' in fx)) report('error', 'effect.value', t, `Effect on "${fx.set}" needs a "to" value.`, sub);
         else if (typeof fx.to === 'string') checkExpr(fx.to, t, [...sub, 'to'], scope);
+        else if (fx.to && typeof fx.to === 'object' && 'sample' in fx.to) { /* format 2: a sampled number */ }
         else if (typeof fx.to !== v.type) report('error', 'effect.value', t, `Effect sets ${v.type} variable "${fx.set}" to ${JSON.stringify(fx.to)}.`, sub);
+      } else if ('timer' in fx) {
+        // Format 2 (docs/simulation.md, "Latency, timeouts and timers").
+        for (const k of keys) if (!['timer', 'after', 'emit', 'payload'].includes(k)) report('error', 'effect.unknown', t, `Unsupported field "${k}" in a "timer" effect.`, sub);
+        if (typeof fx.timer !== 'string') report('error', 'effect.timer', t, 'Effect "timer" must be a timer name.', sub);
+        const e = get(fx.emit);
+        if (!e || e.kind !== 'event') report('error', 'effect.emit', t, `Timer "${fx.timer}" emits "${fx.emit}", which is not an event.`, sub);
+        if (fx.after === undefined) report('error', 'effect.after', t, `Timer "${fx.timer}" needs "after".`, sub);
+      } else if ('cancel' in fx) {
+        for (const k of keys) if (k !== 'cancel') report('error', 'effect.unknown', t, `Unsupported field "${k}" in a "cancel" effect.`, sub);
+      } else if ('use' in fx || 'acquire' in fx || 'release' in fx) {
+        // Format 2 (docs/simulation.md, "Resources").
+        const verb = 'use' in fx ? 'use' : 'acquire' in fx ? 'acquire' : 'release';
+        const allowed = verb === 'release' ? ['release', 'class', 'units'] : [verb, 'class', 'units', 'then', 'refused', 'payload', ...(verb === 'use' ? ['demand'] : [])];
+        for (const k of keys) if (!allowed.includes(k)) report('error', 'effect.unknown', t, `Unsupported field "${k}" in a "${verb}" effect.`, sub);
+        const r = get(fx[verb]);
+        if (!r || r.kind !== 'resource') { report('error', 'effect.resource', t, `Effect ${verb}s "${fx[verb]}", which is not a resource.`, sub); return; }
+        const classes = Array.isArray(r.data.classes) ? r.data.classes : [];
+        if (fx.class !== undefined && !classes.some((/** @type {any} */ c) => c?.id === fx.class)) report('error', 'effect.class', t, `Resource "${r.id}" has no class "${fx.class}".`, sub);
+        if (fx.class === undefined && classes.length > 1) report('error', 'effect.class', t, `Effect on "${r.id}" must name one of its classes.`, sub);
+        for (const k of ['then', 'refused']) {
+          if (fx[k] === undefined) continue;
+          const e = get(fx[k]);
+          if (!e || e.kind !== 'event') report('error', 'effect.emit', t, `Effect "${k}" names "${fx[k]}", which is not an event.`, sub);
+        }
+        if (verb !== 'release' && fx.then === undefined) report('error', 'effect.then', t, `A "${verb}" effect needs "then".`, sub);
+        if (verb === 'use' && fx.demand === undefined) report('error', 'effect.demand', t, 'A "use" effect needs "demand".', sub);
       } else if ('emit' in fx) {
-        for (const k of keys) if (!['emit', 'after', 'payload'].includes(k)) report('error', 'effect.unknown', t, `Unsupported field "${k}" in an "emit" effect.`, sub);
+        for (const k of keys) if (!['emit', 'after', 'payload', 'target', 'via', 'size', 'fanout'].includes(k)) report('error', 'effect.unknown', t, `Unsupported field "${k}" in an "emit" effect.`, sub);
         if (typeof fx.emit !== 'string') report('error', 'effect.emit', t, 'Effect "emit" must be an event id.', sub);
-        if ('after' in fx && !(typeof fx.after === 'number' && fx.after >= 0)) report('error', 'effect.after', t, 'Effect "after" must be a non-negative number of logical ticks.', sub);
+        if ('via' in fx) {
+          const l = get(fx.via);
+          if (!l || l.kind !== 'link') report('error', 'effect.via', t, `Effect sends over "${fx.via}", which is not a link.`, sub);
+          if ('after' in fx) report('error', 'effect.after', t, 'An emit with "via" cannot also have "after".', sub);
+        }
+        if ('target' in fx && fx.target !== 'reply') report('error', 'effect.target', t, 'Effect "target" must be "reply".', sub);
+        if ('after' in fx && !(typeof fx.after === 'number' && fx.after >= 0) && !(typeof fx.after === 'string' || (fx.after && typeof fx.after === 'object'))) report('error', 'effect.after', t, 'Effect "after" must be a non-negative number of logical ticks, a duration or a distribution.', sub);
         if ('payload' in fx) {
           if (!fx.payload || typeof fx.payload !== 'object' || Array.isArray(fx.payload)) report('error', 'effect.payload', t, 'Effect "payload" must be an object.', sub);
           else for (const [k, v] of Object.entries(fx.payload)) if (typeof v === 'string') checkExpr(v, t, [...sub, 'payload', k], scope);
         }
       } else {
-        report('error', 'effect.unknown', t, 'An effect must be {"set": variable, "to": value} or {"emit": event}.', sub);
+        report('error', 'effect.unknown', t, 'An effect must be {"set": variable, "to": value}, {"emit": event}, or (format 2) a use, acquire, release, timer or cancel effect.', sub);
       }
     });
   }
@@ -247,6 +282,17 @@ export function validateModel(model) {
     if (!mdef) { report('warning', 'claim.method.unsupported', c, `Evaluation method "${ev.method}" is not supported by this build; the claim stays not evaluated.`, ['evaluate', 'method']); continue; }
     if (!mdef.kinds.includes(c.data.kind)) report('error', 'claim.method.kind', c, `Method "${ev.method}" evaluates ${mdef.kinds.join('/')} claims, not ${c.data.kind} claims.`, ['evaluate', 'method']);
     for (const k of Object.keys(ev)) if (k !== 'method' && !own(mdef.params, k)) report('error', 'claim.param.unknown', c, `Method "${ev.method}" has no parameter "${k}".`, ['evaluate', k]);
+    if (ev.method === 'metric-bound') {
+      // A metric claim with fewer runs than can ever hold (docs/simulation.md, "Claims over metrics").
+      try {
+        const need = minRuns(parseRational(ev.fraction ?? '0.95'), parseRational(ev.confidence ?? '0.95'));
+        const runs = Number(ev.runs ?? 59);
+        if (!(runs >= need)) report('error', 'claim.metric.runs', c, `Claim "${c.id}" can never hold with ${runs} runs; at least ${need} are needed at fraction ${ev.fraction ?? '0.95'} and confidence ${ev.confidence ?? '0.95'}.`, ['evaluate', 'runs']);
+      } catch (e) {
+        report('error', 'claim.param.value', c, `Claim "${c.id}": ${/** @type {Error} */ (e).message}`, ['evaluate']);
+      }
+      if ((ev.op === undefined) === (ev.approx === undefined)) report('error', 'claim.param.value', c, 'A metric-bound claim needs either "op" and "bound" or "approx".', ['evaluate']);
+    }
     /** @type {Set<string>|undefined} */
     let allowedBehaviors;
     if (Array.isArray(ev.scenarios)) {
@@ -352,6 +398,13 @@ export function validateModel(model) {
     for (const c of kind('claim')) {
       if (['invariant', 'temporal', 'measured'].includes(c.data.kind) && c.data.faultModel === undefined) report('info', 'gap.no-fault-model', c, `Claim "${c.id}" is evaluated under no fault model, though this specification declares ${kind('faultModel').length === 1 ? 'one' : 'some'}.`);
     }
+  }
+  // --- evidence -----------------------------------------------------------
+  // A test reference that exegra verify would refuse as unsafe is an error here, so the author sees it before verify.
+  for (const e of kind('evidence')) {
+    if (e.data.kind !== 'test' || typeof e.data.ref !== 'string') continue;
+    const problem = testRefProblem(e.data.ref);
+    if (problem) report('error', 'evidence.ref-unsafe', e, `Evidence "${e.id}": ${describeTestRefProblem(e.data.ref, problem)}`, ['ref']);
   }
   const evidenced = new Set(kind('evidence').map((e) => e.data.claim));
   for (const c of kind('claim')) {

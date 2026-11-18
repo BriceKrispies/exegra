@@ -34,8 +34,9 @@ A change is done when:
 1. `node cli/exegra.js validate --project exegra` reports no errors;
 2. `node cli/exegra.js traceability --project exegra` reports no missing modules and no unclaimed files;
 3. `npm run verify` executes the evidence and records the results, and every claim of the change is **verified** or
-   **supported**; the only violated claim is the one the script expects (`edits-only-via-transactions`, deliberately
-   recorded as a known gap);
+   **supported** (or **proved**, for a `lean-theorem` claim); the only violated claims are the ones the script expects
+   (`edits-only-via-transactions`, deliberately recorded as a known gap, and `core-logic-in-lean`, which lists the
+   core components not yet ported to Lean until WG-4785 finishes);
 4. `npm run generate` has rewritten the derived artifacts under `specs/exegra/generated/`;
 5. the user-visible part has been seen working in the running application, with screenshots.
 
@@ -49,8 +50,11 @@ message flows were shown on `visual-edit-flow`, and they exposed a gap in Exegra
 - Cheap checks while working: `npx tsc -p jsconfig.json --noEmit` (`npm run typecheck` does the same after building
   the engine), `node --check <file>`, `node cli/exegra.js validate` and `apply --dry-run`, and in `engine/`
   `cargo check`, `cargo fmt` and `cargo clippy`.
-- The simulation engine is Rust (`engine/`), run as WebAssembly through `src/core/engine.js`. `npm run build:engine`
-  builds it into `src/engine/pkg/` (generated); `dev`, `build`, `test`, `test:browser`, `typecheck`, `generate` and
+- The simulation engine is the Lean core (`formal/`), run as WebAssembly through `src/core/engine.js` and
+  `src/core/lean.js`. `npm run build:formal-wasm` builds it into `src/engine/lean/` (generated, wasm64 only); new Lean
+  functions for the shell are registered in `formal/Exegra/Api.lean`. The Rust engine (`engine/`) stays as a
+  differential oracle: `npm run build:engine` builds it into `src/engine/pkg/` (generated); `dev`, `build`, `test`,
+  `test:browser`, `typecheck`, `generate` and
   `verify` build it first.
 - Test suites: `npm test` (Node, two at a time) and `npm run test:browser` (Playwright). They run once on a stack of
   changes, not after every change. Subagents run only the cheap checks; the coordinator runs the suites and

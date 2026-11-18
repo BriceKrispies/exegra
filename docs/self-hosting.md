@@ -1,6 +1,6 @@
 # Self-hosting
 
-Exegra specifies itself in `specs/exegra/spec.jsonc`: 58 components, ports and contracts, 180 relationships, ten behaviors with four scenarios, 25 claims and 16 evidence entities. This document describes what that gives today and the order in which more could follow.
+Exegra specifies itself in `specs/exegra/spec.jsonc`: components, ports and contracts, relationships, behaviors, scenarios, claims and evidence entities. The specification changes often, so this document gives no counts; `node cli/exegra.js list --project exegra --kind <kind>` lists the entities of one kind (kinds `component`, `relationship`, `behavior`, `scenario`, `claim`, `evidence`), and its `result` array is the current count. This document describes what that gives today and the order in which more could follow.
 
 **Exegra is not self-hosting today.** Nothing in the running application is generated from the model. No component declares `implementation.status` as `generated`, `partially-generated` or `not-implemented`. The model describes, checks and reports on Exegra; it does not build it.
 

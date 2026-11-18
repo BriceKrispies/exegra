@@ -8,7 +8,8 @@
 // the implementation surface; any of them that no component claims is reported.
 // Build output under GENERATED_DIRS is not part of the surface: it is derived from
 // sources that a component claims (src/engine/pkg/ from engine/exegra-engine-wasm,
-// by npm run build:engine) and exists only after a build.
+// by npm run build:engine; src/engine/lean/ from formal/, by npm run build:formal-wasm) and
+// exists only after a build.
 //
 // With realisation roots (tools/realisation-roots.js), a module "<alias>:<path>"
 // is checked in that root, and unclaimed files come only from roots that declare
@@ -26,7 +27,7 @@ const SCAN_DIRS = ['src', 'cli', 'tools'];
 const SCAN_EXT = new Set(['.js', '.json', '.css', '.html']);
 const SCAN_ROOT_FILES = ['index.html', 'vite.config.js'];
 /** Generated directories (repo-relative, trailing slash) left out of the surface. */
-export const GENERATED_DIRS = ['src/engine/pkg/'];
+export const GENERATED_DIRS = ['src/engine/pkg/', 'src/engine/lean/'];
 
 /** @param {string} p */
 const slash = (p) => p.replace(/\\/g, '/');

@@ -1,5 +1,5 @@
 // Simulator panel: drives session.sim* and displays the run. The simulation
-// engine is the Rust engine behind src/core/engine.js, run by the session in a
+// engine is the Lean core behind src/core/engine.js, run by the session in a
 // Web Worker; this module holds no semantic state.
 
 import { h, clear, revealInScroller } from './dom.js';
@@ -52,6 +52,12 @@ export function mountSimPanel(el, session) {
   const btnPlay = mkBtn('sim-play', 'Play', () => session.simPlay(!session.sim.playing));
   const btnRun = mkBtn('sim-run', 'Run to end', () => session.simRunToEnd());
 
+  // Source: a declared scenario, or Live: this application's own recorded events replayed through its
+  // self-model (session.simLive, src/core/replay.js).
+  const btnSourceScenario = /** @type {HTMLButtonElement} */ (h('button', { type: 'button', class: 'sim__source', 'data-testid': 'sim-source-scenario', onclick: () => session.simLive(false) }, 'Scenario'));
+  const btnLive = /** @type {HTMLButtonElement} */ (h('button', { type: 'button', class: 'sim__source', 'data-testid': 'sim-live', onclick: () => session.simLive(!session.live?.on) }, 'Live'));
+  const sourceGroup = h('div', { class: 'sim__sources', role: 'group', 'aria-label': 'Source' }, btnSourceScenario, btnLive);
+  const liveLine = /** @type {HTMLOutputElement} */ (h('output', { class: 'sim__live', 'data-testid': 'sim-live-status', hidden: true }));
   const scenarioDesc = h('p', { class: 'sim__desc' });
   const behaviorsBox = h('div', { class: 'sim__block' });
   const faultsBox = h('div', { class: 'sim__block' });
@@ -62,6 +68,8 @@ export function mountSimPanel(el, session) {
     h('summary', { class: 'sim__about-summary' }, 'About this scenario'), scenarioDesc, behaviorsBox));
   const runCol = h('section', { class: 'sim__col sim__col--run', 'aria-label': 'Run' },
     h('h3', { class: 'sim__h' }, 'Run'),
+    sourceGroup,
+    liveLine,
     h('label', { class: 'sim__label', for: 'sim-scenario-select' }, 'Scenario'),
     scenarioSelect,
     faultsBox,
@@ -111,7 +119,22 @@ export function mountSimPanel(el, session) {
       scenarioSelect.append(h('option', { value: '' }, 'No scenario'));
       for (const sc of scenarios) scenarioSelect.append(h('option', { value: sc.id }, entityLabel(sc)));
     }
-    scenarioSelect.value = s.scenarioId ?? '';
+    const live = !!session.live?.on;
+    el.dataset.live = String(live);
+    btnLive.setAttribute('aria-pressed', String(live));
+    btnSourceScenario.setAttribute('aria-pressed', String(!live));
+    btnLive.disabled = model?.entities.get('live-session')?.kind !== 'scenario';
+    btnLive.title = btnLive.disabled
+      ? 'This specification has no live-session scenario: Live mode replays Exegra’s own events through Exegra’s own specification.'
+      : 'Show this running Exegra’s own events, replayed through its specification, as they happen';
+    liveLine.hidden = !live;
+    if (live) {
+      const d = session.live.divergences.length;
+      const w = session.live.awaiting.length;
+      liveLine.textContent = `Live: ${s.simulation?.steps.length ?? 0} real events replayed · ${d} divergence${d === 1 ? '' : 's'} · ${w} predicted event${w === 1 ? '' : 's'} awaited${session.live.dropped ? ` · ${session.live.dropped} earlier events dropped` : ''}`;
+      liveLine.classList.toggle('sim__live--bad', d > 0);
+    }
+    scenarioSelect.value = live ? '' : s.scenarioId ?? '';
     scenarioSelect.disabled = !model;
 
     const scenario = s.scenarioId ? model?.entities.get(s.scenarioId) : null;
@@ -143,7 +166,7 @@ export function mountSimPanel(el, session) {
       const ul = h('ul', { class: 'sim__list sim__list--faults' });
       for (const f of faults) {
         const cb = h('input', {
-          type: 'checkbox', checked: active.has(f.id), disabled: !scenario,
+          type: 'checkbox', checked: active.has(f.id), disabled: !scenario || live,
           'data-testid': `sim-fault-${f.id}`,
           onchange: () => {
             const next = new Set(session.sim.faults);
@@ -164,14 +187,14 @@ export function mountSimPanel(el, session) {
     const sim = s.simulation;
     const total = sim ? sim.steps.length : 0;
     const running = sim?.outcome === 'running';
-    const canForward = !!sim && (s.stepIndex < total - 1 || running);
+    const canForward = !!sim && (s.stepIndex < total - 1 || (running && !sim.live));
     btnReset.disabled = !sim || (s.stepIndex < 0 && total === 0);
     btnReset.title = sim ? 'Return to the initial configuration' : s.running ? 'The scenario is running' : 'Load a scenario first';
     btnBack.disabled = !sim || s.stepIndex < 0;
     btnBack.title = !sim ? 'Load a scenario first' : s.stepIndex < 0 ? 'Already at the initial configuration' : 'Show the previous step';
     btnStep.disabled = !canForward;
     btnStep.title = !sim ? 'Load a scenario first' : canForward ? 'Execute the next event delivery' : 'The run has ended';
-    btnPlay.disabled = !sim || (!canForward && !s.playing);
+    btnPlay.disabled = !sim || !!sim.live || (!canForward && !s.playing);
     btnPlay.title = !sim ? 'Load a scenario first' : canForward || s.playing ? 'Step automatically' : 'The run has ended';
     btnPlay.textContent = s.playing ? 'Pause' : 'Play';
     btnPlay.setAttribute('aria-pressed', String(!!s.playing));
@@ -199,6 +222,9 @@ export function mountSimPanel(el, session) {
     const sim = s.simulation;
     timelineCol.append(h('h3', { class: 'sim__h' }, 'Timeline'));
     if (!sim) { timelineCol.append(h('p', { class: 'sim__muted' }, s.running ? 'Running the scenario…' : 'Load a scenario to see its timeline.')); return; }
+    const live = !!sim.live;
+    /** @type {Set<number>} */
+    const diverged = new Set(live ? session.live.divergences.map((/** @type {any} */ d) => d.stepIndex) : []);
     /** @type {Map<number, any>} */
     const firstViolation = new Map();
     for (const c of s.checks) if (!c.holds && !c.pending && typeof c.stepIndex === 'number') {
@@ -214,11 +240,19 @@ export function mountSimPanel(el, session) {
         'aria-current': index === s.stepIndex ? 'step' : null,
         onclick: () => session.simSeek(index),
       }, kids));
-    ol.append(row(-1, [h('span', { class: 'sim__idx' }, '—'), h('span', { class: 'sim__time' }, `t=${sim.initial.time}`), h('span', { class: 'sim__ev' }, 'Initial configuration')]));
-    for (const st of sim.steps) {
+    ol.append(row(-1, [h('span', { class: 'sim__idx' }, '—'), h('span', { class: 'sim__time' }, `t=${sim.initial.time}`), h('span', { class: 'sim__ev' }, live ? 'Page load (declared initial configuration)' : 'Initial configuration')]));
+    // Live: the most recent steps only, so a long session stays responsive.
+    const LIVE_ROWS = 300;
+    const shownSteps = live && sim.steps.length > LIVE_ROWS ? sim.steps.slice(-LIVE_ROWS) : sim.steps;
+    if (shownSteps.length < sim.steps.length) ol.append(h('li', { class: 'sim__muted' }, `${sim.steps.length - shownSteps.length} earlier events are not listed.`));
+    const t0 = live ? session.live.at.get(sim.steps[0]?.time) ?? 0 : 0;
+    for (const st of shownSteps) {
+      const at = live ? session.live.at.get(st.time) : undefined;
       const kids = [
         h('span', { class: 'sim__idx' }, `#${st.index}`),
-        h('span', { class: 'sim__time' }, `t=${st.time}`),
+        h('span', { class: 'sim__time', title: live ? 'Logical time: the recorded sequence number' : null }, `t=${st.time}`),
+        live && at !== undefined ? h('span', { class: 'sim__muted sim__clock', title: 'Wall-clock time since the first recorded event (display only)' }, `${((at - t0) / 1000).toFixed(2)} s`) : null,
+        live && st.event.source?.inferred ? h('span', { class: 'sim__chip', title: 'The development server inferred this event; nothing observed it directly' }, 'inferred') : null,
         st.kind !== 'deliver' ? h('span', { class: ['sim__chip', `sim__chip--${st.kind}`] }, st.kind) : null,
         h('span', { class: 'sim__ev' }, nameOf(st.event.id)),
         h('span', { class: 'sim__sum' }, st.fired.length
@@ -227,6 +261,7 @@ export function mountSimPanel(el, session) {
         st.faults.length ? h('span', { class: 'sim__mark sim__mark--fault', title: st.faults.map((/** @type {any} */ f) => `${nameOf(f.fault)} ${FAULT_EFFECT_WORDS[/** @type {keyof typeof FAULT_EFFECT_WORDS} */ (f.effect)] ?? f.effect}`).join('; ') }, 'fault') : null,
         st.error ? h('span', { class: 'sim__mark sim__mark--bad', title: st.error.message }, 'error') : null,
         firstViolation.has(st.index) ? h('span', { class: 'sim__mark sim__mark--bad', title: `Violates: ${firstViolation.get(st.index).claims.map(nameOf).join('; ')}` }, 'violation') : null,
+        diverged.has(st.index) ? h('span', { class: 'sim__mark sim__mark--bad', 'data-testid': `sim-divergence-mark-${st.index}` }, 'divergence') : null,
       ];
       ol.append(row(st.index, kids));
     }
@@ -235,7 +270,7 @@ export function mountSimPanel(el, session) {
 
     // pending events of the current configuration
     const config = s.stepIndex >= 0 ? sim.steps[s.stepIndex]?.config : sim.initial;
-    timelineCol.append(h('h4', { class: 'sim__sub' }, 'Pending events'));
+    timelineCol.append(h('h4', { class: 'sim__sub' }, live ? 'Predicted, not yet seen' : 'Pending events'));
     if (!config?.pending?.length) timelineCol.append(h('p', { class: 'sim__muted' }, 'None.'));
     else {
       const tb = h('tbody');
@@ -254,6 +289,7 @@ export function mountSimPanel(el, session) {
     if (src.kind === 'scenario') return `scenario input #${src.step + 1}`;
     if (src.kind === 'transition') return `emitted by transition ${nameOf(src.transition)} of behavior ${nameOf(src.behavior)}`;
     if (src.kind === 'fault') return `injected by fault ${nameOf(src.fault)}`;
+    if (src.kind === 'recorded') return src.inferred ? 'recorded: inferred by the development server' : 'recorded from the running application; no transition of the model predicted it';
     return String(src.kind);
   }
 
@@ -296,6 +332,16 @@ export function mountSimPanel(el, session) {
       stepBody.append(dl);
 
       if (step.error) stepBody.append(h('p', { class: 'sim__banner', role: 'alert' }, `Error: ${step.error.message}`));
+      if (step.divergences?.length) {
+        const box = h('div', { class: 'sim__banner', role: 'alert' });
+        for (const d of step.divergences) box.append(h('div', null, h('strong', null, `Divergence (${d.kind}): `), d.explanation));
+        stepBody.append(box);
+      }
+      if (step.calibrated?.length) {
+        stepBody.append(h('p', { class: 'sim__muted' }, 'Calibrated from this real event: ',
+          step.calibrated.map((/** @type {any} */ c) => `${c.behavior}.${c.variable} = ${fmt(c.value)}`).join('; '),
+          ' (the declared initial value stood for the environment when the stream started).'));
+      }
 
       if (step.fired.length) {
         stepBody.append(h('h4', { class: 'sim__sub' }, 'Fired'));
@@ -381,6 +427,25 @@ export function mountSimPanel(el, session) {
       }
       reqs.append(ol);
       checksHost.append(reqs);
+    }
+
+    // divergences of the live replay: real events the self-model does not allow, predictions that never came
+    if (sim.live) {
+      const all = session.live.divergences;
+      const box = h('div', { 'data-testid': 'sim-divergences', class: 'sim__divergences' }, h('h4', { class: 'sim__sub' }, `Divergences (${all.length})`));
+      if (!all.length) box.append(h('p', { class: 'sim__muted' }, 'None: every recorded event so far is one the self-model allows, and every prediction older than the bound was seen.'));
+      else {
+        const ol = h('ol', { class: 'sim__rows' });
+        for (const d of all.slice(-200)) {
+          ol.append(h('li', { class: ['sim__row', 'sim__divergence'], 'data-kind': d.kind },
+            h('button', { type: 'button', class: 'sim__rowbtn', title: d.explanation, onclick: () => session.simSeek(d.stepIndex) },
+              h('span', { class: 'sim__idx' }, `#${d.stepIndex}`),
+              h('span', { class: 'sim__chip sim__chip--bad' }, d.kind),
+              h('span', { class: 'sim__reqtext' }, d.explanation))));
+        }
+        box.append(ol);
+      }
+      checksHost.append(box);
     }
 
     // checks

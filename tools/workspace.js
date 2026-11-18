@@ -361,22 +361,29 @@ export function createWorkspace(rootDir) {
       }
       await atomicWrite(target, text);
       const hash = hashText(text);
-      const journal = resolve(name, JOURNAL_REL);
-      const existing = await readOptional(journal);
-      const seq =
-        (existing === null ? 0 : existing.split('\n').filter((line) => line.trim() !== '').length) + 1;
-      const entry = {
-        seq,
-        file,
-        hash,
-        baseHash: expected,
-        label: meta?.label ?? null,
-        origin: meta?.origin ?? null,
-        bytes: Buffer.byteLength(text, 'utf8'),
-      };
-      await fs.mkdir(path.dirname(journal), { recursive: true });
-      await fs.appendFile(journal, `${JSON.stringify(entry)}\n`, 'utf8');
-      return { ok: true, hash };
+      // The file is already replaced. A journal line that cannot be appended is reported in the result rather
+      // than thrown, so the caller can tell that this write has no journal line. Nothing is rolled back.
+      try {
+        const journal = resolve(name, JOURNAL_REL);
+        const existing = await readOptional(journal);
+        const seq =
+          (existing === null ? 0 : existing.split('\n').filter((line) => line.trim() !== '').length) + 1;
+        const entry = {
+          seq,
+          file,
+          hash,
+          baseHash: expected,
+          label: meta?.label ?? null,
+          origin: meta?.origin ?? null,
+          bytes: Buffer.byteLength(text, 'utf8'),
+        };
+        await fs.mkdir(path.dirname(journal), { recursive: true });
+        await fs.appendFile(journal, `${JSON.stringify(entry)}\n`, 'utf8');
+        return { ok: true, hash, journal: { written: true, seq } };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        return { ok: true, hash, journal: { written: false, message: `The journal line was not written: ${message}` } };
+      }
     });
   }
 

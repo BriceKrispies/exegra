@@ -1,0 +1,1382 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "camera-memory-flow": {
+    "state": "camera-live",
+    "vars": {
+     "current": "cA",
+     "view": "structural"
+    }
+   },
+   "session-storage-flow": {
+    "state": "tab-storage-ready",
+    "vars": {
+     "cameraArchitecture": "none",
+     "cameraBehavior": "none",
+     "cameraClaims": "none",
+     "cameraDataAndEditFlow": "none",
+     "cameraRealisation": "none",
+     "cameraReferences": "none",
+     "cameraSemanticCoreOnly": "none",
+     "dataCamera": "cB",
+     "structuralCamera": "cA"
+    }
+   }
+  },
+  "pending": [],
+  "time": 5
+ },
+ "initial": {
+  "machines": {
+   "camera-memory-flow": {
+    "state": "camera-live",
+    "vars": {
+     "current": "c0",
+     "view": "structural"
+    }
+   },
+   "session-storage-flow": {
+    "state": "tab-storage-ready",
+    "vars": {
+     "cameraArchitecture": "none",
+     "cameraBehavior": "none",
+     "cameraClaims": "none",
+     "cameraDataAndEditFlow": "none",
+     "cameraRealisation": "none",
+     "cameraReferences": "none",
+     "cameraSemanticCoreOnly": "none",
+     "dataCamera": "none",
+     "structuralCamera": "none"
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "camera-moved",
+    "payload": {
+     "camera": "cA"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   },
+   {
+    "event": "view-switched",
+    "payload": {
+     "view": "data"
+    },
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    },
+    "time": 2
+   },
+   {
+    "event": "camera-moved",
+    "payload": {
+     "camera": "cB"
+    },
+    "seq": 2,
+    "source": {
+     "kind": "scenario",
+     "step": 2
+    },
+    "time": 3
+   },
+   {
+    "event": "view-switched",
+    "payload": {
+     "view": "structural"
+    },
+    "seq": 3,
+    "source": {
+     "kind": "scenario",
+     "step": 3
+    },
+    "time": 5
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "camera-remembered",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "camera-memory-flow": {
+      "state": "camera-live",
+      "vars": {
+       "current": "cA",
+       "view": "structural"
+      }
+     },
+     "session-storage-flow": {
+      "state": "tab-storage-ready",
+      "vars": {
+       "cameraArchitecture": "none",
+       "cameraBehavior": "none",
+       "cameraClaims": "none",
+       "cameraDataAndEditFlow": "none",
+       "cameraRealisation": "none",
+       "cameraReferences": "none",
+       "cameraSemanticCoreOnly": "none",
+       "dataCamera": "none",
+       "structuralCamera": "none"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "camera-saved",
+      "payload": {
+       "camera": "cA",
+       "view": "structural"
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "camera-memory-flow",
+       "kind": "transition",
+       "transition": "camera-move"
+      },
+      "time": 0
+     },
+     {
+      "event": "view-switched",
+      "payload": {
+       "view": "data"
+      },
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 2
+     },
+     {
+      "event": "camera-moved",
+      "payload": {
+       "camera": "cB"
+      },
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 3
+     },
+     {
+      "event": "view-switched",
+      "payload": {
+       "view": "structural"
+      },
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 5
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "camera-moved",
+    "payload": {
+     "camera": "cA"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "camera-memory-flow",
+     "emitted": [
+      {
+       "event": "camera-saved",
+       "payload": {
+        "camera": "cA",
+        "view": "structural"
+       },
+       "seq": 4,
+       "time": 0
+      }
+     ],
+     "from": "camera-live",
+     "guard": null,
+     "sets": [
+      {
+       "after": "cA",
+       "before": "c0",
+       "variable": "current"
+      }
+     ],
+     "to": "camera-live",
+     "transition": "camera-move"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "session-storage-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "camera-moved",
+    "camera-move",
+    "camera-memory-flow",
+    "visual-interaction"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "camera-memory-flow": {
+      "state": "camera-live",
+      "vars": {
+       "current": "cA",
+       "view": "structural"
+      }
+     },
+     "session-storage-flow": {
+      "state": "tab-storage-ready",
+      "vars": {
+       "cameraArchitecture": "none",
+       "cameraBehavior": "none",
+       "cameraClaims": "none",
+       "cameraDataAndEditFlow": "none",
+       "cameraRealisation": "none",
+       "cameraReferences": "none",
+       "cameraSemanticCoreOnly": "none",
+       "dataCamera": "none",
+       "structuralCamera": "cA"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "view-switched",
+      "payload": {
+       "view": "data"
+      },
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 2
+     },
+     {
+      "event": "camera-moved",
+      "payload": {
+       "camera": "cB"
+      },
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 3
+     },
+     {
+      "event": "view-switched",
+      "payload": {
+       "view": "structural"
+      },
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 5
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "camera-saved",
+    "payload": {
+     "camera": "cA",
+     "view": "structural"
+    },
+    "seq": 4,
+    "source": {
+     "behavior": "camera-memory-flow",
+     "kind": "transition",
+     "transition": "camera-move"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "session-storage-flow",
+     "emitted": [],
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'structural'",
+     "sets": [
+      {
+       "after": "cA",
+       "before": "none",
+       "variable": "structuralCamera"
+      }
+     ],
+     "to": "tab-storage-ready",
+     "transition": "tab-storage-save-structural"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "camera-memory-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "camera-saved",
+    "tab-storage-save-structural",
+    "session-storage-flow",
+    "browser-storage"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "camera-memory-flow": {
+      "state": "camera-live",
+      "vars": {
+       "current": "cA",
+       "view": "data"
+      }
+     },
+     "session-storage-flow": {
+      "state": "tab-storage-ready",
+      "vars": {
+       "cameraArchitecture": "none",
+       "cameraBehavior": "none",
+       "cameraClaims": "none",
+       "cameraDataAndEditFlow": "none",
+       "cameraRealisation": "none",
+       "cameraReferences": "none",
+       "cameraSemanticCoreOnly": "none",
+       "dataCamera": "none",
+       "structuralCamera": "cA"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "camera-restore-requested",
+      "payload": {
+       "view": "data"
+      },
+      "seq": 5,
+      "source": {
+       "behavior": "camera-memory-flow",
+       "kind": "transition",
+       "transition": "camera-switch"
+      },
+      "time": 2
+     },
+     {
+      "event": "camera-moved",
+      "payload": {
+       "camera": "cB"
+      },
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 3
+     },
+     {
+      "event": "view-switched",
+      "payload": {
+       "view": "structural"
+      },
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 5
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "view-switched",
+    "payload": {
+     "view": "data"
+    },
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "camera-memory-flow",
+     "emitted": [
+      {
+       "event": "camera-restore-requested",
+       "payload": {
+        "view": "data"
+       },
+       "seq": 5,
+       "time": 2
+      }
+     ],
+     "from": "camera-live",
+     "guard": null,
+     "sets": [
+      {
+       "after": "data",
+       "before": "structural",
+       "variable": "view"
+      }
+     ],
+     "to": "camera-live",
+     "transition": "camera-switch"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "session-storage-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "view-switched",
+    "camera-switch",
+    "camera-memory-flow",
+    "visual-interaction"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "camera-memory-flow": {
+      "state": "camera-live",
+      "vars": {
+       "current": "cA",
+       "view": "data"
+      }
+     },
+     "session-storage-flow": {
+      "state": "tab-storage-ready",
+      "vars": {
+       "cameraArchitecture": "none",
+       "cameraBehavior": "none",
+       "cameraClaims": "none",
+       "cameraDataAndEditFlow": "none",
+       "cameraRealisation": "none",
+       "cameraReferences": "none",
+       "cameraSemanticCoreOnly": "none",
+       "dataCamera": "none",
+       "structuralCamera": "cA"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "camera-none",
+      "payload": {
+       "view": "data"
+      },
+      "seq": 6,
+      "source": {
+       "behavior": "session-storage-flow",
+       "kind": "transition",
+       "transition": "tab-storage-nothing"
+      },
+      "time": 2
+     },
+     {
+      "event": "camera-moved",
+      "payload": {
+       "camera": "cB"
+      },
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 3
+     },
+     {
+      "event": "view-switched",
+      "payload": {
+       "view": "structural"
+      },
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 5
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "camera-restore-requested",
+    "payload": {
+     "view": "data"
+    },
+    "seq": 5,
+    "source": {
+     "behavior": "camera-memory-flow",
+     "kind": "transition",
+     "transition": "camera-switch"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "session-storage-flow",
+     "emitted": [
+      {
+       "event": "camera-none",
+       "payload": {
+        "view": "data"
+       },
+       "seq": 6,
+       "time": 2
+      }
+     ],
+     "from": "tab-storage-ready",
+     "guard": null,
+     "sets": [],
+     "to": "tab-storage-ready",
+     "transition": "tab-storage-nothing"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "camera-memory-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "camera-restore-requested",
+    "tab-storage-nothing",
+    "session-storage-flow",
+    "browser-storage"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "camera-memory-flow": {
+      "state": "camera-live",
+      "vars": {
+       "current": "cA",
+       "view": "data"
+      }
+     },
+     "session-storage-flow": {
+      "state": "tab-storage-ready",
+      "vars": {
+       "cameraArchitecture": "none",
+       "cameraBehavior": "none",
+       "cameraClaims": "none",
+       "cameraDataAndEditFlow": "none",
+       "cameraRealisation": "none",
+       "cameraReferences": "none",
+       "cameraSemanticCoreOnly": "none",
+       "dataCamera": "none",
+       "structuralCamera": "cA"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "camera-saved",
+      "payload": {
+       "camera": "cA",
+       "view": "data"
+      },
+      "seq": 7,
+      "source": {
+       "behavior": "camera-memory-flow",
+       "kind": "transition",
+       "transition": "camera-keep"
+      },
+      "time": 2
+     },
+     {
+      "event": "camera-moved",
+      "payload": {
+       "camera": "cB"
+      },
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 3
+     },
+     {
+      "event": "view-switched",
+      "payload": {
+       "view": "structural"
+      },
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 5
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "camera-none",
+    "payload": {
+     "view": "data"
+    },
+    "seq": 6,
+    "source": {
+     "behavior": "session-storage-flow",
+     "kind": "transition",
+     "transition": "tab-storage-nothing"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "camera-memory-flow",
+     "emitted": [
+      {
+       "event": "camera-saved",
+       "payload": {
+        "camera": "cA",
+        "view": "data"
+       },
+       "seq": 7,
+       "time": 2
+      }
+     ],
+     "from": "camera-live",
+     "guard": null,
+     "sets": [],
+     "to": "camera-live",
+     "transition": "camera-keep"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "session-storage-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 4,
+   "kind": "deliver",
+   "responsible": [
+    "camera-none",
+    "camera-keep",
+    "camera-memory-flow",
+    "visual-interaction"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "camera-memory-flow": {
+      "state": "camera-live",
+      "vars": {
+       "current": "cA",
+       "view": "data"
+      }
+     },
+     "session-storage-flow": {
+      "state": "tab-storage-ready",
+      "vars": {
+       "cameraArchitecture": "none",
+       "cameraBehavior": "none",
+       "cameraClaims": "none",
+       "cameraDataAndEditFlow": "none",
+       "cameraRealisation": "none",
+       "cameraReferences": "none",
+       "cameraSemanticCoreOnly": "none",
+       "dataCamera": "cA",
+       "structuralCamera": "cA"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "camera-moved",
+      "payload": {
+       "camera": "cB"
+      },
+      "seq": 2,
+      "source": {
+       "kind": "scenario",
+       "step": 2
+      },
+      "time": 3
+     },
+     {
+      "event": "view-switched",
+      "payload": {
+       "view": "structural"
+      },
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 5
+     }
+    ],
+    "time": 2
+   },
+   "event": {
+    "id": "camera-saved",
+    "payload": {
+     "camera": "cA",
+     "view": "data"
+    },
+    "seq": 7,
+    "source": {
+     "behavior": "camera-memory-flow",
+     "kind": "transition",
+     "transition": "camera-keep"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "session-storage-flow",
+     "emitted": [],
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'data'",
+     "sets": [
+      {
+       "after": "cA",
+       "before": "none",
+       "variable": "dataCamera"
+      }
+     ],
+     "to": "tab-storage-ready",
+     "transition": "tab-storage-save-data"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "camera-memory-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 5,
+   "kind": "deliver",
+   "responsible": [
+    "camera-saved",
+    "tab-storage-save-data",
+    "session-storage-flow",
+    "browser-storage"
+   ],
+   "time": 2
+  },
+  {
+   "config": {
+    "machines": {
+     "camera-memory-flow": {
+      "state": "camera-live",
+      "vars": {
+       "current": "cB",
+       "view": "data"
+      }
+     },
+     "session-storage-flow": {
+      "state": "tab-storage-ready",
+      "vars": {
+       "cameraArchitecture": "none",
+       "cameraBehavior": "none",
+       "cameraClaims": "none",
+       "cameraDataAndEditFlow": "none",
+       "cameraRealisation": "none",
+       "cameraReferences": "none",
+       "cameraSemanticCoreOnly": "none",
+       "dataCamera": "cA",
+       "structuralCamera": "cA"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "camera-saved",
+      "payload": {
+       "camera": "cB",
+       "view": "data"
+      },
+      "seq": 8,
+      "source": {
+       "behavior": "camera-memory-flow",
+       "kind": "transition",
+       "transition": "camera-move"
+      },
+      "time": 3
+     },
+     {
+      "event": "view-switched",
+      "payload": {
+       "view": "structural"
+      },
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 5
+     }
+    ],
+    "time": 3
+   },
+   "event": {
+    "id": "camera-moved",
+    "payload": {
+     "camera": "cB"
+    },
+    "seq": 2,
+    "source": {
+     "kind": "scenario",
+     "step": 2
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "camera-memory-flow",
+     "emitted": [
+      {
+       "event": "camera-saved",
+       "payload": {
+        "camera": "cB",
+        "view": "data"
+       },
+       "seq": 8,
+       "time": 3
+      }
+     ],
+     "from": "camera-live",
+     "guard": null,
+     "sets": [
+      {
+       "after": "cB",
+       "before": "cA",
+       "variable": "current"
+      }
+     ],
+     "to": "camera-live",
+     "transition": "camera-move"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "session-storage-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 6,
+   "kind": "deliver",
+   "responsible": [
+    "camera-moved",
+    "camera-move",
+    "camera-memory-flow",
+    "visual-interaction"
+   ],
+   "time": 3
+  },
+  {
+   "config": {
+    "machines": {
+     "camera-memory-flow": {
+      "state": "camera-live",
+      "vars": {
+       "current": "cB",
+       "view": "data"
+      }
+     },
+     "session-storage-flow": {
+      "state": "tab-storage-ready",
+      "vars": {
+       "cameraArchitecture": "none",
+       "cameraBehavior": "none",
+       "cameraClaims": "none",
+       "cameraDataAndEditFlow": "none",
+       "cameraRealisation": "none",
+       "cameraReferences": "none",
+       "cameraSemanticCoreOnly": "none",
+       "dataCamera": "cB",
+       "structuralCamera": "cA"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "view-switched",
+      "payload": {
+       "view": "structural"
+      },
+      "seq": 3,
+      "source": {
+       "kind": "scenario",
+       "step": 3
+      },
+      "time": 5
+     }
+    ],
+    "time": 3
+   },
+   "event": {
+    "id": "camera-saved",
+    "payload": {
+     "camera": "cB",
+     "view": "data"
+    },
+    "seq": 8,
+    "source": {
+     "behavior": "camera-memory-flow",
+     "kind": "transition",
+     "transition": "camera-move"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "session-storage-flow",
+     "emitted": [],
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'data'",
+     "sets": [
+      {
+       "after": "cB",
+       "before": "cA",
+       "variable": "dataCamera"
+      }
+     ],
+     "to": "tab-storage-ready",
+     "transition": "tab-storage-save-data"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "camera-memory-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 7,
+   "kind": "deliver",
+   "responsible": [
+    "camera-saved",
+    "tab-storage-save-data",
+    "session-storage-flow",
+    "browser-storage"
+   ],
+   "time": 3
+  },
+  {
+   "config": {
+    "machines": {
+     "camera-memory-flow": {
+      "state": "camera-live",
+      "vars": {
+       "current": "cB",
+       "view": "structural"
+      }
+     },
+     "session-storage-flow": {
+      "state": "tab-storage-ready",
+      "vars": {
+       "cameraArchitecture": "none",
+       "cameraBehavior": "none",
+       "cameraClaims": "none",
+       "cameraDataAndEditFlow": "none",
+       "cameraRealisation": "none",
+       "cameraReferences": "none",
+       "cameraSemanticCoreOnly": "none",
+       "dataCamera": "cB",
+       "structuralCamera": "cA"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "camera-restore-requested",
+      "payload": {
+       "view": "structural"
+      },
+      "seq": 9,
+      "source": {
+       "behavior": "camera-memory-flow",
+       "kind": "transition",
+       "transition": "camera-switch"
+      },
+      "time": 5
+     }
+    ],
+    "time": 5
+   },
+   "event": {
+    "id": "view-switched",
+    "payload": {
+     "view": "structural"
+    },
+    "seq": 3,
+    "source": {
+     "kind": "scenario",
+     "step": 3
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "camera-memory-flow",
+     "emitted": [
+      {
+       "event": "camera-restore-requested",
+       "payload": {
+        "view": "structural"
+       },
+       "seq": 9,
+       "time": 5
+      }
+     ],
+     "from": "camera-live",
+     "guard": null,
+     "sets": [
+      {
+       "after": "structural",
+       "before": "data",
+       "variable": "view"
+      }
+     ],
+     "to": "camera-live",
+     "transition": "camera-switch"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "session-storage-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 8,
+   "kind": "deliver",
+   "responsible": [
+    "view-switched",
+    "camera-switch",
+    "camera-memory-flow",
+    "visual-interaction"
+   ],
+   "time": 5
+  },
+  {
+   "config": {
+    "machines": {
+     "camera-memory-flow": {
+      "state": "camera-live",
+      "vars": {
+       "current": "cB",
+       "view": "structural"
+      }
+     },
+     "session-storage-flow": {
+      "state": "tab-storage-ready",
+      "vars": {
+       "cameraArchitecture": "none",
+       "cameraBehavior": "none",
+       "cameraClaims": "none",
+       "cameraDataAndEditFlow": "none",
+       "cameraRealisation": "none",
+       "cameraReferences": "none",
+       "cameraSemanticCoreOnly": "none",
+       "dataCamera": "cB",
+       "structuralCamera": "cA"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "camera-restored",
+      "payload": {
+       "camera": "cA",
+       "view": "structural"
+      },
+      "seq": 10,
+      "source": {
+       "behavior": "session-storage-flow",
+       "kind": "transition",
+       "transition": "tab-storage-restore-structural"
+      },
+      "time": 5
+     }
+    ],
+    "time": 5
+   },
+   "event": {
+    "id": "camera-restore-requested",
+    "payload": {
+     "view": "structural"
+    },
+    "seq": 9,
+    "source": {
+     "behavior": "camera-memory-flow",
+     "kind": "transition",
+     "transition": "camera-switch"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "session-storage-flow",
+     "emitted": [
+      {
+       "event": "camera-restored",
+       "payload": {
+        "camera": "cA",
+        "view": "structural"
+       },
+       "seq": 10,
+       "time": 5
+      }
+     ],
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'structural' && structuralCamera != 'none'",
+     "sets": [],
+     "to": "tab-storage-ready",
+     "transition": "tab-storage-restore-structural"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "camera-memory-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 9,
+   "kind": "deliver",
+   "responsible": [
+    "camera-restore-requested",
+    "tab-storage-restore-structural",
+    "session-storage-flow",
+    "browser-storage"
+   ],
+   "time": 5
+  },
+  {
+   "config": {
+    "machines": {
+     "camera-memory-flow": {
+      "state": "camera-live",
+      "vars": {
+       "current": "cA",
+       "view": "structural"
+      }
+     },
+     "session-storage-flow": {
+      "state": "tab-storage-ready",
+      "vars": {
+       "cameraArchitecture": "none",
+       "cameraBehavior": "none",
+       "cameraClaims": "none",
+       "cameraDataAndEditFlow": "none",
+       "cameraRealisation": "none",
+       "cameraReferences": "none",
+       "cameraSemanticCoreOnly": "none",
+       "dataCamera": "cB",
+       "structuralCamera": "cA"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "camera-saved",
+      "payload": {
+       "camera": "cA",
+       "view": "structural"
+      },
+      "seq": 11,
+      "source": {
+       "behavior": "camera-memory-flow",
+       "kind": "transition",
+       "transition": "camera-apply"
+      },
+      "time": 5
+     }
+    ],
+    "time": 5
+   },
+   "event": {
+    "id": "camera-restored",
+    "payload": {
+     "camera": "cA",
+     "view": "structural"
+    },
+    "seq": 10,
+    "source": {
+     "behavior": "session-storage-flow",
+     "kind": "transition",
+     "transition": "tab-storage-restore-structural"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "camera-memory-flow",
+     "emitted": [
+      {
+       "event": "camera-saved",
+       "payload": {
+        "camera": "cA",
+        "view": "structural"
+       },
+       "seq": 11,
+       "time": 5
+      }
+     ],
+     "from": "camera-live",
+     "guard": null,
+     "sets": [
+      {
+       "after": "cA",
+       "before": "cB",
+       "variable": "current"
+      }
+     ],
+     "to": "camera-live",
+     "transition": "camera-apply"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "session-storage-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 10,
+   "kind": "deliver",
+   "responsible": [
+    "camera-restored",
+    "camera-apply",
+    "camera-memory-flow",
+    "visual-interaction"
+   ],
+   "time": 5
+  },
+  {
+   "config": {
+    "machines": {
+     "camera-memory-flow": {
+      "state": "camera-live",
+      "vars": {
+       "current": "cA",
+       "view": "structural"
+      }
+     },
+     "session-storage-flow": {
+      "state": "tab-storage-ready",
+      "vars": {
+       "cameraArchitecture": "none",
+       "cameraBehavior": "none",
+       "cameraClaims": "none",
+       "cameraDataAndEditFlow": "none",
+       "cameraRealisation": "none",
+       "cameraReferences": "none",
+       "cameraSemanticCoreOnly": "none",
+       "dataCamera": "cB",
+       "structuralCamera": "cA"
+      }
+     }
+    },
+    "pending": [],
+    "time": 5
+   },
+   "event": {
+    "id": "camera-saved",
+    "payload": {
+     "camera": "cA",
+     "view": "structural"
+    },
+    "seq": 11,
+    "source": {
+     "behavior": "camera-memory-flow",
+     "kind": "transition",
+     "transition": "camera-apply"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "session-storage-flow",
+     "emitted": [],
+     "from": "tab-storage-ready",
+     "guard": "event.view == 'structural'",
+     "sets": [
+      {
+       "after": "cA",
+       "before": "cA",
+       "variable": "structuralCamera"
+      }
+     ],
+     "to": "tab-storage-ready",
+     "transition": "tab-storage-save-structural"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "camera-memory-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 11,
+   "kind": "deliver",
+   "responsible": [
+    "camera-saved",
+    "tab-storage-save-structural",
+    "session-storage-flow",
+    "browser-storage"
+   ],
+   "time": 5
+  }
+ ]
+}

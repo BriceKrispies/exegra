@@ -1,0 +1,3147 @@
+{
+ "behaviors": [
+  {
+   "id": "project-session-flow",
+   "initial": "session-closed",
+   "states": [
+    "session-closed",
+    "session-opening",
+    "session-open",
+    "session-saving",
+    "session-conflict",
+    "session-error",
+    "session-readonly"
+   ],
+   "subject": "session",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "pendingName",
+       "to": "event.project"
+      },
+      {
+       "set": "persistent",
+       "to": true
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "list-intent",
+       "payload": {
+        "requestId": "reqSeq"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-closed",
+     "guard": "event.persistent",
+     "id": "session-init",
+     "on": "session-init-requested",
+     "to": "session-closed"
+    },
+    {
+     "effects": [
+      {
+       "set": "persistent",
+       "to": false
+      },
+      {
+       "emit": "project-open-requested",
+       "payload": {
+        "name": "event.project"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-closed",
+     "guard": "!event.persistent",
+     "id": "session-init-readonly",
+     "on": "session-init-requested",
+     "to": "session-closed"
+    },
+    {
+     "effects": [
+      {
+       "set": "projectsListed",
+       "to": "projectsListed + 1"
+      },
+      {
+       "emit": "project-open-requested",
+       "payload": {
+        "name": "pendingName"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-closed",
+     "guard": null,
+     "id": "session-listed-open",
+     "on": "projects-listed",
+     "to": "session-closed"
+    },
+    {
+     "effects": [
+      {
+       "set": "pendingName",
+       "to": "event.name"
+      },
+      {
+       "set": "readPurpose",
+       "to": "'open'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "read-intent",
+       "payload": {
+        "name": "event.name",
+        "purpose": "'open'",
+        "requestId": "reqSeq"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-closed",
+     "guard": "persistent",
+     "id": "session-open-read",
+     "on": "project-open-requested",
+     "to": "session-opening"
+    },
+    {
+     "effects": [
+      {
+       "set": "projectName",
+       "to": "event.name"
+      },
+      {
+       "set": "textHash",
+       "to": "'shipped'"
+      },
+      {
+       "set": "saveState",
+       "to": "'readonly'"
+      },
+      {
+       "emit": "project-opened",
+       "payload": {
+        "layoutHash": "'shipped-layout'",
+        "name": "event.name",
+        "specHash": "'shipped'"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-closed",
+     "guard": "!persistent",
+     "id": "session-open-shipped",
+     "on": "project-open-requested",
+     "to": "session-readonly"
+    },
+    {
+     "effects": [
+      {
+       "set": "pendingName",
+       "to": "event.name"
+      },
+      {
+       "set": "readPurpose",
+       "to": "'open'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "read-intent",
+       "payload": {
+        "name": "event.name",
+        "purpose": "'open'",
+        "requestId": "reqSeq"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": null,
+     "id": "session-switch",
+     "on": "project-open-requested",
+     "to": "session-opening"
+    },
+    {
+     "effects": [
+      {
+       "set": "errorsLogged",
+       "to": "errorsLogged + 1"
+      },
+      {
+       "emit": "open-refused",
+       "payload": {
+        "name": "event.name"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": null,
+     "id": "session-switch-refused-saving",
+     "on": "project-open-requested",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "errorsLogged",
+       "to": "errorsLogged + 1"
+      },
+      {
+       "emit": "open-refused",
+       "payload": {
+        "name": "event.name"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-conflict",
+     "guard": null,
+     "id": "session-switch-refused-conflict",
+     "on": "project-open-requested",
+     "to": "session-conflict"
+    },
+    {
+     "effects": [
+      {
+       "set": "errorsLogged",
+       "to": "errorsLogged + 1"
+      },
+      {
+       "emit": "open-refused",
+       "payload": {
+        "name": "event.name"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-error",
+     "guard": null,
+     "id": "session-switch-refused-error",
+     "on": "project-open-requested",
+     "to": "session-error"
+    },
+    {
+     "effects": [
+      {
+       "set": "projectName",
+       "to": "pendingName"
+      },
+      {
+       "set": "textHash",
+       "to": "event.specHash"
+      },
+      {
+       "set": "layoutHash",
+       "to": "event.layoutHash"
+      },
+      {
+       "set": "saveState",
+       "to": "'saved'"
+      },
+      {
+       "emit": "project-opened",
+       "payload": {
+        "layoutHash": "event.layoutHash",
+        "name": "pendingName",
+        "specHash": "event.specHash"
+       }
+      },
+      {
+       "emit": "watch-intent",
+       "payload": {
+        "name": "pendingName"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-opening",
+     "guard": null,
+     "id": "session-opened-without-base",
+     "on": "project-files-read",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "projectName",
+       "to": "pendingName"
+      },
+      {
+       "set": "baseHash",
+       "to": "event.specHash"
+      },
+      {
+       "set": "textHash",
+       "to": "event.specHash"
+      },
+      {
+       "set": "layoutBase",
+       "to": "event.layoutHash"
+      },
+      {
+       "set": "layoutHash",
+       "to": "event.layoutHash"
+      },
+      {
+       "set": "recordedVersion",
+       "to": "event.recorded"
+      },
+      {
+       "set": "saveState",
+       "to": "'saved'"
+      },
+      {
+       "set": "pendingAgain",
+       "to": false
+      },
+      {
+       "set": "conflictHash",
+       "to": "'none'"
+      },
+      {
+       "emit": "project-opened",
+       "payload": {
+        "layoutHash": "event.layoutHash",
+        "name": "pendingName",
+        "specHash": "event.specHash"
+       }
+      },
+      {
+       "emit": "watch-intent",
+       "payload": {
+        "name": "pendingName"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-opening",
+     "guard": null,
+     "id": "session-opened",
+     "on": "project-files-read",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "errorsLogged",
+       "to": "errorsLogged + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-opening",
+     "guard": "projectName == 'none'",
+     "id": "session-open-failed",
+     "on": "project-read-failed",
+     "to": "session-closed"
+    },
+    {
+     "effects": [
+      {
+       "set": "errorsLogged",
+       "to": "errorsLogged + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-opening",
+     "guard": "projectName != 'none'",
+     "id": "session-open-failed-keep",
+     "on": "project-read-failed",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "textHash",
+       "to": "event.text"
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-open",
+     "guard": "event.origin == 'undo'",
+     "id": "session-skip-flush-on-undo",
+     "on": "commit-notified",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "textHash",
+       "to": "event.text"
+      },
+      {
+       "set": "saveState",
+       "to": "'saving'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "write-intent",
+       "payload": {
+        "baseHash": "baseHash",
+        "file": "'spec'",
+        "name": "projectName",
+        "requestId": "reqSeq",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-open",
+     "guard": "event.origin == 'external'",
+     "id": "session-flush-external-reload",
+     "on": "commit-notified",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "textHash",
+       "to": "event.text"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.origin == 'external'",
+     "id": "session-commit-external",
+     "on": "commit-notified",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "textHash",
+       "to": "event.text"
+      },
+      {
+       "set": "saveState",
+       "to": "'saving'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "write-intent",
+       "payload": {
+        "baseHash": "baseHash",
+        "file": "'spec'",
+        "name": "projectName",
+        "requestId": "reqSeq",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.file == 'spec'",
+     "id": "session-commit-spec",
+     "on": "commit-notified",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "layoutHash",
+       "to": "event.text"
+      },
+      {
+       "set": "saveState",
+       "to": "'saving'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "write-intent",
+       "payload": {
+        "baseHash": "layoutBase",
+        "file": "'layout'",
+        "name": "projectName",
+        "requestId": "reqSeq",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.file == 'layout'",
+     "id": "session-commit-layout",
+     "on": "commit-notified",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "textHash",
+       "to": "event.text"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "write-intent",
+       "payload": {
+        "baseHash": "baseHash",
+        "file": "'spec'",
+        "name": "projectName",
+        "requestId": "reqSeq",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-readonly",
+     "guard": null,
+     "id": "session-readonly-flush",
+     "on": "commit-notified",
+     "to": "session-readonly"
+    },
+    {
+     "effects": [
+      {
+       "set": "textHash",
+       "to": "event.text"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-readonly",
+     "guard": null,
+     "id": "session-readonly-commit",
+     "on": "commit-notified",
+     "to": "session-readonly"
+    },
+    {
+     "effects": [
+      {
+       "set": "textHash",
+       "to": "event.text"
+      },
+      {
+       "set": "pendingAgain",
+       "to": true
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": "event.file == 'spec' && event.origin != 'external'",
+     "id": "session-commit-while-saving",
+     "on": "commit-notified",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "baseHash",
+       "to": "event.hash"
+      },
+      {
+       "set": "pendingAgain",
+       "to": false
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "write-intent",
+       "payload": {
+        "baseHash": "event.hash",
+        "file": "'spec'",
+        "name": "projectName",
+        "requestId": "reqSeq",
+        "text": "textHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": "event.file == 'spec' && pendingAgain",
+     "id": "session-saved-again",
+     "on": "save-succeeded",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "baseHash",
+       "to": "event.hash"
+      },
+      {
+       "set": "saveState",
+       "to": "'saved'"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": "event.file == 'spec'",
+     "id": "session-saved",
+     "on": "save-succeeded",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "layoutBase",
+       "to": "event.hash"
+      },
+      {
+       "set": "saveState",
+       "to": "'saved'"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": "event.file == 'layout'",
+     "id": "session-layout-saved",
+     "on": "save-succeeded",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "conflictHash",
+       "to": "event.currentHash"
+      },
+      {
+       "set": "saveState",
+       "to": "'conflict'"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": null,
+     "id": "session-save-conflict",
+     "on": "save-conflicted",
+     "to": "session-conflict"
+    },
+    {
+     "effects": [
+      {
+       "set": "saveState",
+       "to": "'error'"
+      },
+      {
+       "set": "errorsLogged",
+       "to": "errorsLogged + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": null,
+     "id": "session-save-failed",
+     "on": "save-failed",
+     "to": "session-error"
+    },
+    {
+     "effects": [
+      {
+       "set": "textHash",
+       "to": "event.text"
+      },
+      {
+       "set": "saveState",
+       "to": "'saving'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "write-intent",
+       "payload": {
+        "baseHash": "baseHash",
+        "file": "'spec'",
+        "name": "projectName",
+        "requestId": "reqSeq",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-error",
+     "guard": "event.file == 'spec' && event.origin != 'external'",
+     "id": "session-retry-on-commit",
+     "on": "commit-notified",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "baseHash",
+       "to": "conflictHash"
+      },
+      {
+       "set": "saveState",
+       "to": "'saved'"
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-conflict",
+     "guard": "event.how == 'reload'",
+     "id": "session-resolve-reload-keeps-text",
+     "on": "conflict-resolution-chosen",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "baseHash",
+       "to": "conflictHash"
+      },
+      {
+       "set": "saveState",
+       "to": "'saved'"
+      },
+      {
+       "emit": "reload-requested",
+       "payload": {
+        "file": "'spec'",
+        "text": "conflictHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-conflict",
+     "guard": "event.how == 'reload'",
+     "id": "session-resolve-reload",
+     "on": "conflict-resolution-chosen",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "saveState",
+       "to": "'saving'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "write-intent",
+       "payload": {
+        "baseHash": "baseHash",
+        "file": "'spec'",
+        "name": "projectName",
+        "requestId": "reqSeq",
+        "text": "textHash"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-conflict",
+     "guard": "event.how == 'overwrite'",
+     "id": "session-overwrite-stale-base",
+     "on": "conflict-resolution-chosen",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "baseHash",
+       "to": "conflictHash"
+      },
+      {
+       "set": "saveState",
+       "to": "'saving'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "write-intent",
+       "payload": {
+        "baseHash": "conflictHash",
+        "file": "'spec'",
+        "name": "projectName",
+        "requestId": "reqSeq",
+        "text": "textHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-conflict",
+     "guard": "event.how == 'overwrite'",
+     "id": "session-resolve-overwrite",
+     "on": "conflict-resolution-chosen",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "readPurpose",
+       "to": "'recorded'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "read-intent",
+       "payload": {
+        "name": "projectName",
+        "purpose": "'recorded'",
+        "requestId": "reqSeq"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.file == 'recorded'",
+     "id": "session-recorded-changed",
+     "on": "external-change-received",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "externalReloads",
+       "to": "externalReloads + 1"
+      },
+      {
+       "emit": "reload-requested",
+       "payload": {
+        "file": "'spec'",
+        "text": "event.hash"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-open",
+     "guard": "event.file == 'spec'",
+     "id": "session-reload-own-write",
+     "on": "external-change-received",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "ownNotices",
+       "to": "ownNotices + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.file == 'spec' && event.hash == baseHash",
+     "id": "session-ignore-own-write",
+     "on": "external-change-received",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "ownNotices",
+       "to": "ownNotices + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.file == 'layout' && event.hash == layoutBase",
+     "id": "session-ignore-own-layout-write",
+     "on": "external-change-received",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "readPurpose",
+       "to": "'external-layout'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "read-intent",
+       "payload": {
+        "name": "projectName",
+        "purpose": "'external'",
+        "requestId": "reqSeq"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.file == 'layout'",
+     "id": "session-external-layout-read",
+     "on": "external-change-received",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "readPurpose",
+       "to": "'external'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "read-intent",
+       "payload": {
+        "name": "projectName",
+        "purpose": "'external'",
+        "requestId": "reqSeq"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.file == 'spec'",
+     "id": "session-external-read",
+     "on": "external-change-received",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "layoutBase",
+       "to": "event.layoutHash"
+      },
+      {
+       "set": "externalReloads",
+       "to": "externalReloads + 1"
+      },
+      {
+       "emit": "reload-requested",
+       "payload": {
+        "file": "'layout'",
+        "text": "event.layoutHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "readPurpose == 'external-layout' && event.layoutHash != layoutBase",
+     "id": "session-external-layout-adopted",
+     "on": "project-files-read",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "recordedVersion",
+       "to": "event.recorded"
+      },
+      {
+       "emit": "recorded-results-adopted",
+       "payload": {
+        "version": "event.recorded"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "readPurpose == 'recorded'",
+     "id": "session-recorded-adopted",
+     "on": "project-files-read",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "baseHash",
+       "to": "event.specHash"
+      },
+      {
+       "set": "externalReloads",
+       "to": "externalReloads + 1"
+      },
+      {
+       "emit": "reload-requested",
+       "payload": {
+        "file": "'spec'",
+        "text": "event.specHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "readPurpose == 'external' && event.specHash != baseHash",
+     "id": "session-external-adopted",
+     "on": "project-files-read",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "projectsListed",
+       "to": "projectsListed + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": null,
+     "id": "session-projects-refreshed",
+     "on": "projects-listed",
+     "to": "session-open"
+    },
+    {
+     "effects": [],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "readPurpose == 'external' || readPurpose == 'external-layout'",
+     "id": "session-external-unchanged",
+     "on": "project-files-read",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "ownNotices",
+       "to": "ownNotices + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": null,
+     "id": "session-notice-while-saving",
+     "on": "external-change-received",
+     "to": "session-saving"
+    }
+   ],
+   "variables": [
+    {
+     "initial": true,
+     "name": "persistent"
+    },
+    {
+     "initial": "none",
+     "name": "projectName"
+    },
+    {
+     "initial": "none",
+     "name": "pendingName"
+    },
+    {
+     "initial": "none",
+     "name": "baseHash"
+    },
+    {
+     "initial": "none",
+     "name": "layoutBase"
+    },
+    {
+     "initial": "none",
+     "name": "textHash"
+    },
+    {
+     "initial": "none",
+     "name": "layoutHash"
+    },
+    {
+     "initial": "none",
+     "name": "saveState"
+    },
+    {
+     "initial": false,
+     "name": "pendingAgain"
+    },
+    {
+     "initial": "none",
+     "name": "conflictHash"
+    },
+    {
+     "initial": 0,
+     "name": "reqSeq"
+    },
+    {
+     "initial": "none",
+     "name": "readPurpose"
+    },
+    {
+     "initial": "none",
+     "name": "recordedVersion"
+    },
+    {
+     "initial": 0,
+     "name": "externalReloads"
+    },
+    {
+     "initial": 0,
+     "name": "ownNotices"
+    },
+    {
+     "initial": 0,
+     "name": "errorsLogged"
+    },
+    {
+     "initial": 0,
+     "name": "projectsListed"
+    }
+   ]
+  },
+  {
+   "id": "persistence-client-flow",
+   "initial": "client-ready",
+   "states": [
+    "client-ready"
+   ],
+   "subject": "persistence-client",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "calls",
+       "to": "calls + 1"
+      },
+      {
+       "emit": "read-project-request",
+       "payload": {
+        "name": "event.name",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-read",
+     "on": "read-intent",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "project-files-read",
+       "payload": {
+        "layoutHash": "event.layout",
+        "recorded": "event.recorded",
+        "requestId": "event.requestId",
+        "specHash": "event.spec"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-read-ok",
+     "on": "read-project-ok",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "project-read-failed",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-read-failed",
+     "on": "read-project-failed",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "calls",
+       "to": "calls + 1"
+      },
+      {
+       "emit": "list-projects-request",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-list",
+     "on": "list-intent",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "projects-listed",
+       "payload": {
+        "projects": "event.projects"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-listed",
+     "on": "list-projects-ok",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "calls",
+       "to": "calls + 1"
+      },
+      {
+       "set": "lastFile",
+       "to": "event.file"
+      },
+      {
+       "emit": "write-file-request",
+       "payload": {
+        "baseHash": "event.baseHash",
+        "file": "event.file",
+        "name": "event.name",
+        "requestId": "event.requestId",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-write",
+     "on": "write-intent",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "save-succeeded",
+       "payload": {
+        "file": "lastFile",
+        "hash": "event.hash",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-write-ok",
+     "on": "write-file-ok",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "save-conflicted",
+       "payload": {
+        "currentHash": "event.current",
+        "file": "lastFile",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-write-conflict",
+     "on": "write-file-conflict",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "save-failed",
+       "payload": {
+        "file": "lastFile",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-write-failed",
+     "on": "write-file-failed",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "watch-project-request",
+       "payload": {
+        "name": "event.name"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-watch",
+     "on": "watch-intent",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "external-change-received",
+       "payload": {
+        "file": "event.file",
+        "hash": "event.hash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-notice",
+     "on": "file-change-notice-sent",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "calls",
+       "to": "calls + 1"
+      },
+      {
+       "emit": "export-request",
+       "payload": {
+        "name": "event.name",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-export",
+     "on": "export-intent",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "bundle-received",
+       "payload": {
+        "files": "event.files",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-export-ok",
+     "on": "export-ok",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "export-refused-received",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-export-failed",
+     "on": "export-failed",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "calls",
+       "to": "calls + 1"
+      },
+      {
+       "emit": "import-request",
+       "payload": {
+        "bundle": "event.bundle",
+        "name": "event.name",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-import",
+     "on": "import-intent",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "import-done",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-import-ok",
+     "on": "import-ok",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "import-refused-received",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-import-refused",
+     "on": "import-refused",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "calls",
+       "to": "calls + 1"
+      },
+      {
+       "emit": "generated-write-request",
+       "payload": {
+        "files": "event.files",
+        "name": "event.name",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-generated",
+     "on": "generated-intent",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "generated-saved",
+       "payload": {
+        "requestId": "event.requestId",
+        "written": "event.written"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-generated-ok",
+     "on": "generated-write-ok",
+     "to": "client-ready"
+    }
+   ],
+   "variables": [
+    {
+     "initial": "spec",
+     "name": "lastFile"
+    },
+    {
+     "initial": 0,
+     "name": "calls"
+    }
+   ]
+  },
+  {
+   "id": "dev-server-flow",
+   "initial": "dev-ready",
+   "states": [
+    "dev-ready"
+   ],
+   "subject": "dev-server-plugin",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "requests",
+       "to": "requests + 1"
+      },
+      {
+       "emit": "ws-read",
+       "payload": {
+        "caller": "'http'",
+        "name": "event.name",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": null,
+     "id": "dev-read",
+     "on": "read-project-request",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "read-project-ok",
+       "payload": {
+        "layout": "event.layout",
+        "recorded": "event.recorded",
+        "requestId": "event.requestId",
+        "spec": "event.spec"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": "event.caller == 'http'",
+     "id": "dev-read-ok",
+     "on": "ws-read-done",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "read-project-failed",
+       "payload": {
+        "code": "'not-found'",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": "event.caller == 'http'",
+     "id": "dev-read-missing",
+     "on": "ws-read-missing",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "requests",
+       "to": "requests + 1"
+      },
+      {
+       "emit": "ws-list",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": null,
+     "id": "dev-list",
+     "on": "list-projects-request",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "list-projects-ok",
+       "payload": {
+        "projects": "event.projects",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": null,
+     "id": "dev-listed",
+     "on": "ws-list-done",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "requests",
+       "to": "requests + 1"
+      },
+      {
+       "emit": "ws-write",
+       "payload": {
+        "baseHash": "event.baseHash",
+        "caller": "'http'",
+        "file": "event.file",
+        "name": "event.name",
+        "requestId": "event.requestId",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": null,
+     "id": "dev-write",
+     "on": "write-file-request",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "write-file-ok",
+       "payload": {
+        "hash": "event.hash",
+        "ok": true,
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": "event.caller == 'http'",
+     "id": "dev-write-ok",
+     "on": "ws-write-done",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "write-file-conflict",
+       "payload": {
+        "code": "'conflict'",
+        "current": "event.current",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": "event.caller == 'http'",
+     "id": "dev-write-conflict",
+     "on": "ws-write-conflict",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "write-file-failed",
+       "payload": {
+        "code": "'internal'",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": "event.caller == 'http'",
+     "id": "dev-write-error",
+     "on": "ws-write-error",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "ws-watch",
+       "payload": {
+        "name": "event.name"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": null,
+     "id": "dev-watch",
+     "on": "watch-project-request",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "file-change-notice-sent",
+       "payload": {
+        "file": "event.file",
+        "hash": "event.hash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": null,
+     "id": "dev-change",
+     "on": "ws-change",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "requests",
+       "to": "requests + 1"
+      },
+      {
+       "emit": "ws-export",
+       "payload": {
+        "name": "event.name",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": null,
+     "id": "dev-export",
+     "on": "export-request",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "export-ok",
+       "payload": {
+        "files": "event.files",
+        "format": "'exegra-project'",
+        "name": "event.name",
+        "requestId": "event.requestId",
+        "version": 1
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": null,
+     "id": "dev-export-ok",
+     "on": "ws-export-done",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "export-failed",
+       "payload": {
+        "code": "'not-found'",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": null,
+     "id": "dev-export-missing",
+     "on": "ws-export-missing",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "requests",
+       "to": "requests + 1"
+      },
+      {
+       "emit": "ws-import",
+       "payload": {
+        "bundle": "event.bundle",
+        "name": "event.name",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": null,
+     "id": "dev-import",
+     "on": "import-request",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "import-ok",
+       "payload": {
+        "ok": true,
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": null,
+     "id": "dev-import-ok",
+     "on": "ws-import-done",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "import-refused",
+       "payload": {
+        "code": "'bundle.invalid'",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": null,
+     "id": "dev-import-refused",
+     "on": "ws-import-refused",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "requests",
+       "to": "requests + 1"
+      },
+      {
+       "emit": "ws-write-generated",
+       "payload": {
+        "caller": "'http'",
+        "files": "event.files",
+        "name": "event.name",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": null,
+     "id": "dev-generated",
+     "on": "generated-write-request",
+     "to": "dev-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "generated-write-ok",
+       "payload": {
+        "ok": true,
+        "requestId": "event.requestId",
+        "written": "event.written"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "dev-ready",
+     "guard": "event.caller == 'http'",
+     "id": "dev-generated-ok",
+     "on": "ws-generated-done",
+     "to": "dev-ready"
+    }
+   ],
+   "variables": [
+    {
+     "initial": 0,
+     "name": "requests"
+    }
+   ]
+  },
+  {
+   "id": "workspace-disk-flow",
+   "initial": "ws-ready",
+   "states": [
+    "ws-ready"
+   ],
+   "subject": "workspace-service",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "emit": "ws-read-missing",
+       "payload": {
+        "caller": "event.caller",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.name == 'missing'",
+     "id": "ws-read-missing-project",
+     "on": "ws-read",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "ws-read-done",
+       "payload": {
+        "caller": "event.caller",
+        "layout": "diskLayout",
+        "recorded": "recordedVersion",
+        "requestId": "event.requestId",
+        "spec": "diskSpec"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": null,
+     "id": "ws-read-files",
+     "on": "ws-read",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "ws-list-done",
+       "payload": {
+        "projects": [
+         "exegra",
+         "benchmark"
+        ],
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": null,
+     "id": "ws-list-projects",
+     "on": "ws-list",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "conflicts",
+       "to": "conflicts + 1"
+      },
+      {
+       "emit": "ws-write-conflict",
+       "payload": {
+        "caller": "event.caller",
+        "current": "diskSpec",
+        "file": "'spec'",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.file == 'spec' && event.baseHash != diskSpec",
+     "id": "ws-conflict-spec",
+     "on": "ws-write",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "conflicts",
+       "to": "conflicts + 1"
+      },
+      {
+       "emit": "ws-write-conflict",
+       "payload": {
+        "caller": "event.caller",
+        "current": "diskLayout",
+        "file": "'layout'",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.file == 'layout' && event.baseHash != diskLayout",
+     "id": "ws-conflict-layout",
+     "on": "ws-write",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskSpec",
+       "to": "event.text"
+      },
+      {
+       "set": "specWrites",
+       "to": "specWrites + 1"
+      },
+      {
+       "emit": "disk-file-replaced",
+       "payload": {
+        "file": "'spec'",
+        "hash": "event.text"
+       }
+      },
+      {
+       "emit": "ws-write-error",
+       "payload": {
+        "caller": "event.caller",
+        "file": "'spec'",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "ws-ready",
+     "guard": "event.file == 'spec' && event.baseHash == diskSpec",
+     "id": "ws-write-journal-append-fails",
+     "on": "ws-write",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskSpec",
+       "to": "event.text"
+      },
+      {
+       "set": "specWrites",
+       "to": "specWrites + 1"
+      },
+      {
+       "set": "journalLines",
+       "to": "journalLines + 1"
+      },
+      {
+       "emit": "disk-file-replaced",
+       "payload": {
+        "file": "'spec'",
+        "hash": "event.text"
+       }
+      },
+      {
+       "emit": "ws-write-done",
+       "payload": {
+        "caller": "event.caller",
+        "file": "'spec'",
+        "hash": "event.text",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.file == 'spec' && event.baseHash == diskSpec",
+     "id": "ws-write-spec",
+     "on": "ws-write",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskLayout",
+       "to": "event.text"
+      },
+      {
+       "set": "layoutWrites",
+       "to": "layoutWrites + 1"
+      },
+      {
+       "set": "journalLines",
+       "to": "journalLines + 1"
+      },
+      {
+       "emit": "disk-file-replaced",
+       "payload": {
+        "file": "'layout'",
+        "hash": "event.text"
+       }
+      },
+      {
+       "emit": "ws-write-done",
+       "payload": {
+        "caller": "event.caller",
+        "file": "'layout'",
+        "hash": "event.text",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.file == 'layout' && event.baseHash == diskLayout",
+     "id": "ws-write-layout",
+     "on": "ws-write",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskSpec",
+       "to": "event.hash"
+      },
+      {
+       "emit": "disk-file-replaced",
+       "payload": {
+        "file": "'spec'",
+        "hash": "event.hash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.file == 'spec'",
+     "id": "ws-external-spec",
+     "on": "disk-edited-externally",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskLayout",
+       "to": "event.hash"
+      },
+      {
+       "emit": "disk-file-replaced",
+       "payload": {
+        "file": "'layout'",
+        "hash": "event.hash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.file == 'layout'",
+     "id": "ws-external-layout",
+     "on": "disk-edited-externally",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "recordedVersion",
+       "to": "event.version"
+      },
+      {
+       "emit": "disk-file-replaced",
+       "payload": {
+        "file": "'recorded'",
+        "hash": "event.version"
+       }
+      },
+      {
+       "emit": "ws-recorded-done",
+       "payload": {
+        "version": "event.version"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": null,
+     "id": "ws-recorded",
+     "on": "ws-write-recorded",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "ws-generated-done",
+       "payload": {
+        "caller": "event.caller",
+        "requestId": "event.requestId",
+        "written": []
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.files == generatedHash",
+     "id": "ws-generated-unchanged",
+     "on": "ws-write-generated",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "generatedHash",
+       "to": "event.files"
+      },
+      {
+       "emit": "ws-generated-done",
+       "payload": {
+        "caller": "event.caller",
+        "requestId": "event.requestId",
+        "written": [
+         "ARCHITECTURE.md",
+         "claims-report.json",
+         "claims-report.md",
+         "manifest.json",
+         "tasks.json"
+        ]
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": null,
+     "id": "ws-generated",
+     "on": "ws-write-generated",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "ws-export-missing",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.name == 'missing'",
+     "id": "ws-export-missing-project",
+     "on": "ws-export",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "ws-export-done",
+       "payload": {
+        "files": "diskSpec",
+        "name": "event.name",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": null,
+     "id": "ws-export-files",
+     "on": "ws-export",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "ws-import-refused",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": "event.bundle == 'malformed'",
+     "id": "ws-import-refused-bundle",
+     "on": "ws-import",
+     "to": "ws-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskSpec",
+       "to": "event.bundle"
+      },
+      {
+       "set": "imports",
+       "to": "imports + 1"
+      },
+      {
+       "emit": "disk-file-replaced",
+       "payload": {
+        "file": "'spec'",
+        "hash": "event.bundle"
+       }
+      },
+      {
+       "emit": "ws-import-done",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "ws-ready",
+     "guard": null,
+     "id": "ws-import-bundle",
+     "on": "ws-import",
+     "to": "ws-ready"
+    }
+   ],
+   "variables": [
+    {
+     "initial": "h1",
+     "name": "diskSpec"
+    },
+    {
+     "initial": "L1",
+     "name": "diskLayout"
+    },
+    {
+     "initial": "r1",
+     "name": "recordedVersion"
+    },
+    {
+     "initial": "g1",
+     "name": "generatedHash"
+    },
+    {
+     "initial": 0,
+     "name": "journalLines"
+    },
+    {
+     "initial": 0,
+     "name": "specWrites"
+    },
+    {
+     "initial": 0,
+     "name": "layoutWrites"
+    },
+    {
+     "initial": 0,
+     "name": "conflicts"
+    },
+    {
+     "initial": 0,
+     "name": "imports"
+    }
+   ]
+  },
+  {
+   "id": "project-history-flow",
+   "initial": "history-ready",
+   "states": [
+    "history-ready"
+   ],
+   "subject": "transactions",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "specHash",
+       "to": "event.specHash"
+      },
+      {
+       "set": "layoutHash",
+       "to": "event.layoutHash"
+      },
+      {
+       "set": "undoDepth",
+       "to": 0
+      },
+      {
+       "set": "redoDepth",
+       "to": 0
+      },
+      {
+       "set": "revision",
+       "to": 1
+      }
+     ],
+     "faultOnly": false,
+     "from": "history-ready",
+     "guard": null,
+     "id": "history-open",
+     "on": "project-opened",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "undoHash",
+       "to": "specHash"
+      },
+      {
+       "set": "specHash",
+       "to": "event.specHash"
+      },
+      {
+       "set": "undoDepth",
+       "to": "undoDepth + 1"
+      },
+      {
+       "set": "redoDepth",
+       "to": 0
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'spec'",
+        "origin": "event.origin",
+        "text": "event.specHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "history-ready",
+     "guard": null,
+     "id": "history-edit",
+     "on": "edit-applied",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "layoutHash",
+       "to": "event.layoutHash"
+      },
+      {
+       "set": "specHash",
+       "to": "'h-moved'"
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'spec'",
+        "origin": "'ui'",
+        "text": "'h-moved'"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "history-ready",
+     "guard": null,
+     "id": "history-move-edits-spec",
+     "on": "node-moved",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "layoutHash",
+       "to": "event.layoutHash"
+      },
+      {
+       "set": "undoDepth",
+       "to": "undoDepth + 1"
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'layout'",
+        "origin": "'ui'",
+        "text": "event.layoutHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "history-ready",
+     "guard": null,
+     "id": "history-move",
+     "on": "node-moved",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "undoDepth",
+       "to": "undoDepth - 1"
+      },
+      {
+       "set": "redoDepth",
+       "to": "redoDepth + 1"
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'spec'",
+        "origin": "'undo'",
+        "text": "specHash"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "history-ready",
+     "guard": "undoDepth > 0",
+     "id": "history-undo-keeps-text",
+     "on": "undo-requested",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "redoHash",
+       "to": "specHash"
+      },
+      {
+       "set": "specHash",
+       "to": "undoHash"
+      },
+      {
+       "set": "undoDepth",
+       "to": "undoDepth - 1"
+      },
+      {
+       "set": "redoDepth",
+       "to": "redoDepth + 1"
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'spec'",
+        "origin": "'undo'",
+        "text": "specHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "history-ready",
+     "guard": "undoDepth > 0",
+     "id": "history-undo",
+     "on": "undo-requested",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "undoHash",
+       "to": "specHash"
+      },
+      {
+       "set": "specHash",
+       "to": "redoHash"
+      },
+      {
+       "set": "undoDepth",
+       "to": "undoDepth + 1"
+      },
+      {
+       "set": "redoDepth",
+       "to": "redoDepth - 1"
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'spec'",
+        "origin": "'redo'",
+        "text": "specHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "history-ready",
+     "guard": "redoDepth > 0",
+     "id": "history-redo",
+     "on": "redo-requested",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "layoutHash",
+       "to": "event.text"
+      },
+      {
+       "set": "undoDepth",
+       "to": 0
+      },
+      {
+       "set": "redoDepth",
+       "to": 0
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'layout'",
+        "origin": "'external'",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "history-ready",
+     "guard": "event.file == 'layout'",
+     "id": "history-reload-layout",
+     "on": "reload-requested",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "specHash",
+       "to": "event.text"
+      },
+      {
+       "set": "undoDepth",
+       "to": 0
+      },
+      {
+       "set": "redoDepth",
+       "to": 0
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'spec'",
+        "origin": "'external'",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "history-ready",
+     "guard": null,
+     "id": "history-reload",
+     "on": "reload-requested",
+     "to": "history-ready"
+    }
+   ],
+   "variables": [
+    {
+     "initial": 1,
+     "name": "revision"
+    },
+    {
+     "initial": "none",
+     "name": "specHash"
+    },
+    {
+     "initial": "none",
+     "name": "layoutHash"
+    },
+    {
+     "initial": "none",
+     "name": "undoHash"
+    },
+    {
+     "initial": "none",
+     "name": "redoHash"
+    },
+    {
+     "initial": 0,
+     "name": "undoDepth"
+    },
+    {
+     "initial": 0,
+     "name": "redoDepth"
+    }
+   ]
+  }
+ ],
+ "events": [
+  {
+   "id": "edit-requested"
+  },
+  {
+   "id": "source-apply-requested"
+  },
+  {
+   "id": "operation-submitted"
+  },
+  {
+   "id": "text-edits-computed"
+  },
+  {
+   "id": "model-parsed"
+  },
+  {
+   "id": "validation-passed"
+  },
+  {
+   "id": "validation-failed"
+  },
+  {
+   "id": "transaction-committed"
+  },
+  {
+   "id": "transaction-rejected"
+  },
+  {
+   "id": "refresh-requested"
+  },
+  {
+   "id": "projection-refreshed"
+  },
+  {
+   "id": "model-published"
+  },
+  {
+   "id": "save-requested"
+  },
+  {
+   "id": "save-succeeded"
+  },
+  {
+   "id": "save-conflicted"
+  },
+  {
+   "id": "write-intent"
+  },
+  {
+   "id": "write-file-request"
+  },
+  {
+   "id": "write-file-ok"
+  },
+  {
+   "id": "write-file-conflict"
+  },
+  {
+   "id": "write-file-failed"
+  },
+  {
+   "id": "read-project-request"
+  },
+  {
+   "id": "read-project-ok"
+  },
+  {
+   "id": "read-project-failed"
+  },
+  {
+   "id": "list-projects-request"
+  },
+  {
+   "id": "list-projects-ok"
+  },
+  {
+   "id": "watch-project-request"
+  },
+  {
+   "id": "file-change-notice-sent"
+  },
+  {
+   "id": "export-request"
+  },
+  {
+   "id": "export-ok"
+  },
+  {
+   "id": "export-failed"
+  },
+  {
+   "id": "import-request"
+  },
+  {
+   "id": "import-ok"
+  },
+  {
+   "id": "import-refused"
+  },
+  {
+   "id": "generated-write-request"
+  },
+  {
+   "id": "generated-write-ok"
+  },
+  {
+   "id": "engine-run-posted"
+  },
+  {
+   "id": "engine-run-returned"
+  },
+  {
+   "id": "engine-run-refused"
+  },
+  {
+   "id": "cli-command-request"
+  },
+  {
+   "id": "cli-command-ok"
+  },
+  {
+   "id": "cli-command-failed"
+  },
+  {
+   "id": "session-init-requested"
+  },
+  {
+   "id": "project-open-requested"
+  },
+  {
+   "id": "open-refused"
+  },
+  {
+   "id": "read-intent"
+  },
+  {
+   "id": "project-files-read"
+  },
+  {
+   "id": "project-read-failed"
+  },
+  {
+   "id": "project-opened"
+  },
+  {
+   "id": "list-intent"
+  },
+  {
+   "id": "projects-listed"
+  },
+  {
+   "id": "watch-intent"
+  },
+  {
+   "id": "external-change-received"
+  },
+  {
+   "id": "disk-edited-externally"
+  },
+  {
+   "id": "reload-requested"
+  },
+  {
+   "id": "commit-notified"
+  },
+  {
+   "id": "edit-applied"
+  },
+  {
+   "id": "node-moved"
+  },
+  {
+   "id": "undo-requested"
+  },
+  {
+   "id": "redo-requested"
+  },
+  {
+   "id": "conflict-resolution-chosen"
+  },
+  {
+   "id": "save-failed"
+  },
+  {
+   "id": "claims-evaluation-requested"
+  },
+  {
+   "id": "claim-scenarios-run"
+  },
+  {
+   "id": "claims-evaluated"
+  },
+  {
+   "id": "recorded-results-adopted"
+  },
+  {
+   "id": "export-clicked"
+  },
+  {
+   "id": "export-intent"
+  },
+  {
+   "id": "bundle-received"
+  },
+  {
+   "id": "export-refused-received"
+  },
+  {
+   "id": "bundle-downloaded"
+  },
+  {
+   "id": "import-file-chosen"
+  },
+  {
+   "id": "import-intent"
+  },
+  {
+   "id": "import-done"
+  },
+  {
+   "id": "import-refused-received"
+  },
+  {
+   "id": "generate-clicked"
+  },
+  {
+   "id": "generated-intent"
+  },
+  {
+   "id": "generated-saved"
+  },
+  {
+   "id": "ws-read"
+  },
+  {
+   "id": "ws-read-done"
+  },
+  {
+   "id": "ws-read-missing"
+  },
+  {
+   "id": "ws-list"
+  },
+  {
+   "id": "ws-list-done"
+  },
+  {
+   "id": "ws-write"
+  },
+  {
+   "id": "ws-write-done"
+  },
+  {
+   "id": "ws-write-conflict"
+  },
+  {
+   "id": "ws-write-error"
+  },
+  {
+   "id": "disk-file-replaced"
+  },
+  {
+   "id": "ws-watch"
+  },
+  {
+   "id": "ws-change"
+  },
+  {
+   "id": "ws-write-recorded"
+  },
+  {
+   "id": "ws-recorded-done"
+  },
+  {
+   "id": "ws-write-generated"
+  },
+  {
+   "id": "ws-generated-done"
+  },
+  {
+   "id": "ws-export"
+  },
+  {
+   "id": "ws-export-done"
+  },
+  {
+   "id": "ws-export-missing"
+  },
+  {
+   "id": "ws-import"
+  },
+  {
+   "id": "ws-import-done"
+  },
+  {
+   "id": "ws-import-refused"
+  },
+  {
+   "id": "verify-tests-run"
+  },
+  {
+   "id": "verify-tests-finished"
+  },
+  {
+   "id": "verify-claims-evaluated"
+  },
+  {
+   "id": "engine-not-built"
+  },
+  {
+   "id": "engine-run-called"
+  },
+  {
+   "id": "engine-run-finished"
+  },
+  {
+   "id": "engine-run-failed"
+  },
+  {
+   "id": "trace-file-written"
+  },
+  {
+   "id": "prove-requested"
+  },
+  {
+   "id": "lake-build-requested"
+  },
+  {
+   "id": "lake-build-finished"
+  },
+  {
+   "id": "explorer-request-sent"
+  },
+  {
+   "id": "explorer-result-returned"
+  },
+  {
+   "id": "lean-file-written"
+  },
+  {
+   "id": "lean-check-requested"
+  },
+  {
+   "id": "lean-check-finished"
+  },
+  {
+   "id": "lean-rejects-proof"
+  },
+  {
+   "id": "prove-finished"
+  },
+  {
+   "id": "markdown-import-run"
+  },
+  {
+   "id": "markdown-source-unmapped"
+  },
+  {
+   "id": "markdown-spec-built"
+  },
+  {
+   "id": "markdown-report-printed"
+  },
+  {
+   "id": "conformance-run"
+  },
+  {
+   "id": "golden-replayed"
+  },
+  {
+   "id": "golden-compared"
+  },
+  {
+   "id": "engine-diverges"
+  },
+  {
+   "id": "conformance-reported"
+  },
+  {
+   "id": "differential-run"
+  },
+  {
+   "id": "differential-mismatch-saved"
+  },
+  {
+   "id": "sim-load-requested"
+  },
+  {
+   "id": "engine-run-intent"
+  },
+  {
+   "id": "worker-terminated"
+  },
+  {
+   "id": "worker-run-done"
+  },
+  {
+   "id": "worker-load-failed"
+  },
+  {
+   "id": "sim-trace-ready"
+  },
+  {
+   "id": "sim-run-failed"
+  },
+  {
+   "id": "sim-step-requested"
+  },
+  {
+   "id": "sim-back-requested"
+  },
+  {
+   "id": "sim-run-to-end-requested"
+  },
+  {
+   "id": "sim-step-shown"
+  },
+  {
+   "id": "step-pulsed"
+  },
+  {
+   "id": "page-loaded"
+  },
+  {
+   "id": "engine-load-requested"
+  },
+  {
+   "id": "engine-load-settled"
+  },
+  {
+   "id": "entity-selected"
+  },
+  {
+   "id": "view-selected"
+  },
+  {
+   "id": "preferences-written"
+  },
+  {
+   "id": "page-reloaded"
+  },
+  {
+   "id": "preferences-read"
+  },
+  {
+   "id": "preferences-loaded"
+  },
+  {
+   "id": "panel-toggled"
+  },
+  {
+   "id": "layout-preferences-written"
+  },
+  {
+   "id": "camera-moved"
+  },
+  {
+   "id": "view-switched"
+  },
+  {
+   "id": "camera-saved"
+  },
+  {
+   "id": "camera-restore-requested"
+  },
+  {
+   "id": "camera-restored"
+  },
+  {
+   "id": "camera-none"
+  },
+  {
+   "id": "traffic-step-recorded"
+  },
+  {
+   "id": "sim-reset-requested"
+  },
+  {
+   "id": "sim-seek-requested"
+  }
+ ],
+ "faults": [],
+ "format": "exegra-sim-input",
+ "scenario": {
+  "faults": [],
+  "id": "layout-move-saved",
+  "stepLimit": 1000,
+  "steps": [
+   {
+    "at": 0,
+    "event": "project-open-requested",
+    "payload": {
+     "name": "exegra"
+    }
+   },
+   {
+    "at": 3,
+    "event": "node-moved",
+    "payload": {
+     "layoutHash": "L2"
+    }
+   }
+  ]
+ },
+ "version": 1
+}

@@ -1,0 +1,1313 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "app-start-flow": {
+    "state": "app-started",
+    "vars": {
+     "persistentFlag": false,
+     "project": "exegra"
+    }
+   },
+   "engine-module-flow": {
+    "state": "engine-settled",
+    "vars": {
+     "built": true,
+     "loaded": true
+    }
+   },
+   "project-history-flow": {
+    "state": "history-ready",
+    "vars": {
+     "layoutHash": "shipped-layout",
+     "redoDepth": 0,
+     "redoHash": "none",
+     "revision": 2,
+     "specHash": "h2",
+     "undoDepth": 1,
+     "undoHash": "shipped"
+    }
+   },
+   "project-session-flow": {
+    "state": "session-readonly",
+    "vars": {
+     "baseHash": "none",
+     "conflictHash": "none",
+     "errorsLogged": 0,
+     "externalReloads": 0,
+     "layoutBase": "none",
+     "layoutHash": "none",
+     "ownNotices": 0,
+     "pendingAgain": false,
+     "pendingName": "none",
+     "persistent": false,
+     "projectName": "exegra",
+     "projectsListed": 0,
+     "readPurpose": "none",
+     "recordedVersion": "none",
+     "reqSeq": 0,
+     "saveState": "readonly",
+     "textHash": "h2"
+    }
+   }
+  },
+  "pending": [],
+  "time": 3
+ },
+ "initial": {
+  "machines": {
+   "app-start-flow": {
+    "state": "app-loading",
+    "vars": {
+     "persistentFlag": true,
+     "project": "exegra"
+    }
+   },
+   "engine-module-flow": {
+    "state": "engine-unloaded",
+    "vars": {
+     "built": true,
+     "loaded": false
+    }
+   },
+   "project-history-flow": {
+    "state": "history-ready",
+    "vars": {
+     "layoutHash": "none",
+     "redoDepth": 0,
+     "redoHash": "none",
+     "revision": 1,
+     "specHash": "none",
+     "undoDepth": 0,
+     "undoHash": "none"
+    }
+   },
+   "project-session-flow": {
+    "state": "session-closed",
+    "vars": {
+     "baseHash": "none",
+     "conflictHash": "none",
+     "errorsLogged": 0,
+     "externalReloads": 0,
+     "layoutBase": "none",
+     "layoutHash": "none",
+     "ownNotices": 0,
+     "pendingAgain": false,
+     "pendingName": "none",
+     "persistent": true,
+     "projectName": "none",
+     "projectsListed": 0,
+     "readPurpose": "none",
+     "recordedVersion": "none",
+     "reqSeq": 0,
+     "saveState": "none",
+     "textHash": "none"
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "page-loaded",
+    "payload": {
+     "persistent": false,
+     "project": "exegra"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   },
+   {
+    "event": "edit-applied",
+    "payload": {
+     "origin": "ui",
+     "specHash": "h2"
+    },
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    },
+    "time": 3
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "production-read-only-edit",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-waiting-engine",
+      "vars": {
+       "persistentFlag": false,
+       "project": "exegra"
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-unloaded",
+      "vars": {
+       "built": true,
+       "loaded": false
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-closed",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "none",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 0,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "engine-load-requested",
+      "payload": {},
+      "seq": 2,
+      "source": {
+       "behavior": "app-start-flow",
+       "kind": "transition",
+       "transition": "app-load-engine"
+      },
+      "time": 0
+     },
+     {
+      "event": "edit-applied",
+      "payload": {
+       "origin": "ui",
+       "specHash": "h2"
+      },
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 3
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "page-loaded",
+    "payload": {
+     "persistent": false,
+     "project": "exegra"
+    },
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "app-start-flow",
+     "emitted": [
+      {
+       "event": "engine-load-requested",
+       "payload": {},
+       "seq": 2,
+       "time": 0
+      }
+     ],
+     "from": "app-loading",
+     "guard": null,
+     "sets": [
+      {
+       "after": false,
+       "before": true,
+       "variable": "persistentFlag"
+      },
+      {
+       "after": "exegra",
+       "before": "exegra",
+       "variable": "project"
+      }
+     ],
+     "to": "app-waiting-engine",
+     "transition": "app-load-engine"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "page-loaded",
+    "app-load-engine",
+    "app-start-flow",
+    "visual-interaction"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-waiting-engine",
+      "vars": {
+       "persistentFlag": false,
+       "project": "exegra"
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-closed",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "none",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 0,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "engine-load-settled",
+      "payload": {
+       "ok": true
+      },
+      "seq": 3,
+      "source": {
+       "behavior": "engine-module-flow",
+       "kind": "transition",
+       "transition": "engine-module-load"
+      },
+      "time": 0
+     },
+     {
+      "event": "edit-applied",
+      "payload": {
+       "origin": "ui",
+       "specHash": "h2"
+      },
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 3
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "engine-load-requested",
+    "payload": {},
+    "seq": 2,
+    "source": {
+     "behavior": "app-start-flow",
+     "kind": "transition",
+     "transition": "app-load-engine"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "engine-module-flow",
+     "emitted": [
+      {
+       "event": "engine-load-settled",
+       "payload": {
+        "ok": true
+       },
+       "seq": 3,
+       "time": 0
+      }
+     ],
+     "from": "engine-unloaded",
+     "guard": null,
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "loaded"
+      }
+     ],
+     "to": "engine-settled",
+     "transition": "engine-module-load"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "engine-load-requested",
+    "engine-module-load",
+    "engine-module-flow",
+    "simulation-engine"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": false,
+       "project": "exegra"
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-closed",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "none",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 0,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "session-init-requested",
+      "payload": {
+       "persistent": false,
+       "project": "exegra"
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "app-start-flow",
+       "kind": "transition",
+       "transition": "app-start-session"
+      },
+      "time": 0
+     },
+     {
+      "event": "edit-applied",
+      "payload": {
+       "origin": "ui",
+       "specHash": "h2"
+      },
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 3
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "engine-load-settled",
+    "payload": {
+     "ok": true
+    },
+    "seq": 3,
+    "source": {
+     "behavior": "engine-module-flow",
+     "kind": "transition",
+     "transition": "engine-module-load"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "app-start-flow",
+     "emitted": [
+      {
+       "event": "session-init-requested",
+       "payload": {
+        "persistent": false,
+        "project": "exegra"
+       },
+       "seq": 4,
+       "time": 0
+      }
+     ],
+     "from": "app-waiting-engine",
+     "guard": null,
+     "sets": [],
+     "to": "app-started",
+     "transition": "app-start-session"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "engine-load-settled",
+    "app-start-session",
+    "app-start-flow",
+    "visual-interaction"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": false,
+       "project": "exegra"
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-closed",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "none",
+       "persistent": false,
+       "projectName": "none",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 0,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "project-open-requested",
+      "payload": {
+       "name": "exegra"
+      },
+      "seq": 5,
+      "source": {
+       "behavior": "project-session-flow",
+       "kind": "transition",
+       "transition": "session-init-readonly"
+      },
+      "time": 0
+     },
+     {
+      "event": "edit-applied",
+      "payload": {
+       "origin": "ui",
+       "specHash": "h2"
+      },
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 3
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "session-init-requested",
+    "payload": {
+     "persistent": false,
+     "project": "exegra"
+    },
+    "seq": 4,
+    "source": {
+     "behavior": "app-start-flow",
+     "kind": "transition",
+     "transition": "app-start-session"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "project-session-flow",
+     "emitted": [
+      {
+       "event": "project-open-requested",
+       "payload": {
+        "name": "exegra"
+       },
+       "seq": 5,
+       "time": 0
+      }
+     ],
+     "from": "session-closed",
+     "guard": "!event.persistent",
+     "sets": [
+      {
+       "after": false,
+       "before": true,
+       "variable": "persistent"
+      }
+     ],
+     "to": "session-closed",
+     "transition": "session-init-readonly"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "session-init-requested",
+    "session-init-readonly",
+    "project-session-flow",
+    "session"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": false,
+       "project": "exegra"
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-readonly",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "none",
+       "persistent": false,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 0,
+       "saveState": "readonly",
+       "textHash": "shipped"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "project-opened",
+      "payload": {
+       "layoutHash": "shipped-layout",
+       "name": "exegra",
+       "specHash": "shipped"
+      },
+      "seq": 6,
+      "source": {
+       "behavior": "project-session-flow",
+       "kind": "transition",
+       "transition": "session-open-shipped"
+      },
+      "time": 0
+     },
+     {
+      "event": "edit-applied",
+      "payload": {
+       "origin": "ui",
+       "specHash": "h2"
+      },
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 3
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "project-open-requested",
+    "payload": {
+     "name": "exegra"
+    },
+    "seq": 5,
+    "source": {
+     "behavior": "project-session-flow",
+     "kind": "transition",
+     "transition": "session-init-readonly"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "project-session-flow",
+     "emitted": [
+      {
+       "event": "project-opened",
+       "payload": {
+        "layoutHash": "shipped-layout",
+        "name": "exegra",
+        "specHash": "shipped"
+       },
+       "seq": 6,
+       "time": 0
+      }
+     ],
+     "from": "session-closed",
+     "guard": "!persistent",
+     "sets": [
+      {
+       "after": "exegra",
+       "before": "none",
+       "variable": "projectName"
+      },
+      {
+       "after": "shipped",
+       "before": "none",
+       "variable": "textHash"
+      },
+      {
+       "after": "readonly",
+       "before": "none",
+       "variable": "saveState"
+      }
+     ],
+     "to": "session-readonly",
+     "transition": "session-open-shipped"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 4,
+   "kind": "deliver",
+   "responsible": [
+    "project-open-requested",
+    "session-open-shipped",
+    "project-session-flow",
+    "session"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": false,
+       "project": "exegra"
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "shipped-layout",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "shipped",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-readonly",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "none",
+       "persistent": false,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 0,
+       "saveState": "readonly",
+       "textHash": "shipped"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "edit-applied",
+      "payload": {
+       "origin": "ui",
+       "specHash": "h2"
+      },
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 3
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "project-opened",
+    "payload": {
+     "layoutHash": "shipped-layout",
+     "name": "exegra",
+     "specHash": "shipped"
+    },
+    "seq": 6,
+    "source": {
+     "behavior": "project-session-flow",
+     "kind": "transition",
+     "transition": "session-open-shipped"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "project-history-flow",
+     "emitted": [],
+     "from": "history-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": "shipped",
+       "before": "none",
+       "variable": "specHash"
+      },
+      {
+       "after": "shipped-layout",
+       "before": "none",
+       "variable": "layoutHash"
+      },
+      {
+       "after": 0,
+       "before": 0,
+       "variable": "undoDepth"
+      },
+      {
+       "after": 0,
+       "before": 0,
+       "variable": "redoDepth"
+      },
+      {
+       "after": 1,
+       "before": 1,
+       "variable": "revision"
+      }
+     ],
+     "to": "history-ready",
+     "transition": "history-open"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 5,
+   "kind": "deliver",
+   "responsible": [
+    "project-opened",
+    "history-open",
+    "project-history-flow",
+    "transactions"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": false,
+       "project": "exegra"
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "shipped-layout",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 2,
+       "specHash": "h2",
+       "undoDepth": 1,
+       "undoHash": "shipped"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-readonly",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "none",
+       "persistent": false,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 0,
+       "saveState": "readonly",
+       "textHash": "shipped"
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "commit-notified",
+      "payload": {
+       "file": "spec",
+       "origin": "ui",
+       "text": "h2"
+      },
+      "seq": 7,
+      "source": {
+       "behavior": "project-history-flow",
+       "kind": "transition",
+       "transition": "history-edit"
+      },
+      "time": 3
+     }
+    ],
+    "time": 3
+   },
+   "event": {
+    "id": "edit-applied",
+    "payload": {
+     "origin": "ui",
+     "specHash": "h2"
+    },
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "project-history-flow",
+     "emitted": [
+      {
+       "event": "commit-notified",
+       "payload": {
+        "file": "spec",
+        "origin": "ui",
+        "text": "h2"
+       },
+       "seq": 7,
+       "time": 3
+      }
+     ],
+     "from": "history-ready",
+     "guard": null,
+     "sets": [
+      {
+       "after": "shipped",
+       "before": "none",
+       "variable": "undoHash"
+      },
+      {
+       "after": "h2",
+       "before": "shipped",
+       "variable": "specHash"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "undoDepth"
+      },
+      {
+       "after": 0,
+       "before": 0,
+       "variable": "redoDepth"
+      },
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "revision"
+      }
+     ],
+     "to": "history-ready",
+     "transition": "history-edit"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 6,
+   "kind": "deliver",
+   "responsible": [
+    "edit-applied",
+    "history-edit",
+    "project-history-flow",
+    "transactions"
+   ],
+   "time": 3
+  },
+  {
+   "config": {
+    "machines": {
+     "app-start-flow": {
+      "state": "app-started",
+      "vars": {
+       "persistentFlag": false,
+       "project": "exegra"
+      }
+     },
+     "engine-module-flow": {
+      "state": "engine-settled",
+      "vars": {
+       "built": true,
+       "loaded": true
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "shipped-layout",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 2,
+       "specHash": "h2",
+       "undoDepth": 1,
+       "undoHash": "shipped"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-readonly",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "none",
+       "persistent": false,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "none",
+       "recordedVersion": "none",
+       "reqSeq": 0,
+       "saveState": "readonly",
+       "textHash": "h2"
+      }
+     }
+    },
+    "pending": [],
+    "time": 3
+   },
+   "event": {
+    "id": "commit-notified",
+    "payload": {
+     "file": "spec",
+     "origin": "ui",
+     "text": "h2"
+    },
+    "seq": 7,
+    "source": {
+     "behavior": "project-history-flow",
+     "kind": "transition",
+     "transition": "history-edit"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "project-session-flow",
+     "emitted": [],
+     "from": "session-readonly",
+     "guard": null,
+     "sets": [
+      {
+       "after": "h2",
+       "before": "shipped",
+       "variable": "textHash"
+      }
+     ],
+     "to": "session-readonly",
+     "transition": "session-readonly-commit"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "app-start-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "engine-module-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 7,
+   "kind": "deliver",
+   "responsible": [
+    "commit-notified",
+    "session-readonly-commit",
+    "project-session-flow",
+    "session"
+   ],
+   "time": 3
+  }
+ ]
+}

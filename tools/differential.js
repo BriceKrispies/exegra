@@ -85,7 +85,8 @@ export function compareResults(rust, lean) {
 export function traceCoverage(trace, cov) {
   const add = (/** @type {string} */ k) => { cov[k] = (cov[k] ?? 0) + 1; };
   add(`outcome ${trace.outcome}`);
-  for (const st of trace.steps) {
+  if (trace.metrics) add("trace with metrics");
+  for (const st of trace.steps ?? []) {
     add(`step ${st.kind}`);
     if (st.fired.length) add('step with fired transitions');
     if (st.fired.length > 1) add('step with several fired transitions');
@@ -215,8 +216,8 @@ export const liftInput = (input) => ({ ...input, version: 2, time: { unit: 'tick
 export function stripTrace(t) {
   const drop = (/** @type {any} */ o, /** @type {string[]} */ keys) => { if (o && typeof o === 'object') for (const k of keys) delete o[k]; return o; };
   const config = (/** @type {any} */ c) => {
-    drop(c, ['resources', 'links', 'timers', 'workloads', 'meters', 'routeCounters', 'streams', 'down', 'incarnations']);
-    for (const p of c?.pending ?? []) drop(p, ['scheduledAt', 'routes', 'from', 'target']);
+    drop(c, ['resources', 'links', 'timers', 'workloads', 'meters', 'routeCounters', 'streams', 'down', 'incarnations', 'activeFaults']);
+    for (const p of c?.pending ?? []) drop(p, ['scheduledAt', 'routes', 'from', 'target', 'copyOf']);
     return c;
   };
   const out = structuredClone(t);
@@ -224,8 +225,8 @@ export function stripTrace(t) {
   config(out.initial);
   config(out.final);
   for (const st of out.steps ?? []) {
-    drop(st, ['resources', 'draws']);
-    drop(st.event, ['scheduledAt', 'routes', 'from', 'target']);
+    drop(st, ['resources', 'draws', 'links']);
+    drop(st.event, ['scheduledAt', 'routes', 'from', 'target', 'copyOf']);
     for (const f of st.fired ?? []) drop(f, ['instance']);
     for (const i of st.ignored ?? []) drop(i, ['instance']);
     config(st.config);

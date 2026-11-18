@@ -33,7 +33,7 @@ const byId = (list) => new Map(list.map((x) => [x.id, x]));
 
 test('implicit views exist when none are declared', () => {
   const views = listViews(build());
-  assert.deepEqual(views.map((v) => v.id), ['structural', 'claims', 'behavior', 'references']);
+  assert.deepEqual(views.map((v) => v.id), ['structural', 'claims', 'behavior', 'references', 'reader']);
   assert.ok(views.every((v) => v.declared === false));
 });
 

@@ -3,6 +3,7 @@ import Exegra.Temporal
 import Exegra.Prove
 import Exegra.Format2
 import Exegra.Integrity
+import Exegra.Impl.Semantics
 
 /-!
 `exegra-lean`: reads one engine input JSON on stdin and writes one trace JSON on stdout, the
@@ -32,7 +33,7 @@ def main (args : List String) : IO UInt32 := do
     return 1
   | some text =>
     let run := if args == ["explore"] then runExplore else if args == ["temporal"] then runTemporal
-      else if args == ["integrity"] then Integrity.runIntegrity else runAny
+      else if args == ["integrity"] then Integrity.runIntegrity else Impl.runAny
     match run text with
     | .ok out =>
       let stdout ← IO.getStdout

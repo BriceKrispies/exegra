@@ -147,6 +147,8 @@
   .explorer__status .explorer__dot { background: var(--none); }
   .explorer__status--ok .explorer__dot { background: var(--ok); }
   .explorer__status--ok-external .explorer__dot { background: var(--ok-external); }
+  .explorer__status--ok-model .explorer__dot { background: var(--ok-model); }
+  .explorer__status--ok-proof .explorer__dot { background: var(--ok-proof); }
   .explorer__status--bad .explorer__dot { background: var(--bad); }
   .explorer__status--warn .explorer__dot { background: var(--warn); }
   .explorer__status--bad { color: var(--bad); }

@@ -1,0 +1,526 @@
+{
+ "faults": [],
+ "final": {
+  "machines": {
+   "markdown-import-flow": {
+    "state": "md-done",
+    "vars": {
+     "coverageOk": true,
+     "written": true
+    }
+   },
+   "workspace-disk-flow": {
+    "state": "ws-ready",
+    "vars": {
+     "conflicts": 0,
+     "diskLayout": "L1",
+     "diskSpec": "hmd",
+     "generatedHash": "g1",
+     "imports": 0,
+     "journalLines": 0,
+     "layoutWrites": 0,
+     "recordedVersion": "r1",
+     "specWrites": 0
+    }
+   }
+  },
+  "pending": [],
+  "time": 0
+ },
+ "initial": {
+  "machines": {
+   "markdown-import-flow": {
+    "state": "md-idle",
+    "vars": {
+     "coverageOk": true,
+     "written": false
+    }
+   },
+   "workspace-disk-flow": {
+    "state": "ws-ready",
+    "vars": {
+     "conflicts": 0,
+     "diskLayout": "L1",
+     "diskSpec": "h1",
+     "generatedHash": "g1",
+     "imports": 0,
+     "journalLines": 0,
+     "layoutWrites": 0,
+     "recordedVersion": "r1",
+     "specWrites": 0
+    }
+   }
+  },
+  "pending": [
+   {
+    "event": "markdown-import-run",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   }
+  ],
+  "time": 0
+ },
+ "outcome": "quiescent",
+ "scenarioId": "markdown-import",
+ "steps": [
+  {
+   "config": {
+    "machines": {
+     "markdown-import-flow": {
+      "state": "md-idle",
+      "vars": {
+       "coverageOk": true,
+       "written": false
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "markdown-spec-built",
+      "payload": {
+       "coverage": true
+      },
+      "seq": 1,
+      "source": {
+       "behavior": "markdown-import-flow",
+       "kind": "transition",
+       "transition": "md-build"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "markdown-import-run",
+    "payload": {},
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "markdown-import-flow",
+     "emitted": [
+      {
+       "event": "markdown-spec-built",
+       "payload": {
+        "coverage": true
+       },
+       "seq": 1,
+       "time": 0
+      }
+     ],
+     "from": "md-idle",
+     "guard": null,
+     "sets": [],
+     "to": "md-idle",
+     "transition": "md-build"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 0,
+   "kind": "deliver",
+   "responsible": [
+    "markdown-import-run",
+    "md-build",
+    "markdown-import-flow",
+    "markdown-importer"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "markdown-import-flow": {
+      "state": "md-done",
+      "vars": {
+       "coverageOk": true,
+       "written": true
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "disk-edited-externally",
+      "payload": {
+       "file": "spec",
+       "hash": "hmd"
+      },
+      "seq": 2,
+      "source": {
+       "behavior": "markdown-import-flow",
+       "kind": "transition",
+       "transition": "md-write"
+      },
+      "time": 0
+     },
+     {
+      "event": "markdown-report-printed",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "behavior": "markdown-import-flow",
+       "kind": "transition",
+       "transition": "md-write"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "markdown-spec-built",
+    "payload": {
+     "coverage": true
+    },
+    "seq": 1,
+    "source": {
+     "behavior": "markdown-import-flow",
+     "kind": "transition",
+     "transition": "md-build"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "markdown-import-flow",
+     "emitted": [
+      {
+       "event": "disk-edited-externally",
+       "payload": {
+        "file": "spec",
+        "hash": "hmd"
+       },
+       "seq": 2,
+       "time": 0
+      },
+      {
+       "event": "markdown-report-printed",
+       "payload": {},
+       "seq": 3,
+       "time": 0
+      }
+     ],
+     "from": "md-idle",
+     "guard": "event.coverage",
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "written"
+      }
+     ],
+     "to": "md-done",
+     "transition": "md-write"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "responsible": [
+    "markdown-spec-built",
+    "md-write",
+    "markdown-import-flow",
+    "markdown-importer"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "markdown-import-flow": {
+      "state": "md-done",
+      "vars": {
+       "coverageOk": true,
+       "written": true
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "hmd",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "markdown-report-printed",
+      "payload": {},
+      "seq": 3,
+      "source": {
+       "behavior": "markdown-import-flow",
+       "kind": "transition",
+       "transition": "md-write"
+      },
+      "time": 0
+     },
+     {
+      "event": "disk-file-replaced",
+      "payload": {
+       "file": "spec",
+       "hash": "hmd"
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "workspace-disk-flow",
+       "kind": "transition",
+       "transition": "ws-external-spec"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "disk-edited-externally",
+    "payload": {
+     "file": "spec",
+     "hash": "hmd"
+    },
+    "seq": 2,
+    "source": {
+     "behavior": "markdown-import-flow",
+     "kind": "transition",
+     "transition": "md-write"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "workspace-disk-flow",
+     "emitted": [
+      {
+       "event": "disk-file-replaced",
+       "payload": {
+        "file": "spec",
+        "hash": "hmd"
+       },
+       "seq": 4,
+       "time": 0
+      }
+     ],
+     "from": "ws-ready",
+     "guard": "event.file == 'spec'",
+     "sets": [
+      {
+       "after": "hmd",
+       "before": "h1",
+       "variable": "diskSpec"
+      }
+     ],
+     "to": "ws-ready",
+     "transition": "ws-external-spec"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "markdown-import-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "responsible": [
+    "disk-edited-externally",
+    "ws-external-spec",
+    "workspace-disk-flow",
+    "workspace-service"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "markdown-import-flow": {
+      "state": "md-done",
+      "vars": {
+       "coverageOk": true,
+       "written": true
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "hmd",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     }
+    },
+    "pending": [
+     {
+      "event": "disk-file-replaced",
+      "payload": {
+       "file": "spec",
+       "hash": "hmd"
+      },
+      "seq": 4,
+      "source": {
+       "behavior": "workspace-disk-flow",
+       "kind": "transition",
+       "transition": "ws-external-spec"
+      },
+      "time": 0
+     }
+    ],
+    "time": 0
+   },
+   "event": {
+    "id": "markdown-report-printed",
+    "payload": {},
+    "seq": 3,
+    "source": {
+     "behavior": "markdown-import-flow",
+     "kind": "transition",
+     "transition": "md-write"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "markdown-import-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "responsible": [
+    "markdown-report-printed"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "machines": {
+     "markdown-import-flow": {
+      "state": "md-done",
+      "vars": {
+       "coverageOk": true,
+       "written": true
+      }
+     },
+     "workspace-disk-flow": {
+      "state": "ws-ready",
+      "vars": {
+       "conflicts": 0,
+       "diskLayout": "L1",
+       "diskSpec": "hmd",
+       "generatedHash": "g1",
+       "imports": 0,
+       "journalLines": 0,
+       "layoutWrites": 0,
+       "recordedVersion": "r1",
+       "specWrites": 0
+      }
+     }
+    },
+    "pending": [],
+    "time": 0
+   },
+   "event": {
+    "id": "disk-file-replaced",
+    "payload": {
+     "file": "spec",
+     "hash": "hmd"
+    },
+    "seq": 4,
+    "source": {
+     "behavior": "workspace-disk-flow",
+     "kind": "transition",
+     "transition": "ws-external-spec"
+    }
+   },
+   "faults": [],
+   "fired": [],
+   "ignored": [
+    {
+     "behavior": "markdown-import-flow",
+     "considered": [],
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-disk-flow",
+     "considered": [],
+     "reason": "no-transition"
+    }
+   ],
+   "index": 4,
+   "kind": "deliver",
+   "responsible": [
+    "disk-file-replaced"
+   ],
+   "time": 0
+  }
+ ]
+}

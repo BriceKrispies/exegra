@@ -36,6 +36,8 @@ A claim may name a fault model (`faultModel`, an entity of kind `faultModel`, se
 | `precedes` | temporal | In each listed scenario, every occurrence of `then` has an earlier `first`. |
 | `eventually` | temporal | In each listed scenario, `occurs` happens, or `expr` holds in the final configuration. |
 | `never` | temporal | In each listed scenario, `occurs` never happens. |
+| `lean-theorem` | structural, invariant, temporal, requirement | A theorem of the Lean core (`theorem`, fully qualified) states the claim, and Lean checks it: the constant exists and is a theorem, the kernel accepts its proof again (re-added under a fresh name), it depends on no axiom beyond `propext`, `Classical.choice` and `Quot.sound`, and each implementation constant in `about` is a definition that occurs in its statement. See [Lean theorems](#lean-theorems). |
+| `implementation-language` | structural | Every selected implemented component (`select`, minus `exclude` taken exactly) records `implementation.language` equal to `language`. Violated with the components that are not, by language, with progress and the task named in `plannedBy`. |
 | `external-evidence` | any | Nothing is evaluated. The status comes only from attached evidence. |
 
 A **selector** picks components: an id, an array of ids, or an object (`ids`, `category`, `kind`, `tag`, `trustZone`, `within`, `all`; all present fields must match). Components nested in a selected subsystem are selected. A **matcher** is `{ "event": id }` or `{ "transition": id }`.
@@ -58,6 +60,7 @@ Each result of a trace claim lists its negatives under `negatives`: `scenario`, 
 
 | Status | Meaning |
 |---|---|
+| `proved` | A `lean-theorem` claim: the Lean kernel checked a theorem that states it, with only the standard axioms, about the named Lean definitions. It covers every input, not a list of scenarios. It is about the code that runs to the extent the trusted base holds (the claim's assumptions: the Lean compiler and runtime, emscripten, the JS glue, the WebAssembly engine). |
 | `verified` | An evaluator checked the model and found no counterexample, within the stated scope. A trace claim also needs a declared negative, and every one must violate it. |
 | `supported` | No evaluation; attached evidence supports the claim. Evidence may be author-entered. |
 | `violated` | A counterexample was found, or recorded or declared evidence contradicts the claim. |
@@ -76,6 +79,18 @@ Rules that keep the statuses honest:
 ## External verification methods
 
 A specification's `vocabulary.verificationMethods` declares methods that Exegra does not run, for example a property test, a scenario run or a conformance table carried out by another tool ([model-and-format.md](model-and-format.md#meta-model-and-vocabulary)). A claim whose `evaluate.method` names one has no other parameters, gets the evaluator `external:<method>`, and is treated like an `external-evidence` claim: no evidence gives `not-evaluated`, contradicting evidence gives `violated`, a recorded pass or an author-entered item gives `supported`, and untested `test` evidence gives `inconclusive`. It is never `verified`: the result's scope says "Exegra ran nothing" and names the method. The claim kind `requirement` exists for this, and a specification converted from Markdown (a linked project) uses it for every requirement it holds, none of which has evidence, so all are `not-evaluated` ([importing-markdown.md](importing-markdown.md)). `tests/core/vocabulary.test.js` checks that such a claim is never reported as verified by Exegra.
+
+## Lean theorems
+
+A `lean-theorem` claim names a theorem of the Lean core and, optionally, the implementation constants it must be about:
+
+```jsonc
+"evaluate": { "method": "lean-theorem", "theorem": "Exegra.runInput_terminates", "about": ["Exegra.runInput"] }
+```
+
+Lean does the checking (`tools/lean-theorems.js`, through `lake env lean` in `formal/` on the built library) and reports facts per theorem: whether it exists and is a theorem, whether the kernel accepts its proof again, the axioms it depends on (`Lean.collectAxioms`, what `#print axioms` prints), and for each `about` constant its kind and whether it occurs in the theorem's statement (its type). `exegra verify` records the facts in `evidence/results.json` under `theorems`; `exegra claims` and `exegra evaluate` check again when Lean is installed (`EXEGRA_NO_LEAN=1` skips it) and otherwise use the recorded facts, as the application does. The rule in `src/core/claims.js` turns the facts into a status: `proved` when all hold; `violated` when Lean refuses (no such constant, not a theorem, the kernel rejects the proof, `sorryAx` from `sorry`, `Lean.ofReduceBool` or `Lean.ofReduceNat` from `native_decide`, an axiom of our own, an `about` constant that is missing, is not a definition, or does not occur in the statement); `not-evaluated` with no recorded check. A refused theorem makes `exegra verify` fail unless the claim is expected to be violated.
+
+Requiring the `about` constants in the statement is what makes the theorem about the code: a true theorem that does not mention `Exegra.runInput` says nothing about the engine. What the check does not establish is that the code which runs is those definitions; that is the trusted base, recorded as assumptions of the self-specification (`trusted-lean-kernel`, `trusted-lean-compiler-runtime`, `trusted-emscripten-toolchain`, `trusted-libuv`, `trusted-js-glue`, `trusted-wasm-engine`, `trusted-os-filesystem`, `trusted-js-shell`) and listed by each claim and by the components' `implementation.trusts`.
 
 ## Evidence
 

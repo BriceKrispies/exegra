@@ -1,15 +1,18 @@
-// The simulation contract: the Rust engine reproduces every golden trace of tests/conformance
-// exactly, compiled to WebAssembly (through src/core/engine.js, from the model and from the committed
-// engine input alone) and as the native binary engine/target/release/exegra-sim when it is built;
-// the committed engine inputs are what simulationInput derives; and the conformance runner reports a
-// difference at the right step and path.
+// The simulation contract: the engine Exegra runs, the Lean core compiled to WebAssembly (through
+// src/core/engine.js and src/core/lean.js), reproduces every golden trace of tests/conformance exactly,
+// from the model and from the committed engine input alone; the Rust engine, kept as a differential
+// oracle, reproduces them too and gives byte-identical traces, as WebAssembly (src/engine/pkg) and as
+// the native binary engine/target/release/exegra-sim when they are built; the committed engine
+// inputs are what simulationInput derives; and the conformance runner reports a difference at the
+// right step and path.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { initEngine, runScenario } from '../../src/core/engine.js';
+import { initEngine, runEngineText, runScenario } from '../../src/core/engine.js';
+import { rustEngineBuilt, runRustEngineText } from '../../tools/rust-engine.js';
 import { simulationInput } from '../../src/core/sim-input.js';
 import { SOURCES, loadModel, variantsOf } from '../../tools/record-goldens.js';
 import { GOLDENS_DIR, REPO_ROOT, compareTraces, describeFailure, listGoldens, runConformance, runEngineCommand } from '../../tools/conformance.js';
@@ -24,7 +27,7 @@ const viaJson = (v) => JSON.parse(JSON.stringify(v));
 /** @param {string} p */
 const readJson = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
 
-test('the WebAssembly engine reproduces every golden trace when run from the model', () => {
+test('the Lean WebAssembly engine reproduces every golden trace when run from the model', () => {
   let checked = 0;
   for (const [source, file] of SOURCES) {
     const model = loadModel(source, file);
@@ -45,14 +48,30 @@ test('the WebAssembly engine reproduces every golden trace when run from the mod
   assert.ok(checked >= 50, `only ${checked} goldens checked`);
 });
 
-test('the WebAssembly engine reproduces every golden trace from the input file alone', () => {
+test('the Lean WebAssembly engine reproduces every golden trace from the input file alone', () => {
   // Only the input files are read: no specification, no model.
   const results = runConformance();
   assert.ok(results.length >= 50);
   assert.deepEqual(results.filter((r) => r.status !== 'ok').map(describeFailure), []);
 });
 
-test('the native engine binary reproduces every golden trace', (t) => {
+test('the Rust WebAssembly engine reproduces every golden trace and agrees with the Lean engine byte for byte', (t) => {
+  if (!rustEngineBuilt()) {
+    t.skip('src/engine/pkg is not built (npm run build:engine)');
+    return;
+  }
+  const results = runConformance({ engine: (text) => JSON.parse(runRustEngineText(text)) });
+  assert.ok(results.length >= 50);
+  assert.deepEqual(results.filter((r) => r.status !== 'ok').map(describeFailure), []);
+  const differ = [];
+  for (const g of listGoldens()) {
+    const text = fs.readFileSync(g.inputPath, 'utf8');
+    if (runRustEngineText(text) !== runEngineText(text)) differ.push(g.name);
+  }
+  assert.deepEqual(differ, []);
+});
+
+test('the native Rust engine binary reproduces every golden trace', (t) => {
   if (!fs.existsSync(NATIVE)) {
     t.skip(`${path.relative(REPO_ROOT, NATIVE)} is not built (cargo build --release in engine/)`);
     return;

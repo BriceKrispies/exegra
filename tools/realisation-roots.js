@@ -17,6 +17,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { parseJUnit } from './junit.js';
+import { ROOT_REF } from '../src/core/evidence-ref.js';
 
 /** @typedef {import('./junit.js').JUnitCase} JUnitCase */
 /**
@@ -28,7 +29,6 @@ import { parseJUnit } from './junit.js';
  */
 
 const ALIAS = /^[a-z][a-z0-9_-]*$/;
-const ROOT_REF = /^([a-z][a-z0-9_-]*):(.+)$/;
 /** Failure texts that mean the environment was missing, not that the requirement failed. */
 export const DEFAULT_NOT_RUN_WHEN = ['ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN', 'docker', 'testcontainers', 'container runtime'];
 const SKIP_DIRS = new Set(['node_modules', '.git']);

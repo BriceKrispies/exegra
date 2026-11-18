@@ -2,205 +2,550 @@
   "results": {
     "ev-roundtrip-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:06:38.575Z"
+      "ranAt": "2026-11-18T16:15:08.540Z",
+      "obtained": "run"
     },
     "ev-browser-inspector-rename": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:06:47.496Z"
+      "ranAt": "2026-11-18T16:15:18.750Z",
+      "obtained": "run"
     },
     "ev-browser-source-edit": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:06:57.172Z"
+      "ranAt": "2026-11-18T16:15:29.081Z",
+      "obtained": "run"
     },
     "ev-workspace-write": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:06:57.384Z"
+      "ranAt": "2026-11-18T16:15:29.437Z",
+      "obtained": "run"
     },
     "ev-browser-persists": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:04.584Z"
+      "ranAt": "2026-11-18T16:15:38.803Z",
+      "obtained": "run"
     },
     "ev-roundtrip-rejected": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:04.825Z"
+      "ranAt": "2026-11-18T16:15:39.040Z",
+      "obtained": "run"
     },
     "ev-browser-rejected-source": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:14.760Z"
+      "ranAt": "2026-11-18T16:15:48.951Z",
+      "obtained": "run"
     },
     "ev-workspace-conflict": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:14.988Z"
+      "ranAt": "2026-11-18T16:15:49.253Z",
+      "obtained": "run"
     },
     "ev-layout-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:15.208Z"
+      "ranAt": "2026-11-18T16:15:49.560Z",
+      "obtained": "run"
     },
     "ev-layout-browser": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:22.495Z"
+      "ranAt": "2026-11-18T16:15:58.646Z",
+      "obtained": "run"
     },
     "ev-simulation-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:22.724Z"
+      "ranAt": "2026-11-18T16:15:59.010Z",
+      "obtained": "run"
     },
     "ev-generate-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:22.944Z"
+      "ranAt": "2026-11-18T16:15:59.440Z",
+      "obtained": "run"
     },
     "ev-workspace-confinement": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:23.494Z"
+      "ranAt": "2026-11-18T16:16:00.099Z",
+      "obtained": "run"
     },
     "ev-roundtrip-invalid-draft": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:23.705Z"
+      "ranAt": "2026-11-18T16:16:00.393Z",
+      "obtained": "run"
     },
     "ev-browser-invalid-draft": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:33.626Z"
+      "ranAt": "2026-11-18T16:16:11.008Z",
+      "obtained": "run"
     },
     "ev-model-unsupported": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:33.829Z"
+      "ranAt": "2026-11-18T16:16:11.236Z",
+      "obtained": "run"
     },
     "ev-flows-trace": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:34.070Z"
+      "ranAt": "2026-11-18T16:16:11.625Z",
+      "obtained": "run"
     },
     "ev-flows-edges": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:34.299Z"
+      "ranAt": "2026-11-18T16:16:12.017Z",
+      "obtained": "run"
     },
     "ev-browser-sim-flow": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:43.744Z"
+      "ranAt": "2026-11-18T16:16:23.976Z",
+      "obtained": "run"
     },
     "ev-simulation-contract": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:44.305Z"
+      "ranAt": "2026-11-18T16:16:31.823Z",
+      "obtained": "run"
     },
     "ev-engines-agree": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:44.892Z"
+      "ranAt": "2026-11-18T16:16:39.989Z",
+      "obtained": "run"
     },
     "ev-simulation-worker-responsive": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:07:56.840Z"
+      "ranAt": "2026-11-18T16:16:54.250Z",
+      "obtained": "run"
     },
     "ev-browser-phone-touch-usable": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:08:13.455Z"
+      "ranAt": "2026-11-18T16:17:08.751Z",
+      "obtained": "run"
     },
     "ev-browser-phone-every-function": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:08:34.644Z"
+      "ranAt": "2026-11-18T16:17:30.656Z",
+      "obtained": "run"
     },
     "ev-browser-tablet-desktop-expand": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:08:45.458Z"
+      "ranAt": "2026-11-18T16:17:41.876Z",
+      "obtained": "run"
     },
     "ev-fault-model-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:08:45.704Z"
+      "ranAt": "2026-11-18T16:17:42.257Z",
+      "obtained": "run"
     },
     "ev-formal-differential": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:08:51.726Z"
+      "ranAt": "2026-11-18T16:18:54.790Z",
+      "obtained": "run"
     },
     "ev-formal-proofs": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:08:52.475Z"
+      "ranAt": "2026-11-18T16:18:55.647Z",
+      "obtained": "run"
     },
     "ev-contract-events-static": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:08:52.693Z"
+      "ranAt": "2026-11-18T16:18:56.013Z",
+      "obtained": "run"
     },
     "ev-contract-trace-checks": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:08:52.951Z"
+      "ranAt": "2026-11-18T16:18:56.408Z",
+      "obtained": "run"
     },
     "ev-contract-request-log": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:08:53.204Z"
+      "ranAt": "2026-11-18T16:18:56.800Z",
+      "obtained": "run"
     },
     "ev-browser-requests-section": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:00.909Z"
+      "ranAt": "2026-11-18T16:19:05.991Z",
+      "obtained": "run"
     },
     "ev-data-model-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:01.151Z"
+      "ranAt": "2026-11-18T16:19:06.245Z",
+      "obtained": "run"
     },
     "ev-formal-explore": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:12.210Z"
+      "ranAt": "2026-11-18T16:19:17.765Z",
+      "obtained": "run"
     },
     "ev-formal-explore-bounded": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:16.867Z"
+      "ranAt": "2026-11-18T16:19:22.381Z",
+      "obtained": "run"
     },
     "ev-negatives-status": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:17.094Z"
+      "ranAt": "2026-11-18T16:19:22.750Z",
+      "obtained": "run"
     },
     "ev-negatives-validated": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:17.363Z"
+      "ranAt": "2026-11-18T16:19:23.114Z",
+      "obtained": "run"
     },
     "ev-own-claims-falsifiable": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:17.635Z"
+      "ranAt": "2026-11-18T16:19:23.882Z",
+      "obtained": "run"
     },
     "ev-formal-explore-temporal": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:21.758Z"
+      "ranAt": "2026-11-18T16:19:28.685Z",
+      "obtained": "run"
+    },
+    "ev-distribution-lowering": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:30.483Z",
+      "obtained": "run"
+    },
+    "ev-metric-claims-in-specifications": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:34.505Z",
+      "obtained": "run"
+    },
+    "ev-runtime-data-complete": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:34.901Z",
+      "obtained": "run"
+    },
+    "ev-verify-reuses-fresh-outcomes": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:35.147Z",
+      "obtained": "run"
+    },
+    "ev-verify-skip-keeps-outcome": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:35.382Z",
+      "obtained": "run"
+    },
+    "ev-journal-append-failure": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:35.601Z",
+      "obtained": "run"
+    },
+    "ev-changes-pairing-by-revision": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:35.827Z",
+      "obtained": "run"
+    },
+    "ev-replay-recorded-stream-clean": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:36.127Z",
+      "obtained": "run"
+    },
+    "ev-replay-wrong-order": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:36.419Z",
+      "obtained": "run"
+    },
+    "ev-replay-unknown-event": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:36.729Z",
+      "obtained": "run"
+    },
+    "ev-replay-missing-response": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:37.064Z",
+      "obtained": "run"
+    },
+    "ev-replay-bound": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:37.374Z",
+      "obtained": "run"
+    },
+    "ev-replay-payload": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:37.723Z",
+      "obtained": "run"
+    },
+    "ev-replay-not-allowed": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:38.023Z",
+      "obtained": "run"
+    },
+    "ev-replay-incremental": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:38.336Z",
+      "obtained": "run"
+    },
+    "ev-live-browser": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:48.927Z",
+      "obtained": "run"
+    },
+    "ev-traffic-bounded": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:19:49.189Z",
+      "obtained": "run"
+    },
+    "ev-traffic-live-seq": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:20:00.873Z",
+      "obtained": "run"
+    },
+    "ev-traffic-server-events": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:20:01.278Z",
+      "obtained": "run"
+    },
+    "ev-traffic-engine-runner": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:20:01.566Z",
+      "obtained": "run"
+    },
+    "ev-traffic-sha256": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:20:01.864Z",
+      "obtained": "run"
+    },
+    "ev-traffic-browser-producers": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:20:18.257Z",
+      "obtained": "run"
+    },
+    "ev-evidence-ref-rule": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:20:18.680Z",
+      "obtained": "run"
+    },
+    "ev-lean-boundary": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:20:19.164Z",
+      "obtained": "run"
+    },
+    "ev-lean-theorem-method": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:20:19.514Z",
+      "obtained": "run"
+    },
+    "ev-lean-core-browser": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:20:32.326Z",
+      "obtained": "run"
     },
     "ev-register-import-coverage": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:22.015Z"
+      "ranAt": "2026-11-18T16:20:32.658Z",
+      "obtained": "run"
     },
     "ev-register-import-lost-cell": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:22.245Z"
+      "ranAt": "2026-11-18T16:20:33.070Z",
+      "obtained": "run"
     },
     "ev-register-import-sources": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:22.472Z"
+      "ranAt": "2026-11-18T16:20:33.513Z",
+      "obtained": "run"
     },
     "ev-register-import-drafts": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:22.728Z"
+      "ranAt": "2026-11-18T16:20:33.797Z",
+      "obtained": "run"
     },
     "ev-register-import-authority": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:23.150Z"
+      "ranAt": "2026-11-18T16:20:34.267Z",
+      "obtained": "run"
     },
     "ev-external-traceability": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:23.428Z"
+      "ranAt": "2026-11-18T16:20:34.797Z",
+      "obtained": "run"
     },
     "ev-external-junit": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:23.975Z"
+      "ranAt": "2026-11-18T16:20:39.277Z",
+      "obtained": "run"
     },
     "ev-integrity-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:24.276Z"
+      "ranAt": "2026-11-18T16:20:39.660Z",
+      "obtained": "run"
     },
     "ev-integrity-ratchet": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:24.523Z"
+      "ranAt": "2026-11-18T16:20:40.189Z",
+      "obtained": "run"
     },
     "ev-integrity-lean": {
       "outcome": "pass",
-      "ranAt": "2026-11-17T15:09:48.622Z"
+      "ranAt": "2026-11-18T16:21:21.672Z",
+      "obtained": "run"
+    },
+    "ev-reader-counts": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:21:22.080Z",
+      "obtained": "run"
+    },
+    "ev-reader-table": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:21:22.494Z",
+      "obtained": "run"
+    },
+    "ev-reader-list": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:21:22.766Z",
+      "obtained": "run"
+    },
+    "ev-reader-sections": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:21:23.024Z",
+      "obtained": "run"
+    },
+    "ev-reader-default": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:21:23.416Z",
+      "obtained": "run"
+    },
+    "ev-reader-unknown-field": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:21:23.846Z",
+      "obtained": "run"
+    },
+    "ev-reader-browser-select": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:21:37.194Z",
+      "obtained": "run"
+    },
+    "ev-reader-browser-edit": {
+      "outcome": "pass",
+      "ranAt": "2026-11-18T16:21:48.492Z",
+      "obtained": "run"
     }
   },
   "traceability": {
-    "checkedModules": 145,
+    "checkedModules": 175,
     "missingModules": [],
     "unclaimedFiles": [],
-    "claimedFiles": 106
+    "claimedFiles": 125
+  },
+  "theorems": {
+    "Exegra.runInput_terminates": {
+      "about": {
+        "Exegra.runInput": {
+          "inStatement": true,
+          "kind": "definition"
+        }
+      },
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "found": true,
+      "kernel": "ok",
+      "kind": "theorem",
+      "lean": "4.35.0",
+      "checkedAt": "2026-11-18T10:22:02.356Z"
+    },
+    "Exegra.Api.runAny_eq_parse_call": {
+      "about": {
+        "Exegra.Api.call": {
+          "inStatement": true,
+          "kind": "definition"
+        },
+        "Exegra.runAny": {
+          "inStatement": true,
+          "kind": "definition"
+        }
+      },
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "found": true,
+      "kernel": "ok",
+      "kind": "theorem",
+      "lean": "4.35.0",
+      "checkedAt": "2026-11-18T10:22:02.356Z"
+    },
+    "Exegra.Api.registry_names_nodup": {
+      "about": {
+        "Exegra.Api.registry": {
+          "inStatement": true,
+          "kind": "definition"
+        }
+      },
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "found": true,
+      "kernel": "ok",
+      "kind": "theorem",
+      "lean": "4.35.0",
+      "checkedAt": "2026-11-18T10:22:02.356Z"
+    },
+    "Exegra.Impl.runAnyValue_eq": {
+      "about": {
+        "Exegra.Impl.runAnyValue": {
+          "inStatement": true,
+          "kind": "definition"
+        },
+        "Exegra.runAnyValue": {
+          "inStatement": true,
+          "kind": "definition"
+        }
+      },
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "found": true,
+      "kernel": "ok",
+      "kind": "theorem",
+      "lean": "4.35.0",
+      "checkedAt": "2026-11-18T10:22:02.356Z"
+    },
+    "Exegra.Api.call_engine_run_spec": {
+      "about": {
+        "Exegra.Api.call": {
+          "inStatement": true,
+          "kind": "definition"
+        },
+        "Exegra.runAnyValue": {
+          "inStatement": true,
+          "kind": "definition"
+        }
+      },
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "found": true,
+      "kernel": "ok",
+      "kind": "theorem",
+      "lean": "4.35.0",
+      "checkedAt": "2026-11-18T10:22:02.356Z"
+    },
+    "Exegra.Impl.JsonOut.write'_eq": {
+      "about": {
+        "Exegra.Impl.JsonOut.write'": {
+          "inStatement": true,
+          "kind": "definition"
+        },
+        "Exegra.Json.write": {
+          "inStatement": true,
+          "kind": "definition"
+        }
+      },
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "found": true,
+      "kernel": "ok",
+      "kind": "theorem",
+      "lean": "4.35.0",
+      "checkedAt": "2026-11-18T10:22:02.356Z"
+    }
   }
 }
