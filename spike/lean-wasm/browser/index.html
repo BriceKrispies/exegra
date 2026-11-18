@@ -1,0 +1,70 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Lean engine in wasm</title>
+<pre id="out">running...</pre>
+<script type="module">
+// Loads the Lean engine compiled to wasm, runs every conformance golden, compares each trace with the
+// golden as JSON values, and times start-up and calls against the Rust wasm engine. The result is put on
+// window.result for the Playwright driver (check.mjs).
+import { createLeanEngine } from '/spike/lean-engine.mjs';
+
+const canon = (v) => Array.isArray(v) ? v.map(canon)
+  : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v;
+const same = (a, b) => JSON.stringify(canon(a)) === JSON.stringify(canon(b));
+const ms = (x) => Math.round(x * 100) / 100;
+
+const result = { ok: 0, mismatch: [], error: [] };
+try {
+  const t0 = performance.now();
+  const { default: factory } = await import('/wasm/exegra-lean.mjs');
+  const t1 = performance.now();
+  let tInst;
+  const engine = await createLeanEngine(async (o) => { const m = await factory(o); tInst = performance.now(); return m; });
+  const t2 = performance.now();
+  result.importGlueMs = ms(t1 - t0);
+  result.fetchCompileInstantiateMs = ms(tInst - t1);
+  result.leanInitMs = ms(t2 - tInst);
+  result.heapAfterInit = engine.heapBytes();
+
+  const names = await (await fetch('/goldens.json')).json();
+  const inputs = {};
+  const calls = [];
+  for (const name of names) {
+    const input = await (await fetch(`/goldens/${name}.input.json`)).text();
+    const expected = await (await fetch(`/goldens/${name}.trace.json`)).json();
+    inputs[name] = input;
+    const s = performance.now();
+    try {
+      const out = engine.run(input);
+      calls.push([name, performance.now() - s]);
+      if (same(JSON.parse(out), expected)) result.ok++; else result.mismatch.push(name);
+    } catch (e) { result.error.push(`${name}: ${e instanceof Error ? e.message : e}`); }
+  }
+  result.goldens = names.length;
+  calls.sort((a, b) => b[1] - a[1]);
+  result.firstPassTotalMs = ms(calls.reduce((a, c) => a + c[1], 0));
+
+  const rust = await import('/rust/exegra_engine_wasm.js');
+  const r0 = performance.now();
+  const rustExports = await rust.default({ module_or_path: '/rust/exegra_engine_wasm_bg.wasm' });
+  result.rustFetchCompileInstantiateMs = ms(performance.now() - r0);
+
+  const time = (f, n) => { f(); const s = performance.now(); for (let i = 0; i < n; i++) f(); return ms((performance.now() - s) / n); };
+  result.perCall = {};
+  // fixed inputs, so runs in different browsers are comparable: the slowest goldens and a small one
+  for (const name of ['exegra/live-session', 'exegra/app-start-and-open', 'fixture/faults-combined--delay-tick-3']) {
+    const input = inputs[name];
+    result.perCall[name] = {
+      inputBytes: input.length,
+      leanMs: time(() => engine.run(input), 30),
+      rustMs: time(() => rust.run_input(input), 30),
+    };
+  }
+  result.heapAtEnd = engine.heapBytes();
+  result.rustMemoryAtEnd = rustExports.memory.buffer.byteLength;
+} catch (e) {
+  result.fatal = String(e?.stack ?? e);
+}
+window.result = result;
+document.getElementById('out').textContent = JSON.stringify(result, null, 2);
+</script>

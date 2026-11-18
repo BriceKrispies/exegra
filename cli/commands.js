@@ -23,13 +23,16 @@ import { OPERATIONS, planDelete } from '../src/core/operations.js';
 import {
   entityLabel, childrenOf, ancestorsOf, inboundRefs, relationshipsOf, dependencies, contractsOf,
 } from '../src/core/query.js';
-import { evaluateClaims, evaluateClaim, checkTrace } from '../src/core/claims.js';
+import { evaluateClaims, evaluateClaim, checkTrace, theoremRequests } from '../src/core/claims.js';
+import { checkTheorems } from '../tools/lean-theorems.js';
 import { requestLog } from '../src/core/contract-trace.js';
 import { runScenario } from '../src/core/engine.js';
 import { proveScenario, ProveError } from '../tools/prove.js';
 import { CLAIM_STATUSES } from '../src/core/claim-methods.js';
 import { stableStringify } from '../src/core/hash.js';
 import { testRefProblem, describeTestRefProblem } from '../src/core/evidence-ref.js';
+import { treeStamp } from '../tools/tree-stamp.js';
+import { createOutcomeReuse } from './outcomes.js';
 
 /** @typedef {import('../src/core/types.js').Model} Model */
 /** @typedef {import('../src/core/types.js').Entity} Entity */
@@ -119,11 +122,38 @@ function countSeverities(diagnostics) {
 /** @param {{status: string}[]} results */
 function summarize(results) {
   /** @type {Record<string, number>} */
-  const summary = { total: results.length, verified: 0, supported: 0, violated: 0, inconclusive: 0, 'not-evaluated': 0 };
+  const summary = { total: results.length, proved: 0, verified: 0, supported: 0, violated: 0, inconclusive: 0, 'not-evaluated': 0 };
   for (const r of results) {
     if (r.status in summary) summary[r.status] += 1;
   }
   return summary;
+}
+
+/**
+ * The theorem checks of the model's lean-theorem claims: checked now by Lean when it is installed
+ * (tools/lean-theorems.js), merged over the recorded ones; the recorded ones alone otherwise, or
+ * when EXEGRA_NO_LEAN=1. Returns the merged map and whether Lean ran.
+ * @param {Model} model @param {any} recorded @param {(msg: string) => void} [log]
+ * @returns {{theorems: Record<string, any>, checked: boolean}}
+ */
+function leanTheoremChecks(model, recorded, log) {
+  const prior = recorded && typeof recorded === 'object' && recorded.theorems && typeof recorded.theorems === 'object' ? recorded.theorems : {};
+  const requests = theoremRequests(model);
+  if (!requests.length || process.env.EXEGRA_NO_LEAN === '1') return { theorems: prior, checked: false };
+  log?.(`lean: checking ${requests.length} theorem(s)`);
+  const r = checkTheorems(requests);
+  if (!r.available) {
+    log?.(`lean: not checked, the recorded checks are used (${r.reason.split(/\r?\n/)[0]})`);
+    return { theorems: prior, checked: false };
+  }
+  return { theorems: { ...prior, ...r.results }, checked: true };
+}
+
+/** The recorded results with fresh Lean theorem checks applied. @param {Model} model @param {any} recorded @param {(msg: string) => void} [log] */
+function withLean(model, recorded, log) {
+  const { theorems, checked } = leanTheoremChecks(model, recorded, log);
+  if (!checked) return recorded ?? undefined;
+  return { ...(recorded && typeof recorded === 'object' ? recorded : {}), theorems };
 }
 
 /** Split "a,b" into ["a", "b"]; an absent flag gives []. @param {string|undefined} value */
@@ -302,7 +332,7 @@ export function countPassingTests(output, file) {
  * or a test that skipped itself) did not execute, so it keeps the outcome recorded before rather than erasing it;
  * with no earlier outcome it records nothing. Outcomes that ran replace the earlier ones.
  * @param {Record<string, any>} prior the `results` object recorded before this run
- * @param {{id: string, outcome: 'pass'|'fail'|'skipped', detail?: string, ranAt: string}[]} runs this run, per evidence id
+ * @param {{id: string, outcome: 'pass'|'fail'|'skipped', detail?: string, ranAt: string, obtained?: 'run'|'reused'}[]} runs this run, per evidence id
  * @returns {Record<string, any>}
  */
 export function mergeRecordedResults(prior, runs) {
@@ -313,7 +343,7 @@ export function mergeRecordedResults(prior, runs) {
       if (Object.hasOwn(prior, run.id)) results[run.id] = prior[run.id];
       continue;
     }
-    results[run.id] = { outcome: run.outcome, ...(run.detail !== undefined ? { detail: run.detail } : {}), ranAt: run.ranAt };
+    results[run.id] = { outcome: run.outcome, ...(run.detail !== undefined ? { detail: run.detail } : {}), ranAt: run.ranAt, ...(run.obtained ? { obtained: run.obtained } : {}) };
   }
   return results;
 }
@@ -321,21 +351,27 @@ export function mergeRecordedResults(prior, runs) {
 /**
  * Execute one test evidence reference.
  * @param {string} ref
- * @param {{repoRoot: string, skipBrowser: boolean, log: (m: string) => void}} env
- * @returns {{outcome: 'pass'|'fail'|'skipped', detail?: string}}
+ * @param {{repoRoot: string, skipBrowser: boolean, log: (m: string) => void, reuse?: ReturnType<typeof createOutcomeReuse>|null}} env
+ * @returns {{outcome: 'pass'|'fail'|'skipped', detail?: string, obtained: 'run'|'reused', ranAt?: string}}
  */
 function runTestReference(ref, env) {
   const problem = testRefProblem(ref);
-  if (problem) return { outcome: 'fail', detail: `unsafe reference: ${describeTestRefProblem(ref, problem)}` };
+  if (problem) return { outcome: 'fail', detail: `unsafe reference: ${describeTestRefProblem(ref, problem)}`, obtained: 'run' };
   const hashAt = ref.indexOf('#');
   const file = (hashAt < 0 ? ref : ref.slice(0, hashAt)).trim();
   const pattern = hashAt < 0 ? '' : ref.slice(hashAt + 1).trim();
   const abs = path.resolve(env.repoRoot, file);
-  if (!isInside(env.repoRoot, abs)) return { outcome: 'fail', detail: 'unsafe reference' };
-  if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) return { outcome: 'fail', detail: 'test file not found' };
+  if (!isInside(env.repoRoot, abs)) return { outcome: 'fail', detail: 'unsafe reference', obtained: 'run' };
+  if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) return { outcome: 'fail', detail: 'test file not found', obtained: 'run' };
 
   const browser = file.startsWith(BROWSER_TEST_PREFIX);
-  if (browser && env.skipBrowser) return { outcome: 'skipped' };
+  if (browser && env.skipBrowser) return { outcome: 'skipped', obtained: 'run' };
+
+  const hit = env.reuse?.lookup(ref, browser);
+  if (hit) {
+    env.log(`verify: reusing the recorded outcome of ${ref}`);
+    return { ...hit, obtained: 'reused' };
+  }
 
   const isWin = process.platform === 'win32';
   env.log(`verify: running ${ref}`);
@@ -365,15 +401,15 @@ function runTestReference(ref, env) {
       if (countPassingTests(String(run.stdout ?? ''), file) === 0) {
         // A test that matched but skipped itself (a gated fixture, a missing tool) ran nothing: it is not
         // evidence either way, so it is recorded as skipped rather than as a failure.
-        if (/^ok \d+ - .*#\s*SKIP\b/im.test(String(run.stdout ?? ''))) return { outcome: 'skipped', detail: 'the matching test skipped itself' };
-        return { outcome: 'fail', detail: 'the reference matched no test' };
+        if (/^ok \d+ - .*#\s*SKIP\b/im.test(String(run.stdout ?? ''))) return { outcome: 'skipped', detail: 'the matching test skipped itself', obtained: 'run' };
+        return { outcome: 'fail', detail: 'the reference matched no test', obtained: 'run' };
       }
     }
-    return { outcome: 'pass' };
+    return { outcome: 'pass', obtained: 'run' };
   }
-  if (run.error) return { outcome: 'fail', detail: run.error.message };
+  if (run.error) return { outcome: 'fail', detail: run.error.message, obtained: 'run' };
   const lines = `${run.stdout ?? ''}${run.stderr ?? ''}`.replace(/\s+$/, '').split(/\r?\n/);
-  return { outcome: 'fail', detail: lines.slice(-TEST_OUTPUT_TAIL_LINES).join('\n') };
+  return { outcome: 'fail', detail: lines.slice(-TEST_OUTPUT_TAIL_LINES).join('\n'), obtained: 'run' };
 }
 
 /**
@@ -401,10 +437,13 @@ async function runVerify(ctx) {
   // (3) execute test evidence
   const skipBrowser = ctx.values['skip-browser'] === true;
   // Outcomes recorded by earlier runs. A skipped run keeps these rather than erasing them.
+  // Outcomes that `npm test` and `npm run test:browser` recorded on this very tree are reused (cli/outcomes.js).
+  const reuse = ctx.values.fresh === true ? null : createOutcomeReuse(ctx.repoRoot, treeStamp(ctx.repoRoot));
+  if (reuse) for (const [kind, why] of Object.entries(reuse.notes)) ctx.log(`verify: not reusing ${kind} outcomes: ${why}`);
   const priorRecorded = (await ws.read(ctx.projectName)).recorded;
   const priorResults = priorRecorded && typeof priorRecorded === 'object' && priorRecorded.results && typeof priorRecorded.results === 'object'
     ? priorRecorded.results : {};
-  /** @type {{id: string, outcome: 'pass'|'fail'|'skipped', detail?: string, ranAt: string}[]} */
+  /** @type {{id: string, outcome: 'pass'|'fail'|'skipped', detail?: string, ranAt: string, obtained?: 'run'|'reused'}[]} */
   const runs = [];
   /** @type {Record<string, any>[]} */
   const evidence = [];
@@ -414,15 +453,15 @@ async function runVerify(ctx) {
       evidence.push({ ...base, outcome: 'not-executed' });
       continue;
     }
-    const run = runTestReference(String(ev.data.ref), { repoRoot: ctx.repoRoot, skipBrowser, log: ctx.log });
-    const ranAt = new Date().toISOString();
-    runs.push({ id: ev.id, outcome: run.outcome, ...(run.detail !== undefined ? { detail: run.detail } : {}), ranAt });
+    const run = runTestReference(String(ev.data.ref), { repoRoot: ctx.repoRoot, skipBrowser, log: ctx.log, reuse });
+    const ranAt = run.ranAt ?? new Date().toISOString();
+    runs.push({ id: ev.id, outcome: run.outcome, ...(run.detail !== undefined ? { detail: run.detail } : {}), ranAt, obtained: run.obtained });
     if (run.outcome === 'skipped') {
       const kept = priorResults[ev.id];
       evidence.push({ ...base, outcome: 'skipped', ...(kept ? { recorded: { outcome: kept.outcome, ranAt: kept.ranAt } } : {}) });
       continue;
     }
-    evidence.push({ ...base, outcome: run.outcome, ...(run.detail !== undefined ? { detail: run.detail } : {}), ranAt });
+    evidence.push({ ...base, outcome: run.outcome, obtained: run.obtained, ...(run.detail !== undefined ? { detail: run.detail } : {}), ranAt });
   }
   const results = mergeRecordedResults(priorResults, runs);
 
@@ -433,10 +472,12 @@ async function runVerify(ctx) {
   const kept = {};
   const prior = priorRecorded;
   if (prior && typeof prior === 'object') for (const k of ['tool', 'version', 'source', 'claims', 'lint']) if (Object.hasOwn(prior, k)) kept[k] = /** @type {any} */ (prior)[k];
-  await ws.writeRecorded(ctx.projectName, { ...kept, results, traceability });
+  // (4b) the Lean checks of the lean-theorem claims; without Lean the recorded checks are kept
+  const { theorems } = leanTheoremChecks(model, prior, ctx.log);
+  await ws.writeRecorded(ctx.projectName, { ...kept, results, traceability, ...(Object.keys(theorems).length ? { theorems } : {}) });
 
   // (5) re-evaluate the claims with the new results
-  const claimResults = evaluateClaims(model, { recorded: { results } });
+  const claimResults = evaluateClaims(model, { recorded: { results, theorems } });
   const violated = claimResults.filter((r) => r.status === 'violated').map((r) => r.claimId);
   const unexpectedViolated = violated.filter((id) => !expectViolated.includes(id));
   const failedEvidence = evidence.filter((e) => e.outcome === 'fail');
@@ -592,7 +633,7 @@ export const COMMANDS = {
       if (status !== undefined && !(status in CLAIM_STATUSES)) {
         throw usage('invalid-argument', `--status must be one of: ${Object.keys(CLAIM_STATUSES).join(', ')}.`);
       }
-      const result = evaluateClaims(model, { recorded: data.recorded ?? undefined })
+      const result = evaluateClaims(model, { recorded: withLean(model, data.recorded, ctx.log) })
         .map((r) => {
           const claim = model.entities.get(r.claimId);
           return { ...r, statement: claim?.data.statement ?? null, kind: claim?.data.kind ?? r.kind };
@@ -608,7 +649,7 @@ export const COMMANDS = {
     run: async (ctx) => {
       const { data, project } = await loadProject(ctx);
       const model = requireModel(project);
-      const recorded = data.recorded ?? undefined;
+      const recorded = withLean(model, data.recorded, ctx.log);
       const id = ctx.positionals[0];
       const results = id !== undefined
         ? [evaluateClaim(model, requireEntity(model, id, 'claim').id, { recorded })]
@@ -869,9 +910,9 @@ export const COMMANDS = {
   },
 
   verify: {
-    usage: 'verify [--skip-browser] [--expect-violated a,b]',
-    summary: 'Validate, check traceability, execute test evidence, record the results and re-evaluate the claims.',
-    options: { 'skip-browser': { type: 'boolean' }, 'expect-violated': { type: 'string' } },
+    usage: 'verify [--skip-browser] [--fresh] [--expect-violated a,b]',
+    summary: 'Validate, check traceability, execute test evidence (reusing outcomes recorded on the same tree unless --fresh), record the results and re-evaluate the claims.',
+    options: { 'skip-browser': { type: 'boolean' }, fresh: { type: 'boolean' }, 'expect-violated': { type: 'string' } },
     run: async (ctx) => {
       const result = await runVerify(ctx);
       return result;

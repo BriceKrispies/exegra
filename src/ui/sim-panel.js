@@ -1,5 +1,5 @@
 // Simulator panel: drives session.sim* and displays the run. The simulation
-// engine is the Rust engine behind src/core/engine.js, run by the session in a
+// engine is the Lean core behind src/core/engine.js, run by the session in a
 // Web Worker; this module holds no semantic state.
 
 import { h, clear, revealInScroller } from './dom.js';

@@ -8,15 +8,16 @@
 // engine, the metrics and the claim method, not any system.
 //
 // Six scenario evaluations of 59 runs each are beyond the routine suite's budget, so the test runs
-// only with EXEGRA_FIXTURES=1. It uses the native engine (engine/target/release/exegra-sim, cargo
-// build --release in engine/) when built, else the WebAssembly engine.
+// only with EXEGRA_FIXTURES=1. It uses the native Lean engine (formal/.lake/build/bin/exegra-lean,
+// npm run build:formal, the same C as the Lean WebAssembly engine) when built, else the native Rust
+// engine (engine/target/release/exegra-sim), else the WebAssembly engine.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { REPO_ROOT } from '../../tools/conformance.js';
-import { RUST_BIN, runBinary } from '../../tools/differential.js';
+import { LEAN_BIN, RUST_BIN, runBinary } from '../../tools/differential.js';
 import { evaluateMetricClaim } from '../../src/core/metric-claims.js';
 import { initEngine, runEngineText } from '../../src/core/engine.js';
 import { changed, lowerInput, withFaults } from '../fixtures/queueing/inputs.js';
@@ -27,9 +28,12 @@ test('pool under flood: the move leg holds in base and control, and every twin f
   const fx = JSON.parse(fs.readFileSync(FIXTURE, 'utf8'));
   /** @type {(text: string) => any} */
   let run;
-  if (fs.existsSync(RUST_BIN)) {
+  // The native Lean engine is compiled from the same C as the Lean WebAssembly engine and runs it
+  // about twice as fast; the native Rust engine is the fallback, the WebAssembly engine the last resort.
+  const native = [LEAN_BIN, RUST_BIN].find((bin) => fs.existsSync(bin));
+  if (native) {
     run = (text) => {
-      const r = runBinary(RUST_BIN, text);
+      const r = runBinary(native, text);
       if (!r.ok) throw new Error(r.refusal);
       return r.trace;
     };

@@ -87,6 +87,8 @@
           "fields": {
             "status": { "type": "enum", "values": ["manual", "model-configured", "partially-generated", "generated", "not-implemented"], "required": true, "label": "Realisation" },
             "modules": { "type": "list", "items": { "type": "string" }, "label": "Modules" },
+            "language": { "type": "enum", "values": ["lean", "js", "rust", "css", "html", "json", "mixed"], "label": "Language", "doc": "The language the component's logic is implemented in; mixed when its modules span more than one." },
+            "trusts": { "type": "list", "items": { "type": "ref", "ref": ["assumption"] }, "label": "Trusted base", "doc": "Assumptions the correctness of this implementation rests on and nothing checks: compilers, runtimes, platforms." },
             "notes": { "type": "text", "label": "Notes" }
           }
         }

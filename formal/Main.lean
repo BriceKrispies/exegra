@@ -2,6 +2,7 @@ import Exegra.Semantics
 import Exegra.Temporal
 import Exegra.Prove
 import Exegra.Format2
+import Exegra.Impl.Semantics
 
 /-!
 `exegra-lean`: reads one engine input JSON on stdin and writes one trace JSON on stdout, the
@@ -26,7 +27,7 @@ def main (args : List String) : IO UInt32 := do
     IO.eprintln "exegra-lean: the input is not JSON: not UTF-8"
     return 1
   | some text =>
-    let run := if args == ["explore"] then runExplore else if args == ["temporal"] then runTemporal else runAny
+    let run := if args == ["explore"] then runExplore else if args == ["temporal"] then runTemporal else Impl.runAny
     match run text with
     | .ok out =>
       let stdout ← IO.getStdout

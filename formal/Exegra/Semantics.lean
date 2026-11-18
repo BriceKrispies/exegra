@@ -568,12 +568,16 @@ def runInput (i : SimInput) : Except String Trace :=
   | .error e => .error e
   | .ok () => .ok (traceOf i)
 
+/-- The semantics on a parsed engine input: trace JSON, or the refusal message. -/
+def runValue (v : Value) : Except String String := do
+  let i ← Decode.input v
+  let t ← runInput i
+  pure t.toJson
+
 /-- The whole semantics as a text-to-text function: engine input JSON to trace JSON, or the
 refusal message. -/
 def runText (text : String) : Except String String := do
   let v ← Json.parse text
-  let i ← Decode.input v
-  let t ← runInput i
-  pure t.toJson
+  runValue v
 
 end Exegra

@@ -8,9 +8,12 @@ const chrome = { browserName: /** @type {const} */ ('chromium'), channel: 'chrom
 export default defineConfig({
   testDir: 'tests/browser',
   timeout: 60_000,
-  workers: 1,
-  fullyParallel: false,
-  reporter: [['list']],
+  // Two workers by default (the cap for test jobs); EXEGRA_TEST_WORKERS overrides. Each worker slot has its own
+  // scratch projects (tests/browser/scratch.js), so the tests do not share files.
+  workers: Math.max(1, Number(process.env.EXEGRA_TEST_WORKERS) || 2),
+  fullyParallel: true,
+  // The second reporter records each test's outcome with the tree stamp, for `exegra verify` to reuse.
+  reporter: [['list'], ['./tools/outcomes-playwright-reporter.js']],
   globalSetup: './tests/browser/global-setup.js',
   globalTeardown: './tests/browser/global-teardown.js',
   use: {

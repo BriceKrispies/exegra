@@ -16,7 +16,8 @@ Exegra has one semantic core and several things attached to it. Everything the u
         |        |         |            \
    claims     projections  simulation    persistence (dev only)
    (claims.js) (projections.js,  (engine.js ->   (src/persist/client.js)
-                layout.js)       Rust engine as
+                layout.js)       lean.js -> the
+                                 Lean core as
                                  WebAssembly; a
                                  Web Worker for
                                  the Simulation tab)
@@ -39,7 +40,8 @@ Exegra has one semantic core and several things attached to it. Everything the u
 | `hash.js` | normal form and 53-bit hash of the semantic content (excludes comments, whitespace, key order, top-level declaration order, locations and layout) |
 | `query.js` | labels, containment, ownership, inbound references, component graph, dependency traversal, selectors |
 | `claims.js`, `claim-methods.js` | claim results with status, scope and counterexample ([claims-and-evidence.md](claims-and-evidence.md)) |
-| `engine.js`, `sim-input.js` | scenario traces: `sim-input.js` derives the engine input, `engine.js` runs it on the Rust engine (`engine/`) compiled to WebAssembly ([simulation.md](simulation.md)) |
+| `engine.js`, `sim-input.js` | scenario traces: `sim-input.js` derives the engine input, `engine.js` runs it on the Lean core (`formal/`) compiled to WebAssembly ([simulation.md](simulation.md)) |
+| `lean.js` | the call boundary to the Lean core: a JSON request `{fn, args}` to `{ok}` or `{error}` ([module-contracts.md](module-contracts.md)) |
 | `projections.js` | a `SceneModel` per view (`structural`, `claims`, `behavior`, `references`) |
 | `layout.js`, `layout/*` | a `Placement` per `SceneModel`, by one of four methods or an automatic choice among them |
 | `generate/` | five artifacts ([self-hosting.md](self-hosting.md)) |

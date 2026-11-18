@@ -12,7 +12,7 @@ import {
 /** @typedef {import('../claims.js').ClaimResult} ClaimResult */
 
 /** Summary order of claim statuses (also the order of the summary table). */
-export const STATUS_ORDER = ['verified', 'supported', 'violated', 'inconclusive', 'not-evaluated'];
+export const STATUS_ORDER = ['proved', 'verified', 'supported', 'violated', 'inconclusive', 'not-evaluated'];
 
 /**
  * One row per claim in declaration order. `result` is the supplied ClaimResult,

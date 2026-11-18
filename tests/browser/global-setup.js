@@ -1,6 +1,8 @@
-import { resetScratch } from './scratch.js';
+import { resetScratch, workerCount } from './scratch.js';
 
 export default function globalSetup() {
-  resetScratch('exegra');
-  resetScratch('multiplayer');
+  for (let i = 0; i < workerCount(); i++) {
+    resetScratch('exegra', i);
+    resetScratch('multiplayer', i);
+  }
 }

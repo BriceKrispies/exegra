@@ -93,10 +93,10 @@ export function mountRealisationPanel(el, session) {
       const impl = c.data.implementation;
       const results = session.claimResults.filter((/** @type {any} */ r) => r.involved.includes(c.id));
       const n = (/** @type {string} */ s) => results.filter((/** @type {any} */ r) => r.status === s).length;
-      const other = results.length - n('verified') - n('supported') - n('violated');
+      const other = results.length - n('proved') - n('verified') - n('supported') - n('violated');
       const verif = !results.length
         ? h('span', { class: 'real__muted' }, 'no claims')
-        : h('span', null, `${n('verified')} verified, ${n('supported')} supported, `,
+        : h('span', null, `${n('proved') ? `${n('proved')} proved, ` : ''}${n('verified')} verified, ${n('supported')} supported, `,
           h('span', { class: n('violated') ? 'real__bad' : '' }, `${n('violated')} violated`), `, ${other} other`);
       const mods = h('td', { class: 'real__mono', 'data-label': 'Modules' });
       for (const m of impl?.modules ?? []) {

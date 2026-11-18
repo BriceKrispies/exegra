@@ -5,7 +5,7 @@ import { h, clear } from './dom.js';
 import { entityLabel } from '../core/query.js';
 import { CLAIM_STATUSES } from '../core/claim-methods.js';
 
-const ORDER = /** @type {const} */ (['verified', 'supported', 'violated', 'inconclusive', 'not-evaluated']);
+const ORDER = /** @type {const} */ (['proved', 'verified', 'supported', 'violated', 'inconclusive', 'not-evaluated']);
 
 /** @param {HTMLElement} el @param {any} session */
 export function mountVerificationPanel(el, session) {

@@ -86,7 +86,14 @@
         "Apply typed operations atomically as source-preserving text edits",
         "Evaluate claims and simulate state machines on the model"
       ],
-      "implementation": { "status": "manual", "modules": ["src/core/types.js"], "notes": "types.js holds JSDoc typedefs only. The directory src/core also contains projections.js, layout.js with the modules under layout/, and generate/, which this file classifies under visualization and tooling by responsibility, and own.js, claimed by queries; they import nothing outside src/core." }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/types.js"
+        ],
+        "notes": "types.js holds JSDoc typedefs only. The directory src/core also contains projections.js, layout.js with the modules under layout/, and generate/, which this file classifies under visualization and tooling by responsibility, and own.js, claimed by queries; they import nothing outside src/core.",
+        "language": "mixed"
+      }
     },
     {
       "id": "application",
@@ -95,7 +102,12 @@
       "category": "client",
       "runsIn": "browser",
       "purpose": "The browser application: the session that owns interaction state, the shell and every panel.",
-      "implementation": { "status": "manual", "modules": [], "notes": "Grouping only; the code lives in the child components." }
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "Grouping only; the code lives in the child components.",
+        "language": "js"
+      }
     },
     {
       "id": "visualization",
@@ -103,7 +115,12 @@
       "kind": "subsystem",
       "category": "logical",
       "purpose": "Derives scenes from the model, lays them out and draws and interacts with them in 3D.",
-      "implementation": { "status": "manual", "modules": [], "notes": "Grouping only; the code lives in the child components." }
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "Grouping only; the code lives in the child components.",
+        "language": "js"
+      }
     },
     {
       "id": "persistence",
@@ -111,7 +128,12 @@
       "kind": "subsystem",
       "category": "logical",
       "purpose": "Moves project files between the browser and the disk: browser client, development-server middleware, workspace service and the project files themselves.",
-      "implementation": { "status": "manual", "modules": [], "notes": "Grouping only; the code lives in the child components." }
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "Grouping only; the code lives in the child components.",
+        "language": "js"
+      }
     },
     {
       "id": "agent-interface",
@@ -120,7 +142,12 @@
       "category": "logical",
       "runsIn": "node",
       "purpose": "The structured command line through which AI coding agents read and change a specification using the same model and transactions as the UI.",
-      "implementation": { "status": "manual", "modules": [], "notes": "Grouping only; the code lives in the child component." }
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "Grouping only; the code lives in the child component.",
+        "language": "js"
+      }
     },
     {
       "id": "tooling",
@@ -128,7 +155,12 @@
       "kind": "subsystem",
       "category": "infrastructure",
       "purpose": "Build and development system, verification pipeline, artifact generators, tests and development utilities.",
-      "implementation": { "status": "manual", "modules": [], "notes": "Grouping only; the code lives in the child components." }
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "Grouping only; the code lives in the child components.",
+        "language": "js"
+      }
     },
 
     // ======== Semantic core =============================================================
@@ -148,7 +180,14 @@
         "Define the record and copy kinds of the data model: field types, personal-data classes, roles, copy scopes (shared, per-session, per-principal, internal) and the units of freshness and erasure bounds"
       ],
       "unknowns": ["The built-in entity kinds, claim kinds, claim evaluation methods and projections are fixed per build. A specification can add entity kinds, properties of any kind, categories, relationship kinds and verification methods (carried out outside Exegra) through its vocabulary, but it cannot add an evaluation method that Exegra itself runs."],
-      "implementation": { "status": "manual", "modules": ["src/core/metamodel.json"], "notes": "Hand-written data file." }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/metamodel.json"
+        ],
+        "notes": "Hand-written data file.",
+        "language": "json"
+      }
     },
     {
       "id": "claim-method-registry",
@@ -164,7 +203,14 @@
         "Declare `negatives` as a parameter of every trace method (state-invariant, precedes, eventually, never): a list of {scenario, faults}, each one of the claim's scenarios run with extra faults"
       ],
       "unknowns": ["The registry declares methods but the evaluator implements them separately; adding an entry without code leaves the claim not evaluated."],
-      "implementation": { "status": "manual", "modules": ["src/core/claim-methods.js"], "notes": "Hand-written data module used by the parser, validator, evaluator and inspector." }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/claim-methods.js"
+        ],
+        "notes": "Hand-written data module used by the parser, validator, evaluator and inspector.",
+        "language": "js"
+      }
     },
     {
       "id": "parser",
@@ -186,7 +232,14 @@
         "The whole text is re-parsed on every commit and on every source-editor analysis; there is no incremental parsing and no measurement of its cost on large specifications.",
         "The schema.version error message tells the user to run an `exegra migrate` command that does not exist."
       ],
-      "implementation": { "status": "model-configured", "modules": ["src/core/parse.js"], "notes": "Structure checks are driven by metamodel.json and the specification's vocabulary; the parser code itself is hand-written." }
+      "implementation": {
+        "status": "model-configured",
+        "modules": [
+          "src/core/parse.js"
+        ],
+        "notes": "Structure checks are driven by metamodel.json and the specification's vocabulary; the parser code itself is hand-written.",
+        "language": "js"
+      }
     },
     {
       "id": "validator",
@@ -209,7 +262,10 @@
           "src/core/validate.js",
           "src/core/analyze.js",
           "src/core/evidence-ref.js"
-        ], "notes": "The rules are hard-coded. Claim parameter checks read the claim method registry, the gap rules read `expected` flags of the effective meta-model and view filters are checked against the effective vocabulary." }
+        ],
+        "notes": "The rules are hard-coded. Claim parameter checks read the claim method registry, the gap rules read `expected` flags of the effective meta-model and view filters are checked against the effective vocabulary.",
+        "language": "js"
+      }
     },
     {
       "id": "expression-language",
@@ -228,7 +284,8 @@
         "modules": [
           "src/core/expr.js"
         ],
-        "notes": "The validator and the claim evaluator use src/core/expr.js. The simulation engine has its own implementation of the same language in Rust (engine/exegra-engine/src/expr.rs), held to the same parse and evaluation semantics and error messages by the conformance goldens."
+        "notes": "The validator and the claim evaluator use src/core/expr.js. The simulation engine has its own implementation of the same language in Rust (engine/exegra-engine/src/expr.rs), held to the same parse and evaluation semantics and error messages by the conformance goldens.",
+        "language": "js"
       }
     },
     {
@@ -247,7 +304,9 @@
       "implementation": { "status": "manual", "modules": [
           "src/core/hash.js",
           "src/core/sha256.js"
-        ] }
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "queries",
@@ -263,7 +322,15 @@
         "Find the declaration site of an entity kind",
         "Provide own(), the own-property lookup that the parser, validator, claim evaluator, queries and Project use for every spec-supplied key"
       ],
-      "implementation": { "status": "manual", "modules": ["src/core/query.js", "src/core/own.js"], "notes": "own.js is a one-function helper; it is claimed here because the lookup it provides is imported by the other core modules that read spec-supplied keys." }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/query.js",
+          "src/core/own.js"
+        ],
+        "notes": "own.js is a one-function helper; it is claimed here because the lookup it provides is imported by the other core modules that read spec-supplied keys.",
+        "language": "js"
+      }
     },
     {
       "id": "transactions",
@@ -289,7 +356,16 @@
         "Only operation transactions and replacement sources are validated before they commit. Undo and redo restore text that was committed before and do not validate again, and reload commits any text that parses, so the model after a reload can carry validation errors.",
         "The session never passes expectRevision or expectHash; only the CLI uses the optimistic checks (--expect-hash)."
       ],
-      "implementation": { "status": "manual", "modules": ["src/core/operations.js", "src/core/project.js", "src/core/text-edit.js"], "notes": "The operation table is hand-written; CreateEntity looks up declaration sites in the meta-model." }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/operations.js",
+          "src/core/project.js",
+          "src/core/text-edit.js"
+        ],
+        "notes": "The operation table is hand-written; CreateEntity looks up declaration sites in the meta-model.",
+        "language": "js"
+      }
     },
     {
       "id": "claim-evaluator",
@@ -315,7 +391,13 @@
         "Behavioral results hold for the listed scenario traces only; there is no exhaustive state-space exploration and no probabilistic evaluation.",
         "Claim evaluation runs on the caller's thread. In the application session.evaluate runs it on the main thread inside every semantic commit, and trace and metric claims run engine scenarios there (src/core/claims.js), unlike the Simulation tab, which runs its scenario in the engine worker. The cost on large models is not measured (WG-4775, finding F06)."
       ],
-      "implementation": { "status": "manual", "modules": ["src/core/claims.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/claims.js"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "simulation-engine",
@@ -329,7 +411,7 @@
         "Fire at most one transition per behavior and event, evaluating guards against the configuration at the start of the step",
         "Apply faults (drop, delay, enable or disable a transition, inject an event) and record them in the trace",
         "End a run as quiescent, step-limit (default 1000) or error",
-        "Run as one engine everywhere: the Rust crate engine/exegra-engine, compiled to WebAssembly and loaded only through src/core/engine.js in the browser and in Node (the Simulation tab runs it in a Web Worker so a long run never blocks the page), and as the native binary exegra-sim"
+        "Run as one engine everywhere: the Lean core (formal/), called as engine.run through the Lean call boundary and loaded only through src/core/engine.js in the browser and in Node (the Simulation tab runs it in a Web Worker so a long run never blocks the page), and as the native binary exegra-lean compiled from the same C"
       ],
       "ports": [
         {
@@ -349,13 +431,16 @@
       "implementation": {
         "status": "manual",
         "modules": [
-          "engine/",
           "src/core/engine.js",
           "src/app/engine-worker.js",
-          "src/app/engine-runner.js",
-          "tools/build-engine.js"
+          "src/app/engine-runner.js"
         ],
-        "notes": "engine/ holds the library and native binary (exegra-engine) and the WebAssembly crate (exegra-engine-wasm). npm run build:engine (tools/build-engine.js) compiles the WebAssembly crate and binds it with wasm-bindgen into src/engine/pkg/, which is generated, not committed, and left out of the traceability surface. src/core/engine.js is the only module that loads it; src/app/engine-runner.js and src/app/engine-worker.js run the Simulation tab's runs off the main thread."
+        "notes": "engine/ holds the library and native binary (exegra-engine) and the WebAssembly crate (exegra-engine-wasm). npm run build:engine (tools/build-engine.js) compiles the WebAssembly crate and binds it with wasm-bindgen into src/engine/pkg/, which is generated, not committed, and left out of the traceability surface. src/core/engine.js is the only module that loads it; src/app/engine-runner.js and src/app/engine-worker.js run the Simulation tab's runs off the main thread.",
+        "trusts": [
+          "trusted-js-glue",
+          "trusted-js-shell"
+        ],
+        "language": "js"
       }
     },
 
@@ -383,7 +468,10 @@
       "implementation": { "status": "model-configured", "modules": [
           "src/core/projections.js",
           "src/core/flows.js"
-        ], "notes": "Views are declared in the specification and shapes, colours and line styles come from the model's vocabulary; the projection code is hand-written." }
+        ],
+        "notes": "Views are declared in the specification and shapes, colours and line styles come from the model's vocabulary; the projection code is hand-written.",
+        "language": "js"
+      }
     },
     {
       "id": "layout-engine",
@@ -404,7 +492,21 @@
         "The score weights are fixed constants chosen by hand; no recorded measurement shows that the lowest score is the most readable layout. Crossings are counted on at most 400 sampled edges.",
         "Automatic layout computes all four methods on every recompute; its cost on large scenes has no recorded measurement."
       ],
-      "implementation": { "status": "manual", "modules": ["src/core/layout.js", "src/core/layout/constants.js", "src/core/layout/model.js", "src/core/layout/solve.js", "src/core/layout/layered.js", "src/core/layout/packed.js", "src/core/layout/radial.js", "src/core/layout/score.js"], "notes": "layout.js is the entry (layoutScene, chooseLayout, LAYOUT_METHODS, scorePlacement); the other modules hold the shared recursion (solve.js, model.js), the four arrangers, the score and the shared sizes." }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/layout.js",
+          "src/core/layout/constants.js",
+          "src/core/layout/model.js",
+          "src/core/layout/solve.js",
+          "src/core/layout/layered.js",
+          "src/core/layout/packed.js",
+          "src/core/layout/radial.js",
+          "src/core/layout/score.js"
+        ],
+        "notes": "layout.js is the entry (layoutScene, chooseLayout, LAYOUT_METHODS, scorePlacement); the other modules hold the shared recursion (solve.js, model.js), the four arrangers, the score and the shared sizes.",
+        "language": "js"
+      }
     },
     {
       "id": "scene-renderer",
@@ -424,7 +526,18 @@
         "No frame-rate or load-time measurement is recorded for the 396-component benchmark specification.",
         "Pointer, drag and connect handling live inside src/render/scene-view.js, which this file assigns to the renderer; the split between rendering and interaction is not a module boundary (see visual-interaction)."
       ],
-      "implementation": { "status": "model-configured", "modules": ["src/render/scene-view.js", "src/render/geometry.js", "src/render/curves.js", "src/render/labels.js", "src/render/palette.js"], "notes": "Node shapes, colours and line styles arrive in the scene from the model's vocabulary and are mapped to geometry and a palette; the renderer code is hand-written." }
+      "implementation": {
+        "status": "model-configured",
+        "modules": [
+          "src/render/scene-view.js",
+          "src/render/geometry.js",
+          "src/render/curves.js",
+          "src/render/labels.js",
+          "src/render/palette.js"
+        ],
+        "notes": "Node shapes, colours and line styles arrive in the scene from the model's vocabulary and are mapped to geometry and a palette; the renderer code is hand-written.",
+        "language": "js"
+      }
     },
     {
       "id": "visual-interaction",
@@ -443,7 +556,14 @@
         "This component holds the camera rig and the application entry (src/app/main.js) because traceability assigns each file to one component; the picking, drag and connect handling it relies on is in src/render/scene-view.js, claimed by scene-renderer.",
         "main.js is also the composition root: it mounts the panels, so this component has dependencies on them that have nothing to do with 3D interaction."
       ],
-      "implementation": { "status": "manual", "modules": ["src/app/main.js", "src/render/camera-rig.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/app/main.js",
+          "src/render/camera-rig.js"
+        ],
+        "language": "js"
+      }
     },
 
     // ======== Application ======================================================================
@@ -479,7 +599,13 @@
         "The session writes the current text, not one write per revision; the edit-flow machines in this file abstract that.",
         "Claim re-evaluation and re-projection run synchronously inside every commit with no measurement of their cost on large models."
       ],
-      "implementation": { "status": "manual", "modules": ["src/app/session.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/app/session.js"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "shell",
@@ -494,7 +620,14 @@
         "Show errors from the session log as toasts",
         "Undo and redo shortcuts, the delete shortcut for the selection, F to fit, / to search, Escape to leave connect mode or clear the selection"
       ],
-      "implementation": { "status": "manual", "modules": ["index.html", "src/ui/shell.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "index.html",
+          "src/ui/shell.js"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "toolbar",
@@ -513,7 +646,13 @@
         "Export a project bundle and import one, replacing the project by name; an import is refused when the bundle's spec.jsonc has syntax errors, and a bundle with validation errors is only noted"
       ],
       "unknowns": ["Import writes the project's files through the persistence service without passing the transaction system, a validation gate or a base-hash check (analyzeSpec is run on the bundle first, but only syntax errors stop it); the session then opens whatever was written, with its validation errors."],
-      "implementation": { "status": "manual", "modules": ["src/ui/toolbar.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/toolbar.js"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "explorer",
@@ -530,7 +669,13 @@
         "Select entities and toggle collapse, hide and isolate marks without rebuilding the rows"
       ],
       "unknowns": ["Rows beyond the 200-row window of a list can only be reached by narrowing the filter; there is no paging."],
-      "implementation": { "status": "manual", "modules": ["src/ui/explorer.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/explorer.js"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "activity-panels",
@@ -539,7 +684,15 @@
       "category": "client",
       "runsIn": "browser",
       "purpose": "Show the current diagnostics (errors, warnings, gaps) and the session's change log of commits, saves and rejected edits. In a panel narrower than 640 px a diagnostic is a two-line row; from there up it is one line.",
-      "implementation": { "status": "manual", "modules": ["src/ui/activity.js", "src/ui/detail.js"], "notes": "detail.js turns a log entry's detail (a string, or a rejected transaction's code and diagnostics) into text and is used by these panels and by the shell's toasts." }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/activity.js",
+          "src/ui/detail.js"
+        ],
+        "notes": "detail.js turns a log entry's detail (a string, or a rejected transaction's code and diagnostics) into text and is used by these panels and by the shell's toasts.",
+        "language": "js"
+      }
     },
     {
       "id": "overlay",
@@ -548,7 +701,13 @@
       "category": "client",
       "runsIn": "browser",
       "purpose": "Shows the active view's name and notes, an illustrative-example mark, the legend and the renderer's statistics over the 3D viewport. On a phone the legend and the statistics are not drawn until opened from the app bar's overflow menu, so they never cover the scene uninvited; from 768 px a closed card shows its summary, the legend starts open when it is short and the statistics start open.",
-      "implementation": { "status": "manual", "modules": ["src/ui/overlay.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/overlay.js"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "inspector",
@@ -566,7 +725,14 @@
         "Place labels above their controls in a panel narrower than 420 px and beside them from there up; its small tables (states, transitions, scenario steps) are card lists in a narrow panel",
         "For a record, list its fields (type, personal class, reference, role) and its copies; for a copy, list its source records and the fields it holds, with personal and principal fields marked"
       ],
-      "implementation": { "status": "model-configured", "modules": ["src/ui/inspector.js"], "notes": "The property editor is generated from the effective meta-model by property-controls; the read-only sections are hand-written queries." }
+      "implementation": {
+        "status": "model-configured",
+        "modules": [
+          "src/ui/inspector.js"
+        ],
+        "notes": "The property editor is generated from the effective meta-model by property-controls; the read-only sections are hand-written queries.",
+        "language": "js"
+      }
     },
     {
       "id": "property-controls",
@@ -581,7 +747,14 @@
         "Render the draft fields of the create dialogs"
       ],
       "unknowns": ["src/ui/property-controls.js and src/ui/dialogs.js import each other."],
-      "implementation": { "status": "model-configured", "modules": ["src/ui/property-controls.js"], "notes": "Controls are derived from the effective meta-model at runtime; the control code is hand-written." }
+      "implementation": {
+        "status": "model-configured",
+        "modules": [
+          "src/ui/property-controls.js"
+        ],
+        "notes": "Controls are derived from the effective meta-model at runtime; the control code is hand-written.",
+        "language": "js"
+      }
     },
     {
       "id": "dialogs",
@@ -596,7 +769,14 @@
         "Submit CreateEntity, CreateRelationship, DeleteEntity and RenameEntity through the session and show a rejection inside the dialog"
       ],
       "unknowns": ["src/ui/dialogs.js and src/ui/property-controls.js import each other."],
-      "implementation": { "status": "manual", "modules": ["src/ui/dialogs.js"], "notes": "The create-any-entity dialog is generated from the meta-model; the other dialogs are hand-written." }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/dialogs.js"
+        ],
+        "notes": "The create-any-entity dialog is generated from the meta-model; the other dialogs are hand-written.",
+        "language": "js"
+      }
     },
     {
       "id": "source-editor",
@@ -613,7 +793,13 @@
         "Take the full height of its panel (the full sheet on a phone); only the editor scrolls horizontally"
       ],
       "unknowns": ["It is a plain textarea: no syntax highlighting, completion or incremental analysis; the whole draft is analyzed on every pause."],
-      "implementation": { "status": "manual", "modules": ["src/ui/source-editor.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/source-editor.js"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "simulator-panel",
@@ -628,7 +814,8 @@
           "src/ui/sim-panel.js",
           "src/ui/sim-transport.js"
         ],
-        "notes": "Holds no semantic state; the panel and the transport drive the session's simulation functions."
+        "notes": "Holds no semantic state; the panel and the transport drive the session's simulation functions.",
+        "language": "js"
       },
       "responsibilities": [
         "Offer a Live source next to the scenario select (session.simLive): the status line counts real events, divergences and awaited predictions; the timeline lists recorded events with logical and display-only wall-clock time, marking inferred events and divergences; a Divergences section lists every divergence with a jump to its step; the step column shows calibrations and divergences; at every size, with 44 px source buttons"
@@ -649,7 +836,13 @@
         "Show the claims as a list of cards in a panel narrower than 640 px and as a table from there up"
       ],
       "unknowns": ["It shows recorded results loaded with the project and cannot execute tests; execution happens only through `exegra verify`.", "Rows beyond the 200-row window can only be reached by filtering; there is no paging."],
-      "implementation": { "status": "manual", "modules": ["src/ui/verification-panel.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/verification-panel.js"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "realisation-panel",
@@ -665,7 +858,13 @@
         "Show the components as a list of cards in a panel narrower than 640 px and as a table from there up"
       ],
       "unknowns": ["It cannot run the traceability check; without a recorded result it says the check has not been run."],
-      "implementation": { "status": "manual", "modules": ["src/ui/realisation-panel.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/realisation-panel.js"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "dom-helpers",
@@ -674,7 +873,13 @@
       "category": "logical",
       "runsIn": "browser",
       "purpose": "Small stateless DOM construction helpers and glyphs shared by the UI modules.",
-      "implementation": { "status": "manual", "modules": ["src/ui/dom.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/dom.js"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "stylesheets",
@@ -705,7 +910,8 @@
           "src/styles/toolbar.css",
           "src/styles/utilities.css",
           "src/styles/verification.css"
-        ]
+        ],
+        "language": "css"
       }
     },
 
@@ -726,7 +932,13 @@
         { "id": "client-write-out", "name": "Write file", "direction": "requires", "contract": "write-file", "protocol": "HTTP POST /__exegra/write", "description": "Sends spec or layout text with its base hash." }
       ],
       "unknowns": ["No retry, queue or offline buffer: a failed request is reported once to the caller."],
-      "implementation": { "status": "manual", "modules": ["src/persist/client.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/persist/client.js"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "dev-server-plugin",
@@ -745,7 +957,13 @@
         { "id": "plugin-write-out", "name": "Write file to workspace", "direction": "requires", "contract": "write-file", "protocol": "in-process call", "description": "Delegates to the workspace service." }
       ],
       "unknowns": ["Protection rests on loopback host, loopback origin and a custom header only; any local process can read and write projects while the development server runs."],
-      "implementation": { "status": "manual", "modules": ["tools/vite-plugin-exegra.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/vite-plugin-exegra.js"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "workspace-service",
@@ -769,7 +987,13 @@
         "Import and recording of results write without a base-hash check, and import writes its files one after another, not as one atomic unit.",
         "The journal is read in full on every write to number its next line and is never truncated."
       ],
-      "implementation": { "status": "manual", "modules": ["tools/workspace.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/workspace.js"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "specification-file",
@@ -781,7 +1005,12 @@
       "unknowns": [
         "Four paths change project files without a transaction or a journal line (WG-4775, finding F05): the bundle import (tools/workspace.js importProject, scenario import-bundle), tools/import-markdown.js (scenario markdown-import), tools/make-benchmark.js (specs/benchmark/spec.jsonc), and exegra apply when its layout write conflicts after the specification was written (scenario cli-apply-partial-write: the spec write has its journal line, but the transaction's two files are no longer written together). The first three write directly with node:fs or atomicWrite."
       ],
-      "implementation": { "status": "manual", "modules": [], "notes": "A data file, not code." }
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "A data file, not code.",
+        "language": "json"
+      }
     },
     {
       "id": "layout-file",
@@ -790,7 +1019,12 @@
       "category": "storage",
       "owner": "transactions",
       "purpose": "specs/<project>/layout.jsonc: presentation-only pins of leaf nodes per view; nothing in it carries architectural meaning.",
-      "implementation": { "status": "manual", "modules": [], "notes": "A data file, not code." }
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "A data file, not code.",
+        "language": "json"
+      }
     },
     {
       "id": "recorded-results-file",
@@ -807,7 +1041,8 @@
       "implementation": {
         "status": "manual",
         "modules": [],
-        "notes": "A data file, not code."
+        "notes": "A data file, not code.",
+        "language": "json"
       }
     },
     {
@@ -817,7 +1052,12 @@
       "category": "storage",
       "owner": "generators",
       "purpose": "specs/<project>/generated/: manifest.json, ARCHITECTURE.md, claims-report.md, claims-report.json and tasks.json derived from the model.",
-      "implementation": { "status": "manual", "modules": [], "notes": "Derived data files, not code and not read back by Exegra." }
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "Derived data files, not code and not read back by Exegra.",
+        "language": "json"
+      }
     },
 
     // ======== Agent interface ===================================================================
@@ -864,7 +1104,8 @@
           "cli/exegra.js",
           "cli/commands.js"
         ],
-        "notes": "The `verify` command's pipeline (runVerify, runTestReference) lives in cli/commands.js; the traceability check it uses is in tools/traceability.js, claimed by verification-pipeline."
+        "notes": "The `verify` command's pipeline (runVerify, runTestReference) lives in cli/commands.js; the traceability check it uses is in tools/traceability.js, claimed by verification-pipeline.",
+        "language": "js"
       }
     },
 
@@ -880,7 +1121,14 @@
         "The production build contains no persistence service: it bundles the shipped specs and is read-only.",
         "dist/ embeds as text the specification, layout and recorded results of every shipped project and the specification of every linked project whose specification lives outside specs/ (copy shipped-specifications); a linked project's specification, which is not in this repository, therefore ends up in the build output (WG-4775, finding F11)."
       ],
-      "implementation": { "status": "manual", "modules": ["vite.config.js"], "notes": "package.json scripts (dev, build, test, test:browser, typecheck, exegra, generate, verify) are not a scanned source file." }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "vite.config.js"
+        ],
+        "notes": "package.json scripts (dev, build, test, test:browser, typecheck, exegra, generate, verify) are not a scanned source file.",
+        "language": "js"
+      }
     },
     {
       "id": "generators",
@@ -895,7 +1143,17 @@
         "Derive a task list from violated and unevaluated claims, validation errors, not-implemented components, traceability findings, unknowns and gaps"
       ],
       "unknowns": ["No generator emits code or any part of Exegra's own runtime; Exegra generates reports about the model, not the software it describes."],
-      "implementation": { "status": "manual", "modules": ["src/core/generate/architecture-doc.js", "src/core/generate/claims-report.js", "src/core/generate/index.js", "src/core/generate/manifest.js", "src/core/generate/task-manifest.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/generate/architecture-doc.js",
+          "src/core/generate/claims-report.js",
+          "src/core/generate/index.js",
+          "src/core/generate/manifest.js",
+          "src/core/generate/task-manifest.js"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "verification-pipeline",
@@ -907,14 +1165,31 @@
       "responsibilities": [
         "Report declared modules missing on disk and files under src, cli and tools (.js, .json, .css, .html) plus index.html and vite.config.js that no component claims, leaving out generated build output (src/engine/pkg/) and files whose name starts with local- (local data, ignored by git)",
         "Through `verify`: validate, check traceability, execute each evidence of kind test with node --test or Playwright and record outcomes and the traceability result in results.json, then re-evaluate claims with them",
-        "Refuse an evidence reference with characters outside letters, digits, underscore, dot, slash, hyphen, space, hash and colon, and time a test run out after ten minutes"
+        "Refuse an evidence reference with characters outside letters, digits, underscore, dot, slash, hyphen, space, hash and colon, and time a test run out after ten minutes",
+        "Reuse the outcomes that `npm test` and `npm run test:browser` already recorded (reporters in tools/ writing .outcomes/, each stamped with a hash over the tracked files, the untracked files git does not ignore and the generated engine builds) instead of running the same test again: an evidence reference is answered from the recorded run only when the run was complete, the tree did not change during it and its stamp equals the stamp of the tree verify runs on; a reference that matches no recorded test, a failure, or a skipped browser test is run as before, and a unit test that skipped itself is recorded as skipped. results.json says for each outcome whether it was run or reused; `verify --fresh` reuses nothing"
       ],
       "unknowns": [
         "Only evidence of kind test is executed; measurement, document and review evidence stay author-entered.",
         "The traceability check compares paths only: it does not check that a module implements what its component claims, nor that relationships match imports.",
         "Browser tests need Chrome and the Vite development server; `verify --skip-browser` skips them and leaves their evidence without a recorded result."
       ],
-      "implementation": { "status": "manual", "modules": ["tools/traceability.js"], "notes": "Orchestrated by the verify command in cli/commands.js (claimed by agent-cli)." }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/traceability.js",
+          "tools/lean-theorems.js",
+          "tools/tree-stamp.js",
+          "tools/outcomes-node-reporter.js",
+          "tools/outcomes-playwright-reporter.js",
+          "tools/run-unit-tests.js",
+          "cli/outcomes.js"
+        ],
+        "notes": "Orchestrated by the verify command in cli/commands.js (claimed by agent-cli).",
+        "language": "js",
+        "trusts": [
+          "trusted-lean-kernel"
+        ]
+      }
     },
     {
       "id": "spec-checker",
@@ -923,7 +1198,13 @@
       "category": "infrastructure",
       "runsIn": "node",
       "purpose": "A read-only command that prints a specification file's diagnostics, scenario outcomes and claim results, and optionally a trace.",
-      "implementation": { "status": "manual", "modules": ["tools/check-spec.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/check-spec.js"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "benchmark-generator",
@@ -933,7 +1214,13 @@
       "runsIn": "node",
       "purpose": "Writes specs/benchmark/spec.jsonc, a deterministic synthetic specification (396 components and 507 relationships by default) for measuring layout and rendering.",
       "unknowns": ["It writes the benchmark specification directly with node:fs, not through the workspace service or the transaction system."],
-      "implementation": { "status": "manual", "modules": ["tools/make-benchmark.js"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/make-benchmark.js"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "markdown-importer",
@@ -953,7 +1240,14 @@
         "It writes the project's specification file directly with node:fs, not through the workspace service or the transaction system, and an edit made to that file through Exegra is overwritten by the next import.",
         "It reads no default source: the source directory is given with --source or as \"source\" in the import map, and the project with --project or with --map and --out."
       ],
-      "implementation": { "status": "manual", "modules": ["tools/import-markdown.js"], "notes": "Not part of the running application or the agent command line, except that the markdown command renders documents with its functions; it is run by hand when the Markdown specification changes." }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/import-markdown.js"
+        ],
+        "notes": "Not part of the running application or the agent command line, except that the markdown command renders documents with its functions; it is run by hand when the Markdown specification changes.",
+        "language": "js"
+      }
     },
     {
       "id": "screenshot-tool",
@@ -962,7 +1256,13 @@
       "category": "infrastructure",
       "runsIn": "node",
       "purpose": "A development aid that loads the running application in Chrome, optionally runs a snippet, saves a screenshot and prints console errors.",
-      "implementation": { "status": "manual", "modules": ["tools/shot.mjs"] }
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/shot.mjs"
+        ],
+        "language": "js"
+      }
     },
     {
       "id": "test-suites",
@@ -970,7 +1270,7 @@
       "parent": "tooling",
       "category": "infrastructure",
       "runsIn": "node",
-      "purpose": "Core tests (node:test) over the semantic core, generators, workspace and agent command line, and Playwright browser tests of the running application: against scratch copies of this specification and of the multiplayer test fixture, and, when a project is linked locally, read-only against it (local-*.spec.js files, which are not tracked); the older browser tests run at desktop size and tests/browser/mobile.spec.js runs at phone and tablet size by touch.",
+      "purpose": "Core tests (node:test) over the semantic core, generators, workspace and agent command line, and Playwright browser tests of the running application: against scratch copies of this specification and of the multiplayer test fixture, and, when a project is linked locally, read-only against it (local-*.spec.js files, which are not tracked); the older browser tests run at desktop size and tests/browser/mobile.spec.js runs at phone and tablet size by touch. The browser tests run on two Playwright workers by default (EXEGRA_TEST_WORKERS overrides); each worker slot has its own pair of scratch projects (zz-test-exegra-wN, zz-test-multiplayer-wN), so edits, saves and change notices never cross workers.",
       "unknowns": [
         "Tests are evidence only through `exegra verify`; recorded results are not tied to the code revision.",
         "No test measures performance, so no claim about frame rate or load time has evidence."
@@ -986,6 +1286,7 @@
           "tests/core/import-markdown.test.js",
           "tests/core/layout.test.js",
           "tests/core/model.test.js",
+          "tests/core/outcome-reuse.test.js",
           "tests/core/projections.test.js",
           "tests/core/references.test.js",
           "tests/core/roundtrip.test.js",
@@ -1005,7 +1306,8 @@
           "tests/core/traffic.test.js",
           "tests/browser/live.spec.js",
           "tests/fixtures/live/open-edit-save.json"
-        ]
+        ],
+        "language": "js"
       }
     },
 
@@ -1208,7 +1510,8 @@
           "tests/core/conformance.test.js",
           "tests/conformance/"
         ],
-        "notes": "tests/conformance/ holds the fixture specification, the committed goldens and the README that lists what the fixture covers."
+        "notes": "tests/conformance/ holds the fixture specification, the committed goldens and the README that lists what the fixture covers.",
+        "language": "js"
       },
       "unknowns": [
         "Engine input and trace format 2 (contracts engine-input-v2 and trace-v2) are derived by simulationInput whenever a specification uses a format-2 construct (needsFormat2, simulationInputV2 in src/core/sim-input.js) and run by the engine's version-2 semantics (engine/exegra-engine/src/lib.rs dispatches on the version). Not yet: format-2 goldens (tests/conformance/goldens holds version 1 only), and the WG-4741 items: crash-instance, meters and the cost metric in the engine, and calibration, sensitivity, the operating envelope and revision binding of metric claims. A specification that uses no format-2 construct still derives version 1, unchanged."
@@ -1239,7 +1542,8 @@
           "src/ui/sheet.js",
           "src/ui/menu.js"
         ],
-        "notes": "layout.js holds the destinations, the navigation and the panel states; sheet.js is the bottom-sheet controller; menu.js is the menu controller shared by More, the app bar's overflow menu and the save-conflict menu."
+        "notes": "layout.js holds the destinations, the navigation and the panel states; sheet.js is the bottom-sheet controller; menu.js is the menu controller shared by More, the app bar's overflow menu and the save-conflict menu.",
+        "language": "js"
       }
     },
     {
@@ -1260,7 +1564,8 @@
         "modules": [
           "src/core/fault-model.js"
         ],
-        "notes": "The environment, failureMode and faultModel kinds, the faultModel and realises properties and the any-kind reference (\"ref\": [\"*\"]) are declared in the meta-model and checked by the generic parser; fault-model.js holds the specific rules (missing sources, bounds, realises outside the model) and the scope text of a claim result."
+        "notes": "The environment, failureMode and faultModel kinds, the faultModel and realises properties and the any-kind reference (\"ref\": [\"*\"]) are declared in the meta-model and checked by the generic parser; fault-model.js holds the specific rules (missing sources, bounds, realises outside the model) and the scope text of a claim result.",
+        "language": "js"
       }
     },
     {
@@ -1295,7 +1600,8 @@
           "formal/Exegra/Search.lean",
           "formal/Exegra/Temporal.lean"
         ],
-        "notes": "formal/Exegra/Explore.lean: State (fault mask and Config, with decidable equality and hashing), successors, Reachable, the explorer explore with a Std.HashSet visited set, and the theorems step_mem_successors, explore_sound and explore_counterexample_real, whose axioms are pinned with #guard_msgs. The file sits inside formal/, which formal-semantics also declares. formal/Exegra/Search.lean: the generic breadth-first search over a node type with search_sound and search_counterexample_real. formal/Exegra/Temporal.lean: the forms, the monitor, runs (runRec), the product system, tcheck, tcheck_sound, tcheck_counterexample_real, tverdict and the exegra-lean temporal protocol; axioms pinned with #guard_msgs."
+        "notes": "formal/Exegra/Explore.lean: State (fault mask and Config, with decidable equality and hashing), successors, Reachable, the explorer explore with a Std.HashSet visited set, and the theorems step_mem_successors, explore_sound and explore_counterexample_real, whose axioms are pinned with #guard_msgs. The file sits inside formal/, which formal-semantics also declares. formal/Exegra/Search.lean: the generic breadth-first search over a node type with search_sound and search_counterexample_real. formal/Exegra/Temporal.lean: the forms, the monitor, runs (runRec), the product system, tcheck, tcheck_sound, tcheck_counterexample_real, tverdict and the exegra-lean temporal protocol; axioms pinned with #guard_msgs.",
+        "language": "lean"
       }
     },
     {
@@ -1389,7 +1695,8 @@
       "responsibilities": [
         "Evaluate a run to a trace in the documented format",
         "Prove determinism of the step function, at most one fired transition per behavior per step, and termination under the step limit",
-        "Serve as the reference for differential checking of the Rust engine on goldens and generated inputs"
+        "Serve as the reference for differential checking of the Rust engine on goldens and generated inputs",
+        "Run, as the engine of the application (engine.run and exegra-lean), the implementation Exegra.Impl (formal/Exegra/Impl/): expressions parsed at most once per run, arithmetic evaluated on unboxed floats, a step counter instead of measuring the list of steps, and an in-place JSON writer; Exegra.Impl.runAnyValue_eq proves it equal to the definition Exegra.runAnyValue on every input, so the theorems about the definition hold of what runs"
       ],
       "implementation": {
         "status": "manual",
@@ -1398,12 +1705,20 @@
           "tools/gen-engine-inputs.js",
           "tools/differential.js"
         ],
-        "notes": "A Lake project (Lean 4, toolchain pinned in formal/lean-toolchain, standard library only): Exegra/Value, Json, Number, Expr, Input, Trace and Semantics define the semantics, Exegra/Properties proves its properties, Main is the exegra-lean executable (engine input JSON on stdin, trace JSON on stdout). npm run build:formal runs lake build in formal/; formal/.lake/ is build output, ignored by git and outside the traceability surface. tools/differential.js compares the native Rust engine with exegra-lean on the goldens and on seeded inputs from tools/gen-engine-inputs.js."
+        "notes": "A Lake project (Lean 4, toolchain pinned in formal/lean-toolchain, standard library only): Exegra/Value, Json, Number, Expr, Input, Trace and Semantics define the semantics, Exegra/Properties proves its properties, Main is the exegra-lean executable (engine input JSON on stdin, trace JSON on stdout). npm run build:formal runs lake build in formal/; formal/.lake/ is build output, ignored by git and outside the traceability surface. tools/differential.js compares the native Rust engine with exegra-lean on the goldens and on seeded inputs from tools/gen-engine-inputs.js. Exegra/Impl/ is the implementation the application runs: Impl/Expr.lean (the numeric fast evaluator, eval_numeric), Impl/Json.lean (the in-place writer, write'_eq), Impl/Semantics.lean (the compiled format-1 engine) and Impl/Refinement.lean (runAnyValue_eq and runAny_eq, axioms pinned with #guard_msgs). Expression parses are kept in Thunks: Thunk.get is Lean's memoizing primitive, logically x.fn (), and the implementation declares no implemented_by, extern or csimp of its own.",
+        "trusts": [
+          "trusted-lean-kernel",
+          "trusted-lean-compiler-runtime",
+          "trusted-emscripten-toolchain",
+          "trusted-wasm-engine"
+        ],
+        "language": "lean"
       },
       "unknowns": [
         "Format 2 is defined in formal/Exegra/Format2.lean for the constructs built so far (instances, routes, resources and resource faults, windows, workloads, links, timers, request lifecycle and measured outputs); formal/Exegra/Resource.lean proves the held-units and queue-bound invariants of a settled resource, the strict FIFO queue of a collapse included. Not defined yet: crash-instance with incarnations, meters and cost (planned: WG-4741).",
         "lift_agrees is stated in formal/Exegra/Lift.lean with its proof left as sorry (pinned on sorryAx); it is checked differentially by tools/differential.js --lift on every liftable golden and generated input (planned: WG-4664).",
-        "The determinism property over seeds is not stated as a theorem for format 2 yet (planned: WG-4741)."
+        "The determinism property over seeds is not stated as a theorem for format 2 yet (planned: WG-4741).",
+        "Exegra.Impl optimizes format 1; format 2 runs the definition's step semantics (V2.traceOf) with only the fast JSON writer, so its expressions are still parsed at every evaluation (planned: WG-4798). Exegra.Json.parse is a partial definition, shared by the definition and the implementation, so it is outside every theorem (planned: WG-4797)."
       ]
     },
     {
@@ -1433,7 +1748,8 @@
           "tools/prove.js",
           "formal/Exegra/Prove.lean"
         ],
-        "notes": "src/core/proof-export.js (pure) builds the exploration request, the Lean proof file and the per-claim results; tools/prove.js runs lake build, the exegra-lean explore protocol and lake env lean on the generated file (formal/generated/, ignored by git), with the modules' shared libraries (precompileModules) loaded; formal/Exegra/Prove.lean holds claimInv, decodesTo, the Lean term printer of an input and the explore protocol of exegra-lean. The command is exegra prove (cli/commands.js)."
+        "notes": "src/core/proof-export.js (pure) builds the exploration request, the Lean proof file and the per-claim results; tools/prove.js runs lake build, the exegra-lean explore protocol and lake env lean on the generated file (formal/generated/, ignored by git), with the modules' shared libraries (precompileModules) loaded; formal/Exegra/Prove.lean holds claimInv, decodesTo, the Lean term printer of an input and the explore protocol of exegra-lean. The command is exegra prove (cli/commands.js).",
+        "language": "mixed"
       }
     },
     {
@@ -1459,7 +1775,8 @@
         "modules": [
           "src/core/type-expr.js",
           "src/core/contract-trace.js"
-        ]
+        ],
+        "language": "js"
       }
     },
     {
@@ -1485,7 +1802,8 @@
         "modules": [
           "src/core/data-model.js"
         ],
-        "notes": "The record and copy kinds are built-in meta-model kinds; the rules are hand-written in data-model.js and run from validate.js and claims.js."
+        "notes": "The record and copy kinds are built-in meta-model kinds; the rules are hand-written in data-model.js and run from validate.js and claims.js.",
+        "language": "js"
       }
     },
     {
@@ -1520,7 +1838,8 @@
           "engine/exegra-engine/src/v2.rs",
           "engine/exegra-engine/src/random.rs"
         ],
-        "notes": "WG-4664 part of format 2: defined in Lean (Resource, Random, Format2, Lift), ported to Rust (v2.rs, random.rs), and checked differentially on generated version-2 inputs (tools/gen-engine-inputs.js --v2, tools/differential.js). Its claims stay not evaluated until recorded evidence supports them."
+        "notes": "WG-4664 part of format 2: defined in Lean (Resource, Random, Format2, Lift), ported to Rust (v2.rs, random.rs), and checked differentially on generated version-2 inputs (tools/gen-engine-inputs.js --v2, tools/differential.js). Its claims stay not evaluated until recorded evidence supports them.",
+        "language": "mixed"
       }
     },
     {
@@ -1551,7 +1870,8 @@
           "formal/Exegra/Workload.lean",
           "engine/exegra-engine/src/workload.rs"
         ],
-        "notes": "WG-4715, in progress. Built: the integer lowering of distributions (src/core/distributions.js; every reference output of docs/simulation.md and the pinned SHA-256 reproduced, tests/core/distributions.test.js); open workloads (constant and Poisson by inversion of the integrated rate with exact integer square roots, phases, ramps, repetition, batches, clients picked uniformly or round-robin, payload literals, samples, weighted choices and counters, maxArrivals, the first-entry rule with a per-workload count of created instants) defined in formal/Exegra/Workload.lean and Format2.lean, ported to the Rust engine (workload.rs, v2.rs) and checked differentially on generated workload inputs (tools/gen-engine-inputs.js, tools/differential.js). Proved: an instant is always before the horizon (nextTime_lt_horizon) and a workload never creates more arrival entries than maxArrivals (makeInstant_arrivals_le)."
+        "notes": "WG-4715, in progress. Built: the integer lowering of distributions (src/core/distributions.js; every reference output of docs/simulation.md and the pinned SHA-256 reproduced, tests/core/distributions.test.js); open workloads (constant and Poisson by inversion of the integrated rate with exact integer square roots, phases, ramps, repetition, batches, clients picked uniformly or round-robin, payload literals, samples, weighted choices and counters, maxArrivals, the first-entry rule with a per-workload count of created instants) defined in formal/Exegra/Workload.lean and Format2.lean, ported to the Rust engine (workload.rs, v2.rs) and checked differentially on generated workload inputs (tools/gen-engine-inputs.js, tools/differential.js). Proved: an instant is always before the horizon (nextTime_lt_horizon) and a workload never creates more arrival entries than maxArrivals (makeInstant_arrivals_le).",
+        "language": "mixed"
       }
     },
     {
@@ -1577,7 +1897,8 @@
       "implementation": {
         "status": "manual",
         "modules": [],
-        "notes": "WG-4715, in progress. Built: the resource metrics of format 2 (utilisation as busy and capacity integrals and max held, queue length as integral and max, waiting time per request enqueued in the window with +infinity for a request removed without a grant or still waiting, nearest-rank quantiles at the input's exact decimals), defined over the step sequence in formal/Exegra/Format2.lean (Measured outputs), accumulated step by step in the Rust engine (v2.rs, Measure), output with the trace or alone with output metrics, and checked differentially on generated workload inputs. The request lifecycle, response time, throughput, outcomes, series, time-to metrics, meters and cost are not built."
+        "notes": "WG-4715, in progress. Built: the resource metrics of format 2 (utilisation as busy and capacity integrals and max held, queue length as integral and max, waiting time per request enqueued in the window with +infinity for a request removed without a grant or still waiting, nearest-rank quantiles at the input's exact decimals), defined over the step sequence in formal/Exegra/Format2.lean (Measured outputs), accumulated step by step in the Rust engine (v2.rs, Measure), output with the trace or alone with output metrics, and checked differentially on generated workload inputs. The request lifecycle, response time, throughput, outcomes, series, time-to metrics, meters and cost are not built.",
+        "language": "mixed"
       }
     },
     {
@@ -1607,7 +1928,8 @@
           "src/core/metric-stats.js",
           "src/core/metric-claims.js"
         ],
-        "notes": "Built: the statistics (src/core/metric-stats.js: exact binomial tails and verdicts, the minimum run count, passes to hold and to fail, runs to decide, the sign-test interval, underpowered statistics, the margin, run seeds and the claim status with negatives; tests/core/metric-stats.test.js) and the metric-bound runner over engine inputs (src/core/metric-claims.js: one metrics-mode run per run seed through runEngineText, on the thread that evaluates claims, which in the application is the main thread). The method is registered and simulationInput derives format 2 for it. Calibration, sensitivity, asOf and revision binding are not built (WG-4741)."
+        "notes": "Built: the statistics (src/core/metric-stats.js: exact binomial tails and verdicts, the minimum run count, passes to hold and to fail, runs to decide, the sign-test interval, underpowered statistics, the margin, run seeds and the claim status with negatives; tests/core/metric-stats.test.js) and the metric-bound runner over engine inputs (src/core/metric-claims.js: one metrics-mode run per run seed through runEngineText, on the thread that evaluates claims, which in the application is the main thread). The method is registered and simulationInput derives format 2 for it. Calibration, sensitivity, asOf and revision binding are not built (WG-4741).",
+        "language": "js"
       }
     },
     {
@@ -1634,7 +1956,8 @@
         "modules": [
           "src/app/traffic-recorder.js"
         ],
-        "notes": "Built (WG-4777). The producers live in the modules they observe; the server-side events are produced by tools/vite-plugin-exegra.js and returned with each answer."
+        "notes": "Built (WG-4777). The producers live in the modules they observe; the server-side events are produced by tools/vite-plugin-exegra.js and returned with each answer.",
+        "language": "js"
       }
     },
     {
@@ -1660,6 +1983,66 @@
         "status": "manual",
         "modules": [
           "src/core/replay.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "lean-call-boundary",
+      "name": "Lean call boundary",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "The one way the JavaScript shell calls the Lean core: a JSON request {fn, args} to a JSON reply {ok} or {error}, through the Lean core compiled to WebAssembly.",
+      "responsibilities": [
+        "Keep the registry of callable Lean functions (Exegra.Api.registry): each module port lists its functions in its own file under formal/Exegra/Api/ and appends the list; the C glue, the exported symbol and the JS binding never change",
+        "Answer every request with a reply: an unknown function, a malformed request, a refusal and a trap are errors as values, and a trap discards the instance",
+        "Load the module synchronously in Node and after an awaited fetch in the browser or a worker (src/core/lean.js)",
+        "Build the module reproducibly from pinned inputs (npm run build:formal-wasm): emscripten 7.0.0, the Lean runtime at the toolchain tag with the committed patch, libuv v1.48.0, Init/Std C from the toolchain, Exegra C from lake; wasm64 only"
+      ],
+      "unknowns": [
+        "Stable Safari does not support Memory64, so the Lean core, and with it the engine, does not run there until Safari ships it (decision 2026-11-18). A wasm32 build would need its C from a 32-bit Lean compiler (spike/lean-wasm/README.md, wasm32 caveats).",
+        "The Lean engine is still slower than the Rust engine it replaced on the goldens, now mostly in reading JSON. Measured 2026-11-18 in Node 24 on Windows 10 (wasm64, best of 10 runs): live-session 17.0 ms (was 21.5 ms; Rust 1.95 ms), app-start-and-open 14.1 ms (was 24.1 ms; Rust 2.4 ms). Natively about two thirds of that is Exegra.Json.parse, a partial definition nothing can be proved about yet; a fast parser proved equal to a total definitional parser is WG-4797. Format 2 runs the definition's step semantics, with its expressions parsed at every evaluation (WG-4798). Loading and initializing the module takes about 119 ms once per process."
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "lean",
+        "trusts": [
+          "trusted-lean-kernel",
+          "trusted-lean-compiler-runtime",
+          "trusted-emscripten-toolchain",
+          "trusted-libuv",
+          "trusted-js-glue",
+          "trusted-wasm-engine"
+        ],
+        "modules": [
+          "formal/Exegra/Api.lean",
+          "formal/Exegra/Api/",
+          "formal/wasm/",
+          "src/core/lean.js",
+          "tools/build-formal-wasm.js"
+        ],
+        "notes": "The Lean side (formal/Exegra/Api.lean, formal/Exegra/Api/) is the logic; src/core/lean.js and formal/wasm/glue.c are glue in the trusted base. Built into src/engine/lean/ (generated, not committed); downloads and checkout-independent objects are cached under %LOCALAPPDATA%\\exegra\\cache\\formal-wasm (EXEGRA_CACHE_DIR overrides)."
+      }
+    },
+    {
+      "id": "rust-engine-oracle",
+      "name": "Rust engine (differential oracle)",
+      "parent": "tooling",
+      "category": "logical",
+      "runsIn": "node",
+      "purpose": "The former simulation engine, the Rust crate engine/exegra-engine, kept as an independent implementation the Lean engine is compared against: as WebAssembly in the conformance tests and as the native exegra-sim in the differential check.",
+      "responsibilities": [
+        "Reproduce every golden trace, as WebAssembly (tools/rust-engine.js) and as the native binary",
+        "Give byte-identical traces to the Lean engine on the goldens and on generated inputs (tests/core/conformance.test.js, tests/core/formal-semantics.test.js)"
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "rust",
+        "modules": [
+          "engine/",
+          "tools/build-engine.js",
+          "tools/rust-engine.js"
         ]
       }
     }
@@ -2420,6 +2803,27 @@
       "from": "realisation-panel",
       "to": "model-hash",
       "description": "Hashes the generated files for the recorded events."
+    },
+    {
+      "id": "simulation-engine-calls-lean-call-boundary",
+      "kind": "calls",
+      "from": "simulation-engine",
+      "to": "lean-call-boundary",
+      "description": "Runs every engine input as the Lean function engine.run."
+    },
+    {
+      "id": "lean-call-boundary-calls-formal-semantics",
+      "kind": "calls",
+      "from": "lean-call-boundary",
+      "to": "formal-semantics",
+      "description": "Dispatches engine.run, engine.explore and engine.temporal to runAnyValue, exploreValue and temporalValue of the Lean core."
+    },
+    {
+      "id": "test-suites-calls-rust-engine-oracle",
+      "kind": "calls",
+      "from": "test-suites",
+      "to": "rust-engine-oracle",
+      "description": "The conformance and differential tests compare the Lean engine with the Rust engine."
     }
   ],
 
@@ -12909,7 +13313,7 @@
     },
     {
       "id": "browser-tests-run-real-application",
-      "statement": "The browser tests drive the real application served by the Vite development server, against scratch copies of this specification and of the multiplayer test fixture (and, read-only, a project linked locally), in the locally installed Chrome.",
+      "statement": "The browser tests drive the real application served by the Vite development server, against scratch copies of this specification and of the multiplayer test fixture (one pair per Playwright worker) (and, read-only, a project linked locally), in the locally installed Chrome.",
       "rationale": "They show behaviour in one browser on one machine; other browsers are not exercised."
     },
     {
@@ -12941,6 +13345,46 @@
       "id": "seeded-streams-independent",
       "statement": "Draws from distinct SplitMix64 streams (distinct seeds, or distinct stream names under one seed) behave as independent uniform 64-bit values for the purposes of the simulator.",
       "rationale": "Metric claims treat runs with distinct seeds as independent and identically distributed (the exact binomial test of docs/simulation.md). This rests on the statistical quality of SplitMix64 (it passes BigCrush) and of the FNV-1a and mix64 derivation of stream keys, which is tested, not proved."
+    },
+    {
+      "id": "trusted-lean-kernel",
+      "statement": "The Lean 4 kernel of the toolchain formal/lean-toolchain pins (v4.35.0) accepts only well-typed proof terms.",
+      "rationale": "Trusted base of every lean-theorem claim (WG-4792). The kernel is the one component a proof is checked by; nothing in this repository checks it. A theorem is proved only relative to it and to the three standard axioms propext, Classical.choice and Quot.sound."
+    },
+    {
+      "id": "trusted-lean-compiler-runtime",
+      "statement": "The Lean compiler translates the Lean core faithfully to C, and the Lean v4.35.0 C/C++ runtime, with the two-hunk patch formal/wasm/patches/lean-v4.35.0-runtime-wasm.patch applied, executes that C as Lean defines it.",
+      "rationale": "Trusted base of the claim that the code which runs is the code the theorems are about (WG-4792). The theorems are about Lean definitions; the compiled module (src/engine/lean/) and the native exegra-lean run the C that the compiler emits (lake build for Exegra, `lean -c` of the toolchain for Init and Std), linked with the runtime. The patch fixes string_to_list_core (a 32-bit-only bug, a no-op on 64-bit) and an emscripten-only stub signature."
+    },
+    {
+      "id": "trusted-emscripten-toolchain",
+      "statement": "Emscripten 7.0.0 (clang/LLVM, wasm-ld, binaryen, musl libc, libc++ and the generated JS loader) compiles and links the C of the Lean core and the runtime to WebAssembly (wasm64, Memory64) without changing its meaning.",
+      "rationale": "Pinned in tools/build-formal-wasm.js (emsdk commit and SDK version). The same C is compiled natively for exegra-lean, and the WebAssembly engine is checked byte for byte against goldens and against the Rust engine, but that is testing, not a proof (WG-4792)."
+    },
+    {
+      "id": "trusted-libuv",
+      "statement": "libuv v1.48.0, linked into the WebAssembly module because the Lean runtime references it, does not affect the result of a call: the core reaches none of its I/O.",
+      "rationale": "Pinned by commit in tools/build-formal-wasm.js; compiled from its sources with Lean's emscripten source list (no-proctitle.c). Only error-string paths are reachable from Exegra.Api (WG-4792)."
+    },
+    {
+      "id": "trusted-js-glue",
+      "statement": "The glue between JavaScript and the Lean core (src/core/lean.js, formal/wasm/glue.c, the emscripten-generated exegra-lean.mjs) passes request and reply bytes unchanged and reports failures as errors.",
+      "rationale": "Small and hand-written (glue.c, lean.js) or generated (exegra-lean.mjs); tested by tests/core/lean.test.js, not proved (WG-4792)."
+    },
+    {
+      "id": "trusted-wasm-engine",
+      "statement": "The WebAssembly engine of the host (V8 in Node and Chrome, SpiderMonkey in Firefox) executes the module according to the WebAssembly specification, Memory64 and exception handling included.",
+      "rationale": "Stable Safari does not ship Memory64, so Exegra's Lean core does not run there until it does (decision 2026-11-18, WG-4792)."
+    },
+    {
+      "id": "trusted-os-filesystem",
+      "statement": "The operating system and file system store and return the specification, layout and recorded-results files as written.",
+      "rationale": "Every claim about Exegra's persisted state rests on it; nothing in Exegra checks it."
+    },
+    {
+      "id": "trusted-js-shell",
+      "statement": "The JavaScript shell (the application, the agent command line, the development server and every component not yet ported to Lean) computes what it is specified to compute.",
+      "rationale": "The goal of WG-4785 is that the shell does only I/O and every core computation is a Lean definition with theorems. Until the ports finish, the JavaScript core components are trusted, tested and not proved; claim core-logic-in-lean lists them."
     }
   ],
 
@@ -13320,7 +13764,7 @@
     {
       "id": "persistence-confined-to-workspace",
       "kind": "invariant",
-      "statement": "Project names are validated and every path is resolved inside specs/<project>/ before any read or write; names and paths that escape that directory are refused, and generated files can only be written under generated/.",
+      "statement": "Project names are validated and every path is resolved inside specs/<project>/ before any read or write; names and paths that escape that directory are refused, and generated files can only be written under generated/. The one exception is deliberate: a project.jsonc may name a specification file outside the project directory (a linked project, such as a specification kept in its own repository), which is then read and written there. project.jsonc is not writable through the workspace endpoints (write and import accept only spec.jsonc, layout.jsonc and evidence/results.json), so only a person editing the file on disk can point a project elsewhere.",
       "subjects": ["workspace-service", "write-file"],
       "assumptions": ["tests-exercise-shipped-modules", "filesystem-honours-atomic-rename", "recorded-results-reflect-current-code"],
       "evaluate": { "method": "external-evidence" }
@@ -15556,6 +16000,22 @@
       }
     },
     {
+      "id": "verify-reuses-fresh-outcomes-only",
+      "kind": "invariant",
+      "statement": "A verify run takes the outcome of a test evidence entry from a recorded test run only when that run was complete, the tree did not change while it ran, and its tree stamp equals the stamp of the tree verify runs on; a reference matching no recorded test is run, never assumed to pass.",
+      "subjects": [
+        "verification-pipeline",
+        "recorded-results-file"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "The check ran every test twice (WG-4794). The stamp covers tracked and untracked files by content and the generated engine builds, so an edit after the run, a rebuilt engine or a different Node version makes the recorded outcomes stale and the tests run again.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
       "id": "verify-skip-keeps-recorded-outcome",
       "kind": "invariant",
       "statement": "A verify run that skips a test evidence entry keeps the outcome recorded for that entry before, and records no outcome for it where none was recorded.",
@@ -15650,6 +16110,224 @@
       "assumptions": [],
       "evaluate": {
         "method": "external-evidence"
+      }
+    },
+    {
+      "id": "engine-run-terminates-proved",
+      "kind": "invariant",
+      "statement": "Every run of an engine input that the engine accepts stops: its outcome is never running, and it has at most stepBound(stepLimit) steps.",
+      "subjects": [
+        "formal-semantics",
+        "simulation-engine"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "The theorem Exegra.runInput_terminates of formal/Exegra/Properties.lean, about Exegra.runInput, the definition of a run (WG-4792). The engine runs the implementation Exegra.Impl, equal to the definition on every input by Exegra.Impl.runAnyValue_eq (claim engine-run-refines-definition), so the property holds of what runs. Proved, not tested: it covers every input, not a list of scenarios.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.runInput_terminates",
+        "about": [
+          "Exegra.runInput"
+        ]
+      }
+    },
+    {
+      "id": "lean-engine-is-exegra-lean",
+      "kind": "structural",
+      "statement": "The engine the JavaScript shell calls (engine.run at the Lean call boundary) is the function the native exegra-lean runs: runAny is Json.parse followed by Exegra.Api.call \"engine.run\".",
+      "subjects": [
+        "lean-call-boundary",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "The theorem Exegra.Api.runAny_eq_parse_call of formal/Exegra/Api.lean (WG-4792): the definition on text is Json.parse followed by engine.run. Since WG-4793 engine.run is the implementation Exegra.Impl.runAnyValue, so the proof goes through the refinement theorem Exegra.Impl.runAny_eq; Exegra.Api.implRunAny_eq_parse_call states by rfl that exegra-lean (Exegra.Impl.runAny) and the boundary run one function.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Api.runAny_eq_parse_call",
+        "about": [
+          "Exegra.runAny",
+          "Exegra.Api.call"
+        ]
+      }
+    },
+    {
+      "id": "lean-registry-names-unique",
+      "kind": "structural",
+      "statement": "No two functions registered at the Lean call boundary share a name, so a name selects exactly one function.",
+      "subjects": [
+        "lean-call-boundary"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "The theorem Exegra.Api.registry_names_nodup (by decide), about Exegra.Api.registry (WG-4792). A module port that registers a duplicate name fails lake build.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Api.registry_names_nodup",
+        "about": [
+          "Exegra.Api.registry"
+        ]
+      }
+    },
+    {
+      "id": "lean-boundary-errors-are-values",
+      "kind": "structural",
+      "statement": "Every call through the Lean call boundary returns a reply: an unknown function, a malformed request and a refusal come back as an error value, and the boundary lists its registered functions.",
+      "subjects": [
+        "lean-call-boundary"
+      ],
+      "assumptions": [
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "Supported by tests/core/lean.test.js (WG-4792).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "lean-theorem-method-refuses-unsound-proofs",
+      "kind": "structural",
+      "statement": "A lean-theorem claim is proved only when Lean reports a kernel-checked theorem that depends on no axiom beyond propext, Classical.choice and Quot.sound and whose statement mentions every named implementation constant; sorry, native_decide, an axiom of its own and an off-topic statement are refused.",
+      "subjects": [
+        "claim-evaluator",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Supported by tests/core/lean-theorem.test.js (WG-4792).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "core-logic-in-lean",
+      "kind": "structural",
+      "statement": "Every implemented component of the semantic core is implemented in Lean, so the claims about the core are theorems about the code that runs and the JavaScript shell only does I/O.",
+      "subjects": [
+        "semantic-core"
+      ],
+      "assumptions": [
+        "relationships-match-imports"
+      ],
+      "rationale": "The goal of the programme WG-4785. Violated until the per-module ports finish: the result lists the components that are not Lean yet, and the verify script expects the violation (like edits-only-via-transactions). The subsystem itself and the meta-model and method registry (data, not logic) are left out.",
+      "evaluate": {
+        "method": "implementation-language",
+        "select": {
+          "within": "semantic-core"
+        },
+        "exclude": [
+          "semantic-core",
+          "metamodel",
+          "claim-method-registry"
+        ],
+        "language": "lean",
+        "plannedBy": "WG-4785"
+      }
+    },
+    {
+      "id": "lean-core-runs-in-browser",
+      "kind": "structural",
+      "statement": "The Lean core, compiled to WebAssembly (wasm64), runs in the application page and reproduces golden traces exactly.",
+      "subjects": [
+        "lean-call-boundary",
+        "simulation-engine"
+      ],
+      "assumptions": [
+        "trusted-wasm-engine",
+        "trusted-js-glue"
+      ],
+      "rationale": "Supported by tests/browser/lean-core.spec.js in Chrome (WG-4792). Stable Safari is not supported until it ships Memory64.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "engine-run-refines-definition",
+      "kind": "invariant",
+      "statement": "The engine the application runs (Exegra.Impl.runAnyValue, registered as engine.run and run by exegra-lean) returns exactly what the definition of the semantics (Exegra.runAnyValue) returns, on every parsed engine input of format 1 and format 2.",
+      "subjects": [
+        "formal-semantics",
+        "simulation-engine",
+        "lean-call-boundary"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "The refinement theorem Exegra.Impl.runAnyValue_eq of formal/Exegra/Impl/Refinement.lean (WG-4793), built from one lemma per function of a run (stepC_compile, evalFast_eq, write'_eq, ...). The implementation parses expressions once and evaluates arithmetic on unboxed floats; the theorem carries every theorem about Exegra.runInput over to it.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Impl.runAnyValue_eq",
+        "about": [
+          "Exegra.Impl.runAnyValue",
+          "Exegra.runAnyValue"
+        ]
+      }
+    },
+    {
+      "id": "engine-call-computes-definition",
+      "kind": "structural",
+      "statement": "A call of engine.run at the Lean call boundary computes the definition of the semantics, Exegra.runAnyValue, on its parsed arguments.",
+      "subjects": [
+        "lean-call-boundary",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "The theorem Exegra.Api.call_engine_run_spec of formal/Exegra/Api.lean (WG-4793): the registered function is the implementation (call_engine_run, by rfl), equal to the definition by Exegra.Impl.runAnyValue_eq.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Api.call_engine_run_spec",
+        "about": [
+          "Exegra.Api.call",
+          "Exegra.runAnyValue"
+        ]
+      }
+    },
+    {
+      "id": "fast-json-writer-is-json-write",
+      "kind": "invariant",
+      "statement": "The in-place JSON writer the engine writes traces with (Exegra.Impl.JsonOut.write') gives the text of the definition Exegra.Json.write for every value.",
+      "subjects": [
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime"
+      ],
+      "rationale": "The theorem Exegra.Impl.JsonOut.write'_eq of formal/Exegra/Impl/Json.lean (WG-4793), by mutual induction over values; Json.write is total (structural recursion).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Impl.JsonOut.write'_eq",
+        "about": [
+          "Exegra.Impl.JsonOut.write'",
+          "Exegra.Json.write"
+        ]
       }
     }
   ],
@@ -15879,6 +16557,13 @@
       "description": "Every write site found by pattern in src/, cli/ and tools/ belongs to exactly one listed store and every listed store still has a site; each store's locator, every browser storage key the code writes and every workspace project file appear in a record or a copy of specs/exegra/spec.jsonc. A new write site, key or project file fails it until its store is modelled."
     },
     {
+      "id": "ev-verify-reuses-fresh-outcomes",
+      "claim": "verify-reuses-fresh-outcomes-only",
+      "kind": "test",
+      "ref": "tests/core/outcome-reuse.test.js#outcomes are used only while the tree is the one they ran on",
+      "description": "An outcome file stamped with the current tree answers a reference; with another stamp it answers nothing. Companion tests cover a reference matching no recorded test, failures, skipped tests, mixed matches and the stamp itself."
+    },
+    {
       "id": "ev-verify-skip-keeps-outcome",
       "claim": "verify-skip-keeps-recorded-outcome",
       "kind": "test",
@@ -16010,6 +16695,27 @@
       "kind": "test",
       "ref": "tests/core/model.test.js#test evidence references: an unsafe one is a validation error",
       "description": "An unsafe test reference is a validation error and a plain one is not; validate and verify share one rule."
+    },
+    {
+      "id": "ev-lean-boundary",
+      "claim": "lean-boundary-errors-are-values",
+      "kind": "test",
+      "ref": "tests/core/lean.test.js",
+      "description": "Calls through src/core/lean.js: the registry lists engine.run, an unknown function, a malformed request and refused arguments come back as errors, and a run returns the trace the engine returns."
+    },
+    {
+      "id": "ev-lean-theorem-method",
+      "claim": "lean-theorem-method-refuses-unsound-proofs",
+      "kind": "test",
+      "ref": "tests/core/lean-theorem.test.js",
+      "description": "Lean proves Exegra.runInput_terminates about Exegra.runInput and refuses a sorry, a native_decide, an own axiom and an off-topic statement; the rule on recorded facts; no record gives not evaluated."
+    },
+    {
+      "id": "ev-lean-core-browser",
+      "claim": "lean-core-runs-in-browser",
+      "kind": "test",
+      "ref": "tests/browser/lean-core.spec.js",
+      "description": "In Chrome: the page loads the Lean core through src/core/lean.js, lists its functions, gets an error value for an unknown function and reproduces two golden traces."
     }
   ],
 
@@ -17121,6 +17827,66 @@
       ],
       "retention": "In memory in the browser tab: the last 5000 events (src/app/traffic-recorder.js); lost on reload. No durable file yet (WG-4780).",
       "description": "The real run that Live mode replays through this specification: {seq, id, payload, at, inferred?} per event; at (performance.now) is for display only."
+    },
+    {
+      "id": "formal-wasm-build-output",
+      "name": "Lean wasm build output and cache",
+      "owner": "lean-call-boundary",
+      "key": [
+        "file"
+      ],
+      "fields": [
+        {
+          "name": "file",
+          "type": "relative-path"
+        },
+        {
+          "name": "bytes",
+          "type": "number"
+        }
+      ],
+      "retention": "src/engine/lean/ (loader, .wasm, build-info.json; generated, not committed) and the tool cache (%LOCALAPPDATA%/exegra/cache/formal-wasm or EXEGRA_CACHE_DIR or XDG_CACHE_HOME/exegra/formal-wasm): pinned downloads, patched Lean runtime sources (.exegra-patches marker), compiled objects with stamp files, and linker response files. Written by tools/build-formal-wasm.js through a temporary sibling and a rename; rebuilt when formal/ or a pin changes.",
+      "description": "Derived from formal/ and the pinned toolchain, not from a specification. Loaded only by src/core/lean.js initLean()."
+    },
+    {
+      "id": "lean-theorem-check-file",
+      "name": "Theorem check file",
+      "owner": "verification-pipeline",
+      "key": [
+        "file"
+      ],
+      "fields": [
+        {
+          "name": "file",
+          "type": "absolute-path"
+        },
+        {
+          "name": "text",
+          "type": "lean-source"
+        }
+      ],
+      "retention": "A Check.lean in a fresh temporary directory (os.tmpdir()/exegra-theorems-*), written by tools/lean-theorems.js for one lake env lean run and removed after it.",
+      "description": "The Lean source that asks the kernel to re-check each named theorem and lists its axioms; its results become the theorems section of evidence/results.json."
+    },
+    {
+      "id": "test-outcomes-file",
+      "name": "Recorded test outcomes",
+      "owner": "verification-pipeline",
+      "key": [
+        "file"
+      ],
+      "fields": [
+        {
+          "name": "file",
+          "type": "relative-path"
+        },
+        {
+          "name": "treeStamp",
+          "type": "hash"
+        }
+      ],
+      "retention": ".outcomes/node.json (written by tools/outcomes-node-reporter.js through `npm test`) and .outcomes/playwright.json (tools/outcomes-playwright-reporter.js, through playwright.config.js), replaced by each run, not committed. Each holds every test's outcome and the stamp of the tree it ran on; `exegra verify` reuses an outcome only when the stamp equals the current tree's.",
+      "description": "The per-test outcomes of the last unit and browser runs, so that verify does not run the same tests again."
     }
   ],
   "copies": [

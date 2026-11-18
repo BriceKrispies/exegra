@@ -197,45 +197,54 @@ def parse (text : String) : Except String Value :=
     if rest.isEmpty then .ok v else .error "the input is not JSON: trailing characters"
   | .error e => .error s!"the input is not JSON: {e}"
 
+/-- One character of a string as JSON, with the escape `JSON.stringify` uses for it. -/
+def escape (c : Char) : String :=
+  match c with
+  | '"' => "\\\""
+  | '\\' => "\\\\"
+  | '\n' => "\\n"
+  | '\r' => "\\r"
+  | '\t' => "\\t"
+  | '\x08' => "\\b"
+  | '\x0c' => "\\f"
+  | c =>
+    if c.toNat < 0x20 then
+      let h := Nat.toDigits 16 c.toNat
+      "\\u" ++ String.ofList (List.replicate (4 - h.length) '0' ++ h)
+    else c.toString
+
 /-- A string as JSON, with the escapes `JSON.stringify` uses. -/
 def quote (s : String) : String :=
-  let body := s.toList.foldl (fun acc c =>
-    acc ++ match c with
-      | '"' => "\\\""
-      | '\\' => "\\\\"
-      | '\n' => "\\n"
-      | '\r' => "\\r"
-      | '\t' => "\\t"
-      | '\x08' => "\\b"
-      | '\x0c' => "\\f"
-      | c =>
-        if c.toNat < 0x20 then
-          let h := Nat.toDigits 16 c.toNat
-          "\\u" ++ String.ofList (List.replicate (4 - h.length) '0' ++ h)
-        else c.toString) ""
-  "\"" ++ body ++ "\""
+  "\"" ++ s.toList.foldl (fun acc c => acc ++ escape c) "" ++ "\""
 
 /-- A number as JSON: the shortest text reading back to it; non-finite values are `null`. -/
 def number' (x : Float) : String :=
   if x.isFinite then Num.jsNumberToString x else "null"
 
 mutual
-/-- Compact JSON text of a value. -/
-partial def write : Value → String
+/-- Compact JSON text of a value. A total function, by structural recursion; `undefined`
+properties are left out. -/
+def write : Value → String
   | .undef => "null"
   | .null => "null"
   | .bool b => if b then "true" else "false"
   | .num x => number' x
   | .str s => quote s
-  | .arr _ xs => "[" ++ ",".intercalate (xs.map write) ++ "]"
-  | .obj _ fs => writeObject fs
+  | .arr _ xs => "[" ++ ",".intercalate (writeItems xs) ++ "]"
+  | .obj _ fs => "{" ++ ",".intercalate (writeMembers fs) ++ "}"
 
-partial def writeObject (fs : List (String × Value)) : String :=
-  let items := fs.filterMap fun (k, v) =>
+/-- The JSON texts of array items. -/
+def writeItems : List Value → List String
+  | [] => []
+  | x :: xs => write x :: writeItems xs
+
+/-- The JSON texts `"key":value` of an object's members, leaving out `undefined` ones. -/
+def writeMembers : List (String × Value) → List String
+  | [] => []
+  | (k, v) :: fs =>
     match v with
-    | .undef => none
-    | _ => some (quote k ++ ":" ++ write v)
-  "{" ++ ",".intercalate items ++ "}"
+    | .undef => writeMembers fs
+    | _ => (quote k ++ ":" ++ write v) :: writeMembers fs
 end
 
 end Exegra.Json

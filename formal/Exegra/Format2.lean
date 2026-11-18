@@ -2988,16 +2988,20 @@ end Exegra.V2
 
 namespace Exegra
 
-/-- The engine input of either version, as text to text. Version 1 is run by the format-1
-semantics, unchanged (`runText`); version 2 by `V2.runInput`. -/
-def runAny (text : String) : Except String String := do
-  let v ← Json.parse text
+/-- The engine input of either version, parsed. Version 1 is run by the format-1 semantics,
+unchanged (`runValue`, the body of `runText`); version 2 by `V2.runInput`. -/
+def runAnyValue (v : Value) : Except String String :=
   match v with
   | .obj _ root =>
     match objGet? root "version", objGet? root "format" with
     | some (.num x), some (.str "exegra-sim-input") =>
-      if x == 2 then V2.runInput (← V2.Decode.input root) else runText text
-    | _, _ => runText text
-  | _ => runText text
+      if x == 2 then do V2.runInput (← V2.Decode.input root) else runValue v
+    | _, _ => runValue v
+  | _ => runValue v
+
+/-- `runAnyValue` on JSON text: what `exegra-lean` runs. -/
+def runAny (text : String) : Except String String := do
+  let v ← Json.parse text
+  runAnyValue v
 
 end Exegra

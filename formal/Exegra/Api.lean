@@ -1,0 +1,91 @@
+import Exegra.Api.Basic
+import Exegra.Api.Engine
+
+/-!
+The one entry point of the Lean core for the JavaScript shell (`src/core/lean.js`): a JSON
+request `{"fn": <name>, "args": <JSON>}` to a JSON reply, `{"ok": <result>}` or
+`{"error": <message>}`. The reply is always one of the two: an unknown function, a malformed
+request and a refusal by the function are all `error` replies, never a trap.
+
+**Adding functions.** A module port defines its functions in its own file under `Exegra/Api/`,
+as a list of `Entry` (see `Exegra/Api/Engine.lean`), imports it here and appends the list to
+`modules`. Nothing else changes: the C glue (`formal/wasm/glue.c`), the exported symbol and the
+JS binding take any registered name. `registry_names_nodup` fails the build if two entries share
+a name.
+-/
+
+namespace Exegra.Api
+
+/-- The functions of the module ports, in lookup order. -/
+def modules : List Entry := Engine.entries
+
+def functionsDoc : String := "The registered functions, [{name, doc}], in lookup order."
+
+/-- `[{name, doc}]` as JSON text. -/
+def describe (es : List (String × String)) : String :=
+  Json.write (.arr 0 (es.map fun (n, d) => .obj 0 [("name", .str n), ("doc", .str d)]))
+
+/-- Every function the shell can call: the module ports' and `api.functions`. -/
+def registry : List Entry :=
+  modules ++ [{ name := "api.functions", doc := functionsDoc,
+                fn := fun _ => pure (describe (modules.map (fun e => (e.name, e.doc)) ++
+                  [("api.functions", functionsDoc)])) }]
+
+/-- The function registered under a name. -/
+def lookup (name : String) : Option Fn := (registry.find? (·.name == name)).map (·.fn)
+
+/-- Call a registered function. -/
+def call (name : String) (args : Value) : Except String String :=
+  match lookup name with
+  | some f => f args
+  | none => .error s!"unknown function \"{name}\""
+
+/-- Read a request `{"fn": <name>, "args": <JSON>}`; `args` may be left out. -/
+def request (text : String) : Except String (String × Value) := do
+  let v ← Json.parse text
+  match v with
+  | .obj _ fs =>
+    match objGet? fs "fn" with
+    | some (.str name) => pure (name, (objGet? fs "args").getD .null)
+    | _ => throw "the request has no \"fn\" string"
+  | _ => throw "the request must be an object {\"fn\", \"args\"}"
+
+/-- The reply to one request: `{"ok": <result JSON>}` or `{"error": <message>}`. -/
+def handle (text : String) : String :=
+  match request text >>= fun (name, args) => call name args with
+  | .ok out => "{\"ok\":" ++ out ++ "}"
+  | .error msg => "{\"error\":" ++ Json.quote msg ++ "}"
+
+/-- The exported symbol the C glue calls (`formal/wasm/glue.c`). -/
+@[export exegra_call]
+def callExport (text : String) : String := handle text
+
+/-! ## What the boundary guarantees -/
+
+/-- No two registered functions share a name, so a name selects exactly one function. -/
+theorem registry_names_nodup : (registry.map (·.name)).Nodup := by decide
+
+/-- The engine at the boundary is the implementation `exegra-lean` runs, on the parsed input. -/
+theorem call_engine_run (v : Value) : call "engine.run" v = Impl.runAnyValue v := rfl
+
+/-- The engine at the boundary computes the definition of the semantics (`Exegra.runAnyValue`,
+the function the theorems of `Exegra/Properties.lean` are about), by the refinement theorem
+`Impl.runAnyValue_eq`. -/
+theorem call_engine_run_spec (v : Value) : call "engine.run" v = runAnyValue v :=
+  Impl.runAnyValue_eq v
+
+theorem call_engine_explore (v : Value) : call "engine.explore" v = exploreValue v := rfl
+
+theorem call_engine_temporal (v : Value) : call "engine.temporal" v = temporalValue v := rfl
+
+/-- `exegra-lean`'s engine is the boundary's `engine.run` after parsing its input text. -/
+theorem implRunAny_eq_parse_call (text : String) :
+    Impl.runAny text = (Json.parse text >>= call "engine.run") := rfl
+
+/-- The definition on input text is the boundary's `engine.run` after parsing its input text. -/
+theorem runAny_eq_parse_call (text : String) :
+    runAny text = (Json.parse text >>= call "engine.run") := by
+  rw [← Impl.runAny_eq]
+  rfl
+
+end Exegra.Api

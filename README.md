@@ -7,8 +7,8 @@ Exegra is a self-describing, visual, executable system specification environment
 - **One specification, many views.** Components, relationships, contracts, requirements, decisions, claims, evidence, behavior models, fault models, and data records with their copies all live in one JSONC file, validated with positions. Views include a 3D architecture scene, an inspector, a source editor, and claims, behavior, data and realisation views. The interface is mobile first.
 - **Transactional editing.** Every change, from the UI or from the agent command line (`exegra apply`), goes through typed operations with dry runs, undo and conflict detection.
 - **Claims with evidence.** Claims are evaluated structurally (graph and data-model rules, such as erasure reaching every copy and no shared copy holding personal data), on simulated traces, or from recorded test evidence. A trace claim counts as verified only when its declared negative scenarios each violate it.
-- **Simulation.** A discrete-event simulator, written in Rust and run as WebAssembly, executes behavior state machines under injected faults. Steps play as message flows in the scene. Events can be the requests and responses of contracts, so a trace reads as a request log that is checked against those contracts.
-- **Formal semantics in Lean 4.** The behavior language is defined as an executable semantics in `formal/`. The Rust engine is checked against it on every golden trace and on generated inputs. Determinism, termination and the resource invariants are proved.
+- **Simulation.** A discrete-event simulator, the Lean semantics itself compiled to WebAssembly, executes behavior state machines under injected faults. Steps play as message flows in the scene. Events can be the requests and responses of contracts, so a trace reads as a request log that is checked against those contracts.
+- **Formal semantics in Lean 4.** The behavior language is defined as an executable semantics in `formal/`. It is the engine that runs: compiled to WebAssembly (wasm64) it runs in the browser and in Node, so the theorems are about the code that runs. The former Rust engine is kept as a differential oracle, checked against it on every golden trace and on generated inputs. Determinism, termination and the resource invariants are proved.
 - **Verified exploration.** `exegra prove` explores every ordering of simultaneous events and every combination of declared faults within a bound, using an explorer proved sound in Lean. It reports state invariants and `never`, `precedes` and `eventually` claims as holding, or gives a real counterexample run.
 - **Format 2, in progress.** Instances, resources with capacity, class queues and reservations, and seeded random streams are implemented in Lean and Rust. Workloads, latency, bandwidth and statistical metric claims are specified in `docs/simulation.md` but not built yet.
 
@@ -17,8 +17,9 @@ What Exegra establishes is the consistency of a *design*. Its models are hand-wr
 ## Requirements
 
 - Node.js 24 or later.
-- Rust stable with the `wasm32-unknown-unknown` target (`rustup target add wasm32-unknown-unknown`) and `wasm-bindgen-cli` 0.2.122 exactly (`cargo install wasm-bindgen-cli --version 0.2.122 --locked`). The simulation engine is written in Rust (`engine/`) and runs in the browser and in Node as WebAssembly. On Windows the MSVC toolchain is used (`stable-x86_64-pc-windows-msvc`) unless `RUSTUP_TOOLCHAIN` says otherwise.
-- A Chromium-based browser to use the application.
+- elan with the Lean toolchain of `formal/lean-toolchain`, git, and network access for the first `npm run build:formal-wasm` (it fetches emscripten 7.0.0, the Lean runtime sources and libuv into a cache outside the repository).
+- Rust stable with the `wasm32-unknown-unknown` target (`rustup target add wasm32-unknown-unknown`) and `wasm-bindgen-cli` 0.2.122 exactly (`cargo install wasm-bindgen-cli --version 0.2.122 --locked`). The Rust engine (`engine/`) is the differential oracle the tests compare the Lean engine with. On Windows the MSVC toolchain is used (`stable-x86_64-pc-windows-msvc`) unless `RUSTUP_TOOLCHAIN` says otherwise.
+- A browser with WebAssembly Memory64 to use the application: Chrome 133+ or Firefox 134+. Stable Safari does not support Memory64 yet, so Exegra does not run there.
 - For `npm run test:browser`: an installed Google Chrome. The Playwright configuration uses `channel: 'chrome'`, so no browser is downloaded.
 
 ## Quick start
@@ -28,13 +29,14 @@ npm install
 npm run dev
 ```
 
-`npm run dev` first builds the simulation engine (`npm run build:engine`, below). Open the URL Vite prints (default `http://127.0.0.1:5173/`). Switch project with the picker in the app bar. Saving works only under `npm run dev`; a production build (`npm run build`, `npm run preview`) bundles the shipped specifications and is read-only.
+`npm run dev` first builds the Rust oracle and the Lean core (`npm run build:engine`, `npm run build:formal-wasm`, below). Open the URL Vite prints (default `http://127.0.0.1:5173/`). Switch project with the picker in the app bar. Saving works only under `npm run dev`; a production build (`npm run build`, `npm run preview`) bundles the shipped specifications and is read-only.
 
 ## Scripts
 
 | Script | What it does |
 |---|---|
-| `npm run build:engine` | Builds the Rust simulation engine for WebAssembly (`cargo build --release --target wasm32-unknown-unknown -p exegra-engine-wasm` in `engine/`, then `wasm-bindgen --target web --out-dir src/engine/pkg`). `src/engine/pkg/` is generated and not committed. `dev`, `build`, `test`, `test:browser`, `typecheck`, `generate` and `verify` run it first. |
+| `npm run build:formal-wasm` | Builds the Lean core (`formal/`) to WebAssembly (wasm64) into `src/engine/lean/` from pinned inputs; the engine Exegra runs. Generated, not committed; caches downloads outside the repository ([docs/simulation.md](docs/simulation.md), "Building and loading the engine"). `dev`, `build`, `test`, `test:browser`, `generate` and `verify` run it first. |
+| `npm run build:engine` | Builds the Rust engine, the differential oracle, for WebAssembly (`cargo build --release --target wasm32-unknown-unknown -p exegra-engine-wasm` in `engine/`, then `wasm-bindgen --target web --out-dir src/engine/pkg`). `src/engine/pkg/` is generated and not committed. `dev`, `build`, `test`, `test:browser`, `typecheck`, `generate` and `verify` run it first. |
 | `npm run dev` | Vite dev server with the persistence middleware (the only place edits are saved). |
 | `npm run build` | Production build into `dist/`. No write path; the app reports its save state as read-only. |
 | `npm run preview` | Serves the production build. |
@@ -106,13 +108,14 @@ Every command prints one JSON envelope (`ok`, `command`, `project`, `semanticHas
 
 ```
 src/core/      semantic core: parse, validate, operations, project, expr, sim-input, engine (the simulation engine facade), claims, projections, layout, generate/
-src/engine/    pkg/: the WebAssembly simulation engine, generated by npm run build:engine
+src/engine/    lean/: the Lean core as WebAssembly (npm run build:formal-wasm); pkg/: the Rust oracle (npm run build:engine); both generated
 src/render/    Three.js scene view, camera rig, geometry, labels, palette
 src/ui/        HTML panels (shell, toolbar, explorer, inspector, source editor, simulation, verification, realisation)
 src/app/       session (the object UI modules talk to), main (composition root), the simulation worker and its runner
 src/persist/   browser client of the dev-server persistence boundary
 tools/         workspace service, Vite plugin, traceability, spec checker, engine build, conformance runner, benchmark generator, Markdown importer
-engine/        the simulation engine in Rust: exegra-engine (library and the native binary exegra-sim), exegra-engine-wasm
+formal/        the Lean core: the semantics, its proofs, the call boundary (Exegra/Api*), wasm/ (C glue and runtime patch)
+engine/        the Rust engine, kept as a differential oracle: exegra-engine (library and the native binary exegra-sim), exegra-engine-wasm
 cli/           agent command line
 specs/         exegra, benchmark (spec.jsonc, optional layout.jsonc, evidence/, generated/); linked projects (git-ignored) hold project.jsonc, and import-map.jsonc when converted from Markdown
 tests/         core (node:test), browser (Playwright), conformance/ (golden engine inputs and traces), fixtures/ (the multiplayer example)
