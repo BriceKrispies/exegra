@@ -883,3 +883,10 @@ registerProjection('data', (model, view, ctx) => {
   if (!records.length && !copies.length) notes.push('The model declares no records or copies.');
   return { viewId: view.id, projection: 'data', nodes, edges, legend: [...legend.values()], notes };
 }, { available: (model) => (model.byKind.record ?? []).length + (model.byKind.copy ?? []).length > 0 });
+
+// The reader projection draws no scene: the application shows a reading surface in its
+// place, built from the view's reader blocks by src/core/reader.js.
+registerProjection('reader', (model, view, ctx) => {
+  void model; void ctx;
+  return { viewId: view.id, projection: 'reader', nodes: [], edges: [], legend: [], notes: ['A reading view: the page replaces the scene.'] };
+});

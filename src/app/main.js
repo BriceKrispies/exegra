@@ -11,6 +11,7 @@ import { openConnectDialog } from '../ui/dialogs.js';
 import { mountSimPanel } from '../ui/sim-panel.js';
 import { mountVerificationPanel } from '../ui/verification-panel.js';
 import { mountRealisationPanel } from '../ui/realisation-panel.js';
+import { mountReader } from '../ui/reader.js';
 import { createSceneView } from '../render/scene-view.js';
 
 const session = createSession();
@@ -46,6 +47,7 @@ mountSourceEditor(shell.source, session, { show: () => shell.show('source') });
 mountSimPanel(shell.simulation, session);
 mountVerificationPanel(shell.verification, session);
 mountRealisationPanel(shell.realisation, session);
+mountReader(/** @type {HTMLElement} */ (document.getElementById('reader-host')), session);
 shell.setStatsProvider(() => view.getStats());
 
 // ---- session -> scene ------------------------------------------------------

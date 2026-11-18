@@ -358,7 +358,7 @@
       "parent": "visualization",
       "category": "logical",
       "runsIn": "both",
-      "purpose": "Derives a flat scene (nodes, edges, legend, notes) from the model for a declared view with one of five projections (structural, claims, behavior, references, data); a view is never a separate dataset and every node and edge is backed by a real entity.",
+      "purpose": "Derives a flat scene (nodes, edges, legend, notes) from the model for a declared view with one of six projections (structural, claims, behavior, references, data, reader); a view is never a separate dataset and every node and edge is backed by a real entity.",
       "responsibilities": [
         "List the views declared in the specification, plus an implicit view for each projection type without a declared view",
         "Project the structural, claims and behavior projections, applying view filters (categories, relationship kinds, within, tags) and display options",
@@ -366,7 +366,8 @@
         "Handle collapsed subsystems (lifted edges), hidden entities, isolation, claim focus, scenario focus and the current simulation step",
         "Take node shapes, colours and line styles from the effective vocabulary of the model; entities of declared kinds take the shape and colour their kind declares",
         "Derive the message flow of a simulation step (src/core/flows.js): the sender is the subject of the behavior whose transition emitted the event, or outside for a scenario stimulus or an injected fault; the receivers are the subjects of the behaviors that fired on it; the path follows the scene edge between their drawn nodes, and is marked unshown when only a relationship the view does not draw connects them, or undeclared when none does",
-        "Project the Data view when the model declares records or copies: records, copies and the components that own or hold them, with edges from of, heldBy and owner; copies with data-rule findings are marked violated"
+        "Project the Data view when the model declares records or copies: records, copies and the components that own or hold them, with edges from of, heldBy and owner; copies with data-rule findings are marked violated",
+        "Register the reader projection, which draws no scene: its views are read on the reader surface"
       ],
       "ports": [
         { "id": "projection-scene-in", "name": "Project scene", "direction": "provides", "contract": "project-scene", "protocol": "in-process call", "description": "Project a model and a view into a SceneModel." }
@@ -683,6 +684,7 @@
           "src/styles/main.css",
           "src/styles/overlay.css",
           "src/styles/panels.css",
+          "src/styles/reader.css",
           "src/styles/realisation.css",
           "src/styles/reset.css",
           "src/styles/scene.css",
@@ -1669,6 +1671,54 @@
         ],
         "notes": "formal/Exegra/Integrity.lean: Facts (a search tree), Term, Formula, Sat (the meaning), eval and eval_iff, refutes and refutes_sound, Facts.find_complete, cex and the exegra-lean integrity protocol; axioms pinned with #guard_msgs. The commands are exegra integrity and exegra prove-integrity (cli/commands.js)."
       }
+    },
+    {
+      "id": "reader-pages",
+      "name": "Reader pages",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Derives the page of a reader view from the model and the view's reader blocks: text, counts by a classified property, tables and lists with grouping, facets and conditions, document sections with the tables their markers place, and an index of kinds. Knows no particular specification.",
+      "responsibilities": [
+        "Resolve each block of view.reader.blocks into plain page data whose every row, count and section is an entity of the model",
+        "Classify a text property by the block's rules (first matching pattern wins) into a value, a label and a tone",
+        "Follow dotted paths through references and nested objects for grouping, columns, facets and conditions",
+        "Split a section body into prose and the tables its {{entity:id}} markers place, and list a document's sections in reading order",
+        "Give a view without blocks the system's description, an index of its kinds and the outline of its first document, and give each kind a page of its own"
+      ],
+      "unknowns": [
+        "Pages are derived in full on every scene change; a very large kind is cut to the first 300 matching rows on the surface, not paged."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/reader.js"
+        ]
+      }
+    },
+    {
+      "id": "reader-surface",
+      "name": "Reader surface",
+      "parent": "application",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "Shows the page of the current reader view in place of the scene, with the scene's controls and overlay hidden, and turns every entity on it into a link that selects the entity through the session, so the inspector shows and edits it.",
+      "responsibilities": [
+        "Replace the scene while the current view uses the reader projection and give it back otherwise",
+        "Draw text, counts, tables, lists, document outlines and sections, and the index of kinds with a page per kind",
+        "Keep each view's facets, text filter, show-all choice, open kind and open section while the model changes",
+        "Mark the selected entity on the page without redrawing it, and redraw on scene and project events",
+        "Link refs written in prose (an entity's ref property) to their entities"
+      ],
+      "unknowns": [
+        "Filters live only in memory; they are not remembered across reloads."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/reader.js"
+        ]
+      }
     }
   ],
 
@@ -2455,6 +2505,48 @@
       "from": "integrity-rules",
       "to": "formal-semantics",
       "description": "Rules are proved in the formal/ Lean project, built with it."
+    },
+    {
+      "id": "visual-interaction-calls-reader-surface",
+      "kind": "calls",
+      "from": "visual-interaction",
+      "to": "reader-surface",
+      "description": "Mounts the reader surface."
+    },
+    {
+      "id": "reader-surface-calls-reader-pages",
+      "kind": "calls",
+      "from": "reader-surface",
+      "to": "reader-pages",
+      "description": "Derives the page of the current reader view, a kind's page and section bodies."
+    },
+    {
+      "id": "reader-surface-calls-session",
+      "kind": "calls",
+      "from": "reader-surface",
+      "to": "session",
+      "description": "Selects entities; reads the model, the views, the current view and the scene's projection."
+    },
+    {
+      "id": "reader-surface-subscribes-session",
+      "kind": "subscribes",
+      "from": "reader-surface",
+      "to": "session",
+      "description": "Redraws on scene and project events; marks the selection on selection events."
+    },
+    {
+      "id": "reader-surface-calls-dom-helpers",
+      "kind": "calls",
+      "from": "reader-surface",
+      "to": "dom-helpers",
+      "description": "Builds its elements with the shared helpers."
+    },
+    {
+      "id": "reader-pages-calls-queries",
+      "kind": "calls",
+      "from": "reader-pages",
+      "to": "queries",
+      "description": "Uses own() for keys the specification supplies."
     }
   ],
 
@@ -5349,6 +5441,57 @@
       "evaluate": {
         "method": "external-evidence"
       }
+    },
+    {
+      "id": "reader-pages-come-from-model",
+      "kind": "invariant",
+      "statement": "A reader page is derived from the model and its view alone: every row, count and section it shows is an entity of the model selected by the view's kind and conditions, grouped, classified and faceted by the view's rules, and a view without blocks reads the system, an index of its kinds and its first document.",
+      "subjects": [
+        "reader-pages",
+        "projection-system"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "reader-blocks-validated",
+      "kind": "invariant",
+      "statement": "A reader block carrying a field the meta-model does not define is refused with an error, so a page cannot silently ignore part of its definition.",
+      "subjects": [
+        "reader-pages",
+        "metamodel",
+        "parser"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "reader-links-select-through-session",
+      "kind": "invariant",
+      "statement": "The reader surface replaces the scene only while the current view uses the reader projection, a link on it selects its entity through the session, and the page follows a committed edit.",
+      "subjects": [
+        "reader-surface",
+        "session",
+        "inspector"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "browser-tests-run-real-application",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
     }
   ],
 
@@ -5603,6 +5746,62 @@
       "kind": "test",
       "ref": "tests/core/formal-integrity.test.js",
       "description": "Every fixture rule holds with a proof by reflection checked by the kernel with standard axioms only; every mutation is refuted from its stated witness; on 25 seeded random mutations the Lean checker and the JavaScript evaluator give the same verdict and counterexamples for every rule, each seen holding and failing. Skipped, with a message, without Lake."
+    },
+    {
+      "id": "ev-reader-counts",
+      "claim": "reader-pages-come-from-model",
+      "kind": "test",
+      "ref": "tests/core/reader.test.js#counts classify text and group by a reference",
+      "description": "Counts classify a text property and group by a referenced entity."
+    },
+    {
+      "id": "ev-reader-table",
+      "claim": "reader-pages-come-from-model",
+      "kind": "test",
+      "ref": "tests/core/reader.test.js#a table groups rows, classifies the status column, links references and offers facets",
+      "description": "A table groups, classifies, links references and offers facets."
+    },
+    {
+      "id": "ev-reader-list",
+      "claim": "reader-pages-come-from-model",
+      "kind": "test",
+      "ref": "tests/core/reader.test.js#a list honours where and marks rows hidden until asked",
+      "description": "A list keeps only rows that meet its conditions and marks the hidden ones."
+    },
+    {
+      "id": "ev-reader-sections",
+      "claim": "reader-pages-come-from-model",
+      "kind": "test",
+      "ref": "tests/core/reader.test.js#section bodies split into prose and the tables their markers place",
+      "description": "Section bodies split into prose and tables; the outline follows reading order."
+    },
+    {
+      "id": "ev-reader-default",
+      "claim": "reader-pages-come-from-model",
+      "kind": "test",
+      "ref": "tests/core/reader.test.js#a view without blocks reads the system, an index of kinds and the document",
+      "description": "A view without blocks gives the default page and a page per kind."
+    },
+    {
+      "id": "ev-reader-unknown-field",
+      "claim": "reader-blocks-validated",
+      "kind": "test",
+      "ref": "tests/core/reader.test.js#unknown fields in a reader block are refused",
+      "description": "An unknown block field is an error."
+    },
+    {
+      "id": "ev-reader-browser-select",
+      "claim": "reader-links-select-through-session",
+      "kind": "test",
+      "ref": "tests/browser/reader.spec.js#reader view replaces the scene and its links select entities",
+      "description": "The reader replaces the scene, a link selects its entity, and the scene returns on leaving the view."
+    },
+    {
+      "id": "ev-reader-browser-edit",
+      "claim": "reader-links-select-through-session",
+      "kind": "test",
+      "ref": "tests/browser/reader.spec.js#reader page follows an edit of the model",
+      "description": "A committed edit shows on the page."
     }
   ],
 

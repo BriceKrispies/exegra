@@ -46,7 +46,7 @@
     "shapes": ["box", "chamfer", "cylinder", "tablet", "octa", "hex", "pipe", "sphere", "diamond", "capsule"],
     "colors": ["slate", "blue", "amber", "teal", "violet", "steel", "rose", "green", "red", "neutral"],
     "lines": ["solid", "dashed", "dotted"],
-    "projections": ["structural", "claims", "behavior", "references", "data"],
+    "projections": ["structural", "claims", "behavior", "references", "data", "reader"],
     "propertyTypes": ["string", "text", "boolean", "number", "enum"]
   },
   "entities": {
@@ -421,6 +421,37 @@
             "colorBy": { "type": "enum", "values": ["category", "implementation", "trustZone"], "label": "Color by" },
             "depth": { "type": "number", "label": "Reference depth", "doc": "For the references projection: how many reference hops around the focused entity to draw (1 to 3)." },
             "layout": { "type": "enum", "values": ["auto", "layered", "layered-down", "packed", "radial"], "label": "Layout method", "doc": "Presentation only. Default for this view; a viewer may choose another without changing the model." }
+          }
+        },
+        "reader": {
+          "type": "object", "label": "Reader", "doc": "For the reader projection: the page, as blocks read top to bottom.",
+          "fields": {
+            "blocks": { "type": "list", "label": "Blocks", "items": {
+                "type": "object",
+                "fields": {
+                  "type": { "type": "enum", "values": ["text", "counts", "table", "list", "document", "sections", "index"], "required": true, "label": "Block type" },
+                  "title": { "type": "string", "label": "Title" },
+                  "text": { "type": "text", "label": "Text", "doc": "For a text block: the paragraph, in plain Markdown." },
+                  "kind": { "type": "string", "label": "Entity kind", "doc": "For counts, table and list blocks: the kind of entity they read." },
+                  "where": { "type": "list", "items": { "type": "object", "fields": { "property": { "type": "string", "required": true, "label": "Property" }, "set": { "type": "boolean", "label": "Is set" }, "equals": { "type": "string", "label": "Equals" }, "matches": { "type": "string", "label": "Matches", "doc": "A case-insensitive regular expression." } } }, "label": "Where", "doc": "Conditions every entity shown must meet." },
+                  "property": { "type": "string", "label": "Counted property", "doc": "For a counts block: the property whose values are counted." },
+                  "classify": { "type": "list", "items": { "type": "object", "fields": { "pattern": { "type": "string", "required": true, "label": "Pattern", "doc": "A case-insensitive regular expression tested against the text." }, "value": { "type": "string", "required": true, "label": "Value" }, "label": { "type": "string", "label": "Label" }, "tone": { "type": "enum", "values": ["done", "partial", "todo", "open", "danger", "none"], "label": "Tone" } } }, "label": "Classify", "doc": "Rules mapping a text property to a status value; the first matching pattern wins." },
+                  "groupBy": { "type": "string", "label": "Group by", "doc": "A property, or a dotted path through references such as table.section." },
+                  "columns": { "type": "list", "items": { "type": "object", "fields": { "property": { "type": "string", "required": true, "label": "Property" }, "label": { "type": "string", "label": "Label" }, "status": { "type": "boolean", "label": "Status", "doc": "Classify this column by the block's classify rules and show it as a status." } } }, "label": "Columns", "doc": "For a table block; without columns the kind's first properties are shown." },
+                  "titleProperty": { "type": "string", "label": "Title property", "doc": "For a list block: the property shown as each item's title." },
+                  "bodyProperty": { "type": "string", "label": "Body property" },
+                  "metaProperties": { "type": "list", "items": { "type": "string" }, "label": "Meta properties" },
+                  "statusProperty": { "type": "string", "label": "Status property", "doc": "For a list block: the property classified as each item's status." },
+                  "facet": { "type": "string", "label": "Facet", "doc": "A property whose values become filter choices." },
+                  "facetLabel": { "type": "string", "label": "Facet label" },
+                  "facetSeparator": { "type": "string", "label": "Facet separator", "doc": "Splits the facet text into several values, such as \", \"." },
+                  "hideWhenSet": { "type": "string", "label": "Hide when set", "doc": "Entities with this property set are hidden until the reader asks to see them." },
+                  "hideLabel": { "type": "string", "label": "Hide label" },
+                  "search": { "type": "boolean", "label": "Text filter" },
+                  "document": { "type": "string", "label": "Document", "doc": "For a document block: the document id; without it, the first document." },
+                  "ids": { "type": "list", "items": { "type": "string" }, "label": "Entity ids", "doc": "For a sections block: the sections or tables to show, in order." }
+                }
+              } }
           }
         }
       }
