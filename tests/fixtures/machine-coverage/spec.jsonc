@@ -1,0 +1,40 @@
+{
+  // Transition and guard coverage of a shipped machine (WG-4965, docs/coverage.md). The door's only scenario
+  // offers a code that is too short, so it covers t-open-else and the false outcome of t-open's guard; the search
+  // finds a long enough code (t-open, its guard true), a close (t-close) and a wait past the lock's timeout
+  // (t-lock). Nothing enters "jammed", so t-unjam is the unreachable transition (machine.transition-unreachable).
+  "exegra": "0.1",
+  "system": { "id": "doors", "name": "Doors" },
+  "components": [
+    { "id": "door-service", "name": "Door service", "category": "computational", "purpose": "Opens doors.", "implementation": { "status": "manual" } }
+  ],
+  "events": [
+    { "id": "ev-code", "name": "Code entered", "payload": [ { "name": "n", "type": "u32" } ] },
+    { "id": "ev-close", "name": "Close" },
+    { "id": "ev-reset", "name": "Reset" },
+    { "id": "ev-lock-due", "name": "Lock due", "elapsed": true }
+  ],
+  "behaviors": [
+    {
+      "id": "door", "name": "Door", "subject": "door-service", "initial": "closed", "level": "implementation",
+      "storage": { "durability": "memory" },
+      "variables": [ { "name": "opens", "type": "number", "initial": 0, "repr": "u32" } ],
+      "states": [
+        { "id": "closed", "name": "Closed", "ignores": ["ev-close", "ev-reset", "ev-lock-due"] },
+        { "id": "open", "name": "Open", "ignores": ["ev-code", "ev-reset"] },
+        { "id": "jammed", "name": "Jammed", "ignores": ["ev-code", "ev-close", "ev-lock-due"] }
+      ],
+      "transitions": [
+        { "id": "t-open", "from": "closed", "to": "open", "on": "ev-code", "guard": "event.n > 2",
+          "effects": [ { "set": "opens", "to": "opens + 1" }, { "timer": "lock", "after": 30, "emit": "ev-lock-due" } ] },
+        { "id": "t-open-else", "from": "closed", "to": "closed", "on": "ev-code", "otherwise": true },
+        { "id": "t-close", "from": "open", "to": "closed", "on": "ev-close", "otherwise": true, "effects": [ { "cancel": "lock" } ] },
+        { "id": "t-lock", "from": "open", "to": "closed", "on": "ev-lock-due", "otherwise": true },
+        { "id": "t-unjam", "from": "jammed", "to": "closed", "on": "ev-reset", "otherwise": true }
+      ]
+    }
+  ],
+  "scenarios": [
+    { "id": "short-code", "name": "A code that is too short", "behaviors": ["door"], "timeUnit": "ms", "steps": [ { "at": 0, "event": "ev-code", "payload": { "n": 1 } } ] }
+  ]
+}

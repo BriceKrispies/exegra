@@ -30,11 +30,18 @@ structure Pending where
   source : Source
   deriving Inhabited
 
-/-- One machine: a behavior's state and variables. -/
+/-- One machine: a behavior's state and variables, and the declared types of the references its
+expressions read (the behavior's `types` in the engine input; not part of the trace). -/
 structure Machine where
   state : String
   vars : List (String × Value)
+  types : List (String × STy) := []
   deriving Inhabited
+
+/-- The declared types a machine's expressions are evaluated with. -/
+def machineTys : Option Machine → TyEnv
+  | some m => tyLookup m.types
+  | none => TyEnv.untyped
 
 /-- A configuration: logical time, one machine per behavior (in creation order), and the
 pending queue ordered by `(time, seq)`. -/

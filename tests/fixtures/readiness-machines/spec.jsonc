@@ -1,0 +1,67 @@
+{
+  "exegra": "0.1",
+  "system": { "id": "sessions", "name": "Sessions" },
+  "components": [
+    { "id": "svc", "name": "Session service", "category": "computational", "purpose": "Holds sessions." },
+    { "id": "mailer", "name": "Mailer", "category": "external", "purpose": "Sends notes." }
+  ],
+  "records": [
+    { "id": "session", "name": "Session", "owner": "svc", "key": ["id"],
+      "fields": [ { "name": "id", "type": "string" }, { "name": "other", "type": "string" }, { "name": "count", "type": "u32" }, { "name": "state", "type": "string" } ] },
+    { "id": "archive", "name": "Archived session", "owner": "svc", "key": ["id"],
+      "fields": [ { "name": "id", "type": "string" } ] },
+    { "id": "tally-rec", "name": "Tally", "owner": "svc", "key": ["tid"],
+      "fields": [ { "name": "tid", "type": "tally-id" }, { "name": "sum", "type": "u16" }, { "name": "phase", "type": "phase" }, { "name": "label", "type": "string" } ] }
+  ],
+  "types": [
+    { "id": "tally-id", "name": "Tally id", "kind": "id", "repr": "string" },
+    { "id": "phase", "name": "Phase", "kind": "enum", "values": ["open", "shut"] }
+  ],
+  "events": [
+    { "id": "ev-start", "name": "Start", "payload": [ { "name": "n", "type": "u32" } ] },
+    { "id": "ev-tick", "name": "Tick", "elapsed": true },
+    { "id": "ev-bump", "name": "Bump" },
+    { "id": "ev-note", "name": "Note", "delivery": "at-least-once", "payload": [ { "name": "n", "type": "u32" } ] }
+  ],
+  "behaviors": [
+    {
+      "id": "machine", "name": "Session machine", "subject": "svc", "initial": "idle", "level": "implementation",
+      "variables": [ { "name": "count", "type": "number", "initial": 0, "repr": "u32" } ],
+      "instances": { "key": "id", "storedIn": "session" }, "storage": { "record": "session", "key": "id" },
+      "transaction": { "scope": "transition", "isolation": "serializable" },
+      "states": [
+        { "id": "idle", "name": "Idle", "ignores": ["ev-tick"] },
+        { "id": "waiting", "name": "Waiting" },
+        { "id": "closed", "name": "Closed", "terminal": true }
+      ],
+      "transitions": [
+        { "id": "t-start", "from": "idle", "to": "waiting", "on": "ev-start", "guard": "event.n > 0",
+          "effects": [
+            { "set": "count", "to": "event.n" },
+            { "timer": "t1", "after": 5, "emit": "ev-tick" },
+            { "emit": "ev-note", "to": "mailer", "payload": { "n": "count" } }
+          ] },
+        { "id": "t-start-else", "from": "idle", "to": "idle", "on": "ev-start", "otherwise": true },
+        { "id": "t-waiting-start", "from": "waiting", "to": "waiting", "on": "ev-start", "otherwise": true },
+        { "id": "t-tick", "from": "waiting", "to": "closed", "on": "ev-tick", "otherwise": true }
+      ]
+    },
+    {
+      "id": "tally", "name": "Tally machine", "subject": "svc", "initial": "t-open", "level":"implementation",
+      "variables": [ { "name": "total", "type": "number", "initial": 0, "repr": "u16" } ],
+      "storage": { "record": "tally-rec", "key": "tid", "fields": { "total": "sum" }, "state": "phase", "stateValues": { "t-open": "open", "t-shut": "shut" } },
+      "transaction": { "scope": "transition", "isolation": "snapshot" },
+      "states": [
+        { "id": "t-open", "name": "Open" },
+        { "id": "t-shut", "name": "Shut", "terminal": true }
+      ],
+      "transitions":[
+        { "id": "t-bump-shut", "from": "t-open", "to": "t-shut", "on": "ev-bump", "guard": "total > 3" },
+        { "id": "t-bump", "from": "t-open", "to": "t-open", "on": "ev-bump", "otherwise": true, "effects": [ { "set": "total", "to": "total + 1" } ] }
+      ]
+    }
+  ],
+  "scenarios": [
+    { "id": "run", "name": "Run", "behaviors": ["machine"], "timeUnit": "ms", "steps": [ { "at": 0, "event": "ev-start", "payload": { "n": 1 } } ] }
+  ]
+}

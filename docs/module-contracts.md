@@ -206,6 +206,13 @@ Status rules:
   records `implementation.language` equal to `language` → `verified`; otherwise `violated`,
   listing the components by language with progress and `plannedBy`; nothing selected or a
   component without a language → `inconclusive`.
+- `refines`: run each scenario of the implementation behavior (the listed ones, or every scenario
+  that runs it) with its own faults and check, step by step, that its initial configurations and
+  every transition it fires map through its `refinement` to the transition its model would fire, or
+  to a stutter (src/core/refinement.js; docs/claims-and-evidence.md, Refinement). All pass with at
+  least one matched model step → `verified`, scoped to those traces; the first failing step →
+  `violated` with `counterexample.reason` and `counterexample.trace`; a run ending in `error`, an
+  unsupported model expression, or only stutters → `inconclusive`.
 - `model-holds` is the status of a metric-bound claim over the model, with its stated parameters: it holds
   in the model at the stated confidence over its runs. It is never `verified` or `supported`, and says nothing
   about a system until calibrated (docs/simulation.md, Claims over metrics).

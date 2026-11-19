@@ -8,11 +8,27 @@ import { parseExpr, exprRefs } from './expr.js';
 import { CLAIM_METHODS } from './claim-methods.js';
 import { own } from './own.js';
 import { validateFaultModels } from './fault-model.js';
+import { scenarioInputDiagnostics } from './scenario-input.js';
+import { checkCodegenConsistency, exprClass, typeClass } from './codegen-model.js';
+import { checkTypeShapes } from './type-shapes.js';
+import { checkLanguages } from './language.js';
+import { checkFunctions } from './function.js';
+import { checkTenantData } from './tenant-data.js';
+import { checkDerivations } from './derivation.js';
+import { checkConstructConsistency } from './constructs.js';
+import { checkUiConsistency } from './ui.js';
+import { checkTelemetryConsistency } from './telemetry.js';
+
+import { checkAccessConsistency } from './access.js';
+import { checkCapabilityConsistency } from './capabilities.js';
+import { READINESS_RULES } from './readiness.js';
+import { notImplemented } from './realisation.js';
 import { checkDataConsistency, dataRuleDiagnostics, RULE_IDS } from './data-model.js';
 import { contractFields, contractErrorCodes } from './contract-trace.js';
 import { parseType, typeAssignable, typeText } from './type-expr.js';
 import { integrityDiagnostics } from './integrity.js';
 import { minRuns, parseRational } from './metric-stats.js';
+import { machineReadiness, keyFieldsOf } from './readiness-machines.js';
 import { testRefProblem, describeTestRefProblem } from './evidence-ref.js';
 
 /** @typedef {import('./types.js').Model} Model */
@@ -106,6 +122,38 @@ export function validateModel(model, opts = {}) {
   };
 
   /**
+   * A timer delay read at run time, {expr, simulate} (docs/model-and-format.md, "User interface, third set"):
+   * only on an implementation-level machine; expr is an expression of a number over the machine's variables,
+   * time and the event's payload, which generated code evaluates when the timer is set; simulate is the delay
+   * the simulator uses (a number, a duration or a distribution), since a simulated run has no such value.
+   * @param {any} fx @param {Entity} t @param {Entity} b @param {any} scope @param {(string|number)[]} sub
+   */
+  const checkTimerDelay = (fx, t, b, scope, sub) => {
+    const at = [...sub, 'after'];
+    const a = fx.after;
+    const extra = Object.keys(a).filter((k) => k !== 'expr' && k !== 'simulate');
+    if (extra.length) report('error', 'effect.after', t, `A timer delay read at run time is {expr, simulate}; ${extra.join(', ')} ${extra.length > 1 ? 'are' : 'is'} not part of it.`, at);
+    if (b.data.level !== 'implementation') report('error', 'effect.after', t, `Timer "${fx.timer}" reads its delay at run time, which only an implementation-level machine may do; behavior "${b.id}" is not one.`, at);
+    const sim = a.simulate;
+    if (!((typeof sim === 'number' && sim >= 0) || typeof sim === 'string' || (sim && typeof sim === 'object' && !Array.isArray(sim)))) report('error', 'effect.after', t, `Timer "${fx.timer}" reads its delay at run time and needs "simulate", the delay a simulated run uses (a non-negative number, a duration or a distribution).`, at);
+    if (typeof a.expr !== 'string') { report('error', 'effect.after', t, `The run-time delay of timer "${fx.timer}" is an expression (a string).`, [...at, 'expr']); return; }
+    checkExpr(a.expr, t, [...at, 'expr'], scope);
+    const parsed = parseExpr(a.expr);
+    if (!parsed.ok) return;
+    const vars = varsOf(b);
+    const payload = new Map((Array.isArray(scope.event?.data.payload) ? scope.event.data.payload : []).filter((/** @type {any} */ f) => f && typeof f.name === 'string').map((/** @type {any} */ f) => [f.name, f.type]));
+    const VAR_CLASS = { number: 'number', boolean: 'bool', string: 'string' };
+    const r = exprClass(parsed.ast, (path) => {
+      if (path.length === 1 && path[0] === 'time') return 'number';
+      if (path.length === 1) return /** @type {any} */ (VAR_CLASS)[vars.get(path[0])?.type] ?? 'any';
+      if (path.length === 2 && path[0] === 'event') return payload.has(path[1]) ? typeClass(model, payload.get(path[1])) : 'any';
+      return 'any';
+    });
+    const complaint = r.error ?? (r.cls === 'number' || r.cls === 'any' ? undefined : `it is a ${r.cls}, and a delay is a number`);
+    if (complaint) report('error', 'effect.after', t, `The run-time delay "${a.expr}" of timer "${fx.timer}": ${complaint}.`, [...at, 'expr']);
+  };
+
+  /**
    * The `models` property of a claim links a check over the behavior model to the requirement it restates:
    * it must name requirements (claims of kind requirement). An id that resolves to nothing is reported by the parser.
    * @param {Entity} c
@@ -120,6 +168,58 @@ export function validateModel(model, opts = {}) {
         report('error', 'claim.models-not-requirement', c, `"models" names "${id}", which is not a requirement (a claim of kind "requirement").`, Array.isArray(v) ? ['models', i] : ['models']);
       }
     });
+  };
+
+  /**
+   * An implementation behavior that refines a model behavior (docs/claims-and-evidence.md, "Refinement"):
+   * one level only, and a mapping that names every state and transition of the implementation and every
+   * variable of the model, with nothing unknown on either side. A `refines` that names something other than
+   * a behavior is reported by the parser (ref.kind, ref.unresolved).
+   * @param {Entity} b
+   */
+  const checkRefinement = (b) => {
+    const refines = b.data.refines;
+    const map = b.data.refinement;
+    if (refines === undefined) {
+      if (map !== undefined) report('error', 'behavior.refinement-without-refines', b, `Behavior "${b.id}" declares a refinement mapping but does not name the behavior it refines ("refines").`, ['refinement']);
+      return;
+    }
+    if (b.data.level !== 'implementation') report('error', 'behavior.refines-model-level', b, `Behavior "${b.id}" is a model-level machine (level ${b.data.level === undefined ? 'absent, so model' : `"${b.data.level}"`}); only a machine with level "implementation" refines another.`, ['refines']);
+    const A = typeof refines === 'string' ? get(refines) : undefined;
+    if (!A || A.kind !== 'behavior') return;
+    if (A.data.refines !== undefined) report('error', 'behavior.refines-chain', b, `Behavior "${b.id}" refines "${A.id}", which itself refines "${A.data.refines}"; refinement has one level, from an implementation machine to a model machine.`, ['refines']);
+    if (!map || typeof map !== 'object' || Array.isArray(map)) { report('error', 'behavior.refinement-missing', b, `Behavior "${b.id}" refines "${A.id}" but declares no refinement mapping ("refinement": {states, variables, transitions}).`, ['refines']); return; }
+    const obj = (/** @type {any} */ v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
+    const states = obj(map.states), variables = obj(map.variables), transitions = obj(map.transitions);
+    if (map.timeScale !== undefined && !(typeof map.timeScale === 'number' && Number.isFinite(map.timeScale) && map.timeScale > 0)) {
+      report('error', 'refinement.time-scale', b, `The refinement's timeScale must be a positive number (implementation time units per model tick), not ${JSON.stringify(map.timeScale)}.`, ['refinement', 'timeScale']);
+    }
+    const iStates = kind('state').filter((s) => s.owner === b.id).map((s) => s.id);
+    const aStates = kind('state').filter((s) => s.owner === A.id).map((s) => s.id);
+    const iTrans = kind('transition').filter((t) => t.owner === b.id).map((t) => t.id);
+    const aTrans = kind('transition').filter((t) => t.owner === A.id).map((t) => t.id);
+    const iVars = varsOf(b), aVars = varsOf(A);
+    for (const [k, v] of Object.entries(states)) {
+      if (!iStates.includes(k)) report('error', 'refinement.unknown-state', b, `The refinement maps "${k}", which is not a state of "${b.id}".`, ['refinement', 'states', k]);
+      if (typeof v !== 'string' || !aStates.includes(v)) report('error', 'refinement.unknown-state', b, `The refinement maps state "${k}" to ${JSON.stringify(v)}, which is not a state of "${A.id}".`, ['refinement', 'states', k]);
+    }
+    for (const s of iStates) if (!Object.hasOwn(states, s)) report('error', 'refinement.unmapped-state', b, `State "${s}" of "${b.id}" is missing from the refinement's states.`, ['refinement', 'states']);
+    for (const [k, v] of Object.entries(transitions)) {
+      if (!iTrans.includes(k)) report('error', 'refinement.unknown-transition', b, `The refinement maps "${k}", which is not a transition of "${b.id}".`, ['refinement', 'transitions', k]);
+      if (v !== null && (typeof v !== 'string' || !aTrans.includes(v))) report('error', 'refinement.unknown-transition', b, `The refinement maps transition "${k}" to ${JSON.stringify(v)}, which is neither a transition of "${A.id}" nor null (a stutter).`, ['refinement', 'transitions', k]);
+    }
+    for (const t of iTrans) if (!Object.hasOwn(transitions, t)) report('error', 'refinement.unmapped-transition', b, `Transition "${t}" of "${b.id}" is missing from the refinement's transitions (map it to a transition of "${A.id}" or to null).`, ['refinement', 'transitions']);
+    for (const [k, v] of Object.entries(variables)) {
+      const sub = ['refinement', 'variables', k];
+      if (!aVars.has(k)) report('error', 'refinement.unknown-variable', b, `The refinement maps "${k}", which is not a variable of "${A.id}".`, sub);
+      if (typeof v !== 'string') { report('error', 'refinement.expr', b, `The mapping of "${k}" must be an expression string over the variables of "${b.id}".`, sub); continue; }
+      const parsed = parseExpr(v);
+      if (!parsed.ok) { report('error', 'refinement.expr', b, `The mapping of "${k}", "${v}": ${parsed.error.message} (at character ${parsed.error.pos + 1}).`, sub); continue; }
+      for (const path of exprRefs(parsed.ast)) {
+        if (path.length !== 1 || !iVars.has(path[0])) report('error', 'refinement.unknown-variable', b, `The mapping of "${k}", "${v}": "${path.join('.')}" is not a variable of "${b.id}".`, sub);
+      }
+    }
+    for (const name of aVars.keys()) if (!Object.hasOwn(variables, name)) report('error', 'refinement.unmapped-variable', b, `Variable "${name}" of "${A.id}" is missing from the refinement's variables.`, ['refinement', 'variables']);
   };
 
   // --- claims -------------------------------------------------------------
@@ -219,13 +319,56 @@ export function validateModel(model, opts = {}) {
       ev.rules.forEach((/** @type {any} */ r, /** @type {number} */ i) => { if (!RULE_IDS.includes(r)) report('error', 'claim.param.value', c, `Unknown data rule "${r}"; the rules are ${RULE_IDS.join(', ')}.`, ['evaluate', 'rules', i]); });
       if (!ev.rules.length) report('error', 'claim.param.value', c, 'At least one data rule is required.', ['evaluate', 'rules']);
     }
+    if (ev.method === 'refines' && ev.behavior !== undefined) {
+      const b = typeof ev.behavior === 'string' ? get(ev.behavior) : undefined;
+      if (typeof ev.behavior !== 'string') report('error', 'claim.param.value', c, 'Method "refines" takes one behavior id in "behavior".', ['evaluate', 'behavior']);
+      else if (b && b.kind === 'behavior' && b.data.refines === undefined) report('error', 'claim.param.value', c, `Behavior "${b.id}" declares no "refines", so there is no refinement to check.`, ['evaluate', 'behavior']);
+      if (b && b.kind === 'behavior') {
+        (Array.isArray(ev.scenarios) ? ev.scenarios : []).forEach((/** @type {any} */ sid, /** @type {number} */ i) => {
+          const sc = typeof sid === 'string' ? get(sid) : undefined;
+          if (sc && sc.kind === 'scenario' && !(Array.isArray(sc.data.behaviors) && sc.data.behaviors.includes(b.id))) report('error', 'claim.param.value', c, `Scenario "${sc.id}" does not run behavior "${b.id}".`, ['evaluate', 'scenarios', i]);
+        });
+      }
+    }
     if (ev.method === 'eventually' && ev.occurs === undefined && ev.expr === undefined) report('error', 'claim.param.required', c, 'Method "eventually" needs "occurs" or "expr".', ['evaluate']);
   }
   };
 
   if (opts.claimsOnly) { claimChecks(); return out; }
 
+  /**
+   * The durability of a machine (NC-7): `record` (default) names the record that holds it; `memory` lives in process
+   * memory for a connection or tab, so it names no record and creates none.
+   * @param {Entity} b
+   */
+  function checkStorageDurability(b) {
+    const st = b.data.storage;
+    if (!st || typeof st !== 'object' || Array.isArray(st)) return;
+    if (st.durability === 'memory') {
+      for (const k of ['record', 'key', 'fields', 'state', 'stateValues']) {
+        if (st[k] !== undefined) report('error', 'storage.durability', b, `Behavior "${b.id}" has storage.durability "memory", so it is held in no record, but declares storage.${k}.`, ['storage', k]);
+      }
+      if (st.creates === true) report('error', 'storage.durability', b, `Behavior "${b.id}" has storage.durability "memory" and storage.creates true: a machine in memory creates no records.`, ['storage', 'creates']);
+      const inst = b.data.instances;
+      if (inst && typeof inst === 'object' && inst.storedIn !== undefined) report('error', 'storage.durability', b, `Behavior "${b.id}" has storage.durability "memory" but instances.storedIn names a record.`, ['instances', 'storedIn']);
+      if (b.data.transaction !== undefined) report('error', 'storage.durability', b, `Behavior "${b.id}" has storage.durability "memory" but declares a transaction, which only a record gives.`, ['transaction']);
+    } else {
+      for (const k of ['record', 'key']) {
+        if (k === 'key' ? !keyFieldsOf(st[k]) : typeof st[k] !== 'string') report('error', 'storage.durability', b, `Behavior "${b.id}" has storage.durability "${st.durability ?? 'record'}" (default record) and so needs storage.${k}.`, ['storage', k]);
+      }
+    }
+  }
+
+  // Realisation (NC-6): a machine or contract explicitly shipped must not follow a component that is not implemented.
   for (const b of kind('behavior')) {
+    if (b.data.realisation === 'shipped' && notImplemented(model, b)) report('error', 'behavior.realisation-subject', b, `Behavior "${b.id}" is declared realisation "shipped", but its subject "${b.data.subject}" has implementation.status "not-implemented"; declare "target", or leave it out for the default.`, ['realisation']);
+  }
+  for (const c of kind('contract')) {
+    if (c.data.deployment === 'shipped' && notImplemented(model, c)) report('error', 'contract.deployment-subject', c, `Contract "${c.id}" is declared deployment "shipped", but implementedBy "${c.data.implementedBy}" has implementation.status "not-implemented"; declare "target", or leave it out for the default.`, ['deployment']);
+  }
+
+  for (const b of kind('behavior')) {
+    checkStorageDurability(b);
     const initial = get(b.data.initial);
     if (initial && initial.kind === 'state' && initial.owner !== b.id) report('error', 'behavior.initial-foreign', b, `Initial state "${initial.id}" belongs to behavior "${initial.owner}".`, ['initial']);
     const names = new Set();
@@ -245,7 +388,7 @@ export function validateModel(model, opts = {}) {
     const firstUnguarded = new Map();
     for (const t of transitions) {
       if (t.data.faultOnly === true || (typeof t.data.guard === 'string' && t.data.guard.trim() !== '')) continue;
-      const key = `${t.data.from} ${t.data.on}`;
+      const key = `${t.data.from}\u0000${t.data.on}`;
       const earlier = firstUnguarded.get(key);
       if (earlier) report('warning', 'transition.order-decides', t, `Transitions "${earlier.id}" and "${t.id}" are both unguarded on event "${t.data.on}" in state "${t.data.from}": only declaration order decides which fires, and "${t.id}" can fire only while "${earlier.id}" is disabled. Add a guard to one of them.`);
       else firstUnguarded.set(key, t);
@@ -257,6 +400,7 @@ export function validateModel(model, opts = {}) {
       for (const t of transitions) if (reach.has(t.data.from) && !reach.has(t.data.to)) { reach.add(t.data.to); grew = true; }
     }
     for (const s of states) if (!reach.has(s.id)) report('warning', 'behavior.unreachable-state', s, `State "${s.id}" cannot be reached from the initial state of "${b.id}".`);
+    checkRefinement(b);
   }
 
   for (const t of kind('transition')) {
@@ -288,6 +432,7 @@ export function validateModel(model, opts = {}) {
         const e = get(fx.emit);
         if (!e || e.kind !== 'event') report('error', 'effect.emit', t, `Timer "${fx.timer}" emits "${fx.emit}", which is not an event.`, sub);
         if (fx.after === undefined) report('error', 'effect.after', t, `Timer "${fx.timer}" needs "after".`, sub);
+        else if (fx.after && typeof fx.after === 'object' && !Array.isArray(fx.after) && 'expr' in fx.after) checkTimerDelay(fx, t, b, scope, sub);
       } else if ('cancel' in fx) {
         for (const k of keys) if (k !== 'cancel') report('error', 'effect.unknown', t, `Unsupported field "${k}" in a "cancel" effect.`, sub);
       } else if ('use' in fx || 'acquire' in fx || 'release' in fx) {
@@ -308,12 +453,16 @@ export function validateModel(model, opts = {}) {
         if (verb !== 'release' && fx.then === undefined) report('error', 'effect.then', t, `A "${verb}" effect needs "then".`, sub);
         if (verb === 'use' && fx.demand === undefined) report('error', 'effect.demand', t, 'A "use" effect needs "demand".', sub);
       } else if ('emit' in fx) {
-        for (const k of keys) if (!['emit', 'after', 'payload', 'target', 'via', 'size', 'fanout'].includes(k)) report('error', 'effect.unknown', t, `Unsupported field "${k}" in an "emit" effect.`, sub);
+        for (const k of keys) if (!['emit', 'after', 'payload', 'target', 'via', 'size', 'fanout', 'to'].includes(k)) report('error', 'effect.unknown', t, `Unsupported field "${k}" in an "emit" effect.`, sub);
         if (typeof fx.emit !== 'string') report('error', 'effect.emit', t, 'Effect "emit" must be an event id.', sub);
         if ('via' in fx) {
           const l = get(fx.via);
           if (!l || l.kind !== 'link') report('error', 'effect.via', t, `Effect sends over "${fx.via}", which is not a link.`, sub);
           if ('after' in fx) report('error', 'effect.after', t, 'An emit with "via" cannot also have "after".', sub);
+        }
+        if ('to' in fx) {
+          const rcv = typeof fx.to === 'string' ? get(fx.to) : undefined;
+          if (!rcv || (rcv.kind !== 'component' && rcv.kind !== 'contract')) report('error', 'effect.to', t, `Effect "to" must name a component or a contract; "${fx.to}" is neither.`, sub);
         }
         if ('target' in fx && fx.target !== 'reply') report('error', 'effect.target', t, 'Effect "target" must be "reply".', sub);
         if ('after' in fx && !(typeof fx.after === 'number' && fx.after >= 0) && !(typeof fx.after === 'string' || (fx.after && typeof fx.after === 'object'))) report('error', 'effect.after', t, 'Effect "after" must be a non-negative number of logical ticks, a duration or a distribution.', sub);
@@ -326,6 +475,9 @@ export function validateModel(model, opts = {}) {
       }
     });
   }
+
+  // --- implementation-level machines (src/core/readiness-machines.js) ---------
+  out.push(...machineReadiness(model));
 
   // --- contract events ----------------------------------------------------
   // An unknown contract is reported by the parser (ref.unresolved, ref.kind) with its position.
@@ -373,8 +525,10 @@ export function validateModel(model, opts = {}) {
   for (const f of kind('fault')) {
     const k = f.data.kind;
     const need = (/** @type {string} */ prop) => { if (f.data[prop] === undefined) report('error', 'fault.missing', f, `A ${k} fault needs "${prop}".`); };
-    if (k === 'drop-event' || k === 'delay-event' || k === 'inject-event') need('event');
+    if (['drop-event', 'delay-event', 'inject-event', 'duplicate-event', 'lose-event', 'retry-event'].includes(k)) need('event');
     if (k === 'delay-event') { need('by'); if (typeof f.data.by === 'number' && f.data.by <= 0) report('error', 'fault.value', f, '"by" must be positive.', ['by']); }
+    if (k === 'duplicate-event' && typeof f.data.by === 'number' && f.data.by < 0) report('error', 'fault.value', f, '"by" must not be negative.', ['by']);
+    if (k === 'retry-event') { need('attempts'); if (f.data.attempts !== undefined && !(Number.isInteger(f.data.attempts) && f.data.attempts >= 1)) report('error', 'fault.value', f, '"attempts" must be a positive integer.', ['attempts']); }
     if (k === 'inject-event') { need('at'); if (typeof f.data.at === 'number' && f.data.at < 0) report('error', 'fault.value', f, '"at" must not be negative.', ['at']); }
     if (k === 'enable-transition' || k === 'disable-transition') need('transition');
     if (k === 'enable-transition') {
@@ -395,11 +549,35 @@ export function validateModel(model, opts = {}) {
     if (s.data.maxSteps !== undefined && !(Number.isInteger(s.data.maxSteps) && s.data.maxSteps > 0)) report('error', 'scenario.max-steps', s, '"maxSteps" must be a positive integer.', ['maxSteps']);
   }
 
+  out.push(...scenarioInputDiagnostics(model));
+
   out.push(...validateFaultModels(model));
 
   // --- data model: consistency (errors) and the six data rules (warnings) --
   out.push(...checkDataConsistency(model));
   out.push(...dataRuleDiagnostics(model));
+
+  // --- types, record constraints, requirement realisation, cross-cutting constructs, user interface, telemetry (errors); readiness when generation is declared --
+  out.push(...checkCodegenConsistency(model));
+  out.push(...checkTypeShapes(model));
+  out.push(...checkLanguages(model));
+  out.push(...checkFunctions(model));
+
+  out.push(...checkTenantData(model));
+  out.push(...checkDerivations(model));
+  out.push(...checkConstructConsistency(model));
+  out.push(...checkUiConsistency(model));
+  out.push(...checkTelemetryConsistency(model));
+
+  out.push(...checkAccessConsistency(model));
+  out.push(...checkCapabilityConsistency(model));
+  if (model.system.data.generation !== undefined) {
+    // The machine rules are reported above for every implementation-level behavior, switch or not.
+    for (const g of READINESS_RULES.flatMap((rule) => rule(model))) {
+      const e = get(g.entityId);
+      out.push(e ? { ...g, loc: e.loc, path: e.path } : g);
+    }
+  }
 
   claimChecks();
 
@@ -437,6 +615,8 @@ export function validateModel(model, opts = {}) {
   }
   const usedEvents = new Set();
   for (const r of model.refs) if (r.allowed.length === 1 && r.allowed[0] === 'event') usedEvents.add(r.target);
+  // A logged domain event is emitted by the running system, which writes it to a service's log (telemetry.js).
+  for (const ev of kind('event')) if (ev.data.domain === true && ev.data.logging?.logged === true) usedEvents.add(ev.id);
   for (const ev of kind('event')) if (!usedEvents.has(ev.id)) report('info', 'gap.unused-event', ev, `Event "${ev.id}" is never triggered, emitted or awaited.`);
   if (kind('faultModel').length) {
     for (const c of kind('claim')) {

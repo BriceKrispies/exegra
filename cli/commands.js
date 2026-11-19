@@ -18,6 +18,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { createWorkspace, WorkspaceError } from '../tools/workspace.js';
 import { checkTraceability } from '../tools/traceability.js';
+import { readinessGaps } from '../src/core/readiness.js';
+import { machineCoverage, coverageOperations, DEFAULT_BOUND, DEFAULT_MAX_RUNS } from '../src/core/machine-coverage.js';
+import { functionCoverage } from '../src/core/function-coverage.js';
 import { resolveRoots, splitRootRef, collectExternalResults, RootsError } from '../tools/realisation-roots.js';
 import { Project } from '../src/core/project.js';
 import { OPERATIONS, OpError, Tx, planDelete } from '../src/core/operations.js';
@@ -1031,6 +1034,100 @@ export const COMMANDS = {
       const { ws, project } = await loadProject(ctx);
       const model = requireModel(project);
       return { result: checkTraceability(model, ctx.repoRoot, loadRoots(ws, ctx)), semanticHash: project.semanticHash };
+    },
+  },
+
+  readiness: {
+    usage: 'readiness',
+    summary: 'List what the specification still lacks before code can be generated from it (codes ready.*). Exits 0 with or without gaps; validate reports them as errors only when system.generation is set.',
+    run: async (ctx) => {
+      const { project } = await loadProject(ctx);
+      const model = requireModel(project);
+      return { result: { gaps: readinessGaps(model) }, semanticHash: project.semanticHash };
+    },
+  },
+
+  'cover-machines': {
+    usage: `cover-machines [<behaviorId>] [--bound N] [--max-runs N] [--write <dir>]`,
+    summary: `Transition and guard-outcome coverage of every shipped implementation machine: what the scenarios exercise (from their traces), and for the rest a bounded breadth-first search over sequences of the machine's input events (default bound ${DEFAULT_BOUND} actions, ${DEFAULT_MAX_RUNS} engine runs per machine) that generates the scenarios reaching them. A transition nothing reaches is a finding, machine.transition-unreachable (an error when system.generation is set, and the command fails). --write <dir> writes the generated scenarios as apply operations to <dir>/ops.json.`,
+    options: { bound: { type: 'string' }, 'max-runs': { type: 'string' }, write: { type: 'string' } },
+    run: async (ctx) => {
+      const { project } = await loadProject(ctx);
+      const model = requireModel(project);
+      /** @param {string} name */
+      const count = (name) => {
+        const v = ctx.values[name];
+        if (v === undefined) return undefined;
+        const n = Number(v);
+        if (!Number.isInteger(n) || n < 1) throw usage('invalid-argument', `--${name} must be a positive integer.`);
+        return n;
+      };
+      const id = ctx.positionals[0];
+      if (id !== undefined) requireEntity(model, id, 'behavior');
+      const { machines, findings } = machineCoverage(model, { bound: count('bound'), maxRuns: count('max-runs'), machines: id === undefined ? undefined : [id] });
+      if (id !== undefined && !machines.length) throw new CliError('cover.not-shipped', `"${id}" is not a shipped implementation-level machine.`);
+      const sum = (/** @type {'transitions'|'guards'} */ k, /** @type {'covered'|'total'|'byScenarios'} */ f) => machines.reduce((n, m) => n + m[k][f], 0);
+      /** @type {Record<string, any>} */
+      const result = {
+        summary: {
+          machines: machines.length,
+          transitions: { covered: sum('transitions', 'covered'), total: sum('transitions', 'total'), byScenarios: sum('transitions', 'byScenarios') },
+          guards: { covered: sum('guards', 'covered'), total: sum('guards', 'total'), byScenarios: sum('guards', 'byScenarios') },
+          generated: machines.reduce((n, m) => n + m.generated.length, 0),
+          unreachable: findings.length,
+        },
+        table: machines.map((m) => ({
+          machine: m.machine,
+          transitions: `${m.transitions.covered}/${m.transitions.total}`,
+          guards: `${m.guards.covered}/${m.guards.total}`,
+          byScenarios: `${m.transitions.byScenarios}/${m.transitions.total} transitions, ${m.guards.byScenarios}/${m.guards.total} guard outcomes`,
+          generated: m.generated.length,
+          open: m.items.filter((i) => i.by === null).map((i) => (i.kind === 'transition' ? i.transition : `${i.transition} (guard ${i.outcome})`)),
+        })),
+        machines,
+        findings: findings.map(serializeDiagnostic),
+      };
+      if (ctx.values.write !== undefined) {
+        const dir = path.resolve(process.cwd(), ctx.values.write);
+        const ops = coverageOperations(model, machines);
+        fs.mkdirSync(dir, { recursive: true });
+        const target = path.join(dir, 'ops.json');
+        fs.writeFileSync(target, `${JSON.stringify(ops, null, 2)}\n`, 'utf8');
+        result.written = { file: target, operations: ops.length };
+      }
+      const errors = findings.filter((d) => d.severity === 'error');
+      if (errors.length) throw new CliError('cover.unreachable', `${errors.length} transition(s) of shipped machines are reached by no scenario and no sequence the search tried.`, { diagnostics: result.findings, result });
+      return { result, semanticHash: project.semanticHash };
+    },
+  },
+
+  'cover-functions': {
+    usage: 'cover-functions [<functionId>] [--branches]',
+    summary: 'Branch coverage of the function examples: for each function, the branches (if then and else, match arms, try value and error paths, fail) its examples take, covered/total, with the uncovered branches and where they are. --branches lists every branch. Exits 0; readiness reports the uncovered branches as ready.function-branch-uncovered.',
+    options: { branches: { type: 'boolean' } },
+    run: async (ctx) => {
+      const { project } = await loadProject(ctx);
+      const model = requireModel(project);
+      const id = ctx.positionals[0];
+      if (id !== undefined) requireEntity(model, id, 'function');
+      const all = functionCoverage(model);
+      const rows = all.filter((c) => id === undefined || c.id === id);
+      const branch = (/** @type {any} */ b) => ({ id: b.id, kind: b.kind, label: b.label, where: b.where, line: b.line, column: b.column, text: b.text, ...(ctx.values.branches === true ? { covered: b.covered } : {}) });
+      const result = {
+        summary: {
+          functions: all.length,
+          withBranches: all.filter((c) => c.total > 0).length,
+          fullyCovered: all.filter((c) => c.total > 0 && c.covered === c.total).length,
+          branches: { covered: all.reduce((n, c) => n + c.covered, 0), total: all.reduce((n, c) => n + c.total, 0) },
+          notEvaluated: all.filter((c) => !c.usable).map((c) => c.id),
+        },
+        functions: rows.map((c) => ({
+          id: c.id, line: c.line, covered: c.covered, total: c.total, examples: c.examples, failedExamples: c.failedExamples, usable: c.usable,
+          uncovered: c.branches.filter((b) => !b.covered).map(branch),
+          ...(ctx.values.branches === true ? { branches: c.branches.map(branch) } : {}),
+        })),
+      };
+      return { result, semanticHash: project.semanticHash };
     },
   },
 

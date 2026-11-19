@@ -13,18 +13,25 @@
  *   | {k:'opaque', text:string}} Atom
  */
 
-/** Split on a separator that is outside quotes, brackets, braces and parentheses. @param {string} s @param {string} sep @returns {string[]} */
+/**
+ * Split on a separator that is outside quotes, brackets, braces, parentheses and the angle brackets of a generic
+ * type (`map<K, map<K2, V>>`, `list<map<K, V>>`). A `>` closes an angle bracket only while one is open, so the
+ * arrow of `(a) => b` is not one.
+ * @param {string} s @param {string} sep @returns {string[]}
+ */
 export function splitTop(s, sep) {
   /** @type {string[]} */
   const parts = [];
-  let depth = 0, quote = '', start = 0;
+  let depth = 0, angles = 0, quote = '', start = 0;
   for (let i = 0; i < s.length; i++) {
     const c = s[i];
     if (quote) { if (c === quote) quote = ''; continue; }
     if (c === '"' || c === "'") quote = c;
     else if ('([{'.includes(c)) depth++;
     else if (')]}'.includes(c)) depth--;
-    else if (depth === 0 && s.startsWith(sep, i)) { parts.push(s.slice(start, i)); start = i + sep.length; i += sep.length - 1; }
+    else if (c === '<') angles++;
+    else if (c === '>' && angles > 0) angles--;
+    else if (depth === 0 && angles === 0 && s.startsWith(sep, i)) { parts.push(s.slice(start, i)); start = i + sep.length; i += sep.length - 1; }
   }
   parts.push(s.slice(start));
   return parts.map((p) => p.trim());

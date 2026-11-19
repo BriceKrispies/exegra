@@ -1,0 +1,47 @@
+{
+  // A moves service whose scenario feeds a request to a machine.
+  //
+  // DELIBERATE MISS: the step "move-requested" gives the uuid key "move-id" the value "x-1",
+  // which is not a uuid. Validation must report exactly one scenario.input-type finding.
+  "exegra": "0.1",
+  "system": { "id": "moves", "name": "Moves", "generation": { "target": "rust" } },
+  "components": [
+    { "id": "mover", "name": "Mover", "category": "computational" }
+  ],
+  "types": [
+    { "id": "move-id", "name": "Move id", "kind": "id", "repr": "uuid" },
+    { "id": "move-kind", "name": "Move kind", "kind": "enum", "values": ["copy", "swap"] }
+  ],
+  "events": [
+    {
+      "id": "move-requested",
+      "name": "Move requested",
+      "payload": [
+        { "name": "move-id", "type": "move-id" },
+        { "name": "kind", "type": "move-kind" },
+        { "name": "priority", "type": "u8" },
+        { "name": "note", "type": "option<string>" }
+      ]
+    }
+  ],
+  "behaviors": [
+    {
+      "id": "move-flow",
+      "name": "Move flow",
+      "subject": "mover",
+      "initial": "idle",
+      "states": [{ "id": "idle", "name": "Idle" }, { "id": "moving", "name": "Moving" }],
+      "transitions": [{ "id": "begin", "from": "idle", "to": "moving", "on": "move-requested" }]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "move-begins",
+      "name": "A move begins",
+      "behaviors": ["move-flow"],
+      "steps": [
+        { "at": 0, "event": "move-requested", "payload": { "move-id": "x-1", "kind": "copy", "priority": 3 } }
+      ]
+    }
+  ]
+}

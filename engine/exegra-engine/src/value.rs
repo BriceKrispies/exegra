@@ -167,7 +167,9 @@ impl Value {
         }
     }
 
-    /// JavaScript's strict equality `===`.
+    /// The expression language's equality (`==`), structural since WG-4902 (`Value.eqv` in
+    /// `formal/Exegra/Value.lean`): arrays element by element, objects by their keys and members
+    /// in any order. The engine does not read declared types, so its arithmetic stays untyped.
     pub fn strict_eq(&self, other: &Value) -> bool {
         match (self, other) {
             (Value::Undefined, Value::Undefined) | (Value::Null, Value::Null) => true,
@@ -175,8 +177,14 @@ impl Value {
             // f64 `==` is JavaScript's: NaN differs from itself, 0 equals -0.
             (Value::Number(a), Value::Number(b)) => a == b,
             (Value::String(a), Value::String(b)) => a == b,
-            (Value::Array(a), Value::Array(b)) => Rc::ptr_eq(a, b),
-            (Value::Object(a), Value::Object(b)) => Rc::ptr_eq(a, b),
+            (Value::Array(a), Value::Array(b)) => {
+                a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| x.strict_eq(y))
+            }
+            (Value::Object(a), Value::Object(b)) => {
+                a.len() == b.len()
+                    && a.iter()
+                        .all(|(k, x)| b.get(k).is_some_and(|y| x.strict_eq(y)))
+            }
             _ => false,
         }
     }
@@ -443,10 +451,10 @@ mod tests {
     }
 
     #[test]
-    fn identity_survives_clone_not_deep_copy() {
+    fn equality_is_structural() {
         let v = Value::object(JsObject::new());
         assert!(v.strict_eq(&v.clone()));
-        assert!(!v.strict_eq(&v.deep_copy()));
+        assert!(v.strict_eq(&v.deep_copy()));
     }
 
     #[test]

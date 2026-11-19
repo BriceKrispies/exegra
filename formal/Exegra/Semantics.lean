@@ -137,7 +137,8 @@ def initialMachines (i : SimInput) : List (String × Machine) :=
   (dedup (i.behaviors.map (·.id))).filterMap fun bid =>
     (behaviorOf? i bid).map fun b =>
       (bid, { state := b.initial,
-              vars := b.variables.foldl (fun vs v => objInsert vs v.name v.initial) [] })
+              vars := b.variables.foldl (fun vs v => objInsert vs v.name v.initial) [],
+              types := b.types })
 
 /-- The initial queue: the scenario's steps in array order with `seq` 0, 1, ..., then the active
 `inject-event` faults in fault order. Returns the queue and the next sequence number. -/
@@ -204,7 +205,7 @@ def evalIn (src : String) (view : Configuration) (bid : String) (payload : Value
     Except String Value :=
   match compile src with
   | .error e => .error e
-  | .ok ast => eval (resolve view bid payload time) ast
+  | .ok ast => eval (resolve view bid payload time) (machineTys (view.machine? bid)) ast
 
 /-- The value of an effect `to` or payload entry: a string is an expression, anything else a
 literal, copied (fresh identities from `nid`). -/

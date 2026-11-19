@@ -45,6 +45,7 @@ const STORES = [
   { file: 'src/ui/toolbar.js', needle: 'URL.createObjectURL', locators: ['.exegra.json'], store: 'project-bundle' },
   { file: 'cli/commands.js', needle: 'stableStringify(trace', locators: ['trace --out'], store: 'cli-outputs' },
   { file: 'cli/commands.js', needle: 'writeFileSync(dest, text)', locators: ['markdown --out'], store: 'markdown-export' },
+  { file: 'cli/commands.js', needle: 'writeFileSync(target, `${JSON.stringify(ops', locators: ['cover --write'], store: 'cli-outputs' },
   { file: 'tools/differential.js', fn: 'saveMismatches', locators: ['test-results/differential/'], store: 'differential-artifacts' },
   { file: 'tools/gen-engine-inputs.js', fn: 'main', locators: ['gen-engine-inputs --out'], store: 'differential-artifacts' },
   { file: 'tools/import-markdown.js', needle: 'writeFileSync(dest, t)', locators: ['--export-md'], store: 'markdown-export' },

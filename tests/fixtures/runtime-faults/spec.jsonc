@@ -1,0 +1,61 @@
+// The fixed specification of the runtime fault rules (src/core/fault-model.js, faultRealisability;
+// src/core/readiness-machines.js, machine.initial-unreachable; WG-4903): one shipped
+// implementation-level machine that creates its records, run by a scenario whose faults are all
+// ones the generated runtime can produce. Every rule is broken once by one textual change in
+// tests/core/runtime-faults.test.js.
+{
+  "exegra": "0.1",
+  "system": { "id": "relays", "name": "Relays" },
+  "components": [
+    { "id": "relay-svc", "name": "Relay service", "category": "computational", "purpose": "Relays notices.", "implementation": { "status": "manual" } },
+    { "id": "sender", "name": "Sender", "category": "external", "purpose": "Sends notices." },
+    { "id": "outside", "name": "Outside", "category": "external", "purpose": "Receives relayed notices." }
+  ],
+  "contracts": [
+    { "id": "open-relay", "name": "Open a relay", "implementedBy": "relay-svc" }
+  ],
+  "records": [
+    { "id": "relay-rec", "name": "Relay", "owner": "relay-svc", "key": ["id"],
+      "fields": [ { "name": "id", "type": "string" }, { "name": "seen", "type": "u32" }, { "name": "state", "type": "string" } ] }
+  ],
+  "events": [
+    { "id": "ev-notice", "name": "Notice", "delivery": "at-least-once" },
+    { "id": "ev-hint", "name": "Hint", "delivery": "at-most-once" },
+    { "id": "ev-poke", "name": "Poke" },
+    { "id": "ev-tick", "name": "Tick", "elapsed": true },
+    { "id": "ev-relayed", "name": "Relayed", "delivery": "at-least-once" }
+  ],
+  "behaviors": [
+    {
+      "id": "relay", "name": "Relay", "subject": "relay-svc", "initial": "idle", "level": "implementation",
+      "variables": [ { "name": "seen", "type": "number", "initial": 0, "repr": "u32" } ],
+      "storage": { "record": "relay-rec", "key": "id", "creates": true },
+      "transaction": { "scope": "transition", "isolation": "serializable" },
+      "states": [
+        { "id": "idle", "name": "Idle", "ignores": ["ev-tick"] },
+        { "id": "waiting", "name": "Waiting", "ignores": ["ev-notice", "ev-hint", "ev-poke"] }
+      ],
+      "transitions": [
+        { "id": "r-notice", "from": "idle", "to": "waiting", "on": "ev-notice", "otherwise": true,
+          "effects": [ { "set": "seen", "to": "seen + 1" }, { "emit": "ev-relayed", "to": "outside" }, { "timer": "t", "after": 2000, "emit": "ev-tick" } ] },
+        { "id": "r-hint", "from": "idle", "to": "idle", "on": "ev-hint", "otherwise": true },
+        { "id": "r-poke", "from": "idle", "to": "idle", "on": "ev-poke", "otherwise": true },
+        { "id": "r-tick", "from": "waiting", "to": "idle", "on": "ev-tick", "otherwise": true }
+      ]
+    }
+  ],
+  "faults": [
+    { "id": "f-notice-twice", "name": "Notice redelivered", "kind": "duplicate-event", "event": "ev-notice", "by": "500 ms", "occurrence": 1 },
+    { "id": "f-notice-retried", "name": "Notice retried twice", "kind": "retry-event", "event": "ev-notice", "attempts": 2, "occurrence": 2 },
+    { "id": "f-notice-backoff", "name": "Notice delayed by one backoff", "kind": "delay-event", "event": "ev-notice", "by": "1 s", "occurrence": 5 },
+    { "id": "f-hint-lost", "name": "Hint lost in a crash", "kind": "lose-event", "event": "ev-hint", "occurrence": 1 },
+    { "id": "f-hint-dropped", "name": "Hint dispatch failed", "kind": "drop-event", "event": "ev-hint", "occurrence": 2 },
+    { "id": "f-poke-late", "name": "Poke sent late", "kind": "delay-event", "event": "ev-poke", "by": "250 ms" },
+    { "id": "f-poke-extra", "name": "Poke sent again", "kind": "inject-event", "event": "ev-poke", "at": "100 ms" }
+  ],
+  "scenarios": [
+    { "id": "run", "name": "Run", "behaviors": ["relay"], "timeUnit": "ms",
+      "faults": ["f-notice-twice", "f-notice-retried", "f-notice-backoff", "f-hint-lost", "f-hint-dropped", "f-poke-late", "f-poke-extra"],
+      "steps": [ { "at": 0, "event": "ev-notice" }, { "at": 0, "event": "ev-hint" }, { "at": 10, "event": "ev-hint" }, { "at": 20, "event": "ev-poke" } ] }
+  ]
+}

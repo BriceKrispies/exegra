@@ -32,7 +32,7 @@ def claimResolve (c : Configuration) : List String → Value
 
 /-- Does a parsed claim expression evaluate to `true` in the configuration? -/
 def claimHolds (ast : Ast) (c : Config) : Bool :=
-  match eval (claimResolve c.conf) ast with
+  match eval (claimResolve c.conf) TyEnv.untyped ast with
   | .ok (.bool true) => true
   | _ => false
 

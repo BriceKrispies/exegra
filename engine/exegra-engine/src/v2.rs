@@ -1021,10 +1021,17 @@ fn decode_fault(v: &Value, i: usize) -> R<Fault> {
         Value::Number(n) => Occurrence::Exactly(*n),
         _ => Occurrence::Never,
     };
-    let by = if kind.as_deref() == Some("delay-event") {
-        int_in(field(f, "by"), &format!("{what}.by"), 0, TWO53 - 1)?
-    } else {
-        0
+    // `by` of a delay, of a retry (computed by the shell from the retry policy) and of a
+    // duplicate's second delivery (0 when left out); Format2.lean, `Decode.fault`.
+    let by = match kind.as_deref() {
+        Some("delay-event" | "retry-event") => {
+            int_in(field(f, "by"), &format!("{what}.by"), 0, TWO53 - 1)?
+        }
+        Some("duplicate-event") => match field(f, "by") {
+            Value::Undefined | Value::Null => 0,
+            v => int_in(v, &format!("{what}.by"), 0, TWO53 - 1)?,
+        },
+        _ => 0,
     };
     let at = if kind.as_deref() == Some("inject-event") {
         int_in(field(f, "at"), &format!("{what}.at"), 0, TWO53 - 1)?
@@ -4556,8 +4563,11 @@ impl<'a> Sim<'a> {
                 StepResult::Committed(Box::new(rec), next, seq, None)
             }
             EntryKind::Event => {
+                let attempt = self.attempts.get(&head.event).copied().unwrap_or(0) + 1;
+                let already = self.delayed_by.get(&head.seq).cloned().unwrap_or_default();
                 let r = self.step_event(next, head.clone());
-                self.after_deliver(&head, r)
+                let r = self.after_deliver(&head, r);
+                self.duplicate_after(attempt, already, r)
             }
         }
     }
@@ -4659,10 +4669,17 @@ impl<'a> Sim<'a> {
         let drops: Vec<FaultRec> = self
             .faults
             .iter()
-            .filter(|f| Self::fault_matches(f, "drop-event", &ev, attempt, head.time))
+            .filter(|f| {
+                Self::fault_matches(f, "drop-event", &ev, attempt, head.time)
+                    || Self::fault_matches(f, "lose-event", &ev, attempt, head.time)
+            })
             .map(|f| FaultRec {
                 fault: f.id.clone(),
-                effect: "dropped",
+                effect: if f.is_kind("lose-event") {
+                    "lost"
+                } else {
+                    "dropped"
+                },
             })
             .collect();
         if !drops.is_empty() {
@@ -4674,7 +4691,8 @@ impl<'a> Sim<'a> {
         }
         let already = self.delayed_by.get(&head.seq).cloned().unwrap_or_default();
         let delay = self.faults.iter().copied().find(|f| {
-            Self::fault_matches(f, "delay-event", &ev, attempt, head.time)
+            (Self::fault_matches(f, "delay-event", &ev, attempt, head.time)
+                || Self::fault_matches(f, "retry-event", &ev, attempt, head.time))
                 && !already.contains(&f.id)
         });
         if let Some(d) = delay {
@@ -4694,7 +4712,11 @@ impl<'a> Sim<'a> {
             self.delayed_by.insert(s, applied);
             let recs = vec![FaultRec {
                 fault: d.id.clone(),
-                effect: "delayed",
+                effect: if d.is_kind("retry-event") {
+                    "retried"
+                } else {
+                    "delayed"
+                },
             }];
             let mut st = blank(index, &head, Kind::Delay, self.snap(&next));
             st.responsible = self.responsible_of(&ev, &[], &recs);
@@ -4784,6 +4806,50 @@ impl<'a> Sim<'a> {
                 )
             }
         }
+    }
+
+    /// After a delivery that committed (and its replies), a matching `duplicate-event` fault that
+    /// has not acted on this entry yet queues a copy of the head (as routed, from the step record)
+    /// `by` later, with the next sequence number after the step's own entries (Format2.lean,
+    /// `duplicateAfter`). `attempt` and `already` are those of the head before the step.
+    fn duplicate_after(&mut self, attempt: u64, already: Vec<Id>, r: StepResult) -> StepResult {
+        let StepResult::Committed(mut rec, mut next, seq, attempts) = r else {
+            return r;
+        };
+        if rec.kind != Kind::Deliver {
+            return StepResult::Committed(rec, next, seq, attempts);
+        }
+        let head = rec.head.clone();
+        let head = &head;
+        let dup = self.faults.iter().copied().find(|f| {
+            Self::fault_matches(f, "duplicate-event", &head.event, attempt, head.time)
+                && !already.contains(&f.id)
+        });
+        let Some(d) = dup else {
+            return StepResult::Committed(rec, next, seq, attempts);
+        };
+        if head.time + d.by >= TWO53 {
+            return self.fail(head, Kind::Deliver, "Value time exceeds 2^53.".into());
+        }
+        let mut copy: Entry = (**head).clone();
+        copy.seq = seq;
+        copy.first = None;
+        copy.copy_of = Some(head.copy_of.unwrap_or(head.seq));
+        copy.time = head.time + d.by;
+        copy.payload = head.payload.deep_copy();
+        insert_entry(&mut next.pending, copy);
+        let mut applied = already;
+        applied.push(d.id.clone());
+        self.delayed_by.insert(seq, applied);
+        rec.faults.push(FaultRec {
+            fault: d.id.clone(),
+            effect: "duplicated",
+        });
+        if !rec.responsible.iter().any(|r| **r == *d.id) {
+            rec.responsible.push(d.id.to_string());
+        }
+        rec.config = self.snap(&next);
+        StepResult::Committed(rec, next, seq + 1, attempts)
     }
 }
 

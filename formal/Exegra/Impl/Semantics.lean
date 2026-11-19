@@ -49,7 +49,8 @@ def evalC (c : Compiled) (view : Configuration) (bid : String) (payload : Value)
     Except String Value :=
   match c with
   | .error e => .error e
-  | .ok ast => evalFast (resolveFast (view.machine? bid) view bid payload time) ast
+  | .ok ast => evalFast (resolveFast (view.machine? bid) view bid payload time)
+      (machineTys (view.machine? bid)) ast
 
 /-- The value of an effect `to` or a payload entry, with its expression parsed. -/
 inductive CVal where

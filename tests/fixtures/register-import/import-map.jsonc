@@ -9,14 +9,14 @@
   "sourceTextColumns": ["Summary"],
   "relationshipKinds": { "interface": { "label": "Interface", "line": "solid", "color": "blue", "dependency": true, "description": "An interface row." } },
   "kinds": {
-    "capability": { "label": "Capability", "section": "capabilities", "shape": "hex", "color": "green" },
+    "feature": { "label": "Capability", "section": "features", "shape": "hex", "color": "green" },
     "interface": { "label": "Interface", "section": "interfaces", "shape": "pipe", "color": "blue" },
     "conflict": { "label": "Conflict", "section": "conflicts", "shape": "diamond", "color": "rose" },
     "ticket": { "label": "Ticket", "section": "tickets", "shape": "tablet", "color": "slate" }
   },
   "rules": [
     { "kind": "component", "header": ["Component", "Repository", "Function", "Team"], "id": { "column": "Component" }, "columns": { "Component": "name", "Function": "purpose" } },
-    { "kind": "capability", "header": ["ID", "Capability", "Owner", "Source"], "id": { "column": "ID" }, "refs": { "Owner": "owners" } },
+    { "kind": "feature", "header": ["ID", "Capability", "Owner", "Source"], "id": { "column": "ID" }, "refs": { "Owner": "owners" } },
     { "kind": "interface", "header": ["#", "From", "To", "Interface", "State"], "id": { "column": "#" }, "relationship": { "kind": "interface", "from": "From", "to": "To", "description": "Interface", "properties": { "State": "state" } } },
     { "kind": "conflict", "header": ["ID", "Topic", "Trusted"], "id": { "column": "ID" } },
     { "kind": "ticket", "header": ["Initiative", "Epic key", "Summary", "Source"], "id": { "column": "Epic key", "pattern": "ERQ-\\d+", "fallbackColumn": "Initiative" } }

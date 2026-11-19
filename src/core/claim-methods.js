@@ -150,6 +150,14 @@ export const CLAIM_METHODS = {
       controlNegatives: { type: 'negatives', doc: "Runs that must hold: a twin's faults on a control scenario." },
     },
   },
+  refines: {
+    kinds: ['temporal'],
+    doc: 'The implementation behavior refines the model behavior it names in `refines`, through its `refinement` mapping: in the trace of each scenario that runs it (or of each listed scenario), every initial configuration of the behavior maps to the model\'s initial configuration, and every transition it fires maps either to the transition the model would fire from the mapped configuration on the same event (same from and to under the state mapping, guard true and first in declaration order, effects giving the mapped post-variables, the same emitted events) or to a stutter that changes no mapped state or variable and emits nothing. Violated with the first failing step; a check of these traces, not of all executions (docs/claims-and-evidence.md, "Refinement").',
+    params: {
+      behavior: { type: 'ids:behavior', required: true, doc: 'The implementation behavior (one id); it declares `refines` and `refinement`.' },
+      scenarios: { type: 'ids:scenario', doc: 'The scenarios whose traces are checked. Default: every scenario that runs the behavior.' },
+    },
+  },
   'lean-theorem': {
     kinds: ['structural', 'invariant', 'temporal', 'requirement'],
     doc: 'A theorem of the Lean core (formal/) states the claim. Lean checks it (tools/lean-theorems.js, recorded by exegra verify): the theorem exists, the kernel accepts its proof again, it depends on no axiom beyond propext, Classical.choice and Quot.sound (no sorry, no native_decide, no axiom of our own), and each named implementation constant occurs in its statement. Proved when all hold; violated when Lean refuses; not evaluated without a recorded check.',

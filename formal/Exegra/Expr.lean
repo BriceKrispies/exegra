@@ -260,37 +260,87 @@ def numOf : Value → Float
   | .num x => x
   | _ => Float.nan
 
-/-- Evaluate. `resolve` maps a reference path to its value, `undef` when it has none. -/
-def eval (resolve : List String → Value) : Ast → Except String Value
+def BinOp.isArith : BinOp → Bool
+  | .add | .sub | .mul | .div | .rem => true
+  | _ => false
+
+/-- The declared type an arithmetic expression is computed in: that of its first typed operand
+(a literal takes the type of the other operand). Only arithmetic and references have one. -/
+def staticTy (tys : TyEnv) : Ast → STy
+  | .ref p => tys p
+  | .un .neg a => staticTy tys a
+  | .bin op a b =>
+    if op.isArith then
+      match staticTy tys a with
+      | .none => staticTy tys b
+      | t => t
+    else .none
+  | _ => .none
+
+/-- Is `x` a value of the integer type `k`: a whole number within its range? -/
+def IntKind.holds (k : IntKind) (x : Float) : Bool :=
+  x.floor == x && k.lo ≤ x && x ≤ k.hi
+
+/-- The result of an arithmetic operator in type `ty` (WG-4902): untyped arithmetic is IEEE;
+integer arithmetic checks that both operands and the exact result `r` are values of the type,
+and otherwise ends the step with an error. On integers within `2^53` a double computes `+`, `-`
+and `*` exactly whenever the exact result is within `2^53`, and rounds monotonically otherwise,
+so a result outside the range is never mistaken for one inside it. -/
+def intResult (ty : STy) (op : String) (x y r : Float) : Except String Value :=
+  match ty with
+  | .int k =>
+    if !(k.holds x) then .error s!"Operator \"{op}\" on {k.name}: operand {Num.jsNumberToString x} is not a {k.name}"
+    else if !(k.holds y) then .error s!"Operator \"{op}\" on {k.name}: operand {Num.jsNumberToString y} is not a {k.name}"
+    else if !(k.holds r) then .error s!"Integer overflow: \"{op}\" on {k.name} gives {Num.jsNumberToString r}, outside {Num.jsNumberToString k.lo}..{Num.jsNumberToString k.hi}"
+    -- `r + 0` is `r` except that `-0` becomes `0`: an integer has no negative zero.
+    else .ok (.num (r + 0))
+  | _ => .ok (.num r)
+
+/-- Division in type `ty`: integer division truncates toward zero. `x - fmod x y` is a multiple
+of `y` no larger than `x` in magnitude, so it and the quotient are exact. -/
+def divIn (ty : STy) (x y : Float) : Float :=
+  match ty with
+  | .int _ => (x - Num.fmod x y) / y
+  | _ => x / y
+
+/-- Evaluate. `resolve` maps a reference path to its value, `undef` when it has none; `tys` gives
+the declared types of references (`TyEnv.untyped` for none). An absent value of an option type reads as
+`null`; any other absent value is an unknown reference. -/
+def eval (resolve : List String → Value) (tys : TyEnv) : Ast → Except String Value
   | .lit v => .ok v
   | .ref path =>
     match resolve path with
-    | .undef => .error s!"Unknown reference \"{".".intercalate path}\""
+    | .undef =>
+      match tys path with
+      | .option => .ok .null
+      | _ => .error s!"Unknown reference \"{".".intercalate path}\""
     | v => .ok v
   | .un op a => do
-    let av ← eval resolve a
+    let av ← eval resolve tys a
     match op with
     | .not => requireType av "boolean" "!"; pure (.bool !(isTrue av))
-    | .neg => requireType av "number" "-"; pure (.num (-(numOf av)))
+    | .neg =>
+      requireType av "number" "-"
+      intResult (staticTy tys a) "-" (numOf av) 0 (-(numOf av))
   | .bin op a b =>
     if op == .and || op == .or || op == .implies then do
       -- ORDER: the left operand is evaluated and type-checked first; the right one is neither
       -- evaluated nor type-checked when the left one decides.
-      let av ← eval resolve a
+      let av ← eval resolve tys a
       requireType av "boolean" op.name
       let aTrue := isTrue av
       if op == .and && !aTrue then return .bool false
       if op == .or && aTrue then return .bool true
       if op == .implies && !aTrue then return .bool true
-      let bv ← eval resolve b
+      let bv ← eval resolve tys b
       requireType bv "boolean" op.name
       pure bv
     else do
       -- ORDER: both operands are evaluated, left first, before any type check.
-      let av ← eval resolve a
-      let bv ← eval resolve b
-      if op == .eq then return .bool (av.strictEq bv)
-      if op == .ne then return .bool !(av.strictEq bv)
+      let av ← eval resolve tys a
+      let bv ← eval resolve tys b
+      if op == .eq then return .bool (av.eqv bv)
+      if op == .ne then return .bool !(av.eqv bv)
       if op == .add then
         match av, bv with
         | .str x, .str y => return .str (x ++ y)
@@ -300,17 +350,18 @@ def eval (resolve : List String → Value) : Ast → Except String Value
       requireType bv "number" op.name
       let x := numOf av
       let y := numOf bv
+      let ty := staticTy tys (.bin op a b)
       match op with
       | .lt => pure (.bool (decide (x < y)))
       | .le => pure (.bool (decide (x ≤ y)))
       | .gt => pure (.bool (decide (x > y)))
       | .ge => pure (.bool (decide (x ≥ y)))
-      | .add => pure (.num (x + y))
-      | .sub => pure (.num (x - y))
-      | .mul => pure (.num (x * y))
+      | .add => intResult ty "+" x y (x + y)
+      | .sub => intResult ty "-" x y (x - y)
+      | .mul => intResult ty "*" x y (x * y)
       -- ORDER: division by zero (also by -0) is reported after both type checks.
-      | .div => if y == 0 then throw "Division by zero" else pure (.num (x / y))
-      | .rem => if y == 0 then throw "Division by zero" else pure (.num (Num.fmod x y))
+      | .div => if y == 0 then throw "Division by zero" else intResult ty "/" x y (divIn ty x y)
+      | .rem => if y == 0 then throw "Division by zero" else intResult ty "%" x y (Num.fmod x y)
       | _ => throw "Malformed expression"
 
 end Exegra

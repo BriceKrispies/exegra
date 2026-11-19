@@ -23,7 +23,7 @@ export const PRINCIPAL = 'principal';
 
 export const DATA_RULES = /** @type {const} */ ({
   'erasure-point': { label: 'Erasure point', doc: 'Every copy that holds a personal field or a principal reference states an erasure point (PER-109).' },
-  'record-erasure-point': { label: 'Record erasure point', doc: 'Every record with a personal field (or a credential field) states an erasure point or a bounded retention (erasure.point, or erasure.bound with a unit).' },
+  'record-erasure-point': { label: 'Record erasure point', doc: 'Every record with a personal field (or a credential field) states an erasure point or a bounded retention (erasure.point, or erasure.bound with a unit), or has a retention construct that deletes it or anonymises every such field.' },
   'no-principal-in-shared': { label: 'No principal data in a shared copy', doc: 'No shared copy holds a field that refers to the principal or is personal, or depends on authority (D-136).' },
   'party-by-id': { label: 'Party fields by principal id', doc: 'Every field with role party refers to the principal and has a type that is not a name (D-137).' },
   'freshness-bound': { label: 'Freshness bound', doc: 'Every copy states a freshness bound.' },
@@ -129,6 +129,14 @@ export const erasureStated = (erasure) => isObj(erasure) && (
   (typeof erasure.point === 'string' && erasure.point.trim() !== '') ||
   (typeof erasure.bound === 'number' && Number.isFinite(erasure.bound) && typeof erasure.unit === 'string')
 );
+
+/**
+ * A retention construct of the record (section retentions) that removes its erasable fields when it ends:
+ * delete, or anonymise naming every one of them. Its keepFor or until is the erasure point.
+ * @param {Model} model @param {Entity} record @param {string[]} names
+ */
+const retentionErases = (model, record, names) => (model.byKind.retention ?? []).some((t) => t.data.record === record.id && (
+  t.data.then === 'delete' || (t.data.then === 'anonymise' && Array.isArray(t.data.fields) && names.every((n) => t.data.fields.includes(n)))));
 
 /** A type that is a name rather than an id: its text contains the word name or handle. @param {any} type */
 export const isNameType = (type) => typeof type === 'string' && /(^|[^a-z])(name|handle)s?($|[^a-z])/i.test(type);
@@ -261,7 +269,7 @@ export function dataFindings(model) {
     const erasable = recordFields(r).filter(({ field }) => isErasableRecordField(field));
     if (!erasable.length) continue;
     checked['record-erasure-point']++;
-    if (erasureStated(r.data.erasure)) continue;
+    if (erasureStated(r.data.erasure) || retentionErases(model, r, erasable.map(({ field }) => field.name))) continue;
     const fields = erasable.map(({ field }) => `${r.id}.${field.name}`);
     findings.push({
       rule: 'record-erasure-point', entityId: r.id, fields, records: [r.id], sub: ['erasure'],

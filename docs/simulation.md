@@ -47,8 +47,11 @@ A guard must evaluate to a boolean. Any evaluation error is recorded on the step
 | `enable-transition` | `transition` | A `faultOnly` transition becomes available (a defect to exhibit). |
 | `disable-transition` | `transition` | A transition cannot fire. |
 | `inject-event` | `event`, `at`, optional `payload` | An event nobody sent is queued at time `at`. |
+| `duplicate-event` | `event`, optional `by`, optional `occurrence` | Format 2. The event is delivered, and delivered again `by` later (default 0): an at-least-once message redelivered ([semantics.md](semantics.md#faults-the-runtime-can-produce)). |
+| `lose-event` | `event`, optional `occurrence` | Format 2. As `drop-event`, recorded `lost`: an at-most-once message lost between its sender's commit and dispatch. |
+| `retry-event` | `event`, `attempts`, optional `occurrence` | Format 2. As `delay-event`, by the retry backoff after `attempts` failed dispatches (`system.generation.retry`), recorded `retried`. |
 
-Faults come from the scenario's own `faults` list, or from the list the caller passes (`runScenario(model, id, {faults})`), which replaces it. The UI, `exegra simulate --faults a,b` and claim checks all use that parameter. Each step records which faults acted and how (`dropped`, `delayed`, `enabled`, `disabled`, `injected`).
+Faults come from the scenario's own `faults` list, or from the list the caller passes (`runScenario(model, id, {faults})`), which replaces it. The UI, `exegra simulate --faults a,b` and claim checks all use that parameter. Each step records which faults acted and how (`dropped`, `delayed`, `enabled`, `disabled`, `injected`; format 2 also `duplicated`, `lost`, `retried`).
 
 ## Traces
 
@@ -84,6 +87,7 @@ Conventions for both documents:
 | `behaviors[].subject` | The component the behavior describes. Only used to build `responsible`. |
 | `behaviors[].initial` | The initial state id. |
 | `behaviors[].variables` | `{name, initial}` in declaration order. `initial` is a literal copied into the initial configuration. |
+| `behaviors[].types` | Optional, implementation-level behaviors only: `{path: type}`, the declared type of each reference the behavior's expressions read (`time`, variables, `event.<field>`), lowered to `u8` … `i64`, `option` or another name (untyped). Integer types make arithmetic checked; an absent `option` reads as `null` ([semantics.md](semantics.md#values-numbers-and-time)). The Rust engine ignores it. |
 | `behaviors[].states` | The ids of the behavior's states. Informational: the engine does not read it, and no trace contains it. |
 | `behaviors[].transitions` | The behavior's transitions in **declaration order** (the order in which they are tried): `{id, from, to, on, guard, effects, faultOnly}`. |
 | `transitions[].guard` | The guard expression as a string, or `null` when there is none. |

@@ -44,7 +44,13 @@
   "pending": [
    {
     "event": "write-intent",
-    "payload": {},
+    "payload": {
+     "baseHash": "stale",
+     "file": "spec",
+     "name": "exegra",
+     "requestId": 1,
+     "text": "9b2f1c0e"
+    },
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -100,7 +106,13 @@
    },
    "event": {
     "id": "write-intent",
-    "payload": {},
+    "payload": {
+     "baseHash": "stale",
+     "file": "spec",
+     "name": "exegra",
+     "requestId": 1,
+     "text": "9b2f1c0e"
+    },
     "seq": 0,
     "source": {
      "kind": "scenario",

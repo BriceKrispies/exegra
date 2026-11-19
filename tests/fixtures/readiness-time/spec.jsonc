@@ -1,0 +1,49 @@
+// The fixed specification of the time and integer readiness rules (src/core/readiness-time.js,
+// WG-4902): one implementation-level machine that trusts a checked copy for 5000 ms. Every rule is
+// broken once by one textual change in tests/core/readiness-time.test.js.
+{
+  "exegra": "0.1",
+  "system": { "id": "copies", "name": "Copies" },
+  "components": [
+    { "id": "gate", "name": "Gate", "category": "computational", "purpose": "Holds copies." },
+    { "id": "client", "name": "Client", "category": "external", "purpose": "Asks." }
+  ],
+  "records": [
+    { "id": "copy-rec", "name": "Copy", "owner": "gate", "key": ["id"],
+      "fields": [ { "name": "id", "type": "string" }, { "name": "checked-at", "type": "timestamp" }, { "name": "checked", "type": "bool" }, { "name": "hits", "type": "u32" }, { "name": "state", "type": "string" } ] }
+  ],
+  "events": [
+    { "id": "ev-request", "name": "Request", "payload": [ { "name": "n", "type": "u32" } ] },
+    { "id": "ev-answer", "name": "Answer" },
+    { "id": "ev-expire", "name": "Expire", "elapsed": true },
+    { "id": "ev-served", "name": "Served", "delivery": "at-least-once" }
+  ],
+  "behaviors": [
+    {
+      "id": "copy", "name": "Copy", "subject": "gate", "initial": "ready", "level": "implementation",
+      "variables": [
+        { "name": "checkedAt", "type": "number", "initial": 0, "repr": "timestamp" },
+        { "name": "checked", "type": "boolean", "initial": false, "repr": "bool" },
+        { "name": "hits", "type": "number", "initial": 0, "repr": "u32" }
+      ],
+      "storage": { "record": "copy-rec", "key": "id", "fields": { "checkedAt": "checked-at" } },
+      "transaction": { "scope": "transition", "isolation": "serializable" },
+      "states": [
+        { "id": "ready", "name": "Ready", "ignores": ["ev-answer", "ev-expire"] },
+        { "id": "checking", "name": "Checking", "ignores": ["ev-request"] }
+      ],
+      "transitions": [
+        { "id": "c-fresh", "from": "ready", "to": "ready", "on": "ev-request", "guard": "checked && checkedAt <= time && time - checkedAt < 5000",
+          "effects": [ { "set": "hits", "to": "hits + 1" }, { "emit": "ev-served", "to": "client" } ] },
+        { "id": "c-recheck", "from": "ready", "to": "checking", "on": "ev-request", "otherwise": true,
+          "effects": [ { "timer": "t", "after": 2000, "emit": "ev-expire" } ] },
+        { "id": "c-answer", "from": "checking", "to": "ready", "on": "ev-answer", "otherwise": true,
+          "effects": [ { "set": "checked", "to": true }, { "set": "checkedAt", "to": "time" } ] },
+        { "id": "c-expire", "from": "checking", "to": "ready", "on": "ev-expire", "otherwise": true }
+      ]
+    }
+  ],
+  "scenarios": [
+    { "id": "run", "name": "Run", "behaviors": ["copy"], "timeUnit": "ms", "steps": [ { "at": 0, "event": "ev-request", "payload": { "n": 1 } } ] }
+  ]
+}

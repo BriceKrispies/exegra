@@ -69,7 +69,7 @@ is not a boolean) in a configuration? -/
 def evalB (src : String) (c : Config) : Option Bool :=
   match parseExpr src with
   | .ok ast =>
-    match eval (claimResolve c.conf) ast with
+    match eval (claimResolve c.conf) TyEnv.untyped ast with
     | .ok (.bool b) => some b
     | _ => none
   | .error _ => none

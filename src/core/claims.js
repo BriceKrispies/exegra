@@ -18,12 +18,15 @@ import { evaluateMetricClaim, quantileKey } from './metric-claims.js';
 import { simulationInput, durationIn } from './sim-input.js';
 import { checkContractEvents } from './contract-trace.js';
 import { evaluateDataClaim } from './data-model.js';
+import { checkRefinementTrace, refinementOf } from './refinement.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Entity} Entity */
 
 /**
- * @typedef {{ summary: string, entities: string[], path?: string[], scenario?: string, stepIndex?: number }} Counterexample
+ * @typedef {{ summary: string, entities: string[], path?: string[], scenario?: string, stepIndex?: number,
+ *   reason?: string, trace?: import('./refinement.js').RefinementStep[] }} Counterexample
+ *   reason and trace: a refines claim's failing check and the steps of the implementation behavior up to it
  * @typedef {{ id: string, kind: string, ref: string, supports: boolean, recorded: 'pass'|'fail'|'none', detail?: string,
  *   title?: string, proofs?: string[], derived?: boolean, revision?: 'matches'|'unknown' }} EvidenceItem
  *   derived: a Concordance result applied from the project's results file (src/core/concordance.js), not a spec entity;
@@ -58,6 +61,7 @@ const STRUCTURAL = 'exegra.structural/0.1';
 const TRACE = 'exegra.trace/0.1';
 const EVIDENCE = 'exegra.evidence/0.1';
 const METRIC = 'exegra.metric/0.1';
+const REFINEMENT = 'exegra.refinement/0.1';
 const LEAN = 'lean.kernel';
 /** The axioms a lean-theorem may depend on: Lean's standard three. */
 export const STANDARD_AXIOMS = ['propext', 'Classical.choice', 'Quot.sound'];
@@ -272,6 +276,20 @@ function evaluateOne(model, claim, hash, recorded) {
       r = evaluateMetricBound(model, ev);
     } catch (e) {
       r = { status: 'inconclusive', evaluator: METRIC, scope: 'The metric claim could not be completed.', explanation: `The evaluator failed: ${/** @type {Error} */ (e).message}`, selected: [] };
+    }
+  } else if (method === 'refines') {
+    try {
+      r = evaluateRefines(model, ev);
+    } catch (e) {
+      r = { status: 'inconclusive', evaluator: REFINEMENT, scope: 'The refinement check could not be completed.', explanation: `The evaluator failed: ${/** @type {Error} */ (e).message}`, selected: [] };
+    }
+    if (r.status === 'verified') {
+      const bad = evidence.filter((e) => !e.supports || e.recorded === 'fail');
+      if (bad.length) {
+        r.status = 'violated';
+        r.explanation += ` However, ${describeContradictions(bad)} contradict${bad.length === 1 ? 's' : ''} this result, so the claim is reported as violated.`;
+        r.counterexample = { summary: `Contradicting evidence: ${bad.map((e) => e.id).join(', ')}.`, entities: bad.map((e) => e.id) };
+      }
     }
   } else if (method === 'external-evidence') {
     r = { ...evaluateEvidenceClaim(claim, evidence, recorded), evaluator: EVIDENCE, selected: evidence.map((e) => e.id) };
@@ -899,6 +917,80 @@ function findCycle(g) {
     if (!state.has(id)) visit(id);
   }
   return found;
+}
+
+// ---------------------------------------------------------------------------
+// Refinement (docs/claims-and-evidence.md, "Refinement")
+// ---------------------------------------------------------------------------
+
+/**
+ * A refines claim: run each scenario of the implementation behavior (the listed ones, or every scenario
+ * that runs it) with its own faults, and check every step the behavior takes against its model through
+ * the refinement mapping (src/core/refinement.js). Violated at the first failing step; verified when every
+ * step of every run passed, at least one step moved the model, and no run ended in an error.
+ * @param {Model} model @param {any} ev
+ */
+function evaluateRefines(model, ev) {
+  const id = typeof ev.behavior === 'string' ? ev.behavior : Array.isArray(ev.behavior) && ev.behavior.length === 1 ? ev.behavior[0] : null;
+  const impl = id ? model.entities.get(id) : undefined;
+  if (!impl || impl.kind !== 'behavior') {
+    return { status: 'inconclusive', evaluator: REFINEMENT, scope: 'Nothing was checked: the claim names no behavior.', explanation: `"behavior" must name one implementation behavior; ${id ? `"${id}" is not a behavior` : 'it names none or several'}.`, selected: [] };
+  }
+  const ref = refinementOf(model, impl);
+  if (!ref) {
+    return { status: 'inconclusive', evaluator: REFINEMENT, scope: 'Nothing was checked: the behavior declares no refinement.', explanation: `Behavior "${impl.id}" does not declare "refines" naming a behavior together with a "refinement" mapping.`, selected: [impl.id] };
+  }
+  const A = ref.model;
+  const listed = typeof ev.scenarios === 'string' ? [ev.scenarios] : Array.isArray(ev.scenarios) ? ev.scenarios : null;
+  const scenarios = listed
+    ? listed.map((/** @type {string} */ s) => model.entities.get(s)).filter((/** @type {any} */ s) => s && s.kind === 'scenario')
+    : (model.byKind.scenario ?? []).filter((s) => Array.isArray(s.data.behaviors) && s.data.behaviors.includes(impl.id));
+  const selected = unique([impl.id, A.id, ...scenarios.map((/** @type {Entity} */ s) => s.id)]);
+  const what = `every step of "${impl.id}" against "${A.id}" through its refinement mapping`;
+  if (!scenarios.length) {
+    return { status: 'inconclusive', evaluator: REFINEMENT, scope: `Nothing was checked: ${listed ? 'no listed scenario exists' : `no scenario runs "${impl.id}"`}.`, explanation: 'There is no trace of the implementation behavior to check, so the refinement is not established.', selected };
+  }
+
+  /** @type {{id: string, steps: number, outcome: string}[]} */
+  const ran = [];
+  /** @type {string[]} */
+  const reasons = [];
+  /** @type {string[]} */
+  const notes = [];
+  let checked = 0, moving = 0;
+  for (const sc of scenarios) {
+    if (!(Array.isArray(sc.data.behaviors) && sc.data.behaviors.includes(impl.id))) { reasons.push(`Scenario "${sc.id}" does not run "${impl.id}".`); continue; }
+    /** @type {any} */
+    let trace;
+    try { trace = runScenarioOnce(model, sc.id); } catch (e) { reasons.push(`Scenario "${sc.id}" could not be run: ${/** @type {Error} */ (e).message}`); continue; }
+    ran.push({ id: sc.id, steps: trace.steps.length, outcome: trace.outcome });
+    const r = checkRefinementTrace(model, impl, trace, sc.id);
+    checked += r.checkedSteps;
+    moving += r.movingSteps;
+    if (r.failure) {
+      const f = r.failure;
+      const scope = `Checked ${what} in the trace of scenario "${sc.id}" up to its first failing step. This is a check of these traces, not of all possible executions.`;
+      return {
+        status: 'violated', evaluator: REFINEMENT, scope, selected: unique([...selected, ...f.entities]),
+        counterexample: { summary: f.summary, entities: f.entities, scenario: f.scenario, stepIndex: f.stepIndex, reason: f.reason, trace: f.trace },
+        explanation: `${f.summary} (scenario "${f.scenario}", ${f.stepIndex < 0 ? 'initial configuration' : `step ${f.stepIndex}`}).`,
+      };
+    }
+    if (r.unsupported) { reasons.push(r.unsupported); continue; }
+    const errStep = trace.steps.find((/** @type {any} */ s) => s.error);
+    if (trace.outcome === 'error') reasons.push(`Scenario "${sc.id}" ended in an error${errStep ? ` at step ${errStep.index}: ${errStep.error.message}` : ''}; every step before it refined the model, but the run did not complete.`);
+    else if (trace.outcome === 'step-limit') notes.push(`Scenario "${sc.id}" stopped at its step limit after ${trace.steps.length} steps, so later steps were not run.`);
+  }
+  const label = ran.map((t) => `${t.id} (${plural(t.steps, 'step', 'steps')})`).join(', ') || 'no scenario';
+  const scope = `Checked ${what} in the traces of scenarios ${label}, each run with its own faults. This is a check of these traces, not of all possible executions.${notes.length ? ` ${notes.join(' ')}` : ''}`;
+  if (reasons.length) return { status: 'inconclusive', evaluator: REFINEMENT, scope, selected, explanation: reasons.join(' ') };
+  if (!moving) {
+    return { status: 'inconclusive', evaluator: REFINEMENT, scope, selected, explanation: checked ? `Every one of the ${plural(checked, 'step', 'steps')} of "${impl.id}" is a stutter, so no step of the model was matched. It is not reported as verified.` : `"${impl.id}" fired no transition in any trace, so only initial configurations were compared. It is not reported as verified.` };
+  }
+  return {
+    status: 'verified', evaluator: REFINEMENT, scope, selected,
+    explanation: `The initial configuration of "${impl.id}" maps to that of "${A.id}", and each of its ${plural(checked, 'step', 'steps')} (${moving} matched to a model transition, ${checked - moving} stutters) refined the model in ${plural(ran.length, 'trace', 'traces')}.${notes.length ? ` ${notes.join(' ')}` : ''} Other executions, inputs or orders of simultaneous events were not examined.`,
+  };
 }
 
 // ---------------------------------------------------------------------------

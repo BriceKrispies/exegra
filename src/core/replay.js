@@ -51,6 +51,8 @@ export const DEFAULT_BOUND = 200;
 
 /** @template T @param {T} v @returns {T} */
 const copy = (v) => (v === undefined ? v : JSON.parse(JSON.stringify(v)));
+/** The declared types a behavior's expressions are evaluated with (its `types` in the engine input). @param {any} b */
+const typesOf = (b) => (/** @type {string[]} */ path) => (b.types && Object.hasOwn(b.types, path.join('.')) ? b.types[path.join('.')] : undefined);
 /** @param {unknown} v */
 const scalar = (v) => v === null || typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean';
 
@@ -221,7 +223,7 @@ export function createReplay(model, opts = {}) {
           if (t.from !== m.state || t.on !== ev.id || t.faultOnly) continue;
           considered.push(t.id);
           if (t.guard !== null) {
-            const g = evaluate(t.guard, resolver(before, b.id, payload));
+            const g = evaluate(t.guard, resolver(before, b.id, payload), typesOf(b));
             if (typeof g !== 'boolean') throw new Error(`Guard "${t.guard}" of transition "${t.id}" did not evaluate to a boolean.`);
             if (!g) { guardFalse = true; continue; }
           }
@@ -242,7 +244,7 @@ export function createReplay(model, opts = {}) {
         const sets = [];
         const emitted = [];
         for (const fx of t.effects) {
-          const val = (/** @type {any} */ v) => (typeof v === 'string' ? evaluate(v, resolver(next, b.id, payload)) : copy(v));
+          const val = (/** @type {any} */ v) => (typeof v === 'string' ? evaluate(v, resolver(next, b.id, payload), typesOf(b)) : copy(v));
           if (typeof fx.set === 'string') {
             const beforeVal = next[b.id].vars[fx.set];
             const after = val(fx.to);

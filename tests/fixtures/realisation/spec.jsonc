@@ -1,0 +1,27 @@
+{
+  "exegra": "0.1",
+  "system": { "id": "realisation", "name": "Realisation" },
+  "components": [
+    { "id": "built", "name": "Built service", "category": "computational", "purpose": "Exists.", "implementation": { "status": "manual" } },
+    { "id": "planned", "name": "Planned service", "category": "computational", "purpose": "Does not exist yet.", "implementation": { "status": "not-implemented" } }
+  ],
+  "events": [
+    { "id": "ev-ping", "name": "Ping" }
+  ],
+  "behaviors": [
+    {
+      "id": "live", "name": "Live notices", "subject": "built", "initial": "idle", "level": "implementation",
+      "storage": { "durability": "memory" },
+      "states": [ { "id": "idle", "name": "Idle", "ignores": ["ev-ping"] } ]
+    },
+    {
+      "id": "future", "name": "Future machine", "subject": "planned", "initial": "f-idle", "realisation": "target",
+      "states": [ { "id": "f-idle", "name": "Idle" } ]
+    }
+  ],
+  "contracts": [
+    { "id": "ct-built", "name": "Built contract", "implementedBy": "built", "deployment": "shipped" },
+    { "id": "ct-planned", "name": "Planned contract", "implementedBy": "planned", "deployment": "target" },
+    { "id": "ct-default", "name": "Defaulted contract", "implementedBy": "planned" }
+  ]
+}

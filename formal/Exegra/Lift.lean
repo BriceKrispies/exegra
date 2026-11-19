@@ -28,7 +28,7 @@ def liftEffect : Exegra.Effect → V2.Effect
   | .malformed => .malformed
 
 def liftBehavior (b : BehaviorIn) : V2.BehaviorIn :=
-  { id := b.id, subject := b.subject, initial := b.initial, variables := b.variables,
+  { id := b.id, subject := b.subject, initial := b.initial, variables := b.variables, types := b.types,
     instances := .single,
     transitions := b.transitions.map fun t =>
       { id := t.id, source := t.source, target := t.target, on := t.on, guard := t.guard,

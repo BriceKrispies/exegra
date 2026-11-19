@@ -9,11 +9,11 @@ resources, workloads and performance"): integer time in a declared unit, instanc
 keyed, with routes), resources (`use`, `acquire`, `release`, class queues, bounds, overflow) and
 seeded SplitMix64 streams. Version-1 inputs never reach this module (`Exegra.runAny`).
 
-Not here yet (refused when present): links, workloads, timers, meters, request classes, prices,
-windowed and resource faults, `crash-instance` (no instance is ever down, every incarnation is 0).
+Not here yet (refused when present): meters and prices (WG-4715), and the fault kind `crash-instance`
+(WG-4664; no instance is ever down, every incarnation is 0).
 
 The step mirrors the format-1 step (`Exegra/Semantics.lean`): the head is taken, drop and delay
-faults act, then phase 1 (choose, reading the configuration from before the step) and phase 2
+faults act (`lose-event` as a drop, `retry-event` as a delay, WG-4903), then phase 1 (choose, reading the configuration from before the step) and phase 2
 (effects, writing the next configuration). New here:
 
 * routes are decided when an entry is first taken as head, and kept by delayed copies;
@@ -24,7 +24,8 @@ faults act, then phase 1 (choose, reading the configuration from before the step
   resource in input order: releases, then enqueues (each request takes a sequence number, then its
   `wait-timeout` entry, if its class has `maxWait`, takes the next), then grants (each `service-done`
   or `then` entry takes a number), then bounds (each `refused` entry takes a number);
-* every draw is recorded in the step's `draws`.
+* every draw is recorded in the step's `draws`;
+* after a delivery, a matching `duplicate-event` fault queues a copy of the head (`duplicateAfter`).
 
 ORDER marks where an order decides an observable result.
 -/
@@ -95,6 +96,8 @@ structure BehaviorIn where
   variables : List VariableIn
   transitions : List TransitionIn
   instances : Instances
+  /-- The declared types of the references its expressions read (`types`, WG-4902). -/
+  types : List (String × STy) := []
   deriving Inhabited
 
 /-- A link (WG-4729): transfer at `bandwidth` bytes per second through a FIFO queue, then a
@@ -425,7 +428,8 @@ def behavior (v : Value) (i : Nat) : R BehaviorIn := do
         pure (.keyed key max)
       else (intIn (field o "count") s!"{what}.instances.count" 0 (two32 - 1)).map .count
     | _ => throw s!"{what}: \"instances\" must be an object."
-  pure { id, subject, initial, variables, transitions, instances }
+  pure { id, subject, initial, variables, transitions, instances,
+         types := tysOfValue (field b "types") }
 
 def fault (v : Value) (i : Nat) : R FaultIn := do
   let what := s!"faults[{i}]"
@@ -444,7 +448,11 @@ def fault (v : Value) (i : Nat) : R FaultIn := do
     | .undef => Occurrence.any
     | .num n => .exactly n
     | _ => .never
-  let delayBy ← if kind == some "delay-event" then intIn (field f "by") s!"{what}.by" 0 (two53 - 1) else pure 0
+  -- `by` of a delay; of a retry (the shell computes it from the retry policy and `attempts`); of a
+  -- duplicate's second delivery, 0 when left out (WG-4903).
+  let delayBy ← if kind == some "delay-event" || kind == some "retry-event" then intIn (field f "by") s!"{what}.by" 0 (two53 - 1)
+    else if kind == some "duplicate-event" then intOr f "by" s!"{what}.by" 0 (two53 - 1) 0
+    else pure 0
   let injectAt ← if kind == some "inject-event" then intIn (field f "at") s!"{what}.at" 0 (two53 - 1) else pure 0
   let resource ← optStr f "resource" what
   let cls ← optStr f "class" what
@@ -1017,7 +1025,8 @@ def insertE (q : List Entry) (e : Entry) : List Entry :=
   q.take pos ++ [e] ++ q.drop pos
 
 def initialMachine (b : BehaviorIn) : Machine :=
-  { state := b.initial, vars := b.variables.foldl (fun vs v => objInsert vs v.name v.initial) [] }
+  { state := b.initial, vars := b.variables.foldl (fun vs v => objInsert vs v.name v.initial) [],
+    types := b.types }
 
 /-! ## Records -/
 
@@ -1199,7 +1208,7 @@ def evalIn (env : Env) (src : String) (view start : Conf) (mk : String) (inst pa
     let _ ← resolve env view start mk inst payload time p
   eval (fun p => match resolve env view start mk inst payload time p with
     | .ok v => v
-    | .error _ => .undef) ast
+    | .error _ => .undef) (machineTys (view.machine? mk)) ast
 
 def valueOf (env : Env) (x : Option Value) (view start : Conf) (mk : String) (inst payload : Value)
     (time : Nat) (nid : Nat) : Except String (Value × Nat) :=
@@ -2090,6 +2099,46 @@ def attemptOf (c : Config) (ev : String) : Nat := (lookupNat c.attempts ev).getD
 def faultMatches (kind ev : String) (attempt time : Nat) (f : FaultIn) : Bool :=
   f.isKind kind && f.event == some ev && f.occurrence.matches attempt && f.actsAt time
 
+/-- A fault that keeps the head from being delivered: `drop-event`, or `lose-event` (an
+at-most-once message lost between its sender's commit and dispatch), which acts the same. -/
+def dropMatches (ev : String) (attempt time : Nat) (f : FaultIn) : Bool :=
+  faultMatches "drop-event" ev attempt time f || faultMatches "lose-event" ev attempt time f
+
+/-- A fault that delivers the head later: `delay-event`, or `retry-event` (an at-least-once
+message delivered after failed dispatches, `by` being the backoff the shell computed). -/
+def delayMatches (ev : String) (attempt time : Nat) (f : FaultIn) : Bool :=
+  faultMatches "delay-event" ev attempt time f || faultMatches "retry-event" ev attempt time f
+
+/-- The effect a delivery-preventing or delaying fault records. -/
+def dropEffect (f : FaultIn) : FaultEffect := if f.isKind "lose-event" then .other "lost" else .dropped
+
+def delayEffect (f : FaultIn) : FaultEffect := if f.isKind "retry-event" then .other "retried" else .delayed
+
+/-- After a delivery that committed, a matching `duplicate-event` fault that has not acted on this
+entry (or the entry it was copied from) yet queues a copy of the head, `by` later, with the next
+sequence number after the step's own entries: the second delivery of an at-least-once message
+whose sender stopped between dispatching it and recording that (WG-4903). The copy keeps the head's
+routes, target and source, and is never duplicated again by the same fault. -/
+def duplicateAfter (env : Env) (c : Config) (head : Entry) (attempt : Nat) (already : List String) :
+    StepResult → StepResult
+  | .committed rec next =>
+    match env.faults.find? (fun f => faultMatches "duplicate-event" head.event attempt head.time f &&
+        !already.contains f.id) with
+    | none => .committed rec next
+    | some d =>
+      if head.time + d.delayBy ≥ two53 then
+        .failed { blank c.taken head .deliver c.conf with responsible := [head.event], error := some "Value time exceeds 2^53." }
+      else
+      let (payload, nid) := head.payload.copy next.nid
+      let copy : Entry := { head with seq := next.seq, time := head.time + d.delayBy, payload, first := none,
+                                      copyOf := some (head.copyOf.getD head.seq) }
+      let conf := { next.conf with pending := insertE next.conf.pending copy }
+      let recs := rec.faults ++ [{ fault := d.id, effect := .other "duplicated" }]
+      .committed { rec with config := conf, faults := recs,
+                            responsible := if rec.responsible.contains d.id then rec.responsible else rec.responsible ++ [d.id] }
+        { next with conf, seq := next.seq + 1, nid, delayedBy := (next.seq, already ++ [d.id]) :: next.delayedBy }
+  | r => r
+
 def injectedOf : Src → List FaultRecord
   | .fault f => [{ fault := f, effect := .injected }]
   | _ => []
@@ -2221,15 +2270,15 @@ def stepHead (env : Env) (c : Config) (next : Conf) (nid : Nat) (head : Entry) :
     | .ok (head, next, cur, rdraws) =>
     let attempt := attemptOf c ev
     let attempts := (ev, attempt) :: c.attempts.filter (·.1 != ev)
-    match env.faults.filter (faultMatches "drop-event" ev attempt head.time) with
+    match env.faults.filter (dropMatches ev attempt head.time) with
     | d :: ds =>
-      let recs := (d :: ds).map fun f => { fault := f.id, effect := FaultEffect.dropped }
+      let recs := (d :: ds).map fun f => { fault := f.id, effect := dropEffect f }
       .committed
         { blank c.taken head .drop next with faults := recs, draws := rdraws, responsible := responsibleOf env.input ev [] recs }
         { c with conf := next, nid, attempts, taken := c.taken + 1 }
     | [] =>
       let already := (lookupSeq c.delayedBy head.seq).getD []
-      match env.faults.find? (fun f => faultMatches "delay-event" ev attempt head.time f && !already.contains f.id) with
+      match env.faults.find? (fun f => delayMatches ev attempt head.time f && !already.contains f.id) with
       | some d =>
         if head.time + d.delayBy ≥ two53 then
           .failed { blank c.taken head .delay c.conf with responsible := [ev], error := some "Value time exceeds 2^53." }
@@ -2238,7 +2287,7 @@ def stepHead (env : Env) (c : Config) (next : Conf) (nid : Nat) (head : Entry) :
         let copy : Entry := { head with seq := c.seq, time := head.time + d.delayBy, payload, first := none,
                                         copyOf := some (head.copyOf.getD head.seq) }
         let next := { next with pending := insertE next.pending copy }
-        let recs := [{ fault := d.id, effect := FaultEffect.delayed }]
+        let recs := [{ fault := d.id, effect := delayEffect d }]
         .committed
           { blank c.taken head .delay next with faults := recs, draws := rdraws, responsible := responsibleOf env.input ev [] recs }
           { c with conf := next, seq := c.seq + 1, nid := nid', attempts, delayedBy := (c.seq, already ++ [d.id]) :: c.delayedBy, taken := c.taken + 1 }
@@ -2251,7 +2300,8 @@ def stepHead (env : Env) (c : Config) (next : Conf) (nid : Nat) (head : Entry) :
         | .error msg =>
           .failed { blank c.taken head .deliver c.conf with responsible := [ev], error := some msg }
         | .ok (fired, ignored, recs, s) =>
-          afterDeliver env head <| finish env c head .deliver fired ignored (injectedOf head.source ++ recs) (rdraws ++ s.draws)
+          duplicateAfter env c head attempt already <| afterDeliver env head <|
+            finish env c head .deliver fired ignored (injectedOf head.source ++ recs) (rdraws ++ s.draws)
             s.ops [] { conf := s.next, seq := s.seq, nid := s.nid, draws := [], recs := [] } attempts [] s.lrecs
 
 /-- Put the arrival draws of a step first among its draws. -/

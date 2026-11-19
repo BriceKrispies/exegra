@@ -8,13 +8,10 @@ held (`engine/exegra-engine/src/value.rs`).
 - Objects keep JavaScript's property order: canonical array-index keys first, ascending, then
   the other keys in insertion order. The order is observable: the entries of an `emit` payload
   are evaluated in it, so it decides which error a payload with two failing entries reports.
-- Arrays and objects are references in JavaScript and `===` compares them by identity. The
-  engine reproduces this with shared `Rc`s. Here every array and object carries an identity
-  `id`; a deep copy (`Value.copy`) gives every array and object inside a fresh identity, and
-  passing a value on (a reference resolved by an expression, assigned by `set`) keeps it. Two
-  compound values are strictly equal exactly when their identities are. Identities of values
-  read from the input are 0 and never observed: the engine copies every input literal before
-  it can reach an expression.
+- Every array and object carries an identity `id`; a deep copy (`Value.copy`) gives every
+  array and object inside a fresh identity, and passing a value on (a reference resolved by an
+  expression, assigned by `set`) keeps it. Identities are bookkeeping only: equality (`eqv`) is
+  structural (WG-4902), as it is in generated code, so no identity is observable.
 - `undef` exists only where JavaScript can hold `undefined`: a variable declared without an
   initial value. JSON output leaves it out as an object property.
 -/
@@ -42,18 +39,6 @@ def typeName : Value → String
   | .str _ => "string"
   | .arr .. => "object"
   | .obj .. => "object"
-
-/-- JavaScript's strict equality `===`: IEEE equality for numbers (NaN differs from itself,
-0 equals -0), identity for arrays and objects. -/
-def strictEq : Value → Value → Bool
-  | .undef, .undef => true
-  | .null, .null => true
-  | .bool a, .bool b => a == b
-  | .num a, .num b => a == b
-  | .str a, .str b => a == b
-  | .arr i _, .arr j _ => i == j
-  | .obj i _, .obj j _ => i == j
-  | _, _ => false
 
 /-- `x === undefined || x === null`. -/
 def isNullish : Value → Bool
@@ -154,5 +139,97 @@ def Value.displayItems : List Value → List String
   | [] => []
   | x :: xs => (if x.isNullish then "" else Value.display x) :: Value.displayItems xs
 end
+
+
+mutual
+/-- Equality of values (`==`), structural (WG-4902, `docs/semantics.md`): numbers by IEEE value
+(NaN differs from itself, 0 equals -0), strings and booleans by value, arrays element by element
+in order, objects by their keys and members in any order. No value equals `undef`, except
+`undef` itself, which never reaches a comparison (an unknown reference is an error first). -/
+def Value.eqv : Value → Value → Bool
+  | .undef, .undef => true
+  | .null, .null => true
+  | .bool a, .bool b => a == b
+  | .num a, .num b => a == b
+  | .str a, .str b => a == b
+  | .arr _ xs, .arr _ ys => Value.eqvItems xs ys
+  | .obj _ fs, .obj _ gs => fs.length == gs.length && Value.eqvFields fs gs
+  | _, _ => false
+
+def Value.eqvItems : List Value → List Value → Bool
+  | [], [] => true
+  | x :: xs, y :: ys => Value.eqv x y && Value.eqvItems xs ys
+  | _, _ => false
+
+/-- Every member of the first object is a member of the second with an equal value. Keys of an
+object are distinct, so with equal lengths this is equality of the two key sets and values. -/
+def Value.eqvFields : List (String × Value) → List (String × Value) → Bool
+  | [], _ => true
+  | (k, x) :: fs, gs =>
+    (match objGet? gs k with
+     | some y => Value.eqv x y
+     | none => false) && Value.eqvFields fs gs
+end
+
+/-- The integer representation types (`src/core/builtin-types.js`). `u64` and `i64` are limited
+to the integers a double holds exactly, `-(2^53 - 1) .. 2^53 - 1` (WG-4902). -/
+inductive IntKind where
+  | u8 | u16 | u32 | u64 | i32 | i64
+  deriving DecidableEq, Hashable, Repr, Inhabited
+
+def IntKind.name : IntKind → String
+  | .u8 => "u8" | .u16 => "u16" | .u32 => "u32" | .u64 => "u64" | .i32 => "i32" | .i64 => "i64"
+
+/-- The least value. -/
+def IntKind.lo : IntKind → Float
+  | .u8 | .u16 | .u32 | .u64 => 0
+  | .i32 => -2147483648
+  | .i64 => -9007199254740991
+
+/-- The greatest value. -/
+def IntKind.hi : IntKind → Float
+  | .u8 => 255
+  | .u16 => 65535
+  | .u32 => 4294967295
+  | .i32 => 2147483647
+  | .u64 | .i64 => 9007199254740991
+
+/-- The declared type of a reference, as far as evaluation depends on it (WG-4902). The engine
+input gives it per behavior (`types`), lowered by `src/core/sim-input.js`: a timestamp is an
+`i64` and a duration a `u64` (as generated code holds them), a declared id or scalar type its
+representation, an `option<T>` or an optional payload field `option`. -/
+inductive STy where
+  /-- No declared type (a model-level variable, or a type evaluation does not depend on):
+  numbers are IEEE doubles. -/
+  | none
+  /-- An integer type: arithmetic is checked integer arithmetic. -/
+  | int (k : IntKind)
+  /-- An option type: an absent value reads as `null`. -/
+  | option
+  deriving DecidableEq, Hashable, Repr, Inhabited
+
+/-- The type a name in the engine input stands for; any other name is `none`. -/
+def STy.ofName : String → STy
+  | "u8" => .int .u8 | "u16" => .int .u16 | "u32" => .int .u32 | "u64" => .int .u64
+  | "i32" => .int .i32 | "i64" => .int .i64
+  | "option" => .option
+  | _ => .none
+
+/-- The declared types of references, by dotted path. -/
+abbrev TyEnv := List String → STy
+
+/-- No declared types. -/
+def TyEnv.untyped : TyEnv := fun _ => .none
+
+/-- Look a dotted path up in a list of declared types. -/
+def tyLookup (tys : List (String × STy)) (path : List String) : STy :=
+  match tys with
+  | [] => .none
+  | _ => ((tys.find? (·.1 == ".".intercalate path)).map (·.2)).getD .none
+
+/-- The `types` member of a behavior in the engine input: `{path: typeName}`. -/
+def tysOfValue : Value → List (String × STy)
+  | .obj _ fs => fs.map fun (k, v) => (k, STy.ofName ((Value.asString? v).getD ""))
+  | _ => []
 
 end Exegra

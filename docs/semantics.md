@@ -1,0 +1,152 @@
+# Semantics of state machines
+
+This document states what each construct of a behavior means and names the Lean definition that is normative for it. Where this text and the Lean definition disagree, the Lean definition decides. The prose of the simulator, with its roadmap, is [simulation.md](simulation.md); the format of a specification is [model-and-format.md](model-and-format.md).
+
+Two Lean files define the machines. `formal/Exegra/Semantics.lean` (namespace `Exegra`) is format 1: one machine per behavior. `formal/Exegra/Format2.lean` (namespace `Exegra.V2`) is format 2: keyed and counted instances, routes, timers, links and resources. The Rust engine (`engine/`) follows the Lean definitions and is checked against them differentially. A specification derives version 1 input unless it uses a format-2 construct (`needsFormat2` in `src/core/sim-input.js`).
+
+## Machines and configurations
+
+- **Configuration.** The state of a run: logical time, one machine per behavior (its state and its variables), and the pending queue. Normative: `Configuration`, `Machine` and `Pending` in `formal/Exegra/Trace.lean`; for format 2, `Conf` in `Format2.lean`, whose machines are keyed by `machineKey`.
+- **Queue order.** The queue is ordered by `(time, seq)`: a new entry goes after every entry with an equal or earlier time, so entries of equal time are delivered in the order they were created. Normative: `insertPending` (`Semantics.lean`), `insertE` (`Format2.lean`).
+- **Step.** A step takes the head of the queue and delivers it. In both formats a head may first be dropped or delayed by a fault (`drop-event` and `delay-event`); otherwise it is delivered in two phases. Phase 1 chooses, for every behavior in scenario order, the transition that fires, reading the configuration from before the step. Phase 2 runs the winners' effects, behavior by behavior, on a copy of the configuration. A behavior whose machine has no enabled transition ignores the event (a recorded outcome, not an error). A failing step, such as an expression error, is not committed. Normative: `step`, `stepHead`, `deliver` (`Semantics.lean`); `chooseAll` and `fireAll` for format 2.
+- **Guard expression language.** Guards, `set` values and payload values are expressions: literals, `!` and unary `-`, `* / %`, `+ -`, comparisons, `== !=`, `&&`, `||`, and `=>`, over variables, `time`, `event.<field>` and `<behavior>.<variable>`. Type errors and unknown references are evaluation errors; numbers, equality, absent values and time follow [Values, numbers and time](#values-numbers-and-time). Normative: `parseExpr` and `eval` in `formal/Exegra/Expr.lean`; `guardHolds` in `Semantics.lean` and `Format2.lean` for the scope guards see.
+
+## Values, numbers and time
+
+These rules are the same in the simulator (`eval` in `formal/Exegra/Expr.lean`, mirrored by `evalExpr` in `src/core/expr.js`), in the Rust generated from a specification and in the generated JavaScript (Strata's `strata-spec-expr`), so a machine means one thing in all three (WG-4902). The shared case table `tests/fixtures/expr-cases.json` states them as cases; Exegra runs it on both of its evaluators (`tests/core/expr-cases.test.js`), and Strata runs a byte-identical copy on its generated Rust and JavaScript.
+
+**Declared types.** An implementation-level behavior's expressions are evaluated with the declared types of the references they read: `time` is an `i64`; each variable has its `repr`; `event.<field>` has the type of that payload field (an optional field is an option). A timestamp is an `i64` and a duration a `u64`, both in milliseconds, as generated code holds them; a declared `id` or `scalar` type is its representation. The engine input carries them as the behavior's `types` (`behaviorTypes` in `src/core/sim-input.js`; `STy`, `tysOfValue` and `Machine.types` in Lean). A model-level behavior has no declared types.
+
+**Numbers.**
+
+- Without a declared type a number is an IEEE double, as before: `7 / 2` is `3.5`, `%` is the floating remainder. `f64` is the same.
+- The integer types are `u8`, `u16`, `u32`, `i32` with their usual ranges, and `u64` and `i64` **limited to the integers a double holds exactly**: `u64` is `0 .. 2^53 - 1` and `i64` is `-(2^53 - 1) .. 2^53 - 1`, everywhere. JavaScript has no exact integer beyond `2^53` without BigInt, so the one range all three can hold exactly is chosen. Generated Rust checks results against the same range, `ready.number-bound` refuses literals, initial values and scenario payload values outside it, and generated code refuses such values when it decodes them.
+- Arithmetic in an integer type is **checked**. An arithmetic expression is computed in the type of its first typed operand; a literal takes the type of the other operand. Both operands must be values of that type (a fractional literal is not; generated code refuses it when compiling), and a result outside the range is an evaluation error, which ends the step as any evaluation error does, and is a step error in generated code. Nothing wraps. Normative: `staticTy`, `intResult` in `Expr.lean`.
+- **Division** in an integer type truncates toward zero (`-7 / 2` is `-3`); **remainder** takes the sign of the dividend (`-7 % 2` is `-1`, `7 % -2` is `1`), so `x == (x / y) * y + x % y`. Division or remainder by zero is an error. The `i32` minimum divided by `-1` is out of range and an error; its remainder by `-1` is `0`. Normative: `divIn`.
+- An integer result is never negative zero.
+- Literal-only arithmetic (`5 - 10`) has no type in the simulator; generated code types it by the variable it is assigned to. Write such constants already computed.
+
+**Equality.** `==` and `!=` compare structurally in all three: numbers by value (so the JSON values `1` and `1.0` are equal), strings and booleans by value, lists element by element in order, structs and JSON objects by their members, in any order. There is no identity comparison. Normative: `Value.eqv` in `formal/Exegra/Value.lean`.
+
+**Absent values.** A value of an option type that is absent (a variable of option type without `initial`, an optional payload field that is not given) reads as `null`. Any other absent value is an `Unknown reference` error in the simulator, and generated code refuses the event when decoding it. Normative: the `.ref` case of `eval`.
+
+**Time.**
+
+- `time` counts from the start of the scenario in the simulator: it is `0` when the run starts, in the scenario base unit. In generated code it is the step clock in milliseconds since the Unix epoch. So a machine **must not depend on where the clock starts**: a variable compared with `time` must hold a value derived from `time` wherever it is read, never its literal initial value. `ready.time-epoch` enforces this.
+- An implementation-level machine's bare-number delays and its reads of `time` are in the unit of the scenarios that run it (`machineTimeUnit` in `src/core/sim-input.js`: a format-2 scenario's `timeUnit`, by default `us`; `ms` when no scenario constrains it). Generated timers and `time` count milliseconds, so the scenarios must agree on one unit, every fixed delay is a whole number of milliseconds, and a machine that reads `time` runs in `ms`; `ready.delay-unit` enforces this, and specc converts delays by the same unit.
+- `time - x` is a signed `i64`: a value set ahead of this clock (clock skew between two processes) gives a negative difference, which an unguarded `time - x < N` reads as fresh. The rule is that a guard writes `x <= time && time - x < N`; `ready.time-difference` refuses `time - x` without `x <= time` (or `time >= x`) established by an earlier conjunct.
+
+## Transitions and their order
+
+- **Declaration-order rule.** Among the transitions of a behavior with the machine's current state as `from` and the delivered event as `on`, the first whose guard holds (an absent guard holds) fires; the rest are not considered. Two unguarded transitions on one state and event leave declaration order alone to decide, and `validate` warns with `transition.order-decides`. Normative: `scan` (`Semantics.lean`, `Format2.lean`).
+- **`otherwise`** (implementation level). Marks the last transition of a `(from, on)` group as the explicit fall-through. Its meaning is the declaration-order rule: it fires when no earlier transition of the group does. Declarative; it changes nothing in `scan`.
+- **`faultOnly` and fault activation.** A `faultOnly` transition is not considered at all unless a fault of kind `enable-transition` targets it (and is active at that time); a `disable-transition` fault removes a transition whose guard holds from consideration. Both leave records in the step. Normative: `scan` and `targeting`, whose `faultOnly` test comes before the guard is evaluated.
+
+## Effects
+
+Effects run in the order written, on the next configuration, so an expression in a later effect sees an earlier `set`. Normative: `runEffects` (`Semantics.lean`, `Format2.lean`), then the transition's machine moves to its target state, after its own effects (`fireOne`).
+
+- **`set`.** `{set, to}`: checks that the variable exists, then evaluates `to` (a string is an expression; any other JSON value is a literal) and assigns it.
+- **`emit`.** `{emit, after?, payload?, target?, via?, size?, fanout?}`: checks that the event exists, evaluates the payload, takes the next sequence number, and inserts a queue entry at `now + after` (default `0`). The entry records its source (the transition and behavior).
+- **Addressing: `target`, `reply`, routes.** An emit with `target: "reply"` answers the instance that sent the entry being handled (the `reply` flag of `Effect.emit`). Any other entry is addressed by a scenario *route* `{event, behavior, by, ...}`, decided when the entry is first taken as head; with no route and no target the entry reaches every instance of every behavior in the scenario that reacts to it. Normative: `Effect.emit`, `Entry`, `addressed`, `route` and `Input.route?` in `Format2.lean`.
+- **`timer`.** `{timer, after, emit, payload?}` sets a named timer of the firing instance: after `after` the event is delivered to that same instance. Setting a timer again replaces it; `{cancel: name}` removes it. Normative: `Effect.timer`, `Effect.cancel`, `dropTimer`, and the `.timer` case of `runEffects` in `Format2.lean`.
+- **Resources and links** (`use`, `acquire`, `release`, `via`) are described in [simulation.md](simulation.md#resources); normative: `Effect.request`, `Effect.release`, `Effect.send` and `sendMsg` in `Format2.lean`, `Resource.lean`.
+
+## Instances
+
+- **Counted instances.** `instances: {count: N}` creates instances `0 … N-1` at the start, each with its own machine. Normative: `Instances.count`, `machineKey`, `initialMachine`.
+- **Keyed instances.** `instances: {key, max}` creates one instance per distinct value of the payload field `key`, in the initial state, on the first entry routed to that key; creating instance `max + 1` fails the step. Normative: `Instances.keyed`, `chooseInst`.
+- **No `instances`**: exactly one instance whose machine key is the behavior id (`Instances.single`).
+
+## Implementation-level properties
+
+These properties exist so that a machine can be held to a standard a code generator could use. **They are declarative, with one exception: the declared types (`repr` and payload field types) of an implementation-level behavior make its arithmetic checked integer arithmetic and let an absent option read as `null` ([Values, numbers and time](#values-numbers-and-time)).** The derivation of the engine input (`src/core/sim-input.js`) forwards only those types, lowered, as the behavior's `types`; the Rust engine ignores them. What each means is a statement about the specification, checked by `src/core/readiness-machines.js` (`machineReadiness`, called by `validate`); the checks are listed under [Readiness rules](#readiness-rules). The normative semantics of the machine they annotate is the Lean definition named above. Representation types are in `src/core/builtin-types.js`.
+
+| Property | Meaning |
+|---|---|
+| `behavior.level` (`model` default, `implementation`) | The behavior is held to the readiness rules below. Models of the system's intent stay at `model`. |
+| variable `repr` | The type the variable has in code: a built-in representation type, a declared type, or `list<T>` / `option<T>` of one. The simulator's variable `type` (boolean, number, string) is unchanged. |
+| `instances.storedIn` | The record in which each instance's state is stored; `key` is one of that record's key fields. The engine reads only `key` and `max`/`count`. |
+| `behavior.storage` `{record, key}` | The record that holds the machine's state and the key field that identifies one machine in it. It is how an unkeyed machine (no `instances`) says where it is held; a keyed machine may say it here, through `instances.storedIn`, or both, and both must then name the same record and key. Dropped from the engine input like `storedIn`. |
+| `behavior.realisation` (`shipped`, `target`) | Whether the machine models code that exists (`shipped`) or the enterprise target (`target`). Default: `target` when the subject component has `implementation.status: "not-implemented"`, otherwise `shipped`; a contract has the same property under the name `deployment` (`contract.realisation` is already `generated` / `hand`), defaulting from the component named by `implementedBy`. An explicit `shipped` on a not-implemented component is an error: `behavior.realisation-subject`, `contract.deployment-subject`. `effectiveRealisation` (src/core/realisation.js) gives the declared or defaulted value. Declarative; dropped from the engine input. |
+| `storage.durability` (`record` default, `memory`) | `record`: the machine is held in the record `storage.record` names (with `key`) and declares a `transaction`. `memory`: each instance lives in process memory for a connection or tab; `storage.record`, `key`, `fields`, `state`, `stateValues`, `creates`, `instances.storedIn` and `transaction` are then not declared, and the storage and transaction readiness rules below do not apply to it. Invalid combinations are `storage.durability` errors: a memory machine that names a record or any field of one, creates records, declares `instances.storedIn` or a `transaction`; a record machine whose storage lacks `record` or `key`. |
+| `storage.fields` `{variable: field}` | The record field that holds each variable. A variable not listed is held in the field of its own name. |
+| `storage.state` (default `"state"`) | The record field that holds the control state: a required `string` field, or a required field of an `enum` type. The state is stored when `storage.state` or `storage.stateValues` is given, when the machine has more than one state, or when the record has a field `state` no variable is held in. |
+| `storage.stateValues` `{state id: value}` | What the state field holds for a state, when not its id: for an enum field whose values are named otherwise. Stored values are distinct, so the state can be read back. |
+| `storage.creates` (default `false`) | `true`: an event for a key with no record creates the record, so the machine fills every required field (key, state, variables). `false`: the machine steps only records that already exist (someone else, such as a contract, creates them); the fields it does not hold are carried over from the existing record, and an event for a key with no record is refused by the runtime host. |
+| `storage.createdBy` (a contract) | For a machine that does not create its records: the contract whose call writes the record, with the machine in its initial state, before the machine's first event. Declarative; it is what makes the scenario's initial configuration one the runtime reaches (`machine.initial-unreachable`). |
+| `event.delivery` (`at-most-once`, `at-least-once`) | The guarantee with which the event is delivered to its receiver. The engines deliver exactly once unless a fault says otherwise; which faults the runtime can produce follows from this guarantee ([Faults the runtime can produce](#faults-the-runtime-can-produce)). |
+| `system.generation.retry` `{first, factor, max}` | The runtime's retry policy for an at-least-once message whose dispatch failed: the wait after the first failure, the factor each further failure multiplies it by, the longest wait. Default: the runtime's own, `1 s`, `2`, `300 s`. |
+| `event.elapsed` | The event stands for elapsed time and is produced only by a `timer` effect. |
+| emit effect `to` | The receiver of an emit outside the modelled behaviors: a component or contract id. The engines address by `target`, `reply` and routes only; `to` is dropped from the input. |
+| `behavior.transaction` `{scope: "transition", isolation}` | Each transition is one atomic unit with the given isolation (`serializable`, `snapshot`, `read-committed`). This matches the engines, where a step is atomic and a failing step is not committed (`step`). |
+| `transition.otherwise` | See [Transitions and their order](#transitions-and-their-order). |
+| `state.ignores` | Events the state deliberately does not react to. This is what the engines do for any event with no enabled transition (the `ignored` outcome of `chooseOne`, with reason `noTransition`); the property makes it a stated decision. |
+
+## Readiness rules
+
+For every behavior with `level: "implementation"`, `validate` reports these as errors. Each code is one rule; a violation is reported once per offending variable, transition, state or event.
+
+| Code | Rule |
+|---|---|
+| `ready.repr-missing` | Every variable has a `repr`. |
+| `ready.repr-unresolved` | A `repr` resolves: built-in, a `type` entity, or `list<T>` / `option<T>` of a resolving T. |
+| `ready.payload-type-unresolved` | Every payload field of an event the machine receives, emits or times has a type that resolves. |
+| `ready.instances-storage` | When `instances` is declared it is `{key, storedIn}`, `storedIn` is a record and `key` is a key field of it. |
+| `ready.storage-missing` | The behavior says which record holds it: `storage: {record, key}`, or `instances: {key, storedIn}`. A stateless machine (one state, no variables) keeps nothing and is exempt. |
+| `ready.storage-key` | `storage.key` is a key field of `storage.record` (or, written as a list, a list of key fields of it). |
+| `storage.key-whole` | A machine is keyed by the whole key of its record: `storage.key` (and `instances.key`) names every key field of `storage.record`, in the record's order. One field name for a one-field key; the list of fields, such as `["object", "record-id"]`, for a composite key. A key naming part of the record's key would make one instance of every record that agrees on that part (two objects with the same record id would share a machine). specc refuses the same at generation (`storage.key-whole`), and generates a composite key as a tuple; a machine keyed by several fields cannot be reached by a request or event that carries one key value. Negative fixture: `tests/core/readiness-machines.test.js`, WG-4907. |
+| `ready.storage-mismatch` | When both `storage` and a valid `instances.storedIn` are declared, they name the same record and key. |
+| `ready.storage-field-unknown` | Every `storage.fields` entry maps a variable of the machine to a field of its record, and no record field holds two of the key, the state and the variables. |
+| `ready.storage-variable-unmapped` | Every variable is held in a field of the record: the field `storage.fields` maps it to, or else the field of its own name. |
+| `ready.storage-field-type` | A variable's `repr` fits its field: the field's type is the repr, or a declared `id` / `scalar` type whose repr is the variable's repr, optional or not; a variable of repr `option<T>` needs an optional field of type T. An optional field read back unset gives the variable its initial value. |
+| `ready.storage-state-field` | When the state is stored, the state field exists, is required, is held by nothing else, and is a `string` or an `enum`; `stateValues` names only states and gives distinct values; for an enum, its values include the stored value of every state. |
+| `ready.storage-creates-unfilled` | A machine with `storage.creates: true` holds every required field of its record as its key, its state or a variable. A non-creating machine is not held to this. |
+| `ready.event-field-undeclared` | Every `event.<field>` read in a guard, a `set` value or a payload expression is a declared payload field of the transition's event. |
+| `ready.emit-receiver-missing` | Every `emit` effect has `target: "reply"`, a `to`, or a scenario route for the emitted event. |
+| `ready.delivery-missing` | Every event emitted by an `emit` effect declares `delivery`. |
+| `ready.transaction-missing` | The behavior declares `transaction: {scope: "transition", isolation}`. |
+| `ready.fault-only` | No transition is `faultOnly`. |
+| `ready.elapsed-no-timer` | Every event with `elapsed: true` that the machine receives, emits or times is the `emit` of some `timer` effect. |
+| `ready.order-ambiguous` | In each `(from, on)` group every transition but the last has a guard, and the last has a guard or `otherwise: true`. |
+| `ready.otherwise-misplaced` | `otherwise` appears only on the last transition of its group. |
+| `ready.outcome-missing` | Every non-terminal state has a transition on every event that is the `on` of some transition of the machine, or lists the event in `ignores`. |
+| `ready.time-epoch` | A variable compared with `time` (or subtracted from it) holds a value set from `time` wherever it is read: it is set from an expression reading `time` on every path into the transition's state, or an earlier conjunct is a boolean variable that starts `false` and is set to anything but `false` only by transitions that also set the variable from `time`. |
+| `ready.time-difference` | `time - x` is read only where `x <= time` (or `time >= x`) is an earlier conjunct of an enclosing `&&` chain or the premise of a `=>`; for an effect the guard's top-level conjuncts count. |
+| `ready.delay-unit` | The scenarios that run the machine agree on one time unit; every fixed delay of an `emit ... after` or a timer (a bare number in that unit, or a duration string) is a whole number of milliseconds; a machine that reads `time` runs in `ms`. |
+| `ready.number-bound` | A number literal in an expression is at most `2^53 - 1`; an initial value of an integer variable, and a scenario payload value of an integer field of an event the machine receives, is a whole number in its type's range. |
+
+Because the last transition of a group needs a guard or `otherwise`, a single unconditional transition is written with `"otherwise": true`. `faultOnly` transitions are excluded from the ordering and outcome rules, since the machine may not have them.
+
+## Faults the runtime can produce
+
+A scenario that runs implementation-level machines says what the generated runtime does, so its faults must be ones that runtime can produce (WG-4903). The runtime (Strata's `crates/runtime`, `host.rs` and `system.rs`) works like this:
+
+- **Timers.** A due timer is removed and its event stepped in one transaction, with `now` equal to its deadline. A timer firing is never dropped, delayed or repeated.
+- **At-least-once messages.** The emit is written to the sender's outbox in the step's transaction. A failed dispatch is retried after the backoff of `system.generation.retry` (by default 1 s, then 2 s, 4 s, ... up to 300 s), until one succeeds; the entry is removed only after a successful dispatch, so a sender that stops between dispatching and recording it dispatches the message again, with the same id.
+- **At-most-once messages.** The entry is claimed (removed) and then dispatched once. A failed dispatch, or a sender that stops between commit and dispatch, loses it; it is never dispatched twice and never deferred.
+- **Inside one system host** every machine's emits and timers are entries of one transactional queue, delivered exactly once at their due time; the guarantees above govern the hop through a dispatcher, from another host's outbox. Exegra cannot see where a deployment splits machines into hosts, so `fault.unrealisable` accepts a fault on any emitted event whose delivery allows it; Strata's system differential produces such a fault only on an input (`crates/system-differential`).
+- **Events that declare no delivery** come from outside the runtime (a person, a browser, another system), which may send them late, twice or not at all.
+
+The fault kinds that model this (format 2; a scenario with one of them derives a version-2 engine input):
+
+| Kind | Fields | What the engine does | The runtime's cause |
+|---|---|---|---|
+| `duplicate-event` | `event`, optional `occurrence`, optional `by` (default `0`) | The matching entry is delivered, and a copy of it is queued `by` later, with the next sequence number after the step's own entries; the copy keeps the entry's routes, target and source, and is not duplicated again by the same fault. The step records `{fault, effect: "duplicated"}`. | An at-least-once message dispatched again because its sender stopped between the dispatch and recording it. |
+| `lose-event` | `event`, optional `occurrence` | As `drop-event`: the step is a `drop`, with effect `lost`. | An at-most-once message lost because its sender stopped between commit and dispatch, or its one dispatch failed. |
+| `retry-event` | `event`, optional `occurrence`, `attempts` (a positive integer) | As `delay-event`, by the sum of the backoff waits after `attempts` failed dispatches (`src/core/fault-model.js`, `retryDelay`; the shell computes `by`); the step is a `delay`, with effect `retried`. | An at-least-once message whose first `attempts` dispatches failed. |
+
+Normative: `dropMatches`, `delayMatches`, `duplicateAfter` and the `.event` case of `stepHead` in `Format2.lean`; the Rust oracle mirrors them (`engine/exegra-engine/src/v2.rs`).
+
+**Rule `fault.unrealisable`** (an error from `validate`, `src/core/fault-model.js`, `faultRealisability`). In a scenario that runs an implementation-level machine, every fault is one the runtime can produce:
+
+| Event of the fault | Realisable | Unrealisable |
+|---|---|---|
+| fired by a timer of the scenario's machines, or `elapsed` | none | every event fault, `inject-event` included |
+| `delivery: at-least-once` | `duplicate-event`, `retry-event`, `inject-event`, `delay-event` by exactly a sum of backoff waits | `drop-event`, `lose-event`, any other `delay-event` |
+| `delivery: at-most-once` | `drop-event`, `lose-event`, `inject-event` | `delay-event`, `retry-event`, `duplicate-event` |
+| no delivery (from outside the runtime) | `drop-event`, `delay-event`, `duplicate-event`, `inject-event` | `lose-event`, `retry-event` |
+
+`enable-transition` and `disable-transition` on a transition of an implementation-level machine are unrealisable too: generated code has no switch that turns a transition on or off; model the cause as a fault of the machine's input. No runtime configuration lets the runtime drop an at-least-once message or a timer firing, so the spec cannot state one; a configuration that changes the backoff is `system.generation.retry`.
+
+**Rule `machine.initial-unreachable`** (an error from `validate`, `src/core/readiness-machines.js`). Exegra starts every instance in its initial state, an unkeyed one at the start and a keyed one on the first entry routed to it, up to `instances.max`. The runtime starts an instance in its initial state only when the machine creates its records (`storage.creates`): otherwise it refuses the machine's events (`RecordMissing`) until someone else has written the record, in whatever state they wrote it. So a shipped implementation-level machine that a scenario runs either creates its records or names the contract that writes them in its initial state (`storage.createdBy`). A machine is shipped when its subject component states an implementation status other than `not-implemented` and is not a `client` (a client machine runs in the browser, generated as JavaScript, and starts in its initial state there); a machine of a component not built yet is a target and is not held to the rule. The runtime enforces `instances.max` as Exegra does: creating one instance more is refused (`HostError::InstanceLimit`).

@@ -2,535 +2,1175 @@
   "results": {
     "ev-concordance-pass": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:44.176Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-concordance-fail": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:44.532Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-concordance-absent": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:44.890Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-concordance-diagnostics": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:45.254Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-concordance-unknown-claim": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:45.620Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-concordance-unconfigured": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:45.979Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-concordance-directory": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:46.335Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-concordance-watched": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:46.706Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-trace-order-decides": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:47.088Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-trace-precedes-script": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:47.442Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-trace-never-faultonly": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:47.802Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-trace-constant-consequent": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:48.139Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-models-listed": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:48.481Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-models-validated": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:48.837Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-validate-inert-negative": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:49.201Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-validate-not-staged": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:49.558Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-data-declared-markers": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:49.914Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-roundtrip-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:02:51.177Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-browser-inspector-rename": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:09.160Z",
+      "ranAt": "2026-11-19T03:58:55.762Z",
       "obtained": "run"
     },
     "ev-browser-source-edit": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:16.033Z",
+      "ranAt": "2026-11-19T03:59:01.934Z",
       "obtained": "run"
     },
     "ev-workspace-write": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:16.208Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-browser-persists": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:22.800Z",
+      "ranAt": "2026-11-19T03:59:07.772Z",
       "obtained": "run"
     },
     "ev-roundtrip-rejected": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:23.169Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-browser-rejected-source": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:29.941Z",
+      "ranAt": "2026-11-19T03:59:13.756Z",
       "obtained": "run"
     },
     "ev-workspace-conflict": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:30.113Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-layout-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:30.523Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-layout-browser": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:37.163Z",
+      "ranAt": "2026-11-19T03:59:19.652Z",
       "obtained": "run"
     },
     "ev-simulation-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:37.647Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-generate-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:38.045Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-workspace-confinement": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:38.563Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-roundtrip-invalid-draft": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:38.902Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-browser-invalid-draft": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:45.598Z",
+      "ranAt": "2026-11-19T03:59:25.834Z",
       "obtained": "run"
     },
     "ev-model-unsupported": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:45.938Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-flows-trace": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:46.320Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-flows-edges": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:46.716Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-browser-sim-flow": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:03:56.452Z",
+      "ranAt": "2026-11-19T03:59:34.911Z",
       "obtained": "run"
     },
     "ev-simulation-contract": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:04:00.112Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-engines-agree": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:04:03.647Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-simulation-worker-responsive": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:04:17.363Z",
+      "ranAt": "2026-11-19T03:59:48.384Z",
       "obtained": "run"
     },
     "ev-browser-phone-touch-usable": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:04:29.183Z",
+      "ranAt": "2026-11-19T03:59:59.636Z",
       "obtained": "run"
     },
     "ev-browser-phone-every-function": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:04:51.240Z",
+      "ranAt": "2026-11-19T04:00:21.175Z",
       "obtained": "run"
     },
     "ev-browser-tablet-desktop-expand": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:05:00.298Z",
+      "ranAt": "2026-11-19T04:00:29.552Z",
       "obtained": "run"
     },
     "ev-fault-model-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:05:00.993Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-formal-differential": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:05:28.675Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-formal-proofs": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:05:29.289Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-contract-events-static": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:05:29.633Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-contract-trace-checks": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:05:30.316Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-contract-request-log": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:05:31.006Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-browser-requests-section": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:05:38.178Z",
+      "ranAt": "2026-11-19T04:00:36.031Z",
       "obtained": "run"
     },
     "ev-data-model-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:05:38.684Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-record-erasure-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:05:39.195Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-classification-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:05:39.695Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-formal-explore": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:05:53.259Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-formal-explore-bounded": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:05:56.781Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-negatives-status": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:05:57.159Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-negatives-validated": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:05:58.098Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-own-claims-falsifiable": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:05:59.329Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-formal-explore-temporal": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:02.694Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-distribution-lowering": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:06.379Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-metric-claims-in-specifications": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:13.219Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-runtime-data-complete": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:14.494Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-verify-reuses-fresh-outcomes": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:14.687Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-verify-skip-keeps-outcome": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:14.877Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-journal-append-failure": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:15.042Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-changes-pairing-by-revision": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:15.193Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-replay-recorded-stream-clean": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:15.855Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-replay-wrong-order": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:16.515Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-replay-unknown-event": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:17.177Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-replay-missing-response": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:17.848Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-replay-bound": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:18.512Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-replay-payload": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:19.179Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-replay-not-allowed": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:19.837Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-replay-incremental": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:20.516Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-live-browser": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:29.831Z",
+      "ranAt": "2026-11-19T04:00:44.737Z",
       "obtained": "run"
     },
     "ev-traffic-bounded": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:30.006Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-traffic-live-seq": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:39.374Z",
+      "ranAt": "2026-11-19T04:00:53.407Z",
       "obtained": "run"
     },
     "ev-traffic-server-events": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:39.646Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-traffic-engine-runner": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:39.824Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-traffic-sha256": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:40.007Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-traffic-browser-producers": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:49.383Z",
+      "ranAt": "2026-11-19T04:01:02.034Z",
       "obtained": "run"
     },
     "ev-evidence-ref-rule": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:49.714Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-lean-boundary": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:06:50.033Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-lean-theorem-method": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:05.641Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-lean-core-browser": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:14.297Z",
+      "ranAt": "2026-11-19T04:01:09.981Z",
       "obtained": "run"
     },
     "ev-register-import-coverage": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:14.650Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-register-import-lost-cell": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:14.836Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-register-import-sources": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:15.024Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-register-import-drafts": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:15.389Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-register-import-authority": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:15.712Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-external-traceability": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:16.100Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-external-junit": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:17.237Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-integrity-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:18.396Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-integrity-ratchet": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:18.914Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-integrity-lean": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:34.549Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-reader-counts": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:34.878Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-reader-table": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:35.208Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-reader-list": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:35.540Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-reader-sections": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:35.877Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-reader-default": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:36.206Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-reader-unknown-field": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:36.539Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-reader-browser-select": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:43.077Z",
+      "ranAt": "2026-11-19T04:01:15.667Z",
       "obtained": "run"
     },
     "ev-reader-browser-edit": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:50.528Z",
+      "ranAt": "2026-11-19T04:01:22.333Z",
       "obtained": "run"
     },
     "ev-model-kernel-corpus": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:51.828Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-model-kernel-cases": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:54.733Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     },
     "ev-model-kernel-edges": {
       "outcome": "pass",
-      "ranAt": "2026-11-18T18:07:55.194Z",
-      "obtained": "run"
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-readiness-rules": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-readiness-fixed": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-readiness-model-level": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-readiness-shipped-projects": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-readiness-declarative": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-codegen-consistency-rules-1": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-codegen-consistency-rules-2": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-codegen-consistency-rules-3": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-codegen-consistency-rules-4": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-codegen-consistency-rules-5": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-codegen-consistency-rules-6": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-codegen-consistency-rules-7": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-codegen-consistency-rules-8": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-codegen-consistency-rules-9": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-codegen-consistency-rules-10": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-codegen-consistency-rules-11": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-codegen-consistency-rules-12": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-codegen-consistency-rules-13": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-codegen-consistency-rules-14": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-1": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-2": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-3": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-4": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-5": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-6": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-7": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-8": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-9": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-10": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-11": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-12": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-13": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-14": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-15": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-16": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-17": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-18": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-19": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-20": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-21": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-22": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-23": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-24": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-25": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-26": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-generation-readiness-gated-27": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-verified": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-wrong-state": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-guard-false": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-post-variable": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-false-stutter": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-initial": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-emits": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refinement-refines-rules": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refinement-mapping-rules": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-declaration-order": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-timer-same": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-timer-internal": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-timer-differs": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-cross-refined": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-cross-direct": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-cross-violated": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-readiness-storage-alone": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-readiness-storedin-alone": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-readiness-stateless-exempt": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-constructs-valid-fixture": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-constructs-consistency": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-constructs-durations": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-constructs-readiness": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-constructs-realised-by-valid": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-constructs-realised-by-removed": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-retention-erases-records": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-time-scale": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-time-scale-violated": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-time-scale-absent": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refinement-time-scale-rule": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-readiness-non-creating": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-readiness-storage-defaults": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-readiness-field-fit": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui-valid-fixture": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui-consistency": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui-routes": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui-readiness": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui-client-machine": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui-steps-valid": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui-steps-capture": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui-steps-mark": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui-steps-css": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui-steps-attribute": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui-steps-action-item": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui-for-each": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui-label-template": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui-item-argument": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-delayed-emit-scaled": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-delayed-emit-event": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-delayed-emit-delay": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-delayed-emit-at-once": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-refines-timer-not-emit": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-valid": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-options-from": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-options-both": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-catch-all": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-catch-all-nav": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-catch-all-route": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-nav-query": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-nav-form": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-when": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-when-shape": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-toast": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-toast-list": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-derive-cycle": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-derive-self": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-result": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-result-nav": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-local": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-timer-delay-type": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-timer-delay-simulate": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-timer-delay-level": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-timer-delay-refines": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-action-form": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-ui3-action-form-field": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-wire-case-values": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-wire-case-refused": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-json-resolves": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-json-expr-class": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-json-repr": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-json-refresh-path": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
+    },
+    "ev-json-action-argument": {
+      "outcome": "pass",
+      "ranAt": "2026-11-19T03:58:44.835Z",
+      "obtained": "reused"
     }
   },
   "traceability": {
-    "checkedModules": 188,
+    "checkedModules": 199,
     "missingModules": [],
     "unclaimedFiles": [],
-    "claimedFiles": 127
+    "claimedFiles": 135
   },
   "theorems": {
     "Exegra.runInput_terminates": {
@@ -549,7 +1189,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T18:07:58.305Z"
+      "checkedAt": "2026-11-19T04:01:25.506Z"
     },
     "Exegra.Api.runAny_eq_parse_call": {
       "about": {
@@ -571,7 +1211,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T18:07:58.305Z"
+      "checkedAt": "2026-11-19T04:01:25.506Z"
     },
     "Exegra.Api.registry_names_nodup": {
       "about": {
@@ -589,7 +1229,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T18:07:58.305Z"
+      "checkedAt": "2026-11-19T04:01:25.506Z"
     },
     "Exegra.Impl.runAnyValue_eq": {
       "about": {
@@ -611,7 +1251,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T18:07:58.305Z"
+      "checkedAt": "2026-11-19T04:01:25.506Z"
     },
     "Exegra.Api.call_engine_run_spec": {
       "about": {
@@ -633,7 +1273,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T18:07:58.305Z"
+      "checkedAt": "2026-11-19T04:01:25.506Z"
     },
     "Exegra.Impl.JsonOut.write'_eq": {
       "about": {
@@ -655,7 +1295,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T18:07:58.305Z"
+      "checkedAt": "2026-11-19T04:01:25.506Z"
     },
     "Exegra.Model.Model.semanticHash_presentation": {
       "about": {
@@ -673,7 +1313,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T18:07:58.305Z"
+      "checkedAt": "2026-11-19T04:01:25.506Z"
     },
     "Exegra.Hash.semanticHash_key_order": {
       "about": {
@@ -691,7 +1331,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T18:07:58.305Z"
+      "checkedAt": "2026-11-19T04:01:25.506Z"
     },
     "Exegra.Hash.semanticHash'_eq": {
       "about": {
@@ -713,7 +1353,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T18:07:58.305Z"
+      "checkedAt": "2026-11-19T04:01:25.506Z"
     },
     "Exegra.Api.call_hash_semantic": {
       "about": {
@@ -735,7 +1375,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T18:07:58.305Z"
+      "checkedAt": "2026-11-19T04:01:25.506Z"
     },
     "Exegra.Model.derive_refs_resolve": {
       "about": {
@@ -753,7 +1393,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T18:07:58.305Z"
+      "checkedAt": "2026-11-19T04:01:25.506Z"
     },
     "Exegra.Api.call_model_derive_total": {
       "about": {
@@ -771,7 +1411,7 @@
       "kernel": "ok",
       "kind": "theorem",
       "lean": "4.35.0",
-      "checkedAt": "2026-11-18T18:07:58.305Z"
+      "checkedAt": "2026-11-19T04:01:25.506Z"
     }
   }
 }

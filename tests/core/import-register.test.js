@@ -33,7 +33,7 @@ test('the fixture imports and validates and rebuilds line for line', () => {
   assert.deepEqual(fileLines(renderMarkdown(spec)), fileLines(text), 'the file renders back from the written specification alone');
   assert.equal(run().text, r.text, 'deterministic');
   assert.deepEqual(spec.components.map((/** @type {any} */ c) => [c.id, c.category]), [['api', 'computational'], ['store', 'storage']]);
-  assert.deepEqual(spec.capabilities.find((/** @type {any} */ c) => c.id === 'cap-02').owners, ['store', 'api']);
+  assert.deepEqual(spec.features.find((/** @type {any} */ c) => c.id === 'cap-02').owners, ['store', 'api']);
   assert.deepEqual(spec.relationships.map((/** @type {any} */ x) => [x.from, x.to, x.label, x.description, x.state]), [['api', 'store', 'I-1', 'SQL over TLS', 'Built']]);
   assert.deepEqual(spec.conflicts[0].mentions, ['cap-02']);
   assert.ok(r.loss.lines().some((l) => l.startsWith('row with a different number of cells')), 'the short row is reported');
@@ -55,7 +55,7 @@ test('ids, mentions and citations follow the map', () => {
 
 test('a row that does not render back fails the import', () => {
   const spec = parseJsonc(run().text);
-  const cap = spec.capabilities.find((/** @type {any} */ c) => c.id === 'cap-01');
+  const cap = spec.features.find((/** @type {any} */ c) => c.id === 'cap-01');
   const raw = new Map([['cap-01', '| CAP-01 | Create widgets | API | [REPO:api/create.ts:1-20] |']]);
   assert.deepEqual(renderCheck(spec, raw), []);
   cap.capability = 'Create';
@@ -77,7 +77,7 @@ test('every imported entity names its source line', () => {
     if (e.ref !== undefined) assert.ok(line.includes(e.ref), `${e.id}: line ${e.source} holds ${e.ref}`);
     if (e.title) assert.ok(line.includes(e.title), `${e.id}: line ${e.source} holds its heading`);
   }
-  for (const c of [...spec.components, ...spec.capabilities, ...spec.interfaces, ...spec.conflicts]) assert.equal(typeof c.ref, 'string', `${c.id} carries ref`);
+  for (const c of [...spec.components, ...spec.features, ...spec.interfaces, ...spec.conflicts]) assert.equal(typeof c.ref, 'string', `${c.id} carries ref`);
 });
 
 test('a draft fragment is merged with origin and source and a checked basis', () => {

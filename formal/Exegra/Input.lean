@@ -53,6 +53,8 @@ structure BehaviorIn where
   initial : String
   variables : List VariableIn
   transitions : List TransitionIn
+  /-- The declared types of the references its expressions read (`types`, WG-4902). -/
+  types : List (String × STy) := []
   deriving Inhabited
 
 /-- How a fault's `occurrence` matches an attempt number. -/
@@ -200,7 +202,7 @@ def behavior (v : Value) (i : Nat) : R BehaviorIn := do
     (arrayOrEmpty b "transitions")
   let subject := (field b "subject").asString?
   let initial ← string b "initial" what
-  pure { id, subject, initial, variables, transitions }
+  pure { id, subject, initial, variables, transitions, types := tysOfValue (field b "types") }
 
 def fault (v : Value) (i : Nat) : R FaultIn := do
   let what := s!"faults[{i}]"

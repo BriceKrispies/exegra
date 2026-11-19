@@ -7,12 +7,15 @@
 // "Specification-level form").
 
 import { lowerDistribution, unitExponentialTable } from './distributions.js';
+import { unsharedText } from './codegen-model.js';
+
+import { retryDelay } from './fault-model.js';
 
 /** @typedef {import('./types.js').Model} Model */
 
 /**
  * @typedef {{id:string, from:string, to:string, on:string, guard:string|null, effects:any[], faultOnly:boolean}} InputTransition
- * @typedef {{id:string, subject:string, initial:string, variables:{name:string, initial:any}[], states:string[], transitions:InputTransition[]}} InputBehavior
+ * @typedef {{id:string, subject:string, initial:string, types?:Record<string, string>, variables:{name:string, initial:any}[], states:string[], transitions:InputTransition[]}} InputBehavior
  * @typedef {{id:string, kind:string, event?:string, transition?:string, occurrence?:number, by?:number, at?:number, payload?:Record<string, any>}} InputFault
  * @typedef {{format:'exegra-sim-input', version:1,
  *   scenario:{id:string, steps:{at:number, event:string, payload:Record<string, any>}[], faults:string[], stepLimit:number},
@@ -20,6 +23,69 @@ import { lowerDistribution, unitExponentialTable } from './distributions.js';
  */
 
 export const SIM_INPUT_FORMAT = 'exegra-sim-input';
+
+const INT_TYPES = ['u8', 'u16', 'u32', 'u64', 'i32', 'i64'];
+
+/**
+ * The type a declared type name stands for in evaluation (WG-4902, docs/semantics.md, "Numbers"):
+ * an integer type name, `option`, or the name itself (which the engines treat as untyped). A
+ * timestamp is an `i64` and a duration a `u64` (milliseconds, as generated code holds them); a
+ * declared id or scalar type is its representation.
+ * @param {Model} model @param {any} name @param {number} [depth]
+ * @returns {string|undefined}
+ */
+export function evalTypeOf(model, name, depth = 0) {
+  if (typeof name !== 'string') return undefined;
+  const t = unsharedText(name);
+  if (INT_TYPES.includes(t)) return t;
+  if (t === 'timestamp') return 'i64';
+  if (t === 'duration') return 'u64';
+  if (/^option\s*</.test(t)) return 'option';
+  const decl = model.entities.get(t);
+  if (decl && decl.kind === 'type' && depth < 8) {
+    const d = /** @type {any} */ (decl.data);
+    if ((d.kind === 'id' || d.kind === 'scalar') && typeof d.repr === 'string') return evalTypeOf(model, d.repr, depth + 1);
+  }
+  return t;
+}
+
+/**
+ * The declared types of the references an implementation-level behavior's expressions read, by
+ * dotted path (`types` of a behavior in the engine input, WG-4902): `time` (an `i64`), each
+ * variable with a `repr`, and `event.<field>` for each payload field of the events it receives
+ * (`option` for an optional field). A field that two received events declare with different
+ * types is left out. A model-level behavior has none: its numbers are untyped doubles.
+ * @param {Model} model @param {string} bid
+ * @returns {Record<string, string>}
+ */
+export function behaviorTypes(model, bid) {
+  const b = model.entities.get(bid);
+  /** @type {Record<string, string>} */
+  const out = {};
+  if (!b || b.kind !== 'behavior' || /** @type {any} */ (b.data).level !== 'implementation') return out;
+  out.time = 'i64';
+  for (const v of Array.isArray(b.data.variables) ? b.data.variables : []) {
+    const t = evalTypeOf(model, v?.repr);
+    if (typeof v?.name === 'string' && t !== undefined) out[v.name] = t;
+  }
+  /** @type {Set<string>} */
+  const conflicting = new Set();
+  const received = new Set((model.byKind.transition ?? []).filter((t) => t.owner === bid).map((t) => t.data.on));
+  for (const eid of received) {
+    const ev = model.entities.get(eid);
+    const payload = ev && ev.kind === 'event' && Array.isArray(/** @type {any} */ (ev.data).payload) ? /** @type {any} */ (ev.data).payload : [];
+    for (const f of payload) {
+      if (typeof f?.name !== 'string') continue;
+      const t = f.optional === true ? 'option' : evalTypeOf(model, f.type);
+      if (t === undefined) continue;
+      const key = `event.${f.name}`;
+      if (key in out && out[key] !== t) conflicting.add(key);
+      else out[key] = t;
+    }
+  }
+  for (const k of conflicting) delete out[k];
+  return out;
+}
 export const SIM_INPUT_VERSION = 1;
 
 /** Fields of an effect the engine reads. */
@@ -40,7 +106,8 @@ function inputEffect(fx) {
   if (!fx || typeof fx !== 'object' || Array.isArray(fx)) return copy(fx);
   /** @type {Record<string, any>} */
   const out = {};
-  for (const k of EFFECT_KEYS) if (hasOwn(fx, k) && fx[k] !== undefined) out[k] = copy(fx[k]);
+  // An emit's `to` names a receiver outside the model (implementation level, declarative): not engine input.
+  for (const k of EFFECT_KEYS) if (hasOwn(fx, k) && fx[k] !== undefined && !(k === 'to' && hasOwn(fx, 'emit'))) out[k] = copy(fx[k]);
   return out;
 }
 
@@ -64,10 +131,12 @@ export function simulationInput(model, scenarioId, faults) {
   const behaviors = behaviorIds.map((/** @type {string} */ bid) => {
     const b = model.entities.get(bid);
     if (!b || b.kind !== 'behavior') throw new Error(`Scenario "${scenarioId}" lists "${bid}", which is not a behavior.`);
+    const types = behaviorTypes(model, bid);
     return {
       id: bid,
       subject: b.data.subject,
       initial: b.data.initial,
+      ...(Object.keys(types).length ? { types } : {}),
       variables: (Array.isArray(b.data.variables) ? b.data.variables : []).map((/** @type {any} */ v) => ({ name: v.name, initial: copy(v.initial) })),
       states: (model.byKind.state ?? []).filter((s) => s.owner === bid).map((s) => s.id),
       transitions: allTransitions.filter((t) => t.owner === bid).map((t) => ({
@@ -113,8 +182,15 @@ export function simulationInput(model, scenarioId, faults) {
     events: (model.byKind.event ?? []).map((e) => ({ id: e.id })),
     faults: faultDecls,
   };
-  return needsFormat2(model, sdata) ? simulationInputV2(model, scenarioId, v1) : v1;
+  return needsFormat2(model, sdata) || faultDecls.some((f) => FORMAT2_FAULTS.includes(/** @type {string} */ (f.kind))) ? simulationInputV2(model, scenarioId, v1) : v1;
 }
+
+/**
+ * The fault kinds only format 2 has (WG-4903): a scenario with one of them derives version 2.
+ * Each acts as the runtime would: duplicate-event delivers and queues a copy `by` later, lose-event
+ * drops, retry-event delays by the retry backoff after `attempts` failures (docs/semantics.md).
+ */
+export const FORMAT2_FAULTS = ['duplicate-event', 'lose-event', 'retry-event'];
 
 // ---------------------------------------------------------------------------
 // Format 2 (docs/simulation.md, "Specification-level form")
@@ -234,6 +310,7 @@ const V2_EFFECTS = ['use', 'acquire', 'release', 'timer', 'cancel', 'via'];
  */
 export function needsFormat2(model, sdata) {
   if ((Array.isArray(sdata.workloads) && sdata.workloads.length) || sdata.seed !== undefined || sdata.horizon !== undefined) return true;
+  for (const fid of Array.isArray(sdata.faults) ? sdata.faults : []) if (FORMAT2_FAULTS.includes(model.entities.get(fid)?.data?.kind)) return true;
   for (const bid of sdata.behaviors ?? []) {
     const b = model.entities.get(bid);
     if (b?.data?.instances) return true;
@@ -244,14 +321,51 @@ export function needsFormat2(model, sdata) {
   return false;
 }
 
+/**
+ * The time unit an implementation-level machine's bare numbers are in (WG-4902, docs/semantics.md,
+ * "Time"): the unit of the scenarios that run it. A format-2 scenario's unit is its `timeUnit`, by default
+ * `us`; a format-1 scenario that names a `timeUnit` has that unit, and one that names none constrains
+ * nothing. With no constraining scenario the unit is `ms`, the unit of generated code's clock. When the
+ * scenarios disagree, `units` lists every unit found and `unit` is the first.
+ * @param {Model} model @param {string} bid
+ * @returns {{unit: string, units: string[], scenarios: string[]}}
+ */
+export function machineTimeUnit(model, bid) {
+  /** @type {string[]} */
+  const units = [];
+  /** @type {string[]} */
+  const scenarios = [];
+  for (const s of model.byKind.scenario ?? []) {
+    const d = /** @type {any} */ (s.data);
+    if (!Array.isArray(d.behaviors) || !d.behaviors.includes(bid)) continue;
+    const u = typeof d.timeUnit === 'string' ? d.timeUnit : needsFormat2(model, d) ? 'us' : undefined;
+    if (u === undefined) continue;
+    scenarios.push(s.id);
+    if (!units.includes(u)) units.push(u);
+  }
+  return { unit: units[0] ?? 'ms', units, scenarios };
+}
+
+/** Nanoseconds per unit of a scenario clock. */
+export const UNIT_NS = Object.freeze({ ns: 1, us: 1000, ms: 1000000, s: 1000000000 });
+
+/** The instances the engine reads: `storedIn` is implementation-level and declarative. @param {any} inst */
+function engineInstances(inst) {
+  const out = copy(inst);
+  if (out && typeof out === 'object') delete out.storedIn;
+  return out;
+}
+
 /** @param {any} fx @param {string} unit @param {string} what */
 function effectV2(fx, unit, what) {
   if (!fx || typeof fx !== 'object' || Array.isArray(fx)) return copy(fx);
   const out = copy(fx);
   for (const k of ['source', 'note', 'description']) delete out[k];
+  if ('emit' in out && !('timer' in out)) delete out.to;
   if ('demand' in out) out.demand = lowerSpecDistribution(out.demand, unit, `${what}.demand`);
-  if ('emit' in out && 'after' in out) out.after = lowerSpecDistribution(out.after, unit, `${what}.after`);
-  if ('timer' in out && 'after' in out) out.after = lowerSpecDistribution(out.after, unit, `${what}.after`);
+  if ('emit' in out && !('timer' in out) && 'after' in out) out.after = lowerSpecDistribution(out.after, unit, `${what}.after`);
+  // A delay read at run time ({expr, simulate}) is simulated with its simulate delay.
+  if ('timer' in out && 'after' in out) out.after = lowerSpecDistribution(out.after && typeof out.after === 'object' && 'expr' in out.after ? out.after.simulate : out.after, unit, `${what}.after`);
   if ('size' in out && typeof out.size === 'object') out.size = lowerSpecDistribution(out.size, unit, `${what}.size`);
   else if ('size' in out && typeof out.size === 'string' && /^\S+\s*(B|kB|MB|GB|KiB|MiB|GiB)$/.test(out.size)) out.size = sizeOf(out.size, `${what}.size`);
   if ('to' in out && out.to && typeof out.to === 'object' && 'sample' in out.to) out.to = { sample: lowerSpecDistribution(out.to.sample, unit, `${what}.to.sample`) };
@@ -279,7 +393,7 @@ export function simulationInputV2(model, scenarioId, v1) {
     const e = /** @type {any} */ (model.entities.get(b.id));
     return {
       ...b,
-      ...(e.data.instances ? { instances: copy(e.data.instances) } : {}),
+      ...(e.data.instances ? { instances: engineInstances(e.data.instances) } : {}),
       transitions: b.transitions.map((/** @type {any} */ t) => {
         const te = /** @type {any} */ (model.entities.get(t.id));
         return { ...t, effects: (Array.isArray(te?.data?.effects) ? te.data.effects : []).map((/** @type {any} */ fx, /** @type {number} */ k) => effectV2(fx, unit, `${t.id}.effects[${k}]`)) };
@@ -346,6 +460,10 @@ export function simulationInputV2(model, scenarioId, v1) {
     const e = /** @type {any} */ (model.entities.get(f.id)).data;
     const out = { ...f };
     if (out.by !== undefined) out.by = dur(out.by, `${f.id}.by`);
+    // A duplicate's second delivery comes `by` later (default at once); a retry is delayed by the
+    // runtime's backoff after `attempts` failed dispatches (fault-model.js, retryDelay).
+    if (out.kind === 'duplicate-event' && out.by === undefined) out.by = 0;
+    if (out.kind === 'retry-event') out.by = retryDelay(model, e.attempts, unit);
     if (out.at !== undefined) out.at = dur(out.at, `${f.id}.at`);
     for (const k of ['resource', 'class', 'capacity', 'limit', 'num', 'den', 'behavior', 'effect']) if (e[k] !== undefined) out[k] = copy(e[k]);
     if (e.demand !== undefined) out.demand = lowerSpecDistribution(e.demand, unit, `${f.id}.demand`);

@@ -14,8 +14,31 @@
     "environments": { "entity": "environment" },
     "failureModes": { "entity": "failureMode" },
     "faultModels": { "entity": "faultModel" },
+    "types": { "entity": "type" },
+    "languages": { "entity": "language" },
+    "functions": { "entity": "function" },
+    "exampleFixtures": { "entity": "exampleFixture" },
     "records": { "entity": "record" },
     "copies": { "entity": "copy" },
+    "policies": { "entity": "policy" },
+    "validations": { "entity": "validation" },
+    "retentions": { "entity": "retention" },
+    "quotas": { "entity": "quota" },
+    "retries": { "entity": "retry" },
+    "audits": { "entity": "audit" },
+    "capabilities": { "entity": "capability" },
+    "plans": { "entity": "plan" },
+    "roles": { "entity": "role" },
+    "grants": { "entity": "grant" },
+    "delegations": { "entity": "delegation" },
+    "tokenScopes": { "entity": "tokenScope" },
+    "featureFlags": { "entity": "featureFlag" },
+    "screens": { "entity": "screen" },
+    "forms": { "entity": "form" },
+    "actions": { "entity": "action" },
+    "liveBindings": { "entity": "liveBinding" },
+    "errorMessages": { "entity": "errorMessage" },
+    "uiScenarios": { "entity": "uiScenario" },
     "resources": { "entity": "resource" },
     "links": { "entity": "link" },
     "workloads": { "entity": "workload" },
@@ -63,7 +86,18 @@
         "description": { "type": "text", "label": "Description" },
         "version": { "type": "string", "label": "Version" },
         "illustrative": { "type": "boolean", "label": "Illustrative", "doc": "True when the whole system is an example and not a description of real software." },
-        "notes": { "type": "list", "items": { "type": "text" }, "label": "Notes" }
+        "notes": { "type": "list", "items": { "type": "text" }, "label": "Notes" },
+        "generation": {
+          "type": "object", "label": "Generation", "doc": "Setting it declares the specification ready to generate code from: the readiness rules (src/core/readiness.js, codes ready.*) become errors. Without it they are only listed by the readiness command.",
+          "fields": { "target": { "type": "string", "label": "Target", "doc": "The language to generate, such as rust." }, "functionBranches": { "type": "enum", "values": ["error", "gap"], "label": "Function branches", "doc": "How ready.function-branch-uncovered (a branch of a function that no example takes, docs/coverage.md) is reported: error (the default) or gap, listed with severity info while the examples are being completed." }, "wireCase": { "type": "enum", "values": ["snake_case", "kebab-case", "camelCase"], "label": "Wire case", "doc": "How generated code names the JSON members of contract inputs, outputs and errors, of the struct types they use (transitively) and of event payloads a contract carries. The specification keeps kebab-case names; the generator converts. Defaults to kebab-case (the names as written). A contract may override it with binding.case." }, "errorKinds": { "type": "map", "label": "Error kinds", "doc": "{kind: HTTP status}: the kinds of failure a contract error may name in errors[].kind, each with the status it is answered with (an integer from 400 to 599)." }, "errorStatus": { "type": "number", "label": "Default error status", "doc": "The HTTP status of a contract error that states neither status nor kind. Without it (and without errorKind) such an error is a readiness gap." }, "errorKind": { "type": "string", "label": "Default error kind", "doc": "The kind of a contract error that states neither status nor kind; a key of errorKinds. Not together with errorStatus." }, "errorBody": { "type": "object", "label": "Error body", "doc": "The body every failed call is answered with, instead of the runtime's own: a struct type whose code field holds the kind of the failure, with the message and correlation fields named and every other field optional; runtime maps each failure the serving runtime reports itself to an error kind.", "fields": { "type": { "type": "ref", "ref": ["type"], "required": true, "doc": "The struct type of the body." }, "code": { "type": "string", "required": true, "doc": "The field that holds the error kind: an enum whose values include every key of errorKinds." }, "message": { "type": "string", "required": true, "doc": "The string field that holds a message safe to show the caller." }, "correlation": { "type": "string", "doc": "The string field that holds the caller's correlation id, which the route fills in." }, "runtime": { "type": "map", "required": true, "doc": "{runtime failure: error kind} for unauthenticated, forbidden, invalid-request, timeout, unavailable and internal." } } }, "retry": { "type": "object", "label": "Retry policy", "doc": "How the generated runtime retries an at-least-once message whose dispatch failed: the wait after the first failure, the factor each further failure multiplies it by, and the longest wait. Defaults to the runtime's own policy: 1 s, factor 2, at most 300 s. Exegra's retry-event delays and the delays fault.unrealisable accepts for an at-least-once event are sums of these waits.", "fields": { "first": { "type": "string", "label": "First wait", "doc": "A duration, such as 1 s." }, "factor": { "type": "number", "label": "Factor", "doc": "A positive integer." }, "max": { "type": "string", "label": "Longest wait", "doc": "A duration of at least the first wait." } } }, "gateway": { "type": "object", "label": "Gateway", "doc": "The gateway public contracts are routed through.", "fields": { "prefix": { "type": "string", "required": true, "doc": "The path every route through the gateway is under, such as /api. Only a public contract may be bound under it." } } }, "developmentConditions": { "type": "list", "items": { "type": "string" }, "label": "Development conditions", "doc": "The deployment conditions under which development and fixture contracts exist, such as STRATA_DEV." } }
+        }
+,        "telemetry": {
+          "type": "object", "label": "Telemetry", "doc": "The services whose generated code writes structured logs, one JSON object per line: ts (milliseconds since the Unix epoch), level, service, event (the log name), correlation and tenant when known, then the logged event's allowlisted fields. Which events each service logs is stated on the event (logging). docs/model-and-format.md, \"Telemetry\".",
+          "fields": {
+            "format": { "type": "enum", "values": ["json-lines"], "label": "Format", "doc": "The line format; json-lines is the only one, and the default." },
+            "services": { "type": "list", "label": "Services", "items": { "type": "object", "fields": { "id": { "type": "string", "required": true, "label": "Service", "doc": "The service name written on every line." }, "component": { "type": "ref", "ref": ["component"], "label": "Component", "doc": "The component that runs as this service." }, "log": { "type": "string", "required": true, "label": "Log file", "doc": "Where the deployment keeps the service's log, relative to its working directory, such as var/logs/backend.jsonl. End-to-end tests read it." } } } }
+          }
+        }
       }
     },
     "component": {
@@ -128,13 +162,39 @@
         "id": { "type": "id", "required": true },
         "name": { "type": "string", "required": true, "label": "Name" },
         "description": { "type": "text", "label": "Description" },
-        "inputs": { "type": "list", "label": "Inputs", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "string" }, "optional": { "type": "boolean" }, "description": { "type": "text" } } } },
+        "inputs": { "type": "list", "label": "Inputs", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "string" }, "optional": { "type": "boolean" }, "description": { "type": "text" }, "encode": { "type": "object", "label": "Encoding", "doc": "How a page's request turns the value it holds into what the endpoint takes, in this order: trim (true: white space removed at both ends), split (a separator: the text becomes the list of its trimmed, non-empty parts), as (number: the text becomes a number), empty (null: an empty value, meaning an empty text, an empty list or false, is sent as null; omit: it is left out of the request).", "fields": { "trim": { "type": "boolean", "label": "Trim" }, "split": { "type": "string", "label": "Split on" }, "as": { "type": "enum", "values": ["number"], "label": "As" }, "empty": { "type": "enum", "values": ["null", "omit"], "label": "Empty value" } } } } } },
         "outputs": { "type": "list", "label": "Outputs", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "string" }, "optional": { "type": "boolean" }, "description": { "type": "text" } } } },
         "preconditions": { "type": "list", "items": { "type": "text" }, "label": "Preconditions" },
         "postconditions": { "type": "list", "items": { "type": "text" }, "label": "Postconditions" },
-        "errors": { "type": "list", "label": "Error conditions", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "condition": { "type": "text" } } } },
+        "errors": { "type": "list", "label": "Error conditions", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "condition": { "type": "text" }, "type": { "type": "string", "doc": "The type of the error payload, when it carries one." }, "status": { "type": "number", "label": "HTTP status", "doc": "The HTTP status the error is answered with, an integer from 400 to 599. State this or kind, not both." }, "kind": { "type": "string", "label": "Error kind", "doc": "The kind of failure, a key of system.generation.errorKinds; the error is answered with the status of its kind, and an error body carries the kind as its code." } } } },
         "obligations": { "type": "list", "items": { "type": "text" }, "label": "Obligations" },
-        "binding": { "type": "object", "label": "Binding", "fields": { "protocol": { "type": "string" }, "method": { "type": "string" }, "path": { "type": "string" }, "operation": { "type": "string" } } }
+        "binding": { "type": "object", "label": "Binding", "fields": { "protocol": { "type": "string" }, "method": { "type": "string" }, "path": { "type": "string" }, "operation": { "type": "string" }, "case": { "type": "enum", "values": ["snake_case", "kebab-case", "camelCase"], "label": "Wire case", "doc": "Overrides system.generation.wireCase for this contract: the JSON names of its inputs, outputs, errors and the types they reach." } } },
+        "ref": { "type": "string", "label": "Reference", "doc": "A stable code for the contract, such as CT-012; for a hand-written contract (a hole) H-012, the code its implementation names in an Implements line." },
+        "realisation": { "type": "enum", "values": ["generated", "hand", "derived", "facade"], "label": "Realisation", "doc": "generated: the code is generated from this contract. hand: a hole, written by hand against its postconditions. derived: the implementation is generated from its derivation (functions, and the contracts it loads and commits through). facade: no server implementation; the client lowers it onto the generic contract its bffRoute names (docs/model-and-format.md, \"Derived and facade contracts\")." },
+        "derivation": {
+          "type": "object", "label": "Derivation", "doc": "A derived contract's implementation. pure: {kind, function}. read: {kind, needs, load, decide}, optionally with insufficient and needRounds: ask again while decide fails with insufficient, as a command does, without a commit. command: {kind, needs, load, decide, commit, conflict, insufficient, needRounds, retries}: load what needs says, decide, ask again while decide fails with insufficient (at most needRounds extra rounds), commit, and start over while the commit fails with conflict (at most retries times). Each kind may name fault, the contract error an integer overflow in a function becomes.",
+          "fields": {
+            "kind": { "type": "string", "required": true, "label": "Kind", "doc": "pure, read or command." },
+            "function": { "type": "string", "label": "Function", "doc": "pure: the function that is the contract's implementation." },
+            "needs": { "type": "string", "label": "Needs", "doc": "read, command: the function that gives the list of needs to load, from the contract's inputs." },
+            "load": { "type": "ref", "ref": ["contract"], "label": "Load", "doc": "read, command: the contract that loads the needs." },
+            "decide": { "type": "string", "label": "Decide", "doc": "read, command: the function that decides from the inputs and what was loaded." },
+            "commit": { "type": "ref", "ref": ["contract"], "label": "Commit", "doc": "command: the contract that commits what decide gives." },
+            "conflict": { "type": "string", "label": "Conflict error", "doc": "command: the error of the commit contract that means another commit got there first." },
+            "insufficient": { "type": "string", "label": "Insufficient-state error", "doc": "command, and optionally read: the variant of decide's error union that asks for one more need (a newtype variant of the need type)." },
+            "needRounds": { "type": "number", "label": "Need rounds", "doc": "command, and a read that names insufficient: how many extra needs one decision may ask for." },
+            "retries": { "type": "number", "label": "Conflict retries", "doc": "command: how often a commit that lost a race is decided again." },
+            "fault": { "type": "string", "label": "Fault error", "doc": "The error of this contract that an integer overflow or a division by zero in a function becomes; a generator refuses a function that can fault without it." }
+          }
+        },
+        "implementedBy": { "type": "ref", "ref": ["component"], "label": "Implemented by", "doc": "The component whose code implements the contract." },
+        "deployment": { "type": "enum", "values": ["shipped", "target"], "label": "Deployment", "doc": "shipped: the contract is served by code that exists. target: it describes what the enterprise product will serve. Default: target when implementedBy names a component with implementation.status not-implemented, otherwise shipped. An explicit shipped on a not-implemented component is contract.deployment-subject. (Named deployment, not realisation, because contract.realisation is generated or hand.)" },
+        "auth": { "type": "string", "label": "Authorisation", "doc": "Who may call it, in the specification's own words." },
+        "auth": { "type": "any", "label": "Authorisation", "doc": "Who may call it: {scheme, requires?, roles?, policies?, tenantPolicies?, csrf?, origin?, stepUp?, secret?, justification?, description?}, requires the ids of the capabilities a call needs, scheme one of anonymous, session, service, provisioning-token, signature, signed-address, delegation, in-process (docs/model-and-format.md#contract-exposure-and-auth). A sentence is accepted only without system.generation." }, "exposure": { "type": "enum", "values": ["public", "internal", "local"], "label": "Exposure", "doc": "Where the contract can be reached from: public (browsers and the internet, through the gateway), internal (the service network only) or local (an in-process call, never a route)." }, "readOnly": { "type": "boolean", "label": "Read-only", "doc": "True when a call changes no state. A public contract that is not read-only needs a session with CSRF and origin checked, or a verified credential." }, "tenantScope": { "type": "enum", "values": ["request", "none", "platform"], "label": "Tenant scope", "doc": "What tenant data it reads and returns: request (only the tenant the request is made in, which a principal's own tenant must match), none, or platform (across tenants; never on a public contract)." }, "development": { "type": "string", "label": "Development condition", "doc": "For a development or fixture contract: the deployment condition (one of system.generation.developmentConditions) without which it does not exist." },
+        "idempotent": { "type": "boolean", "label": "Idempotent", "doc": "True when repeating a call has the effect of making it once." },
+        "timeoutMs": { "type": "number", "label": "Timeout (ms)", "doc": "A positive integer: how long a caller waits." },
+        "milestone": { "type": "number", "label": "Milestone", "doc": "For a hand-written contract (a hole): the milestone whose start makes its implementation expected, like a requirement's milestone." },
+        "policyDefault": { "type": "enum", "values": ["deny", "allow"], "label": "Policy default", "doc": "What the policies on this contract decide when no policy matches: deny (refuse) or allow. A matching deny policy always refuses, and a matching allow permits unless a deny matches too." }
       }
     },
     "event": {
@@ -144,10 +204,25 @@
         "id": { "type": "id", "required": true },
         "name": { "type": "string", "required": true, "label": "Name" },
         "description": { "type": "text", "label": "Description" },
-        "payload": { "type": "list", "label": "Payload fields", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "string" } } } },
+        "payload": { "type": "list", "label": "Payload fields", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "string" }, "optional": { "type": "boolean" }, "sensitive": { "type": "enum", "values": ["secret", "password", "token", "personal"], "label": "Sensitive", "doc": "The kind of sensitive data the field holds; it is never logged." } } } },
         "contract": { "type": "ref", "ref": ["contract"], "label": "Contract" },
         "role": { "type": "enum", "values": ["request", "response", "error"], "label": "Role in the contract" },
-        "correlation": { "type": "string", "label": "Correlation field" }
+        "correlation": { "type": "string", "label": "Correlation field" },
+        "delivery": { "type": "enum", "values": ["at-most-once", "at-least-once"], "label": "Delivery", "doc": "Implementation level: the delivery guarantee of an emitted event. Declarative; simulation ignores it (docs/semantics.md)." },
+        "elapsed": { "type": "boolean", "label": "Elapsed time", "doc": "Implementation level: the event represents elapsed time and must be the emit of some timer effect. Declarative; simulation ignores it." },
+        "domain": { "type": "boolean", "label": "Domain event", "doc": "The event is a fact the running system records (a domain event). With system.generation set, a domain event must state its logging (ready.event-logging-missing)." },
+        "logging": {
+          "type": "object", "label": "Logging", "doc": "Whether generated code logs the event, and what its line holds: {logged: true, service, level, name?, tenant?, fields: [{field, as?}]} or {logged: false, reason}. Logging is an allowlist; a payload is never logged whole, and a sensitive field never. docs/model-and-format.md, \"Telemetry\".",
+          "fields": {
+            "logged": { "type": "boolean", "required": true, "label": "Logged" },
+            "service": { "type": "string", "label": "Service", "doc": "A service of system.telemetry whose log holds the event." },
+            "level": { "type": "enum", "values": ["debug", "info", "warn", "error"], "label": "Level" },
+            "name": { "type": "string", "label": "Log name", "doc": "The event member of the line, such as record.updated. Defaults to the event id." },
+            "tenant": { "type": "string", "label": "Tenant field", "doc": "The payload field written as the line's tenant." },
+            "fields": { "type": "list", "label": "Logged fields", "items": { "type": "object", "fields": { "field": { "type": "string", "required": true, "label": "Payload field" }, "as": { "type": "string", "label": "Written as", "doc": "The member name in the line; defaults to the field name." } } } },
+            "reason": { "type": "text", "label": "Reason", "doc": "Why an event that is not logged is not." }
+          }
+        }
       }
     },
     "behavior": {
@@ -159,10 +234,16 @@
         "subject": { "type": "ref", "ref": ["component"], "required": true, "label": "Subject component" },
         "description": { "type": "text", "label": "Description" },
         "initial": { "type": "ref", "ref": ["state"], "required": true, "label": "Initial state" },
-        "variables": { "type": "list", "label": "Variables", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "enum", "values": ["boolean", "number", "string"], "required": true }, "initial": { "type": "any", "required": true } } } },
+        "variables": { "type": "list", "label": "Variables", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "enum", "values": ["boolean", "number", "string"], "required": true }, "initial": { "type": "any", "required": true }, "repr": { "type": "string", "label": "Representation type", "doc": "Implementation level: a built-in representation type (src/core/builtin-types.js), a declared type, or list<T> / option<T>. Declarative; simulation ignores it." } } } },
         "states": { "type": "entities", "entity": "state", "label": "States", "required": true },
         "transitions": { "type": "entities", "entity": "transition", "label": "Transitions" },
-        "instances": { "type": "map", "label": "Instances", "doc": "Format 2: {count} or {key, max}." }
+        "instances": { "type": "map", "label": "Instances", "doc": "Format 2: {count} or {key, max}. Implementation level: {key, storedIn}, where storedIn is a record whose key field is `key` (declarative; the simulation input drops storedIn)." },
+        "level": { "type": "enum", "values": ["model", "implementation"], "label": "Level", "doc": "model (default) or implementation: an implementation-level machine is held to the rules of src/core/readiness-machines.js. Declarative; simulation ignores it." },
+        "realisation": { "type": "enum", "values": ["shipped", "target"], "label": "Realisation", "doc": "shipped: the machine models code that exists. target: it models what the enterprise product will have, not what is built. Default: target when the subject component has implementation.status not-implemented, otherwise shipped. An explicit shipped on a not-implemented subject is behavior.realisation-subject. Declarative; simulation ignores it (docs/semantics.md)." },
+        "storage": { "type": "object", "label": "Storage", "doc": "Implementation level: the record that holds this machine's state and the key field that identifies a machine in it. Declarative; the simulation input drops it, like instances.storedIn.", "fields": { "durability": { "type": "enum", "values": ["record", "memory"], "label": "Durability", "doc": "record (default): the machine is held in a record, storage.record and storage.key say which, and a transaction is declared. memory: the instance lives in process memory for a connection or tab, so no record, key, fields, state, stateValues, creates, instances.storedIn or transaction is declared (storage.durability, docs/semantics.md). Declarative; simulation ignores it." }, "record": { "type": "ref", "ref": ["record"], "label": "Record", "doc": "Required when durability is record (storage.durability)." }, "key": { "type": "any", "label": "Key field", "doc": "Required when durability is record (storage.durability). The record's whole key: one field name when the key is one field, or the list of every key field in the record's order when it is composite (storage.key-whole). A key that names part of the record's key is an error: records that agree on that part would share one instance." }, "fields": { "type": "map", "label": "Variable fields", "doc": "{variable: record field}: the record field that holds each variable. A variable not listed is held in the field of the same name." }, "state": { "type": "string", "label": "State field", "doc": "The record field that holds the control state, default \"state\": a required string or enum field." }, "stateValues": { "type": "map", "label": "State values", "doc": "{state id: stored value}: what the state field holds for each state, when it is not the state id (for an enum field whose values are named otherwise). Values are distinct." }, "creates": { "type": "boolean", "label": "Creates records", "doc": "True when an event for a key with no record creates the record; the machine must then fill every required field. Default false: the machine steps only records that already exist and carries the fields it does not hold over from them." }, "createdBy": { "type": "ref", "ref": ["contract"], "label": "Created by", "doc": "For a machine that does not create its records: the contract whose call writes the record, with the machine in its initial state, before the machine's first event. Until then the runtime refuses the machine's events (RecordMissing). A shipped machine that a scenario runs needs creates or createdBy (machine.initial-unreachable)." } } },
+        "transaction": { "type": "object", "label": "Transaction", "doc": "Implementation level: what one transition is atomic with respect to. Declarative; simulation ignores it.", "fields": { "scope": { "type": "enum", "values": ["transition"], "required": true }, "isolation": { "type": "enum", "values": ["serializable", "snapshot", "read-committed"], "required": true } } },
+        "refines": { "type": "ref", "ref": ["behavior"], "label": "Refines", "doc": "The model behavior this implementation behavior refines, through its refinement mapping (docs/claims-and-evidence.md, \"Refinement\")." },
+        "refinement": { "type": "object", "label": "Refinement mapping", "doc": "{states: {implState: modelState}, variables: {modelVar: expression over this behavior's variables}, transitions: {implTransition: modelTransition or null}}; null is a stutter.", "fields": { "states": { "type": "map", "required": true }, "variables": { "type": "map", "required": true }, "transitions": { "type": "map", "required": true }, "timeScale": { "type": "number", "label": "Time scale", "doc": "Implementation time units per model tick: the refinement check reads the model's time as the trace time divided by it, and compares model timer delays multiplied by it. Default 1." } } }
       }
     },
     "state": {
@@ -172,7 +253,8 @@
         "id": { "type": "id", "required": true },
         "name": { "type": "string", "required": true, "label": "Name" },
         "description": { "type": "text", "label": "Description" },
-        "terminal": { "type": "boolean", "label": "Terminal" }
+        "terminal": { "type": "boolean", "label": "Terminal" },
+        "ignores": { "type": "list", "items": { "type": "ref", "ref": ["event"] }, "label": "Ignored events", "doc": "Implementation level: events this state deliberately does not react to, which satisfies the completeness rule. Declarative; simulation ignores it." }
       }
     },
     "transition": {
@@ -185,6 +267,7 @@
         "on": { "type": "ref", "ref": ["event"], "required": true, "label": "Trigger event" },
         "guard": { "type": "expr", "label": "Guard" },
         "effects": { "type": "list", "items": { "type": "effect" }, "label": "Effects" },
+        "otherwise": { "type": "boolean", "label": "Otherwise", "doc": "Implementation level: marks the last transition of a (from, on) group as the fall-through. Its meaning is the declaration-order rule; simulation ignores it." },
         "faultOnly": { "type": "boolean", "label": "Fault only", "doc": "The transition exists only when a fault of kind enable-transition activates it." },
         "description": { "type": "text", "label": "Description" }
       }
@@ -195,12 +278,13 @@
       "properties": {
         "id": { "type": "id", "required": true },
         "name": { "type": "string", "required": true, "label": "Name" },
-        "kind": { "type": "enum", "values": ["drop-event", "delay-event", "enable-transition", "disable-transition", "inject-event", "set-capacity", "set-class-limit", "collapse-classes", "scale-demand", "replace-demand"], "required": true, "label": "Kind" },
+        "kind": { "type": "enum", "values": ["drop-event", "delay-event", "enable-transition", "disable-transition", "inject-event", "duplicate-event", "lose-event", "retry-event", "set-capacity", "set-class-limit", "collapse-classes", "scale-demand", "replace-demand"], "required": true, "label": "Kind", "doc": "duplicate-event: the event is delivered and delivered again \"by\" later (default 0), as an at-least-once message is redelivered when its sender stops between dispatch and acknowledgement. lose-event: the event is not delivered, as an at-most-once message is lost when its sender stops between commit and dispatch. retry-event: the event is delivered after \"attempts\" failed dispatches, delayed by the runtime's backoff (system.generation.retry). In a scenario that runs implementation-level machines each kind must be one the runtime can produce (fault.unrealisable, docs/semantics.md)." },
         "description": { "type": "text", "label": "Description" },
         "event": { "type": "ref", "ref": ["event"], "label": "Event" },
         "transition": { "type": "ref", "ref": ["transition"], "label": "Transition" },
         "occurrence": { "type": "number", "label": "Occurrence", "doc": "1-based occurrence of the event to affect. Omitted means every occurrence." },
-        "by": { "type": "any", "label": "Delay by", "doc": "Logical ticks (format 1) or a duration (format 2)." },
+        "by": { "type": "any", "label": "Delay by", "doc": "Logical ticks (format 1) or a duration (format 2). For duplicate-event: how much later the second delivery comes (default 0)." },
+        "attempts": { "type": "number", "label": "Failed attempts", "doc": "For retry-event: a positive integer, the failed dispatches before the one that delivers; the delay is the sum of the backoff waits after each (system.generation.retry)." },
         "at": { "type": "any", "label": "Inject at", "doc": "Logical time (format 1) or a duration (format 2)." },
         "payload": { "type": "map", "label": "Payload" },
         "realises": { "type": "ref", "ref": ["failureMode"], "label": "Realises failure mode", "doc": "The failure mode this injection is an instance of. Not read by the simulation engine." },
@@ -373,6 +457,7 @@
         "id": { "type": "id", "required": true },
         "name": { "type": "string", "required": true, "label": "Name" },
         "description": { "type": "text", "label": "Description" },
+        "tags": { "type": "list", "items": { "type": "string" }, "label": "Tags", "doc": "Labels for the scenario. generated-coverage marks a scenario that exegra cover-machines generated to exercise a transition or guard outcome the other scenarios leave out (docs/coverage.md)." },
         "behaviors": { "type": "list", "items": { "type": "ref", "ref": ["behavior"] }, "required": true, "label": "Behaviors" },
         "steps": { "type": "list", "required": true, "label": "Input events", "items": { "type": "object", "fields": { "at": { "type": "number", "required": true }, "event": { "type": "ref", "ref": ["event"], "required": true }, "payload": { "type": "map" }, "note": { "type": "text" } } } },
         "faults": { "type": "list", "items": { "type": "ref", "ref": ["fault"] }, "label": "Active faults" },
@@ -399,6 +484,111 @@
         "illustrative": { "type": "boolean", "label": "Illustrative" }
       }
     },
+    "type": {
+      "label": "Type",
+      "doc": "A declared data type a code generator maps: an identifier, a scalar over a built-in representation, an enumeration, a struct or a tagged union. Names that are not declared resolve only when they are built-in (src/core/builtin-types.js), list<T> / set<T> / option<T> / shared<T> of a type that resolves, or map<K, V> of a key and a value that resolve. A set<T> is a JSON array of distinct items, in order. A shared<T> is a sharing hint, identical to T on the wire.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "kind": { "type": "enum", "values": ["id", "scalar", "enum", "struct", "union"], "required": true, "label": "Kind" },
+        "repr": { "type": "string", "label": "Representation", "doc": "For an id or a scalar: the built-in representation type." },
+        "values": { "type": "list", "items": { "type": "string" }, "label": "Values", "doc": "For an enum: its values." },
+        "fields": {
+          "type": "list", "label": "Fields", "doc": "For a struct.",
+          "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "string", "required": true }, "optional": { "type": "boolean" }, "sensitive": { "type": "enum", "values": ["secret", "password", "token", "personal"] } } }
+        },
+        "variants": {
+          "type": "list", "label": "Variants", "doc": "For a union: its variants, each {name, fields?, newtype?, tuple?}. A variant without fields is a unit variant; newtype: true marks a variant with exactly one field that is written without the field's name (serde's newtype variant); tuple: true marks a variant with two or more positional fields, written as a JSON array of their values in order (serde's tuple variant, {\"Cmp\": [\"Eq\", a, b]}).",
+          "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "fields": { "type": "list", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "string", "required": true }, "optional": { "type": "boolean" }, "sensitive": { "type": "enum", "values": ["secret", "password", "token", "personal"] } } } }, "newtype": { "type": "boolean" }, "tuple": { "type": "boolean" }, "description": { "type": "text" } } }
+        },
+        "encoding": {
+          "type": "object", "label": "Wire encoding", "doc": "For a union: how a value is written. tag external (default): {\"Variant\": content}, a unit variant is the bare name; internal: the variant name is a member tagField of the object holding the fields; adjacent: {tagField: name, contentField: content}. variantCase converts the variant names on the wire (as written when absent).",
+          "fields": { "tag": { "type": "enum", "values": ["external", "internal", "adjacent"], "label": "Tag" }, "tagField": { "type": "string", "label": "Tag field" }, "contentField": { "type": "string", "label": "Content field" }, "variantCase": { "type": "enum", "values": ["PascalCase", "snake_case", "kebab-case"], "label": "Variant case" } }
+        },
+        "constraints": {
+          "type": "object", "label": "Constraints", "doc": "For an id or scalar: pattern (a regular expression, over a string representation), minLength and maxLength (over a string or bytes representation).",
+          "fields": { "pattern": { "type": "string" }, "minLength": { "type": "number" }, "maxLength": { "type": "number" } }
+        },
+        "sensitive": { "type": "enum", "values": ["secret", "password", "token", "personal"], "label": "Sensitive", "doc": "The kind of sensitive data a value of the type is (a secret, a password, a token, personal data). A field of a sensitive type is never logged; a struct with a sensitive field, and list<T> or option<T> of a sensitive T, are sensitive too." },
+        "metamodel": { "type": "enum", "values": ["tenant-schema", "object-id", "field-id", "values", "definition"], "label": "Tenant metamodel role", "doc": "The part of the tenant-schema metamodel this type is, in a system whose tenants describe their own data. tenant-schema: a tenant's schema, the root; object-id: the id of a tenant object type; field-id: the id of a field of one; values: the field values of one tenant record; definition: any other part (object, field, constraint, workflow, policy definitions). A record field of an object-id or values type, or a map keyed by a field-id type, carries tenant domain data (record.tenant-data-fixed)." },
+        "description": { "type": "text", "label": "Description" }
+      }
+    },
+    "language": {
+      "label": "Language",
+      "doc": "An expression language that users of the specified system write (such as a tenant rule language), described so that a generator can produce its parser, printer, checker and evaluator: the AST and value unions, the static shapes, the scopes names are read through, and one operator per AST variant (or per case of one), each naming a primitive of the fixed catalogue in src/core/language.js. It is not Exegra's guard language and is not mirrored in Lean.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "ast": { "type": "ref", "ref": ["type"], "required": true, "label": "AST", "doc": "The union type of expressions; each variant is one expression form." },
+        "values": { "type": "ref", "ref": ["type"], "required": true, "label": "Values", "doc": "The union type of what an expression evaluates to." },
+        "shapes": { "type": "list", "items": { "type": "string" }, "required": true, "label": "Shapes", "doc": "The names of the static shapes the checker gives expressions." },
+        "anyShape": { "type": "string", "label": "Any shape", "doc": "The shape of null and of what the checker cannot pin down; it is accepted wherever another shape is expected." },
+        "scopes": {
+          "type": "list", "label": "Scopes", "doc": "How names are read: record-scope (<scope>.<field>, with system attributes), param (<scope>.<name>), constant (a bare word), role-test (<scope>(<role>)).",
+          "items": { "type": "object", "fields": {
+            "name": { "type": "string", "required": true },
+            "kind": { "type": "enum", "values": ["record-scope", "param", "constant", "role-test"], "required": true },
+            "value": { "type": "string", "doc": "For a record-scope: the value of the AST's scope field it stands for." },
+            "attributes": { "type": "list", "doc": "For a record-scope: its system attributes, each {name, shape}; a name starts with $.", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "shape": { "type": "string", "required": true }, "description": { "type": "text" } } } },
+            "description": { "type": "text" }
+          } }
+        },
+        "operators": {
+          "type": "list", "label": "Operators", "doc": "One per AST variant, or one per case of one field of a variant: its syntax, operand and result shapes, null handling and primitive.",
+          "items": { "type": "object", "fields": {
+            "name": { "type": "string", "required": true },
+            "variant": { "type": "string", "required": true, "doc": "The AST variant it parses to and prints from." },
+            "case": { "type": "object", "doc": "When a variant has one operator per value of one of its fields: that field (an enum or union) and the value.", "fields": { "field": { "type": "string", "required": true }, "value": { "type": "string", "required": true } } },
+            "syntax": { "type": "object", "required": true, "fields": {
+              "form": { "type": "enum", "values": ["infix", "keyword-infix", "prefix-word", "call", "literal", "scope"], "required": true },
+              "token": { "type": "string" },
+              "precedence": { "type": "number", "doc": "For a binary or prefix operator: a positive integer; higher binds tighter." },
+              "assoc": { "type": "enum", "values": ["left", "right", "none", "n-ary"], "doc": "For a binary operator." }
+            } },
+            "operands": { "type": "list", "items": { "type": "any" }, "doc": "The shape of each operand: a shape name, or a list of the shapes it accepts." },
+            "result": { "type": "string", "doc": "A shape name, or operand:<n> (1-based) for the shape of an operand." },
+            "nulls": { "type": "enum", "values": ["propagate", "kleene-and", "kleene-or", "kleene-not", "total", "null-is-false"] },
+            "primitive": { "type": "string", "doc": "An entry of the primitive catalogue (src/core/language.js)." },
+            "description": { "type": "text" }
+          } }
+        },
+        "description": { "type": "text", "label": "Description" }
+      }
+    },
+    "function": {
+      "label": "Function",
+      "doc": "A pure function a generator compiles into code, such as a kernel's intent decision or policy evaluation: typed parameters, a return type, an optional union of errors, lets and a body in the function body language (src/core/function-syntax.js), and examples Exegra evaluates in JavaScript. The call graph is acyclic, so every function is total. Not mirrored in Lean.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "description": { "type": "text", "label": "Description" },
+        "params": {
+          "type": "list", "label": "Parameters", "doc": "Each {name, type}: a plain name and a type that resolves (or result<T, E>).",
+          "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "string", "required": true }, "description": { "type": "text" } } }
+        },
+        "returns": { "type": "string", "required": true, "label": "Returns", "doc": "The type of the value the body gives." },
+        "errors": { "type": "ref", "ref": ["type"], "label": "Errors", "doc": "The union type of the ways the function can fail; fail(...) gives one of its variants and try passes one on." },
+        "let": {
+          "type": "list", "label": "Lets", "doc": "Names bound in order before the body, each {name, expr}.",
+          "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "expr": { "type": "string", "required": true }, "description": { "type": "text" } } }
+        },
+        "body": { "type": "string", "required": true, "label": "Body", "doc": "An expression of the function body language (docs/model-and-format.md, Functions)." },
+        "examples": {
+          "type": "list", "label": "Examples", "doc": "Each {args, result} or {args, error}: args an object of the parameters, result or error a JSON value (unions in serde's external form). Validation evaluates every example.",
+          "items": { "type": "object", "fields": { "args": { "type": "any", "required": true }, "result": { "type": "any" }, "error": { "type": "any" }, "description": { "type": "text" } } }
+        }
+      }
+    },
+    "exampleFixture": {
+      "label": "Example fixture",
+      "doc": "A value declared once for the examples of functions: a tenant, a schema, a principal. An example argument, result or error is {fixture: <id>} or {fixture: <id>, with: {<dotted path>: <value>}}; Exegra resolves it before evaluating the example and a generator writes it once per fixture (docs/model-and-format.md, Example fixtures).",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "description": { "type": "text", "label": "Description" },
+        "type": { "type": "string", "required": true, "label": "Type", "doc": "The type of the value: a type text that resolves, or result<T, E>. A fixture stands only where this type (or an option of it) is expected." },
+        "value": { "type": "any", "required": true, "label": "Value", "doc": "The value as examples write values (docs/model-and-format.md, Functions); it must be a value of the type." }
+      }
+    },
     "record": {
       "label": "Record",
       "doc": "A kind of record the system stores: its owning component, key, fields and retention. The data rules (src/core/data-model.js) are computed over records and their copies.",
@@ -418,10 +608,20 @@
               "classification": { "type": "enum", "values": ["public", "internal", "personal", "credential"], "label": "Classification", "doc": "How sensitive the field is. The personal-data class above is the one way to say a field is personal: classification personal is accepted only together with a class, and a field with a class is not classified otherwise. credential is treated as personal by rule record-erasure-point." },
               "refersTo": { "type": "ref", "ref": ["record"], "literals": ["principal"], "label": "Refers to", "doc": "The record this field holds the key of, or \"principal\" for a principal id." },
               "role": { "type": "enum", "values": ["party", "subject", "snapshot"], "label": "Role", "doc": "party: a principal taking part in the act (must refer to the principal by id); subject: the principal the record is about; snapshot: a copy of a value as it was at the time of the act." },
+              "optional": { "type": "boolean", "label": "Optional", "doc": "True when a record may leave the field unset." },
+              "constraints": {
+                "type": "object", "label": "Constraints",
+                "fields": { "min": { "type": "number" }, "max": { "type": "number" }, "maxLength": { "type": "number" }, "pattern": { "type": "string" } }
+              },
+              "onDelete": { "type": "enum", "values": ["restrict", "cascade", "set-null"], "label": "On delete", "doc": "What deleting the referred record does to this one. Only with refersTo; set-null needs optional." },
               "description": { "type": "text", "label": "Description" }
             }
           }
         },
+        "unique": { "type": "list", "items": { "type": "list", "items": { "type": "string" } }, "label": "Unique", "doc": "Sets of field names whose combined values are unique." },
+        "indexes": { "type": "list", "label": "Indexes", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "fields": { "type": "list", "items": { "type": "string" }, "required": true } } } },
+        "schemaVersion": { "type": "number", "label": "Schema version", "doc": "A positive integer: the version of the stored shape." },
+        "changes": { "type": "list", "label": "Changes", "doc": "One entry per schema version, 1 to schemaVersion.", "items": { "type": "object", "fields": { "version": { "type": "number", "required": true }, "description": { "type": "text", "required": true } } } },
         "retention": { "type": "text", "label": "Retention", "doc": "How long a record is kept and what ends it. Prose: the erasure property is what is checked." },
         "erasure": {
           "type": "object", "label": "Erasure",
@@ -433,6 +633,9 @@
             "source": { "type": "ref", "ref": ["*"], "label": "Source" }
           }
         },
+        "scope": { "type": "enum", "values": ["platform", "tenant-meta"], "label": "Scope", "doc": "Which side of a metadata model the record is on. platform: a fixed table of the platform, whose declared fields are its whole shape. tenant-meta: a fixed table of the platform whose rows carry tenant-defined data as data (generic records, the schema history), shaped at run time by the tenant schema named in describedBy. Tenant domain data is never a fixed record of its own (rule record.tenant-data-fixed). Required on every record once a type has metamodel tenant-schema (record.scope-missing)." },
+        "describedBy": { "type": "ref", "ref": ["type"], "label": "Described by", "doc": "For scope tenant-meta: the type with metamodel tenant-schema whose values describe the rows' payload at run time (record.described-by)." },
+        "realisation": { "type": "enum", "values": ["shipped", "target"], "label": "Realisation", "doc": "shipped (default): the running system has this table as declared. target: a record of the target design that the running system does not have yet, kept for the machines that model it." },
         "description": { "type": "text", "label": "Description" },
         "source": { "type": "ref", "ref": ["*"], "label": "Source", "doc": "The entity that states this record (a requirement, decision or case)." }
       }
@@ -471,6 +674,295 @@
         "source": { "type": "ref", "ref": ["*"], "label": "Source" }
       }
     },
+    "policy": {
+      "label": "Policy",
+      "doc": "Who may do what: a subject (principal kind and role) may or may not perform an action (a contract or a transition) on a resource (a record) when a condition holds. A matching deny refuses; otherwise a matching allow permits; otherwise the contract's policyDefault decides, and for a transition the default is deny (docs/model-and-format.md, \"Cross-cutting constructs\").",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "subject": { "type": "object", "required": true, "label": "Subject", "fields": { "principal": { "type": "string", "required": true, "label": "Principal kind", "doc": "The kind of principal, such as member, operator or service." }, "role": { "type": "string", "label": "Role", "doc": "The role the principal holds; omitted means any role." } } },
+        "contract": { "type": "ref", "ref": ["contract"], "label": "Contract", "doc": "The action, when it is a contract call. Exactly one of contract and transition." },
+        "transition": { "type": "ref", "ref": ["transition"], "label": "Transition", "doc": "The action, when it is a transition of a behavior. Exactly one of contract and transition." },
+        "resource": { "type": "ref", "ref": ["record"], "label": "Resource", "doc": "The record acted on; its fields are record.<field> in the condition." },
+        "condition": { "type": "expr", "label": "Condition", "doc": "A boolean expression over request.<input> (contract) or event.<field> (transition), record.<field> (with a resource), and principal.id, principal.tenant and principal.role." },
+        "effect": { "type": "enum", "values": ["allow", "deny"], "required": true, "label": "Effect" },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source", "doc": "The entity that states the policy, such as a requirement." }
+      }
+    },
+    "validation": {
+      "label": "Validation",
+      "doc": "One rule a value must meet before it is accepted: a contract input or a record field, a rule from a fixed set, and the message a refusal carries.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "description": { "type": "text", "label": "Description" },
+        "contract": { "type": "ref", "ref": ["contract"], "label": "Contract", "doc": "With input: the target is that input of the contract. Exactly one of contract and record." },
+        "input": { "type": "string", "label": "Input" },
+        "record": { "type": "ref", "ref": ["record"], "label": "Record", "doc": "With field: the target is that field of the record." },
+        "field": { "type": "string", "label": "Field" },
+        "rule": { "type": "enum", "values": ["required", "maxLength", "pattern", "range", "oneOf", "custom"], "required": true, "label": "Rule" },
+        "maxLength": { "type": "number", "label": "Maximum length", "doc": "For rule maxLength: a positive integer." },
+        "unit": { "type": "enum", "values": ["characters", "bytes"], "label": "Length unit", "doc": "For rule maxLength: what the length counts (Unicode scalar values, or bytes of UTF-8)." },
+        "pattern": { "type": "string", "label": "Pattern", "doc": "For rule pattern: a regular expression the whole value matches." },
+        "min": { "type": "number", "label": "Minimum", "doc": "For rule range: the least value allowed." },
+        "max": { "type": "number", "label": "Maximum", "doc": "For rule range: the greatest value allowed." },
+        "values": { "type": "list", "items": { "type": "any" }, "label": "Values", "doc": "For rule oneOf: the values allowed." },
+        "expr": { "type": "expr", "label": "Expression", "doc": "For rule custom: a boolean expression over value (the target) and request.<input> or record.<field>." },
+        "message": { "type": "text", "required": true, "label": "Message", "doc": "What a refusal says." },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+      }
+    },
+    "retention": {
+      "label": "Retention",
+      "doc": "How long records of one kind are kept and what happens then: keep for a duration or until an event, then delete, anonymise or archive. The structured form of the record's prose retention; the record's erasure still states what a principal's deletion does.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "description": { "type": "text", "label": "Description" },
+        "record": { "type": "ref", "ref": ["record"], "required": true, "label": "Record" },
+        "keepFor": { "type": "string", "label": "Keep for", "doc": "A duration \"<decimal> <unit>\" with ns, us, ms, s, min, h or d, counted from the record's creation. Exactly one of keepFor and until." },
+        "until": { "type": "ref", "ref": ["event"], "label": "Until", "doc": "The event that ends the retention." },
+        "then": { "type": "enum", "values": ["delete", "anonymise", "archive"], "required": true, "label": "Then" },
+        "fields": { "type": "list", "items": { "type": "string" }, "label": "Anonymised fields", "doc": "For anonymise: the fields that are cleared." },
+        "archiveTo": { "type": "ref", "ref": ["component"], "label": "Archive to", "doc": "For archive: the component that holds the archive." },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+      }
+    },
+    "quota": {
+      "label": "Quota",
+      "doc": "A limit on how often one scope may call a contract or produce an event in a window, and what happens beyond it.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "description": { "type": "text", "label": "Description" },
+        "scope": { "type": "enum", "values": ["tenant", "principal", "source-address"], "required": true, "label": "Scope", "doc": "Whose use is counted." },
+        "contract": { "type": "ref", "ref": ["contract"], "label": "Contract", "doc": "The counted resource, when it is a contract. Exactly one of contract and event." },
+        "event": { "type": "ref", "ref": ["event"], "label": "Event", "doc": "The counted resource, when it is an event." },
+        "limit": { "type": "number", "required": true, "label": "Limit", "doc": "A positive integer: how many in one window." },
+        "window": { "type": "string", "required": true, "label": "Window", "doc": "A duration \"<decimal> <unit>\" with ns, us, ms, s, min, h or d." },
+        "onExceed": { "type": "enum", "values": ["refuse", "queue", "throttle"], "required": true, "label": "On exceed" },
+        "error": { "type": "string", "label": "Error", "doc": "For refuse on a contract: the name of the contract error the refusal is." },
+        "heldBy": { "type": "ref", "ref": ["component"], "label": "Counters held by", "doc": "The component that keeps the counters." },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+      }
+    },
+    "retry": {
+      "label": "Retry",
+      "doc": "How a contract call or an emitted event is retried: attempts, backoff, the idempotency key that makes a repeat harmless, and the timeout of one attempt.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "description": { "type": "text", "label": "Description" },
+        "contract": { "type": "ref", "ref": ["contract"], "label": "Contract", "doc": "The retried call. Exactly one of contract and event." },
+        "event": { "type": "ref", "ref": ["event"], "label": "Event", "doc": "The retried emit." },
+        "attempts": { "type": "number", "required": true, "label": "Attempts", "doc": "A positive integer: the most attempts, the first included." },
+        "backoff": { "type": "object", "required": true, "label": "Backoff", "fields": { "kind": { "type": "enum", "values": ["fixed", "exponential"], "required": true, "label": "Kind" }, "base": { "type": "string", "required": true, "label": "Base", "doc": "A duration: the wait before the second attempt, and every wait when fixed." }, "cap": { "type": "string", "label": "Cap", "doc": "For exponential: the longest wait, a duration of at least the base." } } },
+        "idempotencyKey": { "type": "string", "label": "Idempotency key", "doc": "An input of the contract, or a payload field of the event, that identifies repeats." },
+        "timeout": { "type": "string", "label": "Timeout", "doc": "A duration: how long one attempt may take." },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+      }
+    },
+    "audit": {
+      "label": "Audit",
+      "doc": "An audit record written whenever a contract is called, a transition fires or an event occurs: the record kind written, the fields captured, and how the log is kept immutable.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "description": { "type": "text", "label": "Description" },
+        "contract": { "type": "ref", "ref": ["contract"], "label": "Contract", "doc": "The trigger, when it is a contract call. Exactly one of contract, transition and event." },
+        "transition": { "type": "ref", "ref": ["transition"], "label": "Transition", "doc": "The trigger, when it is a transition." },
+        "event": { "type": "ref", "ref": ["event"], "label": "Event", "doc": "The trigger, when it is an event." },
+        "record": { "type": "ref", "ref": ["record"], "required": true, "label": "Record written" },
+        "capture": { "type": "list", "required": true, "label": "Captured fields", "items": { "type": "object", "fields": { "field": { "type": "string", "required": true, "label": "Field", "doc": "A field of the record written." }, "from": { "type": "expr", "required": true, "label": "From", "doc": "An expression over request.<input> and response.<output> (contract), event.<field> (transition or event), principal.id, principal.tenant, principal.role and time." } } } },
+        "immutability": { "type": "enum", "values": ["append-only", "chained-hash"], "required": true, "label": "Immutability", "doc": "append-only: entries are never changed or removed. chained-hash: append-only, and each entry holds the hash of the one before it in chainField." },
+        "chainField": { "type": "string", "label": "Chain field", "doc": "For chained-hash: the field of the record that holds the previous entry's hash (bytes or string)." },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+      }
+    },
+    "capability": {
+      "label": "Capability",
+      "doc": "A named thing a principal may do, which contracts require (auth.requires), plans entitle, roles and grants confer, delegations and token scopes pass on, and feature flags gate per tenant. A call is admitted only when the tenant's plan entitles every capability it requires (or the capability is core), no flag gating it is off for the tenant, the principal holds it, and a delegation it acts under passes it on (docs/model-and-format.md#capabilities-plans-and-roles).",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "core": { "type": "boolean", "label": "Core", "doc": "True when every tenant has it whatever its plan: no plan needs to entitle it." },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source", "doc": "The entity that states it, such as a requirement." }
+      }
+    },
+    "plan": {
+      "label": "Plan",
+      "doc": "What a tenant buys: the capabilities beyond the core ones its tenants are entitled to.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "capabilities": { "type": "list", "items": { "type": "string" }, "label": "Capabilities", "doc": "The ids of the capabilities the plan entitles." },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+      }
+    },
+    "role": {
+      "label": "Role",
+      "doc": "A named set of capabilities held by principals. A platform role is the platform's own (operators, services, anonymous visitors): its capabilities are what the specification lists. A tenant role is one a tenant starts with: it is tenant data, the tenant may change it, and the capabilities listed are those it starts with.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "level": { "type": "enum", "values": ["platform", "tenant"], "required": true, "label": "Level", "doc": "platform: defined by the specification. tenant: a role a tenant starts with, held as tenant data." },
+        "holders": { "type": "list", "items": { "type": "enum", "values": ["person", "service", "agent", "team", "anonymous", "external"] }, "label": "Holders", "doc": "Who may hold it: people, platform services, agents, teams, anonymous callers, or external parties that prove themselves by signature or provisioning token." },
+        "capabilities": { "type": "list", "items": { "type": "string" }, "label": "Capabilities", "doc": "The ids of the capabilities it confers." },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+      }
+    },
+    "grant": {
+      "label": "Grant",
+      "doc": "Capabilities one role issues to holders of another for a bounded time, such as a support grant a tenant owner issues to platform support for one tenant. A grant passes on only capabilities its issuer holds (delegation.exceeds).",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "issuer": { "type": "ref", "ref": ["role"], "required": true, "label": "Issued by", "doc": "The role whose holders issue it." },
+        "grantee": { "type": "ref", "ref": ["role"], "required": true, "label": "Granted to", "doc": "The role whose holders receive it." },
+        "capabilities": { "type": "list", "items": { "type": "string" }, "required": true, "label": "Capabilities", "doc": "The ids of the capabilities it confers while it lasts." },
+        "perTenant": { "type": "boolean", "label": "Per tenant", "doc": "True when each grant names one tenant and confers its capabilities in that tenant only." },
+        "maxDuration": { "type": "string", "label": "Longest duration", "doc": "How long one grant may last at most, a duration such as \"72 h\"." },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+      }
+    },
+    "delegation": {
+      "label": "Delegation",
+      "doc": "Capabilities a principal passes on to another (an agent, a service) to act for it. The delegate holds at most the capabilities listed, and at run time at most those its delegator holds; the listed capabilities are within what its source holds (delegation.exceeds).",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "from": { "type": "ref", "ref": ["role", "tokenScope", "delegation", "grant"], "required": true, "label": "Delegated from", "doc": "What the delegator holds that the delegation is issued from: a role, a token scope, another delegation or a grant." },
+        "to": { "type": "enum", "values": ["agent", "service", "person"], "label": "Delegate", "doc": "Who acts under it." },
+        "capabilities": { "type": "list", "items": { "type": "string" }, "required": true, "label": "Capabilities", "doc": "The ids of the capabilities it passes on." },
+        "maxDuration": { "type": "string", "label": "Longest duration", "doc": "How long one delegation may last at most, a duration such as \"1 h\"." },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+      }
+    },
+    "tokenScope": {
+      "label": "Token scope",
+      "doc": "A scope an access token is issued with: the capabilities a call made with the token may use, at most.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "label": "Name", "doc": "The scope as a token carries it, such as content:write." },
+        "description": { "type": "text", "label": "Description" },
+        "capabilities": { "type": "list", "items": { "type": "string" }, "required": true, "label": "Capabilities", "doc": "The ids of the capabilities it allows." },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+      }
+    },
+    "featureFlag": {
+      "label": "Feature flag",
+      "doc": "A switch held per tenant that gates capabilities: while it is off for a tenant, nobody in that tenant may use them.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "gates": { "type": "list", "items": { "type": "string" }, "required": true, "label": "Gates", "doc": "The ids of the capabilities it gates." },
+        "default": { "type": "enum", "values": ["off", "on"], "label": "Default", "doc": "Its value for a tenant that has no setting of its own; off when unstated." },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+      }
+    },
+    "screen": {
+      "label": "Screen",
+      "doc": "A page of the user interface: the route it answers, the contract whose response is its view model, and the hand-written renderer that draws it (docs/model-and-format.md, \"User interface\").",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "route": { "type": "string", "required": true, "label": "Route", "doc": "A path pattern: \"/\" or /segment/... where a segment is a literal or :param; or a catch-all, \"*\" or \"*name\", that answers every path no other screen answers (name: the route parameter holding that path). Route parameters are strings." },
+        "query": { "type": "list", "items": { "type": "string" }, "label": "Query parameters", "doc": "Optional query-string parameters the screen reads, such as q of /search?q=." },
+        "viewModel": { "type": "ref", "ref": ["contract"], "label": "View model", "doc": "The contract whose outputs are the screen's data. It is called with the route and query parameters as inputs of the same names." },
+        "kind": { "type": "string", "label": "Renderer", "doc": "The name of the hand-written renderer that draws the view model." },
+        "title": { "type": "string", "label": "Title" },
+        "auth": { "type": "string", "label": "Authentication", "doc": "none, session (any signed-in principal) or role:<role>." },
+        "local": { "type": "list", "label": "Screen-local values", "doc": "Values the screen holds besides its view model, each {name, type}, empty until an action places a call's output there (action.result); expressions read them as local.<name> and the renderer draws them.", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true, "label": "Name" }, "type": { "type": "string", "required": true, "label": "Type" } } } },
+        "description": { "type": "text", "label": "Description" }
+      }
+    },
+    "form": {
+      "label": "Form",
+      "doc": "A form on a screen whose submission calls a contract. Each field fills one input; the validation constructs on those inputs are the field checks, stated once.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "screen": { "type": "ref", "ref": ["screen"], "required": true, "label": "Screen" },
+        "contract": { "type": "ref", "ref": ["contract"], "required": true, "label": "Submitted to" },
+        "fields": { "type": "list", "required": true, "label": "Fields", "items": { "type": "object", "fields": {
+          "name": { "type": "string", "required": true, "label": "Name" },
+          "input": { "type": "string", "required": true, "label": "Contract input" },
+          "label": { "type": "string", "label": "Label", "doc": "The accessible name of the control." },
+          "control": { "type": "enum", "values": ["text", "textarea", "password", "checkbox", "select", "radio", "date", "number"], "required": true, "label": "Control" },
+          "options": { "type": "list", "label": "Options", "doc": "For a select or radio: the choices, each {value, label}.", "items": { "type": "object", "fields": { "value": { "type": "string", "required": true }, "label": { "type": "string", "required": true } } } },
+          "optionsFrom": { "type": "object", "label": "Options from the view model", "doc": "For a select or radio instead of options: path, a path into the screen's view model reaching a list; for a list of structs, value and label name the fields giving each option's value and label; for a list of strings each item is its own value and label.", "fields": { "path": { "type": "string", "required": true, "label": "Path" }, "value": { "type": "string", "label": "Value field" }, "label": { "type": "string", "label": "Label field" } } },
+          "derive": { "type": "string", "label": "Derived from", "doc": "An expression over the other fields (form.<field>) and the screen's scope that fills this field as they change." },
+          "until": { "type": "string", "label": "Derived until", "doc": "edited: deriving stops once this field has been edited. Left out: always derived." },
+          "transform": { "type": "string", "label": "Transform", "doc": "A transform applied to the derived value. slug: Unicode NFKD, combining marks removed, lower case, every run of characters other than a-z and 0-9 replaced by -, - trimmed at both ends, cut to 80 characters, trailing - trimmed." },
+          "initial": { "type": "object", "label": "Initial value", "doc": "Where the field's value comes from when the form opens: path, a path into the screen's view model (a number is shown as text, a list of texts joined with join); with where, path reaches a list of structs and the field takes the value at path value of the first item whose where.field equals the expression where.equals. Nothing there: the control's own initial value.", "fields": { "path": { "type": "string", "required": true, "label": "Path" }, "where": { "type": "object", "label": "Where", "fields": { "field": { "type": "string", "required": true, "label": "Item field" }, "equals": { "type": "string", "required": true, "label": "Equals", "doc": "An expression over the screen's scope, such as principal.id." } } }, "value": { "type": "string", "label": "Value field", "doc": "With where: the path in the item that gives the value." }, "join": { "type": "string", "label": "Join with", "doc": "For a list of texts shown in a text control: the separator." } } },
+          "normalize": { "type": "enum", "values": ["trim"], "label": "Normalize", "doc": "trim: the submitted text has white space removed at both ends before it is sent and before the outcome reads it." }
+        } } },
+        "arguments": { "type": "map", "label": "Other inputs", "doc": "Contract input -> expression over route.<param>, view.<output> and principal, for the inputs no field fills." },
+        "then": { "type": "object", "label": "Then", "doc": "A second call made when the first succeeds, before onSuccess: contract, with arguments (input -> expression over the outcome's scope: response.<output> of the first call, form.<field> and the screen's scope). It sends only the inputs it names. onSuccess then reads the outputs of both calls, the second's where both have one.", "fields": { "contract": { "type": "ref", "ref": ["contract"], "required": true, "label": "Contract" }, "arguments": { "type": "map", "label": "Arguments" } } },
+        "submitLabel": { "type": "string", "required": true, "label": "Submit label", "doc": "The accessible name of the submit button." },
+        "onSuccess": { "type": "object", "required": true, "label": "On success", "doc": "What the page does when the call succeeds: navigate to a screen (params: route parameter -> expression over response.<output>, route.<param>, view.<output> and principal), show a toast, or both.", "fields": { "navigate": { "type": "object", "label": "Navigate", "fields": { "screen": { "type": "ref", "ref": ["screen"], "required": true, "label": "Screen" }, "params": { "type": "map", "label": "Route parameters", "doc": "Route parameter -> expression; may also read query.<param> of the current screen and, on a form, form.<field>." }, "path": { "type": "string", "label": "Address", "doc": "An expression of a string, such as query.next: the address opened when it is a same-site absolute path (starts with / and not //); otherwise the screen is opened." } } }, "toast": { "type": "text", "label": "Toast", "doc": "The text shown; ${response.<output>[.<field>]}, ${form.<field>}, ${item.<field>}, ${route.<param>}, ${query.<param>}, ${view.<output>[.<field>]}, ${local.<name>} and ${principal.<attribute>} are filled in." }, "view": { "type": "map", "label": "View model until it is read again", "doc": "Output -> expression over the outcome's scope: outputs of the view model of the screen the success opens (navigate.screen, else this screen) that hold these values until that view model is read again, such as the version a save moved the record to." } } },
+        "onError": { "type": "object", "required": true, "label": "On error", "doc": "Where a refusal is shown: inline (next to the form or control, field errors on their fields) or as a toast. Its wording is the errorMessages that apply.", "fields": { "show": { "type": "enum", "values": ["inline", "toast"], "required": true, "label": "Show" }, "prefix": { "type": "text", "label": "Prefix", "doc": "Text put before the message of a refusal shown as a toast, such as \"Not done. \"." }, "announce": { "type": "text", "label": "Announce", "doc": "What is announced when a refusal is only about fields, such as \"Some fields need attention.\"." } } }
+      }
+    },
+    "action": {
+      "label": "Action",
+      "doc": "A button on a screen that calls a contract with arguments taken from the route, the view model and the principal. Shown only when the policies on its contract may permit the current principal.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "screen": { "type": "ref", "ref": ["screen"], "required": true, "label": "Screen" },
+        "label": { "type": "string", "required": true, "label": "Label", "doc": "The accessible name of the button." },
+        "contract": { "type": "ref", "ref": ["contract"], "required": true, "label": "Contract" },
+        "form": { "type": "ref", "ref": ["form"], "label": "Form", "doc": "A form on the same screen whose field values the action reads: its arguments and navigation may use form.<field>, typed like in the form." },
+        "forEach": { "type": "string", "label": "For each", "doc": "A path to a list of structs in the screen's view model: the action is repeated once per row, and item.<field> is that row in its expressions and, as ${item.<field>}, in its label and confirmation." },
+        "arguments": { "type": "map", "label": "Arguments", "doc": "Contract input -> expression over route.<param>, view.<output>, item.<field> (per-row) and principal." },
+        "confirm": { "type": "text", "label": "Confirm", "doc": "When set, the action asks for a second press with this text before calling." },
+        "confirmAnnounce": { "type": "text", "label": "Announced when armed", "doc": "With confirm: what is announced when the first press asks for the second." },
+        "alsoOn": { "type": "object", "label": "Also on", "doc": "The action is also offered on every other screen whose authentication is auth (a screen without one is none), such as a sign-out in the page's header. It then reads only principal and response.<output>.", "fields": { "auth": { "type": "string", "required": true, "label": "Authentication" } } },
+        "optimistic": { "type": "boolean", "label": "Optimistic", "doc": "True when the page shows the success before the reply, and undoes it on a refusal." },
+        "result": { "type": "object", "label": "Result", "doc": "Keep the call's result on the screen instead of navigating: output, an output of the contract, is placed in into, a screen-local value of the screen of the same type.", "fields": { "into": { "type": "string", "required": true, "label": "Into" }, "output": { "type": "string", "required": true, "label": "Output" } } },
+        "onSuccess": { "type": "object", "label": "On success", "doc": "What the page does when the call succeeds: navigate to a screen (params: route parameter -> expression over response.<output>, route.<param>, view.<output> and principal), show a toast, or both.", "fields": { "navigate": { "type": "object", "label": "Navigate", "fields": { "screen": { "type": "ref", "ref": ["screen"], "required": true, "label": "Screen" }, "params": { "type": "map", "label": "Route parameters", "doc": "Route parameter -> expression; may also read query.<param> of the current screen and, on a form, form.<field>." }, "path": { "type": "string", "label": "Address", "doc": "An expression of a string, such as query.next: the address opened when it is a same-site absolute path (starts with / and not //); otherwise the screen is opened." } } }, "toast": { "type": "text", "label": "Toast", "doc": "The text shown; ${response.<output>[.<field>]}, ${form.<field>}, ${item.<field>}, ${route.<param>}, ${query.<param>}, ${view.<output>[.<field>]}, ${local.<name>} and ${principal.<attribute>} are filled in." }, "view": { "type": "map", "label": "View model until it is read again", "doc": "Output -> expression over the outcome's scope: outputs of the view model of the screen the success opens (navigate.screen, else this screen) that hold these values until that view model is read again, such as the version a save moved the record to." } } },
+        "onError": { "type": "object", "label": "On error", "doc": "Where a refusal is shown: inline (next to the form or control, field errors on their fields) or as a toast. Its wording is the errorMessages that apply.", "fields": { "show": { "type": "enum", "values": ["inline", "toast"], "required": true, "label": "Show" }, "prefix": { "type": "text", "label": "Prefix", "doc": "Text put before the message of a refusal shown as a toast, such as \"Not done. \"." }, "announce": { "type": "text", "label": "Announce", "doc": "What is announced when a refusal is only about fields, such as \"Some fields need attention.\"." } } }
+      }
+    },
+    "liveBinding": {
+      "label": "Live binding",
+      "doc": "An event the backend publishes that refreshes an open screen: the whole view model, or one output of it.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "screen": { "type": "ref", "ref": ["screen"], "required": true, "label": "Screen" },
+        "event": { "type": "ref", "ref": ["event"], "required": true, "label": "Event" },
+        "refresh": { "type": "string", "required": true, "label": "Refresh", "doc": "whole, or a path into the view model: an output of the view-model contract, then fields of its struct types." },
+        "when": { "type": "any", "label": "When", "doc": "Refresh only when this holds: an expression over event.<payload field> and the screen's scope, {value, in: view-model path} (the value is an item of that list), or {any: [...]} / {all: [...]} of such conditions." }
+      }
+    },
+    "errorMessage": {
+      "label": "Error message",
+      "doc": "The wording of a refusal: for a failed check of a kind (on check) or for an error code (on error), for every form and action or for those it applies to (docs/model-and-format.md, \"User interface\").",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "on": { "type": "enum", "values": ["check", "error"], "required": true, "label": "On", "doc": "check: a failed check of the reply (its rule kind, such as required or constraint). error: the error code of the reply, when no failed check explains it." },
+        "kinds": { "type": "list", "items": { "type": "string" }, "label": "Kinds", "doc": "The check kinds or error codes it words. Left out: every other one (the default)." },
+        "text": { "type": "text", "required": true, "label": "Text", "doc": "On check: ${check.detail} (the detail as sent) and ${check.statement} (the detail without the bracketed reference at its end) are filled in. On error: ${error.message}." },
+        "fallback": { "type": "text", "label": "Fallback", "doc": "The text when the filled-in text is empty." },
+        "field": { "type": "enum", "values": ["name", "prefix"], "label": "Field", "doc": "On check: the form field the message is shown on. name: the field the check names (object.field); prefix: the field whose name starts the check's name (title for title_length). Left out: the form as a whole." },
+        "appliesTo": { "type": "list", "items": { "type": "ref", "ref": ["form", "action"] }, "label": "Applies to", "doc": "The forms and actions it words, before the messages for all. Left out: all of them." },
+        "description": { "type": "text", "label": "Description" }
+      }
+    },
+    "uiScenario": {
+      "label": "User journey",
+      "doc": "A user journey a generator turns into an end-to-end browser test: steps that act and expect, selecting elements by role and accessible name only.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "verifies": { "type": "list", "items": { "type": "ref", "ref": ["claim"] }, "label": "Verifies", "doc": "The requirements the journey checks." },
+        "browsers": { "type": "list", "items": { "type": "string" }, "label": "Browsers", "doc": "Names of separate browser sessions; the journey starts in the first. Omitted: one session." },
+        "viewport": { "type": "object", "label": "Viewport", "fields": { "width": { "type": "number", "required": true }, "height": { "type": "number", "required": true } } },
+        "steps": { "type": "list", "required": true, "label": "Steps", "items": { "type": "map" }, "doc": "Each step is an object with exactly one key, a step kind of src/core/ui-steps.js (STEP_KINDS): navigation, actions, expectations, network and API checks, cookies, captured values, emulation and layout. Elements are addressed by role and accessible name (or name pattern), heading level and within only." },
+        "description": { "type": "text", "label": "Description" }
+      }
+    },
     "claim": {
       "label": "Claim",
       "doc": "A precise statement about a property expected to hold, with an explicit evaluation mechanism.",
@@ -482,6 +974,8 @@
         "subjects": { "type": "list", "items": { "type": "ref", "ref": ["component", "port", "relationship", "behavior", "contract", "scenario", "state", "transition", "event", "fault", "record", "copy"] }, "label": "Subjects" },
         "assumptions": { "type": "list", "items": { "type": "ref", "ref": ["assumption"] }, "label": "Assumptions" },
         "faultModel": { "type": "ref", "ref": ["faultModel"], "label": "Fault model", "doc": "The fault model this claim is evaluated under. A result states it in its scope." },
+        "realisation": { "type": "enum", "values": ["construction", "checked", "operational"], "label": "Realisation", "doc": "For a requirement. construction: generated code guarantees it, and some claim whose models names it checks that. checked: hand-written code, checked by tests. operational: measured on a running deployment." },
+        "realisedBy": { "type": "list", "items": { "type": "ref", "ref": ["policy", "validation", "retention", "quota", "retry", "audit"] }, "label": "Realised by", "doc": "For a requirement: the cross-cutting constructs that realise it by construction. A construction requirement is satisfied by a claim whose models names it or by at least one construct here." },
         "evaluate": { "type": "evaluation", "required": true, "label": "Evaluation" }
       }
     },

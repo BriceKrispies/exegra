@@ -125,55 +125,132 @@ export function parseExpr(src) {
 }
 
 /**
+ * The integer representation types and their ranges (WG-4902, docs/semantics.md, "Numbers"). `u64`
+ * and `i64` are limited to the integers a double holds exactly. Mirrors `IntKind` in
+ * formal/Exegra/Value.lean.
+ * @type {Readonly<Record<string, readonly [number, number]>>}
+ */
+export const INT_RANGES = Object.freeze({
+  u8: [0, 255], u16: [0, 65535], u32: [0, 4294967295], u64: [0, 9007199254740991],
+  i32: [-2147483648, 2147483647], i64: [-9007199254740991, 9007199254740991],
+});
+
+/** @typedef {(path: string[]) => string|undefined} TypeOf the declared type of a reference: an integer type name, `option`, or anything else (untyped) */
+
+/** @param {string|undefined} ty */
+const isInt = (ty) => ty !== undefined && Object.hasOwn(INT_RANGES, ty);
+
+/** The declared type an arithmetic expression is computed in (`staticTy`). @param {Ast} ast @param {TypeOf} types @returns {string|undefined} */
+function staticType(ast, types) {
+  if (ast.t === 'ref') {
+    // As STy.ofName: an integer type, `option`, or no type.
+    const t = types(ast.path);
+    return t === 'option' || isInt(t) ? t : undefined;
+  }
+  if (ast.t === 'un' && ast.op === '-') return staticType(ast.a, types);
+  if (ast.t === 'bin' && ['+', '-', '*', '/', '%'].includes(ast.op)) {
+    const a = staticType(ast.a, types);
+    return a !== undefined ? a : staticType(ast.b, types);
+  }
+  return undefined;
+}
+
+/** @param {string} k @param {number} x */
+function holds(k, x) {
+  const [lo, hi] = INT_RANGES[k];
+  return Math.floor(x) === x && lo <= x && x <= hi;
+}
+
+/**
+ * The result of an arithmetic operator in declared type `ty` (`intResult` in formal/Exegra/Expr.lean):
+ * untyped arithmetic is IEEE; integer arithmetic checks both operands and the exact result.
+ * @param {string|undefined} ty @param {string} op @param {number} x @param {number} y @param {number} r
+ */
+function intResult(ty, op, x, y, r) {
+  if (ty === undefined || !Object.hasOwn(INT_RANGES, ty)) return r;
+  const [lo, hi] = INT_RANGES[ty];
+  if (!holds(ty, x)) throw new ExprError(`Operator "${op}" on ${ty}: operand ${String(x)} is not a ${ty}`);
+  if (!holds(ty, y)) throw new ExprError(`Operator "${op}" on ${ty}: operand ${String(y)} is not a ${ty}`);
+  if (!holds(ty, r)) throw new ExprError(`Integer overflow: "${op}" on ${ty} gives ${String(r)}, outside ${lo}..${hi}`);
+  // An integer has no negative zero.
+  return r + 0;
+}
+
+/**
+ * Equality of values (`==`), structural (`Value.eqv` in formal/Exegra/Value.lean): numbers by
+ * value, arrays element by element, objects by their keys and members in any order.
+ * @param {any} a @param {any} b @returns {boolean}
+ */
+export function valueEquals(a, b) {
+  if (a === b) return true;
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a)) return a.length === b.length && a.every((x, i) => valueEquals(x, b[i]));
+  const ka = Object.keys(a);
+  return ka.length === Object.keys(b).length && ka.every((k) => Object.hasOwn(b, k) && valueEquals(a[k], b[k]));
+}
+
+/** @type {TypeOf} */
+const UNTYPED = () => undefined;
+
+/**
  * Evaluate a parsed expression. `resolve` maps a reference path to a value and
- * must return undefined for an unknown reference (which is an error).
+ * must return undefined for an unknown reference (which is an error). `types`, when given, maps a
+ * reference path to its declared type (WG-4902): integer types make arithmetic checked integer
+ * arithmetic, and an absent value of type `option` reads as null. Mirrors `eval` in
+ * formal/Exegra/Expr.lean.
  * @param {Ast} ast
  * @param {(path:string[]) => any} resolve
+ * @param {TypeOf} [types]
  * @returns {any}
  */
-export function evalExpr(ast, resolve) {
+export function evalExpr(ast, resolve, types = UNTYPED) {
   switch (ast.t) {
     case 'lit': return ast.v;
     case 'ref': {
       const v = resolve(ast.path);
-      if (v === undefined) throw new ExprError(`Unknown reference "${ast.path.join('.')}"`, ast.pos);
+      if (v === undefined) {
+        if (types(ast.path) === 'option') return null;
+        throw new ExprError(`Unknown reference "${ast.path.join('.')}"`, ast.pos);
+      }
       return v;
     }
     case 'un': {
-      const a = evalExpr(ast.a, resolve);
+      const a = evalExpr(ast.a, resolve, types);
       if (ast.op === '!') { requireType(a, 'boolean', '!'); return !a; }
       requireType(a, 'number', '-');
-      return -a;
+      return intResult(staticType(ast.a, types), '-', a, 0, -a);
     }
     case 'bin': {
       const op = ast.op;
       if (op === '&&' || op === '||' || op === '=>') {
-        const a = evalExpr(ast.a, resolve);
+        const a = evalExpr(ast.a, resolve, types);
         requireType(a, 'boolean', op);
         if (op === '&&' && !a) return false;
         if (op === '||' && a) return true;
         if (op === '=>' && !a) return true;
-        const b = evalExpr(ast.b, resolve);
+        const b = evalExpr(ast.b, resolve, types);
         requireType(b, 'boolean', op);
         return b;
       }
-      const a = evalExpr(ast.a, resolve);
-      const b = evalExpr(ast.b, resolve);
-      if (op === '==') return a === b;
-      if (op === '!=') return a !== b;
+      const a = evalExpr(ast.a, resolve, types);
+      const b = evalExpr(ast.b, resolve, types);
+      if (op === '==') return valueEquals(a, b);
+      if (op === '!=') return !valueEquals(a, b);
       if (op === '+' && typeof a === 'string' && typeof b === 'string') return a + b;
       requireType(a, 'number', op);
       requireType(b, 'number', op);
+      const ty = staticType(ast, types);
       switch (op) {
         case '<': return a < b;
         case '<=': return a <= b;
         case '>': return a > b;
         case '>=': return a >= b;
-        case '+': return a + b;
-        case '-': return a - b;
-        case '*': return a * b;
-        case '/': if (b === 0) throw new ExprError('Division by zero'); return a / b;
-        case '%': if (b === 0) throw new ExprError('Division by zero'); return a % b;
+        case '+': return intResult(ty, op, a, b, a + b);
+        case '-': return intResult(ty, op, a, b, a - b);
+        case '*': return intResult(ty, op, a, b, a * b);
+        case '/': if (b === 0) throw new ExprError('Division by zero'); return intResult(ty, op, a, b, isInt(ty) ? (a - (a % b)) / b : a / b);
+        case '%': if (b === 0) throw new ExprError('Division by zero'); return intResult(ty, op, a, b, a % b);
       }
     }
   }
@@ -207,9 +284,10 @@ export function exprRefs(ast) {
  * Parse and evaluate in one call; throws ExprError on a parse failure.
  * @param {string} src
  * @param {(path:string[]) => any} resolve
+ * @param {TypeOf} [types]
  */
-export function evaluate(src, resolve) {
+export function evaluate(src, resolve, types) {
   const r = parseExpr(src);
   if (!r.ok) throw new ExprError(r.error.message, r.error.pos);
-  return evalExpr(r.ast, resolve);
+  return evalExpr(r.ast, resolve, types);
 }
