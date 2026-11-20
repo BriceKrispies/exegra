@@ -18,6 +18,12 @@
 // Every message names the product entity, the place of the text in it, the text and the position in the text
 // (a count of characters from 0).
 //
+// The nine operators added to the language (checked + - *, a timestamp plus or minus milliseconds, ms_between,
+// days, hours, minutes, concat, text) are parsed and typed here as the generated parser and checker do: a '-'
+// before a digit is the sign of an integer literal only where no operand ends before it, + and - bind looser
+// than *, both tighter than a comparison. tests/core/layer-expr-drift.test.js probes every operator a language
+// entity declares against this module, so a new operator fails a test here until it is handled.
+//
 // The grammar and the static check are those the specification's `tenant-rule-language` entity states, which
 // specc generates into the kernel (crates/model-core/src/tenant_rule_language.rs: tokenize, Parser, check). The
 // operator table is not read from the entity here: Exegra's evaluator and checker of a declared language
@@ -101,7 +107,7 @@ export function productContext(baseModel, items) {
  * The scope a text is written in, found from the item that holds it and the path of the text in the item.
  * Objects: the fields of the object type itself. Policies: the object type of the resource. Segments: the
  * subject type. Triggers: the object of a record event (none for the others) and the params the event binds.
- * Operations: the subject's object type and the inputs as params. Anything else (an automation, a token): the
+ * Operations: the subject's object type and the inputs as params, and in a step the ids of the create steps before it. Anything else (an automation, a token): the
  * run's params are not known here, so any field and param is accepted.
  * @param {ProductContext} ctx @param {string} section @param {any} item @param {(string|number)[]} path
  * @returns {Scope}
@@ -122,6 +128,13 @@ export function expressionScope(ctx, section, item, path) {
     }
     case 'operations': {
       const params = new Set((Array.isArray(item?.inputs) ? item.inputs : []).map((/** @type {any} */ i) => i?.name).filter((/** @type {any} */ n) => typeof n === 'string'));
+      // A step reads the identifier of the record an earlier create step made as the parameter named by that step's id (D-6548).
+      if (path[0] === 'steps' && typeof path[1] === 'number' && Array.isArray(item?.steps)) {
+        for (const earlier of item.steps.slice(0, path[1])) {
+          const id = isObj(earlier) ? earlier.CreateRecord?.id : undefined;
+          if (typeof id === 'string') params.add(id);
+        }
+      }
       const subject = item?.subject?.object;
       return { fields: typeof subject === 'string' ? fieldsOf(subject) : new Map(), params };
     }
@@ -136,9 +149,17 @@ class Problem extends Error {
 
 /** @typedef {{t: 'id'|'int'|'str'|'sym', v: any, pos: number}} Token */
 
+/** Whether a token ends an operand, so that a '-' after it subtracts instead of signing a literal. @param {Token|undefined} tok */
+function endsOperand(tok) {
+  if (tok === undefined) return false;
+  if (tok.t === 'int' || tok.t === 'str') return true;
+  if (tok.t === 'sym') return tok.v === ')' || tok.v === ']';
+  return !['or', 'and', 'not', 'in'].includes(tok.v);
+}
+
 /** @param {string} source @returns {Token[]} */
 function tokenize(source) {
-  const SYMBOLS = ['==', '!=', '<=', '>=', '<', '>', '(', ')', '[', ']', ',', '.'];
+  const SYMBOLS = ['==', '!=', '<=', '>=', '<', '>', '+', '-', '*', '(', ')', '[', ']', ',', '.'];
   const chars = [...source];
   /** @type {Token[]} */
   const out = [];
@@ -150,7 +171,7 @@ function tokenize(source) {
       const start = i;
       while (i < chars.length && /[A-Za-z0-9_$]/.test(chars[i])) i++;
       out.push({ t: 'id', v: chars.slice(start, i).join(''), pos: start });
-    } else if (/[0-9]/.test(c) || (c === '-' && /[0-9]/.test(chars[i + 1] ?? ''))) {
+    } else if (/[0-9]/.test(c) || (c === '-' && /[0-9]/.test(chars[i + 1] ?? '') && !endsOperand(out[out.length - 1]))) {
       const start = i++;
       while (i < chars.length && /[0-9]/.test(chars[i])) i++;
       const text = chars.slice(start, i).join('');
@@ -186,7 +207,7 @@ function tokenize(source) {
 }
 
 /** The call forms: the token, the number of arguments. */
-const CALLS = Object.freeze({ is_null: 1, len: 1, lower: 1, contains: 2, starts_with: 2, is_slug: 1, if: 3 });
+const CALLS = Object.freeze({ is_null: 1, len: 1, lower: 1, contains: 2, starts_with: 2, is_slug: 1, if: 3, ms_between: 2, days: 1, hours: 1, minutes: 1, concat: 2, text: 1 });
 
 /**
  * @typedef {{k: string, pos: number, [key: string]: any}} Node
@@ -252,9 +273,26 @@ function parse(source) {
   /** @returns {Node} */
   const level3 = () => {
     const pos = here();
-    const left = primary();
-    for (const op of ['==', '!=', '<', '<=', '>', '>=']) if (sym(op)) return { k: 'cmp', pos, op, left, right: primary() };
-    if (word('in')) return { k: 'in', pos, left, right: primary() };
+    const left = level4();
+    for (const op of ['==', '!=', '<', '<=', '>', '>=']) if (sym(op)) return { k: 'cmp', pos, op, left, right: level4() };
+    if (word('in')) return { k: 'in', pos, left, right: level4() };
+    return left;
+  };
+  /** + and -, left associative. @returns {Node} */
+  const level4 = () => {
+    const pos = here();
+    let left = level5();
+    for (;;) {
+      const op = sym('+') ? '+' : sym('-') ? '-' : null;
+      if (op === null) return left;
+      left = { k: 'arith', pos, op, left, right: level5() };
+    }
+  };
+  /** The product, left associative. @returns {Node} */
+  const level5 = () => {
+    const pos = here();
+    let left = primary();
+    while (sym('*')) left = { k: 'arith', pos, op: '*', left, right: primary() };
     return left;
   };
   /** @returns {Node} */
@@ -364,6 +402,13 @@ function check(tree, env) {
         }
         return 'bool';
       }
+      case 'arith': {
+        const first = sh(n.left);
+        if (n.op === '*') { expect(first, ['int'], n.op, n.left.pos); expect(sh(n.right), ['int'], n.op, n.right.pos); return 'int'; }
+        expect(first, ['int', 'time'], n.op, n.left.pos);
+        expect(sh(n.right), ['int'], n.op, n.right.pos);
+        return first;
+      }
       case 'in': sh(n.left); expect(sh(n.right), ['list'], 'in', n.right.pos); return 'bool';
       case 'call': {
         const a = n.args;
@@ -379,6 +424,10 @@ function check(tree, env) {
           }
           case 'starts_with': expect(sh(a[0]), ['str'], 'starts_with', a[0].pos); expect(sh(a[1]), ['str'], 'starts_with', a[1].pos); return 'bool';
           case 'is_slug': expect(sh(a[0]), ['str'], 'is_slug', a[0].pos); return 'bool';
+          case 'ms_between': for (const arg of a) expect(sh(arg), ['time'], 'ms_between', arg.pos); return 'int';
+          case 'days': case 'hours': case 'minutes': expect(sh(a[0]), ['int'], n.name, a[0].pos); return 'int';
+          case 'concat': for (const arg of a) expect(sh(arg), ['str'], 'concat', arg.pos); return 'str';
+          case 'text': expect(sh(a[0]), ['int', 'time', 'ref', 'bool', 'str'], 'text', a[0].pos); return 'str';
           default: {
             expect(sh(a[0]), ['bool'], 'if', a[0].pos);
             const then = sh(a[1]), otherwise = sh(a[2]);
@@ -400,11 +449,20 @@ function check(tree, env) {
  * @returns {ExprProblem|null}
  */
 export function checkExpressionText(text, env) {
+  return typeExpressionText(text, env).problem ?? null;
+}
+
+/**
+ * Parse and check one text, giving the shape of its value (bool, int, str, time, ref, list or any) or the first problem.
+ * @param {string} text
+ * @param {Scope & {roles: Set<string>, objects: Map<string, FieldMap>}} env
+ * @returns {{shape: string, problem?: undefined}|{shape?: undefined, problem: ExprProblem}}
+ */
+export function typeExpressionText(text, env) {
   try {
-    check(parse(text), env);
-    return null;
+    return { shape: check(parse(text), env) };
   } catch (e) {
-    if (e instanceof Problem) return { code: e.code, pos: e.pos, message: e.message };
+    if (e instanceof Problem) return { problem: { code: e.code, pos: e.pos, message: e.message } };
     throw e;
   }
 }

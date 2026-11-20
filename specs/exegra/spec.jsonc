@@ -2600,8 +2600,9 @@
         "Check each value of a typed section against the platform type its section maps to (src/core/layer-values.js, one table and one generic check: struct fields required and optional, union variants by tag, enums, lists, maps, ids by pattern and length, scalars by representation, the authoring text of an expression): a value of the wrong shape is refused with layer.value-invalid and a union value the platform union lacks with layer.outside-catalogue (the published catalogue of INT-153: trigger-event, automation-step, tenant-operation-step)",
         "Refuse an entity id that is not in the namespace of its product, the product id with each hyphen replaced by an underscore and two underscores (layer.namespace-missing, D-6582), and resolve the names the typed values hold against what the product files declare: an undeclared name in the product namespace is layer.reference-unknown and a name another product declares is layer.cross-product-reference, which also confines a product capability to its product",
         "Report a product capability as unreachable only when no role or grant confers it: installing the product entitles it, and a product file cannot add a plan (D-6590)",
-        "Parse and check the expression text of every typed value whose platform type is expr or expression (src/core/layer-expr.js: the grammar and static check of the tenant rule language, in the scope the value is written in: the fields of the object type it belongs to, the params an operation or an event binds, the roles of the platform and of the product, and what a reference hop may follow): a text that does not parse is layer.expr-syntax, a field the object type lacks layer.expr-unknown-field, a role nobody declares layer.expr-unknown-role, a param the scope does not bind layer.expr-unknown-param and a shape the operator does not accept layer.expr-type, each naming the product entity and the position in the text",
-        "Refuse an object type that has a field with a personal declaration and no retention rule (layer.retention-missing, D-6584)"
+        "Parse and check the expression text of every typed value whose platform type is expr or expression (src/core/layer-expr.js: the grammar and static check of the tenant rule language, in the scope the value is written in: the fields of the object type it belongs to, the params an operation or an event binds, the roles of the platform and of the product, and what a reference hop may follow): a text that does not parse is layer.expr-syntax, a field the object type lacks layer.expr-unknown-field, a role nobody declares layer.expr-unknown-role, a param the scope does not bind layer.expr-unknown-param and a shape the operator does not accept layer.expr-type, each naming the product entity and the position in the text. The grammar and typing include the nine operators of the language: checked + - * on integers (a timestamp plus or minus an integer is a timestamp; Time + Time is refused, ms_between gives the difference), ms_between, days, hours, minutes, concat and text, with a - before a digit a sign only where no operand ends before it, and an operand of the wrong shape is layer.expr-type with the message \"<op> does not accept a <Shape> operand\". A step of an operation reads the id of an earlier create step as a param (D-6548). tests/core/layer-expr-drift.test.js probes every operator a language entity declares against this parser and compares it with the language checker on the shared case table, so an operator added to the language fails a test until layer-expr.js handles it (WG-5120)",
+        "Refuse an object type that has a field with a personal declaration and no retention rule (layer.retention-missing, D-6584)",
+        "Accept the product header members version (three whole numbers joined by dots) and platform ({min, below?}: a platform release, and a later release from which the product is not supported), and refuse a malformed one with layer.header-invalid, as specc does (WG-5174)"
       ],
       "unknowns": [
         "The browser application opens a project without its product files: src/app/session.js builds the Project from the specification alone, and the workspace watcher does not watch product files (follow-up of WG-4989).",
@@ -18807,7 +18808,7 @@
     {
       "id": "product-layers-expressions",
       "kind": "structural",
-      "statement": "An expression written as text in a typed section of a product file (a policy condition, a trigger condition, an operation's check, a field default or read rule, a constraint, a segment predicate, an automation's expression) is parsed and checked with the tenant rule language in the scope it is written in: a text that does not parse, or uses a name or call the language lacks, is refused with layer.expr-syntax; a record field the object type of the scope lacks with layer.expr-unknown-field; a role neither the platform nor the product declares with layer.expr-unknown-role; a param the scope does not bind with layer.expr-unknown-param; and an operand of a shape its operator does not accept, a comparison of two shapes, or a hop through a field that is not a single reference with layer.expr-type. Each refusal names the product entity, the place and text, and the position in the text. specc gives the same rule codes.",
+      "statement": "An expression written as text in a typed section of a product file (a policy condition, a trigger condition, an operation's check, a field default or read rule, a constraint, a segment predicate, an automation's expression) is parsed and checked with the tenant rule language in the scope it is written in: a text that does not parse, or uses a name or call the language lacks, is refused with layer.expr-syntax; a record field the object type of the scope lacks with layer.expr-unknown-field; a role neither the platform nor the product declares with layer.expr-unknown-role; a param the scope does not bind with layer.expr-unknown-param; and an operand of a shape its operator does not accept, a comparison of two shapes, or a hop through a field that is not a single reference with layer.expr-type. The nine operators of the language (checked + - *, a timestamp plus or minus milliseconds, ms_between, days, hours, minutes, concat, text) are parsed and typed as the language declares them, with the sign rule for a - before a digit. Each refusal names the product entity, the place and text, and the position in the text. specc gives the same rule codes.",
       "subjects": [
         "spec-layers"
       ],
@@ -22204,6 +22205,83 @@
       "kind": "test",
       "ref": "tests/core/language-kernel-cases.test.js#check gives the kernel result: adding a timestamp on the right",
       "description": "The checker refuses int + timestamp, timestamp - timestamp, timestamp * int, ms_between of an int, days of a string, concat of an int and text of a list, and gives a timestamp plus days the time shape."
+    },
+    {
+      "id": "ev-layers-expressions-operators",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#each of the nine operators is accepted and the bare result of arithmetic is an expression",
+      "description": "Each of the nine operators is accepted."
+    },
+    {
+      "id": "ev-layers-expressions-operator-types",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#one operand of the wrong shape per operator is layer.expr-type with the kernel message",
+      "description": "One wrong operand per operator is layer.expr-type with the stated message."
+    },
+    {
+      "id": "ev-layers-expressions-sign",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#a minus before a digit is a sign only where no operand ends before it",
+      "description": "The sign rule for a minus before a digit."
+    },
+    {
+      "id": "ev-layers-expressions-precedence",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#precedence binds the product over the sum over a comparison",
+      "description": "Precedence and associativity."
+    },
+    {
+      "id": "ev-layers-expressions-time-time",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#Time plus Time and Time minus Time are refused: ms_between gives the difference",
+      "description": "Time + Time is refused."
+    },
+    {
+      "id": "ev-layers-expressions-step-params",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#a step reads the id of an earlier create step as a parameter",
+      "description": "A step reads the id of an earlier create step as a param."
+    },
+    {
+      "id": "ev-layers-expressions-drift",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr-drift.test.js#layer-expr.js parses and types every operator the fixture language declares",
+      "description": "Every operator the fixture language declares is parsed and typed as declared."
+    },
+    {
+      "id": "ev-layers-expressions-drift-detects",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr-drift.test.js#the probe fails for an operator layer-expr.js lacks and for one it types differently",
+      "description": "The probe fails for an operator layer-expr.js lacks."
+    },
+    {
+      "id": "ev-layers-expressions-drift-strata",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr-drift.test.js#layer-expr.js parses and types every operator the Strata platform declares",
+      "description": "The same probe over the Strata platform language, when its specification is present."
+    },
+    {
+      "id": "ev-layers-expressions-corpus",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr-drift.test.js#layer-expr.js and the language checker agree on every checked case of the shared table",
+      "description": "layer-expr.js and the language checker agree on every checked case."
+    },
+    {
+      "id": "ev-layers-header-version-platform",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product header takes version and platform and refuses a malformed one with layer.header-invalid",
+      "description": "The header members version and platform are accepted and validated."
     }
   ],
 

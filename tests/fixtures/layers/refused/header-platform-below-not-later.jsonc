@@ -1,0 +1,4 @@
+{
+  // Refused: a platform range whose below is not later than min (layer.header-invalid, WG-5174).
+  "product": { "id": "badges", "name": "Badges", "platform": { "min": "0.2", "below": "0.2.0" }, "imports": { "spec": "../platform.jsonc", "entities": [] } }
+}

@@ -110,7 +110,45 @@ const REFUSED_BECAUSE = {
 const PLATFORM_CODE = 'It is platform code or structure: a product refers to the platform\'s by id (list them in product.imports.entities) and does not declare its own. If the product truly needs a new one, it belongs in the platform specification.';
 
 const ID_RE = new RegExp(metamodel.idPattern);
-const HEADER_KEYS = new Set(['id', 'name', 'description', 'imports']);
+const HEADER_KEYS = new Set(['id', 'name', 'description', 'imports', 'version', 'platform']);
+
+/** A version of a product: three whole numbers joined by dots (specc layers.rs is_version). @param {any} v */
+const isVersion = (v) => typeof v === 'string' && /^[0-9]{1,9}.[0-9]{1,9}.[0-9]{1,9}$/.test(v);
+/** A platform release: one to three whole numbers joined by dots, optionally a hyphen and a label (is_release). @param {any} v */
+const isRelease = (v) => typeof v === 'string' && /^[0-9]{1,9}(.[0-9]{1,9}){0,2}(-[A-Za-z0-9.]+)?$/.test(v);
+/** The numbers of a release without its trailing zeros: 0.2 and 0.2.0 are one release (release_numbers). @param {string} release */
+function releaseNumbers(release) {
+  const numbers = release.split('-')[0].split('.').map(Number);
+  while (numbers.length > 0 && numbers[numbers.length - 1] === 0) numbers.pop();
+  return numbers;
+}
+/** @param {number[]} a @param {number[]} b */
+function compareNumbers(a, b) {
+  for (let i = 0; i < Math.min(a.length, b.length); i++) if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1;
+  return Math.sign(a.length - b.length);
+}
+
+/**
+ * The problems of the platform range of a product header: an object with a "min" that is a platform release and,
+ * when it excludes later releases, a "below" that is one too and is later than "min" (specc layers.rs platform_problems).
+ * @param {string} file @param {any} value @returns {string[]}
+ */
+export function platformProblems(file, value) {
+  const shape = '{"min": "<first release>", "below": "<first release it does not support>"}';
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return [`"product.platform" in ${file} must be an object ${shape}; correct it, or remove it for a product that states no platform range.`];
+  /** @type {string[]} */
+  const problems = [];
+  for (const key of Object.keys(value)) if (key !== 'min' && key !== 'below') problems.push(`"product.platform" in ${file} has "${key}", which it does not take; it holds only min and below. Remove "${key}".`);
+  /** @type {string[]} */
+  const releases = [];
+  for (const [key, required] of /** @type {[string, boolean][]} */ ([['min', true], ['below', false]])) {
+    if (value[key] === undefined) { if (required) problems.push(`"product.platform" in ${file} has no "min", the first platform release the product supports; add it, as in ${shape}.`); }
+    else if (isRelease(value[key])) releases.push(value[key]);
+    else problems.push(`"product.platform.${key}" in ${file} must be a platform release such as "0.2" or "1.4.0" (whole numbers joined by dots); correct it.`);
+  }
+  if (releases.length === 2 && compareNumbers(releaseNumbers(releases[1]), releaseNumbers(releases[0])) <= 0) problems.push(`"product.platform" in ${file} excludes from "${releases[1]}", which is not later than its first release "${releases[0]}", so no release is supported; make "below" later than "min".`);
+  return problems;
+}
 const JSONC = { allowTrailingComma: true, disallowComments: false };
 
 /** @param {string} text */
@@ -353,9 +391,13 @@ function readHeader(st, v, report) {
   for (const prop of v.children ?? []) {
     const [k, val] = member(prop);
     const key = String(k.value);
-    if (!HEADER_KEYS.has(key)) report('layer.header-invalid', `The product header of ${file} has "${key}", which it does not take; it holds only id, name, description and imports. Remove "${key}".`, k);
+    if (!HEADER_KEYS.has(key)) report('layer.header-invalid', `The product header of ${file} has "${key}", which it does not take; it holds only id, name, description, version, platform and imports. Remove "${key}".`, k);
     fields.set(key, val);
   }
+  const version = fields.get('version');
+  if (version && !isVersion(getNodeValue(version))) report('layer.header-invalid', `"product.version" in ${file} is ${JSON.stringify(getNodeValue(version))}, which is not a version. A version is three whole numbers joined by dots, such as "1.0.0" (an upgrade is offered only to a greater one, D-6583); correct it, or remove it.`, version);
+  const platform = fields.get('platform');
+  if (platform) for (const message of platformProblems(file, getNodeValue(platform))) report('layer.header-invalid', message, platform);
   let ok = true;
   const id = fields.get('id');
   if (id?.type === 'string' && ID_RE.test(String(id.value))) { st.productId = String(id.value); st.productIdNode = id; }

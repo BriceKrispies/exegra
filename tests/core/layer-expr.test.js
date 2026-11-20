@@ -2,7 +2,7 @@
 // the grammar of the tenant rule language, and the scope a text is written in.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkExpressionText, expressionScope, fieldMapOf, productContext } from '../../src/core/layer-expr.js';
+import { checkExpressionText, typeExpressionText, expressionScope, fieldMapOf, productContext } from '../../src/core/layer-expr.js';
 
 const tier = { id: 'p__tier', fields: { name: { ty: 'Str' }, points: { ty: 'Int' }, owner: { ty: { Ref: { target: 'p__member', 'on-delete': 'Restrict' } } }, tags: { ty: { List: 'Str' } } } };
 const member = { id: 'p__member', fields: { email: { ty: 'Str' } } };
@@ -23,7 +23,13 @@ test('texts of the language are accepted', () => {
 test('a name or call the language lacks and malformed text is layer.expr-syntax with its position', () => {
   const at = (/** @type {string} */ t) => { const p = check(t); return p && [p.code, p.pos]; };
   assert.deepEqual(at('balance(record.points) > 1'), ['layer.expr-syntax', 0]);
-  assert.deepEqual(at('record.points + 1'), ['layer.expr-syntax', 14]);
+  assert.deepEqual(at('record.points % 1'), ['layer.expr-syntax', 14]);
+  assert.deepEqual(at('record.points +'), ['layer.expr-syntax', 15]);
+  assert.deepEqual(at('- 1 > 0'), ['layer.expr-syntax', 0]);
+  assert.deepEqual(at('-record.points > 0'), ['layer.expr-syntax', 0]);
+  assert.deepEqual(at('ms_between(now) > 0'), ['layer.expr-syntax', 14]);
+  assert.deepEqual(at('days(1, 2) > 0'), ['layer.expr-syntax', 6]);
+  assert.deepEqual(at('1 < 2 < 3'), ['layer.expr-syntax', 6]);
   assert.deepEqual(at('record.name == "gold"'), ['layer.expr-syntax', 15]);
   assert.deepEqual(at("record.name == 'gold"), ['layer.expr-syntax', 15]);
   assert.deepEqual(at('record.points >'), ['layer.expr-syntax', 15]);
@@ -70,4 +76,78 @@ test('the scope comes from the value that holds the text', () => {
   assert.deepEqual([...(op.params ?? [])], ['tier']);
   assert.equal(expressionScope(ctx, 'operations', { inputs: [] }, ['steps']).fields?.size, 0, 'an operation without a subject has no record');
   assert.deepEqual(expressionScope(ctx, 'automations', {}, ['run-key']), { fields: null, params: null });
+});
+
+/** The shape of a text, or the code and message of its problem. @param {string} text */
+const typed = (text) => { const r = typeExpressionText(text, own); return r.problem ? [r.problem.code, r.problem.message] : r.shape; };
+
+test('each of the nine operators is accepted and the bare result of arithmetic is an expression', () => {
+  const accepted = /** @type {[string, string][]} */ ([
+    ['record.points + 1', 'int'], ['record.points - 1', 'int'], ['record.points * 2', 'int'],
+    ['now + 1', 'time'], ['now - 1', 'time'], ['now - days(1)', 'time'], ['time(5) + hours(2)', 'time'],
+    ['ms_between(time(1), now)', 'int'], ['days(2)', 'int'], ['hours(2)', 'int'], ['minutes(record.points)', 'int'],
+    ["concat(record.name, 'x')", 'str'], ['text(record.points)', 'str'], ['text(now)', 'str'], ['text(ref(1))', 'str'], ['text(true)', 'str'], ["text('a')", 'str'],
+    ['ms_between(now, now + days(90)) <= days(90)', 'bool'], ["concat('n', text(record.points)) == 'n1'", 'bool'], ['param.limit + 1', 'any'],
+  ]);
+  for (const [text, shape] of accepted) assert.equal(typed(text), shape, text);
+});
+
+test('one operand of the wrong shape per operator is layer.expr-type with the kernel message', () => {
+  const refused = /** @type {[string, string][]} */ ([
+    ["'a' + 1", '+ does not accept a Str operand'], ['1 + time(5)', '+ does not accept a Time operand'],
+    ['true - 1', '- does not accept a Bool operand'], ["now - 'a'", '- does not accept a Str operand'],
+    ['now * 2', '* does not accept a Time operand'], ['2 * now', '* does not accept a Time operand'],
+    ['ms_between(1, now)', 'ms_between does not accept a Int operand'], ["ms_between(now, 'a')", 'ms_between does not accept a Str operand'],
+    ["days('a')", 'days does not accept a Str operand'], ['hours(now)', 'hours does not accept a Time operand'], ['minutes(true)', 'minutes does not accept a Bool operand'],
+    ['concat(1, record.name)', 'concat does not accept a Int operand'], ["concat('a', 1)", 'concat does not accept a Int operand'],
+    ['text([1])', 'text does not accept a List operand'], ['text(record.tags)', 'text does not accept a List operand'],
+  ]);
+  for (const [text, message] of refused) assert.deepEqual(typed(text), ['layer.expr-type', message], text);
+});
+
+test('Time plus Time and Time minus Time are refused: ms_between gives the difference', () => {
+  assert.deepEqual(typed('now + now'), ['layer.expr-type', '+ does not accept a Time operand']);
+  assert.deepEqual(typed('now - time(1)'), ['layer.expr-type', '- does not accept a Time operand']);
+  assert.equal(typed('ms_between(time(1), now)'), 'int');
+  assert.equal(check('now + now')?.pos, 6, 'the position is the right operand');
+});
+
+test('a minus before a digit is a sign only where no operand ends before it', () => {
+  for (const literal of ['-1 < record.points', '2 * -3 > 0', 'record.points in [1, -1]', 'is_null(-1)', '1 - -1 > 0', 'record.points == -1', 'not -1 < 0', 'time(-5) < now', 'record.points > 1 and -1 < 0', 'if(true, -1, 2) == 0']) {
+    assert.equal(check(literal), null, literal);
+  }
+  assert.equal(typed('record.points-1'), 'int', 'a name before a minus: subtraction');
+  assert.equal(typed('record.points -1'), 'int');
+  assert.equal(typed('1 -1'), 'int');
+  assert.equal(typed('(1) -1'), 'int');
+  assert.deepEqual(typed("'a' -1"), ['layer.expr-type', '- does not accept a Str operand']);
+  assert.equal(check('-1 -1 > 0'), null, 'a literal, then a subtraction');
+  assert.equal(typed('2*-3'), 'int');
+  assert.equal(typed('1 - -1'), 'int');
+  assert.equal(check('- 1 > 0')?.code, 'layer.expr-syntax', 'a symbol minus with no left operand');
+  assert.equal(check('1 + - 1 > 0')?.code, 'layer.expr-syntax');
+  assert.equal(check('99999999999999999999 > 1')?.code, 'layer.expr-syntax', 'out of range');
+  assert.equal(check('-9223372036854775808 < record.points'), null, 'the smallest integer');
+});
+
+test('precedence binds the product over the sum over a comparison', () => {
+  assert.equal(typed('time(1) + 1 * 2'), 'time', 'a product binds tighter than the sum');
+  assert.deepEqual(typed('time(1) * 1 + 2'), ['layer.expr-type', '* does not accept a Time operand']);
+  assert.equal(typed('time(1) + 1 - 2'), 'time', 'left to right');
+  assert.deepEqual(typed('1 + time(1) - 2'), ['layer.expr-type', '+ does not accept a Time operand']);
+  assert.equal(typed('1 + 2 < 4 * 2'), 'bool', 'sums are the operands of a comparison');
+  assert.equal(typed('1 + 2 in [3]'), 'bool');
+  assert.equal(typed('not 1 + 1 > 1 or true'), 'bool');
+  assert.equal(typed('1 + 1 == 2 and 3 - 1 == 2'), 'bool');
+  assert.equal(check('1 < 2 == true')?.code, 'layer.expr-syntax', 'one comparison only');
+  assert.equal(typed('(1 + 2) * 3'), 'int');
+});
+
+test('a step reads the id of an earlier create step as a parameter', () => {
+  const item = { inputs: [{ name: 'tier' }], steps: [{ CreateRecord: { id: 'made', object: 'p__tier' } }, { PostLedger: { id: 'fund', scope: 'text(param.made)' } }, { CreateRecord: { id: 'later' } }] };
+  const at = (/** @type {number} */ n) => [...(expressionScope(ctx, 'operations', item, ['steps', n, 'x']).params ?? [])];
+  assert.deepEqual(at(0), ['tier'], 'not its own id');
+  assert.deepEqual(at(1), ['tier', 'made']);
+  assert.deepEqual(at(2), ['tier', 'made'], 'a post step binds nothing');
+  assert.deepEqual([...(expressionScope(ctx, 'operations', item, ['conditions', 0, 'expr']).params ?? [])], ['tier'], 'a condition runs before every step');
 });

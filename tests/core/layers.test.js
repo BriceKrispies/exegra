@@ -418,3 +418,17 @@ test('an automation accepts any field and param but is still checked for syntax 
   assert.deepEqual(codes('has_role(ghost)'), ['layer.expr-unknown-role']);
   assert.deepEqual(codes('balance(1)'), ['layer.expr-syntax']);
 });
+
+// The header members version and platform (WG-5174): the same validation and rule code as specc's layers.rs.
+test('a product header takes version and platform and refuses a malformed one with layer.header-invalid', () => {
+  const withHeader = (/** @type {string} */ members) => analyzeLayers(read(PLATFORM), [{ ...layer(BADGES), text: read(BADGES).replace('"id": "badges",', `"id": "badges", ${members}`) }]).diagnostics.filter((d) => d.severity === 'error');
+  assert.deepEqual(withHeader('"version": "1.0.0", "platform": { "min": "0.2-draft", "below": "1.0" },').map((d) => d.code), []);
+  assert.deepEqual(withHeader('"platform": { "min": "0.2" },').map((d) => d.code), []);
+  for (const bad of ['"version": "1.0"', '"version": 1', '"version": "1.0.x"', '"platform": "0.2"', '"platform": { "below": "1.0" }', '"platform": { "min": "latest" }', '"platform": { "min": "0.2", "max": "1.0" }', '"platform": { "min": "1.0", "below": "1.0.0" }', '"platform": { "min": "2.0", "below": "1.9" }']) {
+    assert.deepEqual(withHeader(`${bad},`).map((d) => d.code), ['layer.header-invalid'], bad);
+  }
+  assert.equal(errors([refused('header-version-invalid')])[0]?.code, 'layer.header-invalid');
+  assert.match(errors([refused('header-platform-no-min')])[0]?.message ?? '', /has no "min"/);
+  assert.match(errors([refused('header-platform-below-not-later')])[0]?.message ?? '', /not later than its first release/);
+  assert.match(withHeader('"colour": "red",')[0]?.message ?? '', /holds only id, name, description, version, platform and imports/);
+});
