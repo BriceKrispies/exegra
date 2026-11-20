@@ -56,6 +56,8 @@ const NEGATIVE = [
     '{ "id": "f-poke-extra", "name": "Hint ignored", "kind": "disable-transition", "transition": "r-hint" }'],
   ['machine.initial-unreachable', 'a shipped machine that neither creates its records nor names the contract that writes them',
     '"key": "id", "creates": true', '"key": "id"'],
+  ['machine.singleton-key', 'an unkeyed machine that creates its records, run by a scenario, over a key with no fixed value',
+    '{ "name": "id", "type": "string" }, { "name": "seen"', '{ "name": "id", "type": "f64" }, { "name": "seen"'],
 ];
 
 for (const [code, what, from, to] of NEGATIVE) {

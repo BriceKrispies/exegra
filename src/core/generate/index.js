@@ -5,6 +5,7 @@
 import { generateManifest } from './manifest.js';
 import { generateArchitectureDoc } from './architecture-doc.js';
 import { generateClaimsReport, generateClaimsReportJson } from './claims-report.js';
+import { claimStrength } from '../claim-strength.js';
 import { generateTaskManifest } from './task-manifest.js';
 
 /** @typedef {import('../types.js').Model} Model */
@@ -25,7 +26,7 @@ export { generateTaskManifest } from './task-manifest.js';
 /**
  * All generated artifacts, keyed by file name.
  * @param {Model} model
- * @param {{claimResults?: ClaimResult[], diagnostics?: Diagnostic[], traceability?: Traceability}} [opts]
+ * @param {{claimResults?: ClaimResult[], diagnostics?: Diagnostic[], traceability?: Traceability, claimStrength?: Map<string, import('../claim-strength.js').Strength>}} [opts]
  * @returns {Record<string, string>}
  */
 export function generateAll(model, opts = {}) {
@@ -33,6 +34,7 @@ export function generateAll(model, opts = {}) {
     claimResults: opts.claimResults ?? [],
     diagnostics: opts.diagnostics ?? [],
     traceability: opts.traceability,
+    claimStrength: opts.claimStrength ?? claimStrength(model),
   };
   return {
     'manifest.json': generateManifest(model),

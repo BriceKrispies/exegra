@@ -10,6 +10,7 @@ import { lowerDistribution, unitExponentialTable } from './distributions.js';
 import { unsharedText } from './codegen-model.js';
 
 import { retryDelay } from './fault-model.js';
+import { poolMachines } from './pools.js';
 
 /** @typedef {import('./types.js').Model} Model */
 
@@ -150,6 +151,14 @@ export function simulationInput(model, scenarioId, faults) {
       })),
     };
   });
+
+  // A quota pool the scenario lists runs as the machines its meaning derives (src/core/pools.js), after the
+  // scenario's behaviors.
+  for (const pid of Array.isArray(sdata.pools) ? sdata.pools : []) {
+    const p = model.entities.get(pid);
+    if (!p || p.kind !== 'quotaPool') throw new Error(`Scenario "${scenarioId}" lists "${pid}", which is not a quota pool.`);
+    behaviors.push(...poolMachines(model, pid));
+  }
 
   const faultIds = [...new Set(faults ?? sdata.faults ?? [])];
   /** @type {InputFault[]} */

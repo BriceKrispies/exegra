@@ -24,6 +24,7 @@
     "validations": { "entity": "validation" },
     "retentions": { "entity": "retention" },
     "quotas": { "entity": "quota" },
+    "quotaPools": { "entity": "quotaPool" },
     "retries": { "entity": "retry" },
     "audits": { "entity": "audit" },
     "capabilities": { "entity": "capability" },
@@ -33,6 +34,9 @@
     "delegations": { "entity": "delegation" },
     "tokenScopes": { "entity": "tokenScope" },
     "featureFlags": { "entity": "featureFlag" },
+    "regions": { "entity": "region" },
+    "tenantClasses": { "entity": "tenantClass" },
+    "residencyExceptions": { "entity": "residencyException" },
     "screens": { "entity": "screen" },
     "forms": { "entity": "form" },
     "actions": { "entity": "action" },
@@ -47,6 +51,7 @@
     "assumptions": { "entity": "assumption" },
     "claims": { "entity": "claim" },
     "integrityRules": { "entity": "integrityRule" },
+    "integrityRelations": { "entity": "integrityRelation" },
     "evidence": { "entity": "evidence" },
     "views": { "entity": "view" }
   },
@@ -117,6 +122,8 @@
         "unknowns": { "type": "list", "items": { "type": "text" }, "label": "Known unknowns" },
         "illustrative": { "type": "boolean", "label": "Illustrative" },
         "tags": { "type": "list", "items": { "type": "string" }, "label": "Tags" },
+        "placement": { "type": "enum", "values": ["per-region", "fixed", "global"], "label": "Placement", "doc": "Where the component holds and processes data (docs/model-and-format.md, Residency). per-region: an instance in each region it lists (every region when it lists none), holding and processing a tenant's data in that tenant's home region. fixed: it runs only in the regions it lists, whatever the tenant's home. global: anywhere; no residency is promised." },
+        "regions": { "type": "list", "items": { "type": "ref", "ref": ["region"] }, "label": "Regions", "doc": "For per-region, the regions it has an instance in (omitted: every region); for fixed, the regions it runs in. A global component lists none." },
         "implementation": {
           "type": "object", "label": "Implementation",
           "fields": {
@@ -152,6 +159,7 @@
         "label": { "type": "string", "label": "Label" },
         "description": { "type": "text", "label": "Description", "expected": true },
         "contract": { "type": "ref", "ref": ["contract"], "label": "Contract" },
+        "carries": { "type": "list", "items": { "type": "ref", "ref": ["record"] }, "label": "Carries", "doc": "The records whose content passes along this relationship (a data flow), so residency rules can follow it to the component that receives it." },
         "illustrative": { "type": "boolean", "label": "Illustrative" }
       }
     },
@@ -470,6 +478,7 @@
         "warmup": { "type": "string", "label": "Warm-up" },
         "stopAt": { "type": "string", "label": "Stop at" },
         "workloads": { "type": "list", "items": { "type": "ref", "ref": ["workload"] }, "label": "Workloads" },
+        "pools": { "type": "list", "items": { "type": "ref", "ref": ["quotaPool"] }, "label": "Quota pools", "doc": "Quota pools the scenario runs: each runs as the machines its meaning derives, one per pooled limit and modelled member, named <pool>-<limit>-m<k> (docs/model-and-format.md, Pooled quotas)." },
         "routes": { "type": "list", "items": { "type": "map" }, "label": "Routes" },
         "metrics": { "type": "map", "label": "Metrics", "doc": "{quantiles?, series?: {bucket}}." },
         "output": { "type": "enum", "values": ["trace", "metrics"], "label": "Output" }
@@ -745,6 +754,45 @@
         "source": { "type": "ref", "ref": ["*"], "label": "Source" }
       }
     },
+    "quotaPool": {
+      "label": "Quota pool",
+      "doc": "Limits shared by a group of tenants (the clients of one reseller): each member's fair share is what it contributes, the pool's capacity is the sum, a member may go over its share while the pool has headroom, and a member over its share for consecutive windows is throttled unless an exemption set by a named actor applies. Its meaning runs as machines in scenarios that list it (docs/model-and-format.md, Pooled quotas).",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "memberClass": { "type": "ref", "ref": ["tenantClass"], "label": "Member class", "doc": "The class of tenants that may be members; omitted, any tenant." },
+        "groupedBy": { "type": "string", "required": true, "label": "Grouped by", "doc": "What makes one pool of members, as text: the reseller whose clients they are." },
+        "heldBy": { "type": "ref", "ref": ["component"], "label": "Counters held by", "doc": "The component that keeps the pool's counters, the limit store; it is the subject of the machines the pool runs as." },
+        "window": { "type": "string", "required": true, "label": "Window", "doc": "The window usage is counted in and the over-share rule counts, a duration such as 1 d." },
+        "windowEnd": { "type": "ref", "ref": ["event"], "required": true, "label": "Window end", "doc": "The event that closes a window (a day boundary)." },
+        "limits": { "type": "list", "required": true, "label": "Pooled limits", "items": { "type": "object", "fields": {
+          "name": { "type": "string", "required": true, "label": "Name", "doc": "A lower-case word, part of the machine ids." },
+          "kind": { "type": "enum", "values": ["rate", "level"], "required": true, "label": "Kind", "doc": "rate: usage counted per window and reset when it ends (automation runs). level: a standing amount that usage raises or lowers (storage)." },
+          "quota": { "type": "ref", "ref": ["quota"], "label": "Quota", "doc": "The per-tenant quota whose limit each member contributes; its window is the pool's window. Exactly one of quota and perMember." },
+          "perMember": { "type": "number", "label": "Per member", "doc": "What each member contributes, when no quota states it (storage)." },
+          "unit": { "type": "string", "label": "Unit" },
+          "usage": { "type": "ref", "ref": ["event"], "label": "Usage event", "doc": "The event that uses the limit, with payload fields member and amount; defaults to the event the quota counts." }
+        } } },
+        "overShare": { "type": "object", "required": true, "label": "Over fair share", "fields": {
+          "consecutive": { "type": "number", "required": true, "label": "Consecutive windows", "doc": "A member over its fair share at the end of this many consecutive windows is throttled, headroom or not, unless exempt." }
+        } },
+        "throttle": { "type": "object", "required": true, "label": "Throttle", "fields": {
+          "to": { "type": "enum", "values": ["fair-share", "refuse"], "required": true, "label": "Throttled to", "doc": "fair-share: a throttled member may use up to its fair share; refuse: it may only lower a level." },
+          "release": { "type": "any", "required": true, "label": "Released after", "doc": "A positive integer: the throttle lifts after that many consecutive windows ending at or under the fair share; or never." }
+        } },
+        "exemption": { "type": "object", "label": "Exemption", "fields": {
+          "name": { "type": "string", "label": "Name", "doc": "Such as burst eligibility." },
+          "setBy": { "type": "ref", "ref": ["role"], "required": true, "label": "Set by", "doc": "The role whose holders set it (the reseller)." },
+          "capability": { "type": "ref", "ref": ["capability"], "label": "Capability", "doc": "The capability setting it needs; the setBy role confers it." },
+          "event": { "type": "ref", "ref": ["event"], "required": true, "label": "Set event", "doc": "The event that sets it for a member, with payload field member." },
+          "effective": { "type": "enum", "values": ["same-window", "next-window"], "required": true, "label": "Effective from", "doc": "same-window: it applies from the window in which it is set, that window's end included; next-window: from the next one." },
+          "retroactive": { "type": "boolean", "label": "Retroactive", "doc": "true: setting it lifts a throttle already in force. Default false: it never applies to windows already throttled." }
+        } },
+        "modelMembers": { "type": "number", "label": "Modelled members", "doc": "How many members the model runs, 1 to 4 (default 2), named m1, m2, ... in usage payloads." },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+      }
+    },
     "retry": {
       "label": "Retry",
       "doc": "How a contract call or an emitted event is retried: attempts, backoff, the idempotency key that makes a repeat harmless, and the timeout of one attempt.",
@@ -860,6 +908,53 @@
         "description": { "type": "text", "label": "Description" },
         "gates": { "type": "list", "items": { "type": "string" }, "required": true, "label": "Gates", "doc": "The ids of the capabilities it gates." },
         "default": { "type": "enum", "values": ["off", "on"], "label": "Default", "doc": "Its value for a tenant that has no setting of its own; off when unstated." },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+      }
+    },
+    "region": {
+      "label": "Region",
+      "doc": "A residency region: a place data may be required to stay in, such as a jurisdiction's data centres (docs/model-and-format.md, Residency).",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "jurisdiction": { "type": "string", "label": "Jurisdiction", "doc": "The law or authority the region answers to, as text." },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+      }
+    },
+    "tenantClass": {
+      "label": "Tenant class",
+      "doc": "A class of tenants, by a feature flag they carry or a plan they are on (or every tenant), the regions its tenants may be provisioned in, and the records whose data must stay where a tenant was provisioned.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "flag": { "type": "ref", "ref": ["featureFlag"], "label": "Flag", "doc": "The tenants of the class are those for which this flag is on. At most one of flag and plan; with neither, every tenant." },
+        "plan": { "type": "ref", "ref": ["plan"], "label": "Plan", "doc": "The tenants of the class are those on this plan." },
+        "provisionedIn": { "type": "list", "items": { "type": "ref", "ref": ["region"] }, "required": true, "label": "Provisioned in", "doc": "The regions a tenant of the class may be provisioned in. Each tenant has one: its home region." },
+        "confinement": { "type": "enum", "values": ["home", "provisioned-regions", "none"], "label": "Confinement", "doc": "Where the data of the bound records may be. home (default): only in the tenant's home region. provisioned-regions: anywhere among provisionedIn. none: no residency rule." },
+        "binds": { "type": "list", "items": { "type": "ref", "ref": ["record"] }, "label": "Binds", "doc": "The records whose data of a tenant of this class is confined; their copies and the relationships that carry them are bound too." },
+        "source": { "type": "ref", "ref": ["*"], "label": "Source" }
+      }
+    },
+    "residencyException": {
+      "label": "Residency exception",
+      "doc": "A named, approved and bounded exception that lets one copy class or one data flow of a tenant class's bound records sit outside the home region, with the purge obligation when it expires.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "tenantClass": { "type": "ref", "ref": ["tenantClass"], "required": true, "label": "Tenant class" },
+        "copy": { "type": "ref", "ref": ["copy"], "label": "Copy", "doc": "The copy class the exception lets outside the region. Exactly one of copy and flow." },
+        "flow": { "type": "ref", "ref": ["relationship"], "label": "Flow", "doc": "The relationship (a data flow that carries bound records) the exception lets leave the region." },
+        "feature": { "type": "ref", "ref": ["capability", "featureFlag"], "label": "Feature", "doc": "The one product feature the exception is for." },
+        "regions": { "type": "list", "items": { "type": "ref", "ref": ["region"] }, "label": "Regions", "doc": "Where the exception lets the data be; omitted, wherever the holder runs." },
+        "approvedBy": { "type": "ref", "ref": ["role"], "required": true, "label": "Approved by", "doc": "The role whose holders approve an exception of this class." },
+        "maxDuration": { "type": "string", "label": "Longest duration", "doc": "How long one approval lasts at most, a duration such as 90 d." },
+        "renewalWindow": { "type": "string", "label": "Renewal window", "doc": "A renewal received within this duration before expiry continues the approval: its expiry clock does not restart. Needs maxDuration, and is shorter than it." },
+        "purgeWithin": { "type": "string", "label": "Purge within", "doc": "How long after expiry the copies, or the flow's data, outside the region must be purged: a duration. Required with maxDuration." },
+        "residual": { "type": "text", "label": "What may remain", "doc": "What may stay outside the region after the purge, and why, such as copies already served to a cached viewer." },
+        "status": { "type": "enum", "values": ["active", "expired", "revoked"], "label": "Status", "doc": "active (default) covers its target; an expired or revoked exception covers nothing." },
         "source": { "type": "ref", "ref": ["*"], "label": "Source" }
       }
     },
@@ -990,6 +1085,18 @@
         "rule": { "type": "text", "required": true, "label": "Rule", "doc": "The formula, e.g. forall d : decision, forall x in d.closes, x.resolvedBy == d. Entity ids written as literals are not references: a rename does not rewrite them." },
         "rationale": { "type": "text", "label": "Rationale" },
         "basis": { "type": "list", "items": { "type": "ref", "ref": ["*"] }, "label": "Basis", "doc": "The entities this rule rests on: decisions, requirements, claims." }
+      }
+    },
+    "integrityRelation": {
+      "label": "Integrity relation",
+      "doc": "A derived relation for integrity rules: the least relation over its parameter domains closed under its clauses (Datalog with stratified negation). Rules and clauses use it as an atom id(t1, ..., tn). See docs/integrity-rules.md, Derived relations.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "statement": { "type": "text", "required": true, "label": "Statement", "doc": "What a tuple of the relation means, in plain words." },
+        "params": { "type": "list", "required": true, "label": "Parameters", "doc": "The parameters, in order. Each ranges over the entities of its kinds (a list of kinds, or \"*\" for every entity); the candidate tuples are the product of the domains.", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true, "label": "Name", "doc": "The variable that names the parameter in the clauses." }, "kinds": { "type": "any", "required": true, "label": "Kinds", "doc": "A list of entity kinds, or \"*\"." } } } },
+        "clauses": { "type": "list", "required": true, "label": "Clauses", "items": { "type": "text" }, "doc": "Formulas of the rule language whose free variables are parameters; each is one way a tuple is in the relation. Within a cycle of relations every atom of the cycle must occur positively." },
+        "rationale": { "type": "text", "label": "Rationale" },
+        "basis": { "type": "list", "items": { "type": "ref", "ref": ["*"] }, "label": "Basis", "doc": "The entities this relation rests on." }
       }
     },
     "evidence": {

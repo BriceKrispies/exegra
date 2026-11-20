@@ -19,6 +19,7 @@ import { simulationInput, durationIn } from './sim-input.js';
 import { checkContractEvents } from './contract-trace.js';
 import { evaluateDataClaim } from './data-model.js';
 import { checkRefinementTrace, refinementOf } from './refinement.js';
+import { scenarioMachineIds } from './pools.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Entity} Entity */
@@ -174,7 +175,7 @@ function attachModelledBy(model, results) {
  */
 export function checkTrace(model, trace) {
   const scenario = model.entities.get(trace.scenarioId);
-  const behaviors = new Set(Array.isArray(scenario?.data.behaviors) ? scenario.data.behaviors : []);
+  const behaviors = scenarioMachineIds(model, scenario);
   const out = [];
   for (const claim of model.byKind.claim ?? []) {
     if (claim.data.kind !== 'invariant' && claim.data.kind !== 'temporal') continue;

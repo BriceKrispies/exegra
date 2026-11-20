@@ -1,0 +1,72 @@
+{
+  // A fixture for derived relations (integrityRelation) in integrity rules
+  // (tests/core/integrity-relations.test.js, tests/core/formal-integrity.test.js,
+  // tests/core/integrity-nemo.test.js): modules that use one another, a recursive reachability
+  // relation, a pair of mutually recursive relations, and stratified negation (stale-dep negates live,
+  // a lower stratum). Every rule holds here; relations-mutations.json lists, per rule, an edit after
+  // which it must fail with a given counterexample.
+  "exegra": "0.1",
+  "system": { "id": "relations-fixture", "name": "Derived relation fixture", "illustrative": true },
+
+  "vocabulary": {
+    "entityKinds": {
+      "module": { "label": "Module", "section": "modules", "properties": {
+        "uses": { "type": "list", "items": { "type": "ref", "ref": "module" } },
+        "layer": { "type": "enum", "values": ["core", "ui"] },
+        "deprecated": { "type": "boolean" } } },
+      "note": { "label": "Note", "section": "notes", "properties": {
+        "tag": { "type": "string" } } }
+    }
+  },
+
+  "modules": [
+    { "id": "m-store", "layer": "core" },
+    { "id": "m-model", "layer": "core", "uses": ["m-store"] },
+    { "id": "m-rules", "layer": "core", "uses": ["m-model", "m-store"] },
+    { "id": "m-view", "layer": "ui", "uses": ["m-rules"] },
+    { "id": "m-shell", "layer": "ui", "uses": ["m-view"] },
+    // Deprecated and used by nothing: live modules reach only live modules.
+    { "id": "m-legacy", "layer": "ui", "deprecated": true }
+  ],
+
+  // An entity whose id is the kind "module": a rule reads it through kindof (the export must include it).
+  "notes": [
+    { "id": "module", "tag": "A unit of code that uses other modules." }
+  ],
+
+  "integrityRelations": [
+    { "id": "reaches", "statement": "Module a reaches module b through one or more uses.",
+      "params": [{ "name": "a", "kinds": ["module"] }, { "name": "b", "kinds": ["module"] }],
+      "clauses": ["b in a.uses", "exists m in a.uses, reaches(m, b)"] },
+    { "id": "live", "statement": "Module m is not deprecated.",
+      "params": [{ "name": "m", "kinds": ["module"] }],
+      "clauses": ["m.deprecated != true"] },
+    { "id": "stale-dep", "statement": "Module a reaches a module that is not live.",
+      "params": [{ "name": "a", "kinds": ["module"] }],
+      "clauses": ["exists b : module, reaches(a, b) && !live(b)"] },
+    { "id": "odd-path", "statement": "Module a reaches module b in an odd number of uses.",
+      "params": [{ "name": "a", "kinds": ["module"] }, { "name": "b", "kinds": ["module"] }],
+      "clauses": ["b in a.uses", "exists m in a.uses, even-path(m, b)"] },
+    { "id": "even-path", "statement": "Module a reaches module b in an even, non-zero number of uses.",
+      "params": [{ "name": "a", "kinds": ["module"] }, { "name": "b", "kinds": ["module"] }],
+      "clauses": ["exists m in a.uses, odd-path(m, b)"] }
+  ],
+
+  "integrityRules": [
+    { "id": "uses-acyclic", "severity": "error",
+      "statement": "No module reaches itself through uses.",
+      "rule": "forall m : module, !reaches(m, m)" },
+    { "id": "core-below-ui", "severity": "error",
+      "statement": "No core module reaches a ui module.",
+      "rule": "forall a : module where a.layer == \"core\", forall b : module where b.layer == \"ui\", !reaches(a, b)" },
+    { "id": "live-modules-stay-live", "severity": "error",
+      "statement": "A live module reaches only live modules.",
+      "rule": "forall a : module where live(a), !stale-dep(a)" },
+    { "id": "no-odd-cycles", "severity": "error",
+      "statement": "No module reaches itself in an odd number of uses.",
+      "rule": "forall a : module, !odd-path(a, a)" },
+    { "id": "live-kinds-described", "severity": "error",
+      "statement": "The kind of every live module is described by a note of that id.",
+      "rule": "forall m : module where live(m), forall k in kindof m, nonempty k.tag" }
+  ]
+}

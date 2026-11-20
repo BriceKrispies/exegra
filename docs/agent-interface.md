@@ -125,7 +125,7 @@ node cli/exegra.js contracts session
 ```
 
 ### `claims [--status <status>]`
-Evaluated claim results, each with the claim's `statement` and `kind`; a trace claim also carries `negatives` (each declared negative run: `scenario`, `faults`, `violated`, `outcome`, `stepIndex`, `explanation`). `--status` is one of `verified`, `supported`, `violated`, `inconclusive`, `not-evaluated`.
+Evaluated claim results, each with the claim's `statement` and `kind`, its `check` and `grounding`, and the sentences and lists behind them in `strength` ([claims-and-evidence.md](claims-and-evidence.md#check-strength-and-grounding)); a trace claim also carries `negatives` (each declared negative run: `scenario`, `faults`, `violated`, `outcome`, `stepIndex`, `explanation`). `--status` is one of `verified`, `supported`, `violated`, `inconclusive`, `not-evaluated`.
 ```
 node cli/exegra.js claims --status violated
 ```
@@ -134,7 +134,7 @@ node cli/exegra.js claims --status violated
 ```
 
 ### `evaluate [<claimId>]`
-One claim, or all claims. Returns `{results, summary}`. A violated claim is a finding, so the command still succeeds with `ok: true`.
+One claim, or all claims. Returns `{results, summary}`; each result carries `check`, `grounding` and `strength`, as in `claims`. A violated claim is a finding, so the command still succeeds with `ok: true`.
 ```
 node cli/exegra.js evaluate core-dependencies-acyclic
 ```
@@ -175,6 +175,44 @@ Failure codes:
 - `write.conflict`: the file changed on disk after it was read. Nothing was written, or only the spec was written when the layout conflicted (the message says which).
 
 With `--dry-run` the transaction is fully validated and nothing is written. The envelope's `semanticHash` is then the hash before the command.
+
+### `admit [--file <ops.json> | --ops '<json>'] [--label <text>] [--write] [--accept <code[,code...]>]...`
+Decides whether a change set (a list of operations, as for `apply`) may be folded into the specification. It evaluates the specification before, applies the operations to an in-memory copy through `Project.apply` (the same preconditions, validation and integrity ratchet as `apply`), evaluates the result, and reports the difference and a verdict. It writes only with `--write`, and only when the verdict is `admitted`; a rejected change never writes. The file is written as `apply` writes it (`--label` becomes the history label).
+
+```
+node cli/exegra.js admit --project exegra --ops '[{"type":"CreateRelationship","id":"r-web-db","kind":"calls","from":"web","to":"db"}]'
+```
+```json
+{"ok":false,"command":"admit","project":"shop","error":{"code":"admit.rejected","message":"Rejected: admit.claim-regressed (c-no-direct). Nothing was written."},"diagnostics":[],"result":{"verdict":"rejected","reasons":[{"code":"admit.claim-regressed","id":"c-no-direct","before":"verified","after":"violated","message":"Claim \"c-no-direct\" moved from verified to violated."}],"diff":{"claims":{"changed":[{"id":"c-no-direct","before":"verified","after":"violated","direction":"worse","explanation":"Relationship \"r-web-db\" leads from \"web\" to \"db\", although no relationship was to exist."}],"added":[],"removed":[]},"validation":{"errors":{"new":[],"resolved":[]},"warnings":{"new":[],"resolved":[]}},"readiness":{"new":[],"resolved":[]},"integrity":{"new":[],"resolved":[]}},"counts":{"changedClaims":1,"regressedClaims":1,"addedClaims":0,"removedClaims":0,"…":"…"},"transaction":{"accepted":true,"affected":["r-web-db"],"semanticChanged":true},"semanticHashBefore":"…","semanticHashAfter":"…","written":[]}}
+```
+
+The envelope is `ok: true` with exit 0 when admitted. When rejected it is `ok: false` with code `admit.rejected` and exit 1, and `result` still holds the full report (as `verify` does with `verify.failed`).
+
+Result fields: `verdict` (`admitted` or `rejected`), `reasons`, `transaction` (`accepted`; `code`, `message` and `diagnostics` when refused), `diff` (null when the transaction was refused), `counts` (`before` and `after` per side, and the number of changed, regressed, added and removed claims and of new and resolved validation errors, warnings, readiness gaps and integrity violations), `acknowledged`, `pendingRealisation`, `semanticHashBefore`, `semanticHashAfter`, `written`. The diff has `claims` (`changed` with `before`, `after`, `direction` and the evaluator's explanation after; `added` with status; `removed`), `validation` (`errors` and `warnings`, each `new` and `resolved`), `readiness` and `integrity` (each `new` and `resolved`; a violation is the rule id, its severity and the counterexample bindings) and `privilege` (`added`: each capability a role, grant, delegation or token scope gained; `removed`: each capability taken away, informational). Every list is sorted by id. Claims are evaluated exactly as `evaluate` does, with the project's recorded results.
+
+Ranking of claim statuses, best first: `proved` > `verified` > `supported` = `model-holds` > `inconclusive` > `violated`. A claim whose status moves down this ranking has regressed. `not-evaluated` claims, and claims the change removes, are reported but never ranked, so moving to or from `not-evaluated` is listed in the diff without being a reason.
+
+Admitted only when all of these hold; every failing one is listed in `reasons`, not only the first:
+
+| Reason code | Meaning |
+|---|---|
+| `admit.transaction-refused` | The transaction was refused (unknown operation or id, a failed precondition, `validation.failed`, `integrity.violated` by an error rule, and so on). The reason carries `transactionCode`, `message` and `diagnostics`. |
+| `admit.claim-regressed` | An existing claim moved to a worse status (`id`, `before`, `after`). |
+| `admit.new-error` | A validation error the specification did not have before. |
+| `admit.new-violation` | A violation of an integrity rule of any severity (`id` is the rule, with its `counterexample`) that did not exist before. |
+| `admit.new-claim-weak` | A claim the change creates is not `verified` or `proved` (`id`, `status`), where a model method could decide it (see Pending realisation). Not acknowledgeable. |
+| `admit.requirement-without-milestone` | A new requirement that is realised by code names no `milestone` (`id`, `status`). Not acknowledgeable. |
+| `admit.privilege-change` | Acknowledgeable. `change: "capability-added"`: a role, grant, delegation or token scope gained a capability (`entity`, `kind`, `level` and `holders` where it has them, `capability`; a new entity gains all its capabilities). `"no-max-duration"`: a new or changed grant or delegation has no `maxDuration`. `"max-duration-longer"`: a `maxDuration` grew (`before`, `after`). |
+| `admit.guarantee-weakened` | Acknowledgeable, with `before` and `after`. `"copy-freshness-looser"` / `"copy-erasure-looser"`: a new or changed copy class has a bound longer than the tightest other class of the same record (durations compared in nanoseconds across units; bounds that are not times are skipped). `"retention-changed"`: a retention's `keepFor`, `until`, `then`, `fields` or `archiveTo` changed, or it was removed. `"integrity-rule-changed"`: a rule's `rule`, `statement` or `severity` changed, or it was removed. `"claim-changed"`: a claim's `statement` or `evaluate` changed, or it was removed. |
+| `admit.claim-vacuous` | A claim the change creates cannot fail on a correct model: its check is `holds-by-construction` or `restated-scenario` (`id`, `check`, `grounding`, `acknowledgeable: true`). |
+| `admit.claim-single-trace` | A claim the change creates is decided only by running hand-written scenarios, with no exploration and no refinement: check `single-trace` (`acknowledgeable: true`). |
+| `admit.claim-self-contained` | A claim the change creates reads nothing of the platform: grounding `self-contained`, its behaviors anchored to no refined behavior, record, contract event or anchored behavior (`acknowledgeable: true`). |
+
+The last three come from the strength of the claim ([claims-and-evidence.md](claims-and-evidence.md#check-strength-and-grounding)) and are raised for claims the change creates only; one claim can have several. They are acknowledgeable like the reasons above.
+
+Reasons that carry `acknowledgeable: true` are decisions, not failures. `--accept <code>` (repeatable, or comma separated) acknowledges every reason with that code: it no longer blocks admission and is listed in `result.acknowledged`. A code that no reason carries is ignored. Accepting a code whose reason is not acknowledgeable (`admit.claim-regressed`, `admit.new-error`, `admit.new-violation`, `admit.new-claim-weak`, `admit.requirement-without-milestone`, `admit.transaction-refused`) fails with `admit.not-acknowledgeable` and exit 1; fix the change instead.
+
+**Pending realisation.** `admit.new-claim-weak` applies to claims Exegra can decide when they are written: those of a method in `CLAIM_METHODS` other than `external-evidence` (structural, data-model, integrity, lean-theorem, state, temporal, metric and refinement methods). A new claim realised by code, which only executed evidence or a tool such as Concordance can settle, is a requirement whose method Exegra does not evaluate, a claim whose method the vocabulary declares in `verificationMethods`, or one of `external-evidence`. Such a claim that names a `milestone` and is `not-evaluated` or `inconclusive` for lack of evidence is admitted and listed in `pendingRealisation` (`id`, `kind`, `method`, `milestone`, `status`). Without a milestone, a requirement is `admit.requirement-without-milestone` and another code-realised claim stays `admit.new-claim-weak`. A code-realised claim already `supported` is admitted without being listed.
 
 ### `plan-delete <id>`
 What a cascade delete would remove (`entities`), repair (`repairs`) and what depends on it (`dependents`). Changes nothing.
@@ -252,8 +290,8 @@ node cli/exegra.js integrity closes-agrees-with-resolved-by
 {"ok":true,"command":"integrity","project":"exegra","semanticHash":"…","result":{"total":1,"holds":1,"violated":0,"invalid":0,"rules":[{"ruleId":"closes-agrees-with-resolved-by","severity":"error","status":"holds","instances":4,"vacuous":false,"counterexampleCount":0,"counterexamples":[],"ms":0.7}]}}
 ```
 
-### `prove-integrity [<ruleId>] [--rules <file>] [--max-witnesses N]`
-Proves or refutes integrity rules in Lean: per rule `result` (`holds`, `violated` or `incomplete`), the exported `facts`, the `differential` comparison with the JavaScript evaluator, the proof `file`, `theorems`, `axioms` and the times (`evaluateMs`, `exportMs`, `leanEvalMs`, `checkMs`). Needs Lake. Fails with `integrity.incomplete` when a rule could not be decided.
+### `prove-integrity [<ruleId>] [--rules <file>] [--max-witnesses N] [--timeout S] [--max-candidates N]`
+Proves or refutes integrity rules in Lean: per rule `result` (`holds`, `violated` or `incomplete`), the exported `facts` (with the derived `relations` and their `candidates` tuples), the `differential` comparison with the JavaScript evaluator (verdict, witnesses and relation tables), the proof `file`, `theorems`, `axioms` and the times (`evaluateMs`, `exportMs`, `leanEvalMs`, `checkMs`). Each Lean process stops after `--timeout` seconds (default 300), and a rule whose relations have more than `--max-candidates` candidate tuples (default 500) is not sent to the kernel; both give `incomplete` with the reason. `--max-witnesses` is at least 1. Needs Lake. Fails with `integrity.incomplete` when a rule could not be decided.
 
 ### `prove <scenarioId> [--bound N] [--max-states N] [--steps]`
 Explores every configuration of a scenario within a bound with the verified explorer of the Lean semantics, and checks the state-invariant and temporal claims that list the scenario. Needs `lake`. Its output is not written to `results.json`.

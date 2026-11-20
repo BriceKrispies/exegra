@@ -6,6 +6,7 @@
 import { simulationInput } from './sim-input.js';
 import { parseExpr, evalExpr, exprRefs, ExprError } from './expr.js';
 import { requestLog } from './contract-trace.js';
+import { scenarioMachineIds } from './pools.js';
 
 /** @typedef {import('./types.js').Model} Model */
 
@@ -96,7 +97,7 @@ export function proofPlan(model, scenarioId, opts = {}) {
   const requested = opts.bound;
   const bound = requested === undefined ? limit : Math.min(requested, limit);
   const scenario = model.entities.get(scenarioId);
-  const behaviors = new Set(Array.isArray(scenario?.data.behaviors) ? scenario.data.behaviors : []);
+  const behaviors = scenarioMachineIds(model, scenario);
   /** @type {{claimId: string, expr: string, temporal?: any}[]} */
   const claims = [];
   /** @type {{claimId: string, method: string, result: 'not-supported'|'not-evaluable', explanation: string}[]} */

@@ -3,7 +3,7 @@
 // representation, every receiver and delivery guarantee is named, and every (state, event) pair has an
 // outcome. The rules are checks over the model; they never change simulation (docs/semantics.md).
 // Diagnostic codes start with `ready.`, except machine.initial-unreachable (a shipped machine whose initial
-// state the runtime cannot reproduce, WG-4903); see docs/semantics.md, "Implementation-level properties" and
+// state the runtime cannot reproduce, WG-4903) and machine.singleton-key (WG-5090); see docs/semantics.md, "Implementation-level properties" and
 // "Faults the runtime can produce".
 
 import { typeResolves, unsharedText } from './codegen-model.js';
@@ -15,6 +15,9 @@ import { timeReadiness, scenarioIntegerReadiness } from './readiness-time.js';
 /** @typedef {import('./types.js').Diagnostic} Diagnostic */
 
 export { typeResolves };
+
+/** The representations whose fixed value the runtime can derive for the one instance of an unkeyed machine that creates its records. */
+const SINGLETON_KEY_TYPES = ['string', 'uuid', 'u8', 'u16', 'u32', 'u64', 'i32', 'i64'];
 
 /**
  * A record field's type split into whether it may be unset and the type it holds when set: a field that is
@@ -299,6 +302,24 @@ export function machineReadiness(model) {
       if (!by || by.kind !== 'contract') {
         const scenarios = kind('scenario').filter((s) => list(s.data.behaviors).includes(b.id)).map((s) => s.id);
         report('machine.initial-unreachable', b, `Scenario${scenarios.length > 1 ? 's' : ''} ${scenarios.slice(0, 3).map((s) => `"${s}"`).join(', ')}${scenarios.length > 3 ? ` and ${scenarios.length - 3} more` : ''} ${scenarios.length > 1 ? 'start' : 'starts'} "${b.id}" in its initial state "${b.data.initial}", but the runtime cannot: the machine does not create its records of "${holder.id}" (storage.creates) and names no contract that writes them (storage.createdBy), so the runtime refuses its events (RecordMissing) until someone else writes the record, in whatever state they write it. Set storage.creates when the machine owns the whole record, or name the contract in storage.createdBy.`, ['storage']);
+      }
+    }
+
+    // The one instance of an unkeyed machine that creates its records (WG-5090): the runtime creates it at the start
+    // under a fixed key derived from the machine's id, which exists only for a key of type string, uuid or an integer
+    // (or an id or scalar over one) in a field that is not optional. specc refuses the same with specc.singleton-key.
+    if (holder && holder.kind === 'record' && runByScenario.has(b.id) && st?.creates === true && !(inst && typeof inst === 'object' && inst.key !== undefined)) {
+      const bad = (keyFieldsOf(keyField) ?? []).map((k) => {
+        const field = list(holder.data.fields).find((/** @type {any} */ x) => x && x.name === k);
+        if (!field) return undefined;
+        const { optional, base } = fieldBase(field);
+        const t = model.entities.get(base);
+        const repr = t && t.kind === 'type' && (t.data.kind === 'id' || t.data.kind === 'scalar') && typeof t.data.repr === 'string' ? t.data.repr.trim() : base;
+        return optional || !SINGLETON_KEY_TYPES.includes(repr) ? `"${k}" (${optional ? 'optional' : base})` : undefined;
+      }).filter((x) => x !== undefined);
+      if (bad.length) {
+        const scenarios = kind('scenario').filter((sc) => list(sc.data.behaviors).includes(b.id)).map((sc) => sc.id);
+        report('machine.singleton-key', b, `Scenario${scenarios.length > 1 ? 's' : ''} ${scenarios.slice(0, 3).map((x) => `"${x}"`).join(', ')}${scenarios.length > 3 ? ` and ${scenarios.length - 3} more` : ''} run${scenarios.length > 1 ? '' : 's'} "${b.id}", which creates its records of "${holder.id}" and has no instances.key, so the runtime creates its one instance under a fixed key; the key field ${bad.join(', ')} has a type with no fixed value (only string, uuid or an integer, or an id or scalar over one, in a field that is not optional, has one). Key the machine (instances.key) or change the key type.`, ['storage', 'key']);
       }
     }
 

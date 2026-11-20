@@ -1225,13 +1225,25 @@ export function failVariants(sigs, id) {
 }
 
 /**
- * The fixtures of the model by id, each with its type and, when its value is not that type, why not.
+ * The fixture table of each model. A model does not change once derived, and every function example that names a
+ * fixture asks for the table: decoding every fixture again for each example made validating a specification with
+ * many examples and fixtures take minutes.
+ * @type {WeakMap<Model, Map<string, {e: Entity, type?: FnType, problem?: string}>>}
+ */
+const FIXTURE_TABLES = new WeakMap();
+
+/**
+ * The fixtures of the model by id, each with its type and, when its value is not that type, why not. Memoized per
+ * model; callers only read it.
  * @param {Model} model
  * @returns {Map<string, {e: Entity, type?: FnType, problem?: string}>}
  */
 function fixtureTable(model) {
+  const hit = FIXTURE_TABLES.get(model);
+  if (hit) return hit;
   /** @type {Map<string, {e: Entity, type?: FnType, problem?: string}>} */
   const table = new Map();
+  FIXTURE_TABLES.set(model, table);
   for (const e of model.byKind.exampleFixture ?? []) {
     const type = fnTypeOf(model, e.data.type);
     /** @type {string|undefined} */

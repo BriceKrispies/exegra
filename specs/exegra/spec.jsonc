@@ -59,12 +59,104 @@
         "description": "The source sends typed operations that change the specification (or its layout) to the target, which validates and commits them."
       }
     },
+    "entityKinds": {
+      "decision": {
+        "label": "Decision",
+        "section": "decisions",
+        "shape": "capsule",
+        "color": "violet",
+        "doc": "A design decision about Exegra: the context, what was decided, the definitions it introduces, the alternatives considered and why they were not taken, and the consequences.",
+        "properties": {
+          "title": {
+            "type": "string",
+            "required": true,
+            "label": "Title"
+          },
+          "status": {
+            "type": "enum",
+            "values": [
+              "proposed",
+              "accepted",
+              "superseded"
+            ],
+            "label": "Status"
+          },
+          "context": {
+            "type": "text",
+            "label": "Context",
+            "doc": "What made the decision necessary."
+          },
+          "decision": {
+            "type": "text",
+            "required": true,
+            "label": "Decision"
+          },
+          "definitions": {
+            "type": "list",
+            "items": {
+              "type": "text"
+            },
+            "label": "Definitions",
+            "doc": "The terms the decision introduces, each with an example."
+          },
+          "alternatives": {
+            "type": "list",
+            "items": {
+              "type": "text"
+            },
+            "label": "Alternatives considered",
+            "doc": "Each alternative and why it was not taken."
+          },
+          "consequences": {
+            "type": "text",
+            "label": "Consequences"
+          },
+          "task": {
+            "type": "string",
+            "label": "Task",
+            "doc": "The Workgraph task the decision was made for."
+          },
+          "tasks": {
+            "type": "list",
+            "items": {
+              "type": "string"
+            },
+            "label": "Workgraph tasks"
+          },
+          "basis": {
+            "type": "list",
+            "items": {
+              "type": "ref",
+              "ref": [
+                "*"
+              ]
+            },
+            "label": "Basis",
+            "doc": "The entities the decision is about or rests on."
+          },
+          "subjects": {
+            "type": "list",
+            "items": {
+              "type": "ref",
+              "ref": [
+                "component"
+              ]
+            },
+            "label": "Subjects"
+          }
+        }
+      }
+    },
     "properties": [
       {
         "entity": "component",
         "name": "runsIn",
         "type": "enum",
-        "values": ["browser", "node", "both"],
+        "values": [
+          "browser",
+          "node",
+          "both"
+        ],
         "label": "Runs in",
         "doc": "Where the component's code executes: the browser, Node.js (CLI, dev server, tools) or both."
       }
@@ -259,7 +351,9 @@
         "Check refinement declarations: only an implementation-level behavior refines, the refined behavior does not refine in turn, refines comes with a refinement mapping, the mapping names only states and transitions of the right sides and variables of the model, its expressions read only the implementation's variables, and every implementation state and transition and every model variable is mapped; a refines claim names one refining behavior and only scenarios that run it",
         "Check timer delays read at run time ({expr, simulate}): only on an implementation-level machine, expr an expression of a number over the machine variables, time and the event payload, and simulate the delay a simulated run uses (simulationInputV2 lowers the timer with it)",
         "Check time and integers in implementation-level machines (src/core/readiness-time.js, WG-4902): a variable compared with time holds a value set from time wherever it is read (ready.time-epoch); time - x is read only after x <= time (ready.time-difference); the scenarios running the machine agree on a time unit, fixed delays are whole milliseconds and a machine reading time runs in ms (ready.delay-unit); literals, integer initial values and scenario payload values are within their integer range, at most 2^53 - 1 (ready.number-bound)",
-        "Check the realisation and durability of machines (src/core/realisation.js, WG-4922): behavior.realisation and contract.deployment (shipped or target, defaulting from the component's implementation status; an explicit shipped on a not-implemented component is behavior.realisation-subject or contract.deployment-subject) and storage.durability (record or memory; a memory machine names no record, creates none and declares no transaction, or storage.durability)"
+        "Check the realisation and durability of machines (src/core/realisation.js, WG-4922): behavior.realisation and contract.deployment (shipped or target, defaulting from the component's implementation status; an explicit shipped on a not-implemented component is behavior.realisation-subject or contract.deployment-subject) and storage.durability (record or memory; a memory machine names no record, creates none and declares no transaction, or storage.durability)",
+        "Check residency (src/core/residency.js): follow each record a tenant class binds to its owner, the holder of each copy and both ends of each relationship that carries it, and report a component that cannot keep a tenant of the class in its permitted regions (residency.record-outside, residency.copy-outside, residency.flow-outside) unless an active residency exception names that copy or flow; a holder of bound data states its placement (residency.placement-missing) and a per-region one has an instance in every provisioned region (residency.region-uncovered); placement and regions agree (component.placement-regions); a tenant class has one selector and at least one region (tenant-class.selector, tenant-class.provisioned-in); an exception names one copy or flow of bound data, its durations are durations, a bounded one states its purge and a renewal window is shorter than its longest duration (residency.exception-target, residency.exception-duration, residency.exception-purge, residency.exception-renewal)",
+        "Check quota pools (src/core/pools.js): at least one pooled limit with a unique lower-case name (pool.limits), exactly one of quota and a positive perMember (pool.limit-contribution), a pooled quota counted per tenant over the pool's window as a rate (pool.quota-scope, pool.quota-window, pool.limit-kind) and held by the pool's component (pool.held-by), usage and exemption events with the payload fields the pool reads (pool.usage-event, pool.event-payload), the window, over-share count and release (pool.window, pool.over-share, pool.release), 1 to 4 modelled members (pool.model-members), an exemption role that confers its capability (pool.exemption-capability) and machine ids no entity takes (pool.machine-id); a scenario runs a behavior or a pool (scenario.empty), and a claim expression reads only variables of the machines of pools every listed scenario runs (expr.reference)"
       ],
       "implementation": {
         "status": "manual",
@@ -270,11 +364,15 @@
           "src/core/readiness-machines.js",
           "src/core/builtin-types.js",
           "src/core/readiness-time.js",
-          "src/core/realisation.js"
+          "src/core/realisation.js",
+          "src/core/residency.js"
         ],
         "notes": "The rules are hard-coded. Claim parameter checks read the claim method registry, the gap rules read `expected` flags of the effective meta-model and view filters are checked against the effective vocabulary.",
         "language": "js"
-      }
+      },
+      "unknowns": [
+        "A residency exception's expiry, continuous renewal and purge are recorded and shape-checked but not executed, so claims about them are not decided by exploration (WG-5282)."
+      ]
     },
     {
       "id": "expression-language",
@@ -1179,13 +1277,18 @@
       "runsIn": "node",
       "purpose": "A command line that prints one JSON document per command so an AI coding agent can read, check, simulate, generate, verify and change a specification through the same pipeline as the UI.",
       "responsibilities": [
-        "Commands: projects, validate, list, show, deps, contracts, claims, evaluate, gaps, ops, apply, plan-delete, simulate, trace, prove, integrity, prove-integrity, generate, traceability, verify, readiness, cover-machines, cover-functions, store, help",
+        "Commands: projects, validate, list, show, deps, contracts, claims, evaluate, gaps, ops, apply, admit, plan-delete, simulate, trace, prove, integrity, prove-integrity, generate, traceability, verify, readiness, cover-machines, cover-functions, store, help",
         "Print a JSON envelope (ok, command, project, semanticHash, result or error with code and diagnostics) and use exit codes 0 ok, 1 command failed, 2 usage error",
         "Apply operations through Project.apply, then write the changed files with the base hashes read at the start; a stale --expect-hash, an invalid operation or a disk conflict leaves the files unchanged",
         "Run the verification pipeline: validation, traceability, execution of test evidence and recording of the results",
         "Include the request log of the run in the simulate result (requestLog), one line per contract event",
         "Copy a project's specification into its SQLite store and write it back as text (store import, store export), refusing an export over a specification that changed since the store last synchronised with it",
-        "Register a specification file and product files as a project from a script (project add, remove, list: specs/<name>/project.jsonc with paths relative to the project directory, refusing an existing project without --force and a name that is not a project name), and take the project inline (--spec, --product) on the read-only commands, so a job needs no registration"
+        "Register a specification file and product files as a project from a script (project add, remove, list: specs/<name>/project.jsonc with paths relative to the project directory, refusing an existing project without --force and a name that is not a project name), and take the project inline (--spec, --product) on the read-only commands, so a job needs no registration",
+        "Acknowledge admit reasons by code (admit --accept, repeatable or comma separated): a reason that carries acknowledgeable true and whose code is accepted no longer blocks admission and is listed under acknowledged; a reason without it (a failure rather than a decision) cannot be accepted, and passing its code is the error admit.not-acknowledgeable",
+        "Report in admit what a change does to privileges and guarantees as acknowledgeable reasons: admit.privilege-change for every capability added to a role, grant, delegation or token scope and every new or changed grant or delegation without maxDuration (capabilities removed are listed under diff.privilege.removed, not as a reason), and admit.guarantee-weakened for a copy class whose freshness or erasure bound is looser than another class of the same record, a changed or removed retention, integrity rule or claim (before and after)",
+        "Report a new claim that is realised by code and cannot be decided at specification time (a requirement, a claim of an external verification method or of external-evidence) that names a milestone and has no result yet as pendingRealisation instead of a weak claim; a requirement without a milestone is the reason admit.requirement-without-milestone",
+        "Admit a change set (admit): evaluate the specification before and after the operations are applied in memory through Project.apply, report the diff of claim statuses, validation diagnostics, readiness gaps and integrity violations, and admit it only when no claim got worse, no validation error or integrity violation is new and every claim it creates is verified or proved; report the check and grounding of every claim (counts before and after, and each claim it creates) and reject a claim the change creates that is holds-by-construction or restated-scenario (admit.claim-vacuous), single-trace (admit.claim-single-trace) or self-contained (admit.claim-self-contained), each reason marked acknowledgeable; write the specification, as apply does, only with --write and an admitted verdict",
+        "Show the check and grounding of each claim (src/core/claim-strength.js) in the results of claims and evaluate"
       ],
       "ports": [
         {
@@ -1214,7 +1317,8 @@
         "status": "manual",
         "modules": [
           "cli/exegra.js",
-          "cli/commands.js"
+          "cli/commands.js",
+          "cli/admit.js"
         ],
         "notes": "The `verify` command's pipeline (runVerify, runTestReference) lives in cli/commands.js; the traceability check it uses is in tools/traceability.js, claimed by verification-pipeline.",
         "language": "js"
@@ -1626,19 +1730,22 @@
         "Derive the engine input from the model: the scenario, its behaviors with variables, states and transitions, the events and the faults, with expressions as strings, so an engine needs no knowledge of JSONC, the meta-model or validation",
         "Define the trace format field by field, with a format version",
         "Run any engine against the golden suite, in-process or as a command reading an input on stdin and writing a trace on stdout, and report the first differing step and field",
-        "Give an implementation-level behavior the declared types of the references its expressions read (behaviorTypes: time as i64, each variable repr, each received payload field, lowered so a timestamp is i64, a duration u64, a declared id or scalar its representation, an option or optional field option), and name the time unit of a machine (machineTimeUnit)"
+        "Give an implementation-level behavior the declared types of the references its expressions read (behaviorTypes: time as i64, each variable repr, each received payload field, lowered so a timestamp is i64, a duration u64, a declared id or scalar its representation, an option or optional field option), and name the time unit of a machine (machineTimeUnit)",
+        "Derive the machines a quota pool runs as (src/core/pools.js, WG-5278): one per pooled limit and modelled member, <pool>-<limit>-m<k>, with subject the pool's holder, states normal and throttled and the pool variables; usage is admitted on headroom, or within the fair share when throttled; a window end throttles a member over its share for the stated consecutive windows unless its exemption applies from that window, releases after the stated windows under, resets a rate and advances the window; an exemption is recorded the first time it is set, and lifts a throttle only when retroactive. simulationInput adds the machines of the pools a scenario lists after its behaviors, and the trace check and the proof plan count them among the scenario's machines"
       ],
       "implementation": {
         "status": "manual",
         "modules": [
           "src/core/sim-input.js",
-          "tests/conformance/"
+          "tests/conformance/",
+          "src/core/pools.js"
         ],
         "notes": "tests/conformance/ holds the fixture specification, the committed goldens and the README that lists what the fixture covers.",
         "language": "js"
       },
       "unknowns": [
-        "Engine input and trace format 2 (contracts engine-input-v2 and trace-v2) are derived by simulationInput whenever a specification uses a format-2 construct (needsFormat2, simulationInputV2 in src/core/sim-input.js) and run by the engine's version-2 semantics (engine/exegra-engine/src/lib.rs dispatches on the version). Not yet: format-2 goldens (tests/conformance/goldens holds version 1 only), and the WG-4741 items: crash-instance, meters and the cost metric in the engine, and calibration, sensitivity, the operating envelope and revision binding of metric claims. A specification that uses no format-2 construct still derives version 1, unchanged."
+        "Engine input and trace format 2 (contracts engine-input-v2 and trace-v2) are derived by simulationInput whenever a specification uses a format-2 construct (needsFormat2, simulationInputV2 in src/core/sim-input.js) and run by the engine's version-2 semantics (engine/exegra-engine/src/lib.rs dispatches on the version). Not yet: format-2 goldens (tests/conformance/goldens holds version 1 only), and the WG-4741 items: crash-instance, meters and the cost metric in the engine, and calibration, sensitivity, the operating envelope and revision binding of metric claims. A specification that uses no format-2 construct still derives version 1, unchanged.",
+        "The machines a quota pool runs as are derived, not entities: renaming a pool does not rewrite claim expressions that name them, and the simulator panel and inspector list only declared behaviors (WG-5281)."
       ],
       "tags": [
         "verdict-kernel"
@@ -2261,21 +2368,24 @@
       "parent": "semantic-core",
       "category": "logical",
       "runsIn": "both",
-      "purpose": "Declarative consistency rules over a whole specification (the built-in integrityRule kind), evaluated on every edit with counterexamples, enforced by the transaction system as a ratchet, and proved or refuted in Lean with kernel-checked proofs.",
+      "purpose": "Declarative consistency rules over a whole specification (the built-in integrityRule kind), with derived relations defined by recursive clauses (the built-in integrityRelation kind, stratified Datalog with a least-model meaning), evaluated on every edit with counterexamples, enforced by the transaction system as a ratchet, and proved or refuted in Lean with kernel-checked proofs.",
       "responsibilities": [
-        "Parse a rule of the rule language: forall and exists over the entities of some kinds, all entities, or the values of a term, with an optional where filter; property access that follows references through lists; kindof; ==, !=, in, not in, nonempty; !, &&, || and =>; string, number and boolean literals and literal sets. No recursion and no arithmetic, so evaluation is total",
+        "Parse a rule of the rule language: forall and exists over the entities of some kinds, all entities, or the values of a term, with an optional where filter; property access that follows references through lists; kindof; ==, !=, in, not in, nonempty; !, &&, || and =>; string, number and boolean literals and literal sets; and atoms rel(t1, ..., tn) of derived relations. No arithmetic, and relations range over finite candidate tuples, so evaluation is total",
         "Check a rule statically: every variable bound, every kind declared, every property declared on some kind; an invalid rule is a validation error",
+        "Check the derived relations (the built-in integrityRelation kind: params ranging over entity kinds, clauses in the rule language) and stratify them: the strata are the strongly connected components of the dependency graph in topological order, and within a component every atom of the component occurs positively (! flips, the left side of => flips, a forall filter flips, an exists filter does not). Negative recursion (integrity.relation-unstratified), a wrong number of arguments (integrity.relation-arity), an unknown relation (integrity.relation-unknown), a free variable that is not a parameter (integrity.relation-unbound), a parameter kind that does not exist (integrity.relation-kind), a clause that does not parse (integrity.relation-syntax), malformed parameters (integrity.relation-params) and more than 100000 candidate tuples (integrity.relation-size) are errors that make the relation, every relation that uses it and every rule that uses it invalid",
+        "Compute each valid relation as its least model over the product of its parameter domains: stratum by stratum, lowest first, iterating the clauses from the empty table until nothing is added; only the strata of the relations the rules use are computed, each at most once per model; an atom holds when some choice of one value from each argument term is a tuple of the relation",
         "Evaluate every rule of a model once (memoized per model): holds with the number of instances checked under its leading universal quantifiers, or violated with every counterexample as variable bindings with entity ids and lines; a rule whose quantifier ranges over nothing is reported vacuous",
         "Report each violation as a diagnostic of the rule severity at the first entity it names (integrity.violated), left out of the blocking error count",
         "Tell the transaction system which violations of error rules a transaction adds (the ratchet): a violation is identified by its rule and its bindings",
-        "Export a rule to Lean: only the entities it can reach and the properties it reads, every value interned to a natural number, the entities as a balanced search tree; write formal/generated/integrity/<rule>.lean with holds (proof by reflection) or one refutation per witness, each by decide +kernel",
-        "Run exegra prove-integrity: the Lean checker (exegra-lean integrity) must agree with the JavaScript evaluator on the verdict and every counterexample, Lean must accept the file, and every theorem may depend on the standard axioms only; otherwise the rule is incomplete"
+        "Export a rule to Lean: only the entities it can reach and the properties it reads (through the clauses of the relations it uses, and the domains of their parameters), every value interned to a natural number, the entities whose ids are the kinds of exported entities when a formula takes kindof, the entities as a balanced search tree, the program of the relations it uses in stratum order and their tables; write formal/generated/integrity/<rule>.lean with prog_wf (stratified), prog_solved (the checker reaches this table) and holds (proof by reflection) or one refutation per witness, each by decide +kernel and each about Sat under the least-model meaning Least",
+        "Run exegra prove-integrity: the Lean checker (exegra-lean integrity) must find the program stratified and solved, its relation tables must equal the JavaScript tables, and it must agree with the JavaScript evaluator on the verdict and every counterexample; Lean must accept the file, and every theorem may depend on the standard axioms only; each Lean process runs under a time limit (--timeout, default 300 s) and a rule whose relations have more than --max-candidates candidate tuples (default 500) is not sent to the kernel; otherwise, or past a limit, the rule is incomplete"
       ],
       "unknowns": [
         "Property access reads top-level properties of entities only: a nested object property such as implementation.status or evaluate.method cannot be addressed (follow-up of WK-396).",
         "Entity ids written as literals in a rule are not references: a rename does not rewrite them and a delete does not see them (follow-up of WK-396).",
         "Undo, redo and reload are not checked by the ratchet: they restore or adopt text that was valid before, and may bring back a violation.",
-        "The Lean facts are exported by JavaScript: that they are the specification is checked differentially (exegra-lean integrity against the evaluator), not proved."
+        "The Lean facts are exported by JavaScript: that they are the specification is checked differentially (exegra-lean integrity against the evaluator), not proved.",
+        "Derived relations are evaluated by naive iteration: every candidate tuple of the product of the parameter domains, each clause through the general formula evaluator, with no semi-naive evaluation and no indexing of atoms. Relations above 100000 candidates are refused, and a relation over Exegra's own relationships and components would slow every edit, so Exegra's own specification declares none yet; the examples are in tests/fixtures/integrity/relations.jsonc (WG-5267)."
       ],
       "implementation": {
         "status": "manual",
@@ -2285,7 +2395,7 @@
           "tools/prove-integrity.js",
           "formal/Exegra/Integrity.lean"
         ],
-        "notes": "formal/Exegra/Integrity.lean: Facts (a search tree), Term, Formula, Sat (the meaning), eval and eval_iff, refutes and refutes_sound, Facts.find_complete, cex and the exegra-lean integrity protocol; axioms pinned with #guard_msgs. The commands are exegra integrity and exegra prove-integrity (cli/commands.js).",
+        "notes": "formal/Exegra/Integrity.lean: Facts (a search tree), Term, Formula (with relation atoms), Sat under an interpretation (the meaning), eval and eval_iff, refutes and refutes_sound, Facts.find_complete, cex; derived relations: Program, Least (the impredicative least-model meaning, stratum by stratum), solve (the fixpoint checker with fuel), wf and posF (stratification, decided by the kernel), sat_mono, stratum_closed, stratum_le_closed, least_eq_table, holds_of_eval and violated_of_refutes; the exegra-lean integrity protocol; axioms pinned with #guard_msgs. The commands are exegra integrity and exegra prove-integrity (cli/commands.js).",
         "language": "js"
       }
     },
@@ -2618,6 +2728,31 @@
           "src/core/layer-expr.js"
         ],
         "notes": "Outside the verdict path, like the parser: it composes and checks texts before the model derivation in Lean, whose sources and build are unchanged."
+      }
+    },
+    {
+      "id": "claim-strength",
+      "name": "Claim strength",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Says how strong the check behind each claim status is and whether what it reads is the platform's own entities: a static, deterministic analysis of the model that never changes a status (decision dec-claim-check-and-grounding).",
+      "responsibilities": [
+        "Classify the check of every claim: holds-by-construction (a never, state-invariant or precedes claim that every value nominal transitions can give its references satisfies, or whose occurrence only fault transitions or guards that can never hold produce; naming the variables and the fault transitions), restated-scenario (a counter compared with a literal equal to the extreme its one scenario reaches), single-trace, explored (from supplied exploration results), refined, and the method-based checks structural, data-model, lean-theorem, sampled, test, evidence and none",
+        "Classify the grounding of every claim and integrity rule: bound, partly-bound, self-contained or not-applicable, from what the behaviors it reads are anchored to (a refined existing behavior, a record, a contract event, an anchored behavior) and the payload fields of contract-less events they branch on, or the kinds an integrity rule quantifies over; under a baseline an entity the change adds anchors nothing",
+        "Count claims by check and grounding, and integrity rules by grounding"
+      ],
+      "unknowns": [
+        "Exhaustive exploration results (exegra prove) are not recorded in a project, so a trace claim is reported as explored only when the caller passes them; claims, evaluate, the claims report and admit never do yet (WG-5280).",
+        "The value analysis ignores guards when it collects the values and states nominal runs reach and does not follow arithmetic or keyed instances, so vacuity that depends on them is not found; restated-scenario examines only a plain comparison with a literal.",
+        "Grounding is structural: an anchored behavior may still branch on a field that means nothing, and the expression language cannot read roles, capabilities or grants, so the access model reaches a behavior only through a contract's auth.requires."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/claim-strength.js"
+        ],
+        "language": "js"
       }
     }
   ],
@@ -3947,6 +4082,48 @@
       "from": "agent-cli",
       "to": "spec-layers",
       "description": "Trying integrity rules on a layered project analyses the platform text with its product files."
+    },
+    {
+      "id": "claim-strength-calls-simulation-engine",
+      "kind": "calls",
+      "from": "claim-strength",
+      "to": "simulation-engine",
+      "description": "Runs the one scenario of a counter bound to decide restated-scenario."
+    },
+    {
+      "id": "claim-strength-calls-expression-language",
+      "kind": "calls",
+      "from": "claim-strength",
+      "to": "expression-language",
+      "description": "Parses claim expressions, guards and effect values for the value analysis and the grounding."
+    },
+    {
+      "id": "claim-strength-calls-integrity-rules",
+      "kind": "calls",
+      "from": "claim-strength",
+      "to": "integrity-rules",
+      "description": "Parses integrity rules to find the kinds they quantify over."
+    },
+    {
+      "id": "agent-cli-calls-claim-strength",
+      "kind": "calls",
+      "from": "agent-cli",
+      "to": "claim-strength",
+      "description": "Adds the check and grounding to claims and evaluate, and the strength review to admit."
+    },
+    {
+      "id": "generators-calls-claim-strength",
+      "kind": "calls",
+      "from": "generators",
+      "to": "claim-strength",
+      "description": "Shows the check and grounding of each claim in the claims report."
+    },
+    {
+      "id": "test-suites-calls-claim-strength",
+      "kind": "calls",
+      "from": "test-suites",
+      "to": "claim-strength",
+      "description": "Core tests exercise the check and grounding on fixtures from the Harbourline fold."
     }
   ],
 
@@ -18164,7 +18341,7 @@
     {
       "id": "ui-journey-steps-checked",
       "kind": "invariant",
-      "statement": "Every journey step addresses elements by WAI-ARIA role and an exact or patterned accessible name, with a heading level only on a heading and within only another such element, never a CSS selector; every pattern compiles; every attribute read is aria-*, data-*, value, href, lang or dir (data-*, lang or dir on the document element); every ${name} is captured by an earlier step and every name is captured once; a no-reload check names a marker, and a request check a log, set earlier in the same browser; hosts, paths, JSON reply paths, statuses and timeouts are well formed; an API call made as a browser names one of the journey; and clickAction gives a per-row action the row fields its label and confirmation read, and no row to any other action.",
+      "statement": "Every journey step addresses elements by WAI-ARIA role and an exact or patterned accessible name, with a heading level only on a heading and within only another such element, never a CSS selector; every pattern compiles; every attribute read is aria-*, data-*, value, href, lang or dir (data-*, lang or dir on the document element); every ${name} is captured by an earlier step and every name is captured once; a no-reload check names a marker, and a request check a log, set earlier in the same browser; hosts, paths, JSON reply paths, statuses and timeouts are well formed; an API call made as a browser names one of the journey; a gotoPath may add a fragment of letters, digits and = & _ - . ~ % (a captured value may stand in it) and a path carries none inline; expectUrl takes a pattern that compiles; captureMail names the address it reads, a pattern that compiles and a browser of the journey, and binds a name captured once; and clickAction gives a per-row action the row fields its label and confirmation read, and no row to any other action.",
       "rationale": "Evidence is one core test per rule over a journey that uses every step kind, each breaking it once and expecting exactly that error, with and without the switch. Supported, not verified.",
       "subjects": [
         "generation-readiness",
@@ -18782,7 +18959,7 @@
     {
       "id": "product-layers-typed-sections",
       "kind": "structural",
-      "statement": "A product file may declare the typed sections objects, policies, segments, settings, ledgerUnits, ledgerPools, ledgerLimits, mailTemplates, noticeTemplates, tokens, triggers, automations and operations, each value of which is checked against the platform type its section maps to (object-type-def, policy-def, segment-decl, setting-def, ledger-unit-decl, ledger-pool-decl, ledger-limit, mail-template-decl, notice-template-decl, token-decl, trigger-def, automation-def, tenant-operation-def): a value that does not have the shape of its type is refused with layer.value-invalid, a union value the platform union lacks with layer.outside-catalogue, and a name in the product namespace that no product entity declares with layer.reference-unknown or that another product declares with layer.cross-product-reference. The typed sections are not entities of the combined model and do not change the platform semantic hash. specc reads the same table and gives the same rule codes.",
+      "statement": "A product file may declare the typed sections objects, policies, queries, views, workflows, segments, settings, ledgerUnits, ledgerPools, ledgerLimits, mailTemplates, noticeTemplates, tokens, triggers, automations and operations, each value of which is checked against the platform type its section maps to (object-type-def, policy-def, query-def, view-def, workflow-def, segment-decl, setting-def, ledger-unit-decl, ledger-pool-decl, ledger-limit, mail-template-decl, notice-template-decl, token-decl, trigger-def, automation-def, tenant-operation-def): a value that does not have the shape of its type is refused with layer.value-invalid, a union value the platform union lacks with layer.outside-catalogue, and a name in the product namespace that no product entity declares with layer.reference-unknown or that another product declares with layer.cross-product-reference. The typed sections are not entities of the combined model and do not change the platform semantic hash. specc reads the same table and gives the same rule codes.",
       "subjects": [
         "spec-layers"
       ],
@@ -18887,6 +19064,216 @@
       "rationale": "WG-5064 (Strata D-6540 to D-6543, CMS-1540 to CMS-1546): Strata's tenant rule language needs arithmetic, time windows and keys built from several values, and its two evaluators (Exegra's and the Rust specc generates) must agree bit for bit, which the range of 2^53-1 makes possible without a big-integer type. Evidence is the core tests: the shared case table holds every new operator with ordinary values, both ends of the range, overflow in each direction, nulls and type errors, for eval and for check. Supported, not verified: the Rust side reads the same table in Strata.",
       "subjects": [
         "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "integrity-relations-least-model",
+      "kind": "invariant",
+      "statement": "For a program of derived relations that the Lean stratification check wf accepts and the checker solve solves, the solved table is exactly the least-model meaning Least: a tuple is in it iff it is in every interpretation that agrees with the lower strata and is closed under the clauses of its stratum.",
+      "rationale": "The theorem Exegra.Integrity.least_eq_table of formal/Exegra/Integrity.lean. Least is defined impredicatively and does not mention the checker. The proof has two halves per stratum: stratum_closed (the fixpoint table is closed under the clauses) and stratum_le_closed (every iterate is contained in every closed interpretation, by sat_mono: a formula whose stratum atoms occur only positively is monotone in them). A run of solve that runs out of fuel returns none, so it can make no proof wrong. Proved, not tested: it covers every program and every specification.",
+      "subjects": [
+        "integrity-rules",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Integrity.least_eq_table",
+        "about": [
+          "Exegra.Integrity.Least",
+          "Exegra.Integrity.solve",
+          "Exegra.Integrity.wf"
+        ]
+      }
+    },
+    {
+      "id": "integrity-relations-holds-by-reflection",
+      "kind": "invariant",
+      "statement": "A rule that the Lean checker eval accepts over the solved table of a stratified program holds under the least-model meaning: Sat u (Least u prog) [] rule.",
+      "rationale": "The theorem Exegra.Integrity.holds_of_eval of formal/Exegra/Integrity.lean, from eval_iff and least_eq_table; every proof file of exegra prove-integrity states holds through it (and violated_<n> through violated_of_refutes), so what a proof file establishes is about the meaning, not the checker.",
+      "subjects": [
+        "integrity-rules",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Integrity.holds_of_eval",
+        "about": [
+          "Exegra.Integrity.Least",
+          "Exegra.Integrity.eval",
+          "Exegra.Integrity.solve"
+        ]
+      }
+    },
+    {
+      "id": "integrity-relations-evaluated",
+      "kind": "invariant",
+      "statement": "Derived relations are evaluated to their least models, recursion and mutual recursion included, with negation only of lower strata; negative recursion, arity mismatches, unknown relations, unbound clause variables and unknown parameter kinds are named errors that make the relation and every rule using it invalid; and every relation rule of the fixture can be made to fail by a stated mutation that the ratchet refuses.",
+      "rationale": "Evidence is the core test over tests/fixtures/integrity/relations.jsonc, whose relation tables are compared with the least models written out by hand, and whose relations-mutations.json gives every rule an edit after which it must fail. Supported, not verified: Exegra does not check its own evaluator.",
+      "subjects": [
+        "integrity-rules",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "integrity-relations-agree-with-lean-and-nemo",
+      "kind": "invariant",
+      "statement": "The JavaScript relation tables equal the tables of the Lean checker and the relations Nemo derives: exegra prove-integrity proves every relation rule of the fixture under Least and refutes every mutation, and on seeded random graphs and programs the Lean tables and the Nemo relations equal the JavaScript tables.",
+      "rationale": "Evidence is the formal test (Lean, skipped with a message without Lake) and the Nemo test (an independent Datalog engine, skipped with a message without nmo). The Nemo translation covers the fragment Nemo expresses directly; the test says which relations it could not translate.",
+      "subjects": [
+        "integrity-rules",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "admit-never-writes-a-rejected-change",
+      "kind": "structural",
+      "statement": "The admit command never writes the specification for a rejected verdict, even with --write, and reports every reason for the rejection (each claim that moved to a worse status, each new validation error, each new integrity violation, each new claim that is not verified or proved, a refused transaction), not only the first.",
+      "subjects": [
+        "agent-cli",
+        "transactions"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/admit.test.js (the ev-admit-* evidence entries).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "admit-privilege-and-guarantee-changes-need-acknowledgement",
+      "kind": "structural",
+      "statement": "The admit command reports every capability a change adds to a role, grant, delegation or token scope, every new or changed grant or delegation without maxDuration, every copy class looser than another of the same record, and every changed integrity rule, claim or retention, each as a reason that blocks admission until its code is accepted with --accept; a reason that is not acknowledgeable cannot be accepted, and an accepted reason is listed under acknowledged.",
+      "subjects": [
+        "agent-cli"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/admit.test.js (the ev-admit-privilege-*, ev-admit-weakened-* and ev-admit-accept-* evidence entries). WG-5275.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "admit-requirement-claims-pend-on-realisation",
+      "kind": "structural",
+      "statement": "The admit command admits a new claim that is realised by code (a requirement, or a claim of an external verification method or of external-evidence) when it names a milestone and has no result yet, and lists it under pendingRealisation; a new requirement without a milestone is rejected as admit.requirement-without-milestone; a new claim a model method can decide (structural, data-model, integrity, lean-theorem and the other methods Exegra evaluates) must still be verified or proved.",
+      "subjects": [
+        "agent-cli",
+        "claim-method-registry"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/admit.test.js (the ev-admit-pending-* evidence entries). WG-5273.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "claim-strength-names-weak-checks",
+      "kind": "structural",
+      "statement": "claimStrength reports a state invariant whose variables only fault transitions assign as holds-by-construction, naming the variables and those transitions; a counter bound equal to the extreme of its one scenario as restated-scenario; any other trace claim as single-trace, unless the caller supplies an exploration that found it holding (explored); and never changes a status.",
+      "subjects": [
+        "claim-strength"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/claim-strength.test.js (WG-5274), on fixtures that reproduce hl-chk-rx-continuous-renewal, hl-chk-gf-no-creation-after-loss and hl-chk-ag-forbidden-refused of the Harbourline fold.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "claim-strength-grounding",
+      "kind": "structural",
+      "statement": "claimStrength reports a claim whose behaviors branch only on payload fields of contract-less events as self-contained and names those fields, a claim over a behavior that reacts to a contract event as bound with the capabilities the contract requires, an integrity rule over the real roles as bound, and under a baseline counts an entity the change adds as anchoring nothing.",
+      "subjects": [
+        "claim-strength"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/claim-strength.test.js (WG-5276).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "admit-flags-weak-new-claims",
+      "kind": "structural",
+      "statement": "admit rejects a claim the change creates that is holds-by-construction or restated-scenario (admit.claim-vacuous), single-trace (admit.claim-single-trace) or self-contained (admit.claim-self-contained), each reason carrying acknowledgeable: true, reports the counts by check and grounding before and after, and never makes an existing claim a reason.",
+      "subjects": [
+        "agent-cli",
+        "claim-strength"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/claim-strength.test.js (WG-5274, WG-5276).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "residency-rules-checked",
+      "kind": "invariant",
+      "statement": "Region, tenantClass and residencyException are entity kinds, components state a placement and relationships the records they carry; for every tenant class whose confinement is not none, every owner of a bound record, holder of a copy of one and end of a relationship carrying one keeps a tenant of the class in its permitted regions, or validation reports residency.record-outside, residency.copy-outside or residency.flow-outside, except where an active residency exception of the class names that copy or flow; the placement, region, tenant class and exception rules are reported at their positions; and integrity rules, recursive relations included, read the residency properties.",
+      "rationale": "Evidence is the core tests of WG-5277 (tests/core/residency.test.js): the Harbourline fixture of BR-04 and BR-05 validates clean with no scenario, each rule is reported once at its position by a mutation that breaks only it, and an integrity rule over a recursive relation that follows carried data finds the one component outside. Supported, not verified, because Exegra does not check its own validation rules. The decision is dec-residency.",
+      "subjects": [
+        "validator",
+        "metamodel"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "pooled-quotas-executable",
+      "kind": "invariant",
+      "statement": "quotaPool is an entity kind and a scenario lists the pools it runs; a pool runs as one machine per pooled limit and modelled member, whose transitions admit usage on headroom (within the fair share when throttled), throttle a member over its fair share at the end of the stated consecutive windows unless its exemption applies from that window, release after the stated windows under, and record an exemption from the window it is set in or the next; simulation and the Lean explorer run these machines, so a claim over them is decided by exploration and a wrong rule (eligibility effective only from the next window, or a longer over-share window) yields a counterexample; and the pool rules are reported at their positions.",
+      "rationale": "Evidence is the core tests of WG-5278 (tests/core/pooled-quotas.test.js) on the Harbourline BR-12 fixture: the machines and their derivation, a throttle and its release in a simulated run, exploration that holds for the burst and three-day claims and returns a counterexample for each seeded wrong rule, retroactive and default exemptions, and each validation rule broken once. Supported, not verified, because Exegra does not check its own derivation. The decision is dec-pooled-quotas.",
+      "subjects": [
+        "simulation-contract",
+        "validator",
+        "metamodel"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "machine-singleton-key",
+      "kind": "invariant",
+      "statement": "An implementation-level machine that creates its records (storage.creates), has no instances.key and is run by a scenario is reported with machine.singleton-key when a key field of its record has a type with no fixed value for the one instance the runtime creates at the start: only string, uuid or an integer, or an id or scalar over one, in a field that is not optional, has one. A machine keyed by instances.key, or whose key field has such a type, is not.",
+      "rationale": "WG-5090: the runtime creates the one instance of an unkeyed creating machine under a key derived from the machine id (Machine::SINGLETON_KEY) and specc refuses a key without a fixed value with specc.singleton-key; this is the same refusal over the model, so a specification fails validation before generation. Evidence is the core test over the runtime-faults fixture: breaking the key type gives exactly machine.singleton-key. Supported, not verified.",
+      "subjects": [
         "validator"
       ],
       "assumptions": [
@@ -22282,6 +22669,608 @@
       "kind": "test",
       "ref": "tests/core/layers.test.js#a product header takes version and platform and refuses a malformed one with layer.header-invalid",
       "description": "The header members version and platform are accepted and validated."
+    },
+    {
+      "id": "ev-integrity-relations-atoms",
+      "claim": "integrity-relations-evaluated",
+      "kind": "test",
+      "ref": "tests/core/integrity-relations.test.js#relation atoms parse with term arguments and their polarity follows negation and implication and filters",
+      "description": "Atoms parse with term arguments; their polarity flips under !, the left side of => and a forall filter, not an exists filter."
+    },
+    {
+      "id": "ev-integrity-relations-least",
+      "claim": "integrity-relations-evaluated",
+      "kind": "test",
+      "ref": "tests/core/integrity-relations.test.js#the relations of the fixture are their least models: reachability and mutual recursion and stratified negation",
+      "description": "The fixture tables equal the least models written out by hand; strata are ordered; a cycle and a deprecation give exactly the expected tuples."
+    },
+    {
+      "id": "ev-integrity-relations-mutations",
+      "claim": "integrity-relations-evaluated",
+      "kind": "test",
+      "ref": "tests/core/integrity-relations.test.js#every relation rule can be made to fail: each mutation gives its stated counterexample and apply refuses it",
+      "description": "Each relation rule fails after its mutation with the stated counterexample, and Project.apply refuses the mutation."
+    },
+    {
+      "id": "ev-integrity-relations-diagnostics",
+      "claim": "integrity-relations-evaluated",
+      "kind": "test",
+      "ref": "tests/core/integrity-relations.test.js#invalid relations: each problem is a named diagnostic that makes the relation and every rule using it invalid",
+      "description": "Each integrity.relation-* problem is an error on the relation and on the rule using it; invalidity propagates to relations that use it; negation of a lower stratum is accepted."
+    },
+    {
+      "id": "ev-integrity-relations-atom-choice",
+      "claim": "integrity-relations-evaluated",
+      "kind": "test",
+      "ref": "tests/core/integrity-relations.test.js#an atom holds when some choice of one value per argument is a tuple and a parameter over every kind ranges over every entity",
+      "description": "Set-valued arguments hold when some choice is a tuple; a parameter over * covers every entity."
+    },
+    {
+      "id": "ev-integrity-relations-lean-proved",
+      "claim": "integrity-relations-agree-with-lean-and-nemo",
+      "kind": "test",
+      "ref": "tests/core/formal-integrity.test.js#derived relations: every rule of the relations fixture is proved under the least-model meaning with standard axioms only",
+      "description": "Every relation rule of the fixture proved: prog_wf, prog_solved and holds, kernel-checked with standard axioms only."
+    },
+    {
+      "id": "ev-integrity-relations-lean-refuted",
+      "claim": "integrity-relations-agree-with-lean-and-nemo",
+      "kind": "test",
+      "ref": "tests/core/formal-integrity.test.js#derived relations: every mutation is refuted in Lean under the least-model meaning from its stated counterexample",
+      "description": "Every mutation of relations-mutations.json refuted under Least from its stated witness."
+    },
+    {
+      "id": "ev-integrity-relations-lean-differential",
+      "claim": "integrity-relations-agree-with-lean-and-nemo",
+      "kind": "test",
+      "ref": "tests/core/formal-integrity.test.js#differential: Lean and JavaScript agree on relation tables and verdicts and counterexamples of seeded random module graphs",
+      "description": "On 25 seeded random module graphs the Lean tables, verdicts and counterexamples equal the JavaScript ones; every rule is seen holding and failing."
+    },
+    {
+      "id": "ev-integrity-relations-nemo-fixture",
+      "claim": "integrity-relations-agree-with-lean-and-nemo",
+      "kind": "test",
+      "ref": "tests/core/integrity-nemo.test.js#Nemo derives the same relations as the JavaScript evaluator on the relations fixture",
+      "description": "Every relation of the fixture translated to Nemo rules; nmo derives the JavaScript tables."
+    },
+    {
+      "id": "ev-integrity-relations-nemo-random",
+      "claim": "integrity-relations-agree-with-lean-and-nemo",
+      "kind": "test",
+      "ref": "tests/core/integrity-nemo.test.js#Nemo derives the same relations as the JavaScript evaluator on seeded random graphs and stratified programs",
+      "description": "On 40 seeded random graphs with random stratified programs (closures, mutual recursion, negation of lower strata) nmo derives the JavaScript tables."
+    },
+    {
+      "id": "ev-admit-regressed",
+      "claim": "admit-never-writes-a-rejected-change",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a change that worsens a claim is rejected naming the claim with both statuses",
+      "description": "A change that worsens a claim is rejected, naming the claim with its status before and after."
+    },
+    {
+      "id": "ev-admit-violation",
+      "claim": "admit-never-writes-a-rejected-change",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a change that adds an integrity violation is rejected with the rule and its counterexample",
+      "description": "A change that adds an integrity violation is rejected with the rule and the counterexample."
+    },
+    {
+      "id": "ev-admit-weak",
+      "claim": "admit-never-writes-a-rejected-change",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a new claim that is not verified or proved is a reason to reject",
+      "description": "A new claim that is only inconclusive is a reason to reject."
+    },
+    {
+      "id": "ev-admit-refused",
+      "claim": "admit-never-writes-a-rejected-change",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a refused transaction is rejected with the transaction code and message",
+      "description": "A refused transaction is a rejected verdict carrying the transaction code and message, and writes nothing."
+    },
+    {
+      "id": "ev-admit-admitted",
+      "claim": "admit-never-writes-a-rejected-change",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a substantial accepted change is admitted and lists the new claim as verified",
+      "description": "An accepted change with several entities and a claim that verifies is admitted and lists the claim as verified."
+    },
+    {
+      "id": "ev-admit-write",
+      "claim": "admit-never-writes-a-rejected-change",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#--write leaves the spec byte-identical on a rejected change and writes an admitted one",
+      "description": "With --write a rejected change leaves the file byte-identical and an admitted one writes it."
+    },
+    {
+      "id": "ev-admit-deterministic",
+      "claim": "admit-never-writes-a-rejected-change",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#admit output is identical across two runs",
+      "description": "Two runs print identical output, with reasons in id order."
+    },
+    {
+      "id": "ev-admit-privilege-role",
+      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a role that gains a capability is a privilege-change reason until it is accepted",
+      "description": "The owner role gains a capability: a privilege-change reason, admitted with --accept admit.privilege-change and listed under acknowledged."
+    },
+    {
+      "id": "ev-admit-privilege-removed",
+      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#removing a capability from a role is reported but is not a reason",
+      "description": "A removed capability is listed under diff.privilege.removed and does not block."
+    },
+    {
+      "id": "ev-admit-privilege-grant",
+      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a new grant without maxDuration is a privilege-change reason",
+      "description": "A grant with no maxDuration is a privilege-change reason next to its capabilities."
+    },
+    {
+      "id": "ev-admit-weakened-copy",
+      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#an edge copy class looser than an existing class of the same record is a guarantee-weakened reason",
+      "description": "A 72 hour copy class beside a 5 second class of the same record is flagged for freshness and erasure; a tighter class is not."
+    },
+    {
+      "id": "ev-admit-weakened-rule",
+      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a changed integrity rule is shown before and after and can be accepted",
+      "description": "A changed integrity rule is a guarantee-weakened reason with its text before and after."
+    },
+    {
+      "id": "ev-admit-accept-refused",
+      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a reason that is not acknowledgeable cannot be accepted",
+      "description": "Accepting admit.new-claim-weak, admit.claim-regressed or admit.new-error fails with admit.not-acknowledgeable."
+    },
+    {
+      "id": "ev-admit-pending-milestone",
+      "claim": "admit-requirement-claims-pend-on-realisation",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a new requirement claim with a milestone is admitted as pending realisation",
+      "description": "A requirement of an external method with a milestone is admitted and listed under pendingRealisation."
+    },
+    {
+      "id": "ev-admit-pending-no-milestone",
+      "claim": "admit-requirement-claims-pend-on-realisation",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a new requirement claim without a milestone is rejected",
+      "description": "A requirement without a milestone is rejected as admit.requirement-without-milestone."
+    },
+    {
+      "id": "ev-admit-pending-weak",
+      "claim": "admit-requirement-claims-pend-on-realisation",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a new claim a model method decides stays weak when it is not verified",
+      "description": "A structural claim that is not verified is still admit.new-claim-weak, even with a milestone."
+    },
+    {
+      "id": "ev-strength-hbc",
+      "claim": "claim-strength-names-weak-checks",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#a state invariant whose variable only a fault transition changes holds by construction and names the variable and the transition",
+      "description": "clockRestarts == 0 with only a fault incrementing it is holds-by-construction, naming the variable and the fault transition; the status stays verified."
+    },
+    {
+      "id": "ev-strength-restated",
+      "claim": "claim-strength-names-weak-checks",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#a counter bound equal to what its one scenario produces is a restated scenario",
+      "description": "featureRecords <= 1 over a scenario that creates one record is restated-scenario."
+    },
+    {
+      "id": "ev-strength-single-trace",
+      "claim": "claim-strength-names-weak-checks",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#a claim decided on one scenario by a literal payload guard is single-trace and self-contained and names the free input",
+      "description": "A never claim decided by a guard on event.changesPower is single-trace."
+    },
+    {
+      "id": "ev-strength-explored",
+      "claim": "claim-strength-names-weak-checks",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#a trace claim an exhaustive exploration found holding is explored",
+      "description": "A supplied exploration makes a single-trace claim explored and leaves a vacuous claim holds-by-construction."
+    },
+    {
+      "id": "ev-strength-self-contained",
+      "claim": "claim-strength-grounding",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#a claim decided on one scenario by a literal payload guard is single-trace and self-contained and names the free input",
+      "description": "The payload-driven behavior is self-contained and its free input is named."
+    },
+    {
+      "id": "ev-strength-contract-bound",
+      "claim": "claim-strength-grounding",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#a behavior that reacts to a contract event is bound and names the capabilities the contract requires",
+      "description": "A behavior that reacts to a contract event is bound, naming the contract and the capability it requires."
+    },
+    {
+      "id": "ev-strength-integrity-bound",
+      "claim": "claim-strength-grounding",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#an integrity rule over the real roles is bound",
+      "description": "An integrity rule quantifying over every role is bound."
+    },
+    {
+      "id": "ev-strength-baseline",
+      "claim": "claim-strength-grounding",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#under a baseline a contract the change adds anchors nothing",
+      "description": "With the contract outside the baseline the same claim is self-contained."
+    },
+    {
+      "id": "ev-strength-admit",
+      "claim": "admit-flags-weak-new-claims",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#admit gives a new vacuous self-contained claim acknowledgeable reasons and only reports existing ones",
+      "description": "A new never claim over a fault transition gets admit.claim-vacuous and admit.claim-self-contained, both acknowledgeable; the counts include the existing vacuous claim, which is no reason."
+    },
+    {
+      "id": "ev-residency-1",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#regions tenant classes and residency exceptions are entities of the metamodel with sections of their own",
+      "description": "Regions tenant classes and residency exceptions are entities of the metamodel with sections of their own."
+    },
+    {
+      "id": "ev-residency-2",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#the Harbourline fixture states BR-04 and BR-05 on the structure and validates with no errors and no warnings",
+      "description": "The Harbourline fixture states BR-04 and BR-05 on the structure and validates with no errors and no warnings."
+    },
+    {
+      "id": "ev-residency-3",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#a fixed holder inside the provisioned regions is accepted for provisioned-regions confinement and refused for home",
+      "description": "A fixed holder inside the provisioned regions is accepted for provisioned-regions confinement and refused for home."
+    },
+    {
+      "id": "ev-residency-4",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#a tenant class with confinement none confines nothing",
+      "description": "A tenant class with confinement none confines nothing."
+    },
+    {
+      "id": "ev-residency-5",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#integrity rules read regions and placements and follow carried data through a recursive relation",
+      "description": "Integrity rules read regions and placements and follow carried data through a recursive relation."
+    },
+    {
+      "id": "ev-residency-6",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a copy on a global holder with no exception is reported once as residency.copy-outside at copies.3.heldBy",
+      "description": "Residency: a copy on a global holder with no exception is reported once as residency.copy-outside at copies.3.heldBy."
+    },
+    {
+      "id": "ev-residency-7",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a copy whose exception has expired is reported once as residency.copy-outside at copies.3.heldBy",
+      "description": "Residency: a copy whose exception has expired is reported once as residency.copy-outside at copies.3.heldBy."
+    },
+    {
+      "id": "ev-residency-8",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a copy whose exception allows only a region its global holder is not confined to is reported once as residency.copy-outside at copies.3.heldBy",
+      "description": "Residency: a copy whose exception allows only a region its global holder is not confined to is reported once as residency.copy-outside at copies.3.heldBy."
+    },
+    {
+      "id": "ev-residency-9",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a bound record owned by a global component is reported once as residency.record-outside at records.2.owner",
+      "description": "Residency: a bound record owned by a global component is reported once as residency.record-outside at records.2.owner."
+    },
+    {
+      "id": "ev-residency-10",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a flow of attachments to a sandbox fixed in one region is reported once as residency.flow-outside at relationships.0.to",
+      "description": "Residency: a flow of attachments to a sandbox fixed in one region is reported once as residency.flow-outside at relationships.0.to."
+    },
+    {
+      "id": "ev-residency-11",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a holder of bound data with no placement is reported once as residency.placement-missing at components.2.placement",
+      "description": "Residency: a holder of bound data with no placement is reported once as residency.placement-missing at components.2.placement."
+    },
+    {
+      "id": "ev-residency-12",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a per-region holder with no instance in a provisioned region is reported once as residency.region-uncovered at components.6.regions",
+      "description": "Residency: a per-region holder with no instance in a provisioned region is reported once as residency.region-uncovered at components.6.regions."
+    },
+    {
+      "id": "ev-residency-13",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a global component that names regions is reported once as component.placement-regions at components.5.regions",
+      "description": "Residency: a global component that names regions is reported once as component.placement-regions at components.5.regions."
+    },
+    {
+      "id": "ev-residency-14",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a tenant class selected by both a flag and a plan is reported once as tenant-class.selector at tenantClasses.0.plan",
+      "description": "Residency: a tenant class selected by both a flag and a plan is reported once as tenant-class.selector at tenantClasses.0.plan."
+    },
+    {
+      "id": "ev-residency-15",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a tenant class provisioned in no region is reported once as tenant-class.provisioned-in at tenantClasses.0.provisionedIn",
+      "description": "Residency: a tenant class provisioned in no region is reported once as tenant-class.provisioned-in at tenantClasses.0.provisionedIn."
+    },
+    {
+      "id": "ev-residency-16",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: an exception naming both a copy and a flow is reported once as residency.exception-target at residencyExceptions.0",
+      "description": "Residency: an exception naming both a copy and a flow is reported once as residency.exception-target at residencyExceptions.0."
+    },
+    {
+      "id": "ev-residency-17",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: an exception for a copy of no bound record is reported once as residency.exception-target at residencyExceptions.0.copy",
+      "description": "Residency: an exception for a copy of no bound record is reported once as residency.exception-target at residencyExceptions.0.copy."
+    },
+    {
+      "id": "ev-residency-18",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a bounded exception with no purge obligation is reported once as residency.exception-purge at residencyExceptions.0",
+      "description": "Residency: a bounded exception with no purge obligation is reported once as residency.exception-purge at residencyExceptions.0."
+    },
+    {
+      "id": "ev-residency-19",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: an exception whose longest duration is not a duration is reported once as residency.exception-duration at residencyExceptions.0.maxDuration",
+      "description": "Residency: an exception whose longest duration is not a duration is reported once as residency.exception-duration at residencyExceptions.0.maxDuration."
+    },
+    {
+      "id": "ev-residency-20",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a renewal window not shorter than the longest duration is reported once as residency.exception-renewal at residencyExceptions.0.renewalWindow",
+      "description": "Residency: a renewal window not shorter than the longest duration is reported once as residency.exception-renewal at residencyExceptions.0.renewalWindow."
+    },
+    {
+      "id": "ev-pooled-quotas-1",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#quota pools are entities of the metamodel with a section of their own and scenarios list the pools they run",
+      "description": "Quota pools are entities of the metamodel with a section of their own and scenarios list the pools they run."
+    },
+    {
+      "id": "ev-pooled-quotas-2",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#the Harbourline fixture states BR-12 as a pool and validates with no errors and no warnings",
+      "description": "The Harbourline fixture states BR-12 as a pool and validates with no errors and no warnings."
+    },
+    {
+      "id": "ev-pooled-quotas-3",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#a pool runs as one machine per pooled limit and modelled member with the pool variables",
+      "description": "A pool runs as one machine per pooled limit and modelled member with the pool variables."
+    },
+    {
+      "id": "ev-pooled-quotas-4",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#a client over its fair share is admitted while the pool has headroom and throttled after three days and released after two under",
+      "description": "A client over its fair share is admitted while the pool has headroom and throttled after three days and released after two under."
+    },
+    {
+      "id": "ev-pooled-quotas-5",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#exploration decides that a burst-eligible client is never throttled after eligibility was set",
+      "description": "Exploration decides that a burst-eligible client is never throttled after eligibility was set."
+    },
+    {
+      "id": "ev-pooled-quotas-6",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#exploration finds a counterexample when eligibility takes effect only from the next day",
+      "description": "Exploration finds a counterexample when eligibility takes effect only from the next day."
+    },
+    {
+      "id": "ev-pooled-quotas-7",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#exploration finds a counterexample when the over-share window is four days instead of three",
+      "description": "Exploration finds a counterexample when the over-share window is four days instead of three."
+    },
+    {
+      "id": "ev-pooled-quotas-8",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#a retroactive exemption lifts a throttle already in force and the default one does not",
+      "description": "A retroactive exemption lifts a throttle already in force and the default one does not."
+    },
+    {
+      "id": "ev-pooled-quotas-9",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#a scenario may run a pool and no behavior but not neither",
+      "description": "A scenario may run a pool and no behavior but not neither."
+    },
+    {
+      "id": "ev-pooled-quotas-10",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a pool with no limit is reported once as pool.limits at quotaPools.0.limits",
+      "description": "Pooled quotas: a pool with no limit is reported once as pool.limits at quotaPools.0.limits."
+    },
+    {
+      "id": "ev-pooled-quotas-11",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: two limits with one name is reported once as pool.limits at quotaPools.0.limits.1.name",
+      "description": "Pooled quotas: two limits with one name is reported once as pool.limits at quotaPools.0.limits.1.name."
+    },
+    {
+      "id": "ev-pooled-quotas-12",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a limit with both a quota and an amount per member is reported once as pool.limit-contribution at quotaPools.0.limits.0",
+      "description": "Pooled quotas: a limit with both a quota and an amount per member is reported once as pool.limit-contribution at quotaPools.0.limits.0."
+    },
+    {
+      "id": "ev-pooled-quotas-13",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a limit whose amount per member is not positive is reported once as pool.limit-contribution at quotaPools.0.limits.1.perMember",
+      "description": "Pooled quotas: a limit whose amount per member is not positive is reported once as pool.limit-contribution at quotaPools.0.limits.1.perMember."
+    },
+    {
+      "id": "ev-pooled-quotas-14",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a pooled quota counted per principal is reported once as pool.quota-scope at quotaPools.0.limits.0.quota",
+      "description": "Pooled quotas: a pooled quota counted per principal is reported once as pool.quota-scope at quotaPools.0.limits.0.quota."
+    },
+    {
+      "id": "ev-pooled-quotas-15",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a pooled quota with another window is reported once as pool.quota-window at quotaPools.0.limits.0.quota",
+      "description": "Pooled quotas: a pooled quota with another window is reported once as pool.quota-window at quotaPools.0.limits.0.quota."
+    },
+    {
+      "id": "ev-pooled-quotas-16",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a pooled quota stated as a level is reported once as pool.limit-kind at quotaPools.0.limits.0.kind",
+      "description": "Pooled quotas: a pooled quota stated as a level is reported once as pool.limit-kind at quotaPools.0.limits.0.kind."
+    },
+    {
+      "id": "ev-pooled-quotas-17",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a pooled quota held by another component is reported once as pool.held-by at quotaPools.0.heldBy",
+      "description": "Pooled quotas: a pooled quota held by another component is reported once as pool.held-by at quotaPools.0.heldBy."
+    },
+    {
+      "id": "ev-pooled-quotas-18",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a usage event with no amount is reported once as pool.event-payload at quotaPools.0.limits.1.usage",
+      "description": "Pooled quotas: a usage event with no amount is reported once as pool.event-payload at quotaPools.0.limits.1.usage."
+    },
+    {
+      "id": "ev-pooled-quotas-19",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: an exemption event with no member is reported once as pool.event-payload at quotaPools.0.exemption.event",
+      "description": "Pooled quotas: an exemption event with no member is reported once as pool.event-payload at quotaPools.0.exemption.event."
+    },
+    {
+      "id": "ev-pooled-quotas-20",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a level with no usage event is reported once as pool.usage-event at quotaPools.0.limits.1",
+      "description": "Pooled quotas: a level with no usage event is reported once as pool.usage-event at quotaPools.0.limits.1."
+    },
+    {
+      "id": "ev-pooled-quotas-21",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a window that is not a duration is reported once as pool.window at quotaPools.0.window",
+      "description": "Pooled quotas: a window that is not a duration is reported once as pool.window at quotaPools.0.window."
+    },
+    {
+      "id": "ev-pooled-quotas-22",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: an over-share rule of zero days is reported once as pool.over-share at quotaPools.0.overShare.consecutive",
+      "description": "Pooled quotas: an over-share rule of zero days is reported once as pool.over-share at quotaPools.0.overShare.consecutive."
+    },
+    {
+      "id": "ev-pooled-quotas-23",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a throttle with no release is reported once as pool.release at quotaPools.0.throttle.release",
+      "description": "Pooled quotas: a throttle with no release is reported once as pool.release at quotaPools.0.throttle.release."
+    },
+    {
+      "id": "ev-pooled-quotas-24",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: five modelled members is reported once as pool.model-members at quotaPools.0.modelMembers",
+      "description": "Pooled quotas: five modelled members is reported once as pool.model-members at quotaPools.0.modelMembers."
+    },
+    {
+      "id": "ev-pooled-quotas-25",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: an exemption set by a role without its capability is reported once as pool.exemption-capability at quotaPools.0.exemption.capability",
+      "description": "Pooled quotas: an exemption set by a role without its capability is reported once as pool.exemption-capability at quotaPools.0.exemption.capability."
+    },
+    {
+      "id": "ev-pooled-quotas-26",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a pool machine id that is already an entity is reported once as pool.machine-id at quotaPools.0.limits",
+      "description": "Pooled quotas: a pool machine id that is already an entity is reported once as pool.machine-id at quotaPools.0.limits."
+    },
+    {
+      "id": "ev-pooled-quotas-27",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a claim reading a variable a pool machine does not have is reported once as expr.reference at claims.0.evaluate.expr",
+      "description": "Pooled quotas: a claim reading a variable a pool machine does not have is reported once as expr.reference at claims.0.evaluate.expr."
+    },
+    {
+      "id": "ev-ui-steps-fragment",
+      "claim": "ui-journey-steps-checked",
+      "kind": "test",
+      "ref": "tests/core/ui.test.js#ui consistency: a gotoPath fragment with a character a fragment may not hold",
+      "description": "A gotoPath fragment with a space is exactly uiScenario.fragment; the journey that uses every step kind also holds gotoPath with a fragment, expectUrl and captureMail, and validates."
+    },
+    {
+      "id": "ev-layers-typed-queries-views-workflows",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product file may declare queries and views and workflows and refuses each that does not fit its platform type",
+      "description": "A member the platform type lacks in a query, a view and a workflow is exactly layer.value-invalid naming query-def, view-def and workflow-def, and a view section over a query nobody declares is layer.reference-unknown."
+    },
+    {
+      "id": "ev-layers-typed-queries-views-workflows-accepted",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product declaring a query and a view and a workflow that fit their platform types is accepted",
+      "description": "A product declaring one query, one view over it and one workflow validates."
+    },
+    {
+      "id": "ev-singleton-key-negative",
+      "claim": "machine-singleton-key",
+      "kind": "test",
+      "ref": "tests/core/runtime-faults.test.js#rule machine.singleton-key",
+      "description": "The fixed relay over a key of type f64 gives exactly machine.singleton-key."
     }
   ],
 
@@ -23882,6 +24871,97 @@
       "statement": "Every claim that test evidence supports names what it is about.",
       "rule": "forall e : evidence where e.kind == \"test\", forall c in e.claim, nonempty c.subjects",
       "rationale": "Selecting a claim highlights its subjects; a tested claim with none cannot be found from the scene."
+    }
+  ],
+  "decisions": [
+    {
+      "id": "decision-admit-pending-realisation",
+      "title": "admit: claims realised by code are pending realisation, not weak",
+      "status": "accepted",
+      "task": "WG-5273",
+      "context": "A requirement is realised by code and verified later, so it cannot be verified when first written; rejecting it pushed requirements into other entity kinds outside milestone tracking.",
+      "decision": "admit applies admit.new-claim-weak only to claims a model method can decide at specification time. A new claim realised by code (kind requirement whose method Exegra does not evaluate itself, a method declared in vocabulary.verificationMethods, or external-evidence) that names a milestone and is not-evaluated or inconclusive is admitted and reported under pendingRealisation. A new requirement without a milestone is the reason admit.requirement-without-milestone; another code-realised claim without one stays admit.new-claim-weak. Structural, data-model, integrity, lean-theorem and the other methods in the claim method registry stay under admit.new-claim-weak."
+    },
+    {
+      "id": "dec-claim-check-and-grounding",
+      "title": "Claim check strength and grounding",
+      "context": "A verified status says that an evaluator checked a claim within its scope; it does not say how much that check could have found. The Harbourline fold (WG-5265) added 76 claims through admit, all verified, and an independent judge found that most of them prove only the author's own state machines: invariants that only the injected fault transition can break, a bound that restates the count of its one scenario, guards decided by booleans and numbers written into scenario event payloads, and no behavior that refines or reads a real behavior, record, contract, role or capability (judge report F1, F2, F7, F8). A real platform that let an agent change a plan would leave every one of those claims verified.",
+      "decision": "Every claim and every integrity rule gets two computed attributes besides its status, from a static, deterministic analysis of the model (src/core/claim-strength.js, claimStrength): its check, how strong the evaluation behind the status is, and its grounding, whether what it reads is the platform's own entities or only the claim's own inputs. They never change a status. claims, evaluate and the claims report show them. admit counts them for the whole specification before and after the change, and rejects a claim the change creates when its check is holds-by-construction or restated-scenario (admit.claim-vacuous) or single-trace (admit.claim-single-trace), or its grounding is self-contained (admit.claim-self-contained); each such reason carries acknowledgeable: true so that a caller can accept it explicitly. Existing claims are counted and never a reason.",
+      "definitions": [
+        "check holds-by-construction: a never, state-invariant or precedes claim that no run without the defect can violate. Nominal transitions are those not faultOnly, plus the faultOnly ones a fault of the claim's own scenarios enables. For a state invariant, the expression is true for every combination of values its references can take in nominal runs: a variable assigned only by fault transitions, or by nothing, keeps its initial value; a variable set only to literals takes its initial value or one of them; two variables of one behavior that start equal and are always set together to the same expression stay equal; a state reference takes any state reachable from the initial state over nominal transitions. For never, and for the then of precedes, the occurrence can be produced only by fault transitions, or by nominal transitions whose guard is false for every such value. The result names the variables and the fault transitions. Examples: hl-chk-rx-continuous-renewal (clockRestarts == 0, incremented only by the fault hl-rx-renew-restarts-clock), hl-chk-wv-clock-from-receipt (clockStart and receivedAt set together from time), hl-chk-au-append-only (hl-au-edited emitted only by the fault hl-au-edit-allowed).",
+        "check restated-scenario: a state invariant that compares one numeric variable which nominal transitions change by an expression (a counter) with a literal bound, listing exactly one scenario, where the bound is exactly the extreme value the variable reaches in that scenario's run and the run changed it. Example: hl-chk-gf-no-creation-after-loss, featureRecords <= 1, where the one scenario creates one record. Only a plain comparison is examined; a bound inside an implication is not.",
+        "check single-trace: any other state-invariant, precedes, eventually or never claim. It is decided by running hand-written scenarios, without exhaustive exploration and without refinement. Example: hl-chk-ag-forbidden-refused.",
+        "check explored: a trace claim that an exhaustive exploration of its scenario (exegra prove) found to hold, when the caller supplies that result; exploration results are not recorded in a project yet (WG-5280). check refined: a refines claim, or a trace claim whose behaviors all refine an existing behavior.",
+        "Other checks name the method: structural (no-relationship, reachable, only-via, has-port, property-defined, acyclic, implementation-language), data-model, lean-theorem, sampled (metric-bound), test (external evidence with a test attached), evidence (other external evidence and external verification methods), integrity (an integrity rule) and none (no method, or one this build does not evaluate).",
+        "grounding bound: the check reads the platform's own entities: the component graph (structural methods), records and copies (data-model), Lean definitions (lean-theorem), the entities of the kinds an integrity rule quantifies over, or behaviors that are anchored and branch on no free input. A behavior is anchored when it refines an existing behavior, is stored in a record (storage or instances.storedIn), reacts to or emits an event of a contract (the details name the capabilities the contract requires), or reads the state or variables of an anchored behavior. Example: hl-agent-roles-hold-no-forbidden-power, which ranges over every role.",
+        "grounding partly-bound: some of what the check reads is bound and some is not: an anchored behavior whose guards or effects also read a payload field of an event that belongs to no contract, a claim that reads one anchored and one unanchored behavior, or a data-model claim restricted to records the change adds.",
+        "grounding self-contained: the behaviors the check reads are not anchored: their guards and effects read only their own variables, time and payload fields of events that belong to no contract, which the scenarios supply as literals. Example: hl-agent-forbidden-acts-flow branches on event.changesPower, so hl-chk-ag-forbidden-refused is self-contained.",
+        "grounding not-applicable: the status comes from evidence outside the model (external-evidence or an external verification method), or nothing is evaluated.",
+        "Baseline: under admit an entity the change creates does not anchor anything, so a new behavior reading another new behavior, or a new event of a new contract, is self-contained. claims, evaluate and the claims report have no baseline and count every entity of the model."
+      ],
+      "alternatives": [
+        "Make vacuous trace claims inconclusive in the evaluator. Not taken: the trace does hold, and the status says what the evaluator found on it; the weakness is in what the check could have found, a separate axis, and changing the statuses would move many existing results at once.",
+        "Require an exhaustive exploration (exegra prove) of every new trace claim. Not taken for now: prove needs Lean and a build of formal/, and its results are not recorded in the project, so admit cannot read them. The explored check is the place a recorded result will raise a claim (WG-5280).",
+        "Detect vacuity by mutation: run every scenario with all faultOnly transitions enabled, or with generated payloads. Not taken: negatives already do the first, both depend on the hand-written scenarios, and the static analysis of the values nominal transitions can produce answers the question for every nominal run, cheaply enough for every admit.",
+        "Ground a claim through its subjects or its behavior's subject component. Not taken: every behavior names a subject, so that field cannot tell a machine that reads the platform from one that reads only its own payload (judge F1).",
+        "Count any reference to another behavior as binding. Not taken: a fold's machines would then bind to each other. A behavior binds only through a chain of reads that ends at a refinement, a record or a contract.",
+        "Read the access model directly from guards. Not possible: the expression language reads variables, payload fields, time and other machines only, so roles, capabilities and grants reach a behavior through a contract's auth.requires, and integrity rules are where they are quantified over."
+      ],
+      "consequences": "Statuses do not change; the strength is a second view that admit enforces for new claims only. The value analysis over-approximates nominal runs (it ignores guards when collecting values and reachable states, and treats other values as unknown), so it does not report a claim that some nominal run can violate as holds-by-construction, but it misses vacuity that depends on guards, on arithmetic or on keyed instances. restated-scenario needs one run of the claim's scenario and is restricted to a plain comparison with a literal. Grounding is structural: an anchored behavior can still decide on a field that means nothing, and a contract event's payload is still supplied by the scenario. explored is reported only when the caller supplies exploration results (WG-5280).",
+      "tasks": [
+        "WG-5274",
+        "WG-5276",
+        "WG-5280"
+      ],
+      "basis": [
+        "claim-strength",
+        "claim-evaluator",
+        "agent-cli"
+      ]
+    },
+    {
+      "id": "dec-residency",
+      "title": "Residency: regions as entities, placement on components, confinement on tenant classes, checked on the structure",
+      "status": "accepted",
+      "task": "WG-5277",
+      "subjects": [
+        "validator",
+        "metamodel"
+      ],
+      "context": "A fold of 26 business requirements for a multi-tenant platform (Harbourline BR-04, BR-05, BR-09, BR-18, BR-24) could not state residency against anything real: the format had no region, so every rule became a scenario boolean (a harbour flag in a step payload) or prose, and an exception edge copy was given a 72 hour freshness bound that weakened the existing 5 s purge of edge copies. Residency has to compose with records, copies, retention and erasure bounds and with the access model (flags, plans, roles), not duplicate them.",
+      "decision": "Four additions. A region entity. A tenant class entity that selects tenants by one feature flag or one plan (or every tenant), names the regions its tenants may be provisioned in, a confinement (home, provisioned-regions or none) and the records it binds. Two component properties, placement (per-region, fixed or global) and regions, and one relationship property, carries (the records a data flow passes on). A residency exception entity naming one copy or flow of a tenant class, the feature, the approving role, maxDuration, renewalWindow, purgeWithin, the residual and a status. Validation (src/core/residency.js) follows each bound record to its owner, the holder of each copy and both ends of each carrying relationship, and reports residency.record-outside, residency.copy-outside or residency.flow-outside where the component cannot keep a tenant of the class in its permitted regions, unless an active exception names that copy or flow; plus residency.placement-missing, residency.region-uncovered, component.placement-regions, tenant-class.selector, tenant-class.provisioned-in and the exception rules (target, duration, purge, renewal). The properties are flat references, so integrity rules and recursive relations read them.",
+      "alternatives": [
+        "Region as a property of every entity (records and copies each naming a region): not taken. A record class or copy class has no single region; its data is wherever its holder runs, and a tenant's region is run-time data, so a region per record would be stated twice and drift from the placement of the component that holds it.",
+        "A separate placement relation (placement entities pairing a component with regions): not taken for components, which have exactly one placement, so a property says the same thing with less text and stays readable by integrity rules as c.placement. The binding of records to a class is a relation, kept as the tenant class's binds list.",
+        "Tenant classes by flag, by plan or by both: a class takes at most one selector (tenant-class.selector) so its membership is one condition; Harbour tenants are the tenants with the regulated-sector flag on.",
+        "Checking per scenario (a scenario names a tenant's region and a machine moves its data): not taken for placement. The structure decides residency for every tenant of the class whichever region it was provisioned in, with no inputs to choose; a scenario would check only the regions it happened to name. The run-time part, an exception expiring and its copies being purged, stays an obligation shown by evidence.",
+        "Exceptions that expire by a date written in the specification: not taken. A specification states classes of exception, not approvals; maxDuration, renewalWindow and purgeWithin record the bounds of one approval, and status records that a class of exception is no longer in force (expired or revoked covers nothing).",
+        "The purge after expiry as a freshness or erasure bound of the excepted copy: not taken, because it weakens the copy's own bounds for every tenant (the fold's mistake); purgeWithin belongs to the exception."
+      ],
+      "consequences": "Harbourline BR-04 and BR-05 are written with no scenario (tests/fixtures/residency/harbourline.jsonc). Placement is static: a component placed per-region is trusted to route each tenant to its home instance, which only evidence about the running system shows. The exception lifecycle (expiry, renewal within the window, purge within the bound) is recorded, not executed. Fields are not regions: a copy of a bound record is bound whatever fields it holds, and a reference-only payload is stated by an integrity rule over the copy's fields."
+    },
+    {
+      "id": "dec-pooled-quotas",
+      "title": "Pooled quotas: a pool construct over per-tenant quotas whose meaning runs as derived machines",
+      "status": "accepted",
+      "task": "WG-5278",
+      "subjects": [
+        "simulation-contract",
+        "validator",
+        "metamodel"
+      ],
+      "context": "Harbourline BR-12 pools storage and automation-run quotas across a reseller's client tenants: a client may exceed its fair share while the pool has headroom, is throttled after three consecutive days over its share even with headroom unless burst-eligible, and burst eligibility is set by the reseller, applies from the day it is set and never to days already throttled. The format had per-tenant quotas only, so the fold became a hand-written machine with no pool, no headroom and a permanent throttle, and one of its invariants was false for burst-eligible clients but held because only one scenario was run. The rule must be checkable by exploration and compose with plans, quotas and the limit store.",
+      "decision": "A quotaPool entity: memberClass and groupedBy (who shares), heldBy (the limit store), window and windowEnd (the day boundary event), limits (each a rate or a level whose per-member contribution is a per-tenant quota's limit or a perMember amount, with its usage event), overShare.consecutive, throttle (to fair-share or refuse, and a required release: a number of windows at or under the share, or never) and exemption (setBy role, capability, set event, effective same-window or next-window, retroactive). A member's fair share is its contribution and the capacity is the sum. The meaning is executable: src/core/pools.js derives one engine-input machine per limit and modelled member (<pool>-<limit>-m<k>, states normal and throttled, variables usage, day, overDays, underDays, throttledOn, burstSetOn, burstFrom, admitted, refused), and a scenario that lists the pool in pools runs them next to its behaviors, so simulate, the trace check and the Lean explorer decide claims over them. Validation checks the construct (pool.* codes) and claim expressions that read the machines.",
+      "alternatives": [
+        "Fold the pool into quota (a quota with scope pool): not taken. A quota is one counter per scope and window with one onExceed; a pool adds a group, fair shares, headroom, a multi-window rule, an exemption and a release, and keeping the per-tenant quota as each member's contribution keeps what one tenant is entitled to stated once.",
+        "Make capacity and fair share numbers of their own on the pool: not taken for rates, since the per-tenant quota already says what a tenant may use per window; perMember is kept for levels such as storage, which no quota counts.",
+        "Ask authors to write the pool's machine as an ordinary behavior: not taken. That is what the fold did; the rules then live in a hand-written machine that may differ from the pool it claims to model, with nothing to check them against.",
+        "Generate the machine into the specification as behavior entities (as cover-machines writes scenarios): not taken. The machine would be a second copy of the pool's meaning that drifts unless validation re-derives and compares it; deriving it when a scenario runs keeps one source.",
+        "Synthesise the machines as entities of the model at parse time: not taken. Entities have source positions and take part in rename and delete through the Lean model derivation; a derived machine has neither, and adding that machinery is larger than the need.",
+        "One machine per pool with per-member variables: not taken. The expression language has no conditional, so each window end would need a transition for every combination of member outcomes; one machine per member keeps each window end to one of a few guarded transitions, and the members read each other's usage for the pool total.",
+        "A scenario boolean saying a member is burst-eligible or throttled: not taken; eligibility is an event set by the reseller and the throttle follows from usage, so exploration over injected events covers the cases."
+      ],
+      "consequences": "Harbourline BR-12 is written with no scenario boolean (tests/fixtures/pooled-quotas/harbourline.jsonc), and a claim that a burst-eligible client is never throttled after eligibility was set holds by exploration and fails when eligibility is effective only from the next window. A specification must say when a throttle lifts. The machines are not entities: renaming a pool does not rewrite claim expressions that name them, and the simulator panel and inspector do not show them (WG-5281). The model runs 1 to 4 members with equal contributions; unequal plans across members, usage that spans windows and revocation of eligibility are not modelled."
     }
   ]
 }

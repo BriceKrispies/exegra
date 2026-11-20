@@ -1,0 +1,87 @@
+// Harbourline BR-12 written against pooled quotas (WG-5278; docs/model-and-format.md, Pooled quotas).
+// Storage and automation-run quotas are pooled across a reseller's client tenants. Each client's fair share
+// is what it contributes: the per-tenant automation-run quota (10 a day) and 10 GB of storage. A client may
+// go over its share while the pool has headroom; a client over its share at the end of three consecutive
+// days is throttled even with headroom, unless it is burst-eligible. Burst eligibility is set by the
+// reseller, applies from the day it is set (that day's end included), and never lifts a throttle already
+// in force. BR-12 does not say when a throttle ends; the pool states a choice (two days at or under the
+// share), recorded as an assumption, rather than a silent permanent throttle.
+//
+// No scenario boolean says who is eligible or throttled: the pool runs as machines, and the claims are
+// decided over every run of burst-exploration (every subset of its injected usage and eligibility events).
+{
+  "exegra": "0.1",
+  "system": { "id": "harbourline-pools", "name": "Harbourline pooled quotas slice", "illustrative": true },
+  "components": [
+    { "id": "limit-store", "name": "Limit store", "category": "storage", "purpose": "Keeps the per-tenant and pooled counters." }
+  ],
+  "events": [
+    { "id": "day-closed", "name": "Day closed" },
+    { "id": "automation-run", "name": "Automation run", "payload": [ { "name": "member", "type": "string" }, { "name": "amount", "type": "i64" } ] },
+    { "id": "storage-changed", "name": "Storage changed", "payload": [ { "name": "member", "type": "string" }, { "name": "amount", "type": "i64" } ] },
+    { "id": "burst-eligibility-set", "name": "Burst eligibility set", "payload": [ { "name": "member", "type": "string" } ] }
+  ],
+  "quotas": [
+    { "id": "q-automation-runs", "description": "Automation runs of one tenant a day.", "scope": "tenant", "event": "automation-run", "limit": 10, "window": "1 d", "onExceed": "throttle", "heldBy": "limit-store" }
+  ],
+  "capabilities": [ { "id": "burst-eligibility-grant", "name": "Set a client's burst eligibility", "core": true } ],
+  "roles": [ { "id": "reseller-admin", "name": "Reseller administrator", "level": "platform", "holders": ["person"], "capabilities": ["burst-eligibility-grant"] } ],
+  "assumptions": [
+    { "id": "throttle-release-two-days", "statement": "BR-12 does not say when a throttle ends; a throttled client is released after two consecutive days at or under its fair share. A choice to confirm with the reseller programme, not a requirement." }
+  ],
+  "quotaPools": [
+    { "id": "reseller-pool", "name": "Reseller pool", "groupedBy": "reseller", "heldBy": "limit-store", "window": "1 d", "windowEnd": "day-closed",
+      "limits": [
+        { "name": "runs", "kind": "rate", "quota": "q-automation-runs" },
+        { "name": "storage", "kind": "level", "perMember": 10, "unit": "GB", "usage": "storage-changed" }
+      ],
+      "overShare": { "consecutive": 3 },
+      "throttle": { "to": "fair-share", "release": 2 },
+      "exemption": { "name": "burst eligibility", "setBy": "reseller-admin", "capability": "burst-eligibility-grant", "event": "burst-eligibility-set", "effective": "same-window", "retroactive": false },
+      "modelMembers": 2,
+      "source": "throttle-release-two-days",
+      "description": "BR-12: quotas pooled across a reseller's client tenants, with fair share, headroom, the three-day rule and burst eligibility." }
+  ],
+  "faults": [
+    { "id": "m1-runs-day0", "name": "Client m1 runs 15 on day 0", "kind": "inject-event", "event": "automation-run", "at": 5, "payload": { "member": "m1", "amount": 15 } },
+    { "id": "m1-runs-day1", "name": "Client m1 runs 15 on day 1", "kind": "inject-event", "event": "automation-run", "at": 15, "payload": { "member": "m1", "amount": 15 } },
+    { "id": "m1-runs-day2", "name": "Client m1 runs 15 on day 2", "kind": "inject-event", "event": "automation-run", "at": 25, "payload": { "member": "m1", "amount": 15 } },
+    { "id": "m1-runs-day3", "name": "Client m1 runs 15 on day 3", "kind": "inject-event", "event": "automation-run", "at": 35, "payload": { "member": "m1", "amount": 15 } },
+    { "id": "m1-burst-day0", "name": "The reseller makes m1 burst-eligible on day 0", "kind": "inject-event", "event": "burst-eligibility-set", "at": 3, "payload": { "member": "m1" } },
+    { "id": "m1-burst-day1", "name": "The reseller makes m1 burst-eligible on day 1", "kind": "inject-event", "event": "burst-eligibility-set", "at": 13, "payload": { "member": "m1" } },
+    { "id": "m1-burst-day2", "name": "The reseller makes m1 burst-eligible on day 2", "kind": "inject-event", "event": "burst-eligibility-set", "at": 27, "payload": { "member": "m1" } },
+    { "id": "m1-burst-day3", "name": "The reseller makes m1 burst-eligible on day 3", "kind": "inject-event", "event": "burst-eligibility-set", "at": 33, "payload": { "member": "m1" } }
+  ],
+  "scenarios": [
+    { "id": "burst-exploration", "name": "Usage and eligibility on any days", "behaviors": [], "pools": ["reseller-pool"],
+      "description": "Five days. Client m2 runs 2 on day 0. Client m1 may run 15 (over its share of 10, within the pool's 20) on any of days 0 to 3, and the reseller may make it burst-eligible on any of them (on day 2 after that day's run): each is an inject-event fault, so exploration covers every combination.",
+      "steps": [
+        { "at": 1, "event": "automation-run", "payload": { "member": "m2", "amount": 2 } },
+        { "at": 10, "event": "day-closed" }, { "at": 20, "event": "day-closed" }, { "at": 30, "event": "day-closed" },
+        { "at": 40, "event": "day-closed" }, { "at": 50, "event": "day-closed" }
+      ],
+      "faults": ["m1-runs-day0", "m1-runs-day1", "m1-runs-day2", "m1-runs-day3", "m1-burst-day0", "m1-burst-day1", "m1-burst-day2", "m1-burst-day3"],
+      "maxSteps": 20 },
+    { "id": "throttle-and-release", "name": "Throttled after three days and released after two", "behaviors": [], "pools": ["reseller-pool"],
+      "description": "Client m1 runs 15 on days 0 to 2 and is throttled at the end of day 2. On day 3 a run of 12 is refused (over its share) and a run of 5 admitted; days 3 and 4 end under the share, and the throttle lifts at the end of day 4.",
+      "steps": [
+        { "at": 5, "event": "automation-run", "payload": { "member": "m1", "amount": 15 } }, { "at": 10, "event": "day-closed" },
+        { "at": 15, "event": "automation-run", "payload": { "member": "m1", "amount": 15 } }, { "at": 20, "event": "day-closed" },
+        { "at": 25, "event": "automation-run", "payload": { "member": "m1", "amount": 15 } }, { "at": 30, "event": "day-closed" },
+        { "at": 35, "event": "automation-run", "payload": { "member": "m1", "amount": 12 } },
+        { "at": 36, "event": "automation-run", "payload": { "member": "m1", "amount": 5 } }, { "at": 40, "event": "day-closed" },
+        { "at": 50, "event": "day-closed" }
+      ],
+      "maxSteps": 20 }
+  ],
+  "claims": [
+    { "id": "burst-eligible-never-throttled-after-set", "kind": "invariant",
+      "statement": "A burst-eligible client is never throttled for a day on or after the day its eligibility was set (BR-12).",
+      "evaluate": { "method": "state-invariant", "scenarios": ["burst-exploration"],
+        "expr": "reseller-pool-runs-m1.throttledOn < 0 || reseller-pool-runs-m1.burstSetOn < 0 || reseller-pool-runs-m1.throttledOn < reseller-pool-runs-m1.burstSetOn" } },
+    { "id": "three-days-over-throttles", "kind": "invariant",
+      "statement": "A client that is not burst-eligible and ended three consecutive days over its fair share is throttled, headroom or not (BR-12).",
+      "evaluate": { "method": "state-invariant", "scenarios": ["burst-exploration", "throttle-and-release"],
+        "expr": "reseller-pool-runs-m1.overDays >= 3 && reseller-pool-runs-m1.burstFrom < 0 => reseller-pool-runs-m1.state == 'throttled'" } }
+  ]
+}

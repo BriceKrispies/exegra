@@ -1,0 +1,97 @@
+// Harbourline BR-04 and BR-05 written against residency (WG-5277; docs/model-and-format.md, Residency).
+// A slice of a multi-tenant platform: Harbour tenants (the regulated-sector flag) are provisioned in one of
+// two regions, and their records, attachments, search entries, backups, edge copies and notification
+// payloads stay in the region a tenant was provisioned in (BR-04). Notification payloads carry a reference
+// and a title only (an integrity rule over the copy's fields), and an attachment reaches the rendition
+// sandbox only in its own region (the flow is bound and the sandbox is per-region). One named product
+// feature may hold an edge copy outside the region under an exception Compliance approves for at most
+// 90 days, renewed continuously within 14 days of expiry, and purged within 72 hours of expiry, with the
+// cached-viewer carve-out stated (BR-05). The edge copy keeps its 5 s freshness and erasure bounds: the
+// 72 hours is the exception's purge obligation, not a bound of the copy. No scenario and no boolean input
+// says which tenant is a Harbour tenant or where it lives: the rules are checked on the structure.
+{
+  "exegra": "0.1",
+  "system": { "id": "harbourline", "name": "Harbourline residency slice", "illustrative": true },
+  "components": [
+    { "id": "tenant-db", "name": "Tenant database", "category": "storage", "placement": "per-region" },
+    { "id": "file-store", "name": "File store", "category": "storage", "placement": "per-region" },
+    { "id": "search-index", "name": "Search index", "category": "storage", "placement": "per-region" },
+    { "id": "backup-archive", "name": "Backup archive", "category": "storage", "placement": "per-region" },
+    { "id": "regional-edge", "name": "Regional edge", "category": "infrastructure", "placement": "per-region" },
+    { "id": "delivery-network", "name": "Global delivery network", "category": "infrastructure", "placement": "global" },
+    { "id": "mail-dispatch", "name": "Mail dispatch", "category": "computational", "placement": "per-region" },
+    { "id": "rendition-sandbox", "name": "Rendition sandbox", "category": "computational", "placement": "per-region" }
+  ],
+  "relationships": [
+    { "id": "attachment-to-sandbox", "kind": "data-flow", "from": "file-store", "to": "rendition-sandbox", "carries": ["attachment"], "description": "An attachment is sent to the rendition sandbox in the attachment's own region (BR-04)." },
+    { "id": "db-to-search", "kind": "data-flow", "from": "tenant-db", "to": "search-index", "carries": ["tenant-record"], "description": "Committed records are indexed." },
+    { "id": "db-to-backup", "kind": "data-flow", "from": "tenant-db", "to": "backup-archive", "carries": ["tenant-record"], "description": "Backup images of the tenant database." },
+    { "id": "files-to-backup", "kind": "data-flow", "from": "file-store", "to": "backup-archive", "carries": ["attachment"], "description": "Backup images of the tenant's files." },
+    { "id": "db-to-edge", "kind": "publishes", "from": "tenant-db", "to": "regional-edge", "description": "Published pages are served from the edge of the tenant's region; the edge-page copy says what it holds." },
+    { "id": "db-to-global-edge", "kind": "publishes", "from": "tenant-db", "to": "delivery-network", "description": "Published pages of the accelerated-pages feature; the edge-page-accelerated copy says what it holds, under its exception." },
+    { "id": "db-to-mail", "kind": "data-flow", "from": "tenant-db", "to": "mail-dispatch", "description": "Notifications are queued with a reference and a title (the notification-payload copy)." }
+  ],
+  "records": [
+    { "id": "tenant-record", "name": "Tenant record", "owner": "tenant-db", "key": ["record-id"],
+      "fields": [ { "name": "record-id", "type": "record-id" }, { "name": "title", "type": "text" }, { "name": "content", "type": "json" } ],
+      "erasure": { "point": "the commit of the deletion" } },
+    { "id": "attachment", "name": "Attachment", "owner": "file-store", "key": ["file-id"],
+      "fields": [ { "name": "file-id", "type": "file-id" }, { "name": "bytes", "type": "bytes" } ],
+      "erasure": { "point": "the commit of the deletion" } }
+  ],
+  "copies": [
+    { "id": "search-entry", "name": "Search entry", "of": ["tenant-record"], "fields": ["record-id", "content"], "heldBy": "search-index", "scope": "internal",
+      "freshness": { "bound": "the commit of the record" }, "erasure": { "point": "the commit of the deletion" } },
+    { "id": "tenant-backup", "name": "Tenant backup", "of": ["tenant-record", "attachment"], "heldBy": "backup-archive", "scope": "internal",
+      "freshness": { "bound": 24, "unit": "hour" }, "erasure": { "point": "removal of the image at the end of its retention", "bound": 35, "unit": "day" } },
+    { "id": "edge-page", "name": "Edge page", "of": ["tenant-record"], "fields": ["record-id", "title"], "heldBy": "regional-edge", "scope": "shared",
+      "freshness": { "bound": 5, "unit": "second", "mechanism": "surrogate-key purge sent by the commit" }, "erasure": { "point": "the purge sent by the commit of the deletion", "bound": 5, "unit": "second" } },
+    { "id": "edge-page-accelerated", "name": "Edge page outside the region", "of": ["tenant-record"], "fields": ["record-id", "title"], "heldBy": "delivery-network", "scope": "shared",
+      "freshness": { "bound": 5, "unit": "second", "mechanism": "surrogate-key purge sent by the commit" }, "erasure": { "point": "the purge sent by the commit of the deletion", "bound": 5, "unit": "second" },
+      "description": "The edge copy a Harbour tenant may have outside its region for the accelerated-pages feature, only under exception edge-acceleration-exception (BR-05)." },
+    { "id": "notification-payload", "name": "Notification payload", "of": ["tenant-record"], "fields": ["record-id", "title"], "heldBy": "mail-dispatch", "scope": "internal",
+      "freshness": { "bound": "zero" }, "erasure": { "point": "sent, then removed with the message" } }
+  ],
+  "capabilities": [
+    { "id": "accelerated-pages", "name": "Serve published pages from the global edge" },
+    { "id": "residency-exception-approve", "name": "Approve a residency exception", "core": true }
+  ],
+  "plans": [ { "id": "standard", "name": "Standard", "capabilities": ["accelerated-pages"] } ],
+  "roles": [
+    { "id": "compliance", "name": "Compliance", "level": "platform", "holders": ["person"], "capabilities": ["residency-exception-approve"] },
+    { "id": "owner", "name": "Owner", "level": "tenant", "holders": ["person"], "capabilities": ["accelerated-pages"] }
+  ],
+  "featureFlags": [ { "id": "regulated-sector", "name": "Regulated sector", "gates": [], "default": "off" } ],
+  "regions": [
+    { "id": "eu-central", "name": "EU central", "jurisdiction": "EU" },
+    { "id": "ca-central", "name": "Canada central", "jurisdiction": "Canada" }
+  ],
+  "tenantClasses": [
+    { "id": "harbour", "name": "Harbour tenants", "flag": "regulated-sector", "provisionedIn": ["eu-central", "ca-central"], "confinement": "home",
+      "binds": ["tenant-record", "attachment"],
+      "description": "BR-04: record data, attachments and every copy and flow of them stay in the region the tenant was provisioned in." }
+  ],
+  "residencyExceptions": [
+    { "id": "edge-acceleration-exception", "name": "Edge copy for accelerated pages", "tenantClass": "harbour", "copy": "edge-page-accelerated", "feature": "accelerated-pages",
+      "approvedBy": "compliance", "maxDuration": "90 d", "renewalWindow": "14 d", "purgeWithin": "72 h",
+      "residual": "Copies already served to a cached viewer may remain until that viewer's cache lifetime ends, which the platform does not control.",
+      "description": "BR-05: one named feature, approved by Compliance for up to 90 days; a renewal received within 14 days before expiry is continuous; on expiry the copies are purged within 72 hours." }
+  ],
+  "integrityRelations": [
+    { "id": "holds-bound", "statement": "Component c holds or receives data that tenant class t confines: it owns a bound record, holds a copy of one, or receives a flow that carries one.",
+      "params": [ { "name": "t", "kinds": ["tenantClass"] }, { "name": "c", "kinds": ["component"] } ],
+      "clauses": [
+        "exists r in t.binds, r.owner == c",
+        "exists x : copy where x.heldBy == c, exists r in x.of, r in t.binds",
+        "exists f : relationship where f.to == c, exists r in f.carries, r in t.binds && holds-bound(t, f.from)"
+      ] }
+  ],
+  "integrityRules": [
+    { "id": "notification-payload-reference-only", "severity": "error",
+      "statement": "Notification payloads to mail dispatch carry a reference and a title only, never record content (BR-04).",
+      "rule": "forall x : copy where x.heldBy == \"mail-dispatch\", x.fields in [\"record-id\", \"title\"]" },
+    { "id": "confined-data-in-region", "severity": "warning",
+      "statement": "Every component that holds or receives data a tenant class confines is per-region, or holds it under a residency exception.",
+      "rule": "forall t : tenantClass, forall c : component where holds-bound(t, c), c.placement == \"per-region\" || exists e : residencyException where e.tenantClass == t, e.copy.heldBy == c" }
+  ]
+}

@@ -42,6 +42,8 @@ import { stableStringify } from '../src/core/stable-json.js';
 import { testRefProblem, describeTestRefProblem } from '../src/core/evidence-ref.js';
 import { treeStamp } from '../tools/tree-stamp.js';
 import { createOutcomeReuse } from './outcomes.js';
+import { snapshot, compare, sideCounts, NON_ACKNOWLEDGEABLE, withClaimStrength } from './admit.js';
+import { claimStrength } from '../src/core/claim-strength.js';
 
 /** @typedef {import('../src/core/types.js').Model} Model */
 /** @typedef {import('../src/core/types.js').Entity} Entity */
@@ -138,6 +140,15 @@ function viaOf(model, ref) {
 function countSeverities(diagnostics) {
   const count = (/** @type {string} */ s) => diagnostics.filter((d) => d.severity === s).length;
   return { errors: count('error'), warnings: count('warning'), gaps: count('info') };
+}
+
+/**
+ * The check and grounding of a claim (src/core/claim-strength.js), as fields of its result.
+ * @param {Map<string, import('../src/core/claim-strength.js').Strength>} strength @param {string} claimId
+ */
+function strengthFields(strength, claimId) {
+  const s = strength.get(claimId);
+  return s ? { check: s.check, grounding: s.grounding, strength: s.details } : {};
 }
 
 /** @param {{status: string}[]} results */
@@ -388,6 +399,34 @@ async function readOperations(ctx) {
     throw usage('invalid-argument', 'Each operation must be a JSON object with a "type" field.');
   }
   return list;
+}
+
+/**
+ * Write the files a committed transaction changed, each with the base hash read at the start.
+ * @param {any} ctx @param {any} ws @param {any} data @param {Project} project
+ * @param {string} initialSpec @param {string} initialLayout @param {{label: string, origin: string}} meta
+ */
+async function writeProjectFiles(ctx, ws, data, project, initialSpec, initialLayout, meta) {
+  /** @type {('spec'|'layout')[]} */
+  const written = [];
+  /** @type {string[]} */
+  const journalWarnings = [];
+  if (project.specText !== initialSpec) {
+    const w = await ws.write(ctx.projectName, 'spec', project.specText, data.spec.hash, meta);
+    if (!w.ok) throw new CliError('write.conflict', 'spec.jsonc changed on disk since it was read; nothing was written.');
+    written.push('spec');
+    if (w.journal && !w.journal.written) journalWarnings.push(`spec: ${w.journal.message}`);
+  }
+  if (project.layoutText !== initialLayout) {
+    const w = await ws.write(ctx.projectName, 'layout', project.layoutText, data.layout?.hash ?? null, meta);
+    if (!w.ok) {
+      const note = written.length ? ' The specification was already written; the layout was not.' : ' Nothing was written.';
+      throw new CliError('write.conflict', `layout.jsonc changed on disk since it was read.${note}`);
+    }
+    written.push('layout');
+    if (w.journal && !w.journal.written) journalWarnings.push(`layout: ${w.journal.message}`);
+  }
+  return { written, journalWarnings };
 }
 
 /**
@@ -838,10 +877,11 @@ export const COMMANDS = {
       if (status !== undefined && !(status in CLAIM_STATUSES)) {
         throw usage('invalid-argument', `--status must be one of: ${Object.keys(CLAIM_STATUSES).join(', ')}.`);
       }
+      const strength = claimStrength(model);
       const result = evaluateClaims(model, { recorded: withLean(model, data.recorded, ctx.log) })
         .map((r) => {
           const claim = model.entities.get(r.claimId);
-          return { ...r, statement: claim?.data.statement ?? null, kind: claim?.data.kind ?? r.kind };
+          return { ...r, statement: claim?.data.statement ?? null, kind: claim?.data.kind ?? r.kind, ...strengthFields(strength, r.claimId) };
         })
         .filter((r) => status === undefined || r.status === status);
       return { result, semanticHash: project.semanticHash };
@@ -857,9 +897,10 @@ export const COMMANDS = {
       const model = requireModel(project);
       const recorded = withLean(model, data.recorded, ctx.log);
       const id = ctx.positionals[0];
-      const results = id !== undefined
+      const strength = claimStrength(model);
+      const results = (id !== undefined
         ? [evaluateClaim(model, requireEntity(model, id, 'claim').id, { recorded })]
-        : evaluateClaims(model, { recorded });
+        : evaluateClaims(model, { recorded })).map((r) => ({ ...r, ...strengthFields(strength, r.claimId) }));
       return { result: { results, summary: summarize(results) }, semanticHash: project.semanticHash };
     },
   },
@@ -932,28 +973,9 @@ export const COMMANDS = {
       }
 
       const dryRun = ctx.values['dry-run'] === true;
-      /** @type {('spec'|'layout')[]} */
-      const written = [];
-      /** @type {string[]} */
-      const journalWarnings = [];
-      if (!dryRun) {
-        const meta = { label: label ?? list.map((o) => o.type).join(', '), origin: 'cli' };
-        if (project.specText !== initialSpec) {
-          const w = await ws.write(ctx.projectName, 'spec', project.specText, data.spec.hash, meta);
-          if (!w.ok) throw new CliError('write.conflict', 'spec.jsonc changed on disk since it was read; nothing was written.');
-          written.push('spec');
-          if (w.journal && !w.journal.written) journalWarnings.push(`spec: ${w.journal.message}`);
-        }
-        if (project.layoutText !== initialLayout) {
-          const w = await ws.write(ctx.projectName, 'layout', project.layoutText, data.layout?.hash ?? null, meta);
-          if (!w.ok) {
-            const note = written.length ? ' The specification was already written; the layout was not.' : ' Nothing was written.';
-            throw new CliError('write.conflict', `layout.jsonc changed on disk since it was read.${note}`);
-          }
-          written.push('layout');
-          if (w.journal && !w.journal.written) journalWarnings.push(`layout: ${w.journal.message}`);
-        }
-      }
+      const { written, journalWarnings } = dryRun
+        ? { written: /** @type {('spec'|'layout')[]} */ ([]), journalWarnings: /** @type {string[]} */ ([]) }
+        : await writeProjectFiles(ctx, ws, data, project, initialSpec, initialLayout, { label: label ?? list.map((o) => o.type).join(', '), origin: 'cli' });
 
       const result = {
         revision: project.revision,
@@ -966,6 +988,66 @@ export const COMMANDS = {
         ...(journalWarnings.length ? { journalWarnings } : {}),
       };
       return { result, semanticHash: dryRun ? hashBefore : project.semanticHash };
+    },
+  },
+
+  admit: {
+    usage: "admit [--file <ops.json> | --ops '<json>'] [--label <text>] [--write] [--accept <code[,code...]>]...",
+    summary: "Admit a change set only if everything the specification held still holds and the change's own claims hold: the before/after diff and a verdict with every reason. Writes only with --write and only when admitted; fails with admit.rejected otherwise.",
+    options: { file: { type: 'string' }, ops: { type: 'string' }, label: { type: 'string' }, write: { type: 'boolean' }, accept: { type: 'string', multiple: true } },
+    run: async (ctx) => {
+      const accept = (/** @type {string[]} */ (ctx.values.accept ?? [])).flatMap(listValue);
+      const fixed = accept.filter((c) => NON_ACKNOWLEDGEABLE.has(c));
+      if (fixed.length) throw new CliError('admit.not-acknowledgeable', `Cannot accept ${fixed.join(', ')}: a reason without "acknowledgeable" is a failure to fix, not a decision to accept.`);
+      const list = await readOperations(ctx);
+      const { ws, data, project } = await loadProject(ctx);
+      const beforeModel = requireModel(project);
+      const initialSpec = project.specText;
+      const initialLayout = project.layoutText;
+      const hashBefore = project.semanticHash;
+      const { label } = ctx.values;
+      const write = ctx.values.write === true;
+      const before = snapshot(beforeModel, project.diagnostics, evaluateClaims(beforeModel, { recorded: withLean(beforeModel, data.recorded, ctx.log) }));
+      // The transaction runs on this in-memory project; nothing reaches disk unless the verdict allows it.
+      const tx = project.apply(list, { label, origin: 'cli' });
+      /** @type {any} */
+      let report;
+      if (!tx.ok) {
+        const diagnostics = tx.diagnostics.map(serializeDiagnostic);
+        report = {
+          verdict: 'rejected',
+          reasons: [{ code: 'admit.transaction-refused', transactionCode: tx.code, message: tx.message ?? 'The transaction was refused.', diagnostics }],
+          transaction: { accepted: false, code: tx.code, message: tx.message, diagnostics },
+          diff: null,
+          counts: { before: sideCounts(before) },
+        };
+      } else {
+        const afterModel = requireModel(project);
+        const after = snapshot(afterModel, project.diagnostics, evaluateClaims(afterModel, { recorded: withLean(afterModel, data.recorded, ctx.log) }));
+        report = { ...withClaimStrength(compare(before, after, { accept }), beforeModel, afterModel, accept), transaction: { accepted: true, affected: [...tx.affected].sort(), semanticChanged: tx.semanticChanged } };
+      }
+      if (report.refusedAccept) {
+        throw new CliError('admit.not-acknowledgeable', `Cannot accept ${report.refusedAccept.join(', ')}: the reason is not acknowledgeable.`, { result: report });
+      }
+      const admitted = report.verdict === 'admitted';
+      /** @type {string[]} */
+      let written = [];
+      /** @type {string[]} */
+      let journalWarnings = [];
+      if (admitted && write) {
+        ({ written, journalWarnings } = await writeProjectFiles(ctx, ws, data, project, initialSpec, initialLayout, { label: label ?? list.map((o) => o.type).join(', '), origin: 'cli' }));
+      }
+      const result = {
+        ...report,
+        semanticHashBefore: hashBefore,
+        semanticHashAfter: admitted ? project.semanticHash : hashBefore,
+        written,
+        ...(journalWarnings.length ? { journalWarnings } : {}),
+      };
+      if (!admitted) {
+        throw new CliError('admit.rejected', `Rejected: ${report.reasons.map((/** @type {any} */ r) => r.code + (r.id ? ` (${r.id})` : '')).join(', ')}. Nothing was written.`, { result });
+      }
+      return { result, semanticHash: write ? project.semanticHash : hashBefore };
     },
   },
 
@@ -1057,18 +1139,22 @@ export const COMMANDS = {
   },
 
   'prove-integrity': {
-    usage: 'prove-integrity [<ruleId>] [--rules <file>] [--max-witnesses N]',
-    summary: 'Prove or refute integrity rules in Lean: holds (a kernel-checked proof by reflection), violated (a kernel-checked refutation from each concrete witness, up to --max-witnesses, default 10), or incomplete. The Lean checker and the JavaScript evaluator must agree. Needs lake. Fails when a rule is incomplete.',
-    options: { rules: { type: 'string' }, 'max-witnesses': { type: 'string' }, ...INLINE_OPTIONS },
+    usage: 'prove-integrity [<ruleId>] [--rules <file>] [--max-witnesses N] [--timeout S] [--max-candidates N]',
+    summary: 'Prove or refute integrity rules in Lean: holds (a kernel-checked proof by reflection), violated (a kernel-checked refutation from each concrete witness, up to --max-witnesses, default 10), or incomplete. The Lean checker and the JavaScript evaluator must agree. Each Lean process stops after --timeout seconds (default 300), and a rule whose relations have more than --max-candidates candidate tuples (default 500) is not sent to the kernel; both make the rule incomplete. Needs lake. Fails when a rule is incomplete.',
+    options: { rules: { type: 'string' }, 'max-witnesses': { type: 'string' }, timeout: { type: 'string' }, 'max-candidates': { type: 'string' }, ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { project } = await loadProject(ctx);
       const model = modelWithRules(ctx, project);
       const ids = selectRules(ctx, model);
       const mw = ctx.values['max-witnesses'] === undefined ? undefined : Number(ctx.values['max-witnesses']);
       if (mw !== undefined && !(Number.isInteger(mw) && mw >= 1)) throw usage('invalid-argument', '--max-witnesses must be a positive integer.');
+      const to = ctx.values.timeout === undefined ? undefined : Number(ctx.values.timeout);
+      if (to !== undefined && !(Number.isFinite(to) && to > 0)) throw usage('invalid-argument', '--timeout must be a positive number of seconds.');
+      const mc = ctx.values['max-candidates'] === undefined ? undefined : Number(ctx.values['max-candidates']);
+      if (mc !== undefined && !(Number.isInteger(mc) && mc >= 0)) throw usage('invalid-argument', '--max-candidates must be a non-negative integer.');
       let rules;
       try {
-        rules = proveIntegrity(model, ids, { maxWitnesses: mw, log: ctx.log });
+        rules = proveIntegrity(model, ids, { maxWitnesses: mw, timeoutMs: to === undefined ? undefined : Math.round(to * 1000), maxCandidates: mc, log: ctx.log });
       } catch (err) {
         if (err instanceof ProveError) throw new CliError(err.code, err.message);
         throw err;

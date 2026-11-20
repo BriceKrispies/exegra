@@ -41,7 +41,7 @@ Exegra splices the product entities into the platform text at the end of their s
 ```
 exegra  system  vocabulary  components  relationships  contracts  events
 behaviors  faults  environments  failureModes  faultModels  types  functions  exampleFixtures  records  copies  policies  validations  retentions
-quotas  retries  audits  scenarios  assumptions  claims  integrityRules  evidence  views
+quotas  retries  audits  scenarios  assumptions  claims  integrityRules  integrityRelations  evidence  views
 ```
 
 `exegra` is the schema version string, currently `"0.1"`; a missing or different value is an error (`schema.missing`, `schema.version`). `system` is a single object; every other entity section is an array. An unknown top-level section or property is an error: nothing is dropped silently.
@@ -99,11 +99,14 @@ Defined in `metamodel.json`; the parser and the inspector both read it.
 | `copy` | `copies` | Fields of one or more records kept outside their owner: `of`, `fields`, `heldBy`, `scope`, `freshness`, `erasure`, `dependsOnAuthority`. |
 | `policy`, `validation`, `retention`, `quota`, `retry`, `audit` | `policies`, `validations`, `retentions`, `quotas`, `retries`, `audits` | Cross-cutting constructs: who may do what, what a value must meet, how long records are kept, how often a scope may act, how a call or emit is retried, what an act writes to an audit log (see [Cross-cutting constructs](#cross-cutting-constructs)). |
 | `capability`, `plan`, `role`, `grant`, `delegation`, `tokenScope`, `featureFlag` | `capabilities`, `plans`, `roles`, `grants`, `delegations`, `tokenScopes`, `featureFlags` | What a principal may do: capabilities that contracts require, plans entitle, roles and grants confer, delegations and token scopes pass on and flags gate per tenant (see [Capabilities, plans and roles](#capabilities-plans-and-roles)). |
+| `region`, `tenantClass`, `residencyException` | `regions`, `tenantClasses`, `residencyExceptions` | Residency: the regions data may be required to stay in, the classes of tenants provisioned in them with the records they confine, and approved, bounded exceptions for one copy or flow (see [Residency](#residency)). Components state a `placement` and relationships the records they `carries`. |
+| `quotaPool` | `quotaPools` | Limits shared by a group of tenants: fair share, headroom, the over-share rule and its exemption, run as machines by the scenarios that list the pool in `pools` (see [Pooled quotas](#pooled-quotas)). |
 | `screen`, `form`, `action`, `liveBinding`, `errorMessage`, `uiScenario` | `screens`, `forms`, `actions`, `liveBindings`, `errorMessages`, `uiScenarios` | User interface: pages with their routes and view-model contracts, forms and actions that call contracts, events that refresh open pages, the wording of refusals, and user journeys that become browser tests (see [User interface](#user-interface)). |
-| `scenario` | `scenarios` | Behaviors, timed input `steps`, active `faults`, `maxSteps`; optional `faultModel` and `tags` (`generated-coverage` marks a scenario `exegra cover-machines` generated, see [Coverage](coverage.md)). |
+| `scenario` | `scenarios` | Behaviors, quota `pools`, timed input `steps`, active `faults`, `maxSteps`; optional `faultModel` and `tags` (`generated-coverage` marks a scenario `exegra cover-machines` generated, see [Coverage](coverage.md)). |
 | `assumption` | `assumptions` | A statement accepted without evidence. |
 | `claim` | `claims` | `kind` (`structural`, `invariant`, `temporal`, `measured`, `requirement`), `statement`, `evaluate`; optional `faultModel`; for a requirement, optional `realisation` and `realisedBy` (constructs). |
 | `integrityRule` | `integrityRules` | `statement`, `severity` (`error`, `warning`), `rule` (a formula of the rule language), `rationale`, `basis`. A consistency rule over the whole specification, evaluated on every edit ([integrity-rules.md](integrity-rules.md)). |
+| `integrityRelation` | `integrityRelations` | `statement`, `params` (`[{name, kinds}]`, kinds a list of entity kinds or `"*"`), `clauses` (formulas of the rule language), `rationale`, `basis`. A derived relation for integrity rules: the least relation over its parameter domains closed under its clauses, used as an atom `id(t1, ..., tn)` ([integrity-rules.md](integrity-rules.md#derived-relations)). |
 | `evidence` | `evidence` | `claim`, `kind` (`test`, `measurement`, `document`, `review`), `ref`, `supports`, `observed`. |
 | `view` | `views` | `projection` (`structural`, `claims`, `behavior`, `references`, `data`, `reader`), `filter` (including `entityKinds`), `display` (`colorBy`, `showPorts`, `depth`, `layout`), `reader` (`blocks`, for the reader projection). |
 
@@ -201,6 +204,69 @@ A multi-tenant system can keep its tenants' data as data: each tenant describes 
 The rule reads only the declared types, so it finds a fixed tenant record by what its fields hold, not by its name: a record of tenant content that holds neither an object type id nor field values is not seen. The rules live in `src/core/tenant-data.js`; `tests/fixtures/tenant-data/fixtures.js` has a passing metadata model and one negative fixture per way of breaking each rule.
 
 `tests/fixtures/data-model/spec.jsonc` models a slice of a multi-tenant platform's data (sign-in sessions, display names and their history, receipts and trades with name snapshots, a CDN store-page variant, a leaderboard read model) with values taken from that platform's case tables. It leaves out the erasure point of the trade name snapshot on purpose, and rule `erasure-point` finds it. Exegra's own specification declares the specification text as a record with three copies (the session model, the command line's project, the generated documents); the claim `specification-copies-fresh-and-related` is verified on them. Declaring them found a gap: nothing related the generated documents to the specification file, so `holder-reaches-owner` failed until the data flow between them was declared.
+
+### Residency
+
+Where data may be is part of the data model (WG-5277). A **region** is a place data may be required to stay in. A **tenant class** is the tenants with one feature flag on, or on one plan, or every tenant; it names the regions its tenants may be provisioned in (each tenant has one, its home region) and the records whose data of such a tenant is confined. Each component says where it holds and processes data (`placement`), and a relationship that passes record content on says which records it `carries`. A **residency exception** lets one copy class or one flow of confined data sit outside the region, approved by a role, for a bounded time, with the purge obligation for when it expires.
+
+```jsonc
+"regions": [ { "id": "eu-central", "name": "EU central" }, { "id": "ca-central", "name": "Canada central" } ],
+"featureFlags": [ { "id": "regulated-sector", "name": "Regulated sector", "gates": [] } ],
+"tenantClasses": [
+  { "id": "harbour", "name": "Harbour tenants", "flag": "regulated-sector", "provisionedIn": ["eu-central", "ca-central"],
+    "confinement": "home", "binds": ["tenant-record", "attachment"] }
+],
+"components": [
+  { "id": "search-index", "name": "Search index", "category": "storage", "placement": "per-region" },
+  { "id": "delivery-network", "name": "Global delivery network", "category": "infrastructure", "placement": "global" },
+  { "id": "rendition-sandbox", "name": "Rendition sandbox", "category": "computational", "placement": "per-region" }
+],
+"relationships": [
+  { "id": "attachment-to-sandbox", "kind": "data-flow", "from": "file-store", "to": "rendition-sandbox", "carries": ["attachment"] }
+],
+"residencyExceptions": [
+  { "id": "edge-acceleration-exception", "name": "Edge copy for accelerated pages", "tenantClass": "harbour",
+    "copy": "edge-page-accelerated", "feature": "accelerated-pages", "approvedBy": "compliance",
+    "maxDuration": "90 d", "renewalWindow": "14 d", "purgeWithin": "72 h",
+    "residual": "Copies already served to a cached viewer may remain until that viewer's cache lifetime ends." }
+]
+```
+
+| Property | On | Meaning |
+|---|---|---|
+| `name`, `jurisdiction` | region | The region's name, and the law or authority it answers to, as text. |
+| `flag`, `plan` | tenant class | Which tenants are in the class: those with the flag on, or on the plan. At most one; with neither, every tenant. |
+| `provisionedIn` | tenant class | The regions a tenant of the class may be provisioned in (required, not empty). |
+| `confinement` | tenant class | `home` (default): the bound data stays in each tenant's home region. `provisioned-regions`: anywhere among `provisionedIn`. `none`: no rule. |
+| `binds` | tenant class | The records whose data is confined. Their copies, and the relationships that carry them, are bound too. |
+| `placement`, `regions` | component | `per-region`: an instance in each region listed (every region when none is), holding and processing a tenant's data in its home region. `fixed`: runs only in the listed regions, whatever the tenant's home. `global`: anywhere. |
+| `carries` | relationship | The records whose content passes along it, so the rules follow the data to the receiving component (a processing component such as a rendition sandbox or a model provider receives data this way). |
+| `tenantClass`, `copy` or `flow` | residency exception | The class, and the one copy class or relationship it lets outside the region (exactly one of the two). |
+| `feature`, `approvedBy` | residency exception | The one product feature it is for (a capability or flag), and the role whose holders approve it (required). |
+| `regions` | residency exception | Where it lets the data be; omitted, wherever the holder runs. |
+| `maxDuration`, `renewalWindow`, `purgeWithin` | residency exception | How long one approval lasts; a renewal received this long before expiry continues the approval without restarting its clock; how soon after expiry what it let out is purged. Durations as in the constructs. |
+| `residual`, `status` | residency exception | What may remain after the purge and why; `active` (default), `expired` or `revoked`. Only an active exception covers its target. |
+
+**Where the data is.** For each tenant class whose confinement is not `none`, the data of a bound record is at the record's owner, at the holder of every copy of it, and at both ends of every relationship that carries it. A component fits the class when it is `per-region` and has an instance in every region the class provisions in; when it is `fixed` and, for `home`, the class has one region and the component runs there alone, or, for `provisioned-regions`, every region it runs in is one the class provisions in. A `global` component never fits. The rules are static: they hold for every tenant of the class, whichever region it was provisioned in, and need no scenario.
+
+| Code | Checks |
+|---|---|
+| `residency.record-outside` | The owner of a bound record fits the class. Records have no exceptions. |
+| `residency.copy-outside` | The holder of a copy of a bound record fits the class, or an active exception of the class names the copy (and, when the exception lists regions, the holder is fixed inside them). |
+| `residency.flow-outside` | Both ends of a relationship that carries a bound record fit the class, or an active exception of the class names the relationship. |
+| `residency.placement-missing` | A component that holds or receives bound data states its placement (reported once, on the component). |
+| `residency.region-uncovered` | A per-region component that holds or receives bound data has an instance in every region the class provisions in. |
+| `component.placement-regions` | A fixed component names its regions, a global one names none, and regions come only with a placement. |
+| `tenant-class.selector` | A tenant class names at most one of `flag` and `plan`. |
+| `tenant-class.provisioned-in` | A tenant class names at least one region, none twice. |
+| `residency.exception-target` | An exception names exactly one of `copy` and `flow`, and that copy holds, or that flow carries, a record its class binds. |
+| `residency.exception-duration` | `maxDuration`, `renewalWindow` and `purgeWithin` are positive durations. |
+| `residency.exception-purge` | An exception with a `maxDuration` states `purgeWithin`. |
+| `residency.exception-renewal` | A `renewalWindow` comes with a `maxDuration` and is shorter than it. |
+
+An exception's expiry, renewal and purge happen at run time. The format records them as obligations of the exception, not as bounds of the copy, so a copy under an exception keeps its own freshness and erasure bounds. Whether a running system purges within `purgeWithin` is shown by evidence, not by these rules.
+
+**Integrity rules read regions.** The properties above are flat references, so the rule language reads them like any other, and a derived relation can follow data across flows. `tests/fixtures/residency/harbourline.jsonc` declares `holds-bound(t, c)` (component `c` owns a bound record of `t`, holds a copy of one, or receives a flow carrying one from a component that holds bound data) and the rule that every such component is per-region or holds the data under an exception; it also says, as a rule over the copy's fields, that notification payloads to mail dispatch carry only a reference and a title. That fixture is Harbourline BR-04 and BR-05 written on the structure, with no scenario. The rules live in `src/core/residency.js`; `tests/core/residency.test.js` breaks each one once.
 
 ## Types, contract details and generation readiness
 
@@ -830,6 +896,60 @@ Several constructs name their target by one of a few reference properties, of wh
 | `ready.retry-idempotency-missing` | A retry of an event, or of a contract that is not `idempotent`, names an `idempotencyKey`. |
 | `ready.retry-timeout-missing` | Every retry states `timeout`. |
 | `ready.audit-field-unfilled` | An audit fills every required field of its record: by a capture, or as the record's key (assigned by the store) or the chain field. |
+
+### Pooled quotas
+
+A `quota` limits one tenant (or principal, or source address). A **quota pool** (`quotaPools`, WG-5278) shares limits across a group of tenants, such as the clients of one reseller, and its meaning runs in Exegra's model, so claims about it are decided by simulation and exhaustive exploration instead of a hand-written trace.
+
+```jsonc
+"quotas": [ { "id": "q-automation-runs", "scope": "tenant", "event": "automation-run", "limit": 10, "window": "1 d", "onExceed": "throttle", "heldBy": "limit-store" } ],
+"quotaPools": [
+  { "id": "reseller-pool", "name": "Reseller pool", "groupedBy": "reseller", "heldBy": "limit-store", "window": "1 d", "windowEnd": "day-closed",
+    "limits": [
+      { "name": "runs", "kind": "rate", "quota": "q-automation-runs" },
+      { "name": "storage", "kind": "level", "perMember": 10, "unit": "GB", "usage": "storage-changed" }
+    ],
+    "overShare": { "consecutive": 3 },
+    "throttle": { "to": "fair-share", "release": 2 },
+    "exemption": { "name": "burst eligibility", "setBy": "reseller-admin", "capability": "burst-eligibility-grant",
+                   "event": "burst-eligibility-set", "effective": "same-window", "retroactive": false } }
+],
+"scenarios": [ { "id": "burst-exploration", "behaviors": [], "pools": ["reseller-pool"], "steps": [ ... ], "faults": [ ... ] } ]
+```
+
+| Property | Meaning |
+|---|---|
+| `memberClass`, `groupedBy` | Which tenants may be members (a tenant class; omitted, any) and what makes one pool of them (text: the reseller whose clients they are). |
+| `heldBy` | The component that keeps the counters, the limit store. A pooled quota's own `heldBy` must be the same (`pool.held-by`). |
+| `window`, `windowEnd` | The window usage is counted in (a duration), and the event that closes it (a day boundary). |
+| `limits[]` | Each pooled limit: a `name` (a lower-case word), `kind` (`rate`: counted per window and reset at its end; `level`: a standing amount that usage raises or lowers), what each member contributes (`quota`, a per-tenant quota whose limit is the contribution, or `perMember`), `unit`, and `usage`, the event that uses it (payload `member` and `amount`; defaults to the event the quota counts). |
+| `overShare.consecutive` | N: a member whose usage is over its fair share at the end of N consecutive windows is throttled, headroom or not, unless exempt. |
+| `throttle` | `to`: `fair-share` (a throttled member may use up to its share) or `refuse` (it may only lower a level); `release`: the throttle lifts after that many consecutive windows ending at or under the share, or `"never"`. Required, so a specification cannot leave the release unsaid. |
+| `exemption` | Set for a member by holders of `setBy` (with `capability`, which that role must confer) through `event` (payload `member`); `effective` `same-window` applies it from the window it is set in, that window's end included, `next-window` from the next; `retroactive: true` lifts a throttle in force, and by default it never applies to windows already throttled. |
+| `modelMembers` | How many members the model runs, 1 to 4 (default 2); usage payloads name them `m1`, `m2`, ... |
+
+**Meaning.** A member's fair share is its contribution, and the pool's capacity is the sum of the contributions. Composing with quotas this way means a per-tenant quota keeps saying what one tenant is entitled to, and the pool says that the entitlements are shared. A scenario lists the pools it runs in `pools` (a scenario may run pools and no behavior). Each pool runs as one machine per pooled limit and modelled member, `<pool>-<limit>-m<k>`, with subject `heldBy`, states `normal` and `throttled`, and variables `usage`, `day` (the window index), `overDays`, `underDays`, `throttledOn` (the window the throttle in force began, -1 none), `burstSetOn` and `burstFrom` (the window the exemption was set in and the first it applies to, -1 none), `admitted` and `refused`. `poolMachines` in `src/core/pools.js` derives them; `simulationInput` adds them after the scenario's behaviors, so the engines, the trace check and `exegra prove` run them unchanged.
+
+- **Usage** of member `m<k>`: admitted in `normal` when it lowers the amount or the pool's total use plus it is within capacity (headroom); in `throttled`, only within the fair share and the capacity (`fair-share`) or only when it lowers the amount (`refuse`). Otherwise refused, changing only `refused`.
+- **Window end**: the window ended over the share when `usage` exceeds it. In `normal`, a member whose over count reaches N is throttled, unless `burstFrom` is set and not after this window; in `throttled`, the throttle lifts when the under count reaches the release. A rate's usage resets and the window index advances.
+- **Exemption set** for `m<k>`, the first time only: `burstSetOn` is this window and `burstFrom` this window or the next; retroactive, it also lifts the throttle in force.
+
+Claims read the machines like any other: "a burst-eligible client is never throttled for a day on or after the day its eligibility was set" is the state invariant `reseller-pool-runs-m1.throttledOn < 0 || reseller-pool-runs-m1.burstSetOn < 0 || reseller-pool-runs-m1.throttledOn < reseller-pool-runs-m1.burstSetOn`. With the usage and eligibility events of a scenario as `inject-event` faults, exploration covers every combination of them; the claim holds with `effective: same-window`, and with `next-window` the explorer returns the run where eligibility is set on the day the third over-share day ends. Validation checks that a claim reads only variables the machines have, from pools every listed scenario runs (`expr.reference`).
+
+| Code | Checks |
+|---|---|
+| `pool.limits` | At least one pooled limit; each has a lower-case name, and no two share one. |
+| `pool.limit-contribution` | Exactly one of `quota` and `perMember`; `perMember` is positive. |
+| `pool.quota-scope`, `pool.quota-window`, `pool.limit-kind` | A pooled quota is counted per tenant, over the pool's window, and is a rate. |
+| `pool.held-by` | A pooled quota's counters are held by the pool's component. |
+| `pool.usage-event`, `pool.event-payload` | Each limit has a usage event with payload fields `member` and `amount`; the exemption event has `member`. |
+| `pool.window`, `pool.over-share`, `pool.release` | The window is a duration; the over-share count is a positive integer; the release is a positive integer or `never`. |
+| `pool.model-members` | 1 to 4 modelled members. |
+| `pool.exemption-capability` | The role that sets the exemption confers the capability it needs. |
+| `pool.machine-id` | No entity has the id of a machine the pool runs as. |
+| `scenario.empty` | A scenario runs at least one behavior or pool. |
+
+The machines are not entities: renaming a pool or a limit does not rewrite claim expressions that name its machines (validation then reports them as `expr.reference`), and the inspector and simulator panel show only declared behaviors. `tests/fixtures/pooled-quotas/harbourline.jsonc` is Harbourline BR-12; `tests/core/pooled-quotas.test.js` explores it, seeds wrong rules, and breaks each validation rule once.
 
 ## User interface
 

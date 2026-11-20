@@ -1,0 +1,20 @@
+{
+  "//": "Per integrity rule of relations.jsonc: Exegra operations after which the rule must fail, with the counterexample it must report (variable -> entity id). Every rule needs at least one.",
+  "mutations": [
+    { "rule": "uses-acyclic", "note": "m-store comes to use m-rules, which reaches m-store",
+      "ops": [{ "type": "SetProperty", "id": "m-store", "property": "uses", "value": ["m-rules"] }],
+      "expect": { "m": "m-store" } },
+    { "rule": "core-below-ui", "note": "core m-model comes to use the ui module m-legacy",
+      "ops": [{ "type": "SetProperty", "id": "m-model", "property": "uses", "value": ["m-store", "m-legacy"] }],
+      "expect": { "a": "m-model", "b": "m-legacy" } },
+    { "rule": "live-modules-stay-live", "note": "live m-view comes to use the deprecated m-legacy",
+      "ops": [{ "type": "SetProperty", "id": "m-view", "property": "uses", "value": ["m-rules", "m-legacy"] }],
+      "expect": { "a": "m-view" } },
+    { "rule": "no-odd-cycles", "note": "m-store uses m-rules: the cycle m-rules, m-model, m-store has three uses",
+      "ops": [{ "type": "SetProperty", "id": "m-store", "property": "uses", "value": ["m-rules"] }],
+      "expect": { "a": "m-store" } },
+    { "rule": "live-kinds-described", "note": "the note describing the kind module loses its tag",
+      "ops": [{ "type": "SetProperty", "id": "module", "property": "tag", "value": null }],
+      "expect": { "m": "m-store", "k": "module" } }
+  ]
+}

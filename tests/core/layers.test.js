@@ -373,7 +373,7 @@ test('a product capability is reachable when a role confers it and a plan is not
 });
 
 test('Exegra and specc read the same table of typed sections', () => {
-  assert.deepEqual(TYPED_SECTIONS.map((s) => s.section), ['objects', 'policies', 'segments', 'settings', 'ledgerUnits', 'ledgerPools', 'ledgerLimits', 'mailTemplates', 'noticeTemplates', 'tokens', 'triggers', 'automations', 'operations']);
+  assert.deepEqual(TYPED_SECTIONS.map((s) => s.section), ['objects', 'policies', 'queries', 'views', 'workflows', 'segments', 'settings', 'ledgerUnits', 'ledgerPools', 'ledgerLimits', 'mailTemplates', 'noticeTemplates', 'tokens', 'triggers', 'automations', 'operations']);
   for (const key of TYPED_SECTIONS.map((s) => s.section)) assert.ok(PRODUCT_SECTION_NAMES.includes(key), key);
   for (const key of Object.keys(PRODUCT_SECTIONS)) assert.equal(TYPED_SECTIONS.some((s) => s.section === key), false, `${key} is both an entity section and a typed one`);
   const platform = parseSpec(read(PLATFORM)).model;
@@ -431,4 +431,30 @@ test('a product header takes version and platform and refuses a malformed one wi
   assert.match(errors([refused('header-platform-no-min')])[0]?.message ?? '', /has no "min"/);
   assert.match(errors([refused('header-platform-below-not-later')])[0]?.message ?? '', /not later than its first release/);
   assert.match(withHeader('"colour": "red",')[0]?.message ?? '', /holds only id, name, description, version, platform and imports/);
+});
+
+// ---- Queries, views and workflows in a product file (WG-5081) -----------------------------------
+
+test('a product file may declare queries and views and workflows and refuses each that does not fit its platform type', () => {
+  for (const [name, type] of [['query-value-invalid', 'query-def'], ['view-value-invalid', 'view-def'], ['workflow-value-invalid', 'workflow-def']]) {
+    const found = errors([refused(name)]).filter((d) => d.code === 'layer.value-invalid');
+    assert.equal(found.length, 1, `${name}: ${JSON.stringify(found.map((d) => d.message))}`);
+    assert.match(found[0].message, /"colour" is not a field of its type/, name);
+    assert.match(found[0].message, new RegExp(type), name);
+  }
+  const unknown = errors([refused('view-query-unknown')]).filter((d) => d.code === 'layer.reference-unknown');
+  assert.equal(unknown.length, 1, JSON.stringify(unknown.map((d) => d.message)));
+  assert.match(unknown[0].message, /ticket_board__ghost/);
+});
+
+test('a product declaring a query and a view and a workflow that fit their platform types is accepted', () => {
+  const product = {
+    product: { id: 'ticket-board', name: 'Ticket board', imports: { spec: '../platform.jsonc', entities: [] } },
+    objects: [{ id: 'ticket_board__ticket', label: 'Ticket', fields: { title: { id: 'title', label: 'Title', ty: 'Str', required: true, unique: false }, status: { id: 'status', label: 'Status', ty: 'Str', required: true, unique: false } }, constraints: {} }],
+    queries: [{ id: 'ticket_board__open', object: 'ticket_board__ticket', params: [], order: [] }],
+    views: [{ id: 'ticket_board__board', route: '/tickets', title: 'Tickets', sections: { open: { query: 'ticket_board__open', args: {}, include: [], markdown: [], single: false } } }],
+    workflows: [{ id: 'ticket_board__lifecycle', object: 'ticket_board__ticket', field: 'status', initial: ['open'], transitions: [] }],
+  };
+  const a = analyzeLayers(read(PLATFORM), [{ file: 'ticket-board.jsonc', text: JSON.stringify(product), platform: { declared: '../platform.jsonc', matches: true, expected: '../platform.jsonc' } }]);
+  assert.equal(a.errorCount, 0, JSON.stringify(a.diagnostics.filter((d) => d.severity === 'error').map((d) => d.message)));
 });

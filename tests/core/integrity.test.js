@@ -204,3 +204,14 @@ test('the integrity command evaluates every rule, and --rules tries rules withou
     fs.rmSync(specs, { recursive: true, force: true });
   }
 });
+
+test('numeric literals: a dot must be followed by digits and 1.5 still parses', () => {
+  for (const src of ['forall n : gap, n.topic == 1 2', 'forall n : gap, n.topic == 1x2', 'forall n : gap, n.topic in [1 2]', 'forall n : gap, n.topic == 1.']) {
+    const p = parseRule(src);
+    assert.equal(p.ok, false, `${src} is a syntax error`);
+  }
+  const p = parseRule('forall n : gap, n.topic in [1.5, 2]');
+  assert.ok(p.ok);
+  if (p.ok && p.ast.t === 'all' && p.ast.b.t === 'mem' && p.ast.b.b.t === 'lit') assert.deepEqual(p.ast.b.b.vs, ['n:1.5', 'n:2']);
+  else assert.fail('the rule parses to a membership in a literal set');
+});

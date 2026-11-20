@@ -17,7 +17,7 @@ const TARGET = ['role', 'name', 'namePattern', 'level', 'within'];
  */
 export const STEP_KINDS = Object.freeze({
   goto: ['screen', 'params', 'host'],
-  gotoPath: ['path', 'host'],
+  gotoPath: ['path', 'host', 'fragment'],
   reload: [],
   back: [],
   click: TARGET,
@@ -43,6 +43,8 @@ export const STEP_KINDS = Object.freeze({
   expectCookie: ['name', 'absent', 'attributes'],
   setCookie: ['name', 'value', 'host', 'attributes'],
   capture: ['name', 'from', 'cookie', 'header', 'element', 'attribute'],
+  captureMail: ['to', 'pattern', 'name', 'as', 'timeoutMs'],
+  expectUrl: ['pattern', 'absent', 'timeoutMs'],
   emulate: ['colorScheme', 'reducedMotion', 'touch', 'mobile'],
   expectNoOverflow: [],
   expectBeside: ['a', 'b', 'side'],
@@ -85,6 +87,7 @@ const ELEMENT_ATTRIBUTE_RE = /^(?:aria-[a-z]+|data-[a-z][a-z0-9-]*|value|href|la
 /** An attribute of the document element a journey may read. */
 const ROOT_ATTRIBUTE_RE = /^(?:data-[a-z][a-z0-9-]*|lang|dir)$/;
 const HOST_RE = /^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*(?::\d{1,5})?$/;
+const FRAGMENT_RE = /^[A-Za-z0-9=&_.~%-]+$/;
 const PATH_RE = /^\/[^\s#]*$/;
 const CAPTURE_NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const JSON_PATH_RE = /^[A-Za-z0-9_$-]+(?:\.[A-Za-z0-9_$-]+)*$/;
@@ -229,7 +232,7 @@ export function checkJourney(u, err, get, screenParams) {
       if (v.host !== undefined && !(typeof v.host === 'string' && HOST_RE.test(v.host.replace(REF_RE, 'x')))) fail('uiScenario.host', `host ${JSON.stringify(v.host)} is not a host name with an optional port`, [...sub, 'host']);
     };
     const path = (/** @type {any} */ p) => {
-      if (!(typeof p === 'string' && PATH_RE.test(p.replace(REF_RE, 'x')))) fail('uiScenario.path', `path ${JSON.stringify(p)} is not an absolute path ("/..." without spaces or a fragment)`, [...sub, 'path']);
+      if (!(typeof p === 'string' && PATH_RE.test(p.replace(REF_RE, 'x')))) fail('uiScenario.path', `path ${JSON.stringify(p)} is not an absolute path ("/..." without spaces or a fragment; a gotoPath fragment is its own key)`, [...sub, 'path']);
     };
     const screenParamsGiven = (/** @type {Entity} */ s, /** @type {any} */ params) => {
       const p = screenParams.get(s.id) ?? { params: [], query: [] };
@@ -266,7 +269,22 @@ export function checkJourney(u, err, get, screenParams) {
         screenParamsGiven(s, v.params);
         break;
       }
-      case 'gotoPath': path(v.path); host(); break;
+      case 'gotoPath':
+        path(v.path); host();
+        if (v.fragment !== undefined && !(typeof v.fragment === 'string' && FRAGMENT_RE.test(v.fragment.replace(REF_RE, 'x')))) fail('uiScenario.fragment', `fragment ${JSON.stringify(v.fragment)} is what follows the # of an address: letters, digits and = & _ - . ~ % (a captured value may stand in it)`, [...sub, 'fragment']);
+        break;
+      case 'expectUrl':
+        if (!(typeof v.pattern === 'string' && v.pattern !== '' && compiles(v.pattern))) fail('uiScenario.pattern', `pattern ${JSON.stringify(v.pattern)} is not a non-empty regular expression over the whole address, fragment included`, [...sub, 'pattern']);
+        if (v.absent !== undefined && typeof v.absent !== 'boolean') bad('"absent" is a boolean');
+        timeout();
+        break;
+      case 'captureMail':
+        if (!nonEmpty(v.to)) bad('it needs the address the mail was sent "to"');
+        if (!(typeof v.pattern === 'string' && v.pattern !== '' && compiles(v.pattern))) fail('uiScenario.pattern', `pattern ${JSON.stringify(v.pattern)} is not a non-empty regular expression`, [...sub, 'pattern']);
+        if (v.as !== undefined && (typeof v.as !== 'string' || !browsers.includes(v.as))) ref('as', `${JSON.stringify(v.as)} is not one of its browsers (${browsers.length ? browsers.join(', ') : 'it names none'})`);
+        timeout();
+        define(v.name, [...sub, 'name']);
+        break;
       case 'click': case 'focus': target(v, sub); break;
       case 'clickAction': {
         if (typeof v.action !== 'string') { bad('it needs an "action"'); break; }

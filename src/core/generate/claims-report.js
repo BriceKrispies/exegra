@@ -3,6 +3,7 @@
 // result is reported as not evaluated, never as verified.
 
 import { semanticHash } from '../hash.js';
+import { claimStrength, strengthCounts, CHECKS, GROUNDINGS } from '../claim-strength.js';
 import {
   text, oneLine, cell, list, sourceOf, statusLabel, json, markdown,
 } from './manifest.js';
@@ -10,6 +11,7 @@ import {
 /** @typedef {import('../types.js').Model} Model */
 /** @typedef {import('../types.js').Entity} Entity */
 /** @typedef {import('../claims.js').ClaimResult} ClaimResult */
+/** @typedef {Map<string, import('../claim-strength.js').Strength>} StrengthMap */
 
 /** Summary order of claim statuses (also the order of the summary table). */
 export const STATUS_ORDER = ['proved', 'verified', 'supported', 'violated', 'inconclusive', 'not-evaluated'];
@@ -77,17 +79,20 @@ function assumptionStatement(model, id) {
 
 /**
  * @param {Model} model
- * @param {{claimResults?: ClaimResult[]}} [opts]
+ * @param {{claimResults?: ClaimResult[], claimStrength?: StrengthMap}} [opts]
  * @returns {string} claims-report.json text
  */
 export function generateClaimsReportJson(model, opts = {}) {
   const rows = claimRows(model, opts.claimResults ?? []);
   const summary = { ...summaryCounts(rows), total: rows.length };
+  const strength = opts.claimStrength ?? claimStrength(model);
+  const counts = strengthCounts(strength).claims;
   return json({
     format: 'exegra-claims-report',
     version: 1,
     semanticHash: semanticHash(model),
     summary,
+    strength: counts,
     claims: rows.map(({ claim, result }) => ({
       id: claim.id,
       kind: claim.data.kind,
@@ -95,6 +100,9 @@ export function generateClaimsReportJson(model, opts = {}) {
       method: result.method ?? null,
       status: result.status,
       statusLabel: statusLabel(result.status),
+      check: strength.get(claim.id)?.check ?? 'none',
+      grounding: strength.get(claim.id)?.grounding ?? 'not-applicable',
+      strength: strength.get(claim.id)?.details ?? null,
       evaluator: result.evaluator,
       scope: result.scope,
       explanation: result.explanation,
@@ -109,12 +117,14 @@ export function generateClaimsReportJson(model, opts = {}) {
 
 /**
  * @param {Model} model
- * @param {{claimResults?: ClaimResult[]}} [opts]
+ * @param {{claimResults?: ClaimResult[], claimStrength?: StrengthMap}} [opts]
  * @returns {string} claims-report.md text
  */
 export function generateClaimsReport(model, opts = {}) {
   const rows = claimRows(model, opts.claimResults ?? []);
   const counts = summaryCounts(rows);
+  const strength = opts.claimStrength ?? claimStrength(model);
+  const sc = strengthCounts(strength).claims;
   const L = [];
   L.push(
     '# Claims report', '',
@@ -128,6 +138,13 @@ export function generateClaimsReport(model, opts = {}) {
     '| Status | Count |', '| --- | --- |',
     ...STATUS_ORDER.map((s) => `| ${s} | ${counts[s]} |`),
     `| total | ${rows.length} |`, '',
+    '## Check and grounding', '',
+    'The check says how strong the evaluation behind a status is (holds-by-construction and restated-scenario cannot fail on a correct model; single-trace runs hand-written scenarios only); ' +
+    'the grounding says whether what it reads is the platform\'s own entities (bound) or only its own inputs (self-contained). See docs/claims-and-evidence.md, "Check strength and grounding".', '',
+    '| Check | Count |', '| --- | --- |',
+    ...CHECKS.filter((c) => sc.check[c]).map((c) => `| ${c} | ${sc.check[c]} |`), '',
+    '| Grounding | Count |', '| --- | --- |',
+    ...GROUNDINGS.filter((g) => sc.grounding[g]).map((g) => `| ${g} | ${sc.grounding[g]} |`), '',
   );
 
   for (const { claim, result } of rows) {
@@ -136,6 +153,8 @@ export function generateClaimsReport(model, opts = {}) {
       `- Kind: ${oneLine(claim.data.kind)}`,
       `- Method: ${result.method ? oneLine(result.method) : 'none'}`,
       `- **Status**: ${statusLabel(result.status)}`,
+      `- Check: ${strength.get(claim.id)?.check ?? 'none'}: ${oneLine(strength.get(claim.id)?.details.check ?? '')}`,
+      `- Grounding: ${strength.get(claim.id)?.grounding ?? 'not-applicable'}: ${oneLine(strength.get(claim.id)?.details.grounding ?? '')}`,
       `- Evaluator: ${oneLine(result.evaluator)}`,
       `- Scope: ${oneLine(result.scope)}`,
       `- Explanation: ${oneLine(result.explanation)}`, '',

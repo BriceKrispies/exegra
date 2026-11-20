@@ -22,6 +22,8 @@ import { checkTelemetryConsistency } from './telemetry.js';
 
 import { checkAccessConsistency } from './access.js';
 import { checkCapabilityConsistency } from './capabilities.js';
+import { checkResidency } from './residency.js';
+import { allPoolMachines, checkPools, scenarioMachineIds, POOL_VARIABLES } from './pools.js';
 import { READINESS_RULES } from './readiness.js';
 import { notImplemented } from './realisation.js';
 import { checkDataConsistency, dataRuleDiagnostics, RULE_IDS } from './data-model.js';
@@ -56,6 +58,8 @@ export function validateModel(model, opts = {}) {
     out.push({ code, severity, message, entityId: entity.id, loc: entity.loc, path: sub ? [...entity.path, ...sub] : entity.path });
   };
   const get = (/** @type {string} */ id) => model.entities.get(id);
+  // The machines quota pools run as, by id (src/core/pools.js); claim expressions may read them.
+  const poolMachines = allPoolMachines(model);
   const kind = (/** @type {string} */ k) => model.byKind[k] ?? [];
 
   // --- components ---------------------------------------------------------
@@ -111,6 +115,10 @@ export function validateModel(model, opts = {}) {
         if (!scope.event) { report('error', 'expr.reference', entity, `Expression "${src}": "event.*" is only available inside a transition.`, sub); continue; }
         const fields = Array.isArray(scope.event.data.payload) ? scope.event.data.payload.map((/** @type {any} */ f) => f?.name) : [];
         if (!fields.includes(path[1])) report('error', 'expr.reference', entity, `Expression "${src}": event "${scope.event.id}" declares no payload field "${path[1]}".`, sub);
+      } else if (path.length === 2 && !get(path[0]) && poolMachines.has(path[0])) {
+        // A machine a quota pool runs as (src/core/pools.js).
+        if (scope.allowedBehaviors && !scope.allowedBehaviors.has(path[0])) { report('error', 'expr.reference', entity, `Expression "${src}": pool machine "${path[0]}" is not part of every listed scenario.`, sub); continue; }
+        if (path[1] !== 'state' && !POOL_VARIABLES.includes(path[1])) report('error', 'expr.reference', entity, `Expression "${src}": pool machine "${path[0]}" has no variable "${path[1]}"; it has ${POOL_VARIABLES.join(', ')}.`, sub);
       } else if (path.length === 2) {
         const b = get(path[0]);
         if (!b || b.kind !== 'behavior') { report('error', 'expr.reference', entity, `Expression "${src}": "${path[0]}" is not a behavior.`, sub); continue; }
@@ -257,7 +265,7 @@ export function validateModel(model, opts = {}) {
       for (const sid of ev.scenarios) {
         const sc = get(sid);
         if (!sc || sc.kind !== 'scenario') continue;
-        const set = new Set(Array.isArray(sc.data.behaviors) ? sc.data.behaviors : []);
+        const set = scenarioMachineIds(model, sc);
         allowedBehaviors = allowedBehaviors ? new Set([...allowedBehaviors].filter((x) => set.has(x))) : set;
       }
       if (!ev.scenarios.length) report('error', 'claim.param.value', c, 'At least one scenario is required.', ['evaluate', 'scenarios']);
@@ -542,7 +550,7 @@ export function validateModel(model, opts = {}) {
   // --- scenarios ----------------------------------------------------------
   for (const s of kind('scenario')) {
     const bs = Array.isArray(s.data.behaviors) ? s.data.behaviors : [];
-    if (!bs.length) report('error', 'scenario.empty', s, 'A scenario needs at least one behavior.', ['behaviors']);
+    if (!bs.length && !(Array.isArray(s.data.pools) && s.data.pools.length)) report('error', 'scenario.empty', s, 'A scenario needs at least one behavior or quota pool.', ['behaviors']);
     if (new Set(bs).size !== bs.length) report('error', 'scenario.duplicate-behavior', s, 'A behavior is listed twice.', ['behaviors']);
     (Array.isArray(s.data.steps) ? s.data.steps : []).forEach((/** @type {any} */ st, /** @type {number} */ i) => {
       if (st && typeof st.at === 'number' && st.at < 0) report('error', 'scenario.step-time', s, 'Step time "at" must not be negative.', ['steps', i]);
@@ -573,6 +581,8 @@ export function validateModel(model, opts = {}) {
 
   out.push(...checkAccessConsistency(model));
   out.push(...checkCapabilityConsistency(model));
+  out.push(...checkResidency(model));
+  out.push(...checkPools(model));
   if (model.system.data.generation !== undefined) {
     // The machine rules are reported above for every implementation-level behavior, switch or not.
     for (const g of READINESS_RULES.flatMap((rule) => rule(model))) {
