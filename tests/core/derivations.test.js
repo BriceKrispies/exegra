@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { analyzeSpec } from '../../src/core/analyze.js';
 import { readinessGaps } from '../../src/core/readiness.js';
-import { wordsOf, routeShape } from '../../src/core/derivation.js';
+import { wordsOf, routeShape, runDerivation } from '../../src/core/derivation.js';
 import { spec, FIXTURES, READINESS_FIXTURES } from '../fixtures/derivations/fixtures.js';
 
 // Derived and facade contracts (WG-4935, NC-4 and NC-5 of WG-4895). The passing fixture is the specification of
 // specc's golden fixture for derived contracts (crates/spec-compiler/tests/fixtures/derived/spec.jsonc in Strata):
 // a pure, a read and two command derivations over a load and a commit contract, and a facade; and a read with a need
-// loop (WG-4939).
+// loop (WG-4939), a read with a header step and a target contract (WG-4968).
 
 const errors = (/** @type {any} */ r) => r.diagnostics.filter((/** @type {any} */ d) => d.severity === 'error');
 const codes = (/** @type {any} */ ds) => ds.map((/** @type {any} */ d) => d.code);
@@ -63,4 +63,37 @@ test('the format documentation states every derivation code and kind', () => {
   const doc = fs.readFileSync(new URL('../../docs/model-and-format.md', import.meta.url), 'utf8');
   for (const code of [...CODES, 'ready.derived-function-missing']) assert.ok(doc.includes(`\`${code}\``), `code ${code} is documented`);
   for (const kind of ['pure', 'read', 'command']) assert.ok(doc.includes(`"kind": "${kind}"`), `kind ${kind} is documented`);
+});
+
+/** A store of named counters: a load gives the counters the needs name (all of them for the header, which asks for none beyond what every load holds, here the revision). */
+const counterStore = (/** @type {Record<string, number>} */ counters, /** @type {string[]} */ conflicts = []) => ({
+  load: (/** @type {any[]} */ needs) => ({ outputs: { counters: new Map(Object.entries(counters).filter(([k]) => needs.some((n) => n.name === k))), revision: 5 } }),
+  commit: () => (conflicts.length ? { error: { name: /** @type {string} */ (conflicts.shift()) } } : { outputs: { revision: 6 } }),
+});
+const model = () => /** @type {any} */ (analyzeSpec(spec()).model);
+
+test('a read with a header loads once with no needs then its needs together in one round which no need round counts', () => {
+  const found = runDerivation(model(), 'read-counter-header', { name: 'a' }, { load: (needs) => ({ outputs: { counters: new Map([['a', 3]]), revision: 5 } }) });
+  assert.deepEqual(found, { decided: 3, loads: [[], [{ name: 'a' }]], rounds: 0, conflicts: 0 });
+  const missing = runDerivation(model(), 'read-counter-header', { name: 'b' }, { load: () => ({ outputs: { counters: new Map([['a', 3]]), revision: 5 } }) });
+  assert.deepEqual(missing, { error: { name: 'missing', value: { name: 'b' } }, loads: [[], []], rounds: 0, conflicts: 0 });
+  // Without a header there is no load before the needs.
+  const plain = runDerivation(model(), 'read-counter', { name: 'a' }, counterStore({ a: 3 }));
+  assert.deepEqual(plain.loads, [[{ name: 'a' }]]);
+});
+
+test('a command asks for the extra need decide names, and loads again counting only those against need rounds', () => {
+  const r = /** @type {any} */ (runDerivation(model(), 'copy-counter', { source: 'a', target: 'b' }, counterStore({ a: 3, b: 1 })));
+  assert.deepEqual(r.loads, [[{ name: 'a' }], [{ name: 'a' }, { name: 'b' }]]);
+  assert.deepEqual([r.rounds, r.conflicts, r.decided, r.outputs], [1, 0, { name: 'b', value: 3 }, { revision: 6 }]);
+  const spent = runDerivation(model(), 'copy-counter-once', { source: 'a', target: 'b' }, counterStore({ a: 3, b: 1 }));
+  assert.deepEqual(/** @type {any} */ (spent).error, { name: 'missing', value: { name: 'b' } });
+});
+
+test('a commit that lost its race is decided again, at most retries times', () => {
+  const again = /** @type {any} */ (runDerivation(model(), 'copy-counter', { source: 'a', target: 'a' }, counterStore({ a: 3 }, ['conflict', 'conflict'])));
+  assert.equal(again.conflicts, 2);
+  assert.equal(again.loads.length, 3);
+  const spent = /** @type {any} */ (runDerivation(model(), 'copy-counter', { source: 'a', target: 'a' }, counterStore({ a: 3 }, ['conflict', 'conflict', 'conflict', 'conflict'])));
+  assert.deepEqual([spent.error, spent.conflicts], [{ name: 'conflict' }, 3]);
 });

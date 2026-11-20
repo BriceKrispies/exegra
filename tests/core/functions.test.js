@@ -159,7 +159,7 @@ test('eval of the declared language follows its primitives: three-valued logic a
   assert.equal(run({ Or: [NULL, F] }), 'Null');
   assert.equal(run({ Cmp: { op: 'Lt', left: { Lit: { Str: 'a' } }, right: { Lit: { Int: 1 } } } }), 'error');
   assert.deepEqual(run({ Len: { Lit: { Str: 'héllo' } } }), { Int: 5 });
-  // No record: a hop reads null, as the kernel's does.
+  // No record in scope: null. A record whose reference cannot be followed without a lookup is an error (format-gaps.test.js).
   assert.equal(run({ Through: { scope: 'Record', field: 'author', target: 'name' } }), 'Null');
 });
 

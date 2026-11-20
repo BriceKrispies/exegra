@@ -66,6 +66,8 @@ const STORES = [
   { file: 'tools/build-formal-wasm.js', needle: "'.exegra-patches'", locators: ['.exegra-patches'], store: 'formal-wasm-build-output' },
   { file: 'tools/build-formal-wasm.js', needle: 'writeFileSync(rsp', locators: ['linker response files'], store: 'formal-wasm-build-output' },
   { file: 'tools/outcomes-playwright-reporter.js', needle: 'writeFileSync(OUTPUT', locators: ['.outcomes/playwright.json'], store: 'test-outcomes-file' },
+  { file: 'cli/commands.js', needle: 'writeFileSync(file, `${JSON.stringify(link', locators: ['exegra project register'], store: 'project-pointer' },
+  { file: 'tools/spec-store.js', needle: 'writeFileSync(tmp, bytes)', locators: ['tools/spec-store.js (store export'], store: 'specification-text' },
   { file: 'tools/lean-theorems.js', needle: 'writeFileSync(file, text)', locators: ['exegra-theorems-'], store: 'lean-theorem-check-file' },
   { file: 'tools/workspace.js', fn: 'atomicWrite', locators: ['atomicWrite'], store: 'write-journal (the replace that precedes the journal line)' },
   { file: 'tools/workspace.js', fn: 'write', locators: ['spec.jsonc', 'layout.jsonc', '.history/journal.jsonl'], store: 'specification-text, presentation-layout, write-journal' },

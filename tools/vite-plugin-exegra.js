@@ -225,7 +225,7 @@ function openEvents(req, res, url, ws, streams) {
  * The server events of one change notice. A hash this server wrote is its own write, whose
  * disk-file-replaced was recorded with the write; any other hash is an external edit, which the
  * server infers (marked inferred): the file was replaced by another process.
- * @param {string} name @param {'spec'|'layout'|'recorded'} file @param {string|null} hash
+ * @param {string} name @param {'spec'|'layout'|'recorded'|'products'} file @param {string|null} hash
  * @returns {ServerEvent[]}
  */
 export function changeTrace(name, file, hash) {

@@ -13,6 +13,10 @@
 //            needRounds extra needs were asked for, the need is added and loaded; then the commit contract commits
 //            what decide gave; while it fails with the conflict error and fewer than retries commits were retried, the
 //            whole decision starts over.
+// A read or command may also state header: true (WG-4968). Storage-api's execute loads once with no needs (the header: the
+// schema, members and counters every load holds), computes the needs from what that gave, and loads them together in
+// one round; only the extra needs decide asks for count against needRounds. With header the load contract is first
+// called with an empty list of needs, and its outputs are parameters of the needs function as well as of decide.
 // Every kind may name fault: the contract error an integer overflow or a division by zero in a function becomes.
 //
 // Values are matched by name and type: a function parameter is an input of the contract (or, for decide, an output
@@ -20,6 +24,9 @@
 // or by type from the needs list (load) or what decide gives (commit). An optional field of type T has the type
 // option<T>. Error variants and contract errors are matched by their words (VersionConflict is version-conflict);
 // a contract error with a payload type matches a newtype variant of that type, one without a unit variant.
+//
+// A contract with realisation "target" is specified but not yet implemented (WG-4968): nothing serves it, so no
+// derivation loads or commits through it and no facade is lowered onto it.
 //
 // A contract with realisation "facade" has no server implementation: a client lowers it onto a generic contract. It
 // states a bffRoute "<METHOD> <path> <shape> ..." (a property the specification declares in its vocabulary), and
@@ -35,6 +42,9 @@
 //   contract.facade-route  a facade has no implementing component and its bffRoute names exactly one served contract
 // Readiness (errors when system.generation is set, listed by the readiness command otherwise):
 //   ready.derived-function-missing  every function a derivation names is declared
+
+import { analyzeFunctions, runFunction } from './function.js';
+import { valueEq } from './function-value.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Entity} Entity */
@@ -53,7 +63,9 @@ export const DERIVATION_KINDS = Object.freeze({
   command: ['needs', 'load', 'decide', 'commit', 'conflict', 'insufficient', 'needRounds', 'retries'],
 });
 /** The fields a kind may take besides those it needs: a read's need loop, named together or not at all. */
-export const OPTIONAL_DERIVATION_FIELDS = Object.freeze({ pure: [], read: ['insufficient', 'needRounds'], command: [] });
+export const OPTIONAL_DERIVATION_FIELDS = Object.freeze({ pure: [], read: ['insufficient', 'needRounds', 'header'], command: ['header'] });
+/** The fields of a read's need loop, named together or not at all. */
+const NEED_LOOP = ['insufficient', 'needRounds'];
 /** The fields of a derivation that name functions. */
 const FUNCTION_FIELDS = ['function', 'needs', 'decide'];
 /** Which code a missing field is reported with. */
@@ -186,6 +198,7 @@ function calledContract(model, c, id, role) {
   if (!e || e.kind !== 'contract') return undefined;
   if (e.id === c.id) throw new Finding(code, `Contract "${c.id}" names itself as its ${role} contract.`, [role]);
   if (e.data.realisation === 'facade') throw new Finding(code, `The ${role} contract "${e.id}" of contract "${c.id}" is a facade, which nothing serves.`, [role]);
+  if (e.data.realisation === 'target') throw new Finding(code, `The ${role} contract "${e.id}" of contract "${c.id}" is a target, which nothing implements yet.`, [role]);
   return e;
 }
 
@@ -223,7 +236,7 @@ function checkDerived(model, c, d) {
   // A read's need loop: insufficient and needRounds together.
   const loops = kind === 'command' || (kind === 'read' && (d.insufficient !== undefined || d.needRounds !== undefined));
   if (kind === 'read' && loops) {
-    for (const k of optional) {
+    for (const k of NEED_LOOP) {
       if (d[k] === undefined) throw new Finding(MISSING_CODE[k] ?? 'derivation.kind', `The read derivation of contract "${c.id}" names ${k === 'needRounds' ? '"insufficient"' : '"needRounds"'}, so it needs "${k}" too: a read's need loop names both.`);
     }
   }
@@ -257,19 +270,22 @@ function checkDerived(model, c, d) {
 
   const needs = /** @type {NonNullable<ReturnType<typeof fnOf>>} */ (fnOf(model, d.needs));
   const decide = /** @type {NonNullable<ReturnType<typeof fnOf>>} */ (fnOf(model, d.decide));
-  paramsFit(needs, inputs, 'needs', `an input of contract "${c.id}"`);
+  const load = calledContract(model, c, d.load, 'load');
+  const loaded = load ? typesByName(load.data.outputs) : new Map();
+  for (const n of loaded.keys()) {
+    if (inputs.has(n)) throw new Finding('derivation.load', `Output "${n}" of the load contract "${load?.id}" is named like an input of contract "${c.id}", so a parameter of that name would be ambiguous.`, ['load']);
+  }
+  const header = d.header === true;
+  // With a header, the needs function reads what the header load gave; an unresolved load contract is the parser's finding.
+  if (header && load) paramsFit(needs, new Map([...inputs, ...loaded]), 'needs', `an input of contract "${c.id}" or an output of its load contract "${load.id}", loaded as the header`);
+  else if (!header) paramsFit(needs, inputs, 'needs', `an input of contract "${c.id}"`);
   const need = listItem(needs.returns);
   if (need === undefined) throw new Finding('derivation.signature', `Function "${needs.id}" (needs) gives ${needs.returns || 'nothing'}; it gives list<N>, the needs to load.`, ['needs']);
   const needErrs = errorsFit(c, fnErrors(model, needs, 'needs'), `Error variant of function "${needs.id}"`);
   if (needErrs) throw new Finding('derivation.signature', `${needErrs}.`, ['needs']);
 
-  const load = calledContract(model, c, d.load, 'load');
   if (!load) return;
   inputsFit(c, load, inputs, { type: needs.returns, what: 'the needs' }, 'load');
-  const loaded = typesByName(load.data.outputs);
-  for (const n of loaded.keys()) {
-    if (inputs.has(n)) throw new Finding('derivation.load', `Output "${n}" of the load contract "${load.id}" is named like an input of contract "${c.id}", so a parameter of that name would be ambiguous.`, ['load']);
-  }
   const loadErrs = errorsFit(c, list(load.data.errors).filter(isObj).map((e) => ({ name: e.name, type: e.type === undefined ? undefined : norm(e.type) })), `The error of the load contract "${load.id}"`);
   if (loadErrs) throw new Finding('derivation.load', `${loadErrs}.`, ['load']);
 
@@ -315,7 +331,7 @@ function checkFacade(model, c) {
   const mine = routeShape(c.data.bffRoute);
   if (!mine) throw new Finding('contract.facade-route', `Facade "${c.id}" needs a bffRoute "<METHOD> <path> <shape> ..." naming the generic contract it is lowered onto; found ${c.data.bffRoute === undefined ? 'none' : JSON.stringify(c.data.bffRoute)}.`);
   const served = (model.byKind.contract ?? []).filter((o) => {
-    if (o.id === c.id || o.data.realisation === 'facade' || o.data.implementedBy === undefined) return false;
+    if (o.id === c.id || o.data.realisation === 'facade' || o.data.realisation === 'target' || o.data.implementedBy === undefined) return false;
     const r = routeShape(o.data.bffRoute);
     return r !== undefined && r.method === mine.method && r.path === mine.path && r.shape === mine.shape;
   });
@@ -365,4 +381,88 @@ export function derivationReadiness(model) {
     }
   }
   return out;
+}
+
+/**
+ * Run a read or command derivation against a store, the way Strata's storage-api execute does (WG-4968): the
+ * simulator of the load-decide-commit loop. Values are in memory (decoded: see decodeValue in function-value.js);
+ * the contract's inputs are given by name. The store answers `load(needs)` with {outputs} (the load contract's
+ * outputs by name) or {error: {name, value?}}, and `commit(decided, loaded)` with {outputs} or {error}.
+ *
+ * With a header the store is first asked for no needs; what it gives is read by the needs function, whose list is
+ * then loaded in one round that does not count against needRounds. While decide fails with the insufficient variant,
+ * carrying a need not yet asked for, and fewer than needRounds extra needs were asked for, the need is added and
+ * everything is loaded again. A commit that fails with the conflict error is retried by deciding again, at most
+ * retries times. Any other failure, and insufficient or conflict once their bound is spent, is the contract's error
+ * of the same name.
+ *
+ * Returns {decided, outputs?, loads, rounds, conflicts}, where loads is the list of needs lists the store was asked
+ * to load, in order (the header's empty list first), or {error: {name, value?}, loads, rounds, conflicts}. A function
+ * that fails with a variant gives {error: {name: <words of the variant>, value}}.
+ * @param {Model} model @param {string} contractId @param {Record<string, any>} inputs
+ * @param {{load: (needs: any[]) => {outputs: Record<string, any>} | {error: {name: string, value?: any}}, commit?: (decided: any, loaded: Record<string, any>) => {outputs: Record<string, any>} | {error: {name: string, value?: any}}}} store
+ * @returns {{decided: any, outputs?: Record<string, any>, loads: any[][], rounds: number, conflicts: number} | {error: {name: string, value?: any}, loads: any[][], rounds: number, conflicts: number}}
+ */
+export function runDerivation(model, contractId, inputs, store) {
+  const c = model.entities.get(contractId);
+  const d = c?.data.derivation;
+  if (!c || c.data.realisation !== 'derived' || !isObj(d) || (d.kind !== 'read' && d.kind !== 'command')) throw new Error(`Contract "${contractId}" is not a derived read or command.`);
+  const { sigs } = analyzeFunctions(model);
+  /** @param {string} id */
+  const sig = (id) => {
+    const s = sigs.get(id);
+    if (!s || !s.ok) throw new Error(`Function "${id}" of the derivation of "${contractId}" is missing or has findings.`);
+    return s;
+  };
+  /** @param {string} id @param {Record<string, any>} scope */
+  const call = (id, scope) => {
+    const s = sig(id);
+    return runFunction(model, s, sigs, s.params.map((p) => scope[p.name] ?? null));
+  };
+  /** @param {any} variant a UnionValue the function failed with */
+  const asError = (variant) => ({ name: wordsOf(variant.variant), value: Object.values(variant.fields)[0] });
+  const loads = /** @type {any[][]} */ ([]);
+  let rounds = 0, conflicts = 0;
+  /** @param {{name: string, value?: any}} error */
+  const failed = (error) => ({ error, loads, rounds, conflicts });
+  for (;;) {
+    /** @type {Record<string, any>} */
+    let header = {};
+    if (d.header === true) {
+      loads.push([]);
+      const h = store.load([]);
+      if ('error' in h) return failed(h.error);
+      header = h.outputs;
+    }
+    const n = call(d.needs, { ...header, ...inputs });
+    if ('error' in n) return failed(asError(n.error));
+    const needs = [...n.value];
+    rounds = 0;
+    /** @type {Record<string, any>} */
+    let loaded;
+    /** @type {any} */
+    let decided;
+    for (;;) {
+      loads.push([...needs]);
+      const l = store.load(needs);
+      if ('error' in l) return failed(l.error);
+      loaded = l.outputs;
+      const r = call(d.decide, { ...inputs, ...loaded });
+      if ('value' in r) { decided = r.value; break; }
+      const e = asError(r.error);
+      if (d.insufficient !== undefined && wordsOf(d.insufficient) === e.name && rounds < d.needRounds && !needs.some((x) => valueEq(x, e.value))) {
+        needs.push(e.value);
+        rounds++;
+        continue;
+      }
+      return failed(e);
+    }
+    if (d.kind === 'read') return { decided, loads, rounds, conflicts };
+    const committed = store.commit ? store.commit(decided, loaded) : { outputs: {} };
+    if ('error' in committed) {
+      if (committed.error.name === wordsOf(d.conflict) && conflicts < d.retries) { conflicts++; continue; }
+      return failed(committed.error);
+    }
+    return { decided, outputs: committed.outputs, loads, rounds, conflicts };
+  }
 }

@@ -108,7 +108,7 @@ export function typeClass(model, name) {
  * their id and representation, enums their values. A set<T> has the structure of list<T>, marked set: true.
  * @typedef {{k: 'prim', name: string} | {k: 'enum', id: string, values: string[]} | {k: 'alias', id: string, repr: string}
  *   | {k: 'struct', id: string, fields: {name: string, type: TypeStructure, optional: boolean}[]}
- *   | {k: 'union', id: string, variants: {name: string, newtype: boolean, tuple?: boolean, fields: {name: string, type: TypeStructure, optional: boolean}[]}[]}
+ *   | {k: 'union', id: string, encoding: {tag: string, tagField?: string, contentField?: string, variantCase?: string}, variants: {name: string, newtype: boolean, tuple?: boolean, fields: {name: string, type: TypeStructure, optional: boolean}[]}[]}
  *   | {k: 'list', of: TypeStructure, set?: boolean} | {k: 'option', of: TypeStructure} | {k: 'map', key: TypeStructure, value: TypeStructure}} TypeStructure
  */
 
@@ -142,6 +142,10 @@ export function typeStructure(model, name) {
   if (d.kind === 'union') {
     return {
       k: 'union', id: t.id,
+      get encoding() {
+        const e = isObj(d.encoding) ? d.encoding : {};
+        return { tag: typeof e.tag === 'string' ? e.tag : 'external', tagField: e.tagField, contentField: e.contentField, variantCase: e.variantCase };
+      },
       get variants() { return (Array.isArray(d.variants) ? d.variants : []).filter(isObj).map((/** @type {any} */ v) => ({ name: String(v.name), newtype: v.newtype === true, tuple: v.tuple === true, fields: fieldsOf(v.fields) })); },
     };
   }

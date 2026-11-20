@@ -8,13 +8,14 @@ import { validateModel } from './validate.js';
 /**
  * Parse and validate specification source.
  * @param {string} text
+ * @param {{model: Model|null, diagnostics: Diagnostic[]}|null} [parsed] parseSpec(text), when the caller already has it
  * errorCount counts the errors that block a transaction. Violations of integrity rules
  * (`integrity.violated`) are reported with their rule's severity but are left out of it: they are
  * ratcheted by Project.apply instead, so existing ones do not block unrelated edits.
  * @returns {{model: Model|null, diagnostics: Diagnostic[], errorCount: number}}
  */
-export function analyzeSpec(text) {
-  const { model, diagnostics } = parseSpec(text);
+export function analyzeSpec(text, parsed) {
+  const { model, diagnostics } = parsed ?? parseSpec(text);
   // Most semantic rules assume a structurally sound model, so they are skipped when structure is broken. The checks of
   // claims read only what they can resolve; they still run, so one unresolved reference does not hide their errors.
   const structuralErrors = diagnostics.some((d) => d.severity === 'error');

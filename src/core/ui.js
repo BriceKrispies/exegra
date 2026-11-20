@@ -11,6 +11,7 @@
 import { parseExpr, exprRefs } from './expr.js';
 import { typeClass, exprClass, typeResolves } from './codegen-model.js';
 import { checkJourney, itemPlaceholders } from './ui-steps.js';
+import { suppliedInputs } from './supplied-inputs.js';
 
 export { STEP_KINDS, ARIA_ROLES } from './ui-steps.js';
 
@@ -291,9 +292,11 @@ export function checkUiConsistency(model) {
   const checkArguments = (e, args, contract, scope, at = ['arguments']) => {
     if (!isObj(args) || !contract) return;
     const inputs = fieldMap(contract.data.inputs);
+    const supplied = suppliedInputs(contract);
     for (const [name, src] of Object.entries(args)) {
       const f = inputs.get(name);
       if (!f) { err(`${e.kind}.argument-unknown`, e, `Contract "${contract.id}" has no input "${name}".`, [...at, name]); continue; }
+      if (supplied.has(name)) { err(`${e.kind}.supplied-input`, e, `Input "${name}" of contract "${contract.id}" is supplied by its ${supplied.get(name)}, never by the body, so ${e.kind} "${e.id}" cannot give it.`, [...at, name]); continue; }
       const want = typeClass(model, f.type);
       checkExpr(e, src, [...at, name], scope, (cls) => (
         cls === want || cls === 'any' || want === 'any' || (cls === 'null' && f.optional === true) ? undefined : `it is a ${cls}, but input "${name}" of contract "${contract.id}" is a ${want}`));
@@ -574,6 +577,7 @@ export function checkUiConsistency(model) {
       if (typeof fld.input !== 'string' || !inputs) return;
       const input = inputs.get(fld.input);
       if (!input) { err('form.field-unknown', f, `Contract "${contract?.id}" has no input "${fld.input}".`, [...sub, 'input']); return; }
+      if (suppliedInputs(contract).has(fld.input)) { err('form.supplied-input', f, `Input "${fld.input}" of contract "${contract?.id}" is supplied by its ${suppliedInputs(contract).get(fld.input)}, never by the body, so a field of form "${f.id}" cannot fill it.`, [...sub, 'input']); return; }
       if (filled.has(fld.input)) err('form.field-duplicate', f, `Input "${fld.input}" is filled by two fields of form "${f.id}".`, [...sub, 'input']);
       filled.add(fld.input);
       const cls = typeClass(model, input.type);
@@ -587,7 +591,7 @@ export function checkUiConsistency(model) {
     checkArguments(f, d.arguments, contract, scope);
     if (inputs) {
       for (const [name, input] of inputs) {
-        if (input.optional !== true && !filled.has(name) && !(isObj(d.arguments) && Object.hasOwn(d.arguments, name))) err('form.input-uncovered', f, `Form "${f.id}" submits to contract "${contract?.id}" but neither a field nor an argument fills its input "${name}".`, ['contract']);
+        if (input.optional !== true && !filled.has(name) && !suppliedInputs(contract).has(name) && !(isObj(d.arguments) && Object.hasOwn(d.arguments, name))) err('form.input-uncovered', f, `Form "${f.id}" submits to contract "${contract?.id}" but neither a field nor an argument fills its input "${name}".`, ['contract']);
       }
     }
     checkDeriveCycles(f);
@@ -719,7 +723,7 @@ export function checkUiConsistency(model) {
     checkArguments(a, d.arguments, contract, scope);
     if (contract) {
       for (const [name, input] of fieldMap(contract.data.inputs)) {
-        if (input.optional !== true && !(isObj(d.arguments) && Object.hasOwn(d.arguments, name))) err('action.argument-missing', a, `Action "${a.id}" calls contract "${contract.id}" but gives no argument for its input "${name}".`, ['arguments']);
+        if (input.optional !== true && !suppliedInputs(contract).has(name) && !(isObj(d.arguments) && Object.hasOwn(d.arguments, name))) err('action.argument-missing', a, `Action "${a.id}" calls contract "${contract.id}" but gives no argument for its input "${name}".`, ['arguments']);
       }
     }
     if (d.result !== undefined) checkResult(a, contract, screen);

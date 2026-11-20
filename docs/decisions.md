@@ -6,7 +6,7 @@ Architectural decisions in short form: context, decision, consequences. They des
 
 **Context.** A visual editor and a text editor over separate in-memory and serialized forms drift apart.
 **Decision.** The JSONC text is the serialized authority. The model is derived from it on every commit. Every operation is a source-preserving text edit followed by re-derivation.
-**Consequences.** Text and visual editing cannot diverge, since there is no second model; comments and formatting survive edits. The cost is a full re-parse and re-validation per commit, with no incremental parsing. That cost is not otherwise measured; the only test bound is that a transaction plus undo on the 396-component benchmark takes under 2000 ms (`tests/browser/interaction.spec.js`).
+**Consequences.** Text and visual editing cannot diverge, since there is no second model; comments and formatting survive edits. The cost is a full re-parse and re-validation per commit, with no incremental parsing (within a transaction the model is derived once, not per operation; see [transactions-and-persistence.md](transactions-and-persistence.md)). That cost is not otherwise measured; the only test bound is that a transaction plus undo on the 396-component benchmark takes under 2000 ms (`tests/browser/interaction.spec.js`).
 
 ## 2. Presentation is a separate file and a separate operation
 

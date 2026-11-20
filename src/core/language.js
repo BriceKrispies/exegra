@@ -80,6 +80,29 @@ const CMP = (/** @type {string} */ op, /** @type {string} */ sym, /** @type {str
     : 'check, Expr::Cmp: the two shapes agree unless one is the any shape, and each is Int, Time or Str.',
 });
 
+/** The largest magnitude an integer of checked arithmetic may have: 2^53-1 (Strata D-6540, D-5004). */
+export const SAFE_INT = 9007199254740991;
+/** The longest string concat may build, in bytes of UTF-8 (Strata D-6542). */
+export const MAX_TEXT_BYTES = 4096;
+/** The error of a checked integer outside ±SAFE_INT, and of a string longer than MAX_TEXT_BYTES. */
+export const INTEGER_OVERFLOW = 'integer-overflow';
+export const STRING_TOO_LONG = 'string-too-long';
+const RANGE = 'an operand or a result outside -(2^53-1) to 2^53-1 is the error integer-overflow.';
+
+const ARITH = (/** @type {string} */ op, /** @type {string} */ sym, /** @type {string} */ what) => /** @type {Primitive} */ ({
+  arity: 2, forms: ['infix'], nulls: 'propagate',
+  kernel: `crates/kernel/src/expr.rs: eval, Expr::Arith(ArithOp::${op === 'add' ? 'Add' : 'Sub'}) -> checked`,
+  semantics: `null if either operand is null; ${what}; a left operand that is neither an int nor a timestamp, then a right operand that is not an int, is an error (so int ${sym} timestamp is an error); ${RANGE}`,
+  check: 'check, Expr::Arith: the left has the Int, Time or any shape and the right the Int or any shape; the result is the shape of the left.',
+});
+
+const DURATION = (/** @type {string} */ unit, /** @type {number} */ ms) => /** @type {Primitive} */ ({
+  arity: 1, forms: ['call'], nulls: 'propagate',
+  kernel: `crates/kernel/src/expr.rs: eval, Expr::Duration(DurationUnit::${unit[0].toUpperCase()}${unit.slice(1)}) -> checked`,
+  semantics: `null gives null; an int n gives n times ${ms} (milliseconds in ${unit}); anything else is an error; ${RANGE}`,
+  check: 'check, Expr::Duration: the operand has the Int or any shape; the result is Int.',
+});
+
 /**
  * The primitive catalogue. Every operator of every language names one of these; nothing else can be expressed.
  * @type {Readonly<Record<string, Primitive>>}
@@ -150,6 +173,38 @@ export const LANGUAGE_PRIMITIVES = Object.freeze({
     kernel: 'crates/kernel/src/expr.rs: eval, Expr::IsSlug -> is_slug',
     semantics: 'null gives null; a string gives whether it matches [a-z0-9]+(-[a-z0-9]+)* in ASCII (non-empty, single hyphens, no hyphen at either end); anything else is an error.',
     check: 'check, Expr::IsSlug: the operand has the Str or any shape; the result is Bool.',
+  },
+  // Checked integer and time arithmetic, durations and text (Strata D-6540 to D-6543, CMS-1540 to CMS-1546). Every
+  // integer an operand holds or a result would be lies in -(2^53-1) to 2^53-1, the range Rust's i64 and JavaScript's
+  // numbers both hold exactly; anything outside it is the error integer-overflow, never a wrapped or rounded value.
+  'add-checked': ARITH('add', '+', 'the left plus the right: an int and an int give an int, a timestamp and an int give the timestamp that many milliseconds later'),
+  'sub-checked': ARITH('sub', '-', 'the left minus the right: an int and an int give an int, a timestamp and an int give the timestamp that many milliseconds earlier'),
+  'mul-checked': {
+    arity: 2, forms: ['infix'], nulls: 'propagate',
+    kernel: 'crates/kernel/src/expr.rs: eval, Expr::Arith(ArithOp::Mul) -> checked',
+    semantics: `null if either operand is null; two ints give their product; a left operand that is not an int, then a right operand that is not an int, is an error; ${RANGE}`,
+    check: 'check, Expr::Arith: both operands have the Int or any shape; the result is Int.',
+  },
+  'time-difference': {
+    arity: 2, forms: ['call'], nulls: 'propagate',
+    kernel: 'crates/kernel/src/expr.rs: eval, Expr::MsBetween -> checked',
+    semantics: `null if either operand is null; two timestamps a and b give b minus a in milliseconds, as an int; a first operand that is not a timestamp, then a second that is not, is an error; ${RANGE}`,
+    check: 'check, Expr::MsBetween: both operands have the Time or any shape; the result is Int.',
+  },
+  'days-ms': DURATION('days', 86400000),
+  'hours-ms': DURATION('hours', 3600000),
+  'minutes-ms': DURATION('minutes', 60000),
+  'concat-checked': {
+    arity: 2, forms: ['call'], nulls: 'propagate',
+    kernel: 'crates/kernel/src/expr.rs: eval, Expr::Concat',
+    semantics: `null if either operand is null; two strings give the first followed by the second; a first operand that is not a string, then a second that is not, is an error; a result longer than ${MAX_TEXT_BYTES} bytes of UTF-8 is the error string-too-long.`,
+    check: 'check, Expr::Concat: both operands have the Str or any shape; the result is Str.',
+  },
+  'to-text': {
+    arity: 1, forms: ['call'], nulls: 'propagate',
+    kernel: 'crates/kernel/src/expr.rs: eval, Expr::Text',
+    semantics: 'null gives null; an int, a timestamp or a reference gives its decimal digits (a leading - when negative); a bool gives true or false; a string gives itself; a list is an error.',
+    check: 'check, Expr::Text: the operand has the Int, Time, Ref, Bool, Str or any shape; the result is Str.',
   },
   if: {
     arity: 3, forms: ['call'], nulls: 'null-is-false',

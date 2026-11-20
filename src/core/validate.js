@@ -15,6 +15,7 @@ import { checkLanguages } from './language.js';
 import { checkFunctions } from './function.js';
 import { checkTenantData } from './tenant-data.js';
 import { checkDerivations } from './derivation.js';
+import { checkSuppliedInputs } from './supplied-inputs.js';
 import { checkConstructConsistency } from './constructs.js';
 import { checkUiConsistency } from './ui.js';
 import { checkTelemetryConsistency } from './telemetry.js';
@@ -565,6 +566,7 @@ export function validateModel(model, opts = {}) {
 
   out.push(...checkTenantData(model));
   out.push(...checkDerivations(model));
+  out.push(...checkSuppliedInputs(model));
   out.push(...checkConstructConsistency(model));
   out.push(...checkUiConsistency(model));
   out.push(...checkTelemetryConsistency(model));

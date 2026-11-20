@@ -7,9 +7,15 @@
 // its presentation (layout), recorded results, journal and generated artifacts
 // stay here. project.jsonc may also declare realisation roots ({"roots": {...}},
 // see tools/realisation-roots.js). It is never written through this module.
+//
+// project.jsonc may also layer product files on the specification (WG-4989):
+// {"products": ["<file.jsonc or directory>", ...]}, paths relative to the project
+// directory; a directory contributes its *.jsonc files in name order. read()
+// returns them as `layers`, each with what its product.imports.spec resolves to,
+// for src/core/layers.js to check. They are read, never written, through here.
 
 import { createHash } from 'node:crypto';
-import { promises as fs, readFileSync, watch as fsWatch } from 'node:fs';
+import { promises as fs, readFileSync, readdirSync, statSync, watch as fsWatch } from 'node:fs';
 import path from 'node:path';
 import { parse as parseJsonc } from 'jsonc-parser';
 
@@ -27,6 +33,11 @@ const JOURNAL_REL = '.history/journal.jsonl';
 /** The file that may point a project at a specification stored elsewhere. */
 export const PROJECT_FILE = 'project.jsonc';
 const NAME_RE = /^[a-z0-9][a-z0-9_-]{0,63}$/;
+
+/** Whether `name` is a valid project name (a directory name under specs/). @param {unknown} name @returns {name is string} */
+export function isValidProjectName(name) {
+  return typeof name === 'string' && NAME_RE.test(name);
+}
 const MAX_TEXT_BYTES = 16 * 1024 * 1024;
 const RENAME_RETRIES = 5;
 const RENAME_DELAY_MS = 20;
@@ -209,6 +220,34 @@ function validateBundle(bundle) {
   return out;
 }
 
+/** Whether two absolute paths name the same file (case-insensitively on Windows). @param {string} a @param {string} b */
+function samePath(a, b) {
+  const x = path.resolve(a);
+  const y = path.resolve(b);
+  return process.platform === 'win32' ? x.toLowerCase() === y.toLowerCase() : x === y;
+}
+
+/**
+ * What a product file's product.imports.spec names: the declared path, whether it resolves (from the
+ * product file's directory) to the project's specification, and the path that would.
+ * @param {string} file @param {string} text @param {string} spec absolute paths of the product file and the specification
+ * @returns {{declared: string|null, matches: boolean, expected: string}}
+ */
+function importOf(file, text, spec) {
+  /** @type {string|null} */
+  let declared = null;
+  try {
+    const value = parseJsonc(text);
+    const d = value?.product?.imports?.spec;
+    if (typeof d === 'string') declared = d;
+  } catch {
+    declared = null;
+  }
+  const dir = path.dirname(file);
+  const expected = path.relative(dir, spec).split(path.sep).join('/');
+  return { declared, matches: declared !== null && !path.isAbsolute(declared) && samePath(path.resolve(dir, declared), spec), expected };
+}
+
 /**
  * @param {string} rootDir absolute path of the `specs` directory
  */
@@ -255,8 +294,8 @@ export function createWorkspace(rootDir) {
     const config = projectConfig(name);
     if (config === null) return own;
     const spec = config.value.spec;
-    // A project.jsonc that only declares roots keeps the specification in the project directory.
-    if (spec === undefined && config.value.roots !== undefined) return own;
+    // A project.jsonc that only declares roots or products keeps the specification in the project directory.
+    if (spec === undefined && (config.value.roots !== undefined || config.value.products !== undefined)) return own;
     if (typeof spec !== 'string' || spec === '' || path.isAbsolute(spec) || !spec.endsWith('.jsonc')) {
       throw new WorkspaceError('project.invalid', `${name}/${PROJECT_FILE} must name the specification as {"spec": "<path relative to the project directory, ending in .jsonc>"}.`);
     }
@@ -292,7 +331,61 @@ export function createWorkspace(rootDir) {
 
   /** The specification's path as shown to people: relative to the directory holding specs/, forward slashes. @param {string} name */
   function specLocation(name) {
-    return path.relative(path.dirname(root), specFile(name)).split(path.sep).join('/');
+    return shown(specFile(name));
+  }
+
+  /** An absolute path as shown to people: relative to the directory holding specs/, forward slashes. @param {string} abs */
+  function shown(abs) {
+    return path.relative(path.dirname(root), abs).split(path.sep).join('/');
+  }
+
+  /**
+   * Absolute paths of the product files project.jsonc layers on project `name`'s specification, in
+   * order: each entry of "products" is a .jsonc file or a directory whose *.jsonc files are taken in
+   * name order. None when project.jsonc lists none.
+   * @param {string} name
+   * @returns {string[]}
+   */
+  function productFiles(name) {
+    const config = projectConfig(name);
+    const list = config?.value.products;
+    if (list === undefined) return [];
+    const where = `${name}/${PROJECT_FILE}`;
+    if (!Array.isArray(list) || !list.every((p) => typeof p === 'string' && p !== '' && !path.isAbsolute(p))) {
+      throw new WorkspaceError('project.invalid', `${where} must list its product files as {"products": ["<file.jsonc or directory, relative to the project directory>", ...]}.`);
+    }
+    return expandProducts(list, path.resolve(root, name), specFile(name), where);
+  }
+
+  /**
+   * The product files a list of entries names: each entry is a .jsonc file or a directory whose *.jsonc
+   * files are taken in name order; entries resolve against `base`. Refuses an entry that does not exist,
+   * is not a .jsonc file or directory, or is the specification itself.
+   * @param {string[]} list @param {string} base absolute directory @param {string} spec absolute path of the specification @param {string} where what to name in a refusal
+   * @returns {string[]}
+   */
+  function expandProducts(list, base, spec, where) {
+    /** @type {string[]} */
+    const out = [];
+    for (const rel of list) {
+      const abs = path.resolve(base, rel);
+      /** @type {import('node:fs').Stats} */
+      let st;
+      try {
+        st = statSync(abs);
+      } catch {
+        throw new WorkspaceError('project.invalid', `${where} lists the product "${rel}", which does not exist (${shown(abs)}); create it or remove it from "products".`);
+      }
+      const files = st.isDirectory()
+        ? readdirSync(abs).filter((f) => f.endsWith('.jsonc')).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)).map((f) => path.join(abs, f))
+        : [abs];
+      for (const file of files) {
+        if (!file.endsWith('.jsonc')) throw new WorkspaceError('project.invalid', `${where} lists the product "${rel}", which is neither a directory nor a .jsonc file.`);
+        if (samePath(file, spec)) throw new WorkspaceError('project.invalid', `${where} lists the specification itself (${shown(file)}) as a product; a product file is a separate file beside it. Remove it from "products".`);
+        if (!out.some((f) => samePath(f, file))) out.push(file);
+      }
+    }
+    return out;
   }
 
   async function listProjects() {
@@ -316,6 +409,23 @@ export function createWorkspace(rootDir) {
     return projects;
   }
 
+  /**
+   * Read a project that is not registered: the specification file at `specPath` and the product files
+   * (or directories of them) at `productPaths`, all absolute. Nothing is written, no layout or recorded
+   * results are read, and the project has no name under specs/.
+   * @param {string} specPath @param {string[]} productPaths
+   */
+  async function readInline(specPath, productPaths) {
+    const specText = await readOptional(specPath);
+    if (specText === null) throw new WorkspaceError('not-found', `The specification ${specPath} does not exist.`);
+    const layers = [];
+    for (const file of expandProducts(productPaths, '/', specPath, 'The command line')) {
+      const text = await fs.readFile(file, 'utf8');
+      layers.push({ file: shown(file), text, hash: hashText(text), platform: importOf(file, text, specPath) });
+    }
+    return { spec: { text: specText, hash: hashText(specText), path: shown(specPath) }, layers, layout: null, recorded: null, concordance: null };
+  }
+
   async function read(name) {
     assertName(name);
     const specText = await readOptional(specFile(name));
@@ -324,8 +434,15 @@ export function createWorkspace(rootDir) {
     }
     const layoutText = await readOptional(resolve(name, WORKSPACE_FILES.layout));
     const recordedText = await readOptional(resolve(name, WORKSPACE_FILES.recorded));
+    const spec = specFile(name);
+    const layers = [];
+    for (const file of productFiles(name)) {
+      const text = await fs.readFile(file, 'utf8');
+      layers.push({ file: shown(file), text, hash: hashText(text), platform: importOf(file, text, spec) });
+    }
     return {
       spec: { text: specText, hash: hashText(specText), path: specLocation(name) },
+      layers,
       layout: layoutText === null ? null : { text: layoutText, hash: hashText(layoutText) },
       recorded: parseRecorded(recordedText),
       concordance: await concordanceOf(name, specText),
@@ -529,7 +646,10 @@ export function createWorkspace(rootDir) {
    * Watches a project directory. onChange({file, hash}) fires when a tracked file's
    * hash differs from the last hash this subscription saw (own writes included).
    * @param {string} name
-   * @param {(change: {file: 'spec'|'layout'|'recorded', hash: string|null}) => void} onChange
+   * The product files project.jsonc lists are tracked as one file, 'products': its hash is taken over the
+   * project.jsonc list and every product file in it, so a product file that changed, was added or was
+   * removed is reported (null when project.jsonc lists none).
+   * @param {(change: {file: 'spec'|'layout'|'recorded'|'products', hash: string|null}) => void} onChange
    * @returns {() => void} unsubscribe
    */
   function watch(name, onChange) {
@@ -556,6 +676,57 @@ export function createWorkspace(rootDir) {
     const results = concordanceFileOf(name);
     if (results) seen.concordance = hashOfFileSync(results);
 
+    /** The hash of the product layers: their paths and texts in order, or null when there are none. A list that cannot be resolved has a hash of its own, so fixing it is a change too. */
+    const productsHash = () => {
+      try {
+        const files = productFiles(name);
+        if (!files.length && projectConfig(name)?.value.products === undefined) return null;
+        return hashText(files.map((f) => `${shown(f)}\n${hashOfFileSync(f)}`).join('\n'));
+      } catch (err) {
+        return hashText(`invalid\n${/** @type {Error} */ (err).message}`);
+      }
+    };
+    seen.products = productsHash();
+    /** The directories to watch for product files outside the project directory: each listed directory, and the directory of each listed file (which also sees a file being added or removed). */
+    const productDirs = () => {
+      /** @type {Set<string>} */
+      const dirs = new Set();
+      try {
+        const list = projectConfig(name)?.value.products;
+        if (!Array.isArray(list)) return dirs;
+        for (const rel of list) {
+          if (typeof rel !== 'string' || rel === '' || path.isAbsolute(rel)) continue;
+          const abs = path.resolve(projectDir, rel);
+          let dir = path.dirname(abs);
+          try { if (statSync(abs).isDirectory()) dir = abs; } catch { /* missing: its parent is watched */ }
+          if (dir !== projectDir && !isInside(projectDir, dir)) dirs.add(dir);
+        }
+      } catch {
+        // an unreadable project.jsonc is reported by read()
+      }
+      return dirs;
+    };
+    /** @type {Map<string, import('node:fs').FSWatcher>} */
+    const productWatchers = new Map();
+    const watchProductDirs = () => {
+      const want = productDirs();
+      for (const [dir, w] of [...productWatchers]) {
+        if (want.has(dir)) continue;
+        try { w.close(); } catch { /* already closed */ }
+        productWatchers.delete(dir);
+      }
+      for (const dir of want) {
+        if (productWatchers.has(dir) || closed) continue;
+        try {
+          const w = fsWatch(dir, () => { if (!closed) schedule('products', ''); });
+          w.on('error', () => { try { w.close(); } catch { /* already closed */ } productWatchers.delete(dir); });
+          productWatchers.set(dir, w);
+        } catch {
+          // a directory that does not exist (yet) loses only this watcher
+        }
+      }
+    };
+
     /** @type {Map<string, ReturnType<typeof setTimeout>>} */
     const timers = new Map();
     let closed = false;
@@ -571,7 +742,7 @@ export function createWorkspace(rootDir) {
       closed = true;
       for (const timer of timers.values()) clearTimeout(timer);
       timers.clear();
-      for (const w of [watcher, externalWatcher, resultsWatcher]) {
+      for (const w of [watcher, externalWatcher, resultsWatcher, ...productWatchers.values()]) {
         try {
           w?.close();
         } catch {
@@ -581,6 +752,14 @@ export function createWorkspace(rootDir) {
     };
 
     const check = async (key, abs) => {
+      if (key === 'products') {
+        const hash = productsHash();
+        watchProductDirs();
+        if (closed || hash === seen.products) return;
+        seen.products = hash;
+        onChange({ file: 'products', hash });
+        return;
+      }
       /** @type {string|null} */ let text = null;
       try {
         text = await fs.readFile(abs, 'utf8');
@@ -616,6 +795,8 @@ export function createWorkspace(rootDir) {
         for (const entry of tracked) {
           if (entry.inside && (rel === null || rel === entry.rel)) schedule(entry.key, entry.abs);
         }
+        // project.jsonc lists the product files, and product files may sit inside the project directory.
+        if (rel === null || rel === PROJECT_FILE || rel.endsWith('.jsonc')) schedule('products', '');
       });
       if (external) {
         const ext = external;
@@ -647,6 +828,7 @@ export function createWorkspace(rootDir) {
       return stop;
     }
     watcher.on('error', stop);
+    watchProductDirs();
     return stop;
   }
 
@@ -654,6 +836,7 @@ export function createWorkspace(rootDir) {
     root,
     listProjects,
     read,
+    readInline,
     write,
     writeGenerated,
     writeRecorded,
@@ -664,5 +847,6 @@ export function createWorkspace(rootDir) {
     specFile,
     specLocation,
     projectConfig,
+    productFiles,
   };
 }

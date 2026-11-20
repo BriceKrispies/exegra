@@ -1,0 +1,5 @@
+{
+  // Refused: imports a platform specification other than the project's (layer.import-mismatch).
+  "product": { "id": "badges", "name": "Badges", "imports": { "spec": "../other-platform.jsonc", "entities": [] } },
+  "types": [ { "id": "badges__tier", "name": "Badge tier", "kind": "enum", "values": ["bronze", "gold"] } ]
+}

@@ -12,8 +12,11 @@
 //   role-test     list<string>             the roles the acting principal holds
 // where V is the language's value union. Which variant of V is which kind of value (null, bool, int, string,
 // time, ref, list) is read from the language's literal operators: the operator for literal form `int` names the
-// variant of V that an int literal is. No lookup is available, so following a reference (`through`) to a record is
-// an evaluation error, as it is in the kernel without one.
+// variant of V that an int literal is. Following a reference (`through`) reads an optional lookup (WG-4968), a
+// map<string, map<string, map<string, V>>>: for each reference field it covers, the records that exist, by the
+// decimal text of the id the reference holds, each as a record scope is (its fields and system attributes). Without
+// a lookup, or for a field it does not cover, following a reference is an evaluation error, as it is in the kernel
+// without one or for a record the snapshot does not cover; a target the lookup covers but does not hold is null.
 //
 // check takes an environment struct {fields: map<string, string>, params: list<string>, roles: list<string>}: the
 // shape of each field of the record at the definition site, the parameters and the roles declared there.
@@ -25,7 +28,7 @@
 // specc's generated printer does (crates/spec-compiler/src/language.rs, printer): the rules of the "Parsing and
 // printing" table of docs/model-and-format.md.
 
-import { LANGUAGE_PRIMITIVES, LITERAL_KINDS } from './language.js';
+import { LANGUAGE_PRIMITIVES, LITERAL_KINDS, SAFE_INT, MAX_TEXT_BYTES, INTEGER_OVERFLOW, STRING_TOO_LONG } from './language.js';
 import { typeStructure } from './codegen-model.js';
 import { UnionValue, FnEvalError, errOf, ok, valueEq, compareKeys, primName, rustDebugStr, rustPascal } from './function-value.js';
 
@@ -146,12 +149,47 @@ function namesOf(info, e) {
 const label = (op) => (typeof op.syntax?.token === 'string' ? op.syntax.token : op.name);
 
 /**
+ * An operand of checked arithmetic: an integer within ±(2^53-1), or the error integer-overflow. Example values are
+ * decoded within that range already; the test keeps the evaluator correct for any number it is handed.
+ * @param {any} n @returns {number}
+ */
+const safe = (n) => {
+  if (typeof n !== 'number' || !Number.isSafeInteger(n)) throw new LangError(INTEGER_OVERFLOW);
+  return n;
+};
+
+/**
+ * The result of checked arithmetic on safe operands. The exact sum, difference or product of two safe integers is
+ * outside ±(2^53-1) exactly when the double JavaScript computes is (rounding to nearest is monotonic and 2^53 is a
+ * double), and inside that range the double is exact, so the test below decides on the exact value. -0 becomes 0.
+ * @param {number} n @returns {number}
+ */
+const checked = (n) => {
+  if (!(Math.abs(n) <= SAFE_INT)) throw new LangError(INTEGER_OVERFLOW);
+  return n === 0 ? 0 : n;
+};
+
+/** Decimal digits of an integer, as Rust's Display of i64 and u64 writes them. @param {any} n */
+const decimal = (n) => (n === 0 ? '0' : BigInt(n).toString());
+
+/** The length of a string in bytes of UTF-8 (Rust's str::len). @param {string} s */
+const utf8Length = (s) => {
+  let n = 0;
+  for (const c of s) {
+    const cp = /** @type {number} */ (c.codePointAt(0));
+    n += cp < 0x80 ? 1 : cp < 0x800 ? 2 : cp < 0x10000 ? 3 : 4;
+  }
+  return n;
+};
+
+/**
  * Evaluate an expression value. Returns result<V, string>: Ok of a value of the language's value union, or Err of
  * the kernel's message (crates/kernel/src/expr.rs eval).
  * @param {Model} model @param {Entity} lang @param {any} expr @param {Record<string, any>} env
+ * @param {Map<string, Map<string, Map<string, any>>>|null} [lookup] where references may be followed; none when null
  * @returns {UnionValue}
  */
-export function evalLanguage(model, lang, expr, env) {
+export function evalLanguage(model, lang, expr, env, lookup = null) {
   const info = languageInfo(model, lang);
   /** @param {string} kind @param {any} [payload] */
   const mk = (kind, payload) => {
@@ -258,6 +296,48 @@ export function evalLanguage(model, lang, expr, env) {
         if (kind(a) !== 'string') throw typeError(label(op), a);
         return mk('bool', /^[a-z0-9]+(-[a-z0-9]+)*$/.test(payload(a)));
       }
+      case 'add-checked': case 'sub-checked': case 'mul-checked': {
+        // Both operands first, left to right; then nulls; then the left's kind, then the right's.
+        const a = ev(args[0]), b = ev(args[1]);
+        if (isNull(a) || isNull(b)) return NULL();
+        const left = prim === 'mul-checked' ? ['int'] : ['int', 'time'];
+        if (!left.includes(/** @type {string} */ (kind(a)))) throw typeError(label(op), a);
+        if (kind(b) !== 'int') throw typeError(label(op), b);
+        const x = safe(payload(a)), y = safe(payload(b));
+        return mk(/** @type {string} */ (kind(a)), checked(prim === 'add-checked' ? x + y : prim === 'sub-checked' ? x - y : x * y));
+      }
+      case 'time-difference': {
+        const a = ev(args[0]), b = ev(args[1]);
+        if (isNull(a) || isNull(b)) return NULL();
+        if (kind(a) !== 'time') throw typeError(label(op), a);
+        if (kind(b) !== 'time') throw typeError(label(op), b);
+        return mk('int', checked(safe(payload(b)) - safe(payload(a))));
+      }
+      case 'days-ms': case 'hours-ms': case 'minutes-ms': {
+        const a = ev(args[0]);
+        if (isNull(a)) return a;
+        if (kind(a) !== 'int') throw typeError(label(op), a);
+        const unit = prim === 'days-ms' ? 86400000 : prim === 'hours-ms' ? 3600000 : 60000;
+        return mk('int', checked(safe(payload(a)) * unit));
+      }
+      case 'concat-checked': {
+        const a = ev(args[0]), b = ev(args[1]);
+        if (isNull(a) || isNull(b)) return NULL();
+        if (kind(a) !== 'string') throw typeError(label(op), a);
+        if (kind(b) !== 'string') throw typeError(label(op), b);
+        const s = String(payload(a)) + String(payload(b));
+        if (utf8Length(s) > MAX_TEXT_BYTES) throw new LangError(STRING_TOO_LONG);
+        return mk('string', s);
+      }
+      case 'to-text': {
+        const a = ev(args[0]);
+        if (isNull(a)) return a;
+        const k = kind(a);
+        if (k === 'string') return a;
+        if (k === 'bool') return mk('string', payload(a) ? 'true' : 'false');
+        if (k === 'int' || k === 'time' || k === 'ref') return mk('string', decimal(payload(a)));
+        throw typeError(label(op), a);
+      }
       case 'if': {
         const c = ev(args[0]);
         if (kind(c) === 'bool' && payload(c) === true) return ev(args[1]);
@@ -282,17 +362,23 @@ export function evalLanguage(model, lang, expr, env) {
         return attribute(record, scope, strings[0]);
       }
       case 'through': {
-        // expr.rs Expr::Through with no lookup: the reference field is read; a reference cannot be followed.
+        // expr.rs Expr::Through: the reference field is read and followed through the lookup (WG-4968). Without a
+        // lookup, or for a field the lookup does not cover, a reference cannot be followed.
         const { strings, scope } = namesOf(info, e);
         if (!scope) throw new LangError('no record scope');
         const record = recordOf(scope);
         if (!record) return NULL();
-        const field = strings[0];
+        const [field, target] = strings;
         if (!isFieldName(field)) throw new LangError(`invalid field identifier: ${rustDebugStr(field)}`);
         const v = record.get(field) ?? NULL();
         if (isNull(v)) return v;
-        if (kind(v) === 'ref') throw new LangError(`${field} cannot be followed here`);
-        throw typeError('following a reference', v);
+        if (kind(v) !== 'ref') throw typeError('following a reference', v);
+        if (!(lookup instanceof Map)) throw new LangError(`${field} cannot be followed here`);
+        const covered = lookup.get(field);
+        if (!(covered instanceof Map)) throw new LangError(`the lookup does not cover ${field}`);
+        const found = covered.get(String(payload(v)));
+        if (!(found instanceof Map)) return NULL();
+        return found.get(target) ?? NULL();
       }
       default: throw new LangError(`operator ${op.name} has no primitive`);
     }

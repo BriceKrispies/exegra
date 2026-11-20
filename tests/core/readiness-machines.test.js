@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { analyzeSpec } from '../../src/core/analyze.js';
 import { initEngine } from '../../src/core/engine.js';
@@ -129,12 +129,26 @@ test('an emit effect "to" must name a component or a contract', () => {
   assert.ok(codes.includes('effect.to'));
 });
 
-test('the exegra and strata projects have no implementation-level machine and so no readiness diagnostic', async () => {
+// The strata project is a local link (specs/strata/project.jsonc, untracked) to a large external specification; without
+// it the project is absent and this test is skipped, which `exegra verify` records as skipped, never as a pass.
+// Only the machine-readiness diagnostics are asserted: other readiness gaps of that specification, such as
+// ready.function-branch-uncovered reported with severity info, are not about implementation-level machines.
+const MACHINE_READY_CODES = new Set([
+  'ready.delivery-missing', 'ready.elapsed-no-timer', 'ready.emit-receiver-missing', 'ready.event-field-undeclared', 'ready.fault-only',
+  'ready.instances-storage', 'ready.order-ambiguous', 'ready.otherwise-misplaced', 'ready.outcome-missing', 'ready.payload-type-unresolved',
+  'ready.repr-missing', 'ready.repr-unresolved', 'ready.storage-creates-unfilled', 'ready.storage-field-type', 'ready.storage-field-unknown',
+  'ready.storage-key', 'ready.storage-mismatch', 'ready.storage-missing', 'ready.storage-state-field', 'ready.storage-variable-unmapped',
+  'ready.transaction-missing',
+]);
+const specsDir = fileURLToPath(new URL('../../specs', import.meta.url));
+const strataLinked = existsSync(fileURLToPath(new URL('../../specs/strata/project.jsonc', import.meta.url)));
+
+test('the exegra and strata projects have no implementation-level machine and so no readiness diagnostic', { skip: strataLinked ? false : 'the strata project is not linked (specs/strata/project.jsonc is a local link)' }, async () => {
   for (const name of ['exegra', 'strata']) {
-    const data = await createWorkspace(fileURLToPath(new URL('../../specs', import.meta.url))).read(name);
+    const data = await createWorkspace(specsDir).read(name);
     const p = analyzeSpec(data.spec.text);
     assert.ok(p.model.byKind.behavior.length > 0, name);
-    assert.deepEqual(p.diagnostics.filter((d) => d.code.startsWith('ready.')), [], name);
+    assert.deepEqual(p.diagnostics.filter((d) => MACHINE_READY_CODES.has(d.code)), [], name);
   }
 });
 

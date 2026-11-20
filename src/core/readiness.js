@@ -66,7 +66,7 @@ function contractReadiness(model) {
         } else if (errorStatus(model, f) === undefined) out.push(gap(c, 'ready.error-status-missing', `The error "${f.name}" of contract "${c.id}" states no "status" or "kind", and system.generation states no errorStatus or errorKind, so nothing says which HTTP status it is answered with.`));
       }
     }
-    if (c.data.realisation === undefined) out.push(gap(c, 'ready.contract-realisation-missing', `Contract "${c.id}" does not say how it is realised ("realisation": generated, derived, facade or hand).`));
+    if (c.data.realisation === undefined) out.push(gap(c, 'ready.contract-realisation-missing', `Contract "${c.id}" does not say how it is realised ("realisation": generated, derived, facade, hand or target).`));
     if (c.data.realisation === 'hand') {
       if (typeof c.data.ref !== 'string' || !HOLE_REF_RE.test(c.data.ref)) out.push(gap(c, 'ready.hole-ref-invalid', `Hand-written contract "${c.id}" needs a "ref" such as H-012; found ${c.data.ref === undefined ? 'none' : `"${c.data.ref}"`}.`));
       if (c.data.implementedBy === undefined) out.push(gap(c, 'ready.hole-implemented-by-missing', `Hand-written contract "${c.id}" names no component in "implementedBy".`));

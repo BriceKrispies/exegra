@@ -89,7 +89,9 @@ const MENTIONS_FIELD = [
   'And(items) => any(i in items, call mentions-field(i)), Or(items) => any(i in items, call mentions-field(i))',
   'Cmp{left, right} => call mentions-field(left) || call mentions-field(right), In{item, list: l} => call mentions-field(item) || call mentions-field(l)',
   'Contains{haystack, needle} => call mentions-field(haystack) || call mentions-field(needle), StartsWith{text, prefix} => call mentions-field(text) || call mentions-field(prefix)',
-  'If{cond, then: t, otherwise} => call mentions-field(cond) || call mentions-field(t) || call mentions-field(otherwise) }',
+  'If{cond, then: t, otherwise} => call mentions-field(cond) || call mentions-field(t) || call mentions-field(otherwise)',
+  'Arith{left, right} => call mentions-field(left) || call mentions-field(right), MsBetween{from: a, to: b} => call mentions-field(a) || call mentions-field(b)',
+  'Duration{amount} => call mentions-field(amount), Concat{left, right} => call mentions-field(left) || call mentions-field(right), Text(a) => call mentions-field(a) }',
 ].join(', ');
 /** References to the fixtures below, as examples write them. */
 const TENANT = { fixture: 'tenant-alpha' };
@@ -369,6 +371,9 @@ const FUNCTIONS = [
       { args: { e: { In: { item: { Param: 'tag' }, list: varOf('Record', 'tags') } } }, result: true },
       { args: { e: { Contains: { haystack: varOf('New', 'body'), needle: lit(str('x')) } } }, result: true },
       { args: { e: { StartsWith: { text: lit(str('abc')), prefix: varOf('Record', 'prefix') } } }, result: true },
+      { args: { e: { Arith: { op: 'Sub', left: 'Now', right: { Duration: { unit: 'Days', amount: lit({ Int: 7 }) } } } } }, result: false },
+      { args: { e: { MsBetween: { from: varOf('Record', 'starts_at'), to: 'Now' } } }, result: true },
+      { args: { e: { Concat: { left: 'Principal', right: { Text: varOf('Record', '$id') } } } }, result: false },
     ],
   },
   {

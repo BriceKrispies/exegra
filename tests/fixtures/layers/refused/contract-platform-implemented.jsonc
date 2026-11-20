@@ -1,0 +1,5 @@
+{
+  // Refused: a product contract implemented by the platform component "runtime" (layer.platform-power).
+  "product": { "id": "badges", "name": "Badges", "imports": { "spec": "../platform.jsonc", "entities": ["runtime"] } },
+  "contracts": [ { "id": "badges__award", "name": "Award a badge", "implementedBy": "runtime" } ]
+}

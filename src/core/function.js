@@ -33,7 +33,7 @@ import { splitTop } from './type-expr.js';
 import { INT_RANGES } from './expr.js';
 import { parseFnExpr, calledFunctions, isBindableName, BUILTIN_OPS } from './function-syntax.js';
 import {
-  UnionValue, FnEvalError, RESULT_TYPE, UNIT, ok, errOf, valueEq, compareKeys, primName, isIntType, isNumberType, typeText,
+  UnionValue, FnEvalError, RESULT_TYPE, UNIT, ok, errOf, valueEq, compareKeys, compareOrdered, isOrderable, primName, isIntType, isNumberType, typeText,
   decodeValue, encodeTyped, displayValue, debugValue, debuggable, jsonText, jsonWritable, rustDebugStr,
 } from './function-value.js';
 import { evalLanguage, checkLanguage, printLanguage } from './language-eval.js';
@@ -98,6 +98,9 @@ function scalarClass(t) {
   return n;
 }
 
+/** The type of the literal null: an option of unknown. @param {FnType} t */
+const isNullLiteral = (t) => t.k === 'option' && t.of.k === 'unknown';
+
 /**
  * Whether a value of type `from` may stand where `to` is expected. A T stands for option<T>; never and unknown
  * fit everything; ids and scalars fit their representation's class.
@@ -106,6 +109,8 @@ function scalarClass(t) {
 export function assignable(from, to) {
   if (from.k === 'never' || from.k === 'unknown' || to.k === 'never' || to.k === 'unknown') return true;
   if (to.k === 'option') return from.k === 'option' ? assignable(from.of, to.of) : assignable(from, to.of);
+  // The literal null is also the JSON null, where a json value is expected.
+  if (isNullLiteral(from) && scalarClass(to) === 'json') return true;
   if (from.k === 'option') return false;
   const fc = scalarClass(from), tc = scalarClass(to);
   if (fc !== undefined || tc !== undefined) return fc === tc;
@@ -137,6 +142,8 @@ const comparable = (a, b) => assignable(a, b) || assignable(b, a);
 export function join(a, b) {
   if (a.k === 'never' || a.k === 'unknown') return b.k === 'never' && a.k === 'unknown' ? a : b;
   if (b.k === 'never' || b.k === 'unknown') return a;
+  if (isNullLiteral(a) && scalarClass(b) === 'json') return b;
+  if (isNullLiteral(b) && scalarClass(a) === 'json') return a;
   if (a.k === 'option' || b.k === 'option') {
     const inner = join(a.k === 'option' ? a.of : a, b.k === 'option' ? b.of : b);
     return inner && { k: 'option', of: inner };
@@ -437,8 +444,7 @@ function typeFunction(model, sig, sigs) {
         case 'find': need(body, BOOL, 'The condition of find'); return { k: 'option', of };
         case 'any': case 'all': need(body, BOOL, `The condition of ${op}`); return BOOL;
         case 'sortBy': {
-          const c = scalarClass(body);
-          if (c !== 'number' && c !== 'string' && body.k !== 'unknown' && body.k !== 'enum') throw tyErr(`The key of sortBy is ${aText(body)}; it is a number or a string`);
+          if (!isOrderable(body)) throw tyErr(`The key of sortBy is ${aText(body)}; it is a number, a string, a bool, an enum value, or a list, option, struct or union of those`);
           return { k: 'list', of };
         }
       }
@@ -540,7 +546,8 @@ function typeFunction(model, sig, sigs) {
         return BOOL;
       case 'parseTime': { arity(1); need(walk(n.args[0], scope), STRING, 'The argument of parseTime'); return { k: 'result', ok: I64, err: STRING }; }
       case 'eval': case 'check': {
-        arity(3);
+        if (op === 'eval' && n.args.length === 4) arity(4);
+        else arity(3);
         const lang = languageOf(n.args[0], op);
         n.args[0].res = 'language';
         n.args[0].ty = UNKNOWN;
@@ -559,6 +566,13 @@ function typeFunction(model, sig, sigs) {
             const f = env.fields.find((x) => x.name === s.name);
             if (!f) throw tyErr(`The environment of eval, ${env.id}, has no field "${s.name}" for scope "${s.name}" of language "${lang.id}"`);
             if (!assignable(fieldType(f), want) || !assignable(want, fieldType(f))) throw tyErr(`Field "${s.name}" of ${env.id} is a ${typeText(fieldType(f))}; scope "${s.name}" (${s.kind}) of language "${lang.id}" reads ${aText(want)}`);
+          }
+          // The optional fourth argument: the lookup that following a reference (through) reads. For each reference
+          // field it covers, the records that exist, by the decimal text of their id, as record scopes are.
+          if (n.args.length === 4) {
+            /** @type {FnType} */
+            const lookup = { k: 'map', key: STRING, value: { k: 'map', key: STRING, value: { k: 'map', key: STRING, value: values } } };
+            need(walk(n.args[3], scope), lookup, 'The lookup of eval');
           }
           return { k: 'result', ok: values, err: STRING };
         }
@@ -880,7 +894,7 @@ function builtin(model, n, env, sigs) {
       case 'find': return xs.find(at) ?? null;
       case 'any': return xs.some(at);
       case 'all': return xs.every(at);
-      case 'sortBy': return Object.freeze(xs.map((x) => ({ x, k: at(x) })).sort((a, b) => compareKeys(a.k, b.k)).map((p) => p.x));
+      case 'sortBy': return Object.freeze(xs.map((x) => ({ x, k: at(x) })).sort((a, b) => compareOrdered(/** @type {FnType} */ (body.ty), a.k, b.k)).map((p) => p.x));
       case 'fold': {
         const acc = /** @type {any} */ (n.acc);
         let a = go(acc.init);
@@ -916,7 +930,7 @@ function builtin(model, n, env, sigs) {
       const first = /** @type {any} */ (n.args[0]);
       const lang = /** @type {Entity} */ (model.entities.get(first.path[0]));
       if (n.name === 'print') return printLanguage(model, lang, args[1]);
-      return n.name === 'eval' ? evalLanguage(model, lang, args[1], args[2]) : checkLanguage(model, lang, args[1], args[2]);
+      return n.name === 'eval' ? evalLanguage(model, lang, args[1], args[2], args[3]) : checkLanguage(model, lang, args[1], args[2]);
     }
     case 'startsWith': return String(args[0]).startsWith(args[1]);
     case 'endsWith': return String(args[0]).endsWith(args[1]);

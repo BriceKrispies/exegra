@@ -16,6 +16,10 @@ const cmp = (/** @type {string} */ name, /** @type {string} */ value, /** @type 
 const ORDERED = ['int', 'time', 'str'];
 const call = (/** @type {string} */ name, /** @type {string} */ variant, /** @type {string} */ token, /** @type {any[]} */ operands, /** @type {string} */ result, nulls = 'propagate', primitive = name) => (
   { name, variant, syntax: { form: 'call', token }, operands, result, nulls, primitive });
+const arith = (/** @type {string} */ name, /** @type {string} */ value, /** @type {string} */ token, /** @type {number} */ precedence, /** @type {any[]} */ operands, /** @type {string} */ result, /** @type {string} */ primitive) => (
+  { name, variant: 'Arith', case: { field: 'op', value }, syntax: { form: 'infix', token, precedence, assoc: 'left' }, operands, result, nulls: 'propagate', primitive });
+const duration = (/** @type {string} */ name, /** @type {string} */ value, /** @type {string} */ primitive) => (
+  { name, variant: 'Duration', case: { field: 'unit', value }, syntax: { form: 'call', token: name }, operands: ['int'], result: 'int', nulls: 'propagate', primitive });
 const lit = (/** @type {string} */ name, /** @type {string} */ value, /** @type {string} */ token, /** @type {string} */ result, primitive = 'literal') => (
   { name, variant: 'Lit', case: { field: 'value', value }, syntax: { form: 'literal', token }, operands: [], result, nulls: 'total', primitive });
 
@@ -30,6 +34,8 @@ export function spec(mutate = () => {}, { generation = true } = {}) {
       { id: 'role-id', name: 'Role id', kind: 'id', repr: 'string' },
       { id: 'cmp-op', name: 'Comparison', kind: 'enum', values: ['Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge'] },
       { id: 'scope', name: 'Scope', kind: 'enum', values: ['Record', 'Old', 'New'] },
+      { id: 'arith-op', name: 'Arithmetic', kind: 'enum', values: ['Add', 'Sub', 'Mul'] },
+      { id: 'duration-unit', name: 'Duration unit', kind: 'enum', values: ['Days', 'Hours', 'Minutes'] },
       { id: 'value', name: 'Value', kind: 'union', variants: [
         { name: 'Null' },
         { name: 'Bool', newtype: true, fields: [{ name: 'value', type: 'bool' }] },
@@ -59,6 +65,12 @@ export function spec(mutate = () => {}, { generation = true } = {}) {
         { name: 'StartsWith', fields: [expr('text'), expr('prefix')] },
         { name: 'IsSlug', newtype: true, fields: [expr('inner')] },
         { name: 'If', fields: [expr('cond'), expr('then'), expr('otherwise')] },
+        // Checked arithmetic, time arithmetic and text (Strata D-6540 to D-6543).
+        { name: 'Arith', fields: [{ name: 'op', type: 'arith-op' }, expr('left'), expr('right')] },
+        { name: 'MsBetween', fields: [expr('from'), expr('to')] },
+        { name: 'Duration', fields: [{ name: 'unit', type: 'duration-unit' }, expr('amount')] },
+        { name: 'Concat', fields: [expr('left'), expr('right')] },
+        { name: 'Text', newtype: true, fields: [expr('inner')] },
       ] },
     ],
     languages: [{
@@ -108,6 +120,15 @@ export function spec(mutate = () => {}, { generation = true } = {}) {
         call('starts-with', 'StartsWith', 'starts_with', ['str', 'str'], 'bool'),
         call('is-slug', 'IsSlug', 'is_slug', ['str'], 'bool'),
         call('if', 'If', 'if', ['bool', 'any', 'any'], 'operand:2', 'null-is-false'),
+        arith('add', 'Add', '+', 5, [['int', 'time'], 'int'], 'operand:1', 'add-checked'),
+        arith('sub', 'Sub', '-', 5, [['int', 'time'], 'int'], 'operand:1', 'sub-checked'),
+        arith('mul', 'Mul', '*', 6, ['int', 'int'], 'int', 'mul-checked'),
+        call('ms-between', 'MsBetween', 'ms_between', ['time', 'time'], 'int', 'propagate', 'time-difference'),
+        duration('days', 'Days', 'days-ms'),
+        duration('hours', 'Hours', 'hours-ms'),
+        duration('minutes', 'Minutes', 'minutes-ms'),
+        call('concat', 'Concat', 'concat', ['str', 'str'], 'str', 'propagate', 'concat-checked'),
+        call('text', 'Text', 'text', [['int', 'time', 'ref', 'bool', 'str']], 'str', 'propagate', 'to-text'),
       ],
     }],
   };

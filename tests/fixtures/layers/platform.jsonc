@@ -1,0 +1,107 @@
+{
+  // A small platform for the layered-specification tests (tests/core/layers.test.js): a runtime,
+  // the product-module component a product's metadata belongs to, a tenant id type, a capability,
+  // a role and the contract that installs a tenant bundle, and the platform types the typed sections of
+  // a product file conform to (object-type-def, trigger-def, automation-def, tenant-operation-def and
+  // the types they use, copied from the Strata specification). The product files in products/ and
+  // refused/ import it.
+  "exegra": "0.1",
+  "system": {
+    "id": "mini-platform",
+    "name": "Mini platform",
+    "description": "A platform whose product features are tenant metadata installed through the runtime."
+  },
+  "components": [
+    { "id": "runtime", "name": "Runtime", "category": "computational", "purpose": "Holds tenant data and installs tenant metadata." },
+    { "id": "product-module", "name": "Product module", "category": "logical", "purpose": "A product feature: record types, views, workflows and operations as tenant metadata." }
+  ],
+  "relationships": [
+    { "id": "product-module-calls-runtime", "kind": "calls", "from": "product-module", "to": "runtime", "description": "Reaches tenant data through the runtime alone." }
+  ],
+  "types": [
+    { "id": "tenant-id", "name": "Tenant id", "kind": "id", "repr": "uuid" },
+    { "id": "tenant-bundle", "name": "Tenant bundle", "kind": "struct", "fields": [ { "name": "name", "type": "string" }, { "name": "content", "type": "json" } ] },
+    {"id":"object-type-def","name":"Object Type Def","kind":"struct","fields":[{"name":"id","type":"object-type-id"},{"name":"label","type":"string"},{"name":"fields","type":"map<field-id, field-def>"},{"name":"constraints","type":"map<constraint-id, constraint-def>"},{"name":"retention","type":"retention-rule","optional":true},{"name":"publication","type":"publication-def","optional":true},{"name":"language-field","type":"field-id","optional":true},{"name":"translation-group","type":"field-id","optional":true}]},
+    {"id":"object-type-id","name":"object-type-id","kind":"id","repr":"string","constraints":{"pattern":"^[a-z][a-z0-9_]*$","maxLength":64}},
+    {"id":"field-id","name":"field-id","kind":"id","repr":"string","constraints":{"pattern":"^[a-z][a-z0-9_]*$","maxLength":64}},
+    {"id":"field-def","name":"Field Def","kind":"struct","fields":[{"name":"id","type":"field-id"},{"name":"label","type":"string"},{"name":"ty","type":"field-type"},{"name":"required","type":"bool"},{"name":"unique","type":"bool"},{"name":"default","type":"option<expr>"},{"name":"read","type":"expr","optional":true},{"name":"personal","type":"personal-declaration","optional":true}]},
+    {"id":"field-type","name":"Field Type","kind":"union","encoding":{"tag":"external","variantCase":"PascalCase"},"variants":[{"name":"str"},{"name":"int"},{"name":"bool"},{"name":"time"},{"name":"ref","fields":[{"name":"target","type":"object-type-id"},{"name":"on-delete","type":"on-delete"}]},{"name":"list","newtype":true,"fields":[{"name":"value","type":"field-type"}]},{"name":"file","fields":[{"name":"media-types","type":"list<string>"},{"name":"max-bytes","type":"u64"},{"name":"renditions","type":"list<rendition-def>"}]},{"name":"language"}]},
+    {"id":"on-delete","name":"On Delete","kind":"union","encoding":{"tag":"external","variantCase":"PascalCase"},"variants":[{"name":"restrict"},{"name":"set-null"}]},
+    {"id":"rendition-def","name":"Rendition Def","kind":"struct","fields":[{"name":"name","type":"string"},{"name":"width","type":"u32"},{"name":"height","type":"u32"},{"name":"format","type":"string"}]},
+    {"id":"expr","name":"Expr","kind":"union","encoding":{"tag":"external","variantCase":"PascalCase"},"variants":[{"name":"lit","newtype":true,"fields":[{"name":"value","type":"value"}]},{"name":"var","tuple":true,"fields":[{"name":"scope","type":"scope"},{"name":"field","type":"string"}]},{"name":"through","tuple":true,"fields":[{"name":"scope","type":"scope"},{"name":"reference","type":"string"},{"name":"field","type":"string"}]},{"name":"param","newtype":true,"fields":[{"name":"value","type":"string"}]},{"name":"now"},{"name":"principal"},{"name":"has-role","newtype":true,"fields":[{"name":"value","type":"role-id"}]},{"name":"not","newtype":true,"fields":[{"name":"value","type":"expr"}]},{"name":"and","newtype":true,"fields":[{"name":"value","type":"list<expr>"}]},{"name":"or","newtype":true,"fields":[{"name":"value","type":"list<expr>"}]},{"name":"cmp","tuple":true,"fields":[{"name":"op","type":"cmp-op"},{"name":"left","type":"expr"},{"name":"right","type":"expr"}]},{"name":"in","tuple":true,"fields":[{"name":"item","type":"expr"},{"name":"list","type":"expr"}]},{"name":"is-null","newtype":true,"fields":[{"name":"value","type":"expr"}]},{"name":"len","newtype":true,"fields":[{"name":"value","type":"expr"}]},{"name":"lower","newtype":true,"fields":[{"name":"value","type":"expr"}]},{"name":"contains","tuple":true,"fields":[{"name":"haystack","type":"expr"},{"name":"needle","type":"expr"}]},{"name":"starts-with","tuple":true,"fields":[{"name":"text","type":"expr"},{"name":"prefix","type":"expr"}]},{"name":"is-slug","newtype":true,"fields":[{"name":"value","type":"expr"}]},{"name":"if","tuple":true,"fields":[{"name":"condition","type":"expr"},{"name":"then","type":"expr"},{"name":"else","type":"expr"}]}]},
+    {"id":"value","name":"Value","kind":"union","encoding":{"tag":"external","variantCase":"PascalCase"},"variants":[{"name":"null"},{"name":"bool","newtype":true,"fields":[{"name":"value","type":"bool"}]},{"name":"int","newtype":true,"fields":[{"name":"value","type":"i64"}]},{"name":"str","newtype":true,"fields":[{"name":"value","type":"string"}]},{"name":"time","newtype":true,"fields":[{"name":"value","type":"i64"}]},{"name":"ref","newtype":true,"fields":[{"name":"value","type":"record-id"}]},{"name":"list","newtype":true,"fields":[{"name":"value","type":"list<value>"}]}]},
+    {"id":"record-id","name":"record-id","kind":"id","repr":"u64"},
+    {"id":"scope","name":"Scope","kind":"union","encoding":{"tag":"external","variantCase":"PascalCase"},"variants":[{"name":"record"},{"name":"old"},{"name":"new"}]},
+    {"id":"role-id","name":"role-id","kind":"id","repr":"string","constraints":{"pattern":"^[a-z][a-z0-9_]*$","maxLength":64}},
+    {"id":"cmp-op","name":"Cmp Op","kind":"union","encoding":{"tag":"external","variantCase":"PascalCase"},"variants":[{"name":"eq"},{"name":"ne"},{"name":"lt"},{"name":"le"},{"name":"gt"},{"name":"ge"}]},
+    {"id":"personal-declaration","name":"Personal Declaration","kind":"struct","fields":[{"name":"kind","type":"personal-kind"},{"name":"subject","type":"data-subject"},{"name":"searchable","type":"bool"}]},
+    {"id":"personal-kind","name":"Personal Kind","kind":"enum","values":["name","email-address","phone-number","postal-address","identifier","date-of-birth","location","financial","special-category","free-text","file","other"]},
+    {"id":"data-subject","name":"Data Subject","kind":"union","encoding":{"tag":"external","variantCase":"PascalCase"},"variants":[{"name":"creator"},{"name":"field","fields":[{"name":"field","type":"field-id"}]}]},
+    {"id":"constraint-id","name":"constraint-id","kind":"id","repr":"string","constraints":{"pattern":"^[a-z][a-z0-9_]*$","maxLength":64}},
+    {"id":"constraint-def","name":"Constraint Def","kind":"struct","fields":[{"name":"id","type":"constraint-id"},{"name":"expr","type":"expr"},{"name":"message","type":"string"}]},
+    {"id":"retention-rule","name":"Retention Rule","kind":"struct","fields":[{"name":"days","type":"u32"},{"name":"from","type":"retention-start"}]},
+    {"id":"retention-start","name":"Retention Start","kind":"union","encoding":{"tag":"external","variantCase":"PascalCase"},"variants":[{"name":"created"},{"name":"last-changed"},{"name":"field","fields":[{"name":"field","type":"field-id"}]}]},
+    {"id":"publication-def","name":"Publication Def","kind":"struct","fields":[{"name":"state-field","type":"field-id"},{"name":"draft","type":"string"},{"name":"published","type":"string"},{"name":"withdrawn","type":"string"},{"name":"in-review","type":"string","optional":true},{"name":"approved","type":"string","optional":true},{"name":"time-field","type":"field-id","optional":true},{"name":"review-workflow","type":"workflow-id","optional":true},{"name":"review-run-field","type":"field-id","optional":true}]},
+    {"id":"workflow-id","name":"workflow-id","kind":"id","repr":"string","constraints":{"pattern":"^[a-z][a-z0-9_]*$","maxLength":64}},
+    {"id":"policy-def","name":"Policy Def","kind":"struct","fields":[{"name":"id","type":"policy-id"},{"name":"role","type":"role-id"},{"name":"resource","type":"resource"},{"name":"actions","type":"set<action>"},{"name":"condition","type":"option<expr>"}]},
+    {"id":"policy-id","name":"policy-id","kind":"id","repr":"string","constraints":{"pattern":"^[a-z][a-z0-9_]*$","maxLength":64}},
+    {"id":"resource","name":"Resource","kind":"union","encoding":{"tag":"external","variantCase":"PascalCase"},"variants":[{"name":"object","newtype":true,"fields":[{"name":"value","type":"object-type-id"}]},{"name":"any-object"},{"name":"schema"},{"name":"members"}]},
+    {"id":"action","name":"Action","kind":"union","encoding":{"tag":"external","variantCase":"PascalCase"},"variants":[{"name":"read"},{"name":"create"},{"name":"update"},{"name":"delete"},{"name":"manage"}]},
+    {"id":"segment-decl","name":"Segment Decl","kind":"struct","fields":[{"name":"name","type":"string"},{"name":"subject-type","type":"object-type-id"},{"name":"predicate","type":"expression"},{"name":"refresh-seconds","type":"u32","optional":true}]},
+    {"id":"expression","name":"expression","kind":"scalar","repr":"string"},
+    {"id":"setting-def","name":"Setting Def","kind":"struct","fields":[{"name":"id","type":"setting-id"},{"name":"label","type":"string"},{"name":"type","type":"setting-type"},{"name":"default","type":"value"},{"name":"levels","type":"set<setting-level>"},{"name":"locked-by","type":"setting-level","optional":true}]},
+    {"id":"setting-id","name":"setting-id","kind":"id","repr":"string","constraints":{"pattern":"^[a-z][a-z0-9_]*$","maxLength":64}},
+    {"id":"setting-type","name":"setting-type","kind":"scalar","repr":"string","constraints":{"pattern":"^[a-z][a-z0-9_]*$","maxLength":64}},
+    {"id":"setting-level","name":"setting-level","kind":"enum","values":["platform","tenant","team","person"]},
+    {"id":"ledger-unit-decl","name":"Ledger Unit Decl","kind":"struct","fields":[{"name":"unit","type":"ledger-unit"},{"name":"description","type":"string"}]},
+    {"id":"ledger-unit","name":"Ledger unit","kind":"id","repr":"string","constraints":{"pattern":"^[a-z][a-z0-9_-]*$","maxLength":64}},
+    {"id":"ledger-pool-decl","name":"Ledger Pool Decl","kind":"struct","fields":[{"name":"pool","type":"ledger-pool-name"},{"name":"description","type":"string"}]},
+    {"id":"ledger-pool-name","name":"Ledger pool name","kind":"id","repr":"string","constraints":{"pattern":"^[a-z][a-z0-9_-]*$","maxLength":64}},
+    {"id":"ledger-limit","name":"Ledger limit","kind":"struct","fields":[{"name":"unit","type":"ledger-unit"},{"name":"owner","type":"ledger-owner","optional":true},{"name":"floor","type":"ledger-amount","optional":true},{"name":"cap","type":"ledger-amount","optional":true},{"name":"period-cap","type":"u64","optional":true},{"name":"period","type":"ledger-period","optional":true},{"name":"scope","type":"ledger-scope","optional":true}]},
+    {"id":"ledger-owner","name":"Ledger owner","kind":"union","encoding":{"tag":"external","variantCase":"snake_case"},"variants":[{"name":"principal","fields":[{"name":"principal","type":"principal-id"}]},{"name":"pool","fields":[{"name":"pool","type":"ledger-pool-name"}]}]},
+    {"id":"principal-id","name":"principal-id","kind":"id","repr":"string","constraints":{"pattern":"^[A-Za-z0-9_:.-]+$","maxLength":96}},
+    {"id":"ledger-amount","name":"Ledger amount","kind":"scalar","repr":"i64"},
+    {"id":"ledger-period","name":"Ledger period","kind":"enum","values":["hour","day","week","month"]},
+    {"id":"ledger-scope","name":"Ledger scope","kind":"scalar","repr":"string","constraints":{"maxLength":128}},
+    {"id":"mail-template-decl","name":"Mail Template Decl","kind":"struct","fields":[{"name":"template","type":"template-id"},{"name":"subject","type":"string"},{"name":"body","type":"structured-blocks"}]},
+    {"id":"template-id","name":"template-id","kind":"id","repr":"string"},
+    {"id":"structured-blocks","name":"structured-blocks","kind":"scalar","repr":"string"},
+    {"id":"notice-template-decl","name":"Notice Template Decl","kind":"struct","fields":[{"name":"template","type":"template-id"},{"name":"title","type":"string"},{"name":"body","type":"structured-blocks"}]},
+    {"id":"token-decl","name":"Token Decl","kind":"struct","fields":[{"name":"name","type":"string"},{"name":"expression","type":"expression"},{"name":"fallback","type":"string"}]},
+    {"id":"trigger-def","name":"Trigger definition","kind":"struct","fields":[{"name":"id","type":"trigger-id"},{"name":"on","type":"trigger-event"},{"name":"condition","type":"option<expression>","optional":true},{"name":"automation","type":"workflow-id"},{"name":"paused","type":"bool","optional":true}]},
+    {"id":"trigger-id","name":"trigger-id","kind":"id","repr":"string","constraints":{"pattern":"^[a-z][a-z0-9_]*$","maxLength":64}},
+    {"id":"trigger-event","name":"Trigger event","kind":"union","encoding":{"tag":"external","variantCase":"PascalCase"},"variants":[{"name":"record-created","fields":[{"name":"object","type":"object-type-id"}]},{"name":"record-updated","fields":[{"name":"object","type":"object-type-id"},{"name":"transition","type":"option<string>","optional":true}]},{"name":"record-deleted","fields":[{"name":"object","type":"object-type-id"}]},{"name":"segment-entered","fields":[{"name":"segment","type":"segment-id"}]},{"name":"segment-exited","fields":[{"name":"segment","type":"segment-id"}]},{"name":"ledger-posted","fields":[{"name":"unit","type":"ledger-unit"}]},{"name":"setting-changed","fields":[{"name":"setting","type":"setting-id"}]},{"name":"schedule-due","fields":[{"name":"schedule","type":"schedule-id"}]},{"name":"inbound-webhook","fields":[{"name":"endpoint","type":"string"}]}]},
+    {"id":"segment-id","name":"segment-id","kind":"id","repr":"uuid"},
+    {"id":"schedule-id","name":"schedule-id","kind":"id","repr":"uuid"},
+    {"id":"automation-def","name":"Automation definition","kind":"struct","fields":[{"name":"id","type":"workflow-id"},{"name":"label","type":"string"},{"name":"run-as","type":"run-as"},{"name":"run-key","type":"option<expression>","optional":true},{"name":"start","type":"step-name"},{"name":"steps","type":"map<step-name, automation-step-def>"}]},
+    {"id":"run-as","name":"Run-as authority","kind":"struct","fields":[{"name":"roles","type":"set<role-id>"}]},
+    {"id":"step-name","name":"step-name","kind":"id","repr":"string","constraints":{"pattern":"^[a-z][a-z0-9_]*$","maxLength":64}},
+    {"id":"automation-step-def","name":"Automation step definition","kind":"struct","fields":[{"name":"action","type":"automation-step"},{"name":"next","type":"option<step-name>","optional":true},{"name":"retry","type":"option<step-retry>","optional":true},{"name":"timeout","type":"option<duration>","optional":true},{"name":"compensate","type":"option<step-name>","optional":true}]},
+    {"id":"automation-step","name":"Automation step","kind":"union","encoding":{"tag":"external","variantCase":"PascalCase"},"variants":[{"name":"create-record","fields":[{"name":"object","type":"object-type-id"},{"name":"fields","type":"map<field-id, expression>"}]},{"name":"update-record","fields":[{"name":"object","type":"object-type-id"},{"name":"record","type":"expression"},{"name":"fields","type":"map<field-id, expression>"}]},{"name":"delete-record","fields":[{"name":"object","type":"object-type-id"},{"name":"record","type":"expression"}]},{"name":"post-ledger","fields":[{"name":"owner","type":"expression"},{"name":"unit","type":"ledger-unit"},{"name":"amount","type":"expression"},{"name":"reason","type":"string"}]},{"name":"send-mail","fields":[{"name":"template","type":"template-id"},{"name":"to","type":"expression"},{"name":"category","type":"option<string>","optional":true}]},{"name":"create-notice","fields":[{"name":"template","type":"template-id"},{"name":"to","type":"expression"},{"name":"record","type":"option<expression>","optional":true}]},{"name":"call-webhook","fields":[{"name":"subscription","type":"identifier"},{"name":"body","type":"map<string, expression>"}]},{"name":"wait-for","fields":[{"name":"duration","type":"duration"}]},{"name":"wait-until","fields":[{"name":"at","type":"expression"}]},{"name":"branch","fields":[{"name":"condition","type":"expression"},{"name":"object","type":"option<object-type-id>","optional":true},{"name":"record","type":"option<expression>","optional":true},{"name":"then","type":"step-name"},{"name":"else","type":"step-name"}]},{"name":"fan-out","fields":[{"name":"segment","type":"segment-id"},{"name":"batch","type":"u32"},{"name":"each","type":"step-name"}]},{"name":"request-approval","fields":[{"name":"policy","type":"policy-id"},{"name":"timeout","type":"duration"},{"name":"approved","type":"step-name"},{"name":"refused","type":"step-name"}]},{"name":"end"}]},
+    {"id":"identifier","name":"identifier","kind":"id","repr":"uuid"},
+    {"id":"step-retry","name":"Step retry policy","kind":"struct","fields":[{"name":"attempts","type":"u32"},{"name":"first-delay","type":"duration","optional":true},{"name":"max-delay","type":"duration","optional":true}]},
+    {"id":"tenant-operation-def","name":"Tenant Operation Def","kind":"struct","fields":[{"name":"id","type":"tenant-operation-id"},{"name":"label","type":"string"},{"name":"inputs","type":"list<tenant-operation-input>"},{"name":"invokers","type":"tenant-operation-invokers"},{"name":"subject","type":"option<tenant-operation-subject>"},{"name":"conditions","type":"list<tenant-operation-condition>"},{"name":"steps","type":"list<tenant-operation-step>"}]},
+    {"id":"tenant-operation-id","name":"tenant-operation-id","kind":"id","repr":"string","constraints":{"pattern":"^[a-z][a-z0-9_]*$","maxLength":64}},
+    {"id":"tenant-operation-input","name":"Tenant operation input","kind":"struct","fields":[{"name":"name","type":"string"},{"name":"ty","type":"field-type"},{"name":"required","type":"bool"},{"name":"label","type":"string","optional":true}]},
+    {"id":"tenant-operation-invokers","name":"Tenant operation invokers","kind":"struct","fields":[{"name":"signed-in","type":"bool"},{"name":"roles","type":"set<role-id>"}]},
+    {"id":"tenant-operation-subject","name":"Tenant operation subject","kind":"struct","fields":[{"name":"object","type":"object-type-id"},{"name":"input","type":"string"}]},
+    {"id":"tenant-operation-condition","name":"Tenant operation condition","kind":"struct","fields":[{"name":"id","type":"string"},{"name":"expr","type":"expr"},{"name":"error","type":"string"},{"name":"message","type":"string"}]},
+    {"id":"tenant-operation-step","name":"Tenant operation step","kind":"union","encoding":{"tag":"external","variantCase":"PascalCase"},"variants":[{"name":"create-record","fields":[{"name":"id","type":"string"},{"name":"object","type":"object-type-id"},{"name":"fields","type":"map<field-id, expr>"}]},{"name":"update-record","fields":[{"name":"id","type":"string"},{"name":"object","type":"object-type-id"},{"name":"record","type":"expr"},{"name":"fields","type":"map<field-id, expr>"}]},{"name":"delete-record","fields":[{"name":"id","type":"string"},{"name":"object","type":"object-type-id"},{"name":"record","type":"expr"}]},{"name":"post-ledger","fields":[{"name":"id","type":"string"},{"name":"owner","type":"tenant-operation-posting-owner"},{"name":"unit","type":"ledger-unit"},{"name":"scope","type":"option<expr>"},{"name":"amount","type":"expr"},{"name":"reason","type":"string"}]}]},
+    {"id":"tenant-operation-posting-owner","name":"Tenant operation posting owner","kind":"union","encoding":{"tag":"external","variantCase":"PascalCase"},"variants":[{"name":"invoker"},{"name":"pool","fields":[{"name":"pool","type":"ledger-pool-name"}]},{"name":"principal","fields":[{"name":"principal","type":"expr"}]}]}
+  ],
+  "capabilities": [
+    { "id": "content-write", "name": "Write content", "description": "Create and change tenant content.", "core": true },
+    { "id": "content-read", "name": "Read content", "description": "Read tenant content.", "core": true },
+    { "id": "tenant-operation-invoke", "name": "Invoke a tenant operation", "description": "Invoke an operation a product declares as tenant metadata.", "core": true }
+  ],
+  "roles": [
+    { "id": "owner", "name": "Owner", "level": "tenant", "holders": ["person"], "capabilities": ["content-write", "content-read", "tenant-operation-invoke"] }
+  ],
+  "contracts": [
+    {
+      "id": "install-bundle",
+      "name": "Install a tenant bundle",
+      "inputs": [ { "name": "tenant", "type": "tenant-id" }, { "name": "bundle", "type": "tenant-bundle" } ]
+    }
+  ]
+}

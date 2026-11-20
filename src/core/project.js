@@ -5,8 +5,15 @@
 // as a whole on every commit (immutable snapshots). A transaction is a list of
 // operations applied all-or-nothing: if any operation fails its preconditions,
 // or the resulting model has validation errors, nothing changes.
+//
+// A layered project (WG-4989) also holds product files beside the platform
+// specification (src/core/layers.js). Its model is the combined model, its
+// semanticHash is the platform's alone (what is generated from the platform
+// carries it) and layeredHash is that of the combined model. Transactions edit
+// only the platform text; a product file is edited as a file.
 
 import { analyzeSpec } from './analyze.js';
+import { analyzeLayers } from './layers.js';
 import { semanticHash } from './hash.js';
 import { OPERATIONS, OpError, Tx, parseLayout, EMPTY_LAYOUT } from './operations.js';
 import { own } from './own.js';
@@ -16,6 +23,7 @@ import { newErrorViolations, describeCounterexample } from './integrity.js';
 /** @typedef {import('./types.js').Diagnostic} Diagnostic */
 /** @typedef {import('./types.js').Operation} Operation */
 /** @typedef {import('./types.js').TransactionResult} TransactionResult */
+/** @typedef {ReturnType<typeof analyzeSpec>|ReturnType<typeof analyzeLayers>} Analysis */
 
 /**
  * @typedef {Object} HistoryEntry
@@ -33,11 +41,19 @@ import { newErrorViolations, describeCounterexample } from './integrity.js';
 
 export class Project {
   /**
-   * @param {{specText: string, layoutText?: string|null, name?: string}} init
+   * @param {{specText: string, layoutText?: string|null, name?: string, layers?: import('./layers.js').ProductLayer[]}} init
    */
   constructor(init) {
     this.name = init.name ?? '';
     this.specText = init.specText;
+    /** The product files layered on the specification, in order (none for most projects). */
+    this.layers = init.layers ?? [];
+    /** @type {Model|null} the model of the platform text alone; the model itself when there are no layers */
+    this.baseModel = null;
+    /** The semantic hash of the combined model; equal to semanticHash when there are no layers. */
+    this.layeredHash = '';
+    /** @type {{file: string, product: string|null, entities: string[]}[]} what each product file declares */
+    this.layerSummary = [];
     this.layoutText = init.layoutText && parseLayout(init.layoutText).ok ? init.layoutText : EMPTY_LAYOUT;
     /** Monotonic counter: every committed transaction, undo, redo or reload increments it. */
     this.revision = 1;
@@ -63,15 +79,34 @@ export class Project {
 
   /**
    * Re-derive model, diagnostics and hash from the specification text.
-   * @param {ReturnType<typeof analyzeSpec>} [analysis] the analysis of exactly this.specText, when the caller already has it
+   * @param {Analysis} [analysis] the analysis of exactly this.specText, when the caller already has it
    */
   #derive(analysis) {
-    const a = analysis ?? analyzeSpec(this.specText);
+    const a = analysis ?? this.#analyze(this.specText);
     this.model = a.model;
     this.diagnostics = a.diagnostics;
     this.errorCount = a.errorCount;
-    this.semanticHash = semanticHash(a.model);
+    if ('baseHash' in a) {
+      this.baseModel = a.baseModel;
+      this.semanticHash = a.baseHash;
+      this.layeredHash = a.layeredHash;
+      this.layerSummary = a.layers;
+    } else {
+      this.layerSummary = [];
+      this.baseModel = a.model;
+      this.semanticHash = semanticHash(a.model);
+      this.layeredHash = this.semanticHash;
+    }
     this.layout = parseLayout(this.layoutText);
+  }
+
+  /**
+   * The analysis of a specification text, with the product files layered on it when there are any
+   * (this project's, unless the caller gives the ones it is about to adopt).
+   * @param {string} text @param {import('./layers.js').ProductLayer[]} [layers] @returns {Analysis}
+   */
+  #analyze(text, layers = this.layers) {
+    return layers.length ? analyzeLayers(text, layers) : analyzeSpec(text);
   }
 
   get canUndo() { return this.undoStack.length > 0; }
@@ -94,9 +129,11 @@ export class Project {
   /**
    * Apply operations atomically.
    * @param {Operation|Operation[]} ops
-   * @param {{label?: string, origin?: string, expectRevision?: number, expectHash?: string}} [opts]
+   * @param {{label?: string, origin?: string, expectRevision?: number, expectHash?: string, perOperation?: boolean}} [opts]
    *   expectRevision / expectHash: optimistic concurrency. The transaction is
    *   refused with code "revision.stale" when the project has moved on.
+   *   perOperation: re-derive the model after every edit, the reference behaviour that the
+   *   batched transaction is tested against; the result is the same, only slower.
    * @returns {TransactionResult}
    */
   apply(ops, opts = {}) {
@@ -114,17 +151,38 @@ export class Project {
     if (!this.model && list.some((op) => op.type !== 'ReplaceSource' && op.type !== 'ReplaceLayout')) {
       return this.#fail('model.unavailable', 'The current source has syntax errors; fix it in the source editor before applying other operations.', this.diagnostics);
     }
-    const tx = new Tx(this.specText, this.layoutText, /** @type {Model} */ (this.model));
-    try {
-      for (const op of list) OPERATIONS[op.type].apply(tx, op);
-    } catch (e) {
-      if (e instanceof OpError) return this.#fail(e.code, e.message, e.diagnostics);
-      throw e;
+    if (this.layers.length) {
+      for (const op of list) {
+        const id = typeof op.id === 'string' ? op.id : null;
+        const e = id !== null ? this.model?.entities.get(id) : undefined;
+        if (e?.loc.file !== undefined) return this.#fail('layer.product-entity', `"${id}" is declared by product file ${e.loc.file}; transactions edit only the platform specification, so edit that file instead.`);
+      }
     }
-    /** @type {ReturnType<typeof analyzeSpec>|undefined} */
+    // Operations act on the platform text, so they read the platform's own model (the same as the model without layers).
+    // The operations run on one transaction that re-derives the model only when an operation needs
+    // it and once at the end (operations.js, Tx). Should its index of declarations turn out not to
+    // match a model it derived, the transaction is replayed re-deriving after every edit.
+    /** @param {boolean} eager */
+    const run = (eager) => {
+      const tx = new Tx(this.specText, this.layoutText, /** @type {Model} */ (this.baseModel ?? this.model), { eager, diagnostics: this.diagnostics });
+      try {
+        for (const op of list) OPERATIONS[op.type].apply(tx, op);
+        return { tx, parsed: tx.specEdited ? tx.parsed() : null, error: null };
+      } catch (e) {
+        if (!(e instanceof OpError)) throw e;
+        tx.check();
+        return { tx, parsed: null, error: e };
+      }
+    };
+    let r = run(opts.perOperation === true);
+    if (r.tx.diverged) r = run(true);
+    if (r.error) return this.#fail(r.error.code, r.error.message, r.error.diagnostics);
+    const tx = r.tx;
+    /** @type {Analysis|undefined} */
     let analysis;
     if (tx.specEdited) {
-      analysis = analyzeSpec(tx.specText);
+      // With product layers the result is analysed with them; without, from the text the transaction already parsed.
+      analysis = this.layers.length ? this.#analyze(tx.specText) : analyzeSpec(tx.specText, r.parsed);
       if (analysis.errorCount || !analysis.model) {
         return this.#fail('validation.failed', `Rejected: the result would have ${analysis.errorCount} validation error(s).`, analysis.diagnostics.filter((d) => d.severity === 'error' && d.code !== 'integrity.violated'));
       }
@@ -153,13 +211,14 @@ export class Project {
    * @param {string} specText @param {string} layoutText
    * @param {{label: string, origin: string, ops: string[], affected: string[]}} meta
    * @param {boolean} recordUndo
-   * @param {ReturnType<typeof analyzeSpec>} [analysis] analysis of `specText`, when already computed
+   * @param {Analysis} [analysis] analysis of `specText`, when already computed
+   * @param {boolean} [layersChanged] the product files changed: the model is derived again though the text is the same
    * @returns {TransactionResult}
    */
-  #commit(specText, layoutText, meta, recordUndo, analysis) {
+  #commit(specText, layoutText, meta, recordUndo, analysis, layersChanged = false) {
     const before = { specText: this.specText, layoutText: this.layoutText };
     const hashBefore = this.semanticHash;
-    const specChanged = specText !== this.specText;
+    const specChanged = specText !== this.specText || layersChanged;
     const layoutChanged = layoutText !== this.layoutText;
     this.specText = specText;
     this.layoutText = layoutText;
@@ -205,22 +264,24 @@ export class Project {
    * Adopting an external text clears both the undo and redo stacks and is not
    * itself undoable (undo would overwrite the newer file on disk); the reload is
    * still recorded in `history`.
-   * @param {{specText?: string, layoutText?: string}} texts
+   * `layers` is the product files as they are on disk now (all of them, as the constructor takes
+   * them); when they differ from the ones held, the layered model is derived from the new ones.
+   * @param {{specText?: string, layoutText?: string, layers?: import('./layers.js').ProductLayer[]}} texts
    * @returns {TransactionResult}
    */
   reload(texts) {
     const specText = texts.specText ?? this.specText;
     const layoutText = texts.layoutText ?? this.layoutText;
-    if (specText === this.specText && layoutText === this.layoutText) {
+    const layers = texts.layers ?? this.layers;
+    const layersChanged = JSON.stringify(layers) !== JSON.stringify(this.layers);
+    if (specText === this.specText && layoutText === this.layoutText && !layersChanged) {
       return { ok: true, diagnostics: this.diagnostics, revision: this.revision, semanticHash: this.semanticHash, affected: [], semanticChanged: false };
     }
-    if (specText !== this.specText) {
-      const a = analyzeSpec(specText);
-      if (!a.model) return this.#fail('reload.syntax', 'The file on disk has syntax errors; the last valid model is kept.', a.diagnostics);
-    }
+    const analysis = specText !== this.specText || layersChanged ? this.#analyze(specText, layers) : undefined;
+    if (analysis && !analysis.model) return this.#fail('reload.syntax', 'The file on disk has syntax errors; the last valid model is kept.', analysis.diagnostics);
     const usableLayout = parseLayout(layoutText).ok ? layoutText : this.layoutText;
     const beforeData = new Map(this.model ? [...this.model.entities].map(([id, e]) => [id, JSON.stringify(e.data)]) : []);
-    const after = analyzeSpec(specText).model;
+    const after = (analysis ?? this.#analyze(specText, layers)).model;
     const affected = [];
     if (after) {
       for (const [id, e] of after.entities) if (beforeData.get(id) !== JSON.stringify(e.data)) affected.push(id);
@@ -229,6 +290,7 @@ export class Project {
     // The reload is not undoable: undoing would write pre-reload text over the newer file on disk.
     this.undoStack.length = 0;
     this.redoStack.length = 0;
-    return this.#commit(specText, usableLayout, { label: 'Reloaded from disk', origin: 'external', ops: ['Reload'], affected }, false);
+    this.layers = layers;
+    return this.#commit(specText, usableLayout, { label: 'Reloaded from disk', origin: 'external', ops: ['Reload'], affected }, false, analysis, layersChanged);
   }
 }

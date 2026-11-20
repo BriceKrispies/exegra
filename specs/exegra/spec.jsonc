@@ -380,7 +380,8 @@
         "Adopt text that changed outside the process (reload): text with syntax errors is refused, any text that parses is adopted, including text with validation errors; the adoption clears the undo and redo stacks and is itself not undoable",
         "Leave the model and its semantic hash as they were when a commit changes only presentation text",
         "Notify subscribers synchronously after each commit",
-        "Reject a transaction that adds a violation of an integrity rule of severity error that the project did not have before (the ratchet), with the counterexamples; existing violations do not block unrelated edits"
+        "Reject a transaction that adds a violation of an integrity rule of severity error that the project did not have before (the ratchet), with the counterexamples; existing violations do not block unrelated edits",
+        "Re-derive the model once per transaction, not once per operation: keep an index of where every entity is declared that follows creations, property edits, removals, replacements of nested declarations and id changes, re-derive only for an operation that reads references, expressions or entity data (deletion, rename, source replacement) or after an edit the index cannot follow, and splice the edits of each declaration's lines into the text once; the resulting text, failures and verdict are those of re-deriving after every edit, and a transaction whose index is found not to match its model is replayed that way"
       ],
       "ports": [
         {
@@ -395,7 +396,9 @@
       "unknowns": [
         "History, undo and redo stacks are unbounded in memory and are not persisted: undo is lost on reload and per CLI invocation.",
         "Only operation transactions and replacement sources are validated before they commit. Undo and redo restore text that was committed before and do not validate again, and reload commits any text that parses, so the model after a reload can carry validation errors.",
-        "The session never passes expectRevision or expectHash; only the CLI uses the optimistic checks (--expect-hash)."
+        "The session never passes expectRevision or expectHash; only the CLI uses the optimistic checks (--expect-hash).",
+        "A deletion or a rename re-derives the model of the current text before it plans its edits, because references and expressions of entities edited earlier in the transaction are known only to a derivation: about 2.6 s each on a 7 MB specification (WG-4980).",
+        "The validation of a transaction's result is a full validation: rule and example results are not cached per entity (WG-4974). Measured on a 7 MB specification, validation is about 0.9 s of a single-property apply; the model derivation is about 2.6 s."
       ],
       "implementation": {
         "status": "manual",
@@ -404,7 +407,7 @@
           "src/core/project.js",
           "src/core/text-edit.js"
         ],
-        "notes": "The operation table is hand-written; CreateEntity looks up declaration sites in the meta-model.",
+        "notes": "The operation table is hand-written; CreateEntity looks up declaration sites in the meta-model. Tx keeps the index of declarations, the windows over edited declarations and the pending appends; Project.apply's perOperation option runs the reference path that re-derives after every edit.",
         "language": "js"
       },
       "tags": [
@@ -644,14 +647,50 @@
         "Hold selection, hover, active view, collapsed, hidden and isolated sets, simulation state and the change log, and remember UI state in localStorage",
         "Derive the current simulation step's message flow and its path through the current scene, for the renderer and the simulator panel",
         "Run the loaded scenario off the main thread (engine worker) whenever it is loaded or its faults change, show it as running until the trace arrives, discard a run that a newer load replaced, and step, step back, seek, reset, play and run to the end through the finished trace with a cursor that reveals one recorded step at a time",
-        "Record the session's real events in the traffic recorder (and install the persistence client's observer), and in Live mode replay the kept stream through the scenario live-session (src/core/replay.js) as events arrive, batched per microtask: the cursor follows the newest step unless the user stepped back, checks are checkTrace plus the replay's divergences, and a semantic commit replays the stream through the new model"
+        "Record the session's real events in the traffic recorder (and install the persistence client's observer), and in Live mode replay the kept stream through the scenario live-session (src/core/replay.js) as events arrive, batched per microtask: the cursor follows the newest step unless the user stepped back, checks are checkTrace plus the replay's divergences, and a semantic commit replays the stream through the new model",
+        "Re-derive the model from the product layers of a fresh read of the project when the watcher reports a changed, added or removed product file (src/app/disk-reload.js), keeping the platform text and layout in memory"
       ],
       "ports": [
-        { "id": "session-apply-out", "name": "Apply transaction", "direction": "requires", "contract": "apply-transaction", "protocol": "in-process call", "description": "Forwards operations to Project.apply." },
-        { "id": "session-write-out", "name": "Write file", "direction": "requires", "contract": "write-file", "protocol": "persistence client call", "description": "Saves the committed spec and layout text." },
-        { "id": "session-claims-out", "name": "Evaluate claims", "direction": "requires", "contract": "evaluate-claims", "protocol": "in-process call", "description": "Re-evaluates claims after a semantic change." },
-        { "id": "session-project-out", "name": "Project scene", "direction": "requires", "contract": "project-scene", "protocol": "in-process call", "description": "Derives the scene of the active view." },
-        { "id": "session-run-out", "name": "Run scenario", "direction": "requires", "contract": "run-scenario", "protocol": "in-process call", "description": "Runs the scenario shown in the simulator panel in the engine worker and wraps its trace in a cursor." }
+        {
+          "id": "session-apply-out",
+          "name": "Apply transaction",
+          "direction": "requires",
+          "contract": "apply-transaction",
+          "protocol": "in-process call",
+          "description": "Forwards operations to Project.apply."
+        },
+        {
+          "id": "session-write-out",
+          "name": "Write file",
+          "direction": "requires",
+          "contract": "write-file",
+          "protocol": "persistence client call",
+          "description": "Saves the committed spec and layout text."
+        },
+        {
+          "id": "session-claims-out",
+          "name": "Evaluate claims",
+          "direction": "requires",
+          "contract": "evaluate-claims",
+          "protocol": "in-process call",
+          "description": "Re-evaluates claims after a semantic change."
+        },
+        {
+          "id": "session-project-out",
+          "name": "Project scene",
+          "direction": "requires",
+          "contract": "project-scene",
+          "protocol": "in-process call",
+          "description": "Derives the scene of the active view."
+        },
+        {
+          "id": "session-run-out",
+          "name": "Run scenario",
+          "direction": "requires",
+          "contract": "run-scenario",
+          "protocol": "in-process call",
+          "description": "Runs the scenario shown in the simulator panel in the engine worker and wraps its trace in a cursor."
+        }
       ],
       "unknowns": [
         "A failed save leaves the pending flag set and stops writing until the next commit; there is no automatic retry.",
@@ -662,7 +701,8 @@
       "implementation": {
         "status": "manual",
         "modules": [
-          "src/app/session.js"
+          "src/app/session.js",
+          "src/app/disk-reload.js"
         ],
         "language": "js"
       }
@@ -1037,9 +1077,10 @@
         "Validate project names and refuse any path that leaves the project directory",
         "Write spec or layout text only if the base hash equals the current file's hash, replacing the file atomically, serialized per project, appending a line to .history/journal.jsonl",
         "Read a project with the hashes of its files and its recorded results",
-        "Read project.jsonc: the specification it links to and the realisation roots it declares, without ever writing it",
+        "Read project.jsonc: the specification it links to, the realisation roots it declares and the product files it layers on the specification (\"products\": files or directories of *.jsonc, read in order, each with whether its product.imports.spec resolves to the specification), without ever writing it",
         "Write generated artifacts only under generated/, and record verification results",
-        "Export and import project bundles, and watch a project's files for external changes"
+        "Export and import project bundles, and watch a project's files for external changes",
+        "Report a changed, added or removed product file (or a changed products list in project.jsonc) as a change of the file products, and read a project given inline as a specification file and product files with no registration (readInline)"
       ],
       "ports": [
         {
@@ -1138,11 +1179,13 @@
       "runsIn": "node",
       "purpose": "A command line that prints one JSON document per command so an AI coding agent can read, check, simulate, generate, verify and change a specification through the same pipeline as the UI.",
       "responsibilities": [
-        "Commands: projects, validate, list, show, deps, contracts, claims, evaluate, gaps, ops, apply, plan-delete, simulate, trace, prove, integrity, prove-integrity, generate, traceability, verify, readiness, cover-machines, cover-functions, help",
+        "Commands: projects, validate, list, show, deps, contracts, claims, evaluate, gaps, ops, apply, plan-delete, simulate, trace, prove, integrity, prove-integrity, generate, traceability, verify, readiness, cover-machines, cover-functions, store, help",
         "Print a JSON envelope (ok, command, project, semanticHash, result or error with code and diagnostics) and use exit codes 0 ok, 1 command failed, 2 usage error",
         "Apply operations through Project.apply, then write the changed files with the base hashes read at the start; a stale --expect-hash, an invalid operation or a disk conflict leaves the files unchanged",
         "Run the verification pipeline: validation, traceability, execution of test evidence and recording of the results",
-        "Include the request log of the run in the simulate result (requestLog), one line per contract event"
+        "Include the request log of the run in the simulate result (requestLog), one line per contract event",
+        "Copy a project's specification into its SQLite store and write it back as text (store import, store export), refusing an export over a specification that changed since the store last synchronised with it",
+        "Register a specification file and product files as a project from a script (project add, remove, list: specs/<name>/project.jsonc with paths relative to the project directory, refusing an existing project without --force and a name that is not a project name), and take the project inline (--spec, --product) on the read-only commands, so a job needs no registration"
       ],
       "ports": [
         {
@@ -1387,7 +1430,8 @@
           "tests/core/conformance.test.js",
           "tools/differential.js",
           "tests/core/readiness-machines.test.js",
-          "tests/fixtures/readiness-machines/spec.jsonc"
+          "tests/fixtures/readiness-machines/spec.jsonc",
+          "tests/core/spec-store.test.js"
         ],
         "language": "js"
       }
@@ -2401,15 +2445,17 @@
         "Check telemetry: the services of system.telemetry, each event's logging (an allowlist of payload fields that exist, are scalars, are neither marked sensitive nor of a sensitive type, and are written under names of their own, by a declared service under a unique log name, or not logged with a reason), that every domain event states its logging when system.generation is set, and that a journey's expectLog step names a logged event, its service and members of its line only",
         "Check the fourth set of user interface constructs: request encoding on contract inputs (trim, split, as, empty), form initial values (a path, or the first item of a list whose field equals an expression), field normalization, second calls (then), view-model overlays on success, refusal prefixes and announcements, action confirmation announcements, alsoOn on every screen of one authentication, and error messages (by check kind or error code, placeholders that fit their kind, no two messages wording the same thing for the same forms and actions), with the default refusal message as a readiness gap when generation is set",
         "Check that every value a scenario feeds a machine (a step payload, an inject-event fault payload) has the type its event declares: uuid format, integer bounds, enum values, required and undeclared fields, option fields (scenario.input-type, an error when system.generation is set, a warning otherwise)",
-        "Check union, map, set and constraint types (src/core/type-shapes.js): a union has named variants whose fields resolve (type.union-variants, type.union-field), a newtype variant has one field and a tuple variant two or more positional fields, none optional, its wire encoding (external, internal or adjacent tag, tagField, contentField, variantCase) agrees with its variants, an internal tag writing no newtype or tuple variant (type.encoding), a map key is a string, an integer or an id or scalar over one, also inside a list, set, option or another map (type.map-key), a struct does not contain itself through struct fields alone (type.recursion), and constraints (pattern, minLength, maxLength) sit only on an id or scalar whose representation takes them (type.constraints); a union or map value has the opaque class of json and a set the class list in guard expressions, and a scenario value of a set type repeats no item",
         "Check the metadata model (src/core/tenant-data.js): once a type has metamodel tenant-schema every record states its scope, platform or tenant-meta (record.scope-missing); a record that names a tenant object type or carries tenant field values (an object-id or values type, or a map keyed by a field-id type) is a tenant-meta record and never a fixed platform record for tenant domain data (record.tenant-data-fixed); a tenant-meta record, and only it, is described by the tenant-schema type (record.described-by)",
         "Check the language entities (src/core/language.js), and evaluate, check and print their expressions for function examples with the kernel's results, error texts and Display (src/core/language-eval.js, pinned by the shared case table tests/fixtures/language/kernel-cases.json): an expression language users of the specified system write, stated as an AST union, a value union, shapes, scopes and operators each bound to a primitive of the fixed catalogue pinned to the Strata kernel; operator names unique (language.operator-duplicate), no word or symbol claimed twice (language.token-clash), tokens of the right lexical class for their form and forms the primitive is written in (language.syntax), precedence and associativity on binary and prefix operators only, one associativity per level (language.precedence), primitives from the catalogue (language.primitive-unknown), operands agreeing with the primitive arity and the AST variant (language.arity), shapes declared (language.shape-unknown), null handling equal to the primitive's (language.nulls), operators naming variants and cases of the AST with at most one per variant or case (language.variant), scopes well formed and read (language.scope); with system.generation every AST variant and case has an operator and every operator a primitive (ready.language-variant-uncovered, ready.language-primitive-missing)",
-        "Check the function entities (src/core/function.js, src/core/function-syntax.js, src/core/function-value.js, src/core/language-eval.js): pure functions with typed parameters, a return type (the built-in unit for a function that gives nothing), an optional error union, lets and a body in the function body language (the guard language with field access, if, let, match, struct and union constructors, list literals, the unit value (), variants and fields named like keywords written after a dot, as patterns and before a colon, map, filter, find, any, all, fold, sortBy, take, concat, keys, values, get, insert, remove, format with the {} (Display), {:?} (Rust's derived Debug) and {:json} (serde_json text) placeholders, eval, check and print of a declared language, the string operations startsWith, endsWith, length, trim, chars, snakeCase, parseTime and the ASCII character classes, call, fail and try); bodies parse (function.expr-syntax), name what exists (function.expr-reference) and type against the declared types (function.expr-type), matches are exhaustive (function.match-exhaustive), the call graph is acyclic but for structural self-recursion on a strict sub-value of a union parameter (function.recursion), fail and try use the declared error union (function.error-unknown), parameters, returns and lets are well formed (function.param), and every example is evaluated in JavaScript and gives its result or error (function.example-failed); with system.generation every function has a success example and one per error variant it can fail with (ready.function-example-missing)",
+        "Check the function entities (src/core/function.js, src/core/function-syntax.js, src/core/function-value.js, src/core/language-eval.js): pure functions with typed parameters, a return type (the built-in unit for a function that gives nothing), an optional error union, lets and a body in the function body language (the guard language with field access, if, let, match, struct and union constructors, list literals, the unit value (), the JSON null where json is expected, variants and fields named like keywords written after a dot, as patterns and before a colon, map, filter, find, any, all, fold, sortBy (by a number, string, bool, enum value or a list, option, struct or union of those, ordered as Rust's derived Ord: lists item by item), take, concat, keys, values, get, insert, remove, format with the {} (Display), {:?} (Rust's derived Debug) and {:json} (serde_json text) placeholders, eval (with an optional lookup that following a reference reads), check and print of a declared language, the string operations startsWith, endsWith, length, trim, chars, snakeCase, parseTime and the ASCII character classes, call, fail and try); bodies parse (function.expr-syntax), name what exists (function.expr-reference) and type against the declared types (function.expr-type), matches are exhaustive (function.match-exhaustive), the call graph is acyclic but for structural self-recursion on a strict sub-value of a union parameter (function.recursion), fail and try use the declared error union (function.error-unknown), parameters, returns and lets are well formed (function.param), and every example is evaluated in JavaScript and gives its result or error (function.example-failed); with system.generation every function has a success example and one per error variant it can fail with (ready.function-example-missing)",
         "Hold the built-in representation types (unit among them, the type of one value, which no id or scalar represents) and decide when a type name resolves: a built-in, a declared type, list<T>, set<T> or option<T> of a name that resolves, or map<K, V> of a key and a value that resolve, with type texts split at the comma outside angle brackets so generic types nest (map<K, map<K2, V>>, list<map<K, V>>)",
-        "Check derived and facade contracts (src/core/derivation.js): a derivation exactly on a contract with realisation derived, of kind pure, read (optionally with a need loop, insufficient and needRounds together) or command with the fields of its kind (derivation.kind); functions whose parameters are inputs (or load outputs) of the same name and type, whose results are the outputs and whose error variants are errors of the contract, an insufficient-state variant carrying one need, a fault error without payload (derivation.signature); a load contract whose inputs are filled from the inputs and the needs and whose outputs and errors fit (derivation.load); a commit contract whose inputs are filled, whose conflict error exists and whose outputs and errors fit (derivation.commit); need rounds and conflict retries as non-negative integers (derivation.bounds); a facade with no implementing component whose bffRoute method, path and shape exactly one served contract states (contract.facade-route); with system.generation every function a derivation names is declared (ready.derived-function-missing)",
         "Check the capability model (src/core/capabilities.js): every capability that a contract requires (auth.requires), a plan entitles, a role or grant confers, a delegation or token scope passes on and a feature flag gates is a capability (capability.unknown); with system.generation every contract that is not local requires one (capability.required); every capability is conferred by a role or grant and is core or entitled by a plan (capability.unreachable); a delegation passes on only what its source holds and a grant confers only what its issuer role holds (delegation.exceeds); grant and delegation durations are durations (capability.duration)",
         "Check example fixtures (src/core/function.js, src/core/function-fixtures.js): exampleFixture entities declare a value of a type once, and a function example's argument, result or error may be {fixture: id} or {fixture: id, with: {dotted path: value}}, resolved before the example is evaluated; an undeclared fixture is refused (example.fixture-unknown), a fixture whose value is not its type or that, with its overrides, is not the type it stands for (example.fixture-type), and an override path that does not lead into the value (example.fixture-override)",
-        "Measure the branch coverage of function examples (src/core/function-coverage.js, WG-4965): with the evaluator's branch recorder attached, every example is evaluated and each branch it takes is recorded (both branches of if, each match arm, the value and error paths of try, fail); with system.generation every branch of every function is taken by some example (ready.function-branch-uncovered, one gap per function naming each branch with its line and column; not for a function that misses an example or has one that fails, nor while any function has a finding; severity info when system.generation.functionBranches is gap)"
+        "Measure the branch coverage of function examples (src/core/function-coverage.js, WG-4965): with the evaluator's branch recorder attached, every example is evaluated and each branch it takes is recorded (both branches of if, each match arm, the value and error paths of try, fail); with system.generation every branch of every function is taken by some example (ready.function-branch-uncovered, one gap per function naming each branch with its line and column; not for a function that misses an example or has one that fails, nor while any function has a finding; severity info when system.generation.functionBranches is gap)",
+        "Check union, map, set and constraint types (src/core/type-shapes.js): a union has named variants whose fields resolve (type.union-variants, type.union-field), a newtype variant has one field and a tuple variant two or more positional fields, none optional, its wire encoding (external, internal, adjacent or untagged tag, tagField, contentField, variantCase) agrees with its variants, an internal tag writing no newtype or tuple variant, an untagged union with no tag field, content field or variant case, no two variants written as one JSON shape and a json newtype last (type.encoding), a map key is a string, an integer or an id or scalar over one, also inside a list, set, option or another map (type.map-key), a struct does not contain itself through struct fields alone (type.recursion), and constraints (pattern, minLength, maxLength) sit only on an id or scalar whose representation takes them (type.constraints); a union or map value has the opaque class of json and a set the class list in guard expressions, and a scenario value of a set type repeats no item",
+        "Check derived and facade contracts (src/core/derivation.js): a derivation exactly on a contract with realisation derived, of kind pure, read (optionally with a need loop, insufficient and needRounds together) or command with the fields of its kind, and optionally header: true, the load with no needs first, whose outputs the needs function reads, then the needs loaded in one round no need round counts (derivation.kind); functions whose parameters are inputs (or load outputs) of the same name and type, whose results are the outputs and whose error variants are errors of the contract, an insufficient-state variant carrying one need, a fault error without payload (derivation.signature); a load contract that is not a target and whose inputs are filled from the inputs and the needs and whose outputs and errors fit (derivation.load); a commit contract that is not a target and whose inputs are filled, whose conflict error exists and whose outputs and errors fit (derivation.commit); need rounds and conflict retries as non-negative integers (derivation.bounds); a facade with no implementing component whose bffRoute method, path and shape exactly one served contract (not a facade or a target) states (contract.facade-route); with system.generation every function a derivation names is declared (ready.derived-function-missing)",
+        "Check supplied inputs (src/core/supplied-inputs.js, src/core/ui.js): binding.suppliedBy names declared inputs of a contract and says each comes from the route or the session (contract.supplied-by), never from the body, so no form field or argument and no action argument fills one (form.supplied-input, action.supplied-input), and a form or action need not fill it",
+        "Write and read the wire form of values (src/core/wire.js): every union tag (external, internal, adjacent, untagged), newtype and tuple variants, variant case and wire-cased field names, so a value round-trips through its JSON; and run a read or command derivation against a store (runDerivation in src/core/derivation.js), reporting the loads, need rounds and conflict retries"
       ],
       "unknowns": [
         "Only the data and interface rules exist here; the rules for implementation-level machines and refinement are added by their own tasks under WG-4838.",
@@ -2417,7 +2463,7 @@
         "The user interface constructs are checked, but no generator builds the frontend kernel or end-to-end browser tests from them yet (WG-4838).",
         "A language entity is checked here but not mirrored in Lean: its claims are checked by tests, not proved. Generating its parser, printer, checker and evaluator is specc's work (WG-4931); stating the Strata kernel language in Strata's specification is WG-4930.",
         "Derived contracts are checked by shape, names and types here; whether a derivation means what the contract's postconditions say is not checked by Exegra but by tests of the generated code. Emitting their implementations is specc's work (WG-4935, Strata side).",
-        "A function is checked and its examples are evaluated here in JavaScript, but functions are not mirrored in Lean: their claims are checked by examples and tests, not proved. Compiling functions into a pure crate is specc's work (WG-4934). The JavaScript evaluator of a language has no lookup, so an example cannot follow a reference to its record (through); the case table states what the kernel does without one."
+        "A function is checked and its examples are evaluated here in JavaScript, but functions are not mirrored in Lean: their claims are checked by examples and tests, not proved. Compiling functions into a pure crate is specc's work (WG-4934). The JavaScript evaluator of a language follows a reference (through) only through a lookup an example supplies, which keys a reference by its field name alone; the case table states what the kernel does without one."
       ],
       "implementation": {
         "status": "manual",
@@ -2441,7 +2487,9 @@
           "src/core/derivation.js",
           "src/core/capabilities.js",
           "src/core/function-fixtures.js",
-          "src/core/function-coverage.js"
+          "src/core/function-coverage.js",
+          "src/core/supplied-inputs.js",
+          "src/core/wire.js"
         ],
         "notes": "Hand-written; run from validate.js and from the readiness command of cli/commands.js.",
         "language": "js"
@@ -2474,6 +2522,101 @@
           "src/core/machine-coverage.js"
         ],
         "notes": "Run by the cover-machines command of cli/commands.js."
+      }
+    },
+    {
+      "id": "sqlite-engine",
+      "name": "SQLite (node:sqlite)",
+      "category": "external",
+      "runsIn": "node",
+      "purpose": "The SQLite database engine built into Node (node:sqlite, DatabaseSync), which holds specification stores.",
+      "responsibilities": [
+        "Store tables in one database file, run transactions, and let several processes read one database in WAL mode while one writes"
+      ]
+    },
+    {
+      "id": "specification-store-file",
+      "name": "Specification store",
+      "parent": "persistence",
+      "category": "storage",
+      "owner": "spec-store",
+      "purpose": "<spec>.sqlite beside a project's specification: the SQLite store of that specification (tables entity, trivia, ref and meta), rebuilt from the committed JSONC and never committed (.gitignore).",
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "A data file, not code.",
+        "language": "json"
+      }
+    },
+    {
+      "id": "spec-store",
+      "name": "Specification store service",
+      "parent": "persistence",
+      "category": "computational",
+      "runsIn": "node",
+      "purpose": "Holds a project's specification in SQLite with an exact round trip: the JSONC text is cut into verbatim rows, one per entity and one per stretch of text between entities, and the rows in position order are the text again, byte for byte.",
+      "responsibilities": [
+        "Import: parse the text once with jsonc-parser and cut it into rows: one entity row per item of an entity section (the meta-model's sections and those a vocabulary's entityKinds declare), one row per other top-level value stored whole (system, exegra, vocabulary, a section with no entity kind), and trivia rows for everything between them (keys, brackets, commas, comments, whitespace, line endings, the text before the root and after it), so every code unit belongs to exactly one row",
+        "Index each entity row by section, id, kind and component, and record its JSON value, the sha-256 of that value, and the ids it references (also in table ref, indexed by target), from the model the parser derives",
+        "Record in meta the store format and version, the project, the semantic hash, the unit positions count (UTF-16 code units of the imported text) and the sha-256 of the text last synchronised",
+        "Refuse, with a StoreError and nothing stored, a text that does not parse, is not well-formed Unicode, or is not valid UTF-8, and any import whose rows would not export to the same text, which is checked inside the import transaction",
+        "Export: concatenate the rows in position order; write a file atomically, and refuse to overwrite the specification when it changed since the store last synchronised with it",
+        "Give the model, diagnostics and semantic hash of the stored specification by the same analysis as its text (loadModelFromStore)",
+        "Open every database in WAL mode, so several processes can read while one writes"
+      ],
+      "unknowns": [
+        "apply does not go through the store yet: a transaction edits the JSONC text and the store is imported again; edits as SQLite transactions that re-render only the edited rows wait for the batched transactions of WG-4974 (WG-4979, phase 2).",
+        "The model is derived from the exported text by the Lean kernel, not assembled from the rows, and validation is not incremental by entity hash yet (WG-4979).",
+        "Positions are the code-unit offsets of the imported text; inserting rows between existing ones needs a renumbering or fractional scheme, to be chosen in phase 2 (WG-4979).",
+        "A leading byte order mark is stored and given back, but the parser reports it as a syntax error, so such a specification does not validate, from the text or from the store alike.",
+        "specc, Concordance and the application do not read the store yet; they read the JSONC text (WG-4979)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/spec-store.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "spec-layers",
+      "name": "Specification layers",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Reads a layered specification (WG-4989): the platform specification plus product files that import the platform's entities by id and add tenant metadata of their own, checked ahead of the verified kernel and analysed as one model with every location in its own file.",
+      "responsibilities": [
+        "Read each product file on its own: syntax, the product header (id, name, imports.spec naming the platform specification, imports.entities naming the platform entities it uses) and its sections",
+        "Allow a product to declare only tenant metadata (ARC-113 of the platform): the entity sections records, types, screens, forms, actions, liveBindings, errorMessages, behaviors, events, contracts, roles, scenarios, uiScenarios, claims, evidence and capabilities (the one platform section a product adds to, D-6590), and the typed sections objects, policies, segments, settings, ledgerUnits, ledgerPools, ledgerLimits, mailTemplates, noticeTemplates, tokens, triggers, automations and operations; refuse every other section with layer.kind-not-allowed",
+        "Splice the product entities of the entity sections into the platform text at the end of their sections, keeping the platform text byte for byte, and have analyzeSpec derive and validate the combined model; the typed sections are not spliced",
+        "Map every location and JSON path the analysis reports back to the file it is in (loc.file names a product file) and restate the diagnostics a layered specification gives a meaning: an id the platform or another product declares (layer.redefines-entity), a reference no layer declares (layer.reference-unknown)",
+        "Check the imports: an imported id the platform does not declare (layer.import-unknown), a platform entity used by a reference, a type text or a capability list without being imported (layer.import-missing), a reference into another product file (layer.cross-product-reference), an imports.spec that is not the project's platform file (layer.import-mismatch); every refusal says what is wrong and what to do",
+        "Keep the platform's semantic hash the hash of the platform text parsed alone, so adding a product file changes neither it nor anything generated from the platform; report the combined model's hash as the layered hash",
+        "Refuse a product entity that claims what only the platform may have (layer.platform-power): a role at platform level or with anonymous, service or external holders, a contract that is public with the anonymous scheme, is implemented by a platform component or carries a realisation of generated, hand or derived, a behavior at implementation level, an event that is a domain event, an elapsed-time event or states a delivery guarantee, a capability that is core, a setting that is set at or locked by the platform level",
+        "Refuse two product files with one product id (layer.product-id-duplicate), a product entity id that fails the id pattern (layer.entity-id-invalid) and a section item with no id (layer.entity-id-missing)",
+        "Refuse a platform entity that names a product entity, by a typed reference, a type text or a capability list (layer.platform-references-product), so the platform never depends on a product",
+        "Take the product files as they are on disk when a project reloads (Project.reload), so a long-lived session shows the layered model of the current product files",
+        "Check each value of a typed section against the platform type its section maps to (src/core/layer-values.js, one table and one generic check: struct fields required and optional, union variants by tag, enums, lists, maps, ids by pattern and length, scalars by representation, the authoring text of an expression): a value of the wrong shape is refused with layer.value-invalid and a union value the platform union lacks with layer.outside-catalogue (the published catalogue of INT-153: trigger-event, automation-step, tenant-operation-step)",
+        "Refuse an entity id that is not in the namespace of its product, the product id with each hyphen replaced by an underscore and two underscores (layer.namespace-missing, D-6582), and resolve the names the typed values hold against what the product files declare: an undeclared name in the product namespace is layer.reference-unknown and a name another product declares is layer.cross-product-reference, which also confines a product capability to its product",
+        "Report a product capability as unreachable only when no role or grant confers it: installing the product entitles it, and a product file cannot add a plan (D-6590)",
+        "Parse and check the expression text of every typed value whose platform type is expr or expression (src/core/layer-expr.js: the grammar and static check of the tenant rule language, in the scope the value is written in: the fields of the object type it belongs to, the params an operation or an event binds, the roles of the platform and of the product, and what a reference hop may follow): a text that does not parse is layer.expr-syntax, a field the object type lacks layer.expr-unknown-field, a role nobody declares layer.expr-unknown-role, a param the scope does not bind layer.expr-unknown-param and a shape the operator does not accept layer.expr-type, each naming the product entity and the position in the text",
+        "Refuse an object type that has a field with a personal declaration and no retention rule (layer.retention-missing, D-6584)"
+      ],
+      "unknowns": [
+        "The browser application opens a project without its product files: src/app/session.js builds the Project from the specification alone, and the workspace watcher does not watch product files (follow-up of WG-4989).",
+        "Whether a product's claims and scenarios are about its own entities is not checked; any claim or scenario may be declared in a product file.",
+        "The product sections are a fixed list in src/core/layers.js and src/core/layer-values.js; nothing yet generates the tenant bundle a product installs through the platform's install-bundle contract. The check does not parse the block text of a template. The scope of an automation's expressions is not known here (the params come from the triggers that start it and the outputs of its steps), so its fields and params are accepted and only its syntax, shapes and roles are checked."
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "js",
+        "modules": [
+          "src/core/layers.js",
+          "src/core/layer-values.js",
+          "src/core/layer-expr.js"
+        ],
+        "notes": "Outside the verdict path, like the parser: it composes and checks texts before the model derivation in Lean, whose sources and build are unchanged."
       }
     }
   ],
@@ -3684,6 +3827,125 @@
       "from": "agent-cli",
       "to": "machine-coverage",
       "description": "The cover-machines command reports the coverage table and the findings and writes the generated scenarios as ops.json."
+    },
+    {
+      "id": "agent-cli-calls-spec-store",
+      "kind": "calls",
+      "from": "agent-cli",
+      "to": "spec-store",
+      "description": "store import and store export copy a project's specification into its store and back."
+    },
+    {
+      "id": "spec-store-calls-parser",
+      "kind": "calls",
+      "from": "spec-store",
+      "to": "parser",
+      "description": "Derives the model of an imported text for the references and the semantic hash of its rows."
+    },
+    {
+      "id": "spec-store-calls-validator",
+      "kind": "calls",
+      "from": "spec-store",
+      "to": "validator",
+      "description": "loadModelFromStore analyzes the exported text with analyzeSpec."
+    },
+    {
+      "id": "spec-store-reads-metamodel",
+      "kind": "reads",
+      "from": "spec-store",
+      "to": "metamodel",
+      "description": "Takes the entity sections and their kinds from metamodel.json."
+    },
+    {
+      "id": "spec-store-depends-on-jsonc-parser",
+      "kind": "depends-on",
+      "from": "spec-store",
+      "to": "jsonc-parser-library",
+      "description": "Parses the text into a tree whose offsets cut the rows."
+    },
+    {
+      "id": "spec-store-calls-sqlite-engine",
+      "kind": "calls",
+      "from": "spec-store",
+      "to": "sqlite-engine",
+      "description": "Holds the rows in a database opened with DatabaseSync in WAL mode."
+    },
+    {
+      "id": "spec-store-writes-specification-store-file",
+      "kind": "writes",
+      "from": "spec-store",
+      "to": "specification-store-file",
+      "description": "Replaces every row of the store in one transaction on import."
+    },
+    {
+      "id": "spec-store-reads-specification-file",
+      "kind": "reads",
+      "from": "spec-store",
+      "to": "specification-file",
+      "description": "Reads the specification's bytes on import."
+    },
+    {
+      "id": "spec-store-writes-specification-file",
+      "kind": "writes",
+      "from": "spec-store",
+      "to": "specification-file",
+      "description": "export writes the stored text back to the specification, atomically, unless it changed since the store last synchronised with it."
+    },
+    {
+      "id": "test-suites-calls-spec-store",
+      "kind": "calls",
+      "from": "test-suites",
+      "to": "spec-store",
+      "description": "Core tests round-trip every specification and fixture through the store."
+    },
+    {
+      "id": "spec-layers-calls-parser",
+      "kind": "calls",
+      "from": "spec-layers",
+      "to": "parser",
+      "description": "Parses the platform text alone for its model and semantic hash."
+    },
+    {
+      "id": "spec-layers-calls-validator",
+      "kind": "calls",
+      "from": "spec-layers",
+      "to": "validator",
+      "description": "analyzeSpec derives and validates the combined text."
+    },
+    {
+      "id": "spec-layers-calls-generation-readiness",
+      "kind": "calls",
+      "from": "spec-layers",
+      "to": "generation-readiness",
+      "description": "Reads type texts with parseTypeName to find the platform types a product names."
+    },
+    {
+      "id": "spec-layers-reads-metamodel",
+      "kind": "reads",
+      "from": "spec-layers",
+      "to": "metamodel",
+      "description": "Reads the id pattern and the sections of the specification format."
+    },
+    {
+      "id": "spec-layers-depends-on-jsonc-parser",
+      "kind": "depends-on",
+      "from": "spec-layers",
+      "to": "jsonc-parser-library",
+      "description": "Parses product files and the platform's syntax tree with the library."
+    },
+    {
+      "id": "transactions-calls-spec-layers",
+      "kind": "calls",
+      "from": "transactions",
+      "to": "spec-layers",
+      "description": "A Project with product files analyses every candidate platform text with its product files layered on it."
+    },
+    {
+      "id": "agent-cli-calls-spec-layers",
+      "kind": "calls",
+      "from": "agent-cli",
+      "to": "spec-layers",
+      "description": "Trying integrity rules on a layered project analyses the platform text with its product files."
     }
   ],
 
@@ -4361,7 +4623,7 @@
       "inputs": [
         {
           "name": "file",
-          "type": "'spec' | 'layout' | 'recorded'",
+          "type": "'spec' | 'layout' | 'recorded' | 'products'",
           "description": "The file whose hash changed."
         },
         {
@@ -4887,7 +5149,7 @@
       "payload": [
         {
           "name": "file",
-          "type": "'spec' | 'layout' | 'recorded'"
+          "type": "'spec' | 'layout' | 'recorded' | 'products'"
         },
         {
           "name": "hash",
@@ -5353,7 +5615,7 @@
       "payload": [
         {
           "name": "file",
-          "type": "'spec' | 'layout' | 'recorded'"
+          "type": "'spec' | 'layout' | 'recorded' | 'products'"
         },
         {
           "name": "hash",
@@ -5368,7 +5630,7 @@
       "payload": [
         {
           "name": "file",
-          "type": "'spec' | 'layout' | 'recorded'"
+          "type": "'spec' | 'layout' | 'recorded' | 'products'"
         },
         {
           "name": "hash",
@@ -5862,7 +6124,7 @@
       "payload": [
         {
           "name": "file",
-          "type": "'spec' | 'layout' | 'recorded'"
+          "type": "'spec' | 'layout' | 'recorded' | 'products'"
         },
         {
           "name": "hash",
@@ -5888,7 +6150,7 @@
       "payload": [
         {
           "name": "file",
-          "type": "'spec' | 'layout' | 'recorded'"
+          "type": "'spec' | 'layout' | 'recorded' | 'products'"
         },
         {
           "name": "hash",
@@ -18369,6 +18631,270 @@
       "evaluate": {
         "method": "external-evidence"
       }
+    },
+    {
+      "id": "store-export-is-byte-identical",
+      "kind": "invariant",
+      "statement": "Exporting a specification imported into its store gives the imported text byte for byte, and its rows cover every code unit of it exactly once: for Exegra's specification, every linked project's specification, every JSONC fixture and every parse corpus case that parses, and for CRLF line endings, a byte order mark, tabs, trailing commas, comments inside and between entities, empty sections, a missing final newline and non-ASCII text.",
+      "subjects": [
+        "spec-store"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "store-reimport-gives-same-rows",
+      "kind": "invariant",
+      "statement": "Importing the export of a store gives a store whose rows (entity, trivia, ref and meta) equal the original store's.",
+      "subjects": [
+        "spec-store"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "store-model-equals-text-model",
+      "kind": "invariant",
+      "statement": "The model read from a store has the semantic hash, diagnostics, error count and entities of the model of its exported text, and the semantic hash recorded at import is that hash.",
+      "subjects": [
+        "spec-store"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "store-refuses-what-it-cannot-return",
+      "kind": "invariant",
+      "statement": "A text that does not parse, is not well-formed Unicode or is not valid UTF-8 is refused by import with a StoreError naming the problem, and the store keeps the rows it held.",
+      "subjects": [
+        "spec-store"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "store-export-never-overwrites-stale-specification",
+      "kind": "invariant",
+      "statement": "exegra store export replaces the specification only when the file is still the text the store last synchronised with, or is already the exported text; otherwise it fails with store.stale and leaves the file unchanged.",
+      "subjects": [
+        "spec-store"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "product-layers-checked",
+      "kind": "structural",
+      "statement": "A project's product files (project.jsonc \"products\") are validated together with the platform specification: a product that imports the platform and declares only the allowed sections passes, and each of these is refused with its own named rule, whose message names the offending id or section and says how to fix it: an imported id the platform does not declare (layer.import-unknown), a redefinition of a platform entity or of another product's (layer.redefines-entity), a section a product may not declare (layer.kind-not-allowed), a platform entity used without being imported (layer.import-missing), a reference nothing declares (layer.reference-unknown), a missing header (layer.header-missing), an import of another platform file (layer.import-mismatch) a reference into another product (layer.cross-product-reference), two product files with one product id (layer.product-id-duplicate), an entity id that fails the id pattern or is missing (layer.entity-id-invalid, layer.entity-id-missing) and a platform entity that names a product entity (layer.platform-references-product). A platform entity named under any reference key of the meta-model requires an import. Transactions edit only the platform text and refuse a product's entities (layer.product-entity).",
+      "subjects": [
+        "spec-layers",
+        "workspace-service",
+        "transactions"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/layers.test.js (the ev-layers-* evidence entries) over the fixtures in tests/fixtures/layers.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "product-layers-leave-platform-unchanged",
+      "kind": "structural",
+      "statement": "Adding product files to a project changes neither the platform's parsed model (every platform entity keeps its data, path and location) nor its semantic hash: validate reports the hash of the platform text alone as semanticHash, and the combined model's hash as layeredHash.",
+      "subjects": [
+        "spec-layers",
+        "transactions"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/layers.test.js (the ev-layers-platform-* evidence entries). Code generated from the platform carries this hash in its headers, so it stays byte-identical when a product is added.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "product-layers-no-platform-power",
+      "kind": "structural",
+      "statement": "A product file cannot claim what only the platform may have: a role at platform level or with anonymous, service or external holders, a contract that is public with the anonymous scheme, is implemented by a platform component or carries a realisation of generated, hand or derived, a behavior at implementation level, an event that is a domain event, an elapsed-time event or states a delivery guarantee, a capability that is core and a setting that is set at or locked by the platform level are each refused with layer.platform-power, naming the entity and the fix. specc refuses the same product files with the same rule codes.",
+      "subjects": [
+        "spec-layers"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/layers.test.js (the ev-layers-power evidence entry) over the negative fixtures in tests/fixtures/layers/refused.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "browser-reloads-product-files",
+      "kind": "structural",
+      "statement": "When a product file of the open project changes, is added or is removed on disk (or the products list of project.jsonc changes), the application's session re-derives its model from the product layers on disk: the workspace watcher reports the change as the file products, the session reads the project again, and the platform text and layout in memory are kept. A product file that does not parse keeps the last valid model.",
+      "subjects": [
+        "session",
+        "workspace-service",
+        "persistence-client"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/disk-reload.test.js (the ev-product-reload-* evidence entries). WG-5041.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "cli-registers-projects-from-scripts",
+      "kind": "structural",
+      "statement": "A script can register a spec file (and product files) as a project in one command, and can run read-only commands on one without registering it: project add writes specs/<name>/project.jsonc with paths relative to the project directory, refuses an existing project unless --force, a name that is not a valid project name, a project that keeps its own spec.jsonc and files that cannot be read (writing nothing); project remove deletes the link; validate and the other read-only commands take --spec and --product inline and write nothing.",
+      "subjects": [
+        "agent-cli",
+        "workspace-service"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/cli-project.test.js (the ev-cli-project-* evidence entries). WG-5041.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "product-layers-typed-sections",
+      "kind": "structural",
+      "statement": "A product file may declare the typed sections objects, policies, segments, settings, ledgerUnits, ledgerPools, ledgerLimits, mailTemplates, noticeTemplates, tokens, triggers, automations and operations, each value of which is checked against the platform type its section maps to (object-type-def, policy-def, segment-decl, setting-def, ledger-unit-decl, ledger-pool-decl, ledger-limit, mail-template-decl, notice-template-decl, token-decl, trigger-def, automation-def, tenant-operation-def): a value that does not have the shape of its type is refused with layer.value-invalid, a union value the platform union lacks with layer.outside-catalogue, and a name in the product namespace that no product entity declares with layer.reference-unknown or that another product declares with layer.cross-product-reference. The typed sections are not entities of the combined model and do not change the platform semantic hash. specc reads the same table and gives the same rule codes.",
+      "subjects": [
+        "spec-layers"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/layers.test.js and tests/core/layer-values.test.js (the ev-layers-typed-* evidence entries) over the complete products tests/fixtures/layers/typed and the negative fixtures in tests/fixtures/layers/refused.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "product-layers-namespace",
+      "kind": "structural",
+      "statement": "Every entity id of a product file begins with the namespace of its product, the product id with each hyphen replaced by an underscore followed by two underscores, and a local name; an id outside it is refused with layer.namespace-missing. A capability a product declares is confined to that product: another product file that names it is refused with layer.cross-product-reference, and a product capability is reported unreachable only when no role or grant confers it.",
+      "subjects": [
+        "spec-layers"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/layers.test.js (the ev-layers-namespace and ev-layers-capability evidence entries); D-6582, D-6590 and D-6597 of the platform specification.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "product-layers-expressions",
+      "kind": "structural",
+      "statement": "An expression written as text in a typed section of a product file (a policy condition, a trigger condition, an operation's check, a field default or read rule, a constraint, a segment predicate, an automation's expression) is parsed and checked with the tenant rule language in the scope it is written in: a text that does not parse, or uses a name or call the language lacks, is refused with layer.expr-syntax; a record field the object type of the scope lacks with layer.expr-unknown-field; a role neither the platform nor the product declares with layer.expr-unknown-role; a param the scope does not bind with layer.expr-unknown-param; and an operand of a shape its operator does not accept, a comparison of two shapes, or a hop through a field that is not a single reference with layer.expr-type. Each refusal names the product entity, the place and text, and the position in the text. specc gives the same rule codes.",
+      "subjects": [
+        "spec-layers"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/layer-expr.test.js and tests/core/layers.test.js (the ev-layers-expressions-* evidence entries) over the refused fixtures tests/fixtures/layers/refused/expression-*.jsonc and the complete products tests/fixtures/layers/typed.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "product-layers-retention",
+      "kind": "structural",
+      "statement": "An object type of a product file that has a field with a personal declaration and no retention rule is refused with layer.retention-missing (D-6584); a type without a personal field needs none. specc gives the same rule code.",
+      "subjects": [
+        "spec-layers"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/layers.test.js (ev-layers-retention) over tests/fixtures/layers/refused/retention-missing.jsonc and the complete products.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "batched-transaction-equals-per-operation",
+      "kind": "invariant",
+      "statement": "For the same operations, a transaction that re-derives the model once produces byte for byte the specification and layout text, the failure, the affected ids, the verdict and the diagnostics of a transaction that re-derives the model after every edit, and its index of declarations never differs from the model it describes.",
+      "rationale": "Evidence is a differential test over seeded random operation sequences (property edits and removals, creations, nested declarations, relationships, renames, deletions, claim edits, layout moves, failing operations) on a hand-written JSONC specification with comments and trailing commas, the benchmark specification and Exegra's own; EXEGRA_TX_DIFF_SPEC adds a large linked specification.",
+      "subjects": [
+        "transactions"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "transaction-derives-model-once",
+      "kind": "invariant",
+      "statement": "A transaction of property edits, creations, relationships, nested declarations and replacements of nested declarations derives the model of the specification once, when its result is analysed; a deletion or rename derives it once more, before its edits, and the operations after it need no further derivation.",
+      "rationale": "The derivation of a 7 MB specification takes about 2.6 s; re-deriving after every operation made a 100-operation apply take about 9 minutes.",
+      "subjects": [
+        "transactions"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "format-gaps-rules",
+      "kind": "invariant",
+      "statement": "A contract may be a target (realisation target: specified, not implemented, served by no route, never loaded, committed or lowered onto by a derivation or facade); a derivation of a read or command may state header: true (the load with no needs first, its outputs readable by the needs function, then the needs loaded in one round that no need round counts); an untagged union (encoding tag untagged) is written as the raw JSON of its variant, read in declaration order, and validation refuses one with a tagField, contentField or variantCase, two variants written as one JSON shape or a json newtype before another variant (type.encoding); binding.suppliedBy says an input comes from the route or session and never the body, and validation refuses one naming no input or no such supplier (contract.supplied-by), and a form field or argument (form.supplied-input) or action argument (action.supplied-input) that fills one; a function body may write the JSON null where a json value is expected and nowhere else (function.expr-type), and a union variant named like a keyword (plain-json.null) after a dot of a path or in a match pattern, eval may take a lookup that following a reference reads, and sortBy orders lists item by item and unions by variant and fields, as the kernel's Value does.",
+      "rationale": "WG-4968, from the read and view functions of Strata (WG-4939): CT-093 is target, the generic records contract takes raw JSON, tenant and context come from the route and session, projections write the JSON null, a query filter follows references and sorts lists, and the store loads a header before its needs. Evidence is the core tests: a fixture using each construct validates and its function examples hold, each rule has a minimal specification breaking exactly that rule, and values round-trip through their wire form. Supported, not verified: Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "language-checked-arithmetic",
+      "kind": "invariant",
+      "statement": "The primitive catalogue holds checked integer arithmetic (add-checked, sub-checked, mul-checked), time arithmetic (add-checked and sub-checked on a timestamp and an int, time-difference, days-ms, hours-ms, minutes-ms) and text (concat-checked, to-text), and the language evaluator gives for them the results and exact error texts of the shared case table: every integer operand and result lies in -(2^53-1) to 2^53-1, and outside it the evaluation fails with integer-overflow (never a wrapped, saturated or rounded value), at both ends of the range and for a product beyond 64 bits; a concatenation longer than 4096 bytes of UTF-8 fails with string-too-long; a null operand gives null; an operand of the wrong kind is the error <op> does not apply to a <kind>; and the checker refuses an operand of the wrong shape (a timestamp on the right of + or -, a timestamp under *, a list under text) with <op> does not accept a <Shape> operand, giving + and - the shape of their left operand.",
+      "rationale": "WG-5064 (Strata D-6540 to D-6543, CMS-1540 to CMS-1546): Strata's tenant rule language needs arithmetic, time windows and keys built from several values, and its two evaluators (Exegra's and the Rust specc generates) must agree bit for bit, which the range of 2^53-1 makes possible without a big-integer type. Evidence is the core tests: the shared case table holds every new operator with ordinary values, both ends of the range, overflow in each direction, nulls and type errors, for eval and for check. Supported, not verified: the Rust side reads the same table in Strata.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
     }
   ],
 
@@ -20137,7 +20663,7 @@
       "claim": "language-construct-rules",
       "kind": "test",
       "ref": "tests/core/language.test.js#the kernel rule language as it is today validates and has no readiness gap",
-      "description": "The Strata kernel language stated as a language entity (19 AST variants, Cmp split by comparison and Lit by value kind) has no error and no readiness gap, with and without system.generation."
+      "description": "The Strata kernel language stated as a language entity (24 AST variants, Cmp split by comparison, Arith by operator, Duration by unit and Lit by value kind) has no error and no readiness gap, with and without system.generation."
     },
     {
       "id": "ev-language-construct-rules-2",
@@ -20228,7 +20754,7 @@
       "claim": "language-construct-rules",
       "kind": "test",
       "ref": "tests/core/language.test.js#the primitive catalogue is the fixed set pinned to the kernel and each entry is complete",
-      "description": "The catalogue is exactly the 25 primitives, each with arity, forms, null handling, the kernel function it mirrors, its semantics and its static check."
+      "description": "The catalogue is exactly the 34 primitives, each with arity, forms, null handling, the kernel function it mirrors, its semantics and its static check."
     },
     {
       "id": "ev-language-construct-rules-15",
@@ -21174,6 +21700,510 @@
       "kind": "test",
       "ref": "tests/core/functions.test.js#recording branches does not change what an example evaluates to",
       "description": "Evaluating the examples with the recorder attached leaves validation of the fixture without errors."
+    },
+    {
+      "id": "ev-store-round-trip",
+      "claim": "store-export-is-byte-identical",
+      "kind": "test",
+      "ref": "tests/core/spec-store.test.js#round trip",
+      "description": "Round-trips every project specification, JSONC fixture, parse corpus case and edge case, and checks that the rows are contiguous verbatim slices covering the text."
+    },
+    {
+      "id": "ev-store-reimport",
+      "claim": "store-reimport-gives-same-rows",
+      "kind": "test",
+      "ref": "tests/core/spec-store.test.js#reimporting an export gives the same rows",
+      "description": "Compares every row of a store and of the store imported from its export, for Exegra's specification and two fixtures."
+    },
+    {
+      "id": "ev-store-model",
+      "claim": "store-model-equals-text-model",
+      "kind": "test",
+      "ref": "tests/core/spec-store.test.js#the model read from the store is the model of the text: semantic hash and diagnostics",
+      "description": "Compares loadModelFromStore with analyzeSpec for a valid specification, one with errors, one with a byte order mark and one with an unresolved reference."
+    },
+    {
+      "id": "ev-store-refusal",
+      "claim": "store-refuses-what-it-cannot-return",
+      "kind": "test",
+      "ref": "tests/core/spec-store.test.js#a text that does not parse is refused and the store keeps what it held",
+      "description": "Imports broken, empty, lone-surrogate and invalid UTF-8 input over a stored specification and checks the export is unchanged."
+    },
+    {
+      "id": "ev-store-cli-refusal",
+      "claim": "store-refuses-what-it-cannot-return",
+      "kind": "test",
+      "ref": "tests/core/spec-store.test.js#exegra store import and export through the command line",
+      "description": "store import of a broken specification fails with store.syntax."
+    },
+    {
+      "id": "ev-store-stale",
+      "claim": "store-export-never-overwrites-stale-specification",
+      "kind": "test",
+      "ref": "tests/core/spec-store.test.js#files: a WAL database beside the specification and an exact export that never overwrites a stale specification",
+      "description": "Changes the specification after an import and checks that export to it is refused and the file keeps its new text."
+    },
+    {
+      "id": "ev-store-cli-stale",
+      "claim": "store-export-never-overwrites-stale-specification",
+      "kind": "test",
+      "ref": "tests/core/spec-store.test.js#exegra store import and export through the command line",
+      "description": "store export to a specification changed since the import fails with store.stale."
+    },
+    {
+      "id": "ev-layers-accepted",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product file importing the platform passes validation",
+      "description": "The badges product passes, its entities carry the product file in their locations and paths in that file."
+    },
+    {
+      "id": "ev-layers-cli",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#the CLI validates a project that lists product files and reports the platform hash as semanticHash",
+      "description": "validate and show read the product files project.jsonc lists."
+    },
+    {
+      "id": "ev-layers-import-unknown",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#an imported id the platform does not declare is refused with layer.import-unknown",
+      "description": "Negative fixture refused/import-unknown.jsonc."
+    },
+    {
+      "id": "ev-layers-redefines",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product that redefines a platform entity is refused with layer.redefines-entity",
+      "description": "Negative fixture refused/redefines-entity.jsonc."
+    },
+    {
+      "id": "ev-layers-redefines-product",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#two product files that declare the same id are refused with layer.redefines-entity",
+      "description": "Two copies of the badges product."
+    },
+    {
+      "id": "ev-layers-kind",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a section a product may not declare is refused with layer.kind-not-allowed",
+      "description": "Negative fixture refused/kind-not-allowed.jsonc, and vocabulary, functions, capabilities and system."
+    },
+    {
+      "id": "ev-layers-import-missing",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a platform entity used without being imported is refused with layer.import-missing",
+      "description": "Negative fixture refused/import-missing.jsonc: a reference and a type text."
+    },
+    {
+      "id": "ev-layers-reference-unknown",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a reference no layer declares is refused with layer.reference-unknown",
+      "description": "Negative fixture refused/reference-unknown.jsonc."
+    },
+    {
+      "id": "ev-layers-header-missing",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product file without a header is refused with layer.header-missing",
+      "description": "Negative fixture refused/header-missing.jsonc."
+    },
+    {
+      "id": "ev-layers-import-mismatch",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product that imports another platform file is refused with layer.import-mismatch",
+      "description": "Negative fixture refused/import-mismatch.jsonc, through the workspace and the CLI."
+    },
+    {
+      "id": "ev-layers-cross-product",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a reference into another product file is refused with layer.cross-product-reference",
+      "description": "Negative fixture refused/cross-product.jsonc beside products/badges.jsonc."
+    },
+    {
+      "id": "ev-layers-transactions",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#transactions on a layered project edit the platform text and refuse product entities",
+      "description": "A platform edit applies with the product still layered; an edit of a product entity is refused."
+    },
+    {
+      "id": "ev-layers-platform-hash",
+      "claim": "product-layers-leave-platform-unchanged",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#adding a product file leaves the platform semantic hash unchanged",
+      "description": "The layered analysis and a layered Project report the hash of the platform alone."
+    },
+    {
+      "id": "ev-layers-platform-model",
+      "claim": "product-layers-leave-platform-unchanged",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#the parsed platform specification is unchanged by layering",
+      "description": "The platform model, and the platform entities of the combined model, equal the model of the platform alone."
+    },
+    {
+      "id": "ev-layers-platform-cli-hash",
+      "claim": "product-layers-leave-platform-unchanged",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#the CLI validates a project that lists product files and reports the platform hash as semanticHash",
+      "description": "validate of the layered project and of the platform alone report the same semanticHash."
+    },
+    {
+      "id": "ev-layers-power",
+      "claim": "product-layers-no-platform-power",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product that claims a platform power or has a malformed entity id is refused with the rule for it",
+      "description": "One negative fixture per power: platform-level role, anonymous, service and external holders, public anonymous contract, contract implemented by a platform component, realisation, implementation-level behavior, domain event."
+    },
+    {
+      "id": "ev-layers-power-accepted",
+      "claim": "product-layers-no-platform-power",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product role at tenant level held by people and teams and agents is accepted",
+      "description": "A tenant role held by people, teams and agents and a public facade contract on a session scheme are not refused."
+    },
+    {
+      "id": "ev-layers-product-id-duplicate",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#two product files with one product id are refused with layer.product-id-duplicate",
+      "description": "Negative fixture refused/duplicate-product-id.jsonc beside products/badges.jsonc."
+    },
+    {
+      "id": "ev-layers-reference-keys",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a reference through a reference key requires an import",
+      "description": "Negative fixture refused/import-missing-reference.jsonc: event.contract, record.owner and behavior.subject."
+    },
+    {
+      "id": "ev-layers-platform-references-product",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a platform entity that references a product entity is refused with layer.platform-references-product",
+      "description": "A platform relationship and a platform type text that name a product entity."
+    },
+    {
+      "id": "ev-layers-reload",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#reload picks up a changed product file",
+      "description": "Project.reload takes the product files as they are now; the layered model and layered hash follow, the platform hash does not."
+    },
+    {
+      "id": "ev-product-reload-watch",
+      "claim": "browser-reloads-product-files",
+      "kind": "test",
+      "ref": "tests/core/disk-reload.test.js#an added then changed then removed product file is reported by the watcher and re-derives the session model",
+      "description": "The watcher reports an added, a changed and a removed product file as products, and the session reload re-derives the layered model each time."
+    },
+    {
+      "id": "ev-product-reload-invalid",
+      "claim": "browser-reloads-product-files",
+      "kind": "test",
+      "ref": "tests/core/disk-reload.test.js#a product file that does not parse keeps the last valid model and the next good read adopts it",
+      "description": "A broken product file is seen and the next good read is adopted."
+    },
+    {
+      "id": "ev-product-reload-spec",
+      "claim": "browser-reloads-product-files",
+      "kind": "test",
+      "ref": "tests/core/disk-reload.test.js#a reload of the specification keeps the product layers of the read",
+      "description": "A specification reload carries the product layers."
+    },
+    {
+      "id": "ev-cli-project-add",
+      "claim": "cli-registers-projects-from-scripts",
+      "kind": "test",
+      "ref": "tests/core/cli-project.test.js#project add registers a spec file and product files stored relative to the project directory",
+      "description": "project add writes a relative link that validate reads as a layered project; project list shows it."
+    },
+    {
+      "id": "ev-cli-project-refusals",
+      "claim": "cli-registers-projects-from-scripts",
+      "kind": "test",
+      "ref": "tests/core/cli-project.test.js#project add refuses to overwrite a project unless --force and refuses a bad name or an unreadable file",
+      "description": "Existing project, bad names and unreadable files are refused; --force replaces."
+    },
+    {
+      "id": "ev-cli-project-own-spec",
+      "claim": "cli-registers-projects-from-scripts",
+      "kind": "test",
+      "ref": "tests/core/cli-project.test.js#project add refuses a name whose project keeps its own spec.jsonc",
+      "description": "A project with its own spec.jsonc is never given a link."
+    },
+    {
+      "id": "ev-cli-project-remove",
+      "claim": "cli-registers-projects-from-scripts",
+      "kind": "test",
+      "ref": "tests/core/cli-project.test.js#project remove deletes the link and the directory only when nothing else is in it",
+      "description": "remove deletes the link only."
+    },
+    {
+      "id": "ev-cli-project-inline",
+      "claim": "cli-registers-projects-from-scripts",
+      "kind": "test",
+      "ref": "tests/core/cli-project.test.js#validate and other read-only commands accept the project inline with --spec and --product",
+      "description": "Inline projects on read-only commands; writers refuse the options."
+    },
+    {
+      "id": "ev-layers-typed-accepted",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#the complete products declare everything they name and pass validation with the platform hash unchanged",
+      "description": "The badge-milestones and promotions products declare their object types, policies, ledger units, pools and limits, templates, triggers, automations and operations, pass validation, and leave the platform semantic hash unchanged."
+    },
+    {
+      "id": "ev-layers-typed-value-invalid",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a value that does not fit its platform type is refused with layer.value-invalid",
+      "description": "A field without its type and a member the platform type lacks."
+    },
+    {
+      "id": "ev-layers-typed-catalogue",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a union value the platform lacks is refused with layer.outside-catalogue",
+      "description": "A trigger event, an automation step and an operation step outside the platform unions."
+    },
+    {
+      "id": "ev-layers-typed-references",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a name in a typed section that no product file declares or that another product declares is refused",
+      "description": "An object type and an automation no product declares, and an object type another product declares."
+    },
+    {
+      "id": "ev-layers-typed-redefine",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a typed item may not redefine a platform entity or another item",
+      "description": "A ledger unit with the id of a platform component, and a unit and a pool with one id."
+    },
+    {
+      "id": "ev-layers-typed-table",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#Exegra and specc read the same table of typed sections",
+      "description": "The sections, in order, and the platform type each names."
+    },
+    {
+      "id": "ev-layers-typed-check",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layer-values.test.js#a missing field and a stray field and a wrong scalar and an id outside its pattern are refused",
+      "description": "The generic check over a small platform."
+    },
+    {
+      "id": "ev-layers-typed-variants",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layer-values.test.js#a variant the union lacks is outside the catalogue and a variant with fields needs them",
+      "description": "Union variants by tag."
+    },
+    {
+      "id": "ev-layers-namespace",
+      "claim": "product-layers-namespace",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#an id outside the namespace of its product is refused with layer.namespace-missing",
+      "description": "An id with no namespace and an id with one underscore."
+    },
+    {
+      "id": "ev-layers-capability",
+      "claim": "product-layers-namespace",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product capability is reachable when a role confers it and a plan is not needed",
+      "description": "A product capability conferred by a role needs no plan; one no role confers is unreachable."
+    },
+    {
+      "id": "ev-layers-expressions-scope",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#the scope comes from the value that holds the text",
+      "description": "The scope of a text: the object type of a policy, segment, trigger or operation, the params an event or an operation binds."
+    },
+    {
+      "id": "ev-layers-expressions-check",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#fields hops params and roles are checked against the scope",
+      "description": "Unknown fields, hops, params and roles."
+    },
+    {
+      "id": "ev-layers-expressions-syntax",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#a name or call the language lacks and malformed text is layer.expr-syntax with its position",
+      "description": "Syntax errors and their positions."
+    },
+    {
+      "id": "ev-layers-expressions-types",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#shapes that the operator does not accept are layer.expr-type",
+      "description": "Shapes an operator does not accept."
+    },
+    {
+      "id": "ev-layers-expressions-refused",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#an expression that does not parse or check in its scope is refused with one rule code per kind",
+      "description": "The refused fixtures, one rule code per kind."
+    },
+    {
+      "id": "ev-layers-expressions-free",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#an automation accepts any field and param but is still checked for syntax and roles",
+      "description": "An automation's expressions."
+    },
+    {
+      "id": "ev-layers-retention",
+      "claim": "product-layers-retention",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a personal field without a retention rule on its object type is refused with layer.retention-missing",
+      "description": "The refused fixture and the complete products."
+    },
+    {
+      "id": "ev-batched-differential-small",
+      "claim": "batched-transaction-equals-per-operation",
+      "kind": "test",
+      "ref": "tests/core/batched-transactions.test.js#batched transactions equal per-operation re-derivation on a hand-written JSONC specification",
+      "description": "Seeded random transactions on a JSONC specification with comments, one-line declarations and trailing commas, through Tx and through Project.apply."
+    },
+    {
+      "id": "ev-batched-differential-benchmark",
+      "claim": "batched-transaction-equals-per-operation",
+      "kind": "test",
+      "ref": "tests/core/batched-transactions.test.js#batched transactions equal per-operation re-derivation on the benchmark specification",
+      "description": "Seeded random transactions on specs/benchmark."
+    },
+    {
+      "id": "ev-batched-differential-exegra",
+      "claim": "batched-transaction-equals-per-operation",
+      "kind": "test",
+      "ref": "tests/core/batched-transactions.test.js#batched transactions equal per-operation re-derivation on the Exegra specification",
+      "description": "Seeded random transactions on Exegra's own specification, through Tx and through Project.apply."
+    },
+    {
+      "id": "ev-transaction-derives-once",
+      "claim": "transaction-derives-model-once",
+      "kind": "test",
+      "ref": "tests/core/batched-transactions.test.js#a batched transaction derives the model once for property edits and creations",
+      "description": "Counts the derivations of one transaction through edits, creations, a replacement of nested declarations, a rename and a deletion."
+    },
+    {
+      "id": "ev-format-gaps-rules-1",
+      "claim": "format-gaps-rules",
+      "kind": "test",
+      "ref": "tests/core/format-gaps.test.js#the fixture validates with every example holding and nothing missing for generation",
+      "description": "The fixture with an untagged plain-json union, an internally tagged mutation, a contract whose tenant and context the request supplies, and functions using the JSON null, a lookup in eval and lexicographic sortBy has no error and no readiness gap, and every example of those functions holds, with and without system.generation."
+    },
+    {
+      "id": "ev-format-gaps-rules-2",
+      "claim": "format-gaps-rules",
+      "kind": "test",
+      "ref": "tests/core/format-gaps.test.js#an untagged union with two variants written as one shape is reported once as type.encoding",
+      "description": "An untagged union with a tagField, a variantCase, two variants of one shape, two unit variants or a json variant that is not last: exactly one type.encoding error each."
+    },
+    {
+      "id": "ev-format-gaps-rules-3",
+      "claim": "format-gaps-rules",
+      "kind": "test",
+      "ref": "tests/core/format-gaps.test.js#a supplied input the contract does not have is reported once as contract.supplied-by",
+      "description": "A suppliedBy naming no input, or a supplier other than route or session: exactly one contract.supplied-by error."
+    },
+    {
+      "id": "ev-format-gaps-rules-4",
+      "claim": "format-gaps-rules",
+      "kind": "test",
+      "ref": "tests/core/format-gaps.test.js#a form field filling an input the session supplies is reported once as form.supplied-input",
+      "description": "A form field or argument for an input the request supplies: exactly one form.supplied-input error; an action argument: exactly one action.supplied-input."
+    },
+    {
+      "id": "ev-format-gaps-rules-5",
+      "claim": "format-gaps-rules",
+      "kind": "test",
+      "ref": "tests/core/format-gaps.test.js#an untagged union is written as the raw JSON of its variant and read back in declaration order",
+      "description": "An untagged union round-trips through toWire and fromWire for raw JSON values."
+    },
+    {
+      "id": "ev-format-gaps-rules-6",
+      "claim": "format-gaps-rules",
+      "kind": "test",
+      "ref": "tests/core/format-gaps.test.js#the other tags round-trip too external internal adjacent and tuple variants",
+      "description": "Internal, external, adjacent and tuple encodings round-trip too, with a wire case."
+    },
+    {
+      "id": "ev-format-gaps-rules-7",
+      "claim": "format-gaps-rules",
+      "kind": "test",
+      "ref": "tests/core/format-gaps.test.js#lists and unions are ordered as the kernel orders a Value by variant then item by item",
+      "description": "compareOrdered orders lists item by item and unions by variant position then fields, as Rust's derived Ord does."
+    },
+    {
+      "id": "ev-format-gaps-rules-8",
+      "claim": "format-gaps-rules",
+      "kind": "test",
+      "ref": "tests/core/format-gaps.test.js#a null where a string is expected is reported once as function.expr-type",
+      "description": "The JSON null fits json and option, and nothing else; a sortBy by a map or a json value is function.expr-type; an eval lookup of another type or an eval with five arguments too."
+    },
+    {
+      "id": "ev-format-gaps-rules-9",
+      "claim": "format-gaps-rules",
+      "kind": "test",
+      "ref": "tests/core/format-gaps.test.js#a reference lookup example that is wrong is reported once as function.example-failed",
+      "description": "The lookup examples of eval: a target that exists, one that does not, an unset reference, a lookup that does not cover the field, and no lookup."
+    },
+    {
+      "id": "ev-format-gaps-rules-10",
+      "claim": "format-gaps-rules",
+      "kind": "test",
+      "ref": "tests/core/derivations.test.js#a header whose load output is named like an input is reported once as derivation.load",
+      "description": "A header read derivation validates; a needs function reading a load output without a header, a pure derivation with a header and a header load output named like an input are each reported once."
+    },
+    {
+      "id": "ev-format-gaps-rules-11",
+      "claim": "format-gaps-rules",
+      "kind": "test",
+      "ref": "tests/core/derivations.test.js#a load contract that is a target is reported once as derivation.load",
+      "description": "A target contract validates; with a derivation, as a load contract, as a commit contract, or as the only contract a facade names, each is reported once."
+    },
+    {
+      "id": "ev-format-gaps-rules-12",
+      "claim": "format-gaps-rules",
+      "kind": "test",
+      "ref": "tests/core/derivations.test.js#a read with a header loads once with no needs then its needs together in one round which no need round counts",
+      "description": "runDerivation loads the header with no needs, then the needs in one round; a command asks for the extra need decide names and counts only that against need rounds; a commit that lost its race is decided again, at most retries times."
+    },
+    {
+      "id": "ev-language-checked-arithmetic-1",
+      "claim": "language-checked-arithmetic",
+      "kind": "test",
+      "ref": "tests/core/language-kernel-cases.test.js#eval gives the kernel result: add past the safe maximum",
+      "description": "2^53-1 plus 1 is integer-overflow; the eval cases cover +, - and * at both ends of the range, a product beyond 64 bits, a timestamp plus and minus milliseconds, ms_between, days, hours and minutes at the range, nulls and operands of the wrong kind."
+    },
+    {
+      "id": "ev-language-checked-arithmetic-2",
+      "claim": "language-checked-arithmetic",
+      "kind": "test",
+      "ref": "tests/core/language-kernel-cases.test.js#eval gives the kernel result: concat of two-byte characters past 4096 bytes",
+      "description": "A concatenation of 4097 bytes of UTF-8 is string-too-long and one of 4096 bytes is not; text writes ints, timestamps and references as decimal digits, bools as true or false, and refuses a list."
+    },
+    {
+      "id": "ev-language-checked-arithmetic-3",
+      "claim": "language-checked-arithmetic",
+      "kind": "test",
+      "ref": "tests/core/language-kernel-cases.test.js#check gives the kernel result: adding a timestamp on the right",
+      "description": "The checker refuses int + timestamp, timestamp - timestamp, timestamp * int, ms_between of an int, days of a string, concat of an int and text of a list, and gives a timestamp plus days the time shape."
     }
   ],
 
@@ -21352,7 +22382,7 @@
         }
       ],
       "retention": "Kept in the repository; every saved write appends a line to .history/journal.jsonl.",
-      "description": "The serialized authority of a project: specs/<project>/spec.jsonc, or the file that specs/<project>/project.jsonc names. Written by the workspace service (tools/workspace.js write(), under a base-hash check and atomic rename, from the session and from exegra apply) and, outside any transaction, by the bundle import (tools/workspace.js importProject()), by tools/import-markdown.js (--out), by tools/import-register.js (--out, or the project it names) and by tools/make-benchmark.js (specs/benchmark/spec.jsonc). Exegra holds no personal data: no field is personal and none refers to a principal."
+      "description": "The serialized authority of a project: specs/<project>/spec.jsonc, or the file that specs/<project>/project.jsonc names. Written by the workspace service (tools/workspace.js write(), under a base-hash check and atomic rename, from the session and from exegra apply) and, outside any transaction, by the bundle import (tools/workspace.js importProject()), by tools/import-markdown.js (--out), by tools/import-register.js (--out, or the project it names), by tools/make-benchmark.js (specs/benchmark/spec.jsonc) and by tools/spec-store.js (store export, atomically through a temporary file, refused as store.stale when the file changed since the last import). Exegra holds no personal data: no field is personal and none refers to a principal."
     },
     {
       "id": "presentation-layout",
@@ -21548,7 +22578,7 @@
         }
       ],
       "retention": "specs/<project>/project.jsonc, written by hand; never written by Exegra (tools/workspace.js).",
-      "description": "Chooses the file that every read and write of a linked project's specification uses (tools/workspace.js specFile()); the linked-specs plugin reads it at build time (tools/vite-plugin-exegra.js exegraLinkedSpecs). A project with both spec.jsonc and a project.jsonc is refused as project.invalid."
+      "description": "Chooses the file that every read and write of a linked project's specification uses (tools/workspace.js specFile()); the linked-specs plugin reads it at build time (tools/vite-plugin-exegra.js exegraLinkedSpecs). A project with both spec.jsonc and a project.jsonc is refused as project.invalid. Written by exegra project register (cli/commands.js), which names the specification and any product files relative to specs/<project>/project.jsonc."
     },
     {
       "id": "import-map",

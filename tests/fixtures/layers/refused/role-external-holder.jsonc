@@ -1,0 +1,5 @@
+{
+  // Refused: a product role an external party holds (layer.platform-power).
+  "product": { "id": "badges", "name": "Badges", "imports": { "spec": "../platform.jsonc", "entities": [] } },
+  "roles": [ { "id": "badges__hook", "name": "Badge hook", "level": "tenant", "holders": ["external"], "capabilities": [] } ]
+}

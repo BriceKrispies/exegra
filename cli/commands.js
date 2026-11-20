@@ -16,7 +16,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
-import { createWorkspace, WorkspaceError } from '../tools/workspace.js';
+import { createWorkspace, WorkspaceError, isValidProjectName, PROJECT_FILE } from '../tools/workspace.js';
 import { checkTraceability } from '../tools/traceability.js';
 import { readinessGaps } from '../src/core/readiness.js';
 import { machineCoverage, coverageOperations, DEFAULT_BOUND, DEFAULT_MAX_RUNS } from '../src/core/machine-coverage.js';
@@ -25,6 +25,7 @@ import { resolveRoots, splitRootRef, collectExternalResults, RootsError } from '
 import { Project } from '../src/core/project.js';
 import { OPERATIONS, OpError, Tx, planDelete } from '../src/core/operations.js';
 import { analyzeSpec } from '../src/core/analyze.js';
+import { analyzeLayers } from '../src/core/layers.js';
 import { evaluateIntegrity, counterexampleJson } from '../src/core/integrity.js';
 import { proveIntegrity } from '../tools/prove-integrity.js';
 import {
@@ -82,6 +83,16 @@ const GLOBAL_OPTIONS = {
   pretty: { type: 'boolean' },
 };
 
+/**
+ * Options of the read-only commands that take --project: the project given inline, as a specification
+ * file and its product files, with no registration under specs/.
+ * @type {Record<string, import('node:util').ParseArgsOptionDescriptor>}
+ */
+const INLINE_OPTIONS = {
+  spec: { type: 'string' },
+  product: { type: 'string', multiple: true },
+};
+
 // ---------------------------------------------------------------------------
 // Serialisation and small helpers
 // ---------------------------------------------------------------------------
@@ -95,6 +106,8 @@ export function serializeDiagnostic(d) {
     entityId: d.entityId ?? null,
     line: d.loc?.line ?? null,
     column: d.loc?.column ?? null,
+    // The product file a diagnostic of a layered project is in; absent for the specification itself.
+    ...(d.loc?.file !== undefined ? { file: d.loc.file } : {}),
   };
 }
 
@@ -106,7 +119,7 @@ function entityJson(e, withData) {
     kind: e.kind,
     owner: e.owner ?? null,
     label: entityLabel(e),
-    source: { line: e.loc.line, column: e.loc.column },
+    source: { line: e.loc.line, column: e.loc.column, ...(e.loc.file !== undefined ? { file: e.loc.file } : {}) },
   };
   if (withData) out.data = e.data;
   return out;
@@ -219,17 +232,33 @@ function isInside(base, child) {
 // ---------------------------------------------------------------------------
 
 /**
+ * The project given inline (--spec <file> and --product <file or directory>...), as absolute paths
+ * resolved against the working directory; null when the command was given a registered project.
+ * @param {any} ctx @returns {{spec: string, products: string[]}|null}
+ */
+function inlineProject(ctx) {
+  const { spec, product } = ctx.values;
+  if (spec === undefined) {
+    if (product !== undefined) throw usage('invalid-argument', '--product needs --spec: it names a product file of the project given inline.');
+    return null;
+  }
+  if (ctx.values.project !== undefined) throw usage('invalid-argument', 'Give --project or --spec, not both: --spec is the project given inline.');
+  return { spec: path.resolve(process.cwd(), spec), products: (product ?? []).map((/** @type {string} */ p) => path.resolve(process.cwd(), p)) };
+}
+
+/**
  * Read the project's files and build a Project from them.
  * @param {any} ctx
  */
 async function loadProject(ctx) {
   const ws = createWorkspace(ctx.specs);
+  const inline = inlineProject(ctx);
   let data;
   try {
-    data = await ws.read(ctx.projectName);
+    data = inline ? await ws.readInline(inline.spec, inline.products) : await ws.read(ctx.projectName);
   } catch (err) {
     if (err instanceof WorkspaceError && err.code === 'not-found') {
-      throw new CliError('project.not-found', `Project "${ctx.projectName}" was not found in ${ctx.specs}.`);
+      throw new CliError('project.not-found', inline ? err.message : `Project "${ctx.projectName}" was not found in ${ctx.specs}.`);
     }
     throw err;
   }
@@ -237,6 +266,7 @@ async function loadProject(ctx) {
     name: ctx.projectName,
     specText: data.spec.text,
     layoutText: data.layout?.text ?? null,
+    layers: data.layers.map((/** @type {any} */ l) => ({ file: l.file, text: l.text, platform: l.platform })),
   });
   // Concordance results named by project.jsonc become derived evidence in the recorded results
   // handed to claim evaluation; their diagnostics are reported by validate.
@@ -258,6 +288,63 @@ function loadRoots(ws, ctx) {
     if (err instanceof RootsError) throw new CliError(err.code, `${ctx.projectName}/project.jsonc: ${err.message}`);
     throw err;
   }
+}
+
+/**
+ * project add / remove / list: the link a project is registered by, specs/<name>/project.jsonc
+ * ({"spec": "<path relative to the project directory>", "products": [...]}).
+ * @param {any} ctx
+ */
+async function runProjectCommand(ctx) {
+  const verb = ctx.positionals[0];
+  if (verb !== 'add' && verb !== 'remove' && verb !== 'list') throw usage('missing-argument', 'Give project add <name> --spec <file>, project remove <name> or project list.');
+  const ws = createWorkspace(ctx.specs);
+  if (verb === 'list') {
+    if (ctx.positionals.length > 1 || ctx.values.spec !== undefined || ctx.values.product !== undefined || ctx.values.force) throw usage('invalid-argument', 'project list takes no argument.');
+    const out = [];
+    for (const p of await ws.listProjects()) {
+      const config = ws.projectConfig(p.name);
+      out.push({ name: p.name, title: p.title, spec: ws.specLocation(p.name), products: Array.isArray(config?.value.products) ? config.value.products : [] });
+    }
+    return { result: out };
+  }
+  const name = positional(ctx, 1, 'name');
+  if (ctx.positionals.length > 2) throw usage('invalid-argument', `Unexpected argument "${ctx.positionals[2]}".`);
+  if (!isValidProjectName(name)) throw new CliError('name.invalid', `"${name}" is not a valid project name: use lower-case letters, digits, "-" and "_", starting with a letter or digit, at most 64 characters.`);
+  const dir = path.join(ctx.specs, name);
+  const file = path.join(dir, PROJECT_FILE);
+  if (verb === 'remove') {
+    if (ctx.values.spec !== undefined || ctx.values.product !== undefined || ctx.values.force) throw usage('invalid-argument', 'project remove takes only the name.');
+    if (!fs.existsSync(file)) {
+      throw new CliError('project.not-found', fs.existsSync(path.join(dir, 'spec.jsonc'))
+        ? `Project "${name}" keeps its specification in ${dir} and is not a registered link; remove it by hand.`
+        : `Project "${name}" is not registered in ${ctx.specs}.`);
+    }
+    fs.rmSync(file);
+    // The directory goes with the link only when nothing else (a layout, recorded results, a history) lives in it.
+    let removedDirectory = false;
+    if (fs.readdirSync(dir).length === 0) { fs.rmdirSync(dir); removedDirectory = true; }
+    return { project: name, result: { name, removed: true, removedDirectory } };
+  }
+  const { spec, product, force } = ctx.values;
+  if (spec === undefined) throw usage('missing-argument', 'project add needs --spec <file>.');
+  if (fs.existsSync(path.join(dir, 'spec.jsonc'))) throw new CliError('project.exists', `Project "${name}" keeps its own specification (${path.join(dir, 'spec.jsonc')}); a registration would be refused beside it. Choose another name.`);
+  const replaced = fs.existsSync(file);
+  if (replaced && !force) throw new CliError('project.exists', `Project "${name}" is already registered (${file}); give --force to replace it.`);
+  const specAbs = path.resolve(process.cwd(), spec);
+  const productsAbs = (product ?? []).map((/** @type {string} */ p) => path.resolve(process.cwd(), p));
+  if (!specAbs.endsWith('.jsonc')) throw new CliError('project.invalid', `The specification ${specAbs} must be a .jsonc file.`);
+  // Refuse a spec or product that cannot be read before writing anything.
+  await ws.readInline(specAbs, productsAbs);
+  const rel = (/** @type {string} */ target) => {
+    const r = path.relative(dir, target);
+    if (path.isAbsolute(r)) throw new CliError('project.invalid', `${target} cannot be written relative to ${dir} (another drive); keep the specs directory and the specification on one drive.`);
+    return r.split(path.sep).join('/');
+  };
+  const link = { spec: rel(specAbs), ...(productsAbs.length ? { products: productsAbs.map(rel) } : {}) };
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(file, `${JSON.stringify(link, null, 2)}\n`, 'utf8');
+  return { project: name, result: { name, file, ...link, replaced } };
 }
 
 /** Text of stdin when it is piped, '' when nothing is piped. */
@@ -321,14 +408,14 @@ function modelWithRules(ctx, project) {
     throw usage('invalid-argument', `Cannot read rules file "${file}": ${/** @type {Error} */ (err).message}`);
   }
   if (!Array.isArray(rules) || !rules.every((r) => r && typeof r === 'object' && !Array.isArray(r))) throw usage('invalid-argument', 'The rules file must be a JSON array of integrityRule entities.');
-  const tx = new Tx(project.specText, project.layoutText, model);
+  const tx = new Tx(project.specText, project.layoutText, project.baseModel ?? model);
   try {
     for (const data of rules) OPERATIONS.CreateEntity.apply(tx, { type: 'CreateEntity', kind: 'integrityRule', data });
   } catch (err) {
     if (err instanceof OpError) throw new CliError(err.code, err.message, { diagnostics: err.diagnostics.map(serializeDiagnostic) });
     throw err;
   }
-  const a = analyzeSpec(tx.specText);
+  const a = project.layers.length ? analyzeLayers(tx.specText, project.layers) : analyzeSpec(tx.specText);
   if (!a.model || a.errorCount) throw new CliError('validation.failed', 'The specification with these rules has validation errors.', { diagnostics: a.diagnostics.filter((d) => d.severity === 'error').map(serializeDiagnostic) });
   return a.model;
 }
@@ -370,6 +457,18 @@ export function parseTestCounts(output) {
   for (const m of String(output).matchAll(/^[ \t]*(?:#|ℹ)[ \t]+(tests|pass|fail)[ \t]+(\d+)[ \t]*$/gm)) found[m[1]] = Number(m[2]);
   if (found.tests === undefined) return null;
   return { tests: found.tests, pass: found.pass ?? 0, fail: found.fail ?? 0 };
+}
+
+/** @param {string} t */
+const stripAnsi = (t) => String(t).replace(/\x1b\[[0-9;]*m/g, '');
+
+/**
+ * Number of tests Playwright's summary line reports as passed (0 when none ran or all skipped).
+ * @param {string} output the list reporter's text
+ */
+export function countPassedBrowserTests(output) {
+  const m = stripAnsi(output).match(/\b(\d+) passed\b/);
+  return m ? Number(m[1]) : 0;
 }
 
 /**
@@ -462,7 +561,14 @@ function runTestReference(ref, env) {
     });
   }
   if (run.status === 0) {
-    if (!browser) {
+    if (browser) {
+      // playwright exits 0 when every selected test skipped, and when the pattern matched nothing.
+      const out = String(run.stdout ?? '');
+      if (countPassedBrowserTests(out) === 0) {
+        if (/\b[1-9]\d* skipped\b/.test(stripAnsi(out))) return { outcome: 'skipped', detail: 'the matching test skipped itself', obtained: 'run' };
+        return { outcome: 'fail', detail: 'the reference matched no test', obtained: 'run' };
+      }
+    } else {
       // node exits 0 when the pattern or file matches no test; that is not a pass.
       if (countPassingTests(String(run.stdout ?? ''), file) === 0) {
         // A test that matched but skipped itself (a gated fixture, a missing tool) ran nothing: it is not
@@ -591,7 +697,7 @@ async function runVerify(ctx) {
 // ---------------------------------------------------------------------------
 
 /**
- * @typedef {{usage: string, summary: string, options?: Record<string, any>, run: (ctx: any) => Promise<{result: any, semanticHash?: string}>}} CommandDef
+ * @typedef {{usage: string, summary: string, options?: Record<string, any>, run: (ctx: any) => Promise<{result: any, semanticHash?: string, project?: string}>}} CommandDef
  */
 
 /** @type {Record<string, CommandDef>} */
@@ -605,13 +711,28 @@ export const COMMANDS = {
     },
   },
 
+  project: {
+    usage: 'project add <name> --spec <file> [--product <file or directory>]... [--force] | project remove <name> | project list',
+    summary: 'Register a spec file (and product files) as project <name> under specs/, remove such a registration, or list the projects with where their specification is.',
+    options: { spec: { type: 'string' }, product: { type: 'string', multiple: true }, force: { type: 'boolean' } },
+    run: async (ctx) => runProjectCommand(ctx),
+  },
+
   validate: {
     usage: 'validate',
     summary: 'Validate the project. ok is true only when there are no errors.',
+    options: { ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { data, project } = await loadProject(ctx);
       const counts = countSeverities(project.diagnostics);
+      /** @type {Record<string, any>} */
       const result = { ...counts, diagnostics: project.diagnostics.map(serializeDiagnostic), concordance: data.concordanceDiagnostics };
+      // A layered project (product files in project.jsonc): semanticHash stays the platform's alone, the
+      // combined model's hash is layeredHash, and each product file is listed with what it declares.
+      if (project.layers.length) {
+        result.layeredHash = project.layeredHash;
+        result.products = project.layerSummary;
+      }
       if (counts.errors > 0) {
         throw new CliError('validation.failed', `${counts.errors} validation error(s).`, { diagnostics: result.diagnostics, result });
       }
@@ -622,7 +743,7 @@ export const COMMANDS = {
   list: {
     usage: 'list [--kind <kind>] [--owner <id>]',
     summary: 'List entities in declaration order (without data).',
-    options: { kind: { type: 'string' }, owner: { type: 'string' } },
+    options: { kind: { type: 'string' }, owner: { type: 'string' }, ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { project } = await loadProject(ctx);
       const model = requireModel(project);
@@ -641,6 +762,7 @@ export const COMMANDS = {
   show: {
     usage: 'show <id>',
     summary: 'One entity with its data, owned entities and inbound references; components add relationships, children and ancestors.',
+    options: { ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { project } = await loadProject(ctx);
       const model = requireModel(project);
@@ -668,7 +790,7 @@ export const COMMANDS = {
   deps: {
     usage: 'deps <id> [--direction out|in] [--transitive] [--kinds a,b]',
     summary: 'Dependencies of a component. Default: what it depends on, direct only.',
-    options: { direction: { type: 'string' }, transitive: { type: 'boolean' }, kinds: { type: 'string' } },
+    options: { direction: { type: 'string' }, transitive: { type: 'boolean' }, kinds: { type: 'string' }, ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { project } = await loadProject(ctx);
       const model = requireModel(project);
@@ -689,6 +811,7 @@ export const COMMANDS = {
   contracts: {
     usage: 'contracts [<componentId>]',
     summary: 'All contracts, or the contracts bound to one component through its ports and relationships.',
+    options: { ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { project } = await loadProject(ctx);
       const model = requireModel(project);
@@ -707,7 +830,7 @@ export const COMMANDS = {
   claims: {
     usage: 'claims [--status <status>]',
     summary: 'Evaluated claim results, with the recorded evidence results applied.',
-    options: { status: { type: 'string' } },
+    options: { status: { type: 'string' }, ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { data, project } = await loadProject(ctx);
       const model = requireModel(project);
@@ -728,6 +851,7 @@ export const COMMANDS = {
   evaluate: {
     usage: 'evaluate [<claimId>]',
     summary: 'Evaluate one claim or all claims. A violated claim is a finding; the command still succeeds.',
+    options: { ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { data, project } = await loadProject(ctx);
       const model = requireModel(project);
@@ -743,6 +867,7 @@ export const COMMANDS = {
   gaps: {
     usage: 'gaps',
     summary: 'Unspecified or inconsistent things: warnings and gaps, open unknowns, unevaluated claims, components without realisation.',
+    options: { ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { data, project } = await loadProject(ctx);
       const model = requireModel(project);
@@ -847,6 +972,7 @@ export const COMMANDS = {
   'plan-delete': {
     usage: 'plan-delete <id>',
     summary: 'What a cascade delete of an entity would remove and repair. Changes nothing.',
+    options: { ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { project } = await loadProject(ctx);
       const model = requireModel(project);
@@ -859,7 +985,7 @@ export const COMMANDS = {
   simulate: {
     usage: 'simulate <scenarioId> [--faults a,b] [--steps]',
     summary: 'Run a scenario and check the invariant and temporal claims and the contract events that apply to its trace. Contract events are also listed as a request log.',
-    options: { faults: { type: 'string' }, steps: { type: 'boolean' } },
+    options: { faults: { type: 'string' }, steps: { type: 'boolean' }, ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { project } = await loadProject(ctx);
       const model = requireModel(project);
@@ -884,7 +1010,7 @@ export const COMMANDS = {
   prove: {
     usage: 'prove <scenarioId> [--bound N] [--max-states N] [--steps]',
     summary: 'Explore every configuration of a scenario within a bound (every order of simultaneous events, every subset of its faults) with the verified explorer of the Lean semantics, and check each state-invariant claim that lists it in Lean: holds for all N configurations, or a counterexample run. Temporal claims (never, precedes, eventually) are checked on every complete run: holds, a violating run, or incomplete. Needs lake.',
-    options: { bound: { type: 'string' }, 'max-states': { type: 'string' }, steps: { type: 'boolean' } },
+    options: { bound: { type: 'string' }, 'max-states': { type: 'string' }, steps: { type: 'boolean' }, ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { project } = await loadProject(ctx);
       const model = requireModel(project);
@@ -910,7 +1036,7 @@ export const COMMANDS = {
   integrity: {
     usage: 'integrity [<ruleId>] [--rules <file>] [--limit N]',
     summary: 'Evaluate the integrity rules (or one): holds with the number of instances checked, or violated with counterexamples (bindings, entity ids, lines); vacuous rules are flagged. --rules adds rules from a JSON file in memory. Fails when an error rule is violated or a rule is invalid.',
-    options: { rules: { type: 'string' }, limit: { type: 'string' } },
+    options: { rules: { type: 'string' }, limit: { type: 'string' }, ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { project } = await loadProject(ctx);
       const model = modelWithRules(ctx, project);
@@ -933,7 +1059,7 @@ export const COMMANDS = {
   'prove-integrity': {
     usage: 'prove-integrity [<ruleId>] [--rules <file>] [--max-witnesses N]',
     summary: 'Prove or refute integrity rules in Lean: holds (a kernel-checked proof by reflection), violated (a kernel-checked refutation from each concrete witness, up to --max-witnesses, default 10), or incomplete. The Lean checker and the JavaScript evaluator must agree. Needs lake. Fails when a rule is incomplete.',
-    options: { rules: { type: 'string' }, 'max-witnesses': { type: 'string' } },
+    options: { rules: { type: 'string' }, 'max-witnesses': { type: 'string' }, ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { project } = await loadProject(ctx);
       const model = modelWithRules(ctx, project);
@@ -1037,9 +1163,38 @@ export const COMMANDS = {
     },
   },
 
+  store: {
+    usage: 'store import|export [--db <file>] [--out <file>]',
+    summary: 'Copy the specification into its SQLite store (import) or write the store back as JSONC text (export), byte for byte. The store defaults to <spec>.sqlite beside the specification; export writes the specification itself unless --out names another file, and refuses when the specification changed since the store last synchronised with it.',
+    options: { db: { type: 'string' }, out: { type: 'string' } },
+    run: async (ctx) => {
+      const action = positional(ctx, 0, 'import|export');
+      if (action !== 'import' && action !== 'export') throw usage('invalid-argument', `Unknown store action "${action}"; expected import or export.`);
+      const { importFile, exportFile, defaultDbPath, StoreError } = await import('../tools/spec-store.js');
+      const ws = createWorkspace(ctx.specs);
+      const specFile = ws.specFile(ctx.projectName);
+      const db = ctx.values.db !== undefined ? path.resolve(process.cwd(), ctx.values.db) : defaultDbPath(specFile);
+      try {
+        if (action === 'import') {
+          const started = performance.now();
+          const r = importFile(specFile, db, { project: ctx.projectName });
+          return { result: { action, spec: specFile, db, entities: r.entities, trivia: r.trivia, refs: r.refs, length: r.length, ms: Math.round(performance.now() - started) }, semanticHash: r.semanticHash };
+        }
+        const out = ctx.values.out !== undefined ? path.resolve(process.cwd(), ctx.values.out) : specFile;
+        const started = performance.now();
+        const r = exportFile(db, out, { guard: out === specFile });
+        return { result: { action, db, out, changed: r.changed, length: r.length, bytes: r.bytes, sha256: r.sha256, ms: Math.round(performance.now() - started) } };
+      } catch (err) {
+        if (err instanceof StoreError) throw new CliError(err.code, err.message, { diagnostics: err.diagnostics });
+        throw err;
+      }
+    },
+  },
+
   readiness: {
     usage: 'readiness',
     summary: 'List what the specification still lacks before code can be generated from it (codes ready.*). Exits 0 with or without gaps; validate reports them as errors only when system.generation is set.',
+    options: { ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { project } = await loadProject(ctx);
       const model = requireModel(project);
@@ -1182,7 +1337,8 @@ export async function runCommand(name, args = [], options = {}) {
     return failure(name, null, 'usage.invalid-argument', /** @type {Error} */ (err).message);
   }
 
-  const projectName = parsed.values.project ?? options.project ?? DEFAULT_PROJECT;
+  // A project given inline (--spec) has no name; the project command names the project it works on itself.
+  const projectName = name !== 'project' && parsed.values.spec !== undefined ? null : parsed.values.project ?? options.project ?? DEFAULT_PROJECT;
   const ctx = {
     values: parsed.values,
     positionals: parsed.positionals,
@@ -1197,6 +1353,7 @@ export async function runCommand(name, args = [], options = {}) {
     const out = await command.run(ctx);
     /** @type {any} */
     const envelope = { ok: true, command: name, project: projectName };
+    if (out.project !== undefined) envelope.project = out.project;
     if (out.semanticHash !== undefined) envelope.semanticHash = out.semanticHash;
     envelope.result = out.result;
     return envelope;

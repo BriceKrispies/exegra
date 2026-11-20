@@ -2,8 +2,10 @@
 export {};
 
 /**
- * A source location inside the specification text.
- * @typedef {{offset:number, length:number, line:number, column:number}} Loc
+ * A source location inside the specification text. `file` names the product file of a layered
+ * specification (src/core/layers.js) the location is in; without it the location is in the
+ * specification text itself.
+ * @typedef {{offset:number, length:number, line:number, column:number, file?:string}} Loc
  */
 
 /**

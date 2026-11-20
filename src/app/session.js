@@ -16,6 +16,7 @@ import { createEngineRunner } from './engine-runner.js';
 import { stepFlow, flowPaths, describeFlow } from '../core/flows.js';
 import { requestLog } from '../core/contract-trace.js';
 import * as persist from '../persist/client.js';
+import { layersOf, reloadFromDisk } from './disk-reload.js';
 import { traffic } from './traffic-recorder.js';
 import { sha256Hex } from '../core/sha256.js';
 import { createReplay, replayChecks, REPLAY_SCENARIO } from '../core/replay.js';
@@ -261,7 +262,7 @@ export function createSession() {
       /** @type {Project} */
       let project;
       try {
-        project = new Project({ name, specText: files.spec.text, layoutText: files.layout?.text ?? null });
+        project = new Project({ name, specText: files.spec.text, layoutText: files.layout?.text ?? null, layers: layersOf(files) });
       } catch (e) {
         session.note('error', `Could not open project "${name}": ${/** @type {Error} */ (e).message}`);
         emit('project', { name: session.projectName });
@@ -942,7 +943,7 @@ export function createSession() {
     }
   }
 
-  /** @param {{file: 'spec'|'layout'|'recorded', hash: string}} change */
+  /** @param {{file: 'spec'|'layout'|'recorded'|'products', hash: string|null}} change */
   async function onExternalChange(change) {
     const name = session.projectName;
     if (change.file === 'recorded') {
@@ -962,6 +963,7 @@ export function createSession() {
       } catch { /* the next change event will retry */ }
       return;
     }
+    if (change.file === 'products') { await onProductsChange(name); return; }
     if (change.hash === hashes[change.file]) return; // our own write
     if (saving || pending[change.file] || conflict) return; // the pending write will surface the conflict
     const requestId = traffic.nextRequestId();
@@ -974,7 +976,7 @@ export function createSession() {
       if (!current || current.hash === hashes[change.file]) return;
       if (saving || pending[change.file] || conflict) return; // an edit was made during the round trip; do not replace it
       rec('reload-requested', { file: change.file, text: current.hash });
-      const r = session.project.reload(change.file === 'spec' ? { specText: current.text } : { layoutText: current.text });
+      const r = reloadFromDisk(session.project, change.file, files);
       if (r.ok) {
         hashes[change.file] = current.hash;
         session.note('info', `${change.file === 'spec' ? 'spec.jsonc' : 'layout.jsonc'} changed on disk and was reloaded.`);
@@ -984,6 +986,31 @@ export function createSession() {
       }
     } catch (e) {
       session.note('error', `Could not re-read the project after an external change: ${/** @type {Error} */ (e).message}`);
+    }
+  }
+
+  /**
+   * A product file changed, was added or was removed: read the project again and re-derive the model from the
+   * product layers on disk. The product files are never written here, so there is no pending write of ours to
+   * protect, and the platform text and layout in memory are kept as they are.
+   * @param {string} name
+   */
+  async function onProductsChange(name) {
+    const requestId = traffic.nextRequestId();
+    try {
+      rec('read-intent', { name, requestId, purpose: 'external' });
+      const files = await persist.readProject(name, { requestId });
+      rec('project-files-read', filesRead(files, requestId));
+      if (name !== session.projectName) return;
+      const before = session.project.revision;
+      const r = reloadFromDisk(session.project, 'products', files);
+      if (r.ok) {
+        if (session.project.revision !== before) session.note('info', 'A product file changed on disk and was reloaded.');
+      } else {
+        session.note('error', `${r.message} Fix the product file; the last valid model is kept.`, { diagnostics: r.diagnostics });
+      }
+    } catch (e) {
+      session.note('error', `Could not re-read the project after a product file changed: ${/** @type {Error} */ (e).message}`);
     }
   }
 

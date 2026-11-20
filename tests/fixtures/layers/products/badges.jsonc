@@ -1,0 +1,47 @@
+{
+  // A product file: the badges feature of the mini platform, as tenant metadata. It imports the
+  // platform entities it uses by id and declares only kinds a product may declare.
+  "product": {
+    "id": "badges",
+    "name": "Badges",
+    "description": "Badges a tenant awards to its members.",
+    "imports": {
+      "spec": "../platform.jsonc",
+      "entities": ["product-module", "tenant-id", "content-write", "install-bundle"]
+    }
+  },
+  "types": [
+    { "id": "badges__tier", "name": "Badge tier", "kind": "enum", "values": ["bronze", "silver", "gold"] }
+  ],
+  "records": [
+    {
+      "id": "badges__badge",
+      "name": "Badge",
+      "owner": "product-module",
+      "key": ["tenant", "slug"],
+      "fields": [
+        { "name": "tenant", "type": "tenant-id" },
+        { "name": "slug", "type": "string" },
+        { "name": "tier", "type": "badges__tier" }
+      ],
+      "retention": "Until the tenant deletes the badge."
+    }
+  ],
+  "roles": [
+    { "id": "badges__curator", "name": "Badge curator", "level": "tenant", "holders": ["person"], "capabilities": ["content-write", "badges__grant"] }
+  ],
+  "contracts": [
+    {
+      "id": "badges__award",
+      "name": "Award a badge",
+      "inputs": [ { "name": "tenant", "type": "tenant-id" }, { "name": "badge", "type": "string" } ]
+    }
+  ],
+  "claims": [
+    { "id": "badges__key-names-the-tenant", "kind": "structural", "statement": "A badge is identified within its tenant.", "evaluate": { "method": "external-evidence" } }
+  ],
+  // A product may declare capabilities: names that tenant roles grant, in the namespace of the product (D-6590).
+  "capabilities": [
+    { "id": "badges__grant", "name": "Grant badges", "description": "Award a badge to a member of the tenant." }
+  ]
+}

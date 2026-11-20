@@ -1,0 +1,5 @@
+{
+  // Refused: declares a component, which is platform structure, not tenant metadata (layer.kind-not-allowed).
+  "product": { "id": "badges", "name": "Badges", "imports": { "spec": "../platform.jsonc", "entities": [] } },
+  "components": [ { "id": "badges__service", "name": "Badge service", "category": "computational", "purpose": "Awards badges." } ]
+}

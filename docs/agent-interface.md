@@ -61,6 +61,24 @@ node cli/exegra.js projects
 {"ok":true,"command":"projects","project":"exegra","result":[{"name":"exegra","title":"Exegra"}]}
 ```
 
+### `project`
+Registers, removes and lists linked projects, so a script (a continuous-integration job in another repository) can say "treat this spec file as project `strata`" in one command. Nothing else is written, and the specification is never touched.
+```
+node cli/exegra.js project add strata --spec ../strata/specs/platform.jsonc --product ../strata/specs/products
+node cli/exegra.js project remove strata
+node cli/exegra.js project list
+```
+- `project add <name> --spec <file> [--product <file or directory>]... [--force]` writes `specs/<name>/project.jsonc` as `{"spec": ..., "products": [...]}` with every path stored relative to the project directory and forward slashes (so the specs directory and the files must be on one drive). Paths on the command line are relative to the working directory. The spec must be a readable `.jsonc` file and every product a readable `.jsonc` file or directory, or nothing is written. It refuses with `project.exists` when `specs/<name>/project.jsonc` exists (replace it with `--force`) or when the directory keeps its own `spec.jsonc`, and with `name.invalid` for a name that is not a project name (`a-z 0-9 - _`, starting with a letter or digit, at most 64 characters). The envelope's `project` is the name given.
+- `project remove <name>` deletes `project.jsonc`, and the directory when it is then empty; a layout, recorded results or history stay. It refuses with `project.not-found` when the name is not a registered link.
+- `project list` returns `[{name, title, spec, products}]`; `projects` returns names and titles only.
+
+### Inline projects
+`validate`, `list`, `show`, `deps`, `contracts`, `claims`, `evaluate`, `gaps`, `plan-delete`, `simulate`, `prove`, `integrity`, `prove-integrity` and `readiness` accept the project inline instead of `--project`: `--spec <file>` and any number of `--product <file or directory>`, relative to the working directory. Nothing is registered or written, there is no layout and no recorded results, and the envelope's `project` is `null`.
+```
+node cli/exegra.js validate --spec specs/platform.jsonc --product specs/products
+```
+`--spec` with `--project`, or `--product` without `--spec`, is a usage error; commands that write (`apply`, `generate`, `verify`, ...) do not take the options.
+
 ### `validate`
 Returns `{errors, warnings, gaps, diagnostics}` as counts and the full list. `ok` is true only when there are no errors. With errors, the command fails with `validation.failed`.
 ```

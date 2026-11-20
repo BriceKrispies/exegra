@@ -5,7 +5,9 @@
 //                        a tuple variant has two or more fields, none optional, and is not also a newtype
 //   type.union-field     the type of a variant field resolves
 //   type.encoding        tag, tagField, contentField and variantCase agree with each other and with the variants (an
-//                        internal tag writes no newtype or tuple variant)
+//                        internal tag writes no newtype or tuple variant; an untagged union takes no tagField,
+//                        contentField or variantCase, and no two of its variants are written as the same JSON shape,
+//                        so reading it in declaration order always finds the variant that was written)
 //   type.map-key         a map key is string, an integer built-in, or an id or scalar over one
 //   type.recursion       a struct does not contain itself through struct fields alone
 //   type.constraints     pattern, minLength, maxLength only on an id or scalar whose representation takes them
@@ -20,7 +22,7 @@ export const INTEGER_TYPES = Object.freeze(['u8', 'u16', 'u32', 'u64', 'i32', 'i
 /** How the variant names of a union are written on the wire; the names as written when none is given. */
 export const VARIANT_CASES = Object.freeze(['PascalCase', 'snake_case', 'kebab-case']);
 /** How a union is tagged on the wire (serde's forms); external is the default. */
-export const UNION_TAGS = Object.freeze(['external', 'internal', 'adjacent']);
+export const UNION_TAGS = Object.freeze(['external', 'internal', 'adjacent', 'untagged']);
 
 /** @param {any} v */
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -87,6 +89,32 @@ function directStructs(model, t) {
     .filter((/** @type {string} */ n) => model.entities.get(n)?.kind === 'type' && model.entities.get(n)?.data.kind === 'struct');
 }
 
+/**
+ * An untagged union writes a variant as its own JSON: a unit variant null, a newtype the value of its field, a tuple an
+ * array, any other variant an object of its fields. A reader tries the variants in declaration order, so two variants
+ * written as the same shape (the same JSON kind with the same field types) could never be told apart, and a newtype
+ * over json, which takes any value, shadows every variant after it.
+ * @param {Entity} t @param {any[]} variants @param {(code: string, message: string, sub?: (string|number)[]) => void} err
+ */
+function checkUntagged(t, variants, err) {
+  /** @type {Map<string, string>} */
+  const shapes = new Map();
+  /** @param {any} f */
+  const text = (f) => String(f.type ?? '').replace(/\s+/g, '');
+  variants.forEach((/** @type {any} */ v, /** @type {number} */ i) => {
+    if (!isObj(v)) return;
+    const fields = (Array.isArray(v.fields) ? v.fields : []).filter(isObj);
+    const shape = !fields.length ? 'null'
+      : v.newtype === true ? `value ${text(fields[0])}`
+        : v.tuple === true ? `array [${fields.map(text).join(', ')}]`
+          : `object {${fields.map((/** @type {any} */ f) => `${f.name}: ${text(f)}${f.optional === true ? '?' : ''}`).sort().join(', ')}}`;
+    const first = shapes.get(shape);
+    if (first !== undefined) err('type.encoding', `Variants "${first}" and "${v.name}" of untagged union "${t.id}" are both written as ${shape}, so a reader could not tell them apart.`, ['variants', i]);
+    else shapes.set(shape, v.name);
+    if (v.newtype === true && fields.length === 1 && text(fields[0]) === 'json' && i < variants.length - 1) err('type.encoding', `Variant "${v.name}" of untagged union "${t.id}" takes any JSON value, so the variants after it could never be read; it must be the last.`, ['variants', i]);
+  });
+}
+
 /** @param {Model} model @param {Entity} t @param {(code: string, message: string, sub?: (string|number)[]) => void} err */
 function checkUnion(model, t, err) {
   const d = t.data;
@@ -129,12 +157,14 @@ function checkUnion(model, t, err) {
     if (tag === 'internal' && v.newtype === true) err('type.encoding', `Variant "${v.name}" of union "${t.id}" is a newtype, which an internally tagged union cannot write; internal tagging needs struct-like or unit variants.`, [...at, 'newtype']);
     if (tag === 'internal' && typeof enc.tagField === 'string' && names.has(enc.tagField)) err('type.encoding', `Variant "${v.name}" of union "${t.id}" has a field named "${enc.tagField}", which is the tag field of its internal encoding.`, [...at, 'fields']);
   });
+  if (tag === 'untagged') checkUntagged(t, variants, err);
   if (d.encoding === undefined) return;
   const at = ['encoding'];
   if (!isObj(d.encoding)) { err('type.encoding', `The "encoding" of union "${t.id}" is {tag, tagField?, contentField?, variantCase?}.`, at); return; }
   if (enc.tag !== undefined && !UNION_TAGS.includes(enc.tag)) err('type.encoding', `The tag of union "${t.id}" is "${enc.tag}"; it is one of ${UNION_TAGS.join(', ')}.`, [...at, 'tag']);
   if (enc.variantCase !== undefined && !VARIANT_CASES.includes(enc.variantCase)) err('type.encoding', `The variantCase of union "${t.id}" is "${enc.variantCase}"; it is one of ${VARIANT_CASES.join(', ')}.`, [...at, 'variantCase']);
-  if (enc.tagField !== undefined && tag === 'external') err('type.encoding', `Union "${t.id}" has a tagField but an external tag; a tagField belongs to an internal or adjacent encoding.`, [...at, 'tagField']);
+  if (enc.tagField !== undefined && (tag === 'external' || tag === 'untagged')) err('type.encoding', `Union "${t.id}" has a tagField but ${tag === 'external' ? 'an external' : 'an untagged'} tag; a tagField belongs to an internal or adjacent encoding.`, [...at, 'tagField']);
+  if (enc.variantCase !== undefined && tag === 'untagged') err('type.encoding', `Union "${t.id}" is untagged, so its variant names are not written and a variantCase has nothing to convert.`, [...at, 'variantCase']);
   if (enc.contentField !== undefined && tag !== 'adjacent') err('type.encoding', `Union "${t.id}" has a contentField but ${an} ${tag} tag; a contentField belongs to an adjacent encoding.`, [...at, 'contentField']);
   if ((tag === 'internal' || tag === 'adjacent') && !(typeof enc.tagField === 'string' && enc.tagField)) err('type.encoding', `Union "${t.id}" has ${an} ${tag} tag and needs a tagField.`, [...at, 'tag']);
   if (tag === 'adjacent' && !(typeof enc.contentField === 'string' && enc.contentField)) err('type.encoding', `Union "${t.id}" has an adjacent tag and needs a contentField.`, [...at, 'tag']);

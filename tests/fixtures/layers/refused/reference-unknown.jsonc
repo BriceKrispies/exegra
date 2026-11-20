@@ -1,0 +1,7 @@
+{
+  // Refused: the record's owner "badge-service" is declared nowhere (layer.reference-unknown).
+  "product": { "id": "badges", "name": "Badges", "imports": { "spec": "../platform.jsonc", "entities": [] } },
+  "records": [
+    { "id": "badges__badge", "name": "Badge", "owner": "badge-service", "key": ["slug"], "fields": [ { "name": "slug", "type": "string" } ], "retention": "Until deleted." }
+  ]
+}

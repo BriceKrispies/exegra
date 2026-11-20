@@ -1,0 +1,5 @@
+{
+  // Refused beside products/badges.jsonc: a screen whose view model is the badges product's contract (layer.cross-product-reference).
+  "product": { "id": "profiles", "name": "Profiles", "imports": { "spec": "../platform.jsonc", "entities": [] } },
+  "screens": [ { "id": "profiles__badges", "name": "Badges of a profile", "route": "/profiles/:tenant/:badge", "viewModel": "badges__award" } ]
+}

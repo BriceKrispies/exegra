@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { runCommand, exitCodeOf, parseTestCounts, countPassingTests, mergeRecordedResults } from '../../cli/commands.js';
+import { runCommand, exitCodeOf, parseTestCounts, countPassingTests, countPassedBrowserTests, mergeRecordedResults } from '../../cli/commands.js';
 import { Project } from '../../src/core/project.js';
 import { OPERATIONS } from '../../src/core/operations.js';
 
@@ -258,6 +258,13 @@ test('countPassingTests ignores the entry for the test file, so a pattern that m
   // A skipped test ran nothing, so it is not evidence.
   const skipped = 'TAP version 13\nok 1 - the engines agree # SKIP binaries not built\n1..1\n';
   assert.equal(countPassingTests(skipped, 'tests/core/formal-semantics.test.js'), 0);
+});
+
+test('countPassedBrowserTests counts the passed tests of a playwright summary, so a skipped or empty run is not a pass', () => {
+  assert.equal(countPassedBrowserTests('Running 2 tests using 1 worker\n  ok 1 a (1s)\n  ok 2 b (1s)\n\n  2 passed (3s)\n'), 2);
+  assert.equal(countPassedBrowserTests('Running 1 test using 1 worker\n  -  1 a\n\n  1 skipped\n'), 0);
+  assert.equal(countPassedBrowserTests('\x1b[32m  1 passed\x1b[39m (2s)\n'), 1);
+  assert.equal(countPassedBrowserTests(''), 0);
 });
 
 test('markdown renders a document of a specification that holds documents, and refuses one that holds none', async () => {

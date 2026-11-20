@@ -1,0 +1,7 @@
+{
+  // Refused: uses the platform's product-module (a reference) and tenant-id (a type) without importing them (layer.import-missing).
+  "product": { "id": "badges", "name": "Badges", "imports": { "spec": "../platform.jsonc", "entities": [] } },
+  "records": [
+    { "id": "badges__badge", "name": "Badge", "owner": "product-module", "key": ["tenant"], "fields": [ { "name": "tenant", "type": "tenant-id" } ], "retention": "Until deleted." }
+  ]
+}

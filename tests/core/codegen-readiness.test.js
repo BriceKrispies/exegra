@@ -214,15 +214,17 @@ test('the readiness command lists the gaps of a specification and exits 0 either
   }
 });
 
+// The strata project is a local link (specs/strata/project.jsonc, untracked): it is checked only where the link exists, and
+// the exegra project always is. Only errors and warnings are asserted: informational readiness gaps (such as
+// ready.function-branch-uncovered reported as info) are allowed.
 test('the exegra and strata specifications that do not set the switch validate with no errors and no warnings', async () => {
   const projects = ['exegra'];
-  if (fs.existsSync(fileURLToPath(new URL('../../../strata/specifications/spec.jsonc', import.meta.url)))) projects.push('strata');
+  if (fs.existsSync(fileURLToPath(new URL('../../specs/strata/project.jsonc', import.meta.url)))) projects.push('strata');
   for (const project of projects) {
     const env = await runCommand('validate', [], { project });
     assert.equal(env.ok, true, project);
     assert.equal(env.result.errors, 0, project);
     assert.equal(env.result.warnings, 0, project);
-    assert.ok(!env.result.diagnostics.some((/** @type {any} */ d) => d.code.startsWith('ready.')), project);
   }
 });
 

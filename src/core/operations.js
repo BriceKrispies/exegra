@@ -111,32 +111,474 @@ export function removeAt(text, path) {
   return text.slice(0, start) + text.slice(end);
 }
 
+/** @param {string} text */
+function fmt(text) {
+  return { formattingOptions: { insertSpaces: true, tabSize: 2, eol: text.includes('\r\n') ? '\r\n' : '\n' } };
+}
+
 /**
- * Working state of one transaction: the two texts being edited and the model
- * derived from the current specification text.
+ * Set or remove (value undefined) the value at a JSON path of a text: the one edit every
+ * property change makes, whether on the whole specification or on one declaration's lines.
+ * @param {string} text @param {(string|number)[]} path @param {any} value @param {boolean} insert
+ */
+function setAt(text, path, value, insert) {
+  const removed = value === undefined ? removeAt(text, path) : null;
+  if (removed !== null) return removed;
+  return applyEdits(text, modify(text, path, value, { ...fmt(text), isArrayInsertion: insert }));
+}
+
+/**
+ * Append (or insert at `index`) into the array at `arrayPath` of a text, creating the array when
+ * absent. `pos` is where the value landed; `shifted` is true when it landed before existing items.
+ * @param {string} text @param {(string|number)[]} arrayPath @param {any} value @param {number} [index]
+ * @returns {{text: string, pos: number, shifted: boolean}}
+ */
+function appendAt(text, arrayPath, value, index) {
+  const root = parseTree(text, [], { allowTrailingComma: true });
+  const node = root ? findNodeAtLocation(root, arrayPath) : undefined;
+  if (!node) return { text: setAt(text, arrayPath, [value], false), pos: 0, shifted: false };
+  if (node.type !== 'array') throw new OpError('edit.not-array', `"${arrayPath.join('.')}" is not an array.`);
+  const len = node.children?.length ?? 0;
+  const pos = index === undefined ? len : Math.max(0, Math.min(index, len));
+  return { text: insertInArray(text, node, pos, value), pos, shifted: pos < len };
+}
+
+/** @param {(string|number)[]} path */
+const pathKey = (path) => JSON.stringify(path);
+
+/**
+ * Where an entity is declared: what operations look up mid-transaction (existence, kind, owner,
+ * path) without re-deriving the model. Every model entity is one; so is an entity a transaction
+ * has just declared.
+ * @typedef {{id: string, kind: string, owner: string|null, path: (string|number)[]}} Declared
+ */
+
+/**
+ * The full lines one top-level declaration occupies, edited on their own. `start` and `end` are
+ * offsets in the base text (end at the line break, which stays outside).
+ * @typedef {{start: number, end: number, text: string}} Window
+ */
+
+/**
+ * Working state of one transaction: the two texts being edited and the model derived from the
+ * specification text.
+ *
+ * The model is re-derived once per transaction, not once per operation. Between derivations the
+ * transaction keeps an index of where every entity is declared (`Declared`), updated as operations
+ * declare entities and invalidated by any edit that could change the set of entities, their kinds,
+ * owners or paths; a lookup on an invalid index re-derives first. Operations that read references,
+ * expressions or entity data (DeleteEntity, RenameEntity, ReplaceSource) read `model`, which
+ * re-derives when the text changed since the last derivation. So every operation sees the effects
+ * of the operations before it, as it did when the model was re-derived after every edit.
+ *
+ * Edits inside one top-level declaration are made on a window holding just its lines, and edits
+ * that append to a section are kept as pending insertions; `specText` splices them into the base
+ * text once. Every such edit is `jsonc-parser`'s `modify` (or `removeAt`, `insertInArray`), whose
+ * result depends only on the edited lines when the text has no carriage returns, so the spliced
+ * text is byte for byte the text the same edits make on the whole document. Anything else
+ * (removing a whole declaration, a declaration sharing lines with others, a file with CRLF line
+ * breaks) is edited on the whole text, as before.
+ *
+ * `eager` re-derives the model after every edit and edits only the whole text: the reference
+ * behaviour the batched path is tested against. `diverged` becomes true when a derivation finds
+ * that the index did not match the model it claimed to describe; Project.apply then replays the
+ * transaction eagerly.
  */
 export class Tx {
-  /** @param {string} specText @param {string} layoutText @param {Model} model */
-  constructor(specText, layoutText, model) {
-    this.specText = specText;
+  /** Text the pending windows and insertions apply to. */
+  #base = '';
+  /** @type {import('jsonc-parser').Node|null|undefined} parse tree of #base, built on demand */
+  #tree = undefined;
+  /** @type {boolean|null} whether #base has no carriage return (windows are exact only then) */
+  #plain = null;
+  /** @type {Map<string, {node: import('jsonc-parser').Node, count: number}|null>} top-level arrays of #base */
+  #sections = new Map();
+  /** @type {Map<string, Window>} windows of declarations of #base, by "section\0index" */
+  #windows = new Map();
+  /** @type {Map<string, {at: number, items: {text: string}[]}>} declarations appended to a section, inserted at `at` */
+  #appends = new Map();
+  /** @type {Model|null} */
+  #model = null;
+  /** @type {{model: Model|null, diagnostics: Diagnostic[]}|null} the parse of the current text, when this transaction derived it */
+  #parse = null;
+  /** The text changed since #model was derived. */
+  #dirty = false;
+  /** @type {Map<string, Declared>} */
+  #index = new Map();
+  /** @type {Map<string, string>} entity id by path key */
+  #byPath = new Map();
+  #indexValid = false;
+  /** @type {Set<string>|null} ids that more than one declaration uses, when known */
+  #dupIds = null;
+  #eager = false;
+
+  /**
+   * @param {string} specText @param {string} layoutText @param {Model} model the model of specText
+   * @param {{eager?: boolean, diagnostics?: Diagnostic[]}} [opts] diagnostics: those of specText's
+   *   parse (Project.diagnostics), which tell which ids are declared twice
+   */
+  constructor(specText, layoutText, model, opts = {}) {
+    this.#base = specText;
+    this.#eager = opts.eager === true;
+    if (opts.diagnostics) this.#dupIds = duplicateIds(opts.diagnostics);
     this.layoutText = layoutText;
-    this.model = model;
+    if (model) this.#adopt(model);
     /** @type {Set<string>} */
     this.affected = new Set();
     this.specEdited = false;
     this.layoutEdited = false;
+    this.diverged = false;
+    /** How many times this transaction derived the model. */
+    this.derivations = 0;
+  }
+
+  /** The current specification text. */
+  get specText() {
+    if (!this.#windows.size && !this.#appends.size) return this.#base;
+    /** @type {[number, number, string][]} */
+    const cuts = [];
+    for (const w of this.#windows.values()) cuts.push([w.start, w.end, w.text]);
+    for (const a of this.#appends.values()) cuts.push([a.at, a.at, a.items.map((it) => ',\n' + it.text).join('')]);
+    cuts.sort((x, y) => x[0] - y[0] || x[1] - y[1]);
+    const parts = [];
+    let pos = 0;
+    for (const [start, end, text] of cuts) {
+      parts.push(this.#base.slice(pos, start), text);
+      pos = end;
+    }
+    parts.push(this.#base.slice(pos));
+    this.#rebase(parts.join(''));
+    return this.#base;
+  }
+
+  /** Replace the whole specification text. */
+  set specText(text) {
+    this.#rebase(text);
+    this.#dirty = true;
+    this.#indexValid = false;
+    this.#parse = null;
+  }
+
+  /** The model of the current specification text, re-derived when the text changed. */
+  get model() {
+    if (this.#dirty) this.#derive();
+    return /** @type {Model} */ (this.#model);
+  }
+
+  /** Adopt a model the caller derived from the current specification text. */
+  set model(model) {
+    this.#adopt(model);
+    this.#dirty = false;
+    this.#parse = null;
+    this.#dupIds = null;
+  }
+
+  /** The effective meta-model. Only a vocabulary edit changes it, and such an edit invalidates the index. */
+  get meta() {
+    this.#shape();
+    return /** @type {Model} */ (this.#model).meta;
+  }
+
+  /** Re-derive the model now. */
+  refresh() {
+    this.#derive();
+  }
+
+  /**
+   * The parse of the current specification text when this transaction derived it (so an analysis
+   * need not parse it again), else null. Re-derives first when the text changed.
+   * @returns {{model: Model|null, diagnostics: Diagnostic[]}|null}
+   */
+  parsed() {
+    if (this.#dirty) this.#derive();
+    return this.#parse;
   }
 
   /** @param {string} text */
-  #fmt(text) {
-    return { formattingOptions: { insertSpaces: true, tabSize: 2, eol: text.includes('\r\n') ? '\r\n' : '\n' } };
+  #rebase(text) {
+    this.#base = text;
+    this.#tree = undefined;
+    this.#plain = null;
+    this.#sections.clear();
+    this.#windows.clear();
+    this.#appends.clear();
   }
 
-  /** Re-derive the model after an edit. */
-  refresh() {
-    const { model } = parseSpec(this.specText);
-    if (!model) throw new OpError('edit.syntax', 'The edit would leave the specification syntactically invalid.');
-    this.model = model;
+  /** @param {Model} model */
+  #adopt(model) {
+    this.#model = model;
+    this.#index = new Map();
+    this.#byPath = new Map();
+    for (const e of model.entities.values()) {
+      this.#index.set(e.id, e);
+      this.#byPath.set(pathKey(e.path), e.id);
+    }
+    this.#indexValid = true;
+  }
+
+  #derive() {
+    const parsed = parseSpec(this.specText);
+    this.derivations++;
+    if (!parsed.model) throw new OpError('edit.syntax', 'The edit would leave the specification syntactically invalid.');
+    if (this.#indexValid && !this.#eager && !sameDeclarations(this.#index, parsed.model)) this.diverged = true;
+    this.#adopt(parsed.model);
+    this.#parse = parsed;
+    this.#dupIds = duplicateIds(parsed.diagnostics);
+    this.#dirty = false;
+  }
+
+  /** Make the index describe the current text. */
+  #shape() {
+    if (!this.#indexValid) this.#derive();
+  }
+
+  #invalidate() {
+    this.#indexValid = false;
+  }
+
+  /**
+   * Record an edit at `path` (value undefined: a removal) against the index, made the way the
+   * model derivation would see it:
+   * - inside a declared entity, below a property that declares no entities and is not its id:
+   *   nothing changes;
+   * - removing a declared entity from its array: it and everything nested in it go, and the
+   *   items after it move up one;
+   * - replacing or removing a property that declares entities: the old nested entities go and the
+   *   new ones are declared;
+   * - setting an entity's id: the entity and the owner of its nested entities follow.
+   * Anything else invalidates the index. So does freeing an id that a duplicate declaration also
+   * uses, since that declaration would then count.
+   * @param {(string|number)[]} path @param {any} value @param {boolean} insert
+   */
+  #noteEdit(path, value, insert) {
+    if (!this.#indexValid) return;
+    const meta = /** @type {Model} */ (this.#model).meta;
+    const exact = this.#byPath.get(pathKey(path));
+    if (exact !== undefined) {
+      const last = path[path.length - 1];
+      if (value === undefined && !insert && typeof last === 'number' && this.#drop(path)) {
+        this.#shift(path.slice(0, -1), last);
+        return;
+      }
+      this.#invalidate();
+      return;
+    }
+    for (let k = path.length - 1; k >= 1; k--) {
+      const id = this.#byPath.get(pathKey(path.slice(0, k)));
+      if (id === undefined) continue;
+      const e = /** @type {Declared} */ (this.#index.get(id));
+      const key = path[k];
+      const def = meta.entities[e.kind]?.properties;
+      const site = typeof key === 'string' && def && Object.hasOwn(def, key) && def[key]?.type === 'entities' ? def[key] : null;
+      if (typeof key === 'string' && key !== 'id' && !site) return;
+      if (k !== path.length - 1 || insert) break;
+      if (key === 'id' && typeof value === 'string' && ID_RE.test(value) && !this.#index.has(value) && this.#frees([e.id])) {
+        this.#rename(e, value);
+        return;
+      }
+      if (site && this.#drop(path, true) && (value === undefined || (Array.isArray(value) && value.every((item, j) => this.#declareOne(site.entity, item, [...path, j], e.id))))) return;
+      break;
+    }
+    this.#invalidate();
+  }
+
+  /**
+   * Whether freeing these ids leaves the index exact: false when a duplicate declaration of one of
+   * them exists, or when that cannot be known.
+   * @param {string[]} ids
+   */
+  #frees(ids) {
+    return this.#dupIds !== null && !ids.some((id) => /** @type {Set<string>} */ (this.#dupIds).has(id));
+  }
+
+  /**
+   * Remove the entity at `path` and everything nested in it (or, with `below`, everything strictly
+   * below `path`). False, with nothing removed, when an id freed this way has a duplicate.
+   * @param {(string|number)[]} path @param {boolean} [below]
+   */
+  #drop(path, below = false) {
+    const n = path.length;
+    /** @type {Declared[]} */
+    const gone = [];
+    for (const d of this.#index.values()) {
+      if (d.path.length < n + (below ? 1 : 0)) continue;
+      let i = 0;
+      while (i < n && d.path[i] === path[i]) i++;
+      if (i === n) gone.push(d);
+    }
+    if (!this.#frees(gone.map((d) => d.id))) return false;
+    for (const d of gone) {
+      this.#index.delete(d.id);
+      this.#byPath.delete(pathKey(d.path));
+    }
+    return true;
+  }
+
+  /**
+   * Items after `removed` in the array at `arrayPath` move up one, with everything nested in them.
+   * @param {(string|number)[]} arrayPath @param {number} removed
+   */
+  #shift(arrayPath, removed) {
+    const n = arrayPath.length;
+    /** @type {Declared[]} */
+    const moved = [];
+    for (const d of this.#index.values()) {
+      const at = d.path[n];
+      if (d.path.length <= n || typeof at !== 'number' || at <= removed) continue;
+      let i = 0;
+      while (i < n && d.path[i] === arrayPath[i]) i++;
+      if (i === n) moved.push(d);
+    }
+    for (const d of moved) this.#byPath.delete(pathKey(d.path));
+    for (const d of moved) {
+      const path = [...d.path];
+      path[n] = /** @type {number} */ (path[n]) - 1;
+      const next = { id: d.id, kind: d.kind, owner: d.owner, path };
+      this.#index.set(d.id, next);
+      this.#byPath.set(pathKey(path), d.id);
+    }
+  }
+
+  /** @param {Declared} e @param {string} newId */
+  #rename(e, newId) {
+    this.#index.delete(e.id);
+    this.#index.set(newId, { id: newId, kind: e.kind, owner: e.owner, path: e.path });
+    this.#byPath.set(pathKey(e.path), newId);
+    for (const d of [...this.#index.values()]) {
+      if (d.owner === e.id) this.#index.set(d.id, { id: d.id, kind: d.kind, owner: newId, path: d.path });
+    }
+  }
+
+  /**
+   * Add an entity the transaction declared, and the entities nested in it, to the index, the way
+   * the model derivation would; invalidate the index when the declaration is anything but plain.
+   * @param {string} kind @param {any} data @param {(string|number)[]} path @param {string|null} owner
+   */
+  #declare(kind, data, path, owner) {
+    if (!this.#indexValid) return;
+    if (!this.#declareOne(kind, data, path, owner)) this.#invalidate();
+  }
+
+  /** @param {string} kind @param {any} data @param {(string|number)[]} path @param {string|null} owner @returns {boolean} */
+  #declareOne(kind, data, path, owner) {
+    if (!data || typeof data !== 'object' || Array.isArray(data) || typeof data.id !== 'string' || this.#index.has(data.id)) return false;
+    this.#index.set(data.id, { id: data.id, kind, owner, path });
+    this.#byPath.set(pathKey(path), data.id);
+    const props = /** @type {Model} */ (this.#model).meta.entities[kind]?.properties ?? {};
+    for (const [key, def] of Object.entries(props)) {
+      if (def?.type !== 'entities' || !Object.hasOwn(data, key) || data[key] === undefined) continue;
+      const items = data[key];
+      if (!Array.isArray(items)) return false;
+      for (let j = 0; j < items.length; j++) if (!this.#declareOne(def.entity, items[j], [...path, key, j], data.id)) return false;
+    }
+    return true;
+  }
+
+  /** Edit the whole text. @param {(text: string) => string} edit */
+  #whole(edit) {
+    this.#rebase(edit(this.specText));
+  }
+
+  #isPlain() {
+    if (this.#plain === null) this.#plain = !this.#base.includes('\r');
+    return this.#plain;
+  }
+
+  /** @param {string} name */
+  #section(name) {
+    if (this.#sections.has(name)) return this.#sections.get(name) ?? null;
+    if (this.#tree === undefined) this.#tree = parseTree(this.#base, [], { allowTrailingComma: true }) ?? null;
+    const node = this.#tree ? findNodeAtLocation(this.#tree, [name]) : undefined;
+    const sec = node?.type === 'array' ? { node, count: node.children?.length ?? 0 } : null;
+    this.#sections.set(name, sec);
+    return sec;
+  }
+
+  /**
+   * The window of the top-level declaration `path` lies strictly inside, and the path within it;
+   * null when the edit must be made on the whole text.
+   * @param {(string|number)[]} path
+   * @returns {{win: {text: string}, rel: (string|number)[]}|null}
+   */
+  #windowOf(path) {
+    if (path.length < 3 || typeof path[0] !== 'string' || typeof path[1] !== 'number' || !this.#isPlain()) return null;
+    const sec = this.#section(path[0]);
+    if (!sec) return null;
+    const i = path[1];
+    const rel = path.slice(2);
+    if (i < sec.count) {
+      const key = `${path[0]}\u0000${i}`;
+      let win = this.#windows.get(key);
+      if (!win) {
+        const opened = this.#open(/** @type {import('jsonc-parser').Node[]} */ (sec.node.children)[i], path[0]);
+        if (!opened) return null;
+        win = opened;
+        this.#windows.set(key, win);
+      }
+      return { win, rel };
+    }
+    const app = this.#appends.get(path[0]);
+    const item = app?.items[i - sec.count];
+    return item ? { win: item, rel } : null;
+  }
+
+  /**
+   * A window over the lines of one item of a section: only when nothing but indentation precedes
+   * the item on its first line and nothing but a comma follows it on its last.
+   * @param {import('jsonc-parser').Node} node @param {string} section
+   * @returns {Window|null}
+   */
+  #open(node, section) {
+    const t = this.#base;
+    const start = t.lastIndexOf('\n', node.offset - 1) + 1;
+    if (!/^[ \t]*$/.test(t.slice(start, node.offset))) return null;
+    const nodeEnd = node.offset + node.length;
+    let end = t.indexOf('\n', nodeEnd);
+    if (end < 0) end = t.length;
+    if (!/^[ \t]*,?[ \t]*$/.test(t.slice(nodeEnd, end))) return null;
+    const at = this.#appends.get(section)?.at;
+    if (at !== undefined && at > start && at < end) return null;
+    return { start, end, text: t.slice(start, end) };
+  }
+
+  /**
+   * Append a declaration at the end of a top-level section without touching the text before it,
+   * the way insertInArray would. Returns the new item's index, or null when the append must be
+   * made on the whole text.
+   * @param {string} section @param {any} value @param {number} [index]
+   * @returns {number|null}
+   */
+  #appendToSection(section, value, index) {
+    if (!this.#isPlain()) return null;
+    const sec = this.#section(section);
+    if (!sec || !sec.count) return null;
+    const items = /** @type {import('jsonc-parser').Node[]} */ (sec.node.children);
+    let app = this.#appends.get(section);
+    const len = sec.count + (app?.items.length ?? 0);
+    if (index !== undefined && Math.max(0, Math.min(index, len)) < len) return null;
+    if (!app) {
+      const last = items[items.length - 1];
+      const at = last.offset + last.length;
+      if (at < this.#base.length && this.#base[at] !== '\n') return null;
+      app = { at, items: [] };
+      this.#appends.set(section, app);
+    }
+    const t = this.#base;
+    // insertInArray's indentation: the first item's, else the array line's plus two spaces.
+    const first = this.#windows.get(`${section}\u0000${0}`);
+    let indent;
+    if (first) indent = /^[ \t]*/.exec(first.text)?.[0] ?? '';
+    else {
+      const ls = t.lastIndexOf('\n', items[0].offset - 1) + 1;
+      const lead = t.slice(ls, items[0].offset);
+      if (/^[ \t]*$/.test(lead)) indent = lead;
+      else {
+        const als = t.lastIndexOf('\n', sec.node.offset - 1) + 1;
+        indent = (/^[ \t]*/.exec(t.slice(als))?.[0] ?? '') + '  ';
+      }
+    }
+    app.items.push({ text: indent + JSON.stringify(value, null, 2).split('\n').join('\n' + indent) });
+    return len;
   }
 
   /**
@@ -144,51 +586,114 @@ export class Tx {
    * @param {(string|number)[]} path @param {any} value @param {boolean} [insert] array insertion at the index
    */
   setSpec(path, value, insert = false) {
-    const removed = value === undefined ? removeAt(this.specText, path) : null;
-    if (removed !== null) this.specText = removed;
-    else {
-      const edits = modify(this.specText, path, value, { ...this.#fmt(this.specText), isArrayInsertion: insert });
-      this.specText = applyEdits(this.specText, edits);
-    }
     this.specEdited = true;
-    this.refresh();
+    if (this.#eager) {
+      this.#whole((t) => setAt(t, path, value, insert));
+      this.#derive();
+      return;
+    }
+    this.#noteEdit(path, value, insert);
+    const w = this.#windowOf(path);
+    if (w) w.win.text = setAt(w.win.text, w.rel, value, insert);
+    else this.#whole((t) => setAt(t, path, value, insert));
+    this.#dirty = true;
   }
 
   /**
    * Append (or insert at `index`) into an array, creating the array when absent.
    * @param {(string|number)[]} arrayPath @param {any} value @param {number} [index]
+   * @param {{kind: string, owner: string|null}} [declares] the entity `value` declares, so the index can follow
    */
-  appendSpec(arrayPath, value, index) {
-    const root = parseTree(this.specText, [], { allowTrailingComma: true });
-    const node = root ? findNodeAtLocation(root, arrayPath) : undefined;
-    if (!node) return this.setSpec(arrayPath, [value]);
-    if (node.type !== 'array') throw new OpError('edit.not-array', `"${arrayPath.join('.')}" is not an array.`);
-    const len = node.children?.length ?? 0;
-    this.specText = insertInArray(this.specText, node, index === undefined ? len : Math.max(0, Math.min(index, len)), value);
+  appendSpec(arrayPath, value, index, declares) {
     this.specEdited = true;
-    this.refresh();
+    if (this.#eager) {
+      this.#whole((t) => appendAt(t, arrayPath, value, index).text);
+      this.#derive();
+      return;
+    }
+    /** @type {{pos: number, shifted: boolean}} */
+    let r;
+    const top = arrayPath.length === 1 && typeof arrayPath[0] === 'string' ? this.#appendToSection(arrayPath[0], value, index) : null;
+    if (top !== null) r = { pos: top, shifted: false };
+    else {
+      const w = this.#windowOf(arrayPath);
+      if (w) {
+        const a = appendAt(w.win.text, w.rel, value, index);
+        w.win.text = a.text;
+        r = a;
+      } else {
+        /** @type {{pos: number, shifted: boolean}} */
+        let a = { pos: 0, shifted: true };
+        this.#whole((t) => { const x = appendAt(t, arrayPath, value, index); a = x; return x.text; });
+        r = a;
+      }
+    }
+    this.#dirty = true;
+    if (!declares || r.shifted) this.#invalidate();
+    else this.#declare(declares.kind, value, [...arrayPath, r.pos], declares.owner);
   }
 
   /** @param {(string|number)[]} path @param {any} value */
   setLayout(path, value) {
-    const edits = modify(this.layoutText, path, value, this.#fmt(this.layoutText));
+    const edits = modify(this.layoutText, path, value, fmt(this.layoutText));
     this.layoutText = applyEdits(this.layoutText, edits);
     this.layoutEdited = true;
   }
 
-  /** @param {string} id @param {string} [kind] @returns {Entity} */
+  /** @param {string} id @param {string} [kind] @returns {Declared} */
   entity(id, kind) {
-    const e = this.model.entities.get(id);
+    this.#shape();
+    const e = this.#index.get(id);
     if (!e) throw new OpError('entity.unknown', `No entity has id "${id}".`);
     if (kind && e.kind !== kind) throw new OpError('entity.kind', `"${id}" is a ${e.kind}, not a ${kind}.`);
     return e;
   }
 
+  /** Whether an entity has this id. @param {string} id */
+  has(id) {
+    this.#shape();
+    return this.#index.has(id);
+  }
+
   /** @param {any} id */
   requireFreshId(id) {
     if (typeof id !== 'string' || !ID_RE.test(id)) throw new OpError('id.format', `Id ${JSON.stringify(id)} must be lower-case words joined by hyphens.`);
-    if (this.model.entities.has(id)) throw new OpError('id.duplicate', `Id "${id}" is already used by a ${this.model.entities.get(id)?.kind}.`);
+    this.#shape();
+    if (this.#index.has(id)) throw new OpError('id.duplicate', `Id "${id}" is already used by a ${this.#index.get(id)?.kind}.`);
   }
+
+  /**
+   * Whether the index still describes the text: re-derives when the text changed and reports a
+   * mismatch through `diverged`. Used when a transaction fails, so that a failure caused by a
+   * wrong index is replayed eagerly too.
+   */
+  check() {
+    if (this.#dirty && this.#indexValid) {
+      try { this.#derive(); } catch { /* the failure stands */ }
+    }
+    return !this.diverged;
+  }
+}
+
+/**
+ * The ids a parse reported as declared more than once.
+ * @param {Diagnostic[]} diagnostics
+ */
+function duplicateIds(diagnostics) {
+  return new Set(diagnostics.filter((d) => d.code === 'id.duplicate' && d.entityId).map((d) => /** @type {string} */ (d.entityId)));
+}
+
+/**
+ * Whether an index holds exactly the entities of a model, each with the same kind, owner and path.
+ * @param {Map<string, Declared>} index @param {Model} model
+ */
+function sameDeclarations(index, model) {
+  if (index.size !== model.entities.size) return false;
+  for (const e of model.entities.values()) {
+    const d = index.get(e.id);
+    if (!d || d.kind !== e.kind || (d.owner ?? null) !== (e.owner ?? null) || pathKey(d.path) !== pathKey(e.path)) return false;
+  }
+  return true;
 }
 
 /** @param {any} v @param {string} name */
@@ -295,17 +800,18 @@ export function planDelete(model, id) {
 
 /** @param {Tx} tx @param {string} kind @param {any} data @param {string} [owner] @param {number} [index] */
 function createEntity(tx, kind, data, owner, index) {
-  if (!tx.model.meta.entities[kind] || kind === 'system') throw new OpError('op.kind', `Cannot create an entity of kind "${kind}".`);
+  const meta = tx.meta;
+  if (!meta.entities[kind] || kind === 'system') throw new OpError('op.kind', `Cannot create an entity of kind "${kind}".`);
   if (!data || typeof data !== 'object' || Array.isArray(data)) throw new OpError('op.param', 'Operation parameter "data" must be an object.');
   tx.requireFreshId(data.id);
-  const site = declarationSite(tx.model, kind);
+  const site = declarationSite(/** @type {any} */ ({ meta }), kind);
   if (!site) throw new OpError('op.kind', `Entities of kind "${kind}" have no declaration site.`);
   if (site.section) {
     if (owner) throw new OpError('op.param', `A ${kind} is declared at top level and takes no "owner".`);
-    tx.appendSpec([site.section], data, index);
+    tx.appendSpec([site.section], data, index, { kind, owner: null });
   } else {
     const o = tx.entity(requireString(owner, 'owner'), site.ownerKind);
-    tx.appendSpec([...o.path, /** @type {string} */ (site.property)], data, index);
+    tx.appendSpec([...o.path, /** @type {string} */ (site.property)], data, index, { kind, owner: o.id });
     tx.affected.add(o.id);
   }
   tx.affected.add(data.id);
@@ -315,11 +821,14 @@ function createEntity(tx, kind, data, owner, index) {
 function deleteEntity(tx, id, cascade) {
   const target = tx.entity(id);
   if (target.kind === 'system') throw new OpError('delete.system', 'The system entity cannot be deleted.');
-  const plan = planDelete(tx.model, id);
+  // The plan reads references and expressions, so it needs the model of the current text; the
+  // edits below change the text, so the model is read once, before them.
+  const model = tx.model;
+  const plan = planDelete(model, id);
   if (plan.dependents.length && !cascade) {
     throw new OpError('delete.referenced', `"${id}" is referenced by ${plan.dependents.length} other declaration(s). Delete with cascade to remove or repair them.`,
       plan.dependents.map((d) => {
-        const e = /** @type {Entity} */ (tx.model.entities.get(d.id));
+        const e = /** @type {Entity} */ (model.entities.get(d.id));
         return { code: 'delete.dependent', severity: /** @type {'error'} */ ('error'), message: `${e.kind} "${e.id}" refers to "${id}" through "${d.via}".`, entityId: e.id, loc: e.loc, path: e.path };
       }));
   }
@@ -327,7 +836,7 @@ function deleteEntity(tx, id, cascade) {
   /** @type {{path: (string|number)[], offset: number, value: any}[]} */
   const edits = [];
   for (const eid of plan.entities) {
-    const e = /** @type {Entity} */ (tx.model.entities.get(eid));
+    const e = /** @type {Entity} */ (model.entities.get(eid));
     if (e.owner && plan.entities.includes(e.owner)) continue; // removed with its owner
     edits.push({ path: e.path, offset: e.loc.offset, value: undefined });
   }
@@ -376,8 +885,10 @@ export const OPERATIONS = {
       const id = requireString(op.id, 'id');
       const entity = tx.entity(id);
       tx.requireFreshId(op.newId);
-      const refs = tx.model.refs.filter((r) => r.target === id);
-      const exprs = tx.model.exprs.filter((x) => x.src.includes(id));
+      // References and expressions of the current text, read before the edits below change it.
+      const model = tx.model;
+      const refs = model.refs.filter((r) => r.target === id);
+      const exprs = model.exprs.filter((x) => x.src.includes(id));
       tx.setSpec([...entity.path, 'id'], op.newId);
       for (const r of refs) { tx.setSpec(r.path, op.newId); tx.affected.add(r.from); }
       for (const x of exprs) {
@@ -435,7 +946,7 @@ export const OPERATIONS = {
       if (id === undefined) {
         const base = `${from}-${kind}-${to}`;
         id = base;
-        for (let n = 2; tx.model.entities.has(id); n++) id = `${base}-${n}`;
+        for (let n = 2; tx.has(id); n++) id = `${base}-${n}`;
       }
       /** @type {Record<string, any>} */
       const data = { id, kind, from, to };

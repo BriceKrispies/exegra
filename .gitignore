@@ -18,3 +18,7 @@ formal/.lake/
 formal/generated/
 src/engine/lean/
 .outcomes/
+# Specification stores (exegra store import) are rebuilt from the committed JSONC, never committed.
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

@@ -31,7 +31,7 @@ Exegra has one semantic core and several things attached to it. Everything the u
 
 **The model** (`Model` in `types.js`) is an immutable snapshot: `entities` by id in declaration order, `byKind`, `refs` (every reference with its source location), `exprs` (every expression string), the effective meta-model `meta` and the raw `vocabulary`. Nested entities (ports, states, transitions) are entities with an `owner`.
 
-**Commit.** `Project.apply` checks revision and hash preconditions, applies all operations to a scratch `Tx`, validates the resulting text, and only then commits: text swapped, model re-derived (only when the specification text changed; a presentation-only commit keeps the model), `revision` incremented, a history entry and undo record pushed, listeners notified synchronously. Any failure leaves the project unchanged. Details are in [transactions-and-persistence.md](transactions-and-persistence.md).
+**Commit.** `Project.apply` checks revision and hash preconditions, applies all operations to a scratch `Tx` (which re-derives the model once per transaction, not once per operation), validates the resulting text, and only then commits: text swapped, model re-derived (only when the specification text changed; a presentation-only commit keeps the model), `revision` incremented, a history entry and undo record pushed, listeners notified synchronously. Any failure leaves the project unchanged. Details are in [transactions-and-persistence.md](transactions-and-persistence.md).
 
 **Derived services**, all pure functions of the model (no DOM, no clock, no randomness):
 

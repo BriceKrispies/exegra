@@ -50,8 +50,9 @@ test('every language code has a negative fixture', () => {
 
 test('the primitive catalogue is the fixed set pinned to the kernel and each entry is complete', () => {
   assert.deepEqual(Object.keys(LANGUAGE_PRIMITIVES).sort(), [
-    'and3', 'contains', 'eq', 'ge', 'gt', 'has-role', 'if', 'in-list', 'is-null', 'is-slug', 'le', 'len', 'list-literal', 'literal', 'lower', 'lt',
-    'ne', 'not3', 'now', 'or3', 'param', 'principal', 'starts-with', 'through', 'var',
+    'add-checked', 'and3', 'concat-checked', 'contains', 'days-ms', 'eq', 'ge', 'gt', 'has-role', 'hours-ms', 'if', 'in-list', 'is-null', 'is-slug',
+    'le', 'len', 'list-literal', 'literal', 'lower', 'lt', 'minutes-ms', 'mul-checked', 'ne', 'not3', 'now', 'or3', 'param', 'principal',
+    'starts-with', 'sub-checked', 'through', 'time-difference', 'to-text', 'var',
   ]);
   for (const [name, p] of Object.entries(LANGUAGE_PRIMITIVES)) {
     assert.ok(NULL_RULES.includes(p.nulls), name);

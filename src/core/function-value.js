@@ -17,7 +17,8 @@ import { INT_RANGES } from './expr.js';
  * {}, the inner type of null), which fits any type. A list made from set<T> carries set: true (it is written as a
  * set by the debug rule of format).
  * @typedef {{k: 'prim', name: string} | {k: 'enum', id: string, values: string[]} | {k: 'alias', id: string, repr: string}
- *   | {k: 'struct', id: string, fields: FnField[]} | {k: 'union', id: string, variants: {name: string, newtype: boolean, tuple?: boolean, fields: FnField[]}[]}
+ *   | {k: 'struct', id: string, fields: FnField[]}
+ *   | {k: 'union', id: string, encoding: {tag: string, tagField?: string, contentField?: string, variantCase?: string}, variants: {name: string, newtype: boolean, tuple?: boolean, fields: FnField[]}[]}
  *   | {k: 'list', of: FnType, set?: boolean} | {k: 'option', of: FnType} | {k: 'map', key: FnType, value: FnType}
  *   | {k: 'result', ok: FnType, err: FnType} | {k: 'never'} | {k: 'unknown'}} FnType
  * @typedef {{name: string, type: FnType, optional: boolean}} FnField
@@ -93,6 +94,76 @@ export function compareKeys(a, b) {
   return sa.length - sb.length < 0 ? -1 : sa.length === sb.length ? 0 : 1;
 }
 
+/**
+ * Whether values of a type have the order sortBy uses: numbers, strings, bools and enum values, and a list, option,
+ * struct or union of those. A union is ordered as a Rust enum with derived Ord: by the position of the variant, then
+ * by its fields in declaration order (the kernel's Value is declared in the order Null, Bool, Int, Str, Time, Ref,
+ * List, and a list is ordered item by item, a shorter list before a longer one it begins).
+ * @param {FnType} t @param {Set<string>} [seen] the structs and unions on the way, for recursive types
+ * @returns {boolean}
+ */
+export function isOrderable(t, seen = new Set()) {
+  switch (t.k) {
+    case 'unknown': case 'never': case 'enum': return true;
+    case 'prim': case 'alias': {
+      const n = primName(t);
+      return n !== undefined && (isNumberType(t) || n === 'string' || n === 'uuid' || n === 'bool');
+    }
+    case 'list': case 'option': return isOrderable(t.of, seen);
+    case 'struct': case 'union': {
+      if (seen.has(t.id)) return true;
+      const next = new Set(seen).add(t.id);
+      const fields = t.k === 'struct' ? t.fields : t.variants.flatMap((v) => v.fields);
+      return fields.every((f) => isOrderable(f.type, next));
+    }
+    default: return false;
+  }
+}
+
+/**
+ * Compare two values of an orderable type: -1, 0 or 1. Numbers numerically, strings and enum values by Unicode scalar
+ * values, false before true, an option's null before any value, lists item by item (Rust's Vec Ord), structs by their
+ * fields in order, unions by variant position and then fields in order (derived Ord).
+ * @param {FnType} t @param {any} a @param {any} b @returns {number}
+ */
+export function compareOrdered(t, a, b) {
+  /** @param {any} x @param {any} y */
+  const cmp = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
+  /** @param {{type: FnType, optional: boolean}} f @returns {FnType} */
+  const typeOf = (f) => (f.optional && f.type.k !== 'option' ? { k: 'option', of: f.type } : f.type);
+  switch (t.k) {
+    case 'prim': case 'alias':
+      return primName(t) === 'bool' ? cmp(Number(a), Number(b)) : compareKeys(a, b);
+    case 'list': {
+      for (let i = 0; i < Math.min(a.length, b.length); i++) {
+        const c = compareOrdered(t.of, a[i], b[i]);
+        if (c !== 0) return c;
+      }
+      return cmp(a.length, b.length);
+    }
+    case 'option':
+      if (a === null || b === null) return a === b ? 0 : a === null ? -1 : 1;
+      return compareOrdered(t.of, a, b);
+    case 'struct':
+      for (const f of t.fields) {
+        const c = compareOrdered(typeOf(f), a[f.name] ?? null, b[f.name] ?? null);
+        if (c !== 0) return c;
+      }
+      return 0;
+    case 'union': {
+      const ia = t.variants.findIndex((v) => v.name === a.variant), ib = t.variants.findIndex((v) => v.name === b.variant);
+      if (ia !== ib) return cmp(ia, ib);
+      for (const f of t.variants[ia].fields) {
+        const c = compareOrdered(typeOf(f), a.fields[f.name] ?? null, b.fields[f.name] ?? null);
+        if (c !== 0) return c;
+      }
+      return 0;
+    }
+    default:
+      return compareKeys(a, b);
+  }
+}
+
 /** The built-in number types. */
 const NUMBER_PRIMS = ['u8', 'u16', 'u32', 'u64', 'i32', 'i64', 'f64', 'timestamp', 'duration'];
 
@@ -165,6 +236,8 @@ export function decodeValue(t, json, at) {
       const out = {};
       for (const f of fields) {
         const v = json[f.name];
+        // A json field may hold the JSON null: written null, it is present.
+        if (v === null && primName(f.type) === 'json' && !f.optional) { out[f.name] = null; continue; }
         if ((v === undefined || v === null) && primName(f.type) === 'unit') out[f.name] = UNIT;
         else if (v === undefined || v === null) {
           if (!f.optional && f.type.k !== 'option') throw new FnEvalError(`${at}: field "${f.name}" of ${t.id} is missing`);
