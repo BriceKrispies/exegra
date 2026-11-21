@@ -10,9 +10,9 @@
 // Every example of every function is evaluated with the branch recorder of function.js attached. A branch is
 // covered when some example takes it, directly or through a function the example's function calls.
 //
-// Readiness: ready.function-branch-uncovered, a branch no example takes. A function that already has a gap of
-// ready.function-example-missing or an example that fails is left to those first, and nothing is reported while
-// some function has a finding of its own.
+// The coverage is information only (the cover-functions command). It is not a readiness rule: a rule asking for
+// every branch to be taken pushes a specification toward one example per branch, and examples are checked by
+// evaluating them, not made into a test per branch.
 
 import { analyzeFunctions, runFunction, failVariants, callees, withBranchRecorder, resolvedExample } from './function.js';
 import { FnEvalError, decodeValue, valueEq } from './function-value.js';
@@ -184,43 +184,4 @@ export function functionCoverage(model) {
 export function branchText(b) {
   const what = b.kind === 'if' ? `the ${b.outcome} branch of if` : b.kind === 'match' ? `the arm ${b.label}` : b.kind === 'try' ? (b.outcome === 'err' ? 'the error path of try' : 'the value path of try') : 'the fail';
   return `${what} (${b.where}, line ${b.line} column ${b.column}: "${b.text.length > 32 ? `${b.text.slice(0, 32)}...` : b.text}")`;
-}
-
-/**
- * How the branch rule is reported under system.generation: an error, unless system.generation.functionBranches
- * is "gap", which lists it as a gap (severity info) while the examples are being completed.
- * @param {Model} model @returns {'error' | 'info'}
- */
-export function branchRuleSeverity(model) {
-  const g = model.system?.data?.generation;
-  return isObj(g) && g.functionBranches === 'gap' ? 'info' : 'error';
-}
-
-/**
- * Readiness: every branch of every function is taken by some example (ready.function-branch-uncovered). One gap per
- * function, naming its uncovered branches. Nothing is reported while some function has a finding of its own (its
- * examples do not run, so the functions it calls would lose branches); a function with no example, an example that
- * fails, or a missing example that ready.function-example-missing asks for is skipped.
- * @param {Model} model @param {{missing?: Set<string>}} [opts] the functions that already have an example-missing gap
- * @returns {Gap[]}
- */
-export function functionBranchReadiness(model, opts = {}) {
-  /** @type {Gap[]} */
-  const out = [];
-  const severity = branchRuleSeverity(model);
-  const coverage = functionCoverage(model);
-  // A function with a finding runs no examples, so the functions it calls lose the branches those examples take:
-  // the rule waits until every function checks.
-  if (coverage.some((c) => !c.usable)) return out;
-  for (const c of coverage) {
-    if (!c.usable || c.examples === 0 || c.failedExamples > 0 || opts.missing?.has(c.id)) continue;
-    const open = c.branches.filter((b) => !b.covered);
-    if (!open.length) continue;
-    const shown = open.slice(0, 6).map(branchText).join('; ');
-    out.push({
-      code: 'ready.function-branch-uncovered', severity, entityId: c.id,
-      message: `Function "${c.id}" has ${open.length} of ${c.total} branch${c.total === 1 ? '' : 'es'} that no example takes: ${shown}${open.length > 6 ? `; and ${open.length - 6} more` : ''}. Add an example that takes ${open.length === 1 ? 'it' : 'each'}.`,
-    });
-  }
-  return out;
 }

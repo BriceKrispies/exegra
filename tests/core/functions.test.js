@@ -80,12 +80,12 @@ test('fixtures are resolved: an override changes only its path and not the decla
 test('every function code has a negative fixture', () => {
   const have = new Set(FIXTURES.map(([, code]) => code));
   assert.deepEqual(CODES.filter((c) => !have.has(c)), []);
-  assert.deepEqual(['ready.function-example-missing', 'ready.function-branch-uncovered'].filter((c) => !READINESS_FIXTURES.some(([, code]) => code === c)), []);
+  assert.deepEqual(['ready.function-example-missing'].filter((c) => !READINESS_FIXTURES.some(([, code]) => code === c)), []);
 });
 
 test('the format documentation states every code and operation and that functions are not mirrored in Lean', () => {
   const doc = fs.readFileSync(new URL('../../docs/model-and-format.md', import.meta.url), 'utf8');
-  for (const code of [...CODES, 'ready.function-example-missing', 'ready.function-branch-uncovered']) assert.ok(doc.includes(`\`${code}\``), `code ${code} is documented`);
+  for (const code of [...CODES, 'ready.function-example-missing']) assert.ok(doc.includes(`\`${code}\``), `code ${code} is documented`);
   for (const op of BUILTIN_OPS) assert.ok(doc.includes(`\`${op}(`), `operation ${op} is documented`);
   assert.match(doc, /[Ff]unctions are \*\*not mirrored in Lean\*\*/);
 });
@@ -102,23 +102,22 @@ test('every branch of the kernel functions is taken by an example: if and match 
   assert.deepEqual(check.branches.map((/** @type {any} */ b) => `${b.kind} ${b.label}`), ['match Some(v)', 'match None', 'if then', 'if else', 'fail fail']);
 });
 
-test('a branch no example takes is listed uncovered with its location and named by the one gap', () => {
+test('a branch no example takes is listed uncovered with its location and raises no readiness gap', () => {
   const without = spec((d) => { d.functions.find((/** @type {any} */ f) => f.id === 'roles-of').examples.splice(3, 1); });
   const roles = /** @type {any} */ (functionCoverage(/** @type {any} */ (analyzeSpec(without).model)).find((c) => c.id === 'roles-of'));
   const open = roles.branches.filter((/** @type {any} */ b) => !b.covered);
   assert.deepEqual(open.map((/** @type {any} */ b) => [b.kind, b.label, b.where, b.line]), [['match', 'None', 'body', 1]]);
   assert.ok(open[0].text.startsWith('None =>'), open[0].text);
-  const gaps = readinessGaps(/** @type {any} */ (analyzeSpec(without).model)).filter((g) => g.code === 'ready.function-branch-uncovered');
-  assert.equal(gaps.length, 1);
-  assert.match(gaps[0].message, /roles-of.*1 of 5 branches.*the arm None \(body, line 1 column 121/);
+  // Uncovered branches are information, not a readiness gap: no code asks for one example per branch.
+  const model = /** @type {any} */ (analyzeSpec(without).model);
+  assert.deepEqual(readinessGaps(model).filter((g) => g.code.includes('branch')), []);
+  assert.deepEqual(readinessGaps(model).filter((g) => g.entityId === 'roles-of'), []);
 });
 
-test('system.generation.functionBranches gap lists an uncovered branch as a gap and not an error', () => {
+test('system.generation.functionBranches is still accepted and changes nothing', () => {
   const r = analyzeSpec(spec((d) => { d.functions.find((/** @type {any} */ f) => f.id === 'roles-of').examples.splice(3, 1); d.system.generation.functionBranches = 'gap'; }));
   assert.deepEqual(codes(errors(r)), []);
-  const g = r.diagnostics.filter((/** @type {any} */ d) => d.code === 'ready.function-branch-uncovered');
-  assert.equal(g.length, 1);
-  assert.equal(g[0].severity, 'info');
+  assert.deepEqual(r.diagnostics.filter((/** @type {any} */ d) => d.code.includes('branch')), []);
 });
 
 test('recording branches does not change what an example evaluates to', () => {

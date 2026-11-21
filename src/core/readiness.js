@@ -10,7 +10,6 @@ import { telemetryReadiness } from './telemetry.js';
 import { languageReadiness } from './language.js';
 import { functionReadiness } from './function.js';
 import { derivationReadiness } from './derivation.js';
-import { functionBranchReadiness } from './function-coverage.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Entity} Entity */
@@ -99,13 +98,13 @@ function requirementReadiness(model) {
 }
 
 /**
- * Functions: the examples readiness asks for (ready.function-example-missing), then the branches no example takes
- * (ready.function-branch-uncovered), which is not reported for a function that still misses an example.
+ * Functions: the examples readiness asks for (ready.function-example-missing). The branches the examples take are
+ * reported by cover-functions, not as a readiness rule.
  * @param {Model} model @returns {Gap[]}
  */
 function functionRules(model) {
   const missing = functionReadiness(model);
-  return [...missing, ...functionBranchReadiness(model, { missing: new Set(missing.map((g) => g.entityId)) })];
+  return missing;
 }
 
 /**

@@ -25,8 +25,8 @@
 //   example.fixture-override   an override path of "with" does not lead into the fixture's value
 // Readiness (errors when system.generation is set, listed by the readiness command otherwise):
 //   ready.function-example-missing  a success example, and an example per error variant the function can fail with
-//   ready.function-branch-uncovered every branch is taken by some example (src/core/function-coverage.js, which
-//                                   records the branches through withBranchRecorder)
+// The branches the examples take are reported by cover-functions (src/core/function-coverage.js, which records
+// them through withBranchRecorder), not as a readiness rule.
 
 import { typeStructure } from './codegen-model.js';
 import { splitTop } from './type-expr.js';

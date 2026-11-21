@@ -641,7 +641,6 @@ match e { Var{name} => !startsWith(name, '$'), Through => true, Not(a) => call m
 | Code | Rule |
 |---|---|
 | `ready.function-example-missing` | Every function has an example that succeeds, and an example of each error variant it can fail with: the variants its own `fail` constructors name (every variant when `fail` is given something other than a constructor) and those of the functions it calls with `try`. |
-| `ready.function-branch-uncovered` | Every branch of every function is taken by some example: both branches of each `if`, each arm of each `match` (`_` included), the value and the error path of each `try` (the error path only when the called function can fail) and each `fail`. A branch taken through a call from another function's example counts. One gap per function, naming each uncovered branch with its line and column in the body or let. Not reported for a function that misses an example `ready.function-example-missing` asks for or has an example that fails, nor while any function has a consistency finding. `system.generation.functionBranches: "gap"` lists it with severity info instead of as an error, while the examples are being completed. `exegra cover-functions` reports the coverage; see [Coverage](coverage.md). |
 
 ### Contract errors on the wire
 

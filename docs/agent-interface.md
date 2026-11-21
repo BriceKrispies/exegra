@@ -303,7 +303,7 @@ Renders the document entities of a specification that holds them (a linked proje
 Transition and guard-outcome coverage of every shipped implementation machine (or one): `summary`, a `table` row per machine (transitions and guard outcomes covered/total, generated scenarios, open items), the `machines` in detail and the `findings`. What the scenarios leave out is searched for with bounded sequences of the machine's input events (default 12 actions and 5000 engine runs per machine). A transition nothing reaches is `machine.transition-unreachable`, a warning, or an error under `system.generation`, which fails the command with `cover.unreachable`. `--write <dir>` writes the generated scenarios to `<dir>/ops.json` as operations for `apply`. See [Coverage](coverage.md).
 
 ### `cover-functions [<functionId>] [--branches]`
-Branch coverage of the function examples: `summary` (functions, those with branches, those fully covered, branches covered/total) and per function the branches covered/total, the examples and failing examples, and each uncovered branch with its location. `--branches` lists every branch. Always exits 0; the readiness rule `ready.function-branch-uncovered` reports the gaps. See [Coverage](coverage.md).
+Branch coverage of the function examples: `summary` (functions, those with branches, those fully covered, branches covered/total) and per function the branches covered/total, the examples and failing examples, and each uncovered branch with its location. `--branches` lists every branch. Always exits 0; informational only: readiness does not ask for every branch to be taken. See [Coverage](coverage.md).
 
 ### `help`
 The list of commands with usage and summary.

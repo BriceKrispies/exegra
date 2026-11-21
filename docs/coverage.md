@@ -93,11 +93,7 @@ A branch taken through a call from another function's example counts. The report
 covered/total, the examples and how many fail, and each uncovered branch with where it is (`body` or `let <name>`,
 line and column in that text, and the text at that point). `--branches` lists every branch.
 
-**Readiness.** `ready.function-branch-uncovered` (src/core/function-coverage.js, listed in
-[the format](model-and-format.md#functions)) requires, with `system.generation` set, that every branch of every
-function is taken by some example. It is not reported for a function that still misses an example
-`ready.function-example-missing` asks for or has an example that fails, nor while any function has a consistency
-finding, because a function whose examples cannot run takes branches of the functions it calls away from them.
-`system.generation.functionBranches: "gap"` lists the rule's findings with severity info instead of as errors, for a
-specification whose examples are being completed. The negative fixture is the `READINESS_FIXTURES` entry of
-`tests/fixtures/functions/fixtures.js` that removes the only example taking an arm of `roles-of`.
+**Informational only.** There is no readiness rule for uncovered branches: one that asked for every branch to be taken
+would push a specification toward one example per branch. The examples are checked by evaluating every one of them
+(an example whose result differs is an error); this report says what they exercise. `system.generation.functionBranches`
+is no longer used and is accepted so that a specification that sets it still validates.

@@ -18796,8 +18796,8 @@
     {
       "id": "function-branch-coverage",
       "kind": "invariant",
-      "statement": "Exegra records which branches of each function its examples take (both branches of if, each arm of match, the value and the error path of try where the called function can fail, and fail), without changing what the examples evaluate to; exegra cover-functions reports per function the branches covered out of the total and each uncovered branch with its place in the body or let; with system.generation set a function with a branch no example takes is ready.function-branch-uncovered, an error, or a gap of severity info when system.generation.functionBranches is gap.",
-      "rationale": "WG-4965, item 3: readiness should refuse a function with an unexercised branch. Evidence is tests/core/functions.test.js: the kernel functions of the fixture take every branch, a fixture removing the only example of an arm is reported once with the code, and the gap switch lowers it to info. Supported, not verified: Exegra does not check its own validation rules.",
+      "statement": "Exegra records which branches of each function its examples take (both branches of if, each arm of match, the value and the error path of try where the called function can fail, and fail), without changing what the examples evaluate to; exegra cover-functions reports per function the branches covered out of the total and each uncovered branch with its place in the body or let; an uncovered branch is reported and raises no readiness gap, because a rule that asks for one example per branch rewards examples that restate the function rather than its requirement; system.generation.functionBranches is still accepted and changes nothing.",
+      "rationale": "WG-4965 made an uncovered branch a readiness gap; WG-5377 made it informational (Strata docs/assurance.md, principle 4: tests are judged by whether they fail when the code is wrong, not by branch coverage of examples). Evidence is tests/core/functions.test.js. Supported, not verified: Exegra does not check its own validation rules.",
       "subjects": [
         "generation-readiness",
         "agent-cli"
@@ -22065,22 +22065,15 @@
       "id": "ev-function-branch-coverage-2",
       "claim": "function-branch-coverage",
       "kind": "test",
-      "ref": "tests/core/functions.test.js#a branch no example takes is listed uncovered with its location and named by the one gap",
-      "description": "Without the example of a principal who is no member, the None arm of roles-of is the one uncovered branch, located in the body, and the one gap names it."
+      "ref": "tests/core/functions.test.js#a branch no example takes is listed uncovered with its location and raises no readiness gap",
+      "description": "Without the example of a principal who is no member, the None arm of roles-of is the one uncovered branch, located in the body, and no readiness gap is raised."
     },
     {
       "id": "ev-function-branch-coverage-3",
       "claim": "function-branch-coverage",
       "kind": "test",
-      "ref": "tests/core/functions.test.js#a match arm no example takes is reported once as ready.function-branch-uncovered only when generation is set",
-      "description": "The negative fixture: no error without system.generation, one readiness gap, one error with it."
-    },
-    {
-      "id": "ev-function-branch-coverage-4",
-      "claim": "function-branch-coverage",
-      "kind": "test",
-      "ref": "tests/core/functions.test.js#system.generation.functionBranches gap lists an uncovered branch as a gap and not an error",
-      "description": "With functionBranches gap the finding has severity info and validation has no error."
+      "ref": "tests/core/functions.test.js#system.generation.functionBranches is still accepted and changes nothing",
+      "description": "A specification that still sets functionBranches validates, and the setting changes no finding."
     },
     {
       "id": "ev-function-branch-coverage-5",

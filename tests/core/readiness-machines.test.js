@@ -131,8 +131,8 @@ test('an emit effect "to" must name a component or a contract', () => {
 
 // The strata project is a local link (specs/strata/project.jsonc, untracked) to a large external specification; without
 // it the project is absent and this test is skipped, which `exegra verify` records as skipped, never as a pass.
-// Only the machine-readiness diagnostics are asserted: other readiness gaps of that specification, such as
-// ready.function-branch-uncovered reported with severity info, are not about implementation-level machines.
+// Only the machine-readiness diagnostics are asserted: other readiness gaps of that specification
+// are not about implementation-level machines.
 const MACHINE_READY_CODES = new Set([
   'ready.delivery-missing', 'ready.elapsed-no-timer', 'ready.emit-receiver-missing', 'ready.event-field-undeclared', 'ready.fault-only',
   'ready.instances-storage', 'ready.order-ambiguous', 'ready.otherwise-misplaced', 'ready.outcome-missing', 'ready.payload-type-unresolved',

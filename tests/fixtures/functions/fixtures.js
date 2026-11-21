@@ -569,6 +569,4 @@ export const READINESS_FIXTURES = [
   ['a function without a success example', 'ready.function-example-missing', (d) => { fn(d, 'may-attempt').examples = []; }],
   ['an error variant a function fails with but no example shows', 'ready.function-example-missing', (d) => { fn(d, 'check-version').examples = fn(d, 'check-version').examples.filter((/** @type {any} */ e) => !e.error); }],
   ['an error variant passed on by try but no example shows', 'ready.function-example-missing', (d) => { fn(d, 'next-version').examples = fn(d, 'next-version').examples.filter((/** @type {any} */ e) => !e.error); }],
-  // Only the example of a principal who is no member takes the None arm of roles-of (WG-4965).
-  ['a match arm no example takes', 'ready.function-branch-uncovered', (d) => { fn(d, 'roles-of').examples.splice(3, 1); }],
 ];

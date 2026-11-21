@@ -1344,7 +1344,7 @@ export const COMMANDS = {
 
   'cover-functions': {
     usage: 'cover-functions [<functionId>] [--branches]',
-    summary: 'Branch coverage of the function examples: for each function, the branches (if then and else, match arms, try value and error paths, fail) its examples take, covered/total, with the uncovered branches and where they are. --branches lists every branch. Exits 0; readiness reports the uncovered branches as ready.function-branch-uncovered.',
+    summary: 'Branch coverage of the function examples: for each function, the branches (if then and else, match arms, try value and error paths, fail) its examples take, covered/total, with the uncovered branches and where they are. --branches lists every branch. Exits 0; informational only, readiness does not ask for every branch to be taken.',
     options: { branches: { type: 'boolean' } },
     run: async (ctx) => {
       const { project } = await loadProject(ctx);
