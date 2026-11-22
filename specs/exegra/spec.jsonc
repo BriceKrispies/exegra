@@ -1198,7 +1198,8 @@
       "implementation": {
         "status": "manual",
         "modules": [
-          "tools/workspace.js"
+          "tools/workspace.js",
+          "tools/spec-manifest.js"
         ],
         "language": "js"
       }
@@ -19283,6 +19284,32 @@
       "evaluate": {
         "method": "external-evidence"
       }
+    },
+    {
+      "id": "specification-manifest-parts",
+      "kind": "structural",
+      "statement": "A specification may be a manifest (specParts) listing part files, and Exegra reads it as the one document the parts make: array sections are concatenated in manifest order, a section that is not an array may be in one part only, and a missing part, a part that is itself a manifest, a manifest with sections of its own, a section two parts both hold and an id two parts give one section are refused with an error that names the files. The semantic hash is that of the one-file specification. exegra apply writes each changed entity back to the part that holds it, and a new entity to the part the manifest's specSections table names for its section (else beside its section, else the first part).",
+      "subjects": [
+        "workspace-service"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/spec-manifest.test.js (the ev-spec-manifest-* evidence entries). WG-5386.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "product-layers-share-platform-analysis",
+      "kind": "structural",
+      "statement": "Validating several sets of product files over one platform text in one process parses the platform text once, and every validation reports exactly what a validation of that set alone reports: the same errors, warnings, gaps, semantic hash and layered hash. The shared platform analysis is read-only, so no validation can alter what the next one sees.",
+      "subjects": [
+        "spec-layers"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/layers-cache.test.js (the ev-layers-cache-* evidence entries). The platform's parse, syntax tree and line index depend on its text alone; the combined text is still analysed in full for every set of product files.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
     }
   ],
 
@@ -23264,6 +23291,41 @@
       "kind": "test",
       "ref": "tests/core/runtime-faults.test.js#rule machine.singleton-key",
       "description": "The fixed relay over a key of type f64 gives exactly machine.singleton-key."
+    },
+    {
+      "id": "ev-spec-manifest-resolve",
+      "claim": "specification-manifest-parts",
+      "kind": "test",
+      "ref": "tests/core/spec-manifest.test.js#parts assemble in manifest order and array sections concatenate",
+      "description": "Parts assemble in manifest order into the canonical text."
+    },
+    {
+      "id": "ev-spec-manifest-refusals",
+      "claim": "specification-manifest-parts",
+      "kind": "test",
+      "ref": "tests/core/spec-manifest.test.js#an id repeated across parts is refused naming both files",
+      "description": "A duplicate id across parts is refused naming both files; a missing part and a section in two parts likewise (fixtures in tests/fixtures/spec-manifest)."
+    },
+    {
+      "id": "ev-spec-manifest-write-back",
+      "claim": "specification-manifest-parts",
+      "kind": "test",
+      "ref": "tests/core/spec-manifest.test.js#an edit is written back to the part that holds the entity and new entities go where the table says",
+      "description": "An edit goes to the part that holds the entity and a new entity to the part the table names."
+    },
+    {
+      "id": "ev-layers-cache-identical",
+      "claim": "product-layers-share-platform-analysis",
+      "kind": "test",
+      "ref": "tests/core/layers-cache.test.js#layer sets over one platform give the output of independent validations and the platform is analysed once",
+      "description": "Four validations over one platform text parse it once; each gives the output of the same layer set validated alone."
+    },
+    {
+      "id": "ev-layers-cache-read-only",
+      "claim": "product-layers-share-platform-analysis",
+      "kind": "test",
+      "ref": "tests/core/layers-cache.test.js#the shared platform analysis cannot be corrupted by a caller",
+      "description": "The cached platform model refuses changes; the combined model is rebuilt for each call."
     }
   ],
 
@@ -23442,7 +23504,7 @@
         }
       ],
       "retention": "Kept in the repository; every saved write appends a line to .history/journal.jsonl.",
-      "description": "The serialized authority of a project: specs/<project>/spec.jsonc, or the file that specs/<project>/project.jsonc names. Written by the workspace service (tools/workspace.js write(), under a base-hash check and atomic rename, from the session and from exegra apply) and, outside any transaction, by the bundle import (tools/workspace.js importProject()), by tools/import-markdown.js (--out), by tools/import-register.js (--out, or the project it names), by tools/make-benchmark.js (specs/benchmark/spec.jsonc) and by tools/spec-store.js (store export, atomically through a temporary file, refused as store.stale when the file changed since the last import). Exegra holds no personal data: no field is personal and none refers to a principal."
+      "description": "The serialized authority of a project: specs/<project>/spec.jsonc, or the file that specs/<project>/project.jsonc names. When that file is a manifest listing part files (specParts, WG-5386), the authority is its part files, which sit beside it, and each write goes to the part files holding the changed entities (tools/workspace.js writeSpecText(), tools/spec-manifest.js planWrite(), and tools/spec-store.js store export, each part by atomic rename through a temporary file); the manifest itself is never rewritten. Written by the workspace service (tools/workspace.js write(), under a base-hash check and atomic rename, from the session and from exegra apply) and, outside any transaction, by the bundle import (tools/workspace.js importProject()), by tools/import-markdown.js (--out), by tools/import-register.js (--out, or the project it names), by tools/make-benchmark.js (specs/benchmark/spec.jsonc) and by tools/spec-store.js (store export, atomically through a temporary file, refused as store.stale when the file changed since the last import). Exegra holds no personal data: no field is personal and none refers to a principal."
     },
     {
       "id": "presentation-layout",

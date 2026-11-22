@@ -30,6 +30,7 @@ import metamodel from '../src/core/metamodel.json' with { type: 'json' };
 import { parseSpec } from '../src/core/parse.js';
 import { analyzeSpec } from '../src/core/analyze.js';
 import { semanticHash } from '../src/core/hash.js';
+import { SpecManifestError, planWrite, resolveSpecText } from './spec-manifest.js';
 
 /** @typedef {import('jsonc-parser').Node} JsonNode */
 
@@ -384,7 +385,14 @@ export function decodeUtf8(bytes, what = 'The specification') {
 export function importFile(specFile, dbFile, opts = {}) {
   let bytes;
   try { bytes = fs.readFileSync(specFile); } catch { throw new StoreError('store.not-found', `${specFile} cannot be read.`); }
-  const text = decodeUtf8(bytes, specFile);
+  let text = decodeUtf8(bytes, specFile);
+  // A specification kept as a manifest of part files is stored as the one text the parts assemble to.
+  try {
+    text = resolveSpecText(path.resolve(specFile), text).text;
+  } catch (err) {
+    if (err instanceof SpecManifestError) throw new StoreError('store.syntax', err.message);
+    throw err;
+  }
   const db = openStore(dbFile);
   try {
     return importText(db, text, opts);
@@ -412,12 +420,33 @@ export function exportFile(dbFile, outFile, opts = {}) {
     /** @type {Buffer|null} */
     let current = null;
     try { current = fs.readFileSync(outFile); } catch { current = null; }
+    // The target is a manifest of part files: compare and write the specification it assembles to.
+    /** @type {import('./spec-manifest.js').ResolvedSpec|null} */
+    let manifest = null;
+    if (current !== null) {
+      try {
+        const r = resolveSpecText(path.resolve(outFile), current.toString('utf8'));
+        if (r.manifest) { manifest = r; current = Buffer.from(r.text, 'utf8'); }
+      } catch (err) {
+        if (err instanceof SpecManifestError) throw new StoreError('store.syntax', err.message);
+        throw err;
+      }
+    }
     if (current !== null && current.equals(bytes)) return { changed: false, length: text.length, bytes: bytes.length, sha256: sha };
     if (opts.guard && current !== null) {
       const currentSha = createHash('sha256').update(current).digest('hex');
       if (currentSha !== meta.source_sha256) {
         throw new StoreError('store.stale', `${outFile} changed since the store was last synchronised with it; import it again, or export with --out to another file.`);
       }
+    }
+    if (manifest) {
+      for (const part of planWrite(manifest, text)) {
+        const t = `${part.file}.${process.pid}.store.tmp`;
+        fs.writeFileSync(t, part.text, 'utf8');
+        fs.renameSync(t, part.file);
+      }
+      db.prepare('UPDATE meta SET value = ? WHERE key = ?').run(sha, 'source_sha256');
+      return { changed: true, length: text.length, bytes: bytes.length, sha256: sha };
     }
     const tmp = `${outFile}.${process.pid}.store.tmp`;
     fs.mkdirSync(path.dirname(path.resolve(outFile)), { recursive: true });

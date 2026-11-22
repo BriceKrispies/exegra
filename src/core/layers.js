@@ -193,6 +193,65 @@ const member = (prop) => /** @type {[JsonNode, JsonNode]} */ (prop.children);
  */
 
 /**
+ * What the platform text alone determines: its parse (the Lean derivation of its model), its syntax tree
+ * and its line index. None of it depends on the product files, so it is computed once per process for a
+ * text and shared by every layered analysis of that text. The cached structures are deep-frozen (a Map
+ * gets mutators that throw): a caller that tried to change them would fail loudly instead of corrupting
+ * the next analysis.
+ * @typedef {{parsed: {model: Model|null, diagnostics: Diagnostic[]}, root: JsonNode|null, starts: number[]}} BaseAnalysis
+ */
+
+const BASE_CACHE_SIZE = 2;
+/** @type {Map<string, BaseAnalysis>} most recently used last */
+const baseCache = new Map();
+let baseAnalyses = 0;
+
+/** @param {any} value @returns {any} */
+function deepFreeze(value) {
+  const seen = new Set();
+  const stack = [value];
+  const refuse = () => { throw new TypeError('The cached platform analysis is read-only.'); };
+  while (stack.length) {
+    const v = stack.pop();
+    if (v === null || typeof v !== 'object' || seen.has(v)) continue;
+    seen.add(v);
+    if (v instanceof Map) {
+      for (const [k, x] of v) stack.push(k, x);
+      for (const m of ['set', 'delete', 'clear']) Object.defineProperty(v, m, { value: refuse });
+    }
+    for (const k of Object.keys(v)) stack.push(v[k]);
+    Object.freeze(v);
+  }
+  return value;
+}
+
+/** @param {string} baseText @returns {BaseAnalysis} */
+function baseAnalysis(baseText) {
+  const hit = baseCache.get(baseText);
+  if (hit) {
+    baseCache.delete(baseText);
+    baseCache.set(baseText, hit);
+    return hit;
+  }
+  baseAnalyses++;
+  const parsed = parseSpec(baseText);
+  const root = parsed.model ? /** @type {JsonNode} */ (parseTree(baseText, [], JSONC)) : null;
+  /** @type {BaseAnalysis} */
+  const entry = deepFreeze({ parsed, root, starts: lineIndex(baseText) });
+  baseCache.set(baseText, entry);
+  while (baseCache.size > BASE_CACHE_SIZE) baseCache.delete(/** @type {string} */ (baseCache.keys().next().value));
+  return entry;
+}
+
+/** How many platform texts analyzeLayers has parsed in this process (the rest were served from the cache). */
+export const baseAnalysisCount = () => baseAnalyses;
+
+/** Forget the cached platform analyses. */
+export function clearBaseAnalysisCache() {
+  baseCache.clear();
+}
+
+/**
  * Parse and validate a layered specification.
  *
  * `model` is the combined model (null when the platform text is unusable); `baseModel` the model of
@@ -205,9 +264,10 @@ const member = (prop) => /** @type {[JsonNode, JsonNode]} */ (prop.children);
  * @returns {{model: Model|null, baseModel: Model|null, diagnostics: Diagnostic[], errorCount: number, baseHash: string, layeredHash: string, layers: {file: string, product: string|null, entities: string[]}[]}}
  */
 export function analyzeLayers(baseText, layers) {
-  const base = parseSpec(baseText);
+  const baseEntry = baseAnalysis(baseText);
+  const base = baseEntry.parsed;
   if (!base.model) {
-    const a = analyzeSpec(baseText);
+    const a = analyzeSpec(baseText, base);
     return { ...a, baseModel: null, baseHash: '00000000000000', layeredHash: '00000000000000', layers: layers.map((l) => ({ file: l.file, product: null, entities: [] })) };
   }
   const baseModel = base.model;
@@ -216,8 +276,7 @@ export function analyzeLayers(baseText, layers) {
   const states = layers.map((layer) => readLayer(layer, layerDiags));
 
   // Splice the entities of every sound section into the platform text.
-  const baseRoot = /** @type {JsonNode} */ (parseTree(baseText, [], JSONC));
-  const splice = spliceLayers(baseText, baseRoot, states);
+  const splice = spliceLayers(baseText, /** @type {JsonNode} */ (baseEntry.root), baseEntry.starts, states);
   const merged = analyzeSpec(splice.text);
 
   const fileOf = (/** @type {number} */ i) => (i < 0 ? undefined : layers[i].file);
@@ -454,9 +513,9 @@ function readHeader(st, v, report) {
  * The combined text: the platform text with the entities of the layers spliced in at the end of
  * their sections (a section the platform lacks is added at the end of the platform's object), and
  * the maps from the combined text back to the files.
- * @param {string} baseText @param {JsonNode} baseRoot @param {LayerState[]} states
+ * @param {string} baseText @param {JsonNode} baseRoot @param {number[]} baseStarts @param {LayerState[]} states
  */
-function spliceLayers(baseText, baseRoot, states) {
+function spliceLayers(baseText, baseRoot, baseStarts, states) {
   /** @type {Map<string, JsonNode>} */
   const baseSections = new Map();
   for (const prop of baseRoot.children ?? []) {
@@ -532,7 +591,7 @@ function spliceLayers(baseText, baseRoot, states) {
 
   return {
     text: parts.join(''),
-    baseStarts: lineIndex(baseText),
+    baseStarts,
     /** The file (-1: the platform) and offset in it of an offset of the combined text. @param {number} o */
     map(o) {
       let lo = 0, hi = segments.length - 1;

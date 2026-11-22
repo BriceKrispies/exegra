@@ -5,6 +5,7 @@
 // without a preflight, which is never granted).
 
 import fs from 'node:fs';
+import { resolveSpecText } from './spec-manifest.js';
 import { createWorkspace, WorkspaceError, hashText } from './workspace.js';
 
 const PREFIX = '/__exegra/';
@@ -382,7 +383,7 @@ export function exegraLinkedSpecs({ specsDir }) {
       if (build) {
         for (const { name } of await ws.listProjects()) {
           const file = ws.specFile(name);
-          if (file !== ws.resolve(name, 'spec.jsonc')) linked[name] = fs.readFileSync(file, 'utf8');
+          if (file !== ws.resolve(name, 'spec.jsonc')) linked[name] = resolveSpecText(file, fs.readFileSync(file, 'utf8')).text;
         }
       }
       return `export default ${JSON.stringify(linked)};`;

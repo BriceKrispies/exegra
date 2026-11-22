@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseJsonc, parseTree, getNodeValue } from 'jsonc-parser';
+import { resolveSpecText } from './spec-manifest.js';
 import { Loss, fileLines, slugify, uniquifier, marker, coverage, readGitHead } from './import-markdown.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -720,7 +721,7 @@ function main() {
   try { args = parseArgs(process.argv.slice(2)); } catch (e) { console.error(`${/** @type {Error} */ (e).message}\n${USAGE}`); process.exit(2); }
   if (typeof args.render === 'string') {
     const specFile = fs.existsSync(args.render) ? path.resolve(args.render) : projectSpecFile(args.render);
-    const md = renderMarkdown(parseJsonc(fs.readFileSync(specFile, 'utf8')));
+    const md = renderMarkdown(parseJsonc(resolveSpecText(specFile, fs.readFileSync(specFile, 'utf8')).text));
     if (typeof args.out === 'string') { fs.writeFileSync(args.out, md); console.log(`wrote ${args.out}`); } else process.stdout.write(md);
     return;
   }

@@ -68,11 +68,13 @@ const STORES = [
   { file: 'tools/outcomes-playwright-reporter.js', needle: 'writeFileSync(OUTPUT', locators: ['.outcomes/playwright.json'], store: 'test-outcomes-file' },
   { file: 'cli/commands.js', needle: 'writeFileSync(file, `${JSON.stringify(link', locators: ['exegra project register'], store: 'project-pointer' },
   { file: 'tools/spec-store.js', needle: 'writeFileSync(tmp, bytes)', locators: ['tools/spec-store.js (store export'], store: 'specification-text' },
+  { file: 'tools/spec-store.js', needle: 'writeFileSync(t, part.text', locators: ['tools/spec-store.js (store export', 'part files'], store: 'specification-text' },
   { file: 'tools/lean-theorems.js', needle: 'writeFileSync(file, text)', locators: ['exegra-theorems-'], store: 'lean-theorem-check-file' },
   { file: 'tools/workspace.js', fn: 'atomicWrite', locators: ['atomicWrite'], store: 'write-journal (the replace that precedes the journal line)' },
   { file: 'tools/workspace.js', fn: 'write', locators: ['spec.jsonc', 'layout.jsonc', '.history/journal.jsonl'], store: 'specification-text, presentation-layout, write-journal' },
   { file: 'tools/workspace.js', fn: 'writeGenerated', locators: ['specs/<project>/generated/'], store: 'generated-documents' },
   { file: 'tools/workspace.js', fn: 'writeRecorded', locators: ['evidence/results.json'], store: 'recorded-results' },
+  { file: 'tools/workspace.js', fn: 'writeSpecText', locators: ['writeSpecText', 'part files'], store: 'specification-text (the part files of a manifest)' },
   { file: 'tools/workspace.js', fn: 'importProject', locators: ['importProject'], store: 'specification-text (bundle import)' },
 ];
 

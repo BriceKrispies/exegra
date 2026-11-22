@@ -18,6 +18,7 @@ import { createHash } from 'node:crypto';
 import { promises as fs, readFileSync, readdirSync, statSync, watch as fsWatch } from 'node:fs';
 import path from 'node:path';
 import { parse as parseJsonc } from 'jsonc-parser';
+import { SpecManifestError, planWrite, resolveSpecText } from './spec-manifest.js';
 
 /** Logical file key -> path relative to a project directory (forward slashes). */
 export const WORKSPACE_FILES = {
@@ -108,10 +109,46 @@ async function readOptional(file) {
   }
 }
 
+/**
+ * The specification at `file`, resolved: a manifest of part files (WG-5386, tools/spec-manifest.js) is the
+ * assembled text, any other file is its own text. Null when the file is missing.
+ * @param {string} file @returns {Promise<import('./spec-manifest.js').ResolvedSpec|null>}
+ */
+async function readSpecResolved(file) {
+  const text = await readOptional(file);
+  if (text === null) return null;
+  try {
+    return resolveSpecText(file, text);
+  } catch (err) {
+    if (err instanceof SpecManifestError) throw new WorkspaceError('spec.invalid', err.message);
+    throw err;
+  }
+}
+
+/** @param {string} file @returns {Promise<string|null>} the specification text, assembled when the file is a manifest */
+async function readSpecOptional(file) {
+  return (await readSpecResolved(file))?.text ?? null;
+}
+
+/**
+ * Writes the edited specification text: to the file itself, or when it is a manifest to the part files
+ * whose entities changed. Returns the hash of the specification as it now reads from disk.
+ * @param {string} target @param {string} text @returns {Promise<string>}
+ */
+async function writeSpecText(target, text) {
+  const resolved = await readSpecResolved(target);
+  if (resolved === null || !resolved.manifest) {
+    await atomicWrite(target, text);
+    return hashText(text);
+  }
+  for (const part of planWrite(resolved, text)) await atomicWrite(part.file, part.text);
+  return hashText((await readSpecOptional(target)) ?? text);
+}
+
 /** Synchronous variant used when seeding watch state. */
 function hashOfFileSync(file) {
   try {
-    return hashText(readFileSync(file, 'utf8'));
+    return hashText(resolveSpecText(file, readFileSync(file, 'utf8')).text);
   } catch {
     return null;
   }
@@ -402,7 +439,7 @@ export function createWorkspace(rootDir) {
       .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
     const projects = [];
     for (const name of names) {
-      const text = await readOptional(specFile(name));
+      const text = await readSpecOptional(specFile(name));
       if (text === null) continue;
       projects.push({ name, title: titleOf(text, name) });
     }
@@ -416,7 +453,7 @@ export function createWorkspace(rootDir) {
    * @param {string} specPath @param {string[]} productPaths
    */
   async function readInline(specPath, productPaths) {
-    const specText = await readOptional(specPath);
+    const specText = await readSpecOptional(specPath);
     if (specText === null) throw new WorkspaceError('not-found', `The specification ${specPath} does not exist.`);
     const layers = [];
     for (const file of expandProducts(productPaths, '/', specPath, 'The command line')) {
@@ -428,7 +465,7 @@ export function createWorkspace(rootDir) {
 
   async function read(name) {
     assertName(name);
-    const specText = await readOptional(specFile(name));
+    const specText = await readSpecOptional(specFile(name));
     if (specText === null) {
       throw new WorkspaceError('not-found', `Project "${name}" has no specification at ${specLocation(name)}.`);
     }
@@ -504,7 +541,7 @@ export function createWorkspace(rootDir) {
     }
     const target = file === 'spec' ? specFile(name) : resolve(name, WORKSPACE_FILES[file]);
     return withProjectLock(projectKey(name), async () => {
-      const currentText = await readOptional(target);
+      const currentText = file === 'spec' ? await readSpecOptional(target) : await readOptional(target);
       const currentHash = currentText === null ? null : hashText(currentText);
       if (currentHash !== expected) {
         return {
@@ -513,8 +550,7 @@ export function createWorkspace(rootDir) {
           current: { text: currentText ?? '', hash: currentHash },
         };
       }
-      await atomicWrite(target, text);
-      const hash = hashText(text);
+      const hash = file === 'spec' ? await writeSpecText(target, text) : (await atomicWrite(target, text), hashText(text));
       // The file is already replaced. A journal line that cannot be appended is reported in the result rather
       // than thrown, so the caller can tell that this write has no journal line. Nothing is rolled back.
       try {
@@ -589,7 +625,7 @@ export function createWorkspace(rootDir) {
 
   async function exportProject(name) {
     assertName(name);
-    const spec = await readOptional(specFile(name));
+    const spec = await readSpecOptional(specFile(name));
     if (spec === null) {
       throw new WorkspaceError('not-found', `Project "${name}" has no specification at ${specLocation(name)}.`);
     }
@@ -622,7 +658,8 @@ export function createWorkspace(rootDir) {
     const targets = Object.entries(files).map(([key, text]) => ({ target: key === WORKSPACE_FILES.spec ? specFile(name) : resolve(name, key), text }));
     await withProjectLock(projectKey(name), async () => {
       for (const { target, text } of targets) {
-        await atomicWrite(target, text);
+        if (target === specFile(name)) await writeSpecText(target, text);
+        else await atomicWrite(target, text);
       }
     });
     return { ok: true };
@@ -762,7 +799,7 @@ export function createWorkspace(rootDir) {
       }
       /** @type {string|null} */ let text = null;
       try {
-        text = await fs.readFile(abs, 'utf8');
+        text = key === 'spec' ? await readSpecOptional(abs) : await fs.readFile(abs, 'utf8');
       } catch {
         text = null;
       }
@@ -801,11 +838,15 @@ export function createWorkspace(rootDir) {
       if (external) {
         const ext = external;
         const base = path.basename(ext);
+        // The part files of a manifest (WG-5386) sit beside it and change the specification too.
+        const partNames = () => {
+          try { return resolveSpecText(ext, readFileSync(ext, 'utf8')).parts.map((p) => path.basename(p.file)); } catch { return []; }
+        };
         // Atomic writes rename a sibling temporary file over the target, so any
         // name starting with the file's own name is a reason to look.
         externalWatcher = fsWatch(path.dirname(ext), (_eventType, filename) => {
           if (closed) return;
-          if (filename == null || String(filename).startsWith(base)) schedule('spec', ext);
+          if (filename == null || String(filename).startsWith(base) || partNames().some((n) => String(filename).startsWith(n))) schedule('spec', ext);
         });
         externalWatcher.on('error', stop);
       }

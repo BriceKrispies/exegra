@@ -8,13 +8,15 @@ import { analyzeSpec } from '../src/core/analyze.js';
 import { evaluateClaims } from '../src/core/claims.js';
 import { runScenario } from '../src/core/engine.js';
 import { semanticHash } from '../src/core/hash.js';
+import { resolveSpecText } from './spec-manifest.js';
+import path from 'node:path';
 
 const [file, ...rest] = process.argv.slice(2);
 if (!file) {
   console.error('usage: node tools/check-spec.js <spec.jsonc> [--trace <scenarioId>]');
   process.exit(2);
 }
-const text = fs.readFileSync(file, 'utf8');
+const text = resolveSpecText(path.resolve(file), fs.readFileSync(file, 'utf8')).text;
 const { model, diagnostics, errorCount } = analyzeSpec(text);
 
 for (const d of diagnostics) {
