@@ -182,6 +182,59 @@ const utf8Length = (s) => {
   return n;
 };
 
+// The grapheme and emoji functions (Strata WG-5597, crates/model-core/src/tenant_rule_language.rs graphemes and
+// is_emoji). Extended grapheme clusters come from Intl.Segmenter; the emoji properties are JavaScript's Unicode
+// property escapes, which name the same properties as the Rust side's emoji tables.
+const GRAPHEME_SEGMENTER = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+const REGIONAL_RE = /^\p{Regional_Indicator}$/u;
+const KEYCAP_BASE_RE = /^[0-9#*]$/;
+const EMOJI_RE = /^\p{Emoji}$/u;
+const EMOJI_PRESENTATION_RE = /^\p{Emoji_Presentation}$/u;
+const EMOJI_MODIFIER_RE = /^\p{Emoji_Modifier}$/u;
+const EMOJI_MODIFIER_BASE_RE = /^\p{Emoji_Modifier_Base}$/u;
+const VS16 = '️';
+const KEYCAP = '⃣';
+const ZWJ = '‍';
+const BLACK_FLAG = '\u{1F3F4}';
+const CANCEL_TAG = '\u{E007F}';
+
+/** @param {string} s @returns {string[]} the extended grapheme clusters of s */
+const graphemeList = (s) => Array.from(GRAPHEME_SEGMENTER.segment(s), (x) => x.segment);
+
+/** One part of a ZWJ sequence: an emoji presentation, or a text-default emoji with VS16 or a skin tone. */
+/** @param {string} part */
+function isEmojiPart(part) {
+  const p = Array.from(part);
+  if (p.length === 0) return false;
+  const [base, ...rest] = p;
+  if (!EMOJI_RE.test(base) || REGIONAL_RE.test(base) || KEYCAP_BASE_RE.test(base)) return false;
+  const modifier = rest.length > 0 && EMOJI_MODIFIER_RE.test(rest[0]) && EMOJI_MODIFIER_BASE_RE.test(base);
+  const tail = modifier ? rest.slice(1) : rest;
+  const vs16 = tail.length === 1 && tail[0] === VS16;
+  return (tail.length === 0 || vs16) && (EMOJI_PRESENTATION_RE.test(base) || modifier || vs16);
+}
+
+/** Whether one extended grapheme cluster is an emoji: a keycap, a flag, a subdivision tag sequence or ZWJ parts. */
+/** @param {string} g */
+function isEmojiGrapheme(g) {
+  const s = Array.from(g);
+  if (s.length === 2 && KEYCAP_BASE_RE.test(s[0]) && s[1] === KEYCAP) return true;
+  if (s.length === 3 && KEYCAP_BASE_RE.test(s[0]) && s[1] === VS16 && s[2] === KEYCAP) return true;
+  if (s.length === 2 && REGIONAL_RE.test(s[0]) && REGIONAL_RE.test(s[1])) return true;
+  if (s.length >= 3 && s[0] === BLACK_FLAG && s[s.length - 1] === CANCEL_TAG
+    && s.slice(1, -1).every((c) => c.codePointAt(0) >= 0xE0020 && c.codePointAt(0) <= 0xE007E)) return true;
+  return g.split(ZWJ).every(isEmojiPart);
+}
+
+/**
+ * Whether a string is exactly one emoji grapheme (Strata is_emoji).
+ * @param {string} s
+ */
+export function isEmojiText(s) {
+  const gs = graphemeList(s);
+  return gs.length === 1 && isEmojiGrapheme(gs[0]);
+}
+
 /**
  * Evaluate an expression value. Returns result<V, string>: Ok of a value of the language's value union, or Err of
  * the kernel's message (crates/kernel/src/expr.rs eval).
@@ -295,6 +348,18 @@ export function evalLanguage(model, lang, expr, env, lookup = null) {
         if (isNull(a)) return a;
         if (kind(a) !== 'string') throw typeError(label(op), a);
         return mk('bool', /^[a-z0-9]+(-[a-z0-9]+)*$/.test(payload(a)));
+      }
+      case 'graphemes': {
+        const a = ev(args[0]);
+        if (isNull(a)) return a;
+        if (kind(a) !== 'string') throw typeError(label(op), a);
+        return mk('int', graphemeList(String(payload(a))).length);
+      }
+      case 'is-emoji': {
+        const a = ev(args[0]);
+        if (isNull(a)) return a;
+        if (kind(a) !== 'string') throw typeError(label(op), a);
+        return mk('bool', isEmojiText(String(payload(a))));
       }
       case 'add-checked': case 'sub-checked': case 'mul-checked': {
         // Both operands first, left to right; then nulls; then the left's kind, then the right's.
@@ -485,7 +550,7 @@ export function checkLanguage(model, lang, expr, env) {
         return t === any ? o : t;
       }
       default: {
-        // One operand after another: not, is_null, len, lower, starts_with, is_slug.
+        // One operand after another: not, is_null, len, lower, starts_with, is_slug, graphemes, is_emoji.
         const got = args.map((a, k) => { const s = sh(a); expect(s, ops[k], what); return s; });
         const m = typeof op.result === 'string' ? /^operand:([1-9][0-9]*)$/.exec(op.result) : null;
         if (m) return got[Number(m[1]) - 1] ?? any;

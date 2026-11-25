@@ -174,6 +174,19 @@ export const LANGUAGE_PRIMITIVES = Object.freeze({
     semantics: 'null gives null; a string gives whether it matches [a-z0-9]+(-[a-z0-9]+)* in ASCII (non-empty, single hyphens, no hyphen at either end); anything else is an error.',
     check: 'check, Expr::IsSlug: the operand has the Str or any shape; the result is Bool.',
   },
+  // Grapheme and emoji functions (Strata WG-5597): what a reader sees as one character, UAX #29 extended clusters.
+  graphemes: {
+    arity: 1, forms: ['call'], nulls: 'propagate',
+    kernel: 'crates/kernel/src/expr.rs: eval, Expr::Graphemes -> graphemes',
+    semantics: 'null gives null; a string gives its count of extended grapheme clusters (UAX #29: a combining sequence, a ZWJ emoji sequence, a flag or a keycap is one); anything else is an error.',
+    check: 'check, Expr::Graphemes: the operand has the Str or any shape; the result is Int.',
+  },
+  'is-emoji': {
+    arity: 1, forms: ['call'], nulls: 'propagate',
+    kernel: 'crates/kernel/src/expr.rs: eval, Expr::IsEmoji -> is_emoji',
+    semantics: 'null gives null; a string gives whether it is exactly one grapheme that is an emoji: a keycap, a flag, a subdivision tag sequence, or ZWJ-joined parts each an emoji presentation or a text-default emoji followed by VS16 or a skin tone (a VS15 makes it not an emoji); anything else is an error.',
+    check: 'check, Expr::IsEmoji: the operand has the Str or any shape; the result is Bool.',
+  },
   // Checked integer and time arithmetic, durations and text (Strata D-6540 to D-6543, CMS-1540 to CMS-1546). Every
   // integer an operand holds or a result would be lies in -(2^53-1) to 2^53-1, the range Rust's i64 and JavaScript's
   // numbers both hold exactly; anything outside it is the error integer-overflow, never a wrapped or rounded value.

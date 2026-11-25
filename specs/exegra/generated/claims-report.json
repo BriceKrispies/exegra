@@ -12198,21 +12198,14 @@
           "id": "ev-function-branch-coverage-2",
           "kind": "test",
           "recorded": "none",
-          "ref": "tests/core/functions.test.js#a branch no example takes is listed uncovered with its location and named by the one gap",
+          "ref": "tests/core/functions.test.js#a branch no example takes is listed uncovered with its location and raises no readiness gap",
           "supports": true
         },
         {
           "id": "ev-function-branch-coverage-3",
           "kind": "test",
           "recorded": "none",
-          "ref": "tests/core/functions.test.js#a match arm no example takes is reported once as ready.function-branch-uncovered only when generation is set",
-          "supports": true
-        },
-        {
-          "id": "ev-function-branch-coverage-4",
-          "kind": "test",
-          "recorded": "none",
-          "ref": "tests/core/functions.test.js#system.generation.functionBranches gap lists an uncovered branch as a gap and not an error",
+          "ref": "tests/core/functions.test.js#system.generation.functionBranches is still accepted and changes nothing",
           "supports": true
         },
         {
@@ -12223,17 +12216,17 @@
           "supports": true
         }
       ],
-      "explanation": "Only test evidence (\"ev-function-branch-coverage-1\", \"ev-function-branch-coverage-2\", \"ev-function-branch-coverage-3\", \"ev-function-branch-coverage-4\" and \"ev-function-branch-coverage-5\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "explanation": "Only test evidence (\"ev-function-branch-coverage-1\", \"ev-function-branch-coverage-2\", \"ev-function-branch-coverage-3\" and \"ev-function-branch-coverage-5\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
       "grounding": "not-applicable",
       "id": "function-branch-coverage",
       "kind": "invariant",
       "method": "external-evidence",
-      "scope": "No model evaluation was performed. This rests on 5 evidence entities (ev-function-branch-coverage-1, ev-function-branch-coverage-2, ev-function-branch-coverage-3, ev-function-branch-coverage-4, ev-function-branch-coverage-5), of which 0 have a recorded execution result; the rest is author-entered.",
+      "scope": "No model evaluation was performed. This rests on 4 evidence entities (ev-function-branch-coverage-1, ev-function-branch-coverage-2, ev-function-branch-coverage-3, ev-function-branch-coverage-5), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
         "line": 18797
       },
-      "statement": "Exegra records which branches of each function its examples take (both branches of if, each arm of match, the value and the error path of try where the called function can fail, and fail), without changing what the examples evaluate to; exegra cover-functions reports per function the branches covered out of the total and each uncovered branch with its place in the body or let; with system.generation set a function with a branch no example takes is ready.function-branch-uncovered, an error, or a gap of severity info when system.generation.functionBranches is gap.",
+      "statement": "Exegra records which branches of each function its examples take (both branches of if, each arm of match, the value and the error path of try where the called function can fail, and fail), without changing what the examples evaluate to; exegra cover-functions reports per function the branches covered out of the total and each uncovered branch with its place in the body or let; an uncovered branch is reported and raises no readiness gap, because a rule that asks for one example per branch rewards examples that restate the function rather than its requirement; system.generation.functionBranches is still accepted and changes nothing.",
       "status": "inconclusive",
       "statusLabel": "Inconclusive",
       "strength": {
@@ -13436,6 +13429,58 @@
     {
       "assumptions": [
         {
+          "id": "tests-exercise-shipped-modules",
+          "statement": "The core tests import and run the same modules under src/core and tools that the application and the agent command line run."
+        },
+        {
+          "id": "recorded-results-reflect-current-code",
+          "statement": "A recorded result of a test in evidence/results.json was produced by the code and the specification as they are now."
+        }
+      ],
+      "check": "test",
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [
+        {
+          "id": "ev-language-grapheme-emoji-1",
+          "kind": "test",
+          "recorded": "none",
+          "ref": "tests/core/language.test.js#graphemes and is_emoji validate and give Strata results for each case of its table",
+          "supports": true
+        },
+        {
+          "id": "ev-language-grapheme-emoji-2",
+          "kind": "test",
+          "recorded": "none",
+          "ref": "tests/core/language.test.js#graphemes and is_emoji give null on null and an error on any other kind",
+          "supports": true
+        }
+      ],
+      "explanation": "Only test evidence (\"ev-language-grapheme-emoji-1\" and \"ev-language-grapheme-emoji-2\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "grounding": "not-applicable",
+      "id": "language-grapheme-emoji",
+      "kind": "invariant",
+      "method": "external-evidence",
+      "scope": "No model evaluation was performed. This rests on 2 evidence entities (ev-language-grapheme-emoji-1, ev-language-grapheme-emoji-2), of which 0 have a recorded execution result; the rest is author-entered.",
+      "source": {
+        "column": 5,
+        "line": 19078
+      },
+      "statement": "The primitive catalogue holds the grapheme and emoji functions (graphemes, is-emoji), and the language evaluator gives for them Strata's results over its shared case table: graphemes of a string is its count of extended grapheme clusters (UAX #29), so that a combining sequence, a ZWJ emoji sequence, a flag or a keycap is one; is-emoji of a string is true exactly when the string is one grapheme that is a keycap, a flag, a subdivision tag sequence, or ZWJ-joined parts each an emoji presentation or a text-default emoji followed by VS16 or a skin tone; a VS15 makes it not an emoji, and a lone regional indicator, a lone digit, a bare copyright, trademark or heart, two emoji and the empty string are not; a null operand gives null and an operand of another kind is an error.",
+      "status": "inconclusive",
+      "statusLabel": "Inconclusive",
+      "strength": {
+        "check": "The status comes from attached test evidence.",
+        "grounding": "The status rests on evidence outside the model."
+      },
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ]
+    },
+    {
+      "assumptions": [
+        {
           "id": "trusted-lean-kernel",
           "statement": "The Lean 4 kernel of the toolchain formal/lean-toolchain pins (v4.35.0) accepts only well-typed proof terms."
         }
@@ -13452,7 +13497,7 @@
       "scope": "Nothing was checked: there is no recorded Lean check for this claim.",
       "source": {
         "column": 5,
-        "line": 19078
+        "line": 19095
       },
       "statement": "For a program of derived relations that the Lean stratification check wf accepts and the checker solve solves, the solved table is exactly the least-model meaning Least: a tuple is in it iff it is in every interpretation that agrees with the lower strata and is closed under the clauses of its stratum.",
       "status": "not-evaluated",
@@ -13491,7 +13536,7 @@
       "scope": "Nothing was checked: there is no recorded Lean check for this claim.",
       "source": {
         "column": 5,
-        "line": 19100
+        "line": 19117
       },
       "statement": "A rule that the Lean checker eval accepts over the solved table of a stratified program holds under the least-model meaning: Sat u (Least u prog) [] rule.",
       "status": "not-evaluated",
@@ -13570,7 +13615,7 @@
       "scope": "No model evaluation was performed. This rests on 5 evidence entities (ev-integrity-relations-atoms, ev-integrity-relations-least, ev-integrity-relations-mutations, ev-integrity-relations-diagnostics, ev-integrity-relations-atom-choice), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 19122
+        "line": 19139
       },
       "statement": "Derived relations are evaluated to their least models, recursion and mutual recursion included, with negation only of lower strata; negative recursion, arity mismatches, unknown relations, unbound clause variables and unknown parameter kinds are named errors that make the relation and every rule using it invalid; and every relation rule of the fixture can be made to fail by a stated mutation that the ratchet refuses.",
       "status": "inconclusive",
@@ -13643,7 +13688,7 @@
       "scope": "No model evaluation was performed. This rests on 5 evidence entities (ev-integrity-relations-lean-proved, ev-integrity-relations-lean-refuted, ev-integrity-relations-lean-differential, ev-integrity-relations-nemo-fixture, ev-integrity-relations-nemo-random), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 19139
+        "line": 19156
       },
       "statement": "The JavaScript relation tables equal the tables of the Lean checker and the relations Nemo derives: exegra prove-integrity proves every relation rule of the fixture under Least and refutes every mutation, and on seeded random graphs and programs the Lean tables and the Nemo relations equal the JavaScript tables.",
       "status": "inconclusive",
@@ -13721,7 +13766,7 @@
       "scope": "No model evaluation was performed. This rests on 7 evidence entities (ev-admit-regressed, ev-admit-violation, ev-admit-weak, ev-admit-refused, ev-admit-admitted, ev-admit-write, ev-admit-deterministic), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 19156
+        "line": 19173
       },
       "statement": "The admit command never writes the specification for a rejected verdict, even with --write, and reports every reason for the rejection (each claim that moved to a worse status, each new validation error, each new integrity violation, each new claim that is not verified or proved, a refused transaction), not only the first.",
       "status": "inconclusive",
@@ -13792,7 +13837,7 @@
       "scope": "No model evaluation was performed. This rests on 6 evidence entities (ev-admit-privilege-role, ev-admit-privilege-removed, ev-admit-privilege-grant, ev-admit-weakened-copy, ev-admit-weakened-rule, ev-admit-accept-refused), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 19170
+        "line": 19187
       },
       "statement": "The admit command reports every capability a change adds to a role, grant, delegation or token scope, every new or changed grant or delegation without maxDuration, every copy class looser than another of the same record, and every changed integrity rule, claim or retention, each as a reason that blocks admission until its code is accepted with --accept; a reason that is not acknowledgeable cannot be accepted, and an accepted reason is listed under acknowledged.",
       "status": "inconclusive",
@@ -13841,7 +13886,7 @@
       "scope": "No model evaluation was performed. This rests on 3 evidence entities (ev-admit-pending-milestone, ev-admit-pending-no-milestone, ev-admit-pending-weak), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 19183
+        "line": 19200
       },
       "statement": "The admit command admits a new claim that is realised by code (a requirement, or a claim of an external verification method or of external-evidence) when it names a milestone and has no result yet, and lists it under pendingRealisation; a new requirement without a milestone is rejected as admit.requirement-without-milestone; a new claim a model method can decide (structural, data-model, integrity, lean-theorem and the other methods Exegra evaluates) must still be verified or proved.",
       "status": "inconclusive",
@@ -13898,7 +13943,7 @@
       "scope": "No model evaluation was performed. This rests on 4 evidence entities (ev-strength-hbc, ev-strength-restated, ev-strength-single-trace, ev-strength-explored), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 19197
+        "line": 19214
       },
       "statement": "claimStrength reports a state invariant whose variables only fault transitions assign as holds-by-construction, naming the variables and those transitions; a counter bound equal to the extreme of its one scenario as restated-scenario; any other trace claim as single-trace, unless the caller supplies an exploration that found it holding (explored); and never changes a status.",
       "status": "inconclusive",
@@ -13954,7 +13999,7 @@
       "scope": "No model evaluation was performed. This rests on 4 evidence entities (ev-strength-self-contained, ev-strength-contract-bound, ev-strength-integrity-bound, ev-strength-baseline), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 19210
+        "line": 19227
       },
       "statement": "claimStrength reports a claim whose behaviors branch only on payload fields of contract-less events as self-contained and names those fields, a claim over a behavior that reacts to a contract event as bound with the capabilities the contract requires, an integrity rule over the real roles as bound, and under a baseline counts an entity the change adds as anchoring nothing.",
       "status": "inconclusive",
@@ -13989,7 +14034,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-strength-admit), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 19223
+        "line": 19240
       },
       "statement": "admit rejects a claim the change creates that is holds-by-construction or restated-scenario (admit.claim-vacuous), single-trace (admit.claim-single-trace) or self-contained (admit.claim-self-contained), each reason carrying acknowledgeable: true, reports the counts by check and grounding before and after, and never makes an existing claim a reason.",
       "status": "inconclusive",
@@ -14167,7 +14212,7 @@
       "scope": "No model evaluation was performed. This rests on 20 evidence entities (ev-residency-1, ev-residency-2, ev-residency-3, ev-residency-4, ev-residency-5, ev-residency-6, ev-residency-7, ev-residency-8, ev-residency-9, ev-residency-10, ev-residency-11, ev-residency-12, ev-residency-13, ev-residency-14, ev-residency-15, ev-residency-16, ev-residency-17, ev-residency-18, ev-residency-19, ev-residency-20), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 19237
+        "line": 19254
       },
       "statement": "Region, tenantClass and residencyException are entity kinds, components state a placement and relationships the records they carry; for every tenant class whose confinement is not none, every owner of a bound record, holder of a copy of one and end of a relationship carrying one keeps a tenant of the class in its permitted regions, or validation reports residency.record-outside, residency.copy-outside or residency.flow-outside, except where an active residency exception of the class names that copy or flow; the placement, region, tenant class and exception rules are reported at their positions; and integrity rules, recursive relations included, read the residency properties.",
       "status": "inconclusive",
@@ -14394,7 +14439,7 @@
       "scope": "No model evaluation was performed. This rests on 27 evidence entities (ev-pooled-quotas-1, ev-pooled-quotas-2, ev-pooled-quotas-3, ev-pooled-quotas-4, ev-pooled-quotas-5, ev-pooled-quotas-6, ev-pooled-quotas-7, ev-pooled-quotas-8, ev-pooled-quotas-9, ev-pooled-quotas-10, ev-pooled-quotas-11, ev-pooled-quotas-12, ev-pooled-quotas-13, ev-pooled-quotas-14, ev-pooled-quotas-15, ev-pooled-quotas-16, ev-pooled-quotas-17, ev-pooled-quotas-18, ev-pooled-quotas-19, ev-pooled-quotas-20, ev-pooled-quotas-21, ev-pooled-quotas-22, ev-pooled-quotas-23, ev-pooled-quotas-24, ev-pooled-quotas-25, ev-pooled-quotas-26, ev-pooled-quotas-27), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 19254
+        "line": 19271
       },
       "statement": "quotaPool is an entity kind and a scenario lists the pools it runs; a pool runs as one machine per pooled limit and modelled member, whose transitions admit usage on headroom (within the fair share when throttled), throttle a member over its fair share at the end of the stated consecutive windows unless its exemption applies from that window, release after the stated windows under, and record an exemption from the window it is set in or the next; simulation and the Lean explorer run these machines, so a claim over them is decided by exploration and a wrong rule (eligibility effective only from the next window, or a longer over-share window) yields a counterexample; and the pool rules are reported at their positions.",
       "status": "inconclusive",
@@ -14440,7 +14485,7 @@
       "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-singleton-key-negative), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 19272
+        "line": 19289
       },
       "statement": "An implementation-level machine that creates its records (storage.creates), has no instances.key and is run by a scenario is reported with machine.singleton-key when a key field of its record has a type with no fixed value for the one instance the runtime creates at the start: only string, uuid or an integer, or an id or scalar over one, in a field that is not optional, has one. A machine keyed by instances.key, or whose key field has such a type, is not.",
       "status": "inconclusive",
@@ -14489,7 +14534,7 @@
       "scope": "No model evaluation was performed. This rests on 3 evidence entities (ev-spec-manifest-resolve, ev-spec-manifest-refusals, ev-spec-manifest-write-back), of which 0 have a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
-        "line": 19288
+        "line": 19305
       },
       "statement": "A specification may be a manifest (specParts) listing part files, and Exegra reads it as the one document the parts make: array sections are concatenated in manifest order, a section that is not an array may be in one part only, and a missing part, a part that is itself a manifest, a manifest with sections of its own, a section two parts both hold and an id two parts give one section are refused with an error that names the files. The semantic hash is that of the one-file specification. exegra apply writes each changed entity back to the part that holds it, and a new entity to the part the manifest's specSections table names for its section (else beside its section, else the first part).",
       "status": "inconclusive",
@@ -14501,10 +14546,52 @@
       "subjects": [
         "workspace-service"
       ]
+    },
+    {
+      "assumptions": [],
+      "check": "test",
+      "counterexample": null,
+      "evaluator": "exegra.evidence/0.1",
+      "evidence": [
+        {
+          "id": "ev-layers-cache-identical",
+          "kind": "test",
+          "recorded": "none",
+          "ref": "tests/core/layers-cache.test.js#layer sets over one platform give the output of independent validations and the platform is analysed once",
+          "supports": true
+        },
+        {
+          "id": "ev-layers-cache-read-only",
+          "kind": "test",
+          "recorded": "none",
+          "ref": "tests/core/layers-cache.test.js#the shared platform analysis cannot be corrupted by a caller",
+          "supports": true
+        }
+      ],
+      "explanation": "Only test evidence (\"ev-layers-cache-identical\" and \"ev-layers-cache-read-only\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "grounding": "not-applicable",
+      "id": "product-layers-share-platform-analysis",
+      "kind": "structural",
+      "method": "external-evidence",
+      "scope": "No model evaluation was performed. This rests on 2 evidence entities (ev-layers-cache-identical, ev-layers-cache-read-only), of which 0 have a recorded execution result; the rest is author-entered.",
+      "source": {
+        "column": 5,
+        "line": 19318
+      },
+      "statement": "Validating several sets of product files over one platform text in one process parses the platform text once, and every validation reports exactly what a validation of that set alone reports: the same errors, warnings, gaps, semantic hash and layered hash. The shared platform analysis is read-only, so no validation can alter what the next one sees.",
+      "status": "inconclusive",
+      "statusLabel": "Inconclusive",
+      "strength": {
+        "check": "The status comes from attached test evidence.",
+        "grounding": "The status rests on evidence outside the model."
+      },
+      "subjects": [
+        "spec-layers"
+      ]
     }
   ],
   "format": "exegra-claims-report",
-  "semanticHash": "0cb5a06fddaeda",
+  "semanticHash": "1188f0c674a2b9",
   "strength": {
     "check": {
       "data-model": 2,
@@ -14512,21 +14599,21 @@
       "lean-theorem": 14,
       "single-trace": 40,
       "structural": 9,
-      "test": 134
+      "test": 136
     },
     "grounding": {
       "bound": 25,
-      "not-applicable": 177,
+      "not-applicable": 179,
       "partly-bound": 6,
       "self-contained": 34
     }
   },
   "summary": {
-    "inconclusive": 56,
+    "inconclusive": 58,
     "not-evaluated": 45,
     "proved": 12,
     "supported": 78,
-    "total": 242,
+    "total": 244,
     "verified": 49,
     "violated": 2
   },

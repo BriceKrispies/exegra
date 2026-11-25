@@ -5,6 +5,9 @@ import { analyzeSpec } from '../../src/core/analyze.js';
 import { readinessGaps } from '../../src/core/readiness.js';
 import { LANGUAGE_PRIMITIVES, NULL_RULES, SYNTAX_FORMS, variantOperandCount } from '../../src/core/language.js';
 import { spec, FIXTURES, READINESS_FIXTURES } from '../fixtures/language/fixtures.js';
+import { evalLanguage } from '../../src/core/language-eval.js';
+import { decodeValue } from '../../src/core/function-value.js';
+import { typeStructure } from '../../src/core/codegen-model.js';
 
 // The language construct (WG-4929, NC-2): a tenant expression language stated as data, with operators bound to a
 // fixed primitive catalogue pinned to the Strata kernel.
@@ -50,9 +53,9 @@ test('every language code has a negative fixture', () => {
 
 test('the primitive catalogue is the fixed set pinned to the kernel and each entry is complete', () => {
   assert.deepEqual(Object.keys(LANGUAGE_PRIMITIVES).sort(), [
-    'add-checked', 'and3', 'concat-checked', 'contains', 'days-ms', 'eq', 'ge', 'gt', 'has-role', 'hours-ms', 'if', 'in-list', 'is-null', 'is-slug',
-    'le', 'len', 'list-literal', 'literal', 'lower', 'lt', 'minutes-ms', 'mul-checked', 'ne', 'not3', 'now', 'or3', 'param', 'principal',
-    'starts-with', 'sub-checked', 'through', 'time-difference', 'to-text', 'var',
+    'add-checked', 'and3', 'concat-checked', 'contains', 'days-ms', 'eq', 'ge', 'graphemes', 'gt', 'has-role', 'hours-ms', 'if', 'in-list',
+    'is-emoji', 'is-null', 'is-slug', 'le', 'len', 'list-literal', 'literal', 'lower', 'lt', 'minutes-ms', 'mul-checked', 'ne', 'not3', 'now',
+    'or3', 'param', 'principal', 'starts-with', 'sub-checked', 'through', 'time-difference', 'to-text', 'var',
   ]);
   for (const [name, p] of Object.entries(LANGUAGE_PRIMITIVES)) {
     assert.ok(NULL_RULES.includes(p.nulls), name);
@@ -68,6 +71,101 @@ test('the format documentation states every primitive and every code', () => {
   const doc = fs.readFileSync(new URL('../../docs/model-and-format.md', import.meta.url), 'utf8');
   for (const name of Object.keys(LANGUAGE_PRIMITIVES)) assert.ok(doc.includes(`| \`${name}\` |`), `primitive ${name} has a row`);
   for (const [, code] of [...FIXTURES, ...READINESS_FIXTURES]) assert.ok(doc.includes(`\`${code}\``), `code ${code} is documented`);
+});
+
+// Strata's table for graphemes and is_emoji (crates/kernel/tests/text_rules.rs, CASES): each text, whether it is
+// exactly one emoji, and its extended grapheme count. A text-default emoji (U+00A9, U+2764) is an emoji only with
+// VS16 or a skin tone after it.
+const EMOJI_CASES = [
+  // emoji, one grapheme
+  ['\u{1F600}', true, 1],
+  ['\u{1F44D}', true, 1],
+  ['\u{1F44D}\u{1F3FD}', true, 1],
+  ['\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}', true, 1],
+  ['\u{1F1EC}\u{1F1E7}', true, 1],
+  ['1\u{FE0F}\u{20E3}', true, 1],
+  ['1\u{20E3}', true, 1],
+  ['*\u{FE0F}\u{20E3}', true, 1],
+  ['#\u{FE0F}\u{20E3}', true, 1],
+  ['\u{2764}\u{FE0F}', true, 1],
+  ['\u{A9}\u{FE0F}', true, 1],
+  ['\u{2122}\u{FE0F}', true, 1],
+  ['\u{1F3F3}\u{FE0F}\u{200D}\u{1F308}', true, 1],
+  ['\u{1F469}\u{1F3FD}\u{200D}\u{1F4BB}', true, 1],
+  ['\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}', true, 1],
+  ['\u{1F9D1}\u{200D}\u{2695}\u{FE0F}', true, 1],
+  ['\u{261D}\u{1F3FD}', true, 1],
+  ['\u{1F3FD}', true, 1],
+  // not one emoji: text, a text presentation, or a lone part
+  ['\u{2764}', false, 1],
+  ['\u{A9}', false, 1],
+  ['\u{2122}', false, 1],
+  ['\u{A9}\u{FE0E}', false, 1],
+  ['\u{1F44D}\u{FE0E}', false, 1],
+  ['\u{FE0F}', false, 1],
+  ['\u{1F1EC}', false, 1],
+  ['\u{1F1EC}\u{1F1E7}\u{1F1EB}\u{1F1F7}', false, 2],
+  ['\u{1F600}\u{1F600}', false, 2],
+  ['\u{1F600} ', false, 2],
+  ['\u{1F600}\u{200D}', false, 1],
+  ['a\u{1F44D}', false, 2],
+  // letters, digits and symbols
+  ['a', false, 1],
+  ['A', false, 1],
+  ['\u{E9}', false, 1],
+  ['e\u{301}', false, 1],
+  ['hello', false, 5],
+  ['7', false, 1],
+  ['42', false, 2],
+  ['#', false, 1],
+  ['*', false, 1],
+  ['\u{D55C}', false, 1],
+  ['\u{4E2D}', false, 1],
+  [' ', false, 1],
+  ['', false, 0],
+];
+
+/** Adds the two functions to the rule language the fixtures state: an AST variant and an operator each. */
+const withEmoji = (/** @type {any} */ d) => {
+  d.types.find((/** @type {any} */ t) => t.id === 'expr').variants.push(
+    { name: 'Graphemes', newtype: true, fields: [{ name: 'inner', type: 'expr' }] },
+    { name: 'IsEmoji', newtype: true, fields: [{ name: 'inner', type: 'expr' }] });
+  d.languages[0].operators.push(
+    { name: 'graphemes', variant: 'Graphemes', syntax: { form: 'call', token: 'graphemes' }, operands: ['str'], result: 'int', nulls: 'propagate', primitive: 'graphemes' },
+    { name: 'is-emoji', variant: 'IsEmoji', syntax: { form: 'call', token: 'is_emoji' }, operands: ['str'], result: 'bool', nulls: 'propagate', primitive: 'is-emoji' });
+};
+
+/** The rule language with the two functions, and an evaluator over a literal argument. */
+const emojiLanguage = () => {
+  const r = analyzeSpec(spec(withEmoji));
+  const model = /** @type {any} */ (r.model);
+  const lang = model.entities.get('rule-language');
+  const exprT = typeStructure(model, 'expr');
+  const env = {}; // the literal arguments read no scope
+  /** @param {string} variant @param {any} literal */
+  const run = (variant, literal) => evalLanguage(model, lang, decodeValue(exprT, { [variant]: { Lit: literal } }, 'expr'), env);
+  return { errors: errors(r), run };
+};
+
+test('graphemes and is_emoji validate and give Strata results for each case of its table', () => {
+  const { errors: found, run } = emojiLanguage();
+  assert.deepEqual(found.map((/** @type {any} */ d) => `${d.code} ${d.message}`), []);
+  for (const [text, emoji, count] of EMOJI_CASES) {
+    const g = run('Graphemes', { Str: text });
+    assert.equal(g.variant, 'Ok', `graphemes of ${JSON.stringify(text)}`);
+    assert.deepEqual([g.fields.value.variant, g.fields.value.fields.value], ['Int', count], `graphemes of ${JSON.stringify(text)}`);
+    const e = run('IsEmoji', { Str: text });
+    assert.equal(e.variant, 'Ok', `is_emoji of ${JSON.stringify(text)}`);
+    assert.deepEqual([e.fields.value.variant, e.fields.value.fields.value], ['Bool', emoji], `is_emoji of ${JSON.stringify(text)}`);
+  }
+});
+
+test('graphemes and is_emoji give null on null and an error on any other kind', () => {
+  const { run } = emojiLanguage();
+  assert.equal(run('Graphemes', 'Null').fields.value.variant, 'Null');
+  assert.equal(run('IsEmoji', 'Null').fields.value.variant, 'Null');
+  assert.equal(run('Graphemes', { Int: 1 }).variant, 'Err');
+  assert.equal(run('IsEmoji', { Int: 1 }).variant, 'Err');
 });
 
 test('an AST variant holds as many expression operands as its fields of the AST type, or a list', () => {

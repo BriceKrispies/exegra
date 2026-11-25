@@ -19076,6 +19076,23 @@
       }
     },
     {
+      "id": "language-grapheme-emoji",
+      "kind": "invariant",
+      "statement": "The primitive catalogue holds the grapheme and emoji functions (graphemes, is-emoji), and the language evaluator gives for them Strata's results over its shared case table: graphemes of a string is its count of extended grapheme clusters (UAX #29), so that a combining sequence, a ZWJ emoji sequence, a flag or a keycap is one; is-emoji of a string is true exactly when the string is one grapheme that is a keycap, a flag, a subdivision tag sequence, or ZWJ-joined parts each an emoji presentation or a text-default emoji followed by VS16 or a skin tone; a VS15 makes it not an emoji, and a lone regional indicator, a lone digit, a bare copyright, trademark or heart, two emoji and the empty string are not; a null operand gives null and an operand of another kind is an error.",
+      "rationale": "WG-5603 (Strata WG-5597): Strata's tenant rule language gained graphemes and is-emoji, and Exegra's validation of Strata's specification refused them with language.primitive-unknown. Both are pinned to the Strata kernel's functions (crates/kernel/src/expr.rs, crates/model-core/src/tenant_rule_language.rs), so Exegra's evaluator must agree with Strata's on every case of Strata's table, which the core test mirrors. Supported, not verified: the emoji properties come from the JavaScript and Rust Unicode data of their own versions, so a character added by a later Unicode release could classify differently on the two sides.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
       "id": "integrity-relations-least-model",
       "kind": "invariant",
       "statement": "For a program of derived relations that the Lean stratification check wf accepts and the checker solve solves, the solved table is exactly the least-model meaning Least: a tuple is in it iff it is in every interpretation that agrees with the lower strata and is closed under the clauses of its stratum.",
@@ -21169,7 +21186,7 @@
       "claim": "language-construct-rules",
       "kind": "test",
       "ref": "tests/core/language.test.js#the primitive catalogue is the fixed set pinned to the kernel and each entry is complete",
-      "description": "The catalogue is exactly the 34 primitives, each with arity, forms, null handling, the kernel function it mirrors, its semantics and its static check."
+      "description": "The catalogue is exactly the 36 primitives, each with arity, forms, null handling, the kernel function it mirrors, its semantics and its static check."
     },
     {
       "id": "ev-language-construct-rules-15",
@@ -22591,6 +22608,20 @@
       "kind": "test",
       "ref": "tests/core/derivations.test.js#a read with a header loads once with no needs then its needs together in one round which no need round counts",
       "description": "runDerivation loads the header with no needs, then the needs in one round; a command asks for the extra need decide names and counts only that against need rounds; a commit that lost its race is decided again, at most retries times."
+    },
+    {
+      "id": "ev-language-grapheme-emoji-1",
+      "claim": "language-grapheme-emoji",
+      "kind": "test",
+      "ref": "tests/core/language.test.js#graphemes and is_emoji validate and give Strata results for each case of its table",
+      "description": "Each case of Strata's table (emoji sequences, flags, keycaps, skin tones, text-default emoji with and without VS16, digits, letters, two emoji, the empty string): the count and the is-emoji answer, both as the evaluator gives them."
+    },
+    {
+      "id": "ev-language-grapheme-emoji-2",
+      "claim": "language-grapheme-emoji",
+      "kind": "test",
+      "ref": "tests/core/language.test.js#graphemes and is_emoji give null on null and an error on any other kind",
+      "description": "A null operand gives null and an integer operand is an error, for both functions."
     },
     {
       "id": "ev-language-checked-arithmetic-1",

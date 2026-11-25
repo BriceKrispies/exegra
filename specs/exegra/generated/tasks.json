@@ -1,10 +1,10 @@
 {
   "format": "exegra-tasks",
-  "semanticHash": "0cb5a06fddaeda",
+  "semanticHash": "1188f0c674a2b9",
   "summary": {
     "byType": {
-      "gap": 269,
-      "inconclusive-claim": 56,
+      "gap": 270,
+      "inconclusive-claim": 58,
       "not-implemented": 10,
       "traceability": 0,
       "undeclared-realisation": 11,
@@ -13,7 +13,7 @@
       "validation": 0,
       "violated-claim": 2
     },
-    "total": 534
+    "total": 537
   },
   "tasks": [
     {
@@ -788,7 +788,7 @@
       "type": "inconclusive-claim"
     },
     {
-      "detail": "Only test evidence (\"ev-function-branch-coverage-1\", \"ev-function-branch-coverage-2\", \"ev-function-branch-coverage-3\", \"ev-function-branch-coverage-4\" and \"ev-function-branch-coverage-5\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "detail": "Only test evidence (\"ev-function-branch-coverage-1\", \"ev-function-branch-coverage-2\", \"ev-function-branch-coverage-3\" and \"ev-function-branch-coverage-5\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
       "entities": [
         "function-branch-coverage",
         "generation-readiness",
@@ -796,7 +796,6 @@
         "ev-function-branch-coverage-1",
         "ev-function-branch-coverage-2",
         "ev-function-branch-coverage-3",
-        "ev-function-branch-coverage-4",
         "ev-function-branch-coverage-5"
       ],
       "id": "claim:function-branch-coverage:inconclusive",
@@ -1172,6 +1171,24 @@
       "type": "inconclusive-claim"
     },
     {
+      "detail": "Only test evidence (\"ev-language-grapheme-emoji-1\" and \"ev-language-grapheme-emoji-2\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "entities": [
+        "language-grapheme-emoji",
+        "generation-readiness",
+        "validator",
+        "ev-language-grapheme-emoji-1",
+        "ev-language-grapheme-emoji-2"
+      ],
+      "id": "claim:language-grapheme-emoji:inconclusive",
+      "severity": "medium",
+      "source": {
+        "column": 5,
+        "line": 19078
+      },
+      "title": "Claim \"language-grapheme-emoji\" is inconclusive",
+      "type": "inconclusive-claim"
+    },
+    {
       "detail": "Only test evidence (\"ev-integrity-relations-atoms\", \"ev-integrity-relations-least\", \"ev-integrity-relations-mutations\", \"ev-integrity-relations-diagnostics\" and \"ev-integrity-relations-atom-choice\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
       "entities": [
         "integrity-relations-evaluated",
@@ -1187,7 +1204,7 @@
       "severity": "medium",
       "source": {
         "column": 5,
-        "line": 19122
+        "line": 19139
       },
       "title": "Claim \"integrity-relations-evaluated\" is inconclusive",
       "type": "inconclusive-claim"
@@ -1208,7 +1225,7 @@
       "severity": "medium",
       "source": {
         "column": 5,
-        "line": 19139
+        "line": 19156
       },
       "title": "Claim \"integrity-relations-agree-with-lean-and-nemo\" is inconclusive",
       "type": "inconclusive-claim"
@@ -1231,7 +1248,7 @@
       "severity": "medium",
       "source": {
         "column": 5,
-        "line": 19156
+        "line": 19173
       },
       "title": "Claim \"admit-never-writes-a-rejected-change\" is inconclusive",
       "type": "inconclusive-claim"
@@ -1252,7 +1269,7 @@
       "severity": "medium",
       "source": {
         "column": 5,
-        "line": 19170
+        "line": 19187
       },
       "title": "Claim \"admit-privilege-and-guarantee-changes-need-acknowledgement\" is inconclusive",
       "type": "inconclusive-claim"
@@ -1271,7 +1288,7 @@
       "severity": "medium",
       "source": {
         "column": 5,
-        "line": 19183
+        "line": 19200
       },
       "title": "Claim \"admit-requirement-claims-pend-on-realisation\" is inconclusive",
       "type": "inconclusive-claim"
@@ -1290,7 +1307,7 @@
       "severity": "medium",
       "source": {
         "column": 5,
-        "line": 19197
+        "line": 19214
       },
       "title": "Claim \"claim-strength-names-weak-checks\" is inconclusive",
       "type": "inconclusive-claim"
@@ -1309,7 +1326,7 @@
       "severity": "medium",
       "source": {
         "column": 5,
-        "line": 19210
+        "line": 19227
       },
       "title": "Claim \"claim-strength-grounding\" is inconclusive",
       "type": "inconclusive-claim"
@@ -1326,7 +1343,7 @@
       "severity": "medium",
       "source": {
         "column": 5,
-        "line": 19223
+        "line": 19240
       },
       "title": "Claim \"admit-flags-weak-new-claims\" is inconclusive",
       "type": "inconclusive-claim"
@@ -1362,7 +1379,7 @@
       "severity": "medium",
       "source": {
         "column": 5,
-        "line": 19237
+        "line": 19254
       },
       "title": "Claim \"residency-rules-checked\" is inconclusive",
       "type": "inconclusive-claim"
@@ -1406,7 +1423,7 @@
       "severity": "medium",
       "source": {
         "column": 5,
-        "line": 19254
+        "line": 19271
       },
       "title": "Claim \"pooled-quotas-executable\" is inconclusive",
       "type": "inconclusive-claim"
@@ -1422,7 +1439,7 @@
       "severity": "medium",
       "source": {
         "column": 5,
-        "line": 19272
+        "line": 19289
       },
       "title": "Claim \"machine-singleton-key\" is inconclusive",
       "type": "inconclusive-claim"
@@ -1440,9 +1457,26 @@
       "severity": "medium",
       "source": {
         "column": 5,
-        "line": 19288
+        "line": 19305
       },
       "title": "Claim \"specification-manifest-parts\" is inconclusive",
+      "type": "inconclusive-claim"
+    },
+    {
+      "detail": "Only test evidence (\"ev-layers-cache-identical\" and \"ev-layers-cache-read-only\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "entities": [
+        "product-layers-share-platform-analysis",
+        "spec-layers",
+        "ev-layers-cache-identical",
+        "ev-layers-cache-read-only"
+      ],
+      "id": "claim:product-layers-share-platform-analysis:inconclusive",
+      "severity": "medium",
+      "source": {
+        "column": 5,
+        "line": 19318
+      },
+      "title": "Claim \"product-layers-share-platform-analysis\" is inconclusive",
       "type": "inconclusive-claim"
     },
     {
@@ -2157,7 +2191,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 19078
+        "line": 19095
       },
       "title": "Claim \"integrity-relations-least-model\" is not evaluated",
       "type": "unevaluated-claim"
@@ -2173,7 +2207,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 19100
+        "line": 19117
       },
       "title": "Claim \"integrity-relations-holds-by-reflection\" is not evaluated",
       "type": "unevaluated-claim"
@@ -7977,13 +8011,27 @@
     {
       "detail": "Specification gap gap.no-fault-model.",
       "entities": [
+        "language-grapheme-emoji"
+      ],
+      "id": "diag:gap.no-fault-model:language-grapheme-emoji",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 19078
+      },
+      "title": "Claim \"language-grapheme-emoji\" is evaluated under no fault model, though this specification declares one.",
+      "type": "gap"
+    },
+    {
+      "detail": "Specification gap gap.no-fault-model.",
+      "entities": [
         "integrity-relations-least-model"
       ],
       "id": "diag:gap.no-fault-model:integrity-relations-least-model",
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 19078
+        "line": 19095
       },
       "title": "Claim \"integrity-relations-least-model\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -7997,7 +8045,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 19100
+        "line": 19117
       },
       "title": "Claim \"integrity-relations-holds-by-reflection\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -8011,7 +8059,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 19122
+        "line": 19139
       },
       "title": "Claim \"integrity-relations-evaluated\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -8025,7 +8073,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 19139
+        "line": 19156
       },
       "title": "Claim \"integrity-relations-agree-with-lean-and-nemo\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -8039,7 +8087,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 19237
+        "line": 19254
       },
       "title": "Claim \"residency-rules-checked\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -8053,7 +8101,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 19254
+        "line": 19271
       },
       "title": "Claim \"pooled-quotas-executable\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
@@ -8067,7 +8115,7 @@
       "severity": "low",
       "source": {
         "column": 5,
-        "line": 19272
+        "line": 19289
       },
       "title": "Claim \"machine-singleton-key\" is evaluated under no fault model, though this specification declares one.",
       "type": "gap"
