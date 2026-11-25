@@ -207,7 +207,7 @@ function tokenize(source) {
 }
 
 /** The call forms: the token, the number of arguments. */
-const CALLS = Object.freeze({ is_null: 1, len: 1, lower: 1, contains: 2, starts_with: 2, is_slug: 1, if: 3, ms_between: 2, days: 1, hours: 1, minutes: 1, concat: 2, text: 1 });
+const CALLS = Object.freeze({ is_null: 1, len: 1, lower: 1, contains: 2, starts_with: 2, is_slug: 1, if: 3, ms_between: 2, days: 1, hours: 1, minutes: 1, concat: 2, text: 1, ancestor_of: 4 });
 
 /**
  * @typedef {{k: string, pos: number, [key: string]: any}} Node
@@ -302,7 +302,7 @@ function parse(source) {
     at++;
     if (tok === undefined) throw new Problem('layer.expr-syntax', pos, 'unexpected end of the text');
     if (tok.t === 'int') return { k: 'lit', pos, shape: 'int' };
-    if (tok.t === 'str') return { k: 'lit', pos, shape: 'str' };
+    if (tok.t === 'str') return { k: 'lit', pos, shape: 'str', text: tok.v };
     if (tok.t === 'sym' && tok.v === '(') { const inner = level0(); expect(')'); return inner; }
     if (tok.t === 'sym' && tok.v === '[') {
       let n = 0;
@@ -424,6 +424,20 @@ function check(tree, env) {
           }
           case 'starts_with': expect(sh(a[0]), ['str'], 'starts_with', a[0].pos); expect(sh(a[1]), ['str'], 'starts_with', a[1].pos); return 'bool';
           case 'is_slug': expect(sh(a[0]), ['str'], 'is_slug', a[0].pos); return 'bool';
+          case 'ancestor_of': {
+            // expr.rs check, Expr::AncestorOf (WG-5510): the object type and field are string literals, read at check time.
+            // Refusals follow language-eval.js: a non-literal is a syntax refusal, a bad field or an empty object type too.
+            expect(sh(a[0]), ['ref'], 'ancestor_of', a[0].pos);
+            expect(sh(a[1]), ['ref'], 'ancestor_of', a[1].pos);
+            const literal = (/** @type {Node} */ arg) => {
+              if (arg.k !== 'lit' || arg.shape !== 'str') throw new Problem('layer.expr-syntax', arg.pos, 'ancestor_of takes a string literal here');
+              return String(arg.text);
+            };
+            const object = literal(a[2]), via = literal(a[3]);
+            if (!isFieldId(via)) throw new Problem('layer.expr-unknown-field', a[3].pos, `invalid field identifier: ${JSON.stringify(via)}`);
+            if (object === '') throw new Problem('layer.expr-syntax', n.pos, 'ancestor_of names an empty object type');
+            return 'bool';
+          }
           case 'ms_between': for (const arg of a) expect(sh(arg), ['time'], 'ms_between', arg.pos); return 'int';
           case 'days': case 'hours': case 'minutes': expect(sh(a[0]), ['int'], n.name, a[0].pos); return 'int';
           case 'concat': for (const arg of a) expect(sh(arg), ['str'], 'concat', arg.pos); return 'str';

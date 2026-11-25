@@ -91,7 +91,7 @@ const MENTIONS_FIELD = [
   'Contains{haystack, needle} => call mentions-field(haystack) || call mentions-field(needle), StartsWith{text, prefix} => call mentions-field(text) || call mentions-field(prefix)',
   'If{cond, then: t, otherwise} => call mentions-field(cond) || call mentions-field(t) || call mentions-field(otherwise)',
   'Arith{left, right} => call mentions-field(left) || call mentions-field(right), MsBetween{from: a, to: b} => call mentions-field(a) || call mentions-field(b)',
-  'Duration{amount} => call mentions-field(amount), Concat{left, right} => call mentions-field(left) || call mentions-field(right), Text(a) => call mentions-field(a) }',
+  'Duration{amount} => call mentions-field(amount), Concat{left, right} => call mentions-field(left) || call mentions-field(right), Text(a) => call mentions-field(a), AncestorOf{x: p, y: q, object: o, via: v} => call mentions-field(p) || call mentions-field(q) || call mentions-field(o) || call mentions-field(v) }',
 ].join(', ');
 /** References to the fixtures below, as examples write them. */
 const TENANT = { fixture: 'tenant-alpha' };
@@ -364,6 +364,7 @@ const FUNCTIONS = [
       { args: { e: { And: [{ HasRole: 'editor' }, { Not: { IsNull: varOf('New', 'title') } }] } }, result: true },
       { args: { e: { If: { cond: lit({ Bool: true }), then: 'Now', otherwise: { Through: { scope: 'New', field: 'author', target: 'name' } } } } }, result: true },
       { args: { e: { Or: [] } }, result: false },
+      { args: { e: { AncestorOf: { x: lit({ Ref: 1 }), y: varOf('Record', 'parent'), object: lit({ Str: 'comment' }), via: lit({ Str: 'parent' }) } } }, result: true },
       { args: { e: { Param: 'tag' } }, result: false },
       { args: { e: { Len: varOf('Record', 'tags') } }, result: true },
       { args: { e: { Lower: varOf('Old', 'title') } }, result: true },
@@ -490,6 +491,15 @@ const FUNCTIONS = [
 /** @param {(d: any) => void} [mutate] @param {{generation?: boolean}} [opts] */
 export function spec(mutate = () => {}, { generation = true } = {}) {
   const d = JSON.parse(languageSpec(undefined, { generation }));
+  // Strata's ancestor_of (WG-5510), declared as crates/spec-compiler/tests/fixtures/language/spec.jsonc declares it.
+  const ancestorExpr = (/** @type {string} */ name) => ({ name, type: 'expr' });
+  d.types.find((/** @type {any} */ t) => t.id === 'expr').variants.push(
+    { name: 'AncestorOf', fields: [ancestorExpr('x'), ancestorExpr('y'), ancestorExpr('object'), ancestorExpr('via')] });
+  const ifAt = d.languages[0].operators.findIndex((/** @type {any} */ o) => o.name === 'if');
+  d.languages[0].operators.splice(ifAt, 0, {
+    name: 'ancestor-of', variant: 'AncestorOf', syntax: { form: 'call', token: 'ancestor_of' },
+    operands: ['ref', 'ref', 'str', 'str'], result: 'bool', nulls: 'propagate', primitive: 'ancestor-of',
+  });
   d.types.push(...structuredClone(TYPES));
   d.functions = structuredClone(FUNCTIONS);
   d.exampleFixtures = structuredClone(EXAMPLE_FIXTURES);

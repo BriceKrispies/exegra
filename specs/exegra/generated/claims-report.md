@@ -3718,7 +3718,7 @@ Every run of an engine input that the engine accepts stops: its outcome is never
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.runInput_terminates", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.runInput".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-25T04:49:12.921Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-25T06:32:13.236Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.runInput_terminates" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.runInput.
 
 **Holds only if**
@@ -3748,7 +3748,7 @@ The engine the JavaScript shell calls (engine.run at the Lean call boundary) is 
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Api.runAny_eq_parse_call", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.runAny", "Exegra.Api.call".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-25T04:49:12.921Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-25T06:32:13.236Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Api.runAny_eq_parse_call" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.runAny, Exegra.Api.call.
 
 **Holds only if**
@@ -3778,7 +3778,7 @@ No two functions registered at the Lean call boundary share a name, so a name se
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Api.registry_names_nodup", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Api.registry".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-25T04:49:12.921Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-25T06:32:13.236Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Api.registry_names_nodup" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Api.registry.
 
 **Holds only if**
@@ -3946,7 +3946,7 @@ The engine the application runs (Exegra.Impl.runAnyValue, registered as engine.r
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Impl.runAnyValue_eq", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Impl.runAnyValue", "Exegra.runAnyValue".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-25T04:49:12.921Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-25T06:32:13.236Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Impl.runAnyValue_eq" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Impl.runAnyValue, Exegra.runAnyValue.
 
 **Holds only if**
@@ -3976,7 +3976,7 @@ A call of engine.run at the Lean call boundary computes the definition of the se
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Api.call_engine_run_spec", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Api.call", "Exegra.runAnyValue".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-25T04:49:12.921Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-25T06:32:13.236Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Api.call_engine_run_spec" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Api.call, Exegra.runAnyValue.
 
 **Holds only if**
@@ -4006,7 +4006,7 @@ The in-place JSON writer the engine writes traces with (Exegra.Impl.JsonOut.writ
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Impl.JsonOut.write'_eq", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Impl.JsonOut.write'", "Exegra.Json.write".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-25T04:49:12.921Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-25T06:32:13.236Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Impl.JsonOut.write'_eq" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Impl.JsonOut.write', Exegra.Json.write.
 
 **Holds only if**
@@ -4375,7 +4375,7 @@ The semantic hash of a model depends only on its schema version, its vocabulary 
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Model.Model.semanticHash_presentation", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Model.Model.semanticHash".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-25T04:49:12.921Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-25T06:32:13.236Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Model.Model.semanticHash_presentation" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Model.Model.semanticHash.
 
 **Holds only if**
@@ -4405,7 +4405,7 @@ Reordering the members of objects, at every depth, in the vocabulary and in the 
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Hash.semanticHash_key_order", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Hash.semanticHash".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-25T04:49:12.921Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-25T06:32:13.236Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Hash.semanticHash_key_order" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Hash.semanticHash.
 
 **Holds only if**
@@ -4435,7 +4435,7 @@ The semantic hash that runs (Exegra.Hash.semanticHash': keys converted once for 
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Hash.semanticHash'_eq", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Hash.semanticHash'", "Exegra.Hash.semanticHash".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-25T04:49:12.921Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-25T06:32:13.236Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Hash.semanticHash'_eq" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Hash.semanticHash', Exegra.Hash.semanticHash.
 
 **Holds only if**
@@ -4465,7 +4465,7 @@ A call of hash.semantic at the Lean call boundary returns the definition of the 
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Api.call_hash_semantic", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Api.call", "Exegra.Hash.semanticHash".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-25T04:49:12.921Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-25T06:32:13.236Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Api.call_hash_semantic" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Api.call, Exegra.Hash.semanticHash.
 
 **Holds only if**
@@ -4495,7 +4495,7 @@ In a derived model whose diagnostics contain no reference diagnostic (ref.unreso
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Model.derive_refs_resolve", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Model.derive".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-25T04:49:12.921Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-25T06:32:13.236Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Model.derive_refs_resolve" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Model.derive.
 
 **Holds only if**
@@ -4525,7 +4525,7 @@ Model derivation at the Lean call boundary (model.derive) answers every argument
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Api.call_model_derive_total", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Api.call".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-25T04:49:12.921Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-25T06:32:13.236Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Api.call_model_derive_total" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Api.call.
 
 **Holds only if**
@@ -6691,7 +6691,7 @@ For a program of derived relations that the Lean stratification check wf accepts
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Integrity.least_eq_table", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Integrity.Least", "Exegra.Integrity.solve", "Exegra.Integrity.wf".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-25T04:49:12.921Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-25T06:32:13.236Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Integrity.least_eq_table" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Integrity.Least, Exegra.Integrity.solve, Exegra.Integrity.wf.
 
 **Holds only if**
@@ -6716,7 +6716,7 @@ A rule that the Lean checker eval accepts over the solved table of a stratified 
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Integrity.holds_of_eval", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Integrity.Least", "Exegra.Integrity.eval", "Exegra.Integrity.solve".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-25T04:49:12.921Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-25T06:32:13.236Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Integrity.holds_of_eval" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Integrity.Least, Exegra.Integrity.eval, Exegra.Integrity.solve.
 
 **Holds only if**
