@@ -19093,6 +19093,23 @@
       }
     },
     {
+      "id": "language-ancestor-of",
+      "kind": "invariant",
+      "statement": "The primitive catalogue holds ancestor-of, and the language evaluator gives for it Strata's results (WG-5510): ancestor_of(x, y, object, field) with x and y references and object and field string literals is true when x is y or one of its ancestors, the walk from y following the single reference field of the object type; it is false when the walk ends at a null field or an absent record; and it is an error, never a silent false, when the walk takes more than 32 hops, returns to a record it visited, or meets a record the lookup does not cover. Null on a null reference, an error on any other kind.",
+      "rationale": "WG-5510 (Strata hierarchies and recursion): Strata's tenant rule language gains a bounded ancestor test over a self-reference, so that a policy can grant a manager read over a subtree and a comment can be tested against its thread. Exegra's validation of Strata's specification refuses an operator whose primitive is not in its catalogue, so the primitive enters the catalogue before Strata's specification uses it. Its semantics are the kernel's (crates/kernel/src/expr.rs, Expr::AncestorOf, ANCESTOR_HOPS = 32); Exegra's evaluator must agree with the kernel's on every case of the shared table in tests/core/language.test.js.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
       "id": "integrity-relations-least-model",
       "kind": "invariant",
       "statement": "For a program of derived relations that the Lean stratification check wf accepts and the checker solve solves, the solved table is exactly the least-model meaning Least: a tuple is in it iff it is in every interpretation that agrees with the lower strata and is closed under the clauses of its stratum.",
@@ -21186,7 +21203,7 @@
       "claim": "language-construct-rules",
       "kind": "test",
       "ref": "tests/core/language.test.js#the primitive catalogue is the fixed set pinned to the kernel and each entry is complete",
-      "description": "The catalogue is exactly the 36 primitives, each with arity, forms, null handling, the kernel function it mirrors, its semantics and its static check."
+      "description": "The catalogue is exactly the 37 primitives, each with arity, forms, null handling, the kernel function it mirrors, its semantics and its static check."
     },
     {
       "id": "ev-language-construct-rules-15",
@@ -22622,6 +22639,34 @@
       "kind": "test",
       "ref": "tests/core/language.test.js#graphemes and is_emoji give null on null and an error on any other kind",
       "description": "A null operand gives null and an integer operand is an error, for both functions."
+    },
+    {
+      "id": "ev-language-ancestor-of-1",
+      "claim": "language-ancestor-of",
+      "kind": "test",
+      "ref": "tests/core/language.test.js#ancestor_of validates and answers the walk through a self-reference",
+      "description": "The rule language with ancestor_of validates; a record is its own ancestor; an ancestor reached through a chain is true; a walk that ends at a root is false."
+    },
+    {
+      "id": "ev-language-ancestor-of-2",
+      "claim": "language-ancestor-of",
+      "kind": "test",
+      "ref": "tests/core/language.test.js#ancestor_of is null on a null operand and an error on a non-reference operand",
+      "description": "A null reference operand gives null; an integer operand is an error."
+    },
+    {
+      "id": "ev-language-ancestor-of-3",
+      "claim": "language-ancestor-of",
+      "kind": "test",
+      "ref": "tests/core/language.test.js#ancestor_of allows 32 hops and refuses longer walks cycles and uncovered records",
+      "description": "A walk of 32 hops answers; 33 hops is an error; a cycle is an error; a record the lookup does not cover is an error naming the lack."
+    },
+    {
+      "id": "ev-language-ancestor-of-4",
+      "claim": "language-ancestor-of",
+      "kind": "test",
+      "ref": "tests/core/language.test.js#ancestor_of reads its object type and field only from string literals",
+      "description": "An object type that is not a string literal, and a field that is not a field identifier, are errors."
     },
     {
       "id": "ev-language-checked-arithmetic-1",

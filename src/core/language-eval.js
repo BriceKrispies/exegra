@@ -148,6 +148,25 @@ function namesOf(info, e) {
 /** The label a primitive's errors name: its operator's token (and, or, not, in, len, ...). @param {any} op */
 const label = (op) => (typeof op.syntax?.token === 'string' ? op.syntax.token : op.name);
 
+/** The most reference hops ancestor-of follows (Strata WG-5510, expr.rs ANCESTOR_HOPS). */
+export const ANCESTOR_HOPS = 32;
+
+/**
+ * The text of a string literal operand that must be a literal (ancestor-of's object type and field): the operand is
+ * not evaluated, so it is read at check time too. Anything else is an error.
+ * @param {Info} info @param {UnionValue} e @param {any} op
+ */
+function literalText(info, e, op) {
+  if (!(e instanceof UnionValue) || operatorFor(info, e).primitive !== 'literal') {
+    throw new LangError(`${label(op)} takes a string literal here`);
+  }
+  const value = Object.values(e.fields).find((x) => x instanceof UnionValue && x.type === info.valuesId);
+  if (!(value instanceof UnionValue) || info.variantKind.get(value.variant) !== 'string') {
+    throw new LangError(`${label(op)} takes a string literal here`);
+  }
+  return String(Object.values(value.fields)[0]);
+}
+
 /**
  * An operand of checked arithmetic: an integer within ±(2^53-1), or the error integer-overflow. Example values are
  * decoded within that range already; the test keeps the evaluator correct for any number it is handed.
@@ -361,6 +380,35 @@ export function evalLanguage(model, lang, expr, env, lookup = null) {
         if (kind(a) !== 'string') throw typeError(label(op), a);
         return mk('bool', isEmojiText(String(payload(a))));
       }
+      case 'ancestor-of': {
+        // expr.rs Expr::AncestorOf (WG-5510): the walk from y through the reference field of the object type reads each
+        // record from the lookup's coverage of that object type. A record the lookup does not cover is an error (the
+        // caller loads it and asks again); a covered record that is absent ends the walk.
+        const x = ev(args[0]), y = ev(args[1]);
+        const object = literalText(info, args[2], op), via = literalText(info, args[3], op);
+        if (isNull(x) || isNull(y)) return NULL();
+        if (kind(x) !== 'ref') throw typeError(label(op), x);
+        if (kind(y) !== 'ref') throw typeError(label(op), y);
+        if (!isFieldName(via)) throw new LangError(`invalid field identifier: ${rustDebugStr(via)}`);
+        const covered = lookup instanceof Map ? lookup.get(object) : undefined;
+        const target = String(payload(x));
+        let cur = String(payload(y));
+        const visited = new Set();
+        for (let hops = 0; ; hops += 1) {
+          if (cur === target) return mk('bool', true);
+          if (hops === ANCESTOR_HOPS) throw new LangError(`ancestor-of: the walk is longer than ${ANCESTOR_HOPS} hops`);
+          if (!(covered instanceof Map) || !covered.has(cur)) throw new LangError(`the lookup does not cover ${object} ${cur}`);
+          visited.add(cur);
+          const record = covered.get(cur);
+          if (!(record instanceof Map)) return mk('bool', false);
+          const v = record.get(via) ?? NULL();
+          if (isNull(v)) return mk('bool', false);
+          if (kind(v) !== 'ref') throw typeError('following a reference', v);
+          const next = String(payload(v));
+          if (visited.has(next)) throw new LangError('ancestor-of: the references form a cycle');
+          cur = next;
+        }
+      }
       case 'add-checked': case 'sub-checked': case 'mul-checked': {
         // Both operands first, left to right; then nulls; then the left's kind, then the right's.
         const a = ev(args[0]), b = ev(args[1]);
@@ -541,6 +589,14 @@ export function checkLanguage(model, lang, expr, env) {
         expect(first, ops[0], what);
         expect(second, ops[1], what);
         if (op.primitive === 'contains' && first === strShape) expect(second, [strShape], what);
+        return result(op);
+      }
+      case 'ancestor-of': {
+        expect(sh(args[0]), ops[0], what);
+        expect(sh(args[1]), ops[1], what);
+        const object = literalText(info, args[2], op), via = literalText(info, args[3], op);
+        if (!isFieldName(via)) throw new LangError(`invalid field identifier: ${rustDebugStr(via)}`);
+        if (object === '') throw new LangError(`${what} names an empty object type`);
         return result(op);
       }
       case 'if': {

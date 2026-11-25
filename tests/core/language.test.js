@@ -53,7 +53,7 @@ test('every language code has a negative fixture', () => {
 
 test('the primitive catalogue is the fixed set pinned to the kernel and each entry is complete', () => {
   assert.deepEqual(Object.keys(LANGUAGE_PRIMITIVES).sort(), [
-    'add-checked', 'and3', 'concat-checked', 'contains', 'days-ms', 'eq', 'ge', 'graphemes', 'gt', 'has-role', 'hours-ms', 'if', 'in-list',
+    'add-checked', 'ancestor-of', 'and3', 'concat-checked', 'contains', 'days-ms', 'eq', 'ge', 'graphemes', 'gt', 'has-role', 'hours-ms', 'if', 'in-list',
     'is-emoji', 'is-null', 'is-slug', 'le', 'len', 'list-literal', 'literal', 'lower', 'lt', 'minutes-ms', 'mul-checked', 'ne', 'not3', 'now',
     'or3', 'param', 'principal', 'starts-with', 'sub-checked', 'through', 'time-difference', 'to-text', 'var',
   ]);
@@ -166,6 +166,85 @@ test('graphemes and is_emoji give null on null and an error on any other kind', 
   assert.equal(run('IsEmoji', 'Null').fields.value.variant, 'Null');
   assert.equal(run('Graphemes', { Int: 1 }).variant, 'Err');
   assert.equal(run('IsEmoji', { Int: 1 }).variant, 'Err');
+});
+
+// ancestor_of (Strata WG-5510): the walk through a self-reference, bounded at 32 hops. The lookup stands for the
+// records the snapshot covers: for each object type, a map from record id to the record's fields, or to null when the
+// record is covered and absent. Record ids are u64 in the model, so the names below are numbers.
+const ID = { root: 1, a: 100, b: 101, z: 102, zz: 103 };
+const nid = (/** @type {string} */ name) => (name in ID ? ID[name] : Number(name.slice(1)) + 1);
+
+const withAncestor = (/** @type {any} */ d) => {
+  d.types.find((/** @type {any} */ t) => t.id === 'expr').variants.push(
+    { name: 'AncestorOf', tuple: true, fields: [
+      { name: 'x', type: 'expr' }, { name: 'y', type: 'expr' }, { name: 'object', type: 'expr' }, { name: 'via', type: 'expr' }] });
+  d.languages[0].operators.push(
+    { name: 'ancestor-of', variant: 'AncestorOf', syntax: { form: 'call', token: 'ancestor_of' },
+      operands: ['ref', 'ref', 'str', 'str'], result: 'bool', nulls: 'propagate', primitive: 'ancestor-of' });
+};
+
+/** The rule language with ancestor_of, and a runner over its operands (JSON expressions) and a lookup. */
+const ancestorLanguage = () => {
+  const r = analyzeSpec(spec(withAncestor));
+  const model = /** @type {any} */ (r.model);
+  const lang = model.entities.get('rule-language');
+  const exprT = typeStructure(model, 'expr');
+  const valueT = typeStructure(model, 'value');
+  /** @param {any} x @param {any} y @param {Record<string, any>|null} covered @param {any} [object] @param {any} [via] */
+  const run = (x, y, covered, object = { Str: 'comment' }, via = { Str: 'parent' }) => {
+    const lit = (/** @type {any} */ v) => ({ Lit: v });
+    const expr = decodeValue(exprT, { AncestorOf: { x: lit(x), y: lit(y), object: lit(object), via: lit(via) } }, 'expr');
+    const lookup = covered === null ? null : new Map([['comment', new Map(Object.entries(covered).map(([id, rec]) => [id,
+      rec === null ? null : new Map(Object.entries(rec).map(([f, v]) => [f, decodeValue(valueT, v, 'value')]))]))]]);
+    return evalLanguage(model, lang, expr, {}, lookup);
+  };
+  return { errors: errors(r), run };
+};
+
+/** Records root <- c1 <- c2 <- ... <- cn, keyed by their ids: each record's parent is the one before it; root has none. */
+const chain = (/** @type {number} */ n) => {
+  const covered = { [ID.root]: { parent: 'Null' } };
+  for (let i = 1; i <= n; i += 1) covered[nid(`c${i}`)] = { parent: { Ref: i === 1 ? ID.root : nid(`c${i - 1}`) } };
+  return covered;
+};
+
+const ref = (/** @type {string} */ name) => ({ Ref: nid(name) });
+/** The boolean of an Ok result, or the message of an Err one. */
+const answer = (/** @type {any} */ r) => (r.variant === 'Ok' ? r.fields.value.fields.value : r.fields.error);
+
+test('ancestor_of validates and answers the walk through a self-reference', () => {
+  const { errors: found, run } = ancestorLanguage();
+  assert.deepEqual(found.map((/** @type {any} */ d) => `${d.code} ${d.message}`), []);
+  const covered = chain(4);
+  assert.equal(answer(run(ref('root'), ref('c4'), covered)), true);
+  assert.equal(answer(run(ref('c2'), ref('c4'), covered)), true);
+  assert.equal(answer(run(ref('c4'), ref('c4'), covered)), true, 'a record counts as its own ancestor');
+  assert.equal(answer(run(ref('c4'), ref('c1'), covered)), false, 'a walk from c1 never meets c4');
+  assert.equal(answer(run(ref('c3'), ref('root'), covered)), false, 'the root has no parent');
+});
+
+test('ancestor_of is null on a null operand and an error on a non-reference operand', () => {
+  const { run } = ancestorLanguage();
+  const covered = chain(2);
+  assert.equal(run('Null', ref('c1'), covered).fields.value.variant, 'Null');
+  assert.equal(run(ref('root'), 'Null', covered).fields.value.variant, 'Null');
+  assert.equal(run({ Int: 1 }, ref('c1'), covered).variant, 'Err');
+});
+
+test('ancestor_of allows 32 hops and refuses longer walks cycles and uncovered records', () => {
+  const { run } = ancestorLanguage();
+  assert.equal(answer(run(ref('root'), ref('c32'), chain(32))), true);
+  assert.match(String(answer(run(ref('root'), ref('c33'), chain(33)))), /longer than 32 hops/);
+  const cyclic = { [ID.a]: { parent: { Ref: ID.b } }, [ID.b]: { parent: { Ref: ID.a } }, [ID.z]: { parent: 'Null' } };
+  assert.match(String(answer(run(ref('z'), ref('a'), cyclic))), /cycle/);
+  const partial = { [nid('c1')]: { parent: { Ref: ID.root } } };
+  assert.match(String(answer(run(ref('zz'), ref('c1'), partial))), /does not cover/);
+});
+
+test('ancestor_of reads its object type and field only from string literals', () => {
+  const { run } = ancestorLanguage();
+  assert.match(String(answer(run(ref('c1'), ref('c1'), chain(1), { Int: 1 }))), /string literal/);
+  assert.match(String(answer(run(ref('c1'), ref('c1'), chain(1), { Str: 'comment' }, { Str: 'Bad Field' }))), /invalid field/);
 });
 
 test('an AST variant holds as many expression operands as its fields of the AST type, or a list', () => {

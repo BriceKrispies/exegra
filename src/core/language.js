@@ -187,6 +187,13 @@ export const LANGUAGE_PRIMITIVES = Object.freeze({
     semantics: 'null gives null; a string gives whether it is exactly one grapheme that is an emoji: a keycap, a flag, a subdivision tag sequence, or ZWJ-joined parts each an emoji presentation or a text-default emoji followed by VS16 or a skin tone (a VS15 makes it not an emoji); anything else is an error.',
     check: 'check, Expr::IsEmoji: the operand has the Str or any shape; the result is Bool.',
   },
+  // Bounded reference ancestry (Strata WG-5510): is x the record y or one of its ancestors through a self-reference.
+  'ancestor-of': {
+    arity: 4, forms: ['call'], nulls: 'propagate',
+    kernel: 'crates/kernel/src/expr.rs: eval, Expr::AncestorOf',
+    semantics: 'the first two operands are references (null gives null); the third and fourth are string literals naming an object type and a field of it that is a single reference to that type. Walking from y through the field, the answer is true when a record equals x (y itself counts), false when the walk ends at a record whose field is null or whose target is absent, and an error when the walk would take more than 32 hops, when it returns to a record it already visited (a cycle), or when the lookup does not cover a record it reads. Every operand is evaluated, left to right, before the nulls are read; a non-reference operand is an error.',
+    check: 'check, Expr::AncestorOf: the first two operands have the Ref or any shape, the last two are string literals (the field a valid field identifier, the object type non-empty); the result is Bool. That the object type exists and the field is a single reference to it is checked by the kernel against the schema, where the object is known.',
+  },
   // Checked integer and time arithmetic, durations and text (Strata D-6540 to D-6543, CMS-1540 to CMS-1546). Every
   // integer an operand holds or a result would be lies in -(2^53-1) to 2^53-1, the range Rust's i64 and JavaScript's
   // numbers both hold exactly; anything outside it is the error integer-overflow, never a wrapped or rounded value.
