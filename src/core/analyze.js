@@ -1,5 +1,6 @@
 // One entry point for "what does this source text mean, and is it well-formed?"
 import { parseSpec } from './parse.js';
+import { cachedStage } from './derivation-cache.js';
 import { validateModel } from './validate.js';
 
 /** @typedef {import('./types.js').Model} Model */
@@ -22,7 +23,11 @@ export function analyzeSpec(text, parsed) {
   /** @type {Diagnostic[]} */
   let semantic = [];
   if (model) {
-    try { semantic = validateModel(model, structuralErrors ? { claimsOnly: true } : {}); } catch (e) { if (!structuralErrors) throw e; }
+    try {
+      const options = structuralErrors ? { claimsOnly: true } : {};
+      // Cached only when this function parsed the text itself: a caller's `parsed` is trusted but not keyed.
+      semantic = parsed ? validateModel(model, options) : cachedStage('validate', [text, options], () => validateModel(model, options));
+    } catch (e) { if (!structuralErrors) throw e; }
   }
   const all = diagnostics.concat(semantic);
   const rank = { error: 0, warning: 1, info: 2 };

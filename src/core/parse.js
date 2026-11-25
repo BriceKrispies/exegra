@@ -17,6 +17,7 @@
 // await initLean() (src/core/lean.js) first, as src/app/main.js does before opening a project.
 
 import { parseTree, getNodeValue, printParseErrorCode } from 'jsonc-parser';
+import { cachedStage } from './derivation-cache.js';
 import metamodel from './metamodel.json' with { type: 'json' };
 import { CLAIM_METHODS } from './claim-methods.js';
 import { callText } from './lean.js';
@@ -131,6 +132,11 @@ function bare(v) {
  * @returns {{model: Model|null, diagnostics: Diagnostic[]}}
  */
 export function parseSpec(text) {
+  return cachedStage('parse', text, () => deriveSpec(text), (r) => r.model !== null);
+}
+
+/** parseSpec without the persistent cache. @param {string} text @returns {{model: Model|null, diagnostics: Diagnostic[]}} */
+function deriveSpec(text) {
   /** @type {Diagnostic[]} */
   const diagnostics = [];
   const starts = lineIndex(text);

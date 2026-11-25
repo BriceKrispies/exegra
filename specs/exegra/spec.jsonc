@@ -2732,6 +2732,36 @@
       }
     },
     {
+      "id": "derivation-cache",
+      "name": "Derivation cache",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "A persistent, on-disk cache of the stages of model derivation that run in the Lean kernel, so that repeated Exegra processes over the same specification skip them (WG-5636). It wraps derivation from outside: the cached value is what parseSpec and analyzeSpec compute, and a hit is observably identical to a miss.",
+      "responsibilities": [
+        "Key every entry by the SHA-256 of the entry format, the package version, the content hash of Exegra's derivation sources (every file of src/core and of the Lean build in src/engine/lean, by path and bytes), the stage name and the stage's inputs: the specification text (for a layered project the text that already holds every product file's entities) and the options that change the result (claimsOnly). No modification time is read, so editing a specification, a product file, the file project.jsonc names or Exegra itself is a miss",
+        "Cache two stages: parseSpec (the model and its diagnostics, only when the text is usable) and the semantic diagnostics of analyzeSpec (only when analyzeSpec parsed the text itself, never for a caller's own parsed model)",
+        "Encode a stage's value faithfully as tagged JSON (Maps, Sets, objects without a prototype, -0, infinities, undefined, shared references and cycles) or refuse it and cache nothing: a value the encoding cannot reproduce exactly (a function, a class instance, a hole, an accessor) is computed every time",
+        "Store each entry in one file under the cache directory (EXEGRA_MODEL_CACHE_DIR, else model/ under EXEGRA_CACHE_DIR, else the user cache directory: %LOCALAPPDATA%/exegra/cache/model, $XDG_CACHE_HOME/exegra/model or ~/.cache/exegra/model), with a header that repeats the key, the byte count and the SHA-256 of the body",
+        "Write through a temporary sibling and a rename, so a concurrent reader sees a whole entry or none and two writers of one key leave one valid entry; a failed write is ignored",
+        "Treat an entry that is missing, truncated, altered, of another format or under another key as a miss and replace it, never as an error",
+        "Bound the directory: past EXEGRA_MODEL_CACHE_MAX_BYTES (default 512 MiB) delete the least recently used entries down to three quarters of the bound, and delete temporary files a dead writer left more than an hour ago; a hit refreshes the entry's recency",
+        "Do nothing when EXEGRA_NO_CACHE is set (to anything but empty, 0 or false), when the sources cannot be read or outside Node; EXEGRA_CACHE_TRACE=1 reports each hit, miss and store on stderr"
+      ],
+      "unknowns": [
+        "The evaluation of claims is not cached: it runs the verified engine, and a claims run still takes the time of its scenarios after the derivation stages hit. Measured on the Strata specification (about 10,000 entities): validate 13.9 s cold, 1.0 s warm; claims 16.4 s cold, 7.8 s warm.",
+        "The diagnostics of a validate hit are rebuilt as copies: their loc objects are equal to the entities' but no longer the same objects. Nothing reads the identity."
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "js",
+        "modules": [
+          "src/core/derivation-cache.js"
+        ],
+        "notes": "Outside the verdict path: it stores and returns the values of the derivation without changing them; the derivation itself (Lean and the shell code around it) is untouched."
+      }
+    },
+    {
       "id": "claim-strength",
       "name": "Claim strength",
       "parent": "semantic-core",
@@ -2764,6 +2794,8 @@
   // outward dependency of any core module is jsonc-parser.
   "relationships": [
     // -- Semantic core (acyclic by construction)
+    { "id": "parser-calls-derivation-cache", "kind": "calls", "from": "parser", "to": "derivation-cache", "description": "parseSpec asks the cache for the derived model of a text before deriving it." },
+    { "id": "validator-calls-derivation-cache", "kind": "calls", "from": "validator", "to": "derivation-cache", "description": "analyzeSpec asks the cache for the semantic diagnostics of a text before validating it." },
     { "id": "parser-reads-metamodel", "kind": "reads", "from": "parser", "to": "metamodel", "description": "Checks structure and property types against the entity definitions in metamodel.json." },
     { "id": "parser-reads-claim-method-registry", "kind": "reads", "from": "parser", "to": "claim-method-registry", "description": "Imports CLAIM_METHODS to check evaluation parameters." },
     {
@@ -19333,6 +19365,45 @@
       }
     },
     {
+      "id": "derivation-cache-transparent",
+      "kind": "structural",
+      "statement": "A derivation served from the cache is observably identical to one computed: validate and claims print byte-identical output on a hit and on a miss, the encoding rebuilds Maps, Sets, objects without a prototype, -0, shared references and cycles exactly, and with EXEGRA_NO_CACHE set nothing is read or written.",
+      "subjects": [
+        "derivation-cache"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/derivation-cache.test.js (the ev-derivation-cache-* evidence entries). WG-5636.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "derivation-cache-keyed-by-content",
+      "kind": "structural",
+      "statement": "A cached derivation is reused only for the same input contents and the same Exegra derivation sources: changing a specification file, the file the project config names or any source under src/core or src/engine/lean is a miss, and a missing, truncated or altered entry is a miss that is replaced, never an error.",
+      "subjects": [
+        "derivation-cache"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/derivation-cache.test.js (the ev-derivation-cache-* evidence entries). WG-5636.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "derivation-cache-concurrent-safe",
+      "kind": "structural",
+      "statement": "Processes sharing one cache directory at the same time all succeed with the same output and leave only whole entries: a write is a temporary file renamed into place.",
+      "subjects": [
+        "derivation-cache"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/derivation-cache.test.js (the ev-derivation-cache-* evidence entries). WG-5636.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
       "id": "product-layers-share-platform-analysis",
       "kind": "structural",
       "statement": "Validating several sets of product files over one platform text in one process parses the platform text once, and every validation reports exactly what a validation of that set alone reports: the same errors, warnings, gaps, semantic hash and layered hash. The shared platform analysis is read-only, so no validation can alter what the next one sees.",
@@ -23402,6 +23473,48 @@
       "kind": "test",
       "ref": "tests/core/layers-cache.test.js#the shared platform analysis cannot be corrupted by a caller",
       "description": "The cached platform model refuses changes; the combined model is rebuilt for each call."
+    },
+    {
+      "id": "ev-derivation-cache-identical",
+      "claim": "derivation-cache-transparent",
+      "kind": "test",
+      "ref": "tests/core/derivation-cache.test.js#a hit gives byte-identical validate and claims output to a cold run",
+      "description": "Cold, warm and uncached runs of validate and claims print the same bytes; EXEGRA_NO_CACHE=1 writes no entry."
+    },
+    {
+      "id": "ev-derivation-cache-encoding",
+      "claim": "derivation-cache-transparent",
+      "kind": "test",
+      "ref": "tests/core/derivation-cache.test.js#the encoding reproduces Maps and Sets and null prototypes and negative zero and shared references and cycles",
+      "description": "The encoding round-trips the shapes of a derived model and refuses what it cannot reproduce."
+    },
+    {
+      "id": "ev-derivation-cache-inputs",
+      "claim": "derivation-cache-keyed-by-content",
+      "kind": "test",
+      "ref": "tests/core/derivation-cache.test.js#changing a specification file or the project config is a miss",
+      "description": "An edited specification and a project config naming another file are both misses."
+    },
+    {
+      "id": "ev-derivation-cache-sources",
+      "claim": "derivation-cache-keyed-by-content",
+      "kind": "test",
+      "ref": "tests/core/derivation-cache.test.js#editing an Exegra derivation source is a miss",
+      "description": "Editing a file of a copy of src/core changes the source hash and misses."
+    },
+    {
+      "id": "ev-derivation-cache-damaged",
+      "claim": "derivation-cache-keyed-by-content",
+      "kind": "test",
+      "ref": "tests/core/derivation-cache.test.js#a damaged entry is a miss and never an error and is replaced",
+      "description": "A truncated, altered, foreign or empty entry is a miss with the same output, and is rewritten."
+    },
+    {
+      "id": "ev-derivation-cache-concurrent",
+      "claim": "derivation-cache-concurrent-safe",
+      "kind": "test",
+      "ref": "tests/core/derivation-cache.test.js#concurrent processes on one cache all succeed with the same output",
+      "description": "Four processes started together on an empty cache succeed with one output and leave two whole entries."
     }
   ],
 
@@ -24513,6 +24626,31 @@
       ],
       "retention": "In memory in the browser tab: the last 5000 events (src/app/traffic-recorder.js); lost on reload. No durable file yet (WG-4780).",
       "description": "The real run that Live mode replays through this specification: {seq, id, payload, at, inferred?} per event; at (performance.now) is for display only."
+    },
+    {
+      "id": "derivation-cache-entry",
+      "name": "Derivation cache entry",
+      "owner": "derivation-cache",
+      "key": [
+        "stage",
+        "key"
+      ],
+      "fields": [
+        {
+          "name": "stage",
+          "type": "text"
+        },
+        {
+          "name": "key",
+          "type": "hash"
+        },
+        {
+          "name": "bytes",
+          "type": "number"
+        }
+      ],
+      "retention": "One file <stage>-<key>.entry under the cache directory (EXEGRA_MODEL_CACHE_DIR, else model/ under EXEGRA_CACHE_DIR, else %LOCALAPPDATA%/exegra/cache/model or the XDG cache), outside the repository. Written through a temporary sibling and a rename; the least recently used entries are deleted past EXEGRA_MODEL_CACHE_MAX_BYTES (default 512 MiB); deleting the directory loses nothing.",
+      "description": "The encoded value of one derivation stage for one set of inputs and one version of Exegra's derivation sources: a header line (format, key, byte count, SHA-256 of the body) and the body."
     },
     {
       "id": "formal-wasm-build-output",

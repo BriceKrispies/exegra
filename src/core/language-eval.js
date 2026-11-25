@@ -241,7 +241,7 @@ function isEmojiGrapheme(g) {
   if (s.length === 3 && KEYCAP_BASE_RE.test(s[0]) && s[1] === VS16 && s[2] === KEYCAP) return true;
   if (s.length === 2 && REGIONAL_RE.test(s[0]) && REGIONAL_RE.test(s[1])) return true;
   if (s.length >= 3 && s[0] === BLACK_FLAG && s[s.length - 1] === CANCEL_TAG
-    && s.slice(1, -1).every((c) => c.codePointAt(0) >= 0xE0020 && c.codePointAt(0) <= 0xE007E)) return true;
+    && s.slice(1, -1).every((c) => { const p = c.codePointAt(0) ?? 0; return p >= 0xE0020 && p <= 0xE007E; })) return true;
   return g.split(ZWJ).every(isEmojiPart);
 }
 

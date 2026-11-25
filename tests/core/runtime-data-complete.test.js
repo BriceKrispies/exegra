@@ -60,6 +60,7 @@ const STORES = [
   { file: 'tools/record-goldens.js', needle: 'writeFileSync(w.path', locators: ['tests/conformance/goldens/'], store: 'engine-goldens' },
   { file: 'tools/shot.mjs', needle: '.screenshot(', locators: ['tools/shot.mjs'], store: 'screenshot-images' },
   { file: 'tools/build-engine.js', needle: "'--out-dir'", locators: ['src/engine/pkg/'], store: 'engine-build-output' },
+  { file: 'src/core/derivation-cache.js', needle: 'writeFileSync(tmp', locators: ['<stage>-<key>.entry'], store: 'derivation-cache-entry' },
   { file: 'tools/build-formal-wasm.js', fn: 'writeAtomic', locators: ['src/engine/lean/', 'formal-wasm'], store: 'formal-wasm-build-output' },
   { file: 'tools/build-formal-wasm.js', needle: 'writeFileSync(marker', locators: ['.exegra-patches'], store: 'formal-wasm-build-output' },
   { file: 'tools/build-formal-wasm.js', needle: 'writeFileSync(stamp', locators: ['stamp files'], store: 'formal-wasm-build-output' },
