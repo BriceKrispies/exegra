@@ -36,7 +36,8 @@ theorem incTo_guard (L n : Int) : (incTo L).guard.eval [n] = decide (n < L) := r
 /-- **The counter never exceeds its limit**, for every limit `L ≥ 0`, with no bound on runs. -/
 theorem counter_le (L : Int) (hL : 0 ≤ L) :
     (counter L).lts.Invariant (fun s => getAt s 0 ≤ L) := by
-  apply safe_of_inductive (I := fun s => ∃ n, s = [n] ∧ 0 ≤ n ∧ n ≤ L)
+  refine safe_of_inductive (M := (counter L).lts) (I := fun s => ∃ n, s = [n] ∧ 0 ≤ n ∧ n ≤ L)
+    (P := fun s => getAt s 0 ≤ L) ?_ ?_
   · constructor
     · intro s hs
       exact ⟨0, hs, by omega, hL⟩
@@ -85,7 +86,7 @@ theorem ne_neg_one_not_inductive : ¬ unbounded.lts.Inductive (fun s => getAt s 
 
 /-- …yet it is an invariant, proved through the strengthening `0 ≤ n`. -/
 theorem ne_neg_one_invariant : unbounded.lts.Invariant (fun s => getAt s 0 ≠ -1) := by
-  apply safe_of_inductive unbounded_inductive
+  refine safe_of_inductive (P := fun s => getAt s 0 ≠ -1) unbounded_inductive ?_
   intro s hs
   obtain ⟨n, rfl, h0⟩ := hs
   show n ≠ -1
@@ -147,18 +148,18 @@ end Exegra.Core.Examples
 #guard_msgs in
 #print axioms Exegra.Core.LTS.safe_of_inductive
 
-/-- info: 'Exegra.Core.LTS.checkClosed_sound' depends on axioms: [propext] -/
+/-- info: 'Exegra.Core.LTS.checkClosed_sound' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.LTS.checkClosed_sound
 
-/-- info: 'Exegra.Core.Examples.counter_le' depends on axioms: [propext] -/
+/-- info: 'Exegra.Core.Examples.counter_le' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Examples.counter_le
 
-/-- info: 'Exegra.Core.Examples.bounded_not_unbounded' depends on axioms: [propext] -/
+/-- info: 'Exegra.Core.Examples.bounded_not_unbounded' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Examples.bounded_not_unbounded
 
-/-- info: 'Exegra.Core.Examples.mod3_in_range' depends on axioms: [propext] -/
+/-- info: 'Exegra.Core.Examples.mod3_in_range' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Examples.mod3_in_range
