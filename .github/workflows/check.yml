@@ -1,0 +1,91 @@
+# Checks a change on a development branch: the Lean proofs (lake build checks every theorem), the
+# WebAssembly engine, the Rust oracle, the type check, the unit tests, and Exegra's own specification
+# (validate and traceability). It publishes nothing; .github/workflows/pages.yml publishes main.
+
+name: Check
+
+on:
+  push:
+    branches-ignore: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install elan
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      # Same key as the Pages workflow, so a branch restores what main built.
+      - name: Cache the Lean toolchain and the WebAssembly build inputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.elan/toolchains
+            ~/.cache/exegra/formal-wasm
+            formal/.lake
+          key: formal-wasm-${{ runner.os }}-${{ hashFiles('formal/lean-toolchain', 'formal/lakefile.toml', 'formal/lake-manifest.json', 'tools/build-formal-wasm.js', 'formal/wasm/**') }}-${{ hashFiles('formal/**/*.lean') }}
+          restore-keys: |
+            formal-wasm-${{ runner.os }}-${{ hashFiles('formal/lean-toolchain', 'formal/lakefile.toml', 'formal/lake-manifest.json', 'tools/build-formal-wasm.js', 'formal/wasm/**') }}-
+
+      - name: Cache the Rust oracle build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/wasm-bindgen
+            ~/.cargo/registry
+            engine/target
+          key: rust-${{ runner.os }}-${{ hashFiles('engine/Cargo.lock', 'engine/**/Cargo.toml') }}-${{ hashFiles('engine/**/*.rs') }}
+          restore-keys: |
+            rust-${{ runner.os }}-${{ hashFiles('engine/Cargo.lock', 'engine/**/Cargo.toml') }}-
+
+      - run: npm ci
+
+      - name: Check the Lean proofs and build the Lean core to WebAssembly
+        run: node tools/build-formal-wasm.js --jobs 4
+
+      - name: Build the Rust oracle
+        run: |
+          rustup target add wasm32-unknown-unknown
+          want=$(sed -n 's/^wasm-bindgen = "=\([0-9.]*\)"/\1/p' engine/exegra-engine-wasm/Cargo.toml)
+          if ! wasm-bindgen --version 2>/dev/null | grep -q "$want"; then cargo install wasm-bindgen-cli --version "$want" --locked --force; fi
+          node tools/build-engine.js
+
+      - name: Validate Exegra's own specification
+        run: node cli/exegra.js validate --project exegra --pretty
+
+      - name: Traceability (no missing modules, no unclaimed files)
+        run: |
+          node cli/exegra.js traceability --project exegra > traceability.json
+          node -e "const r=JSON.parse(require('fs').readFileSync('traceability.json','utf8')).result;const m=r.missingModules??[],u=r.unclaimedFiles??[];console.log(JSON.stringify({missingModules:m,unclaimedFiles:u},null,2));process.exit(m.length||u.length?1:0)"
+
+      - name: Type check
+        if: always()
+        run: npx tsc -p jsconfig.json --noEmit
+
+      - name: Unit tests
+        if: always()
+        run: node tools/run-unit-tests.js
+
+      - name: Generated artifacts are current
+        if: always()
+        run: |
+          node cli/exegra.js generate --write --project exegra > /dev/null
+          git diff --stat -- specs/exegra/generated
+          git diff --exit-code -- specs/exegra/generated
