@@ -162,7 +162,7 @@ engine entry point is proved to equal `run ∘ lower`, and the JavaScript status
 
 **M4. Canonical state, fixpoints and k-induction in the explorer (after M2).** The explorer searches canonical
 states, reports `holds` only on an empty frontier, separates quiescent, bound-hit and truncated runs, and emits a
-closed-set certificate. *Done when* eight independent clients explore 256 states, a counter that would fail beyond
+closed-set certificate; k-induction is added with a soundness theorem. *Done when* eight independent clients explore 256 states, a counter that would fail beyond
 the bound reports `incomplete`, and an invariant of Exegra's own `visual-edit-flow` is proved with no bound.
 
 **M5. Liveness under fairness (after M4).** Infinite runs, weak and strong fairness, non-Zeno, lasso search with a
