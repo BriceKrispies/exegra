@@ -13,11 +13,15 @@ import { claimStrength, strengthCounts, VACUOUS_CHECKS } from '../src/core/claim
 
 /**
  * Claim statuses ranked best to worst. A claim whose status falls to a lower rank has regressed.
- * supported and model-holds share a rank. not-evaluated is deliberately absent: a claim that is, or
- * becomes, not-evaluated (and a claim that is removed) is reported but never ranked.
+ * supported and model-holds share a rank; so do inconclusive and not-evaluated, both undecided. A fall from
+ * a positive status to not-evaluated (a stale or missing fact, a check that no longer runs) is a regression
+ * like any other; a positive claim that is removed is the reason admit.claim-removed.
  * @type {Record<string, number>}
  */
-export const CLAIM_RANK = { proved: 5, verified: 4, supported: 3, 'model-holds': 3, inconclusive: 2, violated: 1 };
+export const CLAIM_RANK = { proved: 5, verified: 4, supported: 3, 'model-holds': 3, inconclusive: 2, 'not-evaluated': 2, violated: 1 };
+
+/** Statuses that assert something holds. */
+export const POSITIVE_STATUSES = new Set(['proved', 'verified', 'supported', 'model-holds']);
 
 /** Statuses a claim created by the change may have. */
 const STRONG = new Set(['proved', 'verified']);
@@ -109,6 +113,11 @@ export function compare(before, after, options = {}) {
   const reasons = [];
   for (const c of changed) {
     if (c.direction === 'worse') reasons.push({ code: 'admit.claim-regressed', id: c.id, before: c.before, after: c.after, message: `Claim "${c.id}" moved from ${c.before} to ${c.after}.` });
+  }
+  // Removing a claim that held takes a guarantee away: a reason, which the caller may accept explicitly
+  // (--accept admit.claim-removed) when the removal is the decision.
+  for (const r of removed) {
+    if (POSITIVE_STATUSES.has(r.status)) reasons.push({ code: 'admit.claim-removed', acknowledgeable: true, id: r.id, before: r.status, message: `Claim "${r.id}" was ${r.status} and the change removes it.` });
   }
   for (const e of errors.new) reasons.push({ code: 'admit.new-error', id: e.entityId ?? undefined, diagnosticCode: e.code, message: `New validation error ${e.code}${e.entityId ? ` at "${e.entityId}"` : ''}: ${e.message}` });
   for (const v of violations.new) {
@@ -419,4 +428,95 @@ export function withClaimStrength(report, beforeModel, afterModel, accept = []) 
     ...(refused.length ? { refusedAccept: refused } : {}),
     strength: { before: strengthCounts(before), after: strengthCounts(after), added },
   };
+}
+
+// ---------------------------------------------------------------------------
+// Regression gating of `exegra verify` (epistemics D8): the statuses the last passing run recorded
+// ---------------------------------------------------------------------------
+
+/**
+ * A fingerprint of a counterexample: what it names (summary, entities, path, scenario, step and reason), so that
+ * a change of any of them changes the fingerprint. Deterministic, entity order ignored, no dependency.
+ * @param {any} cx
+ * @returns {string|null}
+ */
+export function counterexampleFingerprint(cx) {
+  if (!cx || typeof cx !== 'object') return null;
+  const text = [
+    String(cx.summary ?? ''),
+    [...(Array.isArray(cx.entities) ? cx.entities : [])].map(String).sort(byText).join(','),
+    (Array.isArray(cx.path) ? cx.path : []).map(String).join('>'),
+    String(cx.scenario ?? ''),
+    String(cx.stepIndex ?? ''),
+    String(cx.reason ?? ''),
+  ].join('\u0000');
+  // Two FNV-1a passes with different offsets over the UTF-16 code units: a stable 64-bit hex text.
+  let a = 0x811c9dc5;
+  let b = 0x050c5d1f;
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    a = Math.imul(a ^ c, 0x01000193) >>> 0;
+    b = Math.imul(b ^ c, 0x01000193) >>> 0;
+    b = (b ^ (b >>> 13)) >>> 0;
+  }
+  return a.toString(16).padStart(8, '0') + b.toString(16).padStart(8, '0');
+}
+
+/**
+ * The baseline `exegra verify` records with a passing run: each claim's status and, for a violated one, the
+ * fingerprint of its counterexample.
+ * @param {{claimId: string, status: string, counterexample?: any}[]} claimResults
+ * @returns {Record<string, {status: string, counterexample?: string}>}
+ */
+export function claimBaseline(claimResults) {
+  /** @type {Record<string, {status: string, counterexample?: string}>} */
+  const out = {};
+  for (const r of claimResults) {
+    const fp = r.status === 'violated' ? counterexampleFingerprint(r.counterexample) : null;
+    out[r.claimId] = { status: r.status, ...(fp ? { counterexample: fp } : {}) };
+  }
+  return out;
+}
+
+/**
+ * What a verify run regressed against the baseline of the last passing run.
+ * - verify.claim-regressed: a claim that was positive (proved, verified, supported, model-holds) now has a lower
+ *   rank (CLAIM_RANK, so inconclusive and not-evaluated count); a fall to violated is reported here too unless the
+ *   claim is expected to be violated.
+ * - verify.claim-removed: a positive claim of the baseline no longer exists.
+ * - verify.counterexample-changed: an expected-violated claim that was violated is violated with another
+ *   counterexample, so the violation is no longer the known one.
+ * A claim named in `accept` is not reported.
+ * @param {Record<string, {status: string, counterexample?: string}>} baseline
+ * @param {Record<string, {status: string, counterexample?: string}>} current
+ * @param {{expectViolated?: string[], accept?: string[]}} [options]
+ * @returns {{code: string, id: string, before: string, after: string|null, message: string}[]}
+ */
+export function verifyRegressions(baseline, current, options = {}) {
+  const expected = new Set(options.expectViolated ?? []);
+  const accepted = new Set(options.accept ?? []);
+  /** @type {{code: string, id: string, before: string, after: string|null, message: string}[]} */
+  const out = [];
+  for (const id of Object.keys(baseline).sort(byText)) {
+    if (accepted.has(id)) continue;
+    const b = baseline[id];
+    if (!b || typeof b.status !== 'string') continue;
+    const a = Object.hasOwn(current, id) ? current[id] : undefined;
+    if (!a) {
+      if (POSITIVE_STATUSES.has(b.status)) out.push({ code: 'verify.claim-removed', id, before: b.status, after: null, message: `Claim "${id}" was ${b.status} and no longer exists.` });
+      continue;
+    }
+    if (expected.has(id) && b.status === 'violated' && a.status === 'violated') {
+      if (b.counterexample && a.counterexample && b.counterexample !== a.counterexample) {
+        out.push({ code: 'verify.counterexample-changed', id, before: b.status, after: a.status, message: `Claim "${id}" is expected to be violated, but its counterexample changed (${b.counterexample} to ${a.counterexample}): the violation is no longer the known one.` });
+      }
+      continue;
+    }
+    if (!POSITIVE_STATUSES.has(b.status)) continue;
+    if (a.status === 'violated' && expected.has(id)) continue;
+    const rb = CLAIM_RANK[b.status];
+    const ra = CLAIM_RANK[a.status];
+    if (ra === undefined || ra < rb) out.push({ code: 'verify.claim-regressed', id, before: b.status, after: a.status, message: `Claim "${id}" moved from ${b.status} to ${a.status}.` });
+  }
+  return out;
 }

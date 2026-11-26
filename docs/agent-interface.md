@@ -190,14 +190,15 @@ The envelope is `ok: true` with exit 0 when admitted. When rejected it is `ok: f
 
 Result fields: `verdict` (`admitted` or `rejected`), `reasons`, `transaction` (`accepted`; `code`, `message` and `diagnostics` when refused), `diff` (null when the transaction was refused), `counts` (`before` and `after` per side, and the number of changed, regressed, added and removed claims and of new and resolved validation errors, warnings, readiness gaps and integrity violations), `acknowledged`, `pendingRealisation`, `semanticHashBefore`, `semanticHashAfter`, `written`. The diff has `claims` (`changed` with `before`, `after`, `direction` and the evaluator's explanation after; `added` with status; `removed`), `validation` (`errors` and `warnings`, each `new` and `resolved`), `readiness` and `integrity` (each `new` and `resolved`; a violation is the rule id, its severity and the counterexample bindings) and `privilege` (`added`: each capability a role, grant, delegation or token scope gained; `removed`: each capability taken away, informational). Every list is sorted by id. Claims are evaluated exactly as `evaluate` does, with the project's recorded results.
 
-Ranking of claim statuses, best first: `proved` > `verified` > `supported` = `model-holds` > `inconclusive` > `violated`. A claim whose status moves down this ranking has regressed. `not-evaluated` claims, and claims the change removes, are reported but never ranked, so moving to or from `not-evaluated` is listed in the diff without being a reason.
+Ranking of claim statuses, best first: `proved` > `verified` > `supported` = `model-holds` > `inconclusive` = `not-evaluated` > `violated`. A claim whose status moves down this ranking has regressed, so a fall from a positive status to `not-evaluated` (a stale or missing fact, a check that no longer runs) is `admit.claim-regressed`. A claim that was positive and that the change removes is `admit.claim-removed`. Both sides read the recorded results against the same current stamps ([claims-and-evidence.md](claims-and-evidence.md#freshness-of-recorded-facts)).
 
 Admitted only when all of these hold; every failing one is listed in `reasons`, not only the first:
 
 | Reason code | Meaning |
 |---|---|
 | `admit.transaction-refused` | The transaction was refused (unknown operation or id, a failed precondition, `validation.failed`, `integrity.violated` by an error rule, and so on). The reason carries `transactionCode`, `message` and `diagnostics`. |
-| `admit.claim-regressed` | An existing claim moved to a worse status (`id`, `before`, `after`). |
+| `admit.claim-regressed` | An existing claim moved to a worse status (`id`, `before`, `after`), `not-evaluated` included. |
+| `admit.claim-removed` | Acknowledgeable. A claim that was `proved`, `verified`, `supported` or `model-holds` is removed by the change (`id`, `before`). |
 | `admit.new-error` | A validation error the specification did not have before. |
 | `admit.new-violation` | A violation of an integrity rule of any severity (`id` is the rule, with its `counterexample`) that did not exist before. |
 | `admit.new-claim-weak` | A claim the change creates is not `verified` or `proved` (`id`, `status`), where a model method could decide it (see Pending realisation). Not acknowledgeable. |
@@ -259,20 +260,22 @@ node cli/exegra.js traceability
 {"ok":true,"command":"traceability","project":"exegra","semanticHash":"…","result":{"checkedModules":12,"missingModules":[],"unclaimedFiles":["tools/old.js"],"claimedFiles":40}}
 ```
 
-### `verify [--skip-browser] [--ingest-only] [--fresh] [--expect-violated a,b]`
+### `verify [--skip-browser] [--ingest-only] [--fresh] [--expect-violated a,b] [--accept-change a,b]`
 The verification pipeline:
 
 1. Validate.
 2. Check traceability.
 3. Execute every `test` evidence. Its `ref` is `<test file>` or `<test file>#<name pattern>`. Files under `tests/browser/` run through `npx playwright test`. Other files run through `node --test`. A reference may contain only `A-Z a-z 0-9 _ . / - space # :` (the rule of `src/core/evidence-ref.js`, which `exegra validate` also applies as `evidence.ref-unsafe`), and its file must lie inside the repository. Anything else is recorded as `unsafe reference`, with the reason. A missing file is recorded as `test file not found`. A failure keeps the last 20 lines of output as `detail`. A `ref` written `<alias>:<file>[#<describe> > <name>]` points into a realisation root that `project.jsonc` declares: the root's test commands run once and the outcome (`pass`, `fail` or `not-run`) comes from its JUnit report ([verification.md](verification.md#realisation-roots-code-and-tests-in-other-repositories)).
-4. Write the results to `evidence/results.json` with `ranAt` timestamps. Results from earlier runs are replaced.
-5. Re-evaluate the claims with the new results.
+   A reference passes only when at least one matched test executed and passed and none failed, skipped itself or is a `todo`; one whose matched tests skipped, wholly or in part, is recorded as `not-run`.
+4. Write the results to `evidence/results.json` with `ranAt` timestamps and the records stamp of the tree (`stamp`). Results from earlier runs are replaced; an older pass is never kept for a reference that skipped.
+5. Re-evaluate the claims with the new results, against the current stamps.
+6. Compare the claim statuses with `claimBaseline`, those of the last passing run; a passing run records its own there.
 
-`--fresh` runs every test again instead of reusing the outcomes recorded on the same tree (reuse happens only while the tree stamp matches; see `tests/core/outcome-reuse.test.js`). `--ingest-only` runs no realisation root's test command and reads the JUnit reports already on disk. `--skip-browser` leaves browser evidence unexecuted. It has no recorded result, so its claims are evaluated as they would be without a run.
+`--fresh` runs every test again instead of reusing the outcomes recorded on the same tree (reuse happens only while the tree stamp matches; see `tests/core/outcome-reuse.test.js`). `--ingest-only` runs no realisation root's test command and reads the JUnit reports already on disk. `--skip-browser` leaves browser evidence unexecuted and records it as `not-run`, unless its earlier result was recorded on the same tree stamp.
 
-`--expect-violated a,b` names claims that are deliberately violated. The command still succeeds when those are the only violations. Unknown ids are rejected.
+`--expect-violated a,b` names claims that are deliberately violated. The command still succeeds when those are the only violations, as long as each keeps the counterexample recorded in the baseline. Unknown ids are rejected. `--accept-change a,b` accepts, for this run, a regression of the named claims against the baseline.
 
-The command fails with `verify.failed` when validation has errors, any executed evidence failed (`not-run` is not a failure), or any claim is violated outside `--expect-violated`. The failure carries the full report in `result`.
+The command fails with `verify.failed` when validation has errors, any executed evidence failed (`not-run` is not a failure), any claim is violated outside `--expect-violated`, or `result.claims.regressions` is not empty: `verify.claim-regressed` (a positive claim now has a lower status, `inconclusive` and `not-evaluated` included), `verify.claim-removed` (a positive claim no longer exists) or `verify.counterexample-changed` (an expected-violated claim's counterexample changed). A failing run keeps the earlier baseline. The failure carries the full report in `result`.
 
 ```
 node cli/exegra.js verify --skip-browser --expect-violated edits-only-via-transactions
@@ -352,4 +355,4 @@ The CLI, the UI and any future tool share one path: an operation goes to `Projec
 - It does not execute a claim that has no evidence. Such a claim stays `not-evaluated`.
 - It does not write implementation code. `generate` produces artifacts from the model; it does not edit source files.
 - It does not commit to git or push.
-- It does not run tests on its own. `verify` runs the test evidence the specification names, and `--skip-browser` leaves browser evidence unexecuted.
+- It does not run tests on its own. `verify` runs the test evidence the specification names, and `--skip-browser` leaves browser evidence unexecuted (recorded as `not-run`).

@@ -151,8 +151,9 @@ export function minSignTestRuns(confidence) {
 
 /**
  * @typedef {{seed: string, value: Rational | null | 'inf', underpowered?: boolean, truncated?: boolean,
- *   samples?: number, infinite?: number}} RunStatistic
- *   `value`: the per-run statistic; null when undefined or empty; 'inf' for +∞.
+ *   samples?: number, infinite?: number, duplicates?: number}} RunStatistic
+ *   `value`: the per-run statistic; null when undefined or empty; 'inf' for +∞; `duplicates`: starts of the
+ *   class refused as duplicates in the run (its sample count then depends on the system).
  */
 
 /**
@@ -173,12 +174,18 @@ const cmpStat = (a, b) => (a === 'inf' ? (b === 'inf' ? 0 : 1) : b === 'inf' ? -
 /**
  * Evaluate one scenario's runs of a metric-bound claim: keep the runs (an underpowered run is
  * left out for an open-started class and fails otherwise), count the passes, and decide.
+ * `openStarted` must be stated true to leave anything out (src/core/metric-claims.js computes it from
+ * the input); absent, the class is not open-started, so a collapse never turns fails into inconclusive.
+ * A run with duplicate starts is never left out: its sample count depended on the system.
  * @param {RunStatistic[]} runs
  * @param {{op?: string, bound?: Rational, approx?: {value: Rational, tolerance: Rational},
- *   fraction: Rational, confidence: Rational, openStarted: boolean}} spec
+ *   fraction: Rational, confidence: Rational, openStarted?: boolean}} spec
  */
 export function evaluateRuns(runs, spec) {
-  const kept = runs.filter((r) => !(r.underpowered && spec.openStarted));
+  const open = spec.openStarted === true;
+  const leaveOut = (/** @type {RunStatistic} */ r) => !!r.underpowered && open && !r.duplicates;
+  // A kept underpowered run (a class not open-started, or a run with duplicate starts) does not satisfy.
+  const kept = runs.filter((r) => !leaveOut(r)).map((r) => (r.underpowered ? { ...r, value: null } : r));
   const left = runs.length - kept.length;
   const truncated = runs.filter((r) => r.truncated).length;
   const underpowered = runs.filter((r) => r.underpowered).length;

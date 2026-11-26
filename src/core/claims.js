@@ -29,24 +29,34 @@ import { scenarioMachineIds } from './pools.js';
  *   reason?: string, trace?: import('./refinement.js').RefinementStep[] }} Counterexample
  *   reason and trace: a refines claim's failing check and the steps of the implementation behavior up to it
  * @typedef {{ id: string, kind: string, ref: string, supports: boolean, recorded: 'pass'|'fail'|'none', detail?: string,
- *   title?: string, proofs?: string[], derived?: boolean, revision?: 'matches'|'unknown' }} EvidenceItem
+ *   title?: string, proofs?: string[], derived?: boolean, revision?: 'matches'|'unknown', stale?: boolean, freshness?: 'fresh'|'unverifiable' }} EvidenceItem
  *   derived: a Concordance result applied from the project's results file (src/core/concordance.js), not a spec entity;
- *   revision: for a derived item, whether its results file named this text's specSha256 ("unknown" when its results file names none)
+ *   revision: for a derived item, whether its results file named this text's specSha256 ("unknown" when its results file names none);
+ *   stale: its recorded result was recorded on another tree (its stamp differs from the current one): a stale pass is
+ *   read as no result (`recorded` is "none"), a stale fail still contradicts; freshness: of a result read as it is
+ *   (unverifiable: no current stamp to compare with)
+ * @typedef {{ code: string, severity: 'warning'|'info', message: string, entityId: string }} ClaimDiagnostic
+ *   claim.stale-evidence, claim.stale-theorem: a recorded fact was recorded for other files than the current ones;
+ *   claim.freshness-unverifiable: recorded facts were read with no current stamp to compare (the browser bundle)
  * @typedef {{
  *   claimId: string, kind: string, method: string|null,
  *   status: 'proved'|'verified'|'supported'|'model-holds'|'violated'|'inconclusive'|'not-evaluated',
  *   evaluator: string, semanticHash: string, scope: string, explanation: string,
  *   assumptions: string[], involved: string[], counterexample?: Counterexample,
- *   evidence: EvidenceItem[], negatives?: NegativeRun[], modelledBy?: {claimId: string, status: string}[]
+ *   evidence: EvidenceItem[], negatives?: NegativeRun[], modelledBy?: {claimId: string, status: string}[],
+ *   freshness?: 'fresh'|'stale'|'unverifiable', diagnostics?: ClaimDiagnostic[]
  * }} ClaimResult
- *   modelledBy: on a requirement, the claims whose `models` property names it, with their statuses (declaration order)
+ *   modelledBy: on a requirement, the claims whose `models` property names it, with their statuses (declaration order);
+ *   freshness: present when the status rests on recorded facts (evidence results, a Lean theorem check, an external
+ *   tool's outcome): fresh when each was recorded on the current stamps, stale when one was not (the status is then
+ *   never positive: not-evaluated, or violated by a contradicting fact), unverifiable when no current stamp was given
  * @typedef {{ scenario: string, faults: string[], violated: boolean, outcome: string, stepIndex?: number, explanation: string }} NegativeRun
  *   one declared negative of a trace claim: its scenario run with the scenario's faults plus `faults`
  * @typedef {Object} Recorded
- * @property {Record<string, { outcome: 'pass'|'fail'|'not-run', detail?: string, ranAt?: string }>} [results]
+ * @property {Record<string, { outcome: 'pass'|'fail'|'not-run', detail?: string, ranAt?: string, stamp?: string }>} [results]
  *   outcomes of executing evidence entities, keyed by evidence id (written by `exegra verify`);
- *   not-run counts as no result
- * @property {Record<string, { outcome: 'pass'|'fail', status?: string, detail?: string, proofs?: string[] }>} [claims]
+ *   not-run counts as no result; stamp: the records stamp of the tree it was recorded on (tools/tree-stamp.js)
+ * @property {Record<string, { outcome: 'pass'|'fail', status?: string, detail?: string, proofs?: string[], stamp?: string }>} [claims]
  *   outcomes an external verification tool established per claim, keyed by claim id
  * @property {string} [tool]  the tool that wrote `claims`
  * @property {{id: string, claim: string, title: string, ref: string, outcome: 'pass'|'fail', revision?: 'matches'|'unknown', detail?: string, proofs?: string[]}[]} [derived]
@@ -55,7 +65,13 @@ import { scenarioMachineIds } from './pools.js';
  *   what Lean reported about theorems named by lean-theorem claims, keyed by theorem name
  *   (tools/lean-theorems.js, recorded by `exegra verify`)
  * @typedef {{found: boolean, kind?: string, kernel?: string, axioms?: string[],
- *   about?: Record<string, {kind: string, inStatement: boolean}>, lean?: string, checkedAt?: string}} TheoremCheck
+ *   about?: Record<string, {kind: string, inStatement: boolean, implementedBy?: string|null, extern?: boolean, partial?: boolean}>,
+ *   lean?: string, checkedAt?: string, statementHash?: string, formalHash?: string, stamp?: string}} TheoremCheck
+ *   formalHash: the hash of the formal/ sources the check ran on (tools/tree-stamp.js formalSourcesHash);
+ *   statementHash: sha256 of the theorem's type as Lean printed it; stamp: the records stamp of the tree
+ * @typedef {{tree: string|null, formal: string|null}} Stamps
+ *   the current stamps a read compares recorded facts with (tools/tree-stamp.js currentStamps); null where none can
+ *   be computed (the browser bundle), which makes the freshness of every recorded fact unverifiable
  */
 
 const STRUCTURAL = 'exegra.structural/0.1';
@@ -76,8 +92,11 @@ const TRACE_METHODS = ['state-invariant', 'precedes', 'eventually', 'never'];
 // ---------------------------------------------------------------------------
 
 /**
- * Evaluate every claim in declaration order.
- * @param {Model} model @param {{recorded?: Recorded|null}} [opts]
+ * Evaluate every claim in declaration order. `stamps` are the current stamps recorded facts are compared with
+ * (tools/tree-stamp.js currentStamps): a fact recorded on other stamps is stale and never makes a claim positive.
+ * Without stamps (absent, or null as in the browser bundle) recorded facts are read as they are and every result
+ * that rests on them says its freshness is unverifiable.
+ * @param {Model} model @param {{recorded?: Recorded|null, stamps?: Stamps|null}} [opts]
  * @returns {ClaimResult[]}
  */
 export function evaluateClaims(model, opts = {}) {
@@ -85,7 +104,7 @@ export function evaluateClaims(model, opts = {}) {
   const outer = passRuns;
   passRuns = new Map();
   try {
-    const results = (model.byKind.claim ?? []).map((c) => evaluateOne(model, c, hash, opts.recorded ?? undefined));
+    const results = (model.byKind.claim ?? []).map((c) => evaluateOne(model, c, hash, opts.recorded ?? undefined, opts.stamps ?? null));
     attachModelledBy(model, results);
     return results;
   } finally {
@@ -125,19 +144,19 @@ function runScenarioOnce(model, scenarioId, opts) {
 
 /**
  * Evaluate one claim.
- * @param {Model} model @param {string} claimId @param {{recorded?: Recorded|null}} [opts]
+ * @param {Model} model @param {string} claimId @param {{recorded?: Recorded|null, stamps?: Stamps|null}} [opts]
  * @returns {ClaimResult}
  */
 export function evaluateClaim(model, claimId, opts = {}) {
   const claim = model.entities.get(claimId);
   if (!claim || claim.kind !== 'claim') throw new Error(`Unknown claim "${claimId}".`);
   const hash = semanticHash(model);
-  const result = evaluateOne(model, claim, hash, opts.recorded ?? undefined);
+  const result = evaluateOne(model, claim, hash, opts.recorded ?? undefined, opts.stamps ?? null);
   if (claim.data.kind === 'requirement') {
     const outer = passRuns;
     passRuns = new Map();
     try {
-      const checks = modellingClaims(model, claim.id).map((c) => evaluateOne(model, c, hash, opts.recorded ?? undefined));
+      const checks = modellingClaims(model, claim.id).map((c) => evaluateOne(model, c, hash, opts.recorded ?? undefined, opts.stamps ?? null));
       attachModelledBy(model, [result, ...checks]);
     } finally {
       passRuns = outer;
@@ -213,12 +232,13 @@ export function checkTrace(model, trace) {
 
 /**
  * @param {Model} model @param {Entity} claim @param {string} hash @param {Recorded|undefined} recorded
+ * @param {Stamps|null} stamps
  * @returns {ClaimResult}
  */
-function evaluateOne(model, claim, hash, recorded) {
+function evaluateOne(model, claim, hash, recorded, stamps) {
   const ev = claim.data.evaluate && typeof claim.data.evaluate === 'object' ? claim.data.evaluate : null;
   const method = ev && typeof ev.method === 'string' ? ev.method : null;
-  const evidence = collectEvidence(model, claim.id, recorded);
+  const evidence = collectEvidence(model, claim.id, recorded, stamps);
   const subjects = Array.isArray(claim.data.subjects) ? claim.data.subjects.filter((/** @type {any} */ s) => typeof s === 'string') : [];
   /** @type {ClaimResult} */
   const result = {
@@ -253,7 +273,14 @@ function evaluateOne(model, claim, hash, recorded) {
     // An outcome the external tool recorded for this claim. It can establish
     // "supported" or "violated"; Exegra still verified nothing itself.
     const outside = recorded?.claims && Object.hasOwn(recorded.claims, claim.id) ? recorded.claims[claim.id] : undefined;
-    if (outside && (outside.outcome === 'pass' || outside.outcome === 'fail')) {
+    // An outcome recorded on another tree stamp is stale: a stale pass establishes nothing, a stale fail still counts.
+    const outsideStale = !!outside && typeof stamps?.tree === 'string' && outside.stamp !== stamps.tree;
+    if (outside && (outside.outcome === 'pass' || outside.outcome === 'fail')) r.usedRecorded = true;
+    if (outside && outsideStale && outside.outcome === 'pass' && base.status !== 'violated') {
+      r.status = 'not-evaluated';
+      r.explanation = `Stale: ${typeof recorded?.tool === 'string' && recorded.tool ? recorded.tool : 'an external tool'} recorded this claim as passing on ${outside.stamp ? `tree stamp ${String(outside.stamp).slice(0, 12)}` : 'a tree it did not stamp'}, not on the current tree (${stamps?.tree?.slice(0, 12)}), so it establishes nothing now.`;
+      r.stale = true;
+    } else if (outside && (outside.outcome === 'pass' || outside.outcome === 'fail')) {
       const tool = typeof recorded?.tool === 'string' && recorded.tool ? recorded.tool : 'an external tool';
       const proofs = Array.isArray(outside.proofs) && outside.proofs.length ? ` Proofs: ${outside.proofs.join(', ')}.` : '';
       const detail = typeof outside.detail === 'string' && outside.detail ? ` ${outside.detail}` : '';
@@ -295,7 +322,7 @@ function evaluateOne(model, claim, hash, recorded) {
   } else if (method === 'external-evidence') {
     r = { ...evaluateEvidenceClaim(claim, evidence, recorded), evaluator: EVIDENCE, selected: evidence.map((e) => e.id) };
   } else if (method === 'lean-theorem') {
-    r = evaluateLeanTheorem(ev, recorded);
+    r = evaluateLeanTheorem(ev, recorded, stamps);
     if (r.status === 'proved') {
       const bad = evidence.filter((e) => !e.supports || e.recorded === 'fail');
       if (bad.length) {
@@ -333,7 +360,46 @@ function evaluateOne(model, claim, hash, recorded) {
   if (r.counterexample) result.counterexample = r.counterexample;
   if (r.negatives) result.negatives = r.negatives;
   result.involved = unique([...subjects, ...(r.selected ?? []), ...(r.counterexample?.entities ?? []), ...(r.counterexample?.path ?? [])]);
+  applyFreshness(result, r, method, model, stamps);
   return result;
+}
+
+const POSITIVE = new Set(['proved', 'verified', 'supported', 'model-holds']);
+
+/**
+ * Set `freshness` and the freshness diagnostics of a result whose status rests on recorded facts: evidence
+ * results (for the evidence-based methods), a Lean theorem check, an external tool's outcome. The status rule
+ * itself is applied where each fact is read (collectEvidence, evaluateEvidenceClaim, evaluateLeanTheorem); this
+ * only reports it. Without current stamps a positive status keeps its value but says its freshness is unverifiable.
+ * @param {ClaimResult} result @param {any} r the evaluator's outcome @param {string|null} method @param {Model} model
+ * @param {Stamps|null} stamps
+ */
+function applyFreshness(result, r, method, model, stamps) {
+  const evidenceBased = method === 'external-evidence' || (method !== null && !!own(model.meta.verificationMethods, method));
+  const staleEvidence = result.evidence.filter((e) => e.stale);
+  /** @type {ClaimDiagnostic[]} */
+  const diagnostics = [];
+  if (staleEvidence.length) {
+    diagnostics.push({ code: 'claim.stale-evidence', severity: 'warning', entityId: result.claimId,
+      message: `The recorded result of ${staleEvidence.map((e) => `"${e.id}"`).join(', ')} was recorded on another tree than the current one; it is stale until exegra verify runs again.` });
+  }
+  if (r.staleTheorem) {
+    diagnostics.push({ code: 'claim.stale-theorem', severity: 'warning', entityId: result.claimId, message: r.staleTheorem });
+  }
+  if (r.stale && !staleEvidence.length && !r.staleTheorem) {
+    diagnostics.push({ code: 'claim.stale-evidence', severity: 'warning', entityId: result.claimId, message: 'The outcome an external tool recorded for this claim was recorded on another tree than the current one.' });
+  }
+  const usedEvidence = evidenceBased && result.evidence.some((e) => !e.derived && (e.recorded !== 'none' || e.stale));
+  const usedRecorded = usedEvidence || !!r.usedTheorem || !!r.usedRecorded;
+  const stale = (evidenceBased && staleEvidence.length > 0) || !!r.staleTheorem || !!r.stale;
+  if (stale) result.freshness = 'stale';
+  else if (usedRecorded && (method === 'lean-theorem' ? typeof stamps?.formal !== 'string' : typeof stamps?.tree !== 'string')) {
+    result.freshness = 'unverifiable';
+    diagnostics.push({ code: 'claim.freshness-unverifiable', severity: 'info', entityId: result.claimId,
+      message: 'No stamp of the current files is available here, so whether the recorded facts this status rests on describe them cannot be checked.' });
+    if (POSITIVE.has(result.status)) result.explanation += ' Freshness unverifiable: no stamp of the current files is available here, so this rests on results recorded for files that may since have changed.';
+  } else if (usedRecorded) result.freshness = 'fresh';
+  if (diagnostics.length) result.diagnostics = diagnostics;
 }
 
 // ---------------------------------------------------------------------------
@@ -362,11 +428,14 @@ export function theoremRequests(model) {
 /**
  * A lean-theorem claim, decided from what Lean reported (recorded.theorems). Pure: Lean ran in
  * tools/lean-theorems.js; this applies the rule. Proved only when the theorem exists, is a theorem,
- * the kernel accepted its proof again, every axiom it depends on is standard, and every named
- * implementation constant is a definition that occurs in its statement.
- * @param {any} ev @param {Recorded|undefined} recorded
+ * the kernel accepted its proof again, every axiom it depends on is standard, the claim names at least one
+ * implementation constant, and every named one is a definition (not an opaque constant, and not one the record
+ * reports as implemented_by, extern or partial: its runtime body is then not the definition the theorem is
+ * about) that occurs in its statement. A record checked on other formal/ sources than the current ones
+ * (formalHash differs from stamps.formal) is stale: it never proves the claim, which is then not evaluated.
+ * @param {any} ev @param {Recorded|undefined} recorded @param {Stamps|null} [stamps]
  */
-function evaluateLeanTheorem(ev, recorded) {
+function evaluateLeanTheorem(ev, recorded, stamps = null) {
   const thm = typeof ev.theorem === 'string' ? ev.theorem : '';
   const about = Array.isArray(ev.about) ? ev.about.filter((/** @type {any} */ a) => typeof a === 'string') : [];
   const rec = recorded?.theorems && Object.hasOwn(recorded.theorems, thm) ? recorded.theorems[thm] : undefined;
@@ -393,17 +462,29 @@ function evaluateLeanTheorem(ev, recorded) {
         : `${a} (an axiom beyond Lean's standard ones)`));
     return refuse(`it depends on ${why.join(', ')}.`);
   }
+  // A claim proved in Lean presents itself as a theorem about the code: it must name that code.
+  if (!about.length) return refuse('the claim names no implementation constant ("about"), so the theorem is not shown to be about any code.');
   const unchecked = about.filter((/** @type {string} */ a) => !rec.about || !Object.hasOwn(rec.about, a));
   if (unchecked.length) return notChecked(`The recorded check of "${thm}" did not cover ${unchecked.map((/** @type {string} */ a) => `"${a}"`).join(', ')}: run "exegra verify" again.`);
   for (const a of about) {
-    const info = /** @type {{kind: string, inStatement: boolean}} */ (/** @type {any} */ (rec.about)[a]);
+    const info = /** @type {{kind: string, inStatement: boolean, implementedBy?: string|null, extern?: boolean, partial?: boolean}} */ (/** @type {any} */ (rec.about)[a]);
     if (info.kind === 'missing') return refuse(`the implementation constant "${a}" does not exist.`);
-    if (info.kind !== 'definition' && info.kind !== 'opaque') return refuse(`"${a}" is a ${info.kind}, not an implementation constant (a definition).`);
+    if (info.kind === 'opaque') return refuse(`"${a}" is an opaque constant: a theorem about it says nothing about the body that runs (a partial def and an implemented_by opaque compile to one).`);
+    if (info.kind !== 'definition') return refuse(`"${a}" is a ${info.kind}, not an implementation constant (a definition).`);
+    if (info.implementedBy) return refuse(`"${a}" is implemented_by ${info.implementedBy}: the code that runs is not the definition the theorem is about.`);
+    if (info.extern) return refuse(`"${a}" is extern: the code that runs is foreign code, not the definition the theorem is about.`);
+    if (info.partial) return refuse(`"${a}" is a partial definition: its compiled body is not the definition the theorem is about.`);
     if (!info.inStatement) return refuse(`its statement does not mention the implementation constant "${a}", so it is not a theorem about that code.`);
   }
+  // Read-time freshness: the check holds for the formal/ sources it ran on. Refusals above stand even when stale
+  // (staleness never improves a status); a stale positive check proves nothing.
+  if (typeof stamps?.formal === 'string' && rec.formalHash !== stamps.formal) {
+    const why = `Stale: the recorded Lean check of "${thm}" ${rec.formalHash ? `ran on formal/ sources with hash ${String(rec.formalHash).slice(0, 12)}` : 'carries no hash of the formal/ sources it ran on'}, not on the current ones (${stamps.formal.slice(0, 12)}); run "exegra verify" where Lean is installed to check it again.`;
+    return { status: 'not-evaluated', evaluator, scope: 'Nothing was checked against the current sources: the recorded Lean check is stale.', explanation: why, selected: [], usedTheorem: true, staleTheorem: why };
+  }
   return {
-    status: 'proved', evaluator, scope, selected: [],
-    explanation: `"${thm}" is a theorem; the Lean kernel accepted its proof again; it depends only on ${axioms.length ? axioms.join(', ') : 'no axiom'}${about.length ? `; its statement is about ${about.join(', ')}` : '; the claim names no implementation constant, so it says nothing about which code it covers'}.`,
+    status: 'proved', evaluator, scope, selected: [], usedTheorem: true,
+    explanation: `"${thm}" is a theorem; the Lean kernel accepted its proof again; it depends only on ${axioms.length ? axioms.join(', ') : 'no axiom'}; its statement is about ${about.join(', ')}${rec.statementHash ? ` (statement hash ${String(rec.statementHash).slice(0, 12)})` : ''}.`,
   };
 }
 
@@ -447,7 +528,7 @@ function evaluateMetricBound(model, ev) {
   const run = (/** @type {string} */ text) => JSON.parse(runEngineText(text));
   const neg = (/** @type {any[]} */ xs) => (Array.isArray(xs) ? xs : []).map((n) => inputOf(n.scenario, n.faults ?? []));
   const res = evaluateMetricClaim(run, { scenarios: sids.map((/** @type {string} */ sid) => inputOf(sid, [])), negatives: neg(ev.negatives), controlNegatives: neg(ev.controlNegatives) }, claim);
-  const show = (/** @type {any} */ s, /** @type {string} */ what) => `${what}: ${s.verdict} over ${s.kept} of ${s.runs} runs${s.passes !== undefined ? ` (${s.passes} pass)` : ''}${s.leftOut ? `, ${s.leftOut} left out as underpowered` : ''}${s.truncated ? `, ${s.truncated} truncated` : ''}`;
+  const show = (/** @type {any} */ s, /** @type {string} */ what) => `${what}: ${s.verdict} over ${s.kept} of ${s.runs} runs${s.passes !== undefined ? ` (${s.passes} pass)` : ''}${s.leftOut ? `, ${s.leftOut} left out as underpowered` : ''}${s.underpowered > s.leftOut ? `, ${s.underpowered - s.leftOut} underpowered counted as not satisfying (${s.openStarted ? 'duplicate starts' : 'the class is not open-started'})` : ''}${s.truncated ? `, ${s.truncated} truncated` : ''}`;
   const parts = [
     ...res.scenarios.map((s, i) => show(s, `scenario "${sids[i]}"`)),
     ...res.negatives.map((s, i) => show(s, `negative ${i} (${ev.negatives[i].scenario} with ${ev.negatives[i].faults.join(', ')})`)),
@@ -477,23 +558,29 @@ function describeContradictions(bad) {
 }
 
 /**
- * @param {Model} model @param {string} claimId @param {Recorded|undefined} recorded
+ * The evidence entities of a claim with their recorded results. With a current tree stamp, a result recorded on
+ * another stamp (or with none) is stale: a stale pass is read as no result, a stale fail still contradicts.
+ * @param {Model} model @param {string} claimId @param {Recorded|undefined} recorded @param {Stamps|null} [stamps]
  * @returns {EvidenceItem[]}
  */
-function collectEvidence(model, claimId, recorded) {
+function collectEvidence(model, claimId, recorded, stamps = null) {
   /** @type {EvidenceItem[]} */
   const out = [];
   for (const e of model.byKind.evidence ?? []) {
     if (e.data.claim !== claimId) continue;
     const rec = recorded?.results && Object.hasOwn(recorded.results, e.id) ? recorded.results[e.id] : undefined;
+    const outcome = rec && (rec.outcome === 'pass' || rec.outcome === 'fail') ? rec.outcome : 'none';
+    const stale = outcome !== 'none' && typeof stamps?.tree === 'string' && rec?.stamp !== stamps.tree;
     /** @type {EvidenceItem} */
     const item = {
       id: e.id,
       kind: e.data.kind,
       ref: typeof e.data.ref === 'string' ? e.data.ref : '',
       supports: e.data.supports !== false,
-      recorded: rec && (rec.outcome === 'pass' || rec.outcome === 'fail') ? rec.outcome : 'none',
+      recorded: stale && outcome === 'pass' ? 'none' : outcome,
     };
+    if (stale) item.stale = true;
+    else if (outcome !== 'none') item.freshness = typeof stamps?.tree === 'string' ? 'fresh' : 'unverifiable';
     const detail = rec?.detail ?? (typeof e.data.observed === 'string' ? e.data.observed : undefined);
     if (detail !== undefined) item.detail = detail;
     out.push(item);
@@ -530,6 +617,16 @@ function evaluateEvidenceClaim(claim, evidence, recorded) {
       scope,
       explanation: `${capitalise(describeContradictions(bad))} contradict${bad.length === 1 ? 's' : ''} the claim.`,
       counterexample: { summary: `Contradicting evidence: ${bad.map((e) => e.id).join(', ')}.`, entities: bad.map((e) => e.id) },
+    };
+  }
+  // A result recorded on another tree than the current one establishes nothing now: the claim is not evaluated
+  // until exegra verify records it again, whatever else is attached.
+  const stale = evidence.filter((e) => e.stale);
+  if (stale.length) {
+    return {
+      status: /** @type {const} */ ('not-evaluated'),
+      scope,
+      explanation: `Stale: the recorded result${stale.length === 1 ? '' : 's'} of ${list(stale.map((e) => `"${e.id}"`))} ${stale.length === 1 ? 'was' : 'were'} recorded on another tree than the current one (the stamp differs or is missing), so ${stale.length === 1 ? 'it establishes' : 'they establish'} nothing now; run exegra verify to record ${stale.length === 1 ? 'it' : 'them'} again.`,
     };
   }
   const passedTests = evidence.filter((e) => e.kind === 'test' && !e.derived && e.recorded === 'pass');

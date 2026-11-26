@@ -523,6 +523,8 @@
         "Evaluate structural claims (no-relationship, reachable, only-via, has-port, property-defined, acyclic) on the component graph; report a selector that selects nothing as inconclusive, never verified; reachable needs a path of at least one relationship (a target that is also a source does not count); only-via is inconclusive when no directed path of the kinds leads from any source to any target at all, and when every source is itself a via component (both hold by construction, not by the model)",
         "Evaluate invariant and temporal claims on traces of the listed scenarios (state-invariant, precedes, eventually, never), stating that only those traces were checked; never report a vacuous trace check as verified: an implication whose antecedent is never true, a never whose event cannot occur, a precedes whose then-event never happens and traces with zero steps are inconclusive; an eventually whose occurrence is only the scenario's own scripted input is inconclusive, because the input is not a reaction of the system",
         "Derive the status of external-evidence claims only from evidence entities and recorded execution results",
+        "Compare recorded facts with the current stamps the caller passes (tools/tree-stamp.js): an evidence result or external tool outcome whose stamp is not the records stamp of the tree, and a Lean theorem check whose formal hash is not that of the current formal/ sources, is stale; a stale positive fact never makes a claim positive (not-evaluated, an explanation starting with Stale, freshness stale and the diagnostic claim.stale-evidence or claim.stale-theorem) and a stale contradicting fact still counts; without current stamps a result resting on recorded facts carries freshness unverifiable and the diagnostic claim.freshness-unverifiable",
+        "Refuse a lean-theorem claim that names no implementation constant in about, or whose about constant is opaque or reported implemented_by, extern or partial",
         "Report a claim whose method is a verification method declared by the specification with evaluator external:<method>: Exegra runs nothing and the status comes only from evidence",
         "Check a trace step by step for the simulator panel (checkTrace)",
         "Add the automatic contract-conformance checks of a trace to the checks of checkTrace (src/core/contract-trace.js), as failed checks with the step",
@@ -544,7 +546,9 @@
       "unknowns": [
         "Behavioral results hold for the listed scenario traces only; there is no exhaustive state-space exploration and no probabilistic evaluation.",
         "Claim evaluation runs on the caller's thread. In the application session.evaluate runs it on the main thread inside every semantic commit, and trace and metric claims run engine scenarios there (src/core/claims.js), unlike the Simulation tab, which runs its scenario in the engine worker. The cost on large models is not measured (WG-4775, finding F06).",
-        "Refines claims are checked on the deterministic trace of each scenario with its own faults, not over every delivery order and fault subset the explorer enumerates: the explorer returns state-invariant verdicts, not steps (WG-4852)."
+        "Refines claims are checked on the deterministic trace of each scenario with its own faults, not over every delivery order and fault subset the explorer enumerates: the explorer returns state-invariant verdicts, not steps (WG-4852).",
+        "Freshness is reported through not-evaluated, the freshness field and diagnostics, not as a status component of its own; the status lattice with freshness as a part (milestone M3 of docs/foundations.md) replaces these rules. The tree stamp is coarse: any edit of a stamped file makes every evidence result stale until verify runs again, not only the results that depend on it.",
+        "A lean-theorem claim is not bound to what its statement says: a theorem that mentions the named code but states nothing about it (a tautology over it) is still proved, and the recorded statement hash is not compared with anything (statement binding: milestone M3; admission of statement changes: milestone M10 of docs/foundations.md)."
       ],
       "implementation": {
         "status": "manual",
@@ -1031,7 +1035,8 @@
         "Filter by status, claim kind, evaluation method (named by the specification's verification methods where it declares them) and text",
         "Render at most 200 rows and say how many matching claims are not shown",
         "Show, when the specification declares verification methods, a line saying that claims verified by them are checked by tools outside Exegra and are not evaluated without recorded evidence",
-        "Show the claims as a list of cards in a panel narrower than 640 px and as a table from there up"
+        "Show the claims as a list of cards in a panel narrower than 640 px and as a table from there up",
+        "Say on the recorded-results line that the freshness of the recorded results is unverifiable in the page, which cannot stamp the files they were recorded for"
       ],
       "unknowns": ["It shows recorded results loaded with the project and cannot execute tests; execution happens only through `exegra verify`.", "Rows beyond the 200-row window can only be reached by filtering; there is no paging."],
       "implementation": {
@@ -1241,11 +1246,11 @@
       "parent": "persistence",
       "category": "storage",
       "owner": "verification-pipeline",
-      "purpose": "specs/<project>/evidence/results.json: outcomes of executed test evidence and the last traceability result, written by `exegra verify`.",
+      "purpose": "specs/<project>/evidence/results.json: outcomes of executed test evidence, each with the records stamp of the tree it was recorded on, the Lean theorem checks with the formal/ hash they ran on, the claim statuses and counterexample fingerprints of the last passing run (claimBaseline) and the last traceability result, written by `exegra verify`.",
       "unknowns": [
-        "Results are not tied to the model hash or the code revision they were recorded for.",
-        "The claims key (record external-claim-outcomes) is read by claim evaluation and kept by exegra verify, but nothing in this repository writes it; only an external tool could (WG-4775, finding F03).",
-        "A skipped run keeps the outcome recorded before, which may predate the current code; its ranAt shows when it was recorded."
+        "Results are tied to the tree by the records stamp, which covers every stamped file: a result is read as stale after any edit, not only an edit of what its test depends on. Results recorded before the stamp existed carry none and read as stale.",
+        "The claims key (record external-claim-outcomes) is read by claim evaluation and kept by exegra verify, but nothing in this repository writes it; only an external tool could (WG-4775, finding F03). An outcome there counts only when it carries the current records stamp.",
+        "The browser bundle cannot stamp the tree, so there the results are shown with unverifiable freshness."
       ],
       "implementation": {
         "status": "manual",
@@ -1281,14 +1286,16 @@
         "Commands: projects, validate, list, show, deps, contracts, claims, evaluate, gaps, ops, apply, admit, plan-delete, simulate, trace, prove, integrity, prove-integrity, generate, traceability, verify, readiness, cover-machines, cover-functions, store, help",
         "Print a JSON envelope (ok, command, project, semanticHash, result or error with code and diagnostics) and use exit codes 0 ok, 1 command failed, 2 usage error",
         "Apply operations through Project.apply, then write the changed files with the base hashes read at the start; a stale --expect-hash, an invalid operation or a disk conflict leaves the files unchanged",
-        "Run the verification pipeline: validation, traceability, execution of test evidence and recording of the results",
+        "Run the verification pipeline: validation, traceability, execution of test evidence and recording of the results, each with the records stamp of the tree; record a reference that skipped, wholly or in part, as not-run instead of keeping an older pass",
+        "Fail verify when, against the claim statuses and counterexample fingerprints the last passing run recorded (claimBaseline), a positive claim falls to a lower status (inconclusive and not-evaluated included) or is removed, or an expected-violated claim's counterexample changes, unless --accept-change names the claim; a failing run keeps the earlier baseline",
+        "Evaluate claims in claims, evaluate, gaps, admit and generate against the current stamps of the repository (tools/tree-stamp.js currentStamps), so recorded results of another tree read as stale",
         "Include the request log of the run in the simulate result (requestLog), one line per contract event",
         "Copy a project's specification into its SQLite store and write it back as text (store import, store export), refusing an export over a specification that changed since the store last synchronised with it",
         "Register a specification file and product files as a project from a script (project add, remove, list: specs/<name>/project.jsonc with paths relative to the project directory, refusing an existing project without --force and a name that is not a project name), and take the project inline (--spec, --product) on the read-only commands, so a job needs no registration",
         "Acknowledge admit reasons by code (admit --accept, repeatable or comma separated): a reason that carries acknowledgeable true and whose code is accepted no longer blocks admission and is listed under acknowledged; a reason without it (a failure rather than a decision) cannot be accepted, and passing its code is the error admit.not-acknowledgeable",
         "Report in admit what a change does to privileges and guarantees as acknowledgeable reasons: admit.privilege-change for every capability added to a role, grant, delegation or token scope and every new or changed grant or delegation without maxDuration (capabilities removed are listed under diff.privilege.removed, not as a reason), and admit.guarantee-weakened for a copy class whose freshness or erasure bound is looser than another class of the same record, a changed or removed retention, integrity rule or claim (before and after)",
         "Report a new claim that is realised by code and cannot be decided at specification time (a requirement, a claim of an external verification method or of external-evidence) that names a milestone and has no result yet as pendingRealisation instead of a weak claim; a requirement without a milestone is the reason admit.requirement-without-milestone",
-        "Admit a change set (admit): evaluate the specification before and after the operations are applied in memory through Project.apply, report the diff of claim statuses, validation diagnostics, readiness gaps and integrity violations, and admit it only when no claim got worse, no validation error or integrity violation is new and every claim it creates is verified or proved; report the check and grounding of every claim (counts before and after, and each claim it creates) and reject a claim the change creates that is holds-by-construction or restated-scenario (admit.claim-vacuous), single-trace (admit.claim-single-trace) or self-contained (admit.claim-self-contained), each reason marked acknowledgeable; write the specification, as apply does, only with --write and an admitted verdict",
+        "Admit a change set (admit): evaluate the specification before and after the operations are applied in memory through Project.apply, report the diff of claim statuses, validation diagnostics, readiness gaps and integrity violations, and admit it only when no claim got worse (a fall from a positive status to not-evaluated included), no claim that was positive is removed unless admit.claim-removed is accepted, no validation error or integrity violation is new and every claim it creates is verified or proved; report the check and grounding of every claim (counts before and after, and each claim it creates) and reject a claim the change creates that is holds-by-construction or restated-scenario (admit.claim-vacuous), single-trace (admit.claim-single-trace) or self-contained (admit.claim-self-contained), each reason marked acknowledgeable; write the specification, as apply does, only with --write and an admitted verdict",
         "Show the check and grounding of each claim (src/core/claim-strength.js) in the results of claims and evaluate"
       ],
       "ports": [
@@ -1312,7 +1319,8 @@
       "unknowns": [
         "Each invocation builds a fresh Project from disk: there is no undo history across invocations and no long-running session.",
         "Writing the spec file and the layout file are two separate writes; if the second conflicts, the first has already been written.",
-        "No MCP server or other protocol wrapper exists; the command line is the only agent-facing interface."
+        "No MCP server or other protocol wrapper exists; the command line is the only agent-facing interface.",
+        "Admit and verify compare claim statuses, not what the claims say: an edit of a claim's statement or evaluate is reported (admit.guarantee-weakened) but not ranked, and the verify baseline starts with the first passing run that records it (milestone M10 of docs/foundations.md)."
       ],
       "implementation": {
         "status": "manual",
@@ -1333,12 +1341,13 @@
       "parent": "tooling",
       "category": "infrastructure",
       "runsIn": "node",
-      "purpose": "Vite configuration: serves the application on 127.0.0.1 with the development-server plugin, builds a static bundle with relative asset URLs, and keeps saved specifications from triggering page reloads. The Pages workflow publishes that bundle, which opens Exegra's own specification first, to the repository's GitHub Pages site on every push to main.",
+      "purpose": "Vite configuration: serves the application on 127.0.0.1 with the development-server plugin, builds a static bundle with relative asset URLs, and keeps saved specifications from triggering page reloads. The Pages workflow, triggered by a push to main, publishes that bundle, which opens Exegra's own specification first, to the repository's GitHub Pages site.",
       "responsibilities": [
         "Build a static bundle whose asset URLs are relative, so it loads at a domain root or under the repository's GitHub Pages sub-path",
-        "On every push to main, build the Lean core to WebAssembly, validate Exegra's own specification and publish the bundle to GitHub Pages (.github/workflows/pages.yml); a specification that does not validate is not published"
+        "Declare the Pages workflow (.github/workflows/pages.yml): triggered by a push to main, it builds the Lean core to WebAssembly, validates Exegra's own specification, builds and uploads the bundle and deploys it to GitHub Pages; in a run whose specification does not validate nothing is published"
       ],
       "unknowns": [
+        "Only the workflow file is checked (tests/core/pages-site.test.js): that GitHub runs it, and that every push to main is published, are not. Under the workflow's concurrency group a queued run is replaced when a newer push arrives, so an intermediate push may never be deployed; a disabled workflow, Pages not set to GitHub Actions or a push marked to skip CI publish nothing.",
         "The GitHub Pages site is the production build: read-only, it shows the specifications as of the last push to main with the evidence results recorded in specs/exegra/evidence/results.json, and, the Lean core being wasm64, it does not run in stable Safari.",
         "The production build contains no persistence service: it bundles the shipped specs and is read-only.",
         "dist/ embeds as text the specification, layout and recorded results of every shipped project and the specification of every linked project whose specification lives outside specs/ (copy shipped-specifications); a linked project's specification, which is not in this repository, therefore ends up in the build output (WG-4775, finding F11)."
@@ -1389,12 +1398,16 @@
         "Report declared modules missing on disk and files under src, cli and tools (.js, .json, .css, .html) plus index.html and vite.config.js that no component claims, leaving out generated build output (src/engine/pkg/) and files whose name starts with local- (local data, ignored by git)",
         "Through `verify`: validate, check traceability, execute each evidence of kind test with node --test or Playwright and record outcomes and the traceability result in results.json, then re-evaluate claims with them",
         "Refuse an evidence reference with characters outside letters, digits, underscore, dot, slash, hyphen, space, hash and colon, and time a test run out after ten minutes",
-        "Reuse the outcomes that `npm test` and `npm run test:browser` already recorded (reporters in tools/ writing .outcomes/, each stamped with a hash over the tracked files, the untracked files git does not ignore and the generated engine builds) instead of running the same test again: an evidence reference is answered from the recorded run only when the run was complete, the tree did not change during it and its stamp equals the stamp of the tree verify runs on; a reference that matches no recorded test, a failure, or a skipped browser test is run as before, and a unit test that skipped itself is recorded as skipped. results.json says for each outcome whether it was run or reused; `verify --fresh` reuses nothing"
+        "Reuse the outcomes that `npm test` and `npm run test:browser` already recorded (reporters in tools/ writing .outcomes/, each stamped with a hash over the tracked files, the untracked files git does not ignore and the generated engine builds) instead of running the same test again: an evidence reference is answered from the recorded run only when the run was complete, the tree did not change during it and its stamp equals the stamp of the tree verify runs on; a reference that matches no recorded test, a failure, or a skipped browser test is run as before, and a unit test that skipped itself is recorded as skipped. results.json says for each outcome whether it was run or reused; `verify --fresh` reuses nothing",
+        "Decide what a reference's matched tests establish with one function on the fresh path (node's TAP output, Playwright's summary) and the reuse path (the recorded outcomes) alike: only leaf tests count, a describe block is not a test, todo tests are recorded as todo, and a reference passes only when at least one matched test executed and passed and none failed, skipped or is a todo",
+        "Stamp what it records: the records stamp (the tree stamp without specs/<project>/evidence/results.json and specs/<project>/generated/) on every evidence result, and on every Lean theorem check the hash of the formal/ sources checked, the records stamp and the sha256 of the theorem statement as Lean printed it"
       ],
       "unknowns": [
         "Only evidence of kind test is executed; measurement, document and review evidence stay author-entered.",
         "The traceability check compares paths only: it does not check that a module implements what its component claims, nor that relationships match imports. Its surface is src/, cli/ and tools/ with the extensions .js, .json, .css and .html, plus index.html and vite.config.js: a .mjs file is outside it (tools/bench-mm1.mjs was unclaimed until this correction), and formal/ and engine/ are outside it too, so an unclaimed Lean or Rust file is not reported.",
-        "Browser tests need Chrome and the Vite development server; `verify --skip-browser` skips them and leaves their evidence without a recorded result."
+        "Browser tests need Chrome and the Vite development server; `verify --skip-browser` skips them and records their evidence as not run, unless its earlier result was recorded on the same tree stamp.",
+        "A whole-file evidence reference to a test file with a test that skips itself where a tool is missing (Lean, a native binary) is not a pass in such an environment; the reference passes only where every matched test runs.",
+        "The Lean checker does not yet report implemented_by, extern or partial for a definition (tools/lean-theorems.js reports kind, axioms, the kernel check, the constants in the statement and the statement text), so only opaque constants are refused for that reason today."
       ],
       "implementation": {
         "status": "manual",
@@ -1495,7 +1508,7 @@
       "runsIn": "node",
       "purpose": "Core tests (node:test) over the semantic core, generators, workspace and agent command line, and Playwright browser tests of the running application: against scratch copies of this specification and of the multiplayer test fixture, and, when a project is linked locally, read-only against it (local-*.spec.js files, which are not tracked); the older browser tests run at desktop size and tests/browser/mobile.spec.js runs at phone and tablet size by touch. The browser tests run on two Playwright workers by default (EXEGRA_TEST_WORKERS overrides); each worker slot has its own pair of scratch projects (zz-test-exegra-wN, zz-test-multiplayer-wN), so edits, saves and change notices never cross workers.",
       "unknowns": [
-        "Tests are evidence only through `exegra verify`; recorded results are not tied to the code revision.",
+        "Tests are evidence only through `exegra verify`; recorded results carry the records stamp of the tree and read as stale on any later edit, until verify runs again.",
         "No test measures performance, so no claim about frame rate or load time has evidence."
       ],
       "implementation": {
@@ -1515,6 +1528,7 @@
           "tests/core/concordance.test.js",
           "tests/core/cli.test.js",
           "tests/core/data-model.test.js",
+          "tests/core/fact-producers.test.js",
           "tests/core/fault-model.test.js",
           "tests/core/generate.test.js",
           "tests/core/import-markdown.test.js",
@@ -2168,7 +2182,7 @@
       "purpose": "Claims over measured outputs, evaluated over many seeded runs with exact binomial and sign tests, reported with their sample count, seeds and confidence as model results (model-holds), never as verified or supported, and validated against recorded load runs.",
       "responsibilities": [
         "Declare the claim method metric-bound: scenarios, metric (kind, subject, statistic, outcomes, window, series aggregate), op and bound, approx, or relativeTo another metric with its own window, fraction, confidence, runs, base seed, negatives (on the claim's scenarios or on variants declaring variantOf), control negatives and calibratedBy",
-        "Run the scenario once per seed, run r using the r-th SplitMix64 output of the base seed (mod 2^64), in metrics mode, and take one statistic per run; a truncated run does not satisfy the bound; an underpowered run is left out when only open workloads start the class and counts as not satisfying otherwise; the test uses the thresholds of the N' runs kept",
+        "Run the scenario once per seed, run r using the r-th SplitMix64 output of the base seed (mod 2^64), in metrics mode, and take one statistic per run; a truncated run does not satisfy the bound; an underpowered run is left out only when the engine input shows that open workloads alone start the class (computed from the workloads, behaviors, scenario steps and faults, never assumed) and the run had no duplicate starts, and counts as not satisfying otherwise; the test uses the thresholds of the N' runs kept",
         "Decide model-holds, fails or inconclusive by exact rational binomial tails with N fixed in advance (the minimum N is the smallest with beta^N <= alpha, compared exactly); for approx, use the sign-test order-statistic interval of the median of the per-run statistic, which needs at least 6 runs at 95%",
         "Report model-holds (never supported or verified) with the scope \"model only; parameters as stated\", runs, seeds, passes, N', fraction, confidence, the spread of the per-run statistic and the underpowered and truncated runs",
         "Require each negative to fail and each control negative to hold before reporting model-holds; a base scenario that fails makes the claim violated; fixture results test the engine and method and are not evidence about any system",
@@ -6554,7 +6568,7 @@
     {
       "id": "verify-claims-evaluated",
       "name": "Claims evaluated after verify",
-      "description": "Real run: evaluateClaims(model, {recorded: {results}}) in runVerify, after writeRecorded."
+      "description": "Real run: evaluateClaims(model, {recorded: {results}, stamps}) in runVerify, after writeRecorded. A run that then passes writes the claim statuses into the same file as claimBaseline, a second writeRecorded that this machine does not model."
     },
     {
       "id": "engine-not-built",
@@ -12489,7 +12503,7 @@
           "from": "cli-verifying",
           "to": "cli-verifying",
           "on": "verify-tests-finished",
-          "description": "writeRecorded replaces evidence/results.json (results and traceability, the other keys kept).",
+          "description": "writeRecorded replaces evidence/results.json (results stamped with the records stamp, traceability and theorems, the other keys kept).",
           "effects": [
             {
               "emit": "ws-write-recorded",
@@ -14665,7 +14679,7 @@
     {
       "id": "recorded-results-reflect-current-code",
       "statement": "A recorded result of a test in evidence/results.json was produced by the code and the specification as they are now.",
-      "rationale": "Recorded results carry an outcome and a timestamp but no hash of the code or the model; staleness is not detected."
+      "rationale": "Recorded results carry the records stamp of the tree and Lean checks the hash of the formal/ sources; the command line reads a result of another stamp as stale and never positive. Where no stamp can be computed (the browser bundle) the results are shown with unverifiable freshness, and this assumption is what they rest on."
     },
     {
       "id": "filesystem-honours-atomic-rename",
@@ -17427,9 +17441,9 @@
       }
     },
     {
-      "id": "verify-skip-keeps-recorded-outcome",
+      "id": "verify-skip-records-not-run",
       "kind": "invariant",
-      "statement": "A verify run that skips a test evidence entry keeps the outcome recorded for that entry before, and records no outcome for it where none was recorded.",
+      "statement": "A verify run in which a test evidence reference skipped (a matched test skipped itself or is a todo, wholly or in part, or a browser test was not started under --skip-browser) records that evidence as not-run, which counts as no result, and never keeps an older pass for it; the only result kept is that of a browser test not started whose earlier result was recorded on the same tree stamp.",
       "subjects": [
         "agent-cli",
         "recorded-results-file"
@@ -17437,7 +17451,133 @@
       "assumptions": [
         "tests-exercise-shipped-modules"
       ],
-      "rationale": "A skipped run did not execute, so it must not erase the outcome of an earlier run. The kept outcome keeps its own ranAt, so its age stays visible.",
+      "rationale": "Replaces verify-skip-keeps-recorded-outcome, which kept the older pass on purpose: a pass recorded before a test started to skip kept its claim supported on code it never ran against (assessment 2026-11-26, epistemics D1 and D2; milestone M0 of docs/foundations.md). A result recorded on the same tree stamp is still a fact about the tree, so a browser test that verify did not start keeps it.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "test-evidence-skip-aware",
+      "kind": "invariant",
+      "statement": "A test evidence reference passes only when at least one matched leaf test executed and passed and no matched test failed, skipped itself or is a todo; a describe block is not a test of its own; the fresh path (node's TAP output) and the reuse path (outcomes recorded by npm test) decide this with the same function, and a reference whose matched tests skipped, wholly or in part, is recorded as not run on both.",
+      "subjects": [
+        "verification-pipeline",
+        "agent-cli"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "Encodes docs/assessment/2026-11-26/demos/skipped-test-counts-as-pass.test.js (tests/fixtures/skipped-tests/demo.test.js): the patterns inner real check, trivially|real check and publishes each counted as a pass before (a suite whose only test skipped printed a plain ok line; a todo was not filtered; a mixed match passed on the reuse path). A whole-file reference to a file with a test that skips itself, for want of Lean or a native binary, is now not a pass where that test skipped.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "recorded-results-read-stale-on-stamp-mismatch",
+      "kind": "invariant",
+      "statement": "exegra verify records every evidence result with the records stamp of the tree (tools/tree-stamp.js: the tree stamp without the project's results.json and generated artifacts), and the command line evaluates claims against the current stamps: an evidence result or an external tool's outcome recorded on another stamp, or on none, is stale; a stale pass establishes nothing, so a claim resting on it is not evaluated, with an explanation that starts with Stale and the diagnostic claim.stale-evidence; a stale fail still contradicts its claim.",
+      "subjects": [
+        "claim-evaluator",
+        "verification-pipeline",
+        "recorded-results-file"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "Closes epistemics D2 and the architecture finding that recorded results carried no provenance. The status set stays closed: staleness is reported as not-evaluated with the freshness field stale and a diagnostic, not as a new status, because CLAIM_STATUSES, the admit ranks, the summaries and the generators all enumerate the seven statuses, and the status lattice that will carry freshness as its own component is milestone M3. The results file and generated artifacts are left out of the stamp so that writing them does not make the results they hold stale.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "recorded-results-unverifiable-without-stamp",
+      "kind": "invariant",
+      "statement": "Where no current stamp can be computed (the application in the browser), a claim status resting on recorded facts keeps its value but carries freshness unverifiable, the diagnostic claim.freshness-unverifiable and, when the status is positive, an explanation that says so; the verification panel says the recorded results' freshness is unverifiable there.",
+      "subjects": [
+        "claim-evaluator",
+        "verification-panel"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "The page cannot stamp the working tree, so it neither trusts recorded results silently nor hides them. The browser part (the panel line) has no browser test of its own; the evidence covers the evaluator.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "lean-theorem-requires-code-about",
+      "kind": "invariant",
+      "statement": "A lean-theorem claim is refused (violated) when it names no implementation constant in about, or when a named constant is opaque, or is reported implemented_by, extern or partial, because a theorem about such a constant says nothing about the code that runs.",
+      "subjects": [
+        "claim-evaluator"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Encodes the cases of finding L1 of docs/assessment/2026-11-26/lean.md that are reachable from the recorded facts: a claim with no about was proved, and an opaque about constant was accepted. tools/lean-theorems.js does not yet report implemented_by, extern or partial for a definition, so those refusals apply only to records that carry them; a partial def and an implemented_by opaque are opaque constants and are refused. The tautology case of L1 (a statement that mentions the code but says nothing about it) needs the statement binding of milestone M3 and is not decided here.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "lean-theorem-records-stale-on-source-change",
+      "kind": "invariant",
+      "statement": "Each recorded Lean theorem check carries the hash of the formal/ sources it was checked on, the records stamp of the tree and the hash of the theorem statement as Lean printed it; when Lean does not run (not installed, or EXEGRA_NO_LEAN=1) a recorded check whose formal hash differs from that of the current sources, or that carries none, does not keep its claim proved: the claim is not evaluated, with an explanation that starts with Stale and the diagnostic claim.stale-theorem.",
+      "subjects": [
+        "claim-evaluator",
+        "verification-pipeline"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Closes epistemics D3 and lean.md L2: replacing a proof by sorry and running verify without Lean kept all lean-theorem claims proved. A refusal recorded on other sources still stands, since staleness never improves a status. The statement hash is recorded for review and for admission of statement changes (milestone M10); nothing compares it yet.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "metric-open-started-computed",
+      "kind": "invariant",
+      "statement": "A metric-bound claim leaves an underpowered run out only for a request class that the engine input shows to be open-started (its named workload is open, or with none named an open workload issues its start event and no closed or population workload, behavior emit or then, scenario step or injected fault can); for every other class, and for a run with duplicate starts, an underpowered run is kept and does not satisfy the bound; nothing defaults a class to open-started.",
+      "subjects": [
+        "metric-claims"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "Encodes docs/assessment/2026-11-26/demos/metric-demo1.mjs and simulation.md finding F1: openStarted defaulted to true and was never computed, so 40 collapsing runs of 100 on a closed workload were left out and the claim read model-holds; it now reads violated.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "admit-rejects-downgrades-and-removals",
+      "kind": "invariant",
+      "statement": "exegra admit ranks not-evaluated with inconclusive, so a claim that moves from a positive status to not-evaluated is the reason admit.claim-regressed (not acknowledgeable), and a claim that was proved, verified, supported or model-holds and that the change removes is the reason admit.claim-removed, which only an explicit --accept admit.claim-removed acknowledges.",
+      "subjects": [
+        "agent-cli"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "Encodes the compare() demonstration of epistemics D8: supported to not-evaluated, proved to not-evaluated and a removed verified claim were all admitted with no reason.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "verify-fails-on-regression",
+      "kind": "invariant",
+      "statement": "exegra verify records, with each passing run, every claim's status and the fingerprint of each violated claim's counterexample (claimBaseline in results.json), and fails when, against that baseline, a positive claim falls to a lower status (inconclusive and not-evaluated included), a positive claim no longer exists, or a claim named by --expect-violated is violated with another counterexample; --accept-change names the claims whose change is accepted, and a failing run leaves the baseline as it was.",
+      "subjects": [
+        "agent-cli",
+        "recorded-results-file"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "Encodes epistemics D8 for verify: the expectation matched claim ids only, so a new counterexample of core-logic-in-lean or edits-only-via-transactions passed, and a claim falling to inconclusive or not-evaluated passed. Keeping the baseline on failure means running verify again does not wave the regression through.",
       "evaluate": {
         "method": "external-evidence"
       }
@@ -17626,12 +17766,12 @@
     {
       "id": "pages-site-published-from-main",
       "kind": "structural",
-      "statement": "Every push to main publishes the production build to the repository's GitHub Pages site, and only after the Lean core is built and Exegra's own specification validates; the build's asset URLs are relative, so the site loads under the repository's sub-path.",
+      "statement": "The Pages workflow file .github/workflows/pages.yml is triggered by a push to main with no path, tag or branch filter beyond main, and grants pages: write and id-token: write; its build job, with no condition and no step whose failure is ignored, builds the Lean core, validates Exegra's own specification, builds the bundle and uploads dist, in that order; its deploy job needs the build job, runs only on main and deploys the uploaded artifact; and the Vite configuration's base is relative, so the bundle loads under the repository's sub-path.",
       "subjects": [
         "build-system"
       ],
       "assumptions": [],
-      "rationale": "Supported by tests/core/pages-site.test.js (the ev-pages-* evidence entries), which read vite.config.js and .github/workflows/pages.yml; that GitHub runs the workflow as written is outside what Exegra checks.",
+      "rationale": "Supported by tests/core/pages-site.test.js (the ev-pages-* evidence entries), which read the structure of vite.config.js and .github/workflows/pages.yml, and which are shown to fail on the five workflow mutants of docs/assessment/2026-11-26/demos/pages-mutants.mjs (deploy job if: false, build job if: false, || true after validate, a paths filter that never matches, needs: build removed; ev-pages-mutants-refused). It does not establish that GitHub runs the workflow (Pages enabled as the source, the workflow enabled, a push not marked to skip CI), nor that every push to main is published: under the workflow's concurrency group a queued run is replaced when a newer push arrives, so an intermediate push may never be built or deployed. The checks are structural: they catch the listed mutants, not every edit that breaks publishing (a broken build command, a wrong artifact name in a later action version, a failing deploy).",
       "evaluate": {
         "method": "external-evidence"
       }
@@ -19443,8 +19583,9 @@
   // semicolon are referenced by a prefix because verify accepts neither in a reference.
   "evidence": [
     { "id": "ev-pages-relative-base", "claim": "pages-site-published-from-main", "kind": "test", "ref": "tests/core/pages-site.test.js#the production build uses relative asset URLs so it loads under a sub-path", "description": "The Vite configuration's base is relative." },
-    { "id": "ev-pages-on-push-to-main", "claim": "pages-site-published-from-main", "kind": "test", "ref": "tests/core/pages-site.test.js#the Pages workflow runs on every push to main", "description": "The Pages workflow runs on a push to main with the permissions a Pages deployment needs." },
-    { "id": "ev-pages-validate-before-deploy", "claim": "pages-site-published-from-main", "kind": "test", "ref": "tests/core/pages-site.test.js#the Pages workflow builds the Lean core and validates the specification before it builds and deploys dist", "description": "The workflow builds the Lean core, validates specs/exegra/spec.jsonc, builds and uploads dist, and deploys it, in that order." },
+    { "id": "ev-pages-on-push-to-main", "claim": "pages-site-published-from-main", "kind": "test", "ref": "tests/core/pages-site.test.js#the Pages workflow is triggered by a push to main with no path or tag filter and may deploy to Pages", "description": "The workflow's push trigger names exactly the branch main and no other filter, and it grants pages: write and id-token: write." },
+    { "id": "ev-pages-validate-before-deploy", "claim": "pages-site-published-from-main", "kind": "test", "ref": "tests/core/pages-site.test.js#the Pages workflow builds the Lean core and validates the specification before it builds and deploys dist", "description": "Read structurally: the build job has no condition and builds the Lean core, validates specs/exegra/spec.jsonc, builds and uploads dist in that order, none of these steps conditional or able to hide a failure; the deploy job needs build, runs only on main and deploys." },
+    { "id": "ev-pages-mutants-refused", "claim": "pages-site-published-from-main", "kind": "test", "ref": "tests/core/pages-site.test.js#the workflow checks fail on each of the five publishing mutants", "description": "The checks of the two workflow tests fail on each of the five mutants of docs/assessment/2026-11-26/demos/pages-mutants.mjs applied to the workflow as it is: if: false on the deploy or the build job, || true after validate, a never-matching paths filter, needs: build removed." },
     { "id": "ev-concordance-pass", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#a Concordance pass makes a requirement supported", "description": "A recorded pass of a requirement in the Concordance results is supported, not verified." },
     { "id": "ev-concordance-fail", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#a Concordance fail makes a requirement violated", "description": "A recorded fail in the Concordance results makes the requirement violated." },
     { "id": "ev-concordance-absent", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#a claim without a Concordance entry stays not evaluated", "description": "A claim with no entry in the Concordance results stays not evaluated." },
@@ -19703,11 +19844,109 @@
       "description": "An outcome file stamped with the current tree answers a reference; with another stamp it answers nothing. Companion tests cover a reference matching no recorded test, failures, skipped tests, mixed matches and the stamp itself."
     },
     {
-      "id": "ev-verify-skip-keeps-outcome",
-      "claim": "verify-skip-keeps-recorded-outcome",
+      "id": "ev-verify-skip-records-not-run",
+      "claim": "verify-skip-records-not-run",
       "kind": "test",
-      "ref": "tests/core/cli.test.js#a skipped verify run keeps the outcome recorded before instead of erasing it",
-      "description": "mergeRecordedResults keeps the earlier outcome of a skipped evidence entry and records the outcomes of the runs that executed."
+      "ref": "tests/core/cli.test.js#a skipped verify run records the evidence as not run instead of keeping an older pass",
+      "description": "mergeRecordedResults records a skipped entry as not-run with the current stamp instead of its older pass, records the runs that executed, and keeps a result of a browser test not started only when it was recorded on the same stamp."
+    },
+    {
+      "id": "ev-skip-not-supporting",
+      "claim": "verify-skip-records-not-run",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#a test that skipped now is recorded as not run and no older pass supports its claim",
+      "description": "An older pass followed by a skip is recorded as not-run, and the external-evidence claim resting on it is inconclusive, not supported."
+    },
+    {
+      "id": "ev-skip-aware-fresh",
+      "claim": "test-evidence-skip-aware",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#a reference whose matched test skipped or is a todo is not a pass on the fresh path",
+      "description": "node --test runs the demo fixture (tests/fixtures/skipped-tests/demo.test.js) with the patterns inner real check, trivially|real check and publishes, and with no pattern; the TAP verdict is skipped for each, a suite and a todo count no pass, and the executed test alone passes."
+    },
+    {
+      "id": "ev-skip-aware-reuse",
+      "claim": "test-evidence-skip-aware",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#a reference whose matched test skipped or is a todo is not a pass on the reuse path",
+      "description": "The outcomes npm test's reporter records for the same fixture answer the same references with skipped, including an outcome file written before suites and todos were flagged."
+    },
+    {
+      "id": "ev-skip-aware-whole-file",
+      "claim": "test-evidence-skip-aware",
+      "kind": "test",
+      "ref": "tests/core/outcome-reuse.test.js#a whole-file reference to a file with a self-skipping test is not a pass",
+      "description": "A recorded file with one passing and one skipped test answers a whole-file reference with skipped, naming how many matched tests did not execute."
+    },
+    {
+      "id": "ev-stale-evidence",
+      "claim": "recorded-results-read-stale-on-stamp-mismatch",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#a recorded result whose stamp is not the current stamp leaves its claim not evaluated as stale",
+      "description": "A pass recorded on another stamp, or with none, leaves an external-evidence claim not evaluated with a Stale explanation, freshness stale and claim.stale-evidence; on the current stamp it is supported and fresh; a stale fail still violates."
+    },
+    {
+      "id": "ev-stale-external-tool",
+      "claim": "recorded-results-read-stale-on-stamp-mismatch",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#an outcome an external tool recorded on another tree does not support its claim",
+      "description": "An external tool's recorded pass for a claim of a declared verification method supports it only when stamped with the current stamp."
+    },
+    {
+      "id": "ev-records-stamp",
+      "claim": "recorded-results-read-stale-on-stamp-mismatch",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#the records stamp ignores the files Exegra writes from its results and the formal hash follows formal sources",
+      "description": "In a scratch git tree, writing results.json and generated artifacts leaves the records stamp unchanged while an edit of the specification changes it; the formal hash changes when a proof is replaced; verify writes the stamp into every recorded result."
+    },
+    {
+      "id": "ev-unverifiable-freshness",
+      "claim": "recorded-results-unverifiable-without-stamp",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#without a current stamp recorded results are reported with unverifiable freshness",
+      "description": "With no current stamp a recorded pass still supports its claim, which carries freshness unverifiable, an explanation saying so and the info diagnostic claim.freshness-unverifiable."
+    },
+    {
+      "id": "ev-lean-about-refusals",
+      "claim": "lean-theorem-requires-code-about",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#the lean-theorem rule refuses a claim with no about list and an about constant that is not the code that runs",
+      "description": "Recorded facts of a kernel-checked theorem with standard axioms: no about and an empty about are violated, an opaque about constant and one reported implemented_by, extern or partial are violated, a definition named in the statement is proved."
+    },
+    {
+      "id": "ev-lean-stale-sources",
+      "claim": "lean-theorem-records-stale-on-source-change",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#a recorded Lean check of other formal sources does not keep its claim proved",
+      "description": "A recorded check whose formal hash differs from the current one, or that has none, leaves the claim not evaluated with a Stale explanation and claim.stale-theorem; with the current hash it is proved and fresh."
+    },
+    {
+      "id": "ev-metric-closed-violated",
+      "claim": "metric-open-started-computed",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#a closed-workload class whose runs collapse reads violated: underpowered runs are kept and fail",
+      "description": "metric-demo1 through evaluateMetricClaim with a closed workload: the class is not open-started, all 100 runs are kept and the claim is violated; the demo's statistics with openStarted unstated also fail."
+    },
+    {
+      "id": "ev-metric-open-started-rule",
+      "claim": "metric-open-started-computed",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#open-startedness is computed from the workloads that can start the class",
+      "description": "An open workload alone makes the class open-started and the underpowered runs left out; a behavior emit, a population, a scenario step or a non-request metric does not; a run with duplicate starts is kept."
+    },
+    {
+      "id": "ev-admit-downgrades",
+      "claim": "admit-rejects-downgrades-and-removals",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#admit rejects a claim that falls to not evaluated and a positive claim that is removed",
+      "description": "compare() rejects supported and proved claims falling to not-evaluated (admit.claim-regressed) and a removed verified claim (admit.claim-removed), and admits the removal only when it is accepted."
+    },
+    {
+      "id": "ev-verify-regressions",
+      "claim": "verify-fails-on-regression",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#verify fails on a fall from a positive status a removal and a changed counterexample of an expected violation",
+      "description": "verifyRegressions over claimBaseline: a proved claim falling to not-evaluated, a supported one to inconclusive, a removed supported claim and an expected-violated claim with a new counterexample entity are each reported; an unchanged run and accepted changes are not."
     },
     {
       "id": "ev-journal-append-failure",

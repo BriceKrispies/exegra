@@ -6,6 +6,11 @@
 // ran (treeBefore equals treeAfter), and that stamp equals the stamp of the tree verify runs on. A reference
 // that no recorded test matches, a failure, or a matched set that proves nothing (everything skipped, for a
 // browser test) is never reused: verify runs it. Pure apart from reading the outcome files.
+//
+// What a set of matched tests establishes is decided by one function, testsVerdict, for the fresh path (the
+// TAP output verify reads, cli/commands.js) and the reuse path (the recorded outcomes read here) alike: only
+// executed leaf tests count, a suite is never a test of its own, and a match passes only when at least one
+// matched leaf test executed and passed and none failed, skipped or was a todo.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -64,10 +69,52 @@ export function staleReason(doc, current) {
 }
 
 /**
+ * @typedef {{outcome: 'pass'|'fail'|'skipped'|'todo', suite?: boolean}} MatchedTest
+ *   one matched test: `suite` marks a describe block or a test with subtests, which is not a test of its own
+ */
+
+/**
+ * What a reference's matched tests establish, on the fresh and the reuse path alike. Suites are left out.
+ * `pass` needs at least one executed leaf test that passed and no leaf that failed, skipped or was a todo;
+ * any failure is `fail`; no leaf at all is `none` (the reference matched no test); otherwise `skipped`: a
+ * reference part or all of whose matched tests did not execute established nothing, so it is not a pass.
+ * @param {MatchedTest[]} tests
+ * @returns {{outcome: 'pass'|'fail'|'skipped'|'none', executed: number, skipped: number, detail?: string}}
+ */
+export function testsVerdict(tests) {
+  const leaves = tests.filter((t) => !t.suite);
+  const executed = leaves.filter((t) => t.outcome === 'pass' || t.outcome === 'fail').length;
+  const notRun = leaves.filter((t) => t.outcome === 'skipped' || t.outcome === 'todo').length;
+  if (!leaves.length) return { outcome: 'none', executed: 0, skipped: 0 };
+  if (leaves.some((t) => t.outcome === 'fail')) return { outcome: 'fail', executed, skipped: notRun };
+  if (notRun === 0) return { outcome: 'pass', executed, skipped: 0 };
+  const detail = notRun === leaves.length
+    ? `every matching test (${notRun}) skipped itself or is a todo, so nothing was executed`
+    : `${notRun} of ${leaves.length} matching tests skipped themselves or are todos, so the reference was not executed in full`;
+  return { outcome: 'skipped', executed, skipped: notRun, detail };
+}
+
+/**
+ * The recorded tests of one file that are suites: those the reporter flagged, and, for outcome files that
+ * predate the flag, every test whose path is the prefix of a deeper test's path.
+ * @param {any[]} tests
+ * @returns {Set<any>}
+ */
+function suitesOf(tests) {
+  const out = new Set();
+  for (const t of tests) {
+    if (t.suite === true) out.add(t);
+    else if (tests.some((u) => u !== t && u.nesting > t.nesting && String(u.path).startsWith(`${t.path} `))) out.add(t);
+  }
+  return out;
+}
+
+/**
  * The outcome of a node:test reference from a recorded run, or null when the run cannot answer it.
  * Matched tests are those whose name, or whose name with its ancestors, the pattern matches (all tests of the
- * file for a reference without a pattern). Any failure, a failed file, or no match: null (run it). All
- * matched tests skipped: `skipped`.
+ * file for a reference without a pattern); suites are not tests of their own. Any failure, a failed file, or no
+ * matched leaf test: null (run it). Otherwise testsVerdict decides: `pass`, or `skipped` when any matched test
+ * skipped itself or is a todo.
  * @param {any} doc a node outcome file already checked fresh
  * @param {string} ref
  * @returns {{outcome: 'pass'|'skipped', detail?: string, ranAt: string}|null}
@@ -83,9 +130,11 @@ export function nodeOutcome(doc, ref) {
     if (!re) return null;
     matched = entry.tests.filter((/** @type {any} */ t) => re.test(t.name) || re.test(t.path));
   }
-  if (matched.length === 0 || matched.some((t) => t.outcome === 'fail')) return null;
+  const suites = suitesOf(entry.tests);
+  const verdict = testsVerdict(matched.map((t) => ({ outcome: t.outcome, suite: suites.has(t) })));
+  if (verdict.outcome === 'none' || verdict.outcome === 'fail') return null;
   const ranAt = String(doc.finishedAt);
-  if (matched.every((t) => t.outcome === 'skipped')) return { outcome: 'skipped', detail: 'the matching test skipped itself', ranAt };
+  if (verdict.outcome === 'skipped') return { outcome: 'skipped', detail: /** @type {string} */ (verdict.detail), ranAt };
   return { outcome: 'pass', ranAt };
 }
 
@@ -104,8 +153,8 @@ export function playwrightOutcome(doc, ref) {
   if (pattern && !re) return null;
   const wanted = file.replace(/\\/g, '/');
   const matched = doc.tests.filter((/** @type {any} */ t) => String(t.file).includes(wanted) && (!re || re.test(t.title)));
-  if (matched.length === 0 || matched.some((t) => t.outcome === 'fail')) return null;
-  if (!matched.some((t) => t.outcome === 'pass')) return null;
+  // Only a full pass is reused; a failure, no match, or any skipped match is run again.
+  if (testsVerdict(matched.map((t) => ({ outcome: t.outcome }))).outcome !== 'pass') return null;
   return { outcome: 'pass', ranAt: String(doc.finishedAt) };
 }
 
