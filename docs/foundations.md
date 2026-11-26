@@ -138,10 +138,16 @@ regression; `pages-site-published-from-main` restated to what its test establish
 `assessment/2026-11-26/demos/` that shows an inflation yields the honest status, as a unit test.
 
 **M1. The LTS foundation and unbounded safety (no dependency).** `Exegra.Core`: LTS, reachability, invariants,
-inductive invariants, `safe_of_inductive`, k-induction soundness, closed-set certificates; a minimal typed
-guarded-command calculus over `Int` with a total denotation and an LTS semantics. *Done when* the counter invariant
-`n ≤ L` is proved with no bound, a true but non-inductive invariant is shown not to be accepted without
-strengthening, and a closed-set certificate proves an invariant of a finite system with no bound.
+inductive invariants, `safe_of_inductive`, vacuity and deadlock, bounded reachability, closed-set certificates;
+the bridge from the existing generic search (`Gen.search`) to LTS invariants, for `holds` results (under a coverage
+obligation) and for counterexamples (under a soundness obligation); a minimal single-sorted guarded-command
+calculus over `Int` with well-scoped variables (`Fin n`), total expressions, snapshot updates and steps labelled
+by command. *Done when* the counter invariant `n ≤ L` is proved with no bound, a true but non-inductive invariant
+is shown not to be accepted without strengthening, bounded invariance at every depth is shown not to imply
+invariance, and a closed-set certificate proves an invariant of a finite system with no bound. k-induction is M4.
+*Limitations:* the calculus is single-sorted and has no division, timers, events or faults (M2); there are no
+runs, traces or observations yet (M5, M6); semantic completeness of inductive invariants is over arbitrary
+predicates, not over the calculus's expressions.
 
 **M2. Typed core calculus for Exegra behaviours (after M1).** Exegra's behaviour language (machines, events,
 guards, effects, timers, faults) as a typed calculus whose semantics is an M1 LTS, with snapshot reads; the format-2

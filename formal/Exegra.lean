@@ -24,4 +24,5 @@ import Exegra.ModelProps
 import Exegra.Api
 import Exegra.Core.LTS
 import Exegra.Core.Calculus
+import Exegra.Core.Search
 import Exegra.Core.Examples

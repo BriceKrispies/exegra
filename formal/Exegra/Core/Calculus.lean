@@ -4,60 +4,63 @@ import Exegra.Core.LTS
 A minimal guarded-command calculus whose semantics is an `LTS` (docs/foundations.md, M1).
 
 It is the smallest language in which the safety theory of `Exegra.Core.LTS` can be exercised on
-programs rather than on hand-written relations, and it fixes three choices that the behaviour
-calculus of M2 keeps:
+programs rather than on hand-written relations. It fixes the choices the behaviour calculus of M2
+keeps:
 
-* values are integers (`Int`), so arithmetic facts are provable (`omega`), unlike `Float`;
-* expressions are syntax trees with a total denotation (`IExpr.eval`, `BExpr.eval`); nothing is
-  parsed inside a step, and no evaluation can fail;
-* a command assigns all of its variables simultaneously from the state before the step (snapshot
-  reads), so the effect of a command does not depend on the order in which its assignments are
-  listed when they assign distinct variables.
+* **Integers.** Values are `Int`, so arithmetic facts are provable (`omega`); a `Float` semantics
+  admits no such proof.
+* **Total, well-scoped expressions.** A program over `n` variables has expressions `IExpr n` whose
+  variables are `Fin n`: a reference to a variable that does not exist cannot be written. Evaluation
+  is total; nothing is parsed inside a step.
+* **Snapshot reads, by construction.** A command gives each variable at most one new value
+  (`update : Fin n → Option (IExpr n)`), every right-hand side evaluated in the state before the
+  step (`exec_get`). There is no list of assignments, so neither duplicate assignments nor their
+  order exist to be got wrong.
+* **Steps labelled by command.** A step of `p.lts` is labelled by the index of the command that
+  made it (`Fin p.cmds.length`), so two commands are distinguishable even when they do the same
+  thing, as fairness per command (M5) needs.
 
-A state is the list of variable values; variable `i` is position `i`, reading `0` past the end.
+It is single-sorted (every variable is an `Int`; Booleans occur only as guards). A typed calculus
+with several sorts is M2.
+
+A state is the list of the `n` variable values. Every reachable state has length `n`
+(`length_invariant`), so `getAt` never reads past the end of a reachable state.
 -/
 
 namespace Exegra.Core
 
-/-- Integer expressions. -/
-inductive IExpr where
-  | lit (n : Int)
-  | var (i : Nat)
-  | add (a b : IExpr)
-  | sub (a b : IExpr)
+/-- Integer expressions over `n` variables. -/
+inductive IExpr (n : Nat) where
+  | lit (v : Int)
+  | var (i : Fin n)
+  | add (a b : IExpr n)
+  | sub (a b : IExpr n)
   deriving Repr, DecidableEq
 
-/-- Boolean expressions. -/
-inductive BExpr where
+/-- Boolean expressions over `n` variables. -/
+inductive BExpr (n : Nat) where
   | tt
   | ff
-  | lt (a b : IExpr)
-  | le (a b : IExpr)
-  | eq (a b : IExpr)
-  | not (p : BExpr)
-  | and (p q : BExpr)
-  | or (p q : BExpr)
+  | lt (a b : IExpr n)
+  | le (a b : IExpr n)
+  | eq (a b : IExpr n)
+  | not (p : BExpr n)
+  | and (p q : BExpr n)
+  | or (p q : BExpr n)
   deriving Repr, DecidableEq
 
-/-- The value of variable `i` in state `s` (`0` past the end). -/
-def getAt : List Int → Nat → Int
-  | [], _ => 0
-  | x :: _, 0 => x
-  | _ :: xs, i + 1 => getAt xs i
+/-- The value at position `i` of a state (`0` past the end, which a reachable state never is). -/
+def getAt (s : List Int) (i : Nat) : Int := (s[i]?).getD 0
 
-/-- State `s` with variable `i` set to `v` (unchanged past the end). -/
-def setAt : List Int → Nat → Int → List Int
-  | [], _, _ => []
-  | _ :: xs, 0, v => v :: xs
-  | x :: xs, i + 1, v => x :: setAt xs i v
+variable {n : Nat}
 
-def IExpr.eval (s : List Int) : IExpr → Int
-  | .lit n => n
-  | .var i => getAt s i
+def IExpr.eval (s : List Int) : IExpr n → Int
+  | .lit v => v
+  | .var i => getAt s i.val
   | .add a b => a.eval s + b.eval s
   | .sub a b => a.eval s - b.eval s
 
-def BExpr.eval (s : List Int) : BExpr → Bool
+def BExpr.eval (s : List Int) : BExpr n → Bool
   | .tt => true
   | .ff => false
   | .lt a b => decide (a.eval s < b.eval s)
@@ -67,69 +70,79 @@ def BExpr.eval (s : List Int) : BExpr → Bool
   | .and p q => p.eval s && q.eval s
   | .or p q => p.eval s || q.eval s
 
-/-- A guarded command: when `guard` holds, assign each listed variable the value of its expression,
-all evaluated in the state before the step. -/
-structure Cmd where
-  label : String
-  guard : BExpr
-  updates : List (Nat × IExpr)
+/-- A guarded command over `n` variables: when `guard` holds, each variable `i` with
+`update i = some e` takes the value of `e` in the state before the step; the others keep theirs. -/
+structure Cmd (n : Nat) where
+  guard : BExpr n
+  update : Fin n → Option (IExpr n)
 
-/-- The state after executing `c` from `s`. Every right-hand side reads `s`, not the partially
-updated state. -/
-def Cmd.exec (c : Cmd) (s : List Int) : List Int :=
-  c.updates.foldl (fun acc u => setAt acc u.1 (u.2.eval s)) s
+/-- The new value of variable `j` (`0` for a position that is not a variable). -/
+def Cmd.newValue (c : Cmd n) (s : List Int) (j : Nat) : Int :=
+  if h : j < n then
+    match c.update ⟨j, h⟩ with
+    | some e => e.eval s
+    | none => getAt s j
+  else 0
 
-/-- A program: an initial state and a list of guarded commands. -/
-structure Prog where
+/-- The state after executing `c` from `s`: the `n` new values. -/
+def Cmd.exec (c : Cmd n) (s : List Int) : List Int :=
+  (List.range n).map (c.newValue s)
+
+theorem Cmd.exec_length (c : Cmd n) (s : List Int) : (c.exec s).length = n := by
+  simp [Cmd.exec]
+
+/-- **Snapshot semantics.** After a command, each variable holds the value its update denotes in
+the state *before* the step, or its old value if the command does not update it. -/
+theorem Cmd.exec_get (c : Cmd n) (s : List Int) (i : Fin n) :
+    getAt (c.exec s) i.val =
+      match c.update i with
+      | some e => e.eval s
+      | none => getAt s i.val := by
+  have hi := i.isLt
+  simp [Cmd.exec, getAt, Cmd.newValue, List.getElem?_range, hi]
+
+/-- A program over `n` variables: an initial state of length `n` and a list of guarded commands. -/
+structure Prog (n : Nat) where
   init : List Int
-  cmds : List Cmd
+  init_length : init.length = n
+  cmds : List (Cmd n)
 
-/-- The transition system of a program: one initial state; a step labelled `l` executes an enabled
-command labelled `l`. Several enabled commands are nondeterministic alternatives. -/
-def Prog.lts (p : Prog) : LTS (List Int) String where
+/-- The transition system of a program. There is one initial state. A step labelled `i` executes
+command `i` when its guard holds; several enabled commands are nondeterministic alternatives. -/
+def Prog.lts (p : Prog n) : LTS (List Int) (Fin p.cmds.length) where
   init s := s = p.init
-  step s l t := ∃ c, c ∈ p.cmds ∧ c.label = l ∧ c.guard.eval s = true ∧ t = c.exec s
+  step s i t := p.cmds[i].guard.eval s = true ∧ t = p.cmds[i].exec s
+
+/-- A program's transition system always has an initial state. -/
+theorem Prog.nonVacuous (p : Prog n) : p.lts.NonVacuous := ⟨p.init, rfl⟩
+
+/-- Every reachable state has exactly `n` values. -/
+theorem Prog.length_invariant (p : Prog n) : p.lts.Invariant (fun s => s.length = n) := by
+  refine LTS.safe_of_inductive (I := fun s => s.length = n) ⟨?_, ?_⟩ (fun _ h => h)
+  · intro s hs
+    have hs' : s = p.init := hs
+    rw [hs']
+    exact p.init_length
+  · intro s i t _ hst
+    rw [hst.2]
+    exact Cmd.exec_length _ _
 
 /-- The successors of `s`: one per enabled command. -/
-def Prog.succ (p : Prog) (s : List Int) : List (List Int) :=
+def Prog.succ (p : Prog n) (s : List Int) : List (List Int) :=
   p.cmds.filterMap (fun c => if c.guard.eval s = true then some (c.exec s) else none)
 
 /-- The enumeration of a program's transition system is complete. -/
-def Prog.enum (p : Prog) : LTS.Enum p.lts where
+def Prog.enum (p : Prog n) : LTS.Enum p.lts where
   inits := [p.init]
   succ := p.succ
   init_complete := by
     intro s hs
-    simp [Prog.lts] at hs
-    simp [hs]
+    have hs' : s = p.init := hs
+    simp [hs']
   succ_complete := by
-    intro s a t h
-    obtain ⟨c, hc, -, hg, rfl⟩ := h
+    intro s i t h
+    obtain ⟨hg, rfl⟩ := h
     simp only [Prog.succ, List.mem_filterMap]
-    exact ⟨c, hc, by simp [hg]⟩
-
-/-- **Snapshot reads.** Two updates to distinct variables give the same state in either order. -/
-theorem exec_swap (g : BExpr) (l : String) (i j : Nat) (e f : IExpr) (hij : i ≠ j)
-    (s : List Int) :
-    Cmd.exec ⟨l, g, [(i, e), (j, f)]⟩ s = Cmd.exec ⟨l, g, [(j, f), (i, e)]⟩ s := by
-  simp only [Cmd.exec, List.foldl]
-  exact setAt_comm hij
-where
-  setAt_comm {i j : Nat} (hij : i ≠ j) {s : List Int} {v w : Int} :
-      setAt (setAt s i v) j w = setAt (setAt s j w) i v := by
-    induction s generalizing i j with
-    | nil => simp [setAt]
-    | cons x xs ih =>
-      cases i with
-      | zero =>
-        cases j with
-        | zero => exact absurd rfl hij
-        | succ j => simp [setAt]
-      | succ i =>
-        cases j with
-        | zero => simp [setAt]
-        | succ j =>
-          simp only [setAt]
-          rw [ih (fun h => hij (by rw [h]))]
+    exact ⟨p.cmds[i], List.getElem_mem _, by simp [hg]⟩
 
 end Exegra.Core

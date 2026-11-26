@@ -12,9 +12,16 @@ This file proves the safety theory the rest builds on:
 * `Reach`, the reachable states, and `Invariant P`: every reachable state satisfies `P`, with no
   bound on the length of runs;
 * `safe_of_inductive`: an inductive invariant that implies `P` proves `Invariant P`;
-* `invariant_iff_inductive_strengthening`: the method is complete relative to the logic, since
-  every invariant has an inductive strengthening (the reachable set itself). Finding one is the
-  hard part, and is not claimed to be automatic;
+* `invariant_iff_exists_inductive`: semantic completeness of the method. Every invariant has an
+  inductive strengthening, namely the reachable set itself; this is the standard and easy direction,
+  over arbitrary predicates `σ → Prop`. It says nothing about strengthenings expressible in a given
+  assertion language (for the expressions of `Exegra.Core.Calculus` they need not exist), and finding
+  one is not automatic;
+* `NonVacuous` and `Deadlocked`: an `Invariant` of a system with no initial state is true of every
+  predicate (`invariant_of_no_init`), so a claim built on an invariant must also establish
+  `NonVacuous`. A state with no successor is `Deadlocked`. Partial operations are modelled by an
+  explicit error state, never by the absence of a step: a missing step is a deadlock, and a theorem
+  about the reachable states would otherwise silently exclude every run that fails;
 * `ReachIn n` and `BoundedInvariant n P`, what a search to depth `n` can establish, and
   `invariant_iff_all_bounds`: an invariant is exactly a bounded invariant at every depth. No single
   depth suffices in general (`Exegra.Core.Examples.bounded_not_unbounded`);
@@ -66,10 +73,29 @@ theorem safe_of_inductive {M : LTS σ α} {I P : σ → Prop} (h : M.Inductive I
 theorem reach_inductive (M : LTS σ α) : M.Inductive M.Reach :=
   ⟨fun _ h => .init h, fun _ _ _ h hst => .step h hst⟩
 
-/-- **Relative completeness.** `P` is an invariant exactly when some inductive invariant implies it. -/
-theorem invariant_iff_inductive_strengthening (M : LTS σ α) (P : σ → Prop) :
+/-- **Semantic completeness.** `P` is an invariant exactly when some inductive invariant (over
+arbitrary predicates) implies it; the reachable set is one. -/
+theorem invariant_iff_exists_inductive (M : LTS σ α) (P : σ → Prop) :
     M.Invariant P ↔ ∃ I, M.Inductive I ∧ ∀ s, I s → P s :=
   ⟨fun h => ⟨M.Reach, reach_inductive M, h⟩, fun ⟨_, hI, himp⟩ => safe_of_inductive hI himp⟩
+
+/-! ### Vacuity and deadlock -/
+
+/-- The system has an initial state. -/
+def NonVacuous (M : LTS σ α) : Prop := ∃ s, M.init s
+
+/-- No step leaves `s`. -/
+def Deadlocked (M : LTS σ α) (s : σ) : Prop := ∀ a t, ¬ M.step s a t
+
+/-- A reachable state exists only if an initial state does. -/
+theorem nonVacuous_of_reach {M : LTS σ α} {s : σ} (h : M.Reach s) : M.NonVacuous := by
+  induction h with
+  | init hi => exact ⟨_, hi⟩
+  | step _ _ ih => exact ih
+
+/-- **Vacuity.** With no initial state, every predicate is an invariant, `False` included. -/
+theorem invariant_of_no_init {M : LTS σ α} (h : ¬ M.NonVacuous) (P : σ → Prop) : M.Invariant P :=
+  fun _ hs => absurd (nonVacuous_of_reach hs) h
 
 /-! ### Bounded reachability: what a search to a given depth establishes -/
 
