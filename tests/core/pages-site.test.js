@@ -34,7 +34,7 @@ test('the Pages workflow runs on every push to main', () => {
   assert.match(workflow, /^\s+id-token:\s*write$/m);
 });
 
-test('the Pages workflow builds the Lean core, validates the specification, then builds and deploys dist', () => {
+test('the Pages workflow builds the Lean core and validates the specification before it builds and deploys dist', () => {
   const lean = indexOfStep((s) => s.key === 'run' && /tools\/build-formal-wasm\.js|npm run build:formal-wasm/.test(s.value));
   const validate = indexOfStep((s) => s.key === 'run' && /cli\/exegra\.js validate --project exegra/.test(s.value));
   const build = indexOfStep((s) => s.key === 'run' && /vite build/.test(s.value));
