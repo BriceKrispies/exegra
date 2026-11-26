@@ -333,7 +333,8 @@ export function createWorkspace(rootDir) {
     const spec = config.value.spec;
     // A project.jsonc that only declares roots or products keeps the specification in the project directory.
     if (spec === undefined && (config.value.roots !== undefined || config.value.products !== undefined)) return own;
-    if (typeof spec !== 'string' || spec === '' || path.isAbsolute(spec) || !spec.endsWith('.jsonc')) {
+    // Absolute in either path syntax: a project.jsonc written on Windows is refused on every platform.
+    if (typeof spec !== 'string' || spec === '' || path.posix.isAbsolute(spec) || path.win32.isAbsolute(spec) || !spec.endsWith('.jsonc')) {
       throw new WorkspaceError('project.invalid', `${name}/${PROJECT_FILE} must name the specification as {"spec": "<path relative to the project directory, ending in .jsonc>"}.`);
     }
     let ownExists = true;
