@@ -12,7 +12,7 @@ name: Pages
 
 on:
   push:
-    branches: [main, ccr-3b626b82-33hv7j]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -75,7 +75,7 @@ jobs:
 
   deploy:
     needs: build
-    # Only main is published; a push to another branch listed above only builds and validates.
+    # Only main is published (a manual run on another branch only builds and validates).
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
