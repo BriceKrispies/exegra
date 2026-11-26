@@ -1,0 +1,84 @@
+# Publishes the Exegra application to the repository's GitHub Pages site on every push to main.
+#
+# The site is the production build (npx vite build): read-only, with the shipped specifications
+# bundled in, and it opens Exegra's own specification (specs/exegra/spec.jsonc) first. The bundle
+# needs the Lean core built to WebAssembly (npm run build:formal-wasm); the Rust engine is only the
+# differential oracle of the Node tools, so it is not built here. The specification must validate
+# before anything is published.
+#
+# One-time setup: Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; a newer push waits rather than cancelling a deployment in progress.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          # The Lean core is wasm64 (Memory64), which Node runs from version 24.
+          node-version: 24
+          cache: npm
+
+      - name: Install elan
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      # The Lean toolchain, emsdk, the pinned sources and their objects are checkout-independent and
+      # keyed by what pins them; lake's own build directory is keyed by the Lean sources as well.
+      - name: Cache the Lean toolchain and the WebAssembly build inputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.elan/toolchains
+            ~/.cache/exegra/formal-wasm
+            formal/.lake
+          key: formal-wasm-${{ runner.os }}-${{ hashFiles('formal/lean-toolchain', 'formal/lakefile.toml', 'formal/lake-manifest.json', 'tools/build-formal-wasm.js', 'formal/wasm/**') }}-${{ hashFiles('formal/**/*.lean') }}
+          restore-keys: |
+            formal-wasm-${{ runner.os }}-${{ hashFiles('formal/lean-toolchain', 'formal/lakefile.toml', 'formal/lake-manifest.json', 'tools/build-formal-wasm.js', 'formal/wasm/**') }}-
+
+      - run: npm ci
+
+      - name: Build the Lean core to WebAssembly
+        run: node tools/build-formal-wasm.js --jobs 4
+
+      - name: Validate Exegra's own specification
+        run: node cli/exegra.js validate --project exegra --pretty
+
+      # vite build directly: npm run build would first build the Rust engine, which the bundle does not use.
+      - name: Build the application
+        run: npx vite build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

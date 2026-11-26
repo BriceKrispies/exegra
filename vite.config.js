@@ -6,6 +6,10 @@ import { exegraDevServer, exegraLinkedSpecs } from './tools/vite-plugin-exegra.j
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  // Relative asset URLs: the static build works wherever it is served, at a domain root or under a
+  // path such as the repository's GitHub Pages site (/<repository>/, .github/workflows/pages.yml).
+  // The development server ignores a relative base and serves at /.
+  base: './',
   plugins: [exegraDevServer({ specsDir: path.join(here, 'specs') }), exegraLinkedSpecs({ specsDir: path.join(here, 'specs') })],
   server: {
     host: '127.0.0.1',

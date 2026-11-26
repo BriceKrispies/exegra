@@ -31,6 +31,10 @@ npm run dev
 
 `npm run dev` first builds the Rust oracle and the Lean core (`npm run build:engine`, `npm run build:formal-wasm`, below). Open the URL Vite prints (default `http://127.0.0.1:5173/`). Switch project with the picker in the app bar. Saving works only under `npm run dev`; a production build (`npm run build`, `npm run preview`) bundles the shipped specifications and is read-only.
 
+### Hosted on GitHub Pages
+
+Every push to `main` publishes the production build to the repository's GitHub Pages site (`.github/workflows/pages.yml`). The site opens Exegra's own specification, `specs/exegra/spec.jsonc`, and is read-only. The workflow builds the Lean core, publishes nothing unless `node cli/exegra.js validate --project exegra` passes, and then deploys `dist/`. To turn it on once, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**. The site needs a browser with WebAssembly Memory64 (Chrome 133+, Firefox 134+).
+
 ## Scripts
 
 | Script | What it does |
