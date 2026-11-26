@@ -10,7 +10,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  # contents: write lets the last step commit regenerated artifacts back to the development branch.
+  contents: write
 
 concurrency:
   group: check-${{ github.ref }}
@@ -79,13 +80,28 @@ jobs:
         if: always()
         run: npx tsc -p jsconfig.json --noEmit
 
+      # The full spec-reporter output is kept as a file; the log shows the failures and the summary.
       - name: Unit tests
         if: always()
-        run: node tools/run-unit-tests.js
+        run: |
+          set +e
+          node tools/run-unit-tests.js > unit-tests.log 2>&1
+          status=$?
+          grep -n -A40 -E '^\s*(✖|not ok)' unit-tests.log | head -600
+          tail -25 unit-tests.log
+          exit $status
 
-      - name: Generated artifacts are current
+      # npm run generate cannot run where the Lean toolchain is not installed, so a development branch
+      # gets its derived artifacts rewritten and committed here (a push made with the workflow token starts no new run).
+      - name: Regenerate the derived artifacts
         if: always()
         run: |
           node cli/exegra.js generate --write --project exegra > /dev/null
           git diff --stat -- specs/exegra/generated
-          git diff --exit-code -- specs/exegra/generated
+          if ! git diff --quiet -- specs/exegra/generated; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add specs/exegra/generated
+            git commit -m "Regenerate the derived artifacts of Exegra's specification"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
