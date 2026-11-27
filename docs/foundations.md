@@ -168,9 +168,18 @@ values, are a separate milestone M2b.
 
 *Established by M2.1:* the instantaneous behaviour calculus `Exegra.Core.Behav` (typed `Int`/`Bool`/`String`
 values, `Fin`-scoped references, events, guards, effects, failed steps as an explicit error state) with its LTS
-`Sys.lts`, the snapshot theorem `phase2_perm`, and the `[a, b]` / `[b, a]` example giving one verdict under snapshot
-reads (`f4_ab_safe`, `f4_ba_safe`) and two under next-configuration reads (`f4_next_reads_differ`); it covers no
-timers, faults or draws and no theorem yet relates it to the format-2 interpreter (M2.2 onward).
+`Sys.lts`. Arithmetic follows format 2: each arithmetic node carries the declared integer type format 2's `staticTy`
+gives it and checks operands and result against it on every operator, `%` is truncated and typed `/` truncates; where
+format 2 computes a value the calculus does not represent (a fraction, an IEEE result beyond `2^53`) the calculus
+reports an error, never another value. The delivery of an entry does not depend on the order its winners fire in:
+`deliver_perm` gives the same successor configuration, pending list included, for every order (from `phase2_perm`,
+`phase2_perm_emitted` and `winners_nodup`; emitted entries are inserted by time, in machine-index order, as format 2's
+`insertE` does). From a shaped initial configuration shape is invariant and no reachable step fails with `shape`
+(`shaped_invariant`, `shape_unreachable`), and the static sort of an expression is sound for evaluation
+(`Expr.eval_fits`). The `[a, b]` / `[b, a]` example gives one verdict under snapshot reads (`f4_ab_safe`,
+`f4_ba_safe`) and two under the calculus's model of next-configuration reads (`f4_next_reads_differ`). It covers no
+timers, faults or draws, has no `Sys.WF`, `phase2_eq_par`, `pending_perm_bisim` or renaming theorem, and no theorem yet
+relates it to the format-2 interpreter (M2.2 onward).
 
 **M3. Lean owns lowering and verdicts (after M2, M0).** The specification-to-calculus lowering (`sim-input.js`,
 `pools.js`, `distributions.js`) and the claim semantics move to Lean; the status lattice of section 3 is defined in

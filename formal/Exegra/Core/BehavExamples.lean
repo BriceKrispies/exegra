@@ -11,11 +11,21 @@ below pins what each proof rests on.
     listings, with no bound on runs. `yAB` and `yBA` are `none` on the error state, so the
     invariants also say that no run fails. Proved by `safe_of_inductive` with the two reachable
     states, the delivery computed by `decide`.
-  * `f4_next_reads_differ`: under today's next-configuration rule (`deliverNext`) the same delivery
-    gives `y = 1` for one listing and `y = 0` for the other: two verdicts for one model.
+  * `f4_next_reads_differ`: under the calculus's model of today's next-configuration rule
+    (`deliverNext`, with `phase2Next`) the same delivery gives `y = 1` for one listing and `y = 0`
+    for the other: two verdicts for one model.
   * `f4_nonVacuous`: both systems have an initial state, so the invariants are not vacuous.
+  * `f4Init_shaped`, `f4_ab_no_shape`: the initial configuration is shaped, so no step of `f4AB`
+    from a reachable configuration fails with `shape` (`shape_unreachable`).
 * `divZero_counterexample`: a guard `1 / 0 > 0` makes the delivery fail; the run reaches the error
   state, so `ok` is not an invariant. A failing step is a counterexample, not a missing step.
+* Arithmetic as format 2 computes it (docs/assessment/2026-11-26/review-M2.1.md, D2 and D3):
+  `mod_truncates` (`-7 % 2 = -1`), `typed_div_truncates` (`7 / 2 = 3` and `-7 / 2 = -3` in `i32`),
+  `untyped_div_inexact`, and `u8_overflow`: with `x : u8 = 200` the guard `x + 100 > 255` is the
+  error `overflow`, as format 2 reports, not `true`.
+* `emitted_inserted_by_time`: an entry emitted at time 5 goes before a pending entry at time 10, as
+  format 2's `insertE` puts it (D6); `emission_order_irrelevant`: two machines that emit on the same
+  event give the same successor whichever order they fire in (D1, by `deliver_perm`).
 -/
 
 namespace Exegra.Core.Behav.Examples
@@ -123,18 +133,31 @@ theorem f4_ba_safe : (Sys.lts f4BA).Invariant (fun s => yBA s = some (.int 0)) :
 theorem f4_nonVacuous : (Sys.lts f4AB).NonVacuous ∧ (Sys.lts f4BA).NonVacuous :=
   ⟨lts_nonVacuous f4AB, lts_nonVacuous f4BA⟩
 
-/-- The state after delivering the first pending entry from the initial configuration under the
-next-configuration rule; the initial state if there is none. -/
-def afterNext (sys : Sys) : State :=
-  match deliverNext sys sys.init 0 with
-  | some r => outcome sys.init r
-  | none => .run sys.init
-
-/-- **The next-configuration rule gives two verdicts**: the same delivery leaves `y = 1` when `a`
-is listed first and `y = 0` when `b` is. -/
+/-- **The next-configuration rule gives two verdicts**: under `deliverNext` (the calculus's model
+of today's rule, `phase2Next`) the same delivery leaves `b.y = 1` when `a` is listed first (machine
+1 of `f4AB`) and `b.y = 0` when `b` is (machine 0 of `f4BA`). -/
 theorem f4_next_reads_differ :
-    yAB (afterNext f4AB) = some (.int 1) ∧ yBA (afterNext f4BA) = some (.int 0) := by
+    (deliverNext f4AB f4Init 0).map (outcome f4Init) =
+        some (.run { time := 0, machines := [⟨0, [.int 1]⟩, ⟨0, [.int 1]⟩], pending := [] }) ∧
+      (deliverNext f4BA f4Init 0).map (outcome f4Init) = some (.run f4BA1) := by
   decide
+
+/-- The initial configuration of the example has the shape of its signature. -/
+theorem f4Init_shaped : f4Init.Shaped f4AB := by
+  refine ⟨rfl, fun m x hx => ?_⟩
+  obtain ⟨m, hm⟩ := m
+  have fit : VarsFit [Ty.num] [.int 0] :=
+    ⟨rfl, fun i h _ => match i, h with
+      | 0, _ => rfl
+      | _ + 1, h => absurd h (by simp)⟩
+  match m, hm with
+  | 0, _ => cases hx; exact ⟨Nat.zero_lt_one, fit⟩
+  | 1, _ => cases hx; exact ⟨Nat.zero_lt_one, fit⟩
+
+/-- No step of `f4AB` from a reachable configuration fails with `shape`. -/
+theorem f4_ab_no_shape {c : Cfg} (hr : (Sys.lts f4AB).Reach (.run c)) (k : Nat) :
+    deliver f4AB c k ≠ some (.error .shape) :=
+  shape_unreachable f4AB f4Init_shaped hr k
 
 /-! ### A failing step reaches the error state -/
 
@@ -145,7 +168,7 @@ def oneSt (m : Fin 1) : Fin (oneSig.states m).length := ⟨0, Nat.zero_lt_one⟩
 /-- `on e when 1 / 0 > 0`. -/
 def divGuard (m : Fin 1) : Trans oneSig m :=
   { src := oneSt m, dst := oneSt m, event := 0,
-    guard := .bin .lt (.val (.int 0)) (.bin .div (.val (.int 1)) (.val (.int 0))),
+    guard := .bin .lt (.val (.int 0)) (.bin (.arith .div .untyped) (.val (.int 1)) (.val (.int 0))),
     effects := [] }
 
 def divSys : Sys :=
@@ -162,6 +185,78 @@ theorem divZero_counterexample :
     (Sys.lts divSys).Reach (.err divSys.init) ∧ ¬ (Sys.lts divSys).Invariant (fun s => s.ok = true) := by
   have hr : (Sys.lts divSys).Reach (.err divSys.init) := .step (.init rfl) divSys_deliver
   exact ⟨hr, fun h => absurd (h _ hr) (by decide)⟩
+
+/-! ### Arithmetic as format 2 computes it -/
+
+/-- The range of format 2's `i32` (Value.lean:184-195). -/
+def i32 : ATy := .int (-2147483648) 2147483647
+
+/-- `%` is the truncated remainder: `-7 % 2 = -1` (format 2's `Num.fmod`), not `1`. -/
+theorem mod_truncates : BOp.apply (.arith .mod .untyped) (.int (-7)) (.int 2) = .ok (.int (-1)) := by
+  rfl
+
+/-- Typed `/` truncates toward zero, as format 2's `divIn`. -/
+theorem typed_div_truncates :
+    BOp.apply (.arith .div i32) (.int 7) (.int 2) = .ok (.int 3) ∧
+      BOp.apply (.arith .div i32) (.int (-7)) (.int 2) = .ok (.int (-3)) := ⟨rfl, rfl⟩
+
+/-- Untyped `/` with a remainder is an error (format 2 computes the fraction `3.5`, which the
+calculus does not represent), never another value. -/
+theorem untyped_div_inexact : BOp.apply (.arith .div .untyped) (.int 7) (.int 2) = .error .inexact := by
+  rfl
+
+def u8Sig : Sig := { machines := 1, vars := fun _ => [Ty.int 0 255], states := fun _ => ["s"] }
+
+/-- `x + 100 > 255` on a `u8` variable `x`, the sum computed in `u8` (format 2's `staticTy` of
+`x + 100` is `u8`). -/
+def u8Guard : Expr u8Sig ⟨0, by decide⟩ :=
+  .bin .lt (.val (.int 255)) (.bin (.arith .add (.int 0 255)) (.ref (.own ⟨0, by decide⟩)) (.val (.int 100)))
+
+/-- **Overflow is checked at the arithmetic node**: with `x = 200` the guard is the error
+`overflow` (format 2: "Integer overflow: "+" on u8 gives 300"), not `true`. -/
+theorem u8_overflow :
+    u8Guard.eval { snap := [⟨0, [.int 200]⟩], time := 0, own := ⟨0, [.int 200]⟩, payload := [] } =
+      .error .overflow := by
+  rfl
+
+/-! ### The queue -/
+
+def oSig : Sig := { machines := 1, vars := fun _ => [], states := fun _ => ["s"] }
+
+/-- On event 0, emit event 1 after 5. -/
+def emitLater (m : Fin 1) : Trans oSig m :=
+  { src := ⟨0, Nat.zero_lt_one⟩, dst := ⟨0, Nat.zero_lt_one⟩, event := 0,
+    guard := .val (.bool true), effects := [.emit 1 5 []] }
+
+def oSys : Sys :=
+  { sig := oSig, trans := fun m => [emitLater m],
+    init := { time := 0, machines := [⟨0, []⟩], pending := [⟨0, 0, []⟩, ⟨10, 2, []⟩] } }
+
+/-- The entry emitted at time 5 is inserted before the pending entry at time 10. -/
+theorem emitted_inserted_by_time :
+    (deliver oSys oSys.init 0).map (outcome oSys.init) =
+      some (.run { time := 0, machines := [⟨0, []⟩], pending := [⟨5, 1, []⟩, ⟨10, 2, []⟩] }) := by
+  decide
+
+def emSig : Sig := { machines := 2, vars := fun _ => [], states := fun _ => ["s"] }
+
+/-- On event 0, machine `m` emits event `m + 1` at once. -/
+def emitOwn (m : Fin 2) : Trans emSig m :=
+  { src := ⟨0, Nat.zero_lt_one⟩, dst := ⟨0, Nat.zero_lt_one⟩, event := 0,
+    guard := .val (.bool true), effects := [.emit (m.val + 1) 0 []] }
+
+def emSys : Sys :=
+  { sig := emSig, trans := fun m => [emitOwn m],
+    init := { time := 0, machines := [⟨0, []⟩, ⟨0, []⟩], pending := [⟨0, 0, []⟩] } }
+
+/-- **Emission order is irrelevant**: firing the two winners in reverse order gives the same
+successor, pending list included (review-M2.1, D1). -/
+theorem emission_order_irrelevant :
+    (deliverWith emSys (fun c e ws ms => phase2 emSys c e ws.reverse ms) emSys.init 0).map
+        (outcome emSys.init) =
+      some (.run { time := 0, machines := [⟨0, []⟩, ⟨0, []⟩], pending := [⟨0, 1, []⟩, ⟨0, 2, []⟩] }) := by
+  rw [deliver_perm emSys (fun _ _ ws => ws.reverse) (fun _ _ ws => List.reverse_perm ws)]
+  decide
 
 end Exegra.Core.Behav.Examples
 
@@ -188,3 +283,56 @@ end Exegra.Core.Behav.Examples
 /-- info: 'Exegra.Core.Behav.Examples.divZero_counterexample' depends on axioms: [propext] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.divZero_counterexample
+
+
+/-- info: 'Exegra.Core.Behav.deliver_perm' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms Exegra.Core.Behav.deliver_perm
+
+/-- info: 'Exegra.Core.Behav.winners_nodup' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms Exegra.Core.Behav.winners_nodup
+
+/-- info: 'Exegra.Core.Behav.shaped_invariant' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms Exegra.Core.Behav.shaped_invariant
+
+/-- info: 'Exegra.Core.Behav.deliver_ne_shape' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms Exegra.Core.Behav.deliver_ne_shape
+
+/-- info: 'Exegra.Core.Behav.shape_unreachable' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms Exegra.Core.Behav.shape_unreachable
+
+/-- info: 'Exegra.Core.Behav.Expr.eval_fits' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms Exegra.Core.Behav.Expr.eval_fits
+
+/-- info: 'Exegra.Core.Behav.Examples.f4_ab_no_shape' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms Exegra.Core.Behav.Examples.f4_ab_no_shape
+
+/-- info: 'Exegra.Core.Behav.Examples.mod_truncates' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms Exegra.Core.Behav.Examples.mod_truncates
+
+/-- info: 'Exegra.Core.Behav.Examples.typed_div_truncates' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms Exegra.Core.Behav.Examples.typed_div_truncates
+
+/-- info: 'Exegra.Core.Behav.Examples.untyped_div_inexact' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms Exegra.Core.Behav.Examples.untyped_div_inexact
+
+/-- info: 'Exegra.Core.Behav.Examples.u8_overflow' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms Exegra.Core.Behav.Examples.u8_overflow
+
+/-- info: 'Exegra.Core.Behav.Examples.emitted_inserted_by_time' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms Exegra.Core.Behav.Examples.emitted_inserted_by_time
+
+/-- info: 'Exegra.Core.Behav.Examples.emission_order_irrelevant' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms Exegra.Core.Behav.Examples.emission_order_irrelevant
