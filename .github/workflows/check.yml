@@ -9,6 +9,8 @@ on:
     branches-ignore: [main]
   workflow_dispatch:
 
+# Logs go to $RUNNER_TEMP, never into the checkout: the tree stamp that binds recorded results covers
+# untracked files, so a log written between verify and generate would make every result read as stale.
 permissions:
   # contents: write lets the last step commit regenerated artifacts back to the development branch.
   contents: write
@@ -74,8 +76,8 @@ jobs:
 
       - name: Traceability (no missing modules, no unclaimed files)
         run: |
-          node cli/exegra.js traceability --project exegra > traceability.json
-          node -e "const r=JSON.parse(require('fs').readFileSync('traceability.json','utf8')).result;const m=r.missingModules??[],u=r.unclaimedFiles??[];console.log(JSON.stringify({missingModules:m,unclaimedFiles:u},null,2));process.exit(m.length||u.length?1:0)"
+          node cli/exegra.js traceability --project exegra > "$RUNNER_TEMP/traceability.json"
+          node -e "const r=JSON.parse(require('fs').readFileSync(process.env.RUNNER_TEMP+'/traceability.json','utf8')).result;const m=r.missingModules??[],u=r.unclaimedFiles??[];console.log(JSON.stringify({missingModules:m,unclaimedFiles:u},null,2));process.exit(m.length||u.length?1:0)"
 
       - name: Type check
         if: always()
@@ -86,10 +88,10 @@ jobs:
         if: always()
         run: |
           set +e
-          node tools/run-unit-tests.js > unit-tests.log 2>&1
+          node tools/run-unit-tests.js > "$RUNNER_TEMP/unit-tests.log" 2>&1
           status=$?
-          grep -n -A40 -E '^\s*(✖|not ok)' unit-tests.log | head -600
-          tail -25 unit-tests.log
+          grep -n -A40 -E '^\s*(✖|not ok)' "$RUNNER_TEMP/unit-tests.log" | head -600
+          tail -25 "$RUNNER_TEMP/unit-tests.log"
           exit $status
 
       # Executes the evidence (unit and browser tests), checks the lean-theorem claims with Lean, records
@@ -99,10 +101,10 @@ jobs:
         if: always()
         run: |
           set +e
-          node cli/exegra.js verify --project exegra --expect-violated edits-only-via-transactions,core-logic-in-lean --pretty > verify.json 2> verify.log
+          node cli/exegra.js verify --project exegra --expect-violated edits-only-via-transactions,core-logic-in-lean --pretty > "$RUNNER_TEMP/verify.json" 2> "$RUNNER_TEMP/verify.log"
           status=$?
-          tail -40 verify.log
-          node -e "const r=JSON.parse(require('fs').readFileSync('verify.json','utf8'));const x=r.result??r;console.log(JSON.stringify({ok:r.ok,error:r.error,summary:x.summary??x.claims?.summary,violated:x.violated,regressions:x.regressions},null,2))" || head -c 4000 verify.json
+          tail -40 "$RUNNER_TEMP/verify.log"
+          node -e "const r=JSON.parse(require('fs').readFileSync(process.env.RUNNER_TEMP+'/verify.json','utf8'));const x=r.result??r;console.log(JSON.stringify({ok:r.ok,error:r.error,summary:x.summary??x.claims?.summary,violated:x.violated,regressions:x.regressions},null,2))" || head -c 4000 "$RUNNER_TEMP/verify.json"
           exit $status
 
       # npm run generate cannot run where the Lean toolchain is not installed, so a development branch
