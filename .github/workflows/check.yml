@@ -91,17 +91,30 @@ jobs:
           tail -25 unit-tests.log
           exit $status
 
+      # Executes the evidence (unit and browser tests), checks the lean-theorem claims with Lean, records
+      # the results with their provenance stamps in specs/exegra/evidence/results.json and re-evaluates
+      # every claim (AGENTS.md, done criterion 3). The browser tests use the runner's installed Chrome.
+      - name: Verify Exegra against its own specification
+        if: always()
+        run: |
+          set +e
+          node cli/exegra.js verify --project exegra --expect-violated edits-only-via-transactions,core-logic-in-lean --pretty > verify.json 2> verify.log
+          status=$?
+          tail -40 verify.log
+          node -e "const r=JSON.parse(require('fs').readFileSync('verify.json','utf8'));const x=r.result??r;console.log(JSON.stringify({ok:r.ok,error:r.error,summary:x.summary??x.claims?.summary,violated:x.violated,regressions:x.regressions},null,2))" || head -c 4000 verify.json
+          exit $status
+
       # npm run generate cannot run where the Lean toolchain is not installed, so a development branch
       # gets its derived artifacts rewritten and committed here (a push made with the workflow token starts no new run).
-      - name: Regenerate the derived artifacts
+      - name: Regenerate the derived artifacts and commit the recorded results
         if: always()
         run: |
           node cli/exegra.js generate --write --project exegra > /dev/null
-          git diff --stat -- specs/exegra/generated
-          if ! git diff --quiet -- specs/exegra/generated; then
+          git diff --stat -- specs/exegra/generated specs/exegra/evidence
+          if ! git diff --quiet -- specs/exegra/generated specs/exegra/evidence; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add specs/exegra/generated
-            git commit -m "Regenerate the derived artifacts of Exegra's specification"
+            git add specs/exegra/generated specs/exegra/evidence
+            git commit -m "Record verification results and regenerate the derived artifacts of Exegra's specification"
             git push origin HEAD:${{ github.ref_name }}
           fi
