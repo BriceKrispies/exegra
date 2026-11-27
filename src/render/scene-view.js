@@ -20,6 +20,12 @@ const TOUCH_HOLD_MS = 350;
 const EDGE_PULSE_MS = 600;
 /** How long one message takes to travel from its sender to its receiver. */
 const FLOW_MS = 1400;
+/**
+ * A message's clock advances by at most this much per rendered frame, so it is drawn in at least
+ * FLOW_MS / FLOW_FRAME_MS frames: where frames are slow (software rendering of a large scene) the
+ * message travels more slowly instead of vanishing after a handful of frames, before it can be read.
+ */
+const FLOW_FRAME_MS = FLOW_MS / 24;
 const NODE_PULSE_MS = 520;
 const CLUTTER_MS = 120;
 const CONTAINER_DRAG_BAND = 0.5;
@@ -828,7 +834,9 @@ export function createSceneView(host, callbacks = {}) {
       flushEdges();
       const rest = [];
       for (const fl of flows) {
-        const u = (now - fl.t0) / FLOW_MS;
+        fl.elapsed += Math.min(FLOW_FRAME_MS, Math.max(0, now - fl.last));
+        fl.last = now;
+        const u = fl.elapsed / FLOW_MS;
         if (u >= 1) { endFlow(fl); continue; }
         const e = u < 0.5 ? 2 * u * u : 1 - (-2 * u + 2) ** 2 / 2;
         if (fl.es) {
@@ -877,7 +885,7 @@ export function createSceneView(host, callbacks = {}) {
     for (const p of paths ?? []) {
       if (p.kind === 'local') { pulse([p.node]); continue; }
       /** @type {any} */
-      const item = { kind: p.kind, event: eventName, from: p.from ?? null, to: p.to ?? null, t0: now };
+      const item = { kind: p.kind, event: eventName, from: p.from ?? null, to: p.to ?? null, last: now, elapsed: 0 };
       if (p.kind === 'edge') {
         const es = resolveEdge(p.edgeId);
         if (!es) continue;
@@ -922,10 +930,9 @@ export function createSceneView(host, callbacks = {}) {
     matricesDirty = true;
   }
 
-  /** Messages currently in flight, with how far each has travelled (0 to 1). */
+  /** Messages currently in flight, with how far each has travelled (0 to 1) as last drawn. */
   function getFlows() {
-    const now = performance.now();
-    return flows.map((f) => ({ kind: f.kind, event: f.event, from: f.from, to: f.to, edge: f.es ? (f.es.edge.entityId ?? f.es.id) : null, reverse: f.reverse === true, progress: Math.min(1, Math.max(0, (now - f.t0) / FLOW_MS)) }));
+    return flows.map((f) => ({ kind: f.kind, event: f.event, from: f.from, to: f.to, edge: f.es ? (f.es.edge.entityId ?? f.es.id) : null, reverse: f.reverse === true, progress: Math.min(1, f.elapsed / FLOW_MS) }));
   }
 
   // ---------------------------------------------------------------- clutter
