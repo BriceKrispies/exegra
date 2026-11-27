@@ -19,7 +19,7 @@ its results are results about an `LTS`:
 
 namespace Exegra.Core.LTS
 
-variable {σ α : Type}
+variable {σ α : Type} [DecidableEq σ] [Hashable σ]
 
 /-- Every initial state and every step of `M` is present in `S`. -/
 structure Covers (S : Gen.Sys σ) (M : LTS σ α) : Prop where
@@ -49,8 +49,6 @@ theorem reach_of_gen_reach {S : Gen.Sys σ} {M : LTS σ α} (hs : Sound S M) {d 
     obtain ⟨a, ha⟩ := hs.step _ _ _ (Gen.mem_succs.mp hk)
     exact .step ih ha
 
-variable [DecidableEq σ] [Hashable σ]
-
 /-- **A `holds` result of the search proves an unbounded invariant** of every system it covers. -/
 theorem invariant_of_search {S : Gen.Sys σ} {M : LTS σ α} (hc : Covers S M) {ok : σ → Bool}
     {bound cap n : Nat} (h : Gen.search S ok bound cap = .holds n) :
@@ -66,9 +64,9 @@ theorem not_invariant_of_search {S : Gen.Sys σ} {M : LTS σ α} (hs : Sound S M
   intro hinv
   obtain ⟨hr, -, t, ht, hok⟩ := Gen.search_counterexample_real h
   obtain ⟨d, hd⟩ := Gen.greplay_reach_any hr ht
-  have := hinv t (reach_of_gen_reach hs hd)
-  rw [hok] at this
-  exact Bool.false_ne_true this
+  have hokt : ok t = true := hinv t (reach_of_gen_reach hs hd)
+  rw [hok] at hokt
+  exact Bool.false_ne_true hokt
 
 /-- The search system of a complete enumeration. -/
 def Enum.toSys {M : LTS σ α} (E : Enum M) : Gen.Sys σ where
@@ -79,6 +77,7 @@ def Enum.toSys {M : LTS σ α} (E : Enum M) : Gen.Sys σ where
     intro s k t h
     exact (List.getElem?_eq_some_iff.mp h).1
 
+omit [DecidableEq σ] [Hashable σ] in
 theorem Enum.toSys_covers {M : LTS σ α} (E : Enum M) : Covers E.toSys M where
   init := E.init_complete
   step := by

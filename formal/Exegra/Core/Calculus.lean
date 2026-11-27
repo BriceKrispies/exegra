@@ -99,7 +99,7 @@ theorem Cmd.exec_get (c : Cmd n) (s : List Int) (i : Fin n) :
       | some e => e.eval s
       | none => getAt s i.val := by
   have hi := i.isLt
-  simp [Cmd.exec, getAt, Cmd.newValue, List.getElem?_range, hi]
+  simp [Cmd.exec, getAt, Cmd.newValue, hi]
 
 /-- A program over `n` variables: an initial state of length `n` and a list of guarded commands. -/
 structure Prog (n : Nat) where
@@ -142,7 +142,8 @@ def Prog.enum (p : Prog n) : LTS.Enum p.lts where
   succ_complete := by
     intro s i t h
     obtain ⟨hg, rfl⟩ := h
+    have hg' : p.cmds[i.val].guard.eval s = true := hg
     simp only [Prog.succ, List.mem_filterMap]
-    exact ⟨p.cmds[i], List.getElem_mem _, by simp [hg]⟩
+    exact ⟨p.cmds[i.val], List.getElem_mem _, by simp [hg']⟩
 
 end Exegra.Core
