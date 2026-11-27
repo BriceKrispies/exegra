@@ -172,10 +172,12 @@ checkTrace(model, trace) -> { claimId, holds: boolean, pending?: boolean, stepIn
 //   reported with holds: false but is not a violation.
 
 opts = { recorded?: Recorded }
-Recorded = { results: { [evidenceId]: { outcome: 'pass'|'fail', detail?: string, ranAt?: string } },
+Recorded = { results: { [evidenceId]: { outcome: 'pass'|'fail'|'not-run', detail?: string, ranAt?: string, stamp?: string } },
              theorems?: { [theoremName]: TheoremCheck } }   // tools/lean-theorems.js, recorded by exegra verify
 TheoremCheck = { found: boolean, kind?: string, kernel?: 'ok'|string, axioms?: string[],
-                 about?: { [constant]: { kind: string, inStatement: boolean } }, lean?: string, checkedAt?: string }
+                 about?: { [constant]: { kind: string, inStatement: boolean, implementedBy?: string, extern?: boolean, partial?: boolean } },
+                 lean?: string, checkedAt?: string, formalHash?: string, statementHash?: string, stamp?: string }
+Stamps = { tree: string|null, formal: string|null }   // tools/tree-stamp.js currentStamps; evaluateClaims(model, {recorded, stamps})
 
 ClaimResult = {
   claimId, kind, method: string|null,
@@ -187,9 +189,17 @@ ClaimResult = {
   assumptions: string[],     // assumption ids the result rests on
   involved: string[],        // entity ids to highlight: subjects + everything the evaluation touched
   counterexample?: { summary: string, entities: string[], path?: string[], scenario?: string, stepIndex?: number },
-  evidence: { id, kind, ref, supports: boolean, recorded: 'pass'|'fail'|'none', detail?: string }[]
+  evidence: { id, kind, ref, supports: boolean, recorded: 'pass'|'fail'|'none', detail?: string, stale?: boolean }[],
+  freshness?: 'fresh'|'stale'|'unverifiable',   // present when the status rests on recorded facts
+  diagnostics?: { code: 'claim.stale-evidence'|'claim.stale-theorem'|'claim.freshness-unverifiable', severity, message, entityId }[]
 }
 ```
+
+Freshness: with `stamps`, a recorded result or external tool outcome whose `stamp` is not `stamps.tree`, and a
+theorem check whose `formalHash` is not `stamps.formal`, is stale. A stale pass or theorem check is never a
+positive basis: the claim is `not-evaluated` with an explanation starting "Stale:"; a stale `fail` or refusal
+still counts. Without `stamps` (or `stamps: null`, the browser) recorded facts are read as they are and the
+result carries `freshness: 'unverifiable'`.
 
 Status rules:
 
@@ -197,9 +207,11 @@ Status rules:
 - `proved` is the status of a `lean-theorem` claim whose recorded Lean check shows a theorem
   that exists, that the kernel accepts again, that depends on no axiom beyond `propext`,
   `Classical.choice` and `Quot.sound` (no `sorryAx`, no `Lean.ofReduceBool`/`ofReduceNat` from
-  `native_decide`, no axiom of our own), and whose statement mentions every constant in `about`,
-  each a definition. Any of these failing → `violated` (Lean refuses the proof); no recorded check,
-  or one that did not cover an `about` constant → `not-evaluated`. Contradicting evidence turns
+  `native_decide`, no axiom of our own), whose claim names at least one constant in `about`, and
+  whose statement mentions every one of them, each a definition (not `opaque`, not reported
+  `implemented_by`, `extern` or `partial`). Any of these failing → `violated` (Lean refuses the
+  proof); no recorded check, one that did not cover an `about` constant, or one checked on other
+  `formal/` sources than `stamps.formal` → `not-evaluated`. Contradicting evidence turns
   `proved` into `violated`. It establishes the statement about the Lean definitions; that the
   code which runs is those definitions rests on the trusted-base assumptions.
 - `implementation-language`: every selected implemented component (`exclude` taken exactly)
@@ -231,7 +243,8 @@ Status rules:
   Matchers: `{event: id}` matches steps of kind `deliver` for that event;
   `{transition: id}` matches steps where that transition fired.
 - `external-evidence`: no evidence → `not-evaluated`. Any contradicting evidence
-  (`supports: false`) or recorded `fail` → `violated`. Otherwise at least one
+  (`supports: false`) or recorded `fail` → `violated`. Otherwise any stale recorded result →
+  `not-evaluated` ("Stale: …"). Otherwise at least one
   `test` evidence with recorded `pass`, or at least one non-test evidence →
   `supported`; the explanation must say whether Exegra executed anything or the
   evidence is author-entered only. Only `test` evidence with no recorded result →

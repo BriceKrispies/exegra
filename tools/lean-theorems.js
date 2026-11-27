@@ -7,7 +7,10 @@
 //     with `addDecl`, which type-checks it in the kernel;
 //   - the axioms it depends on (`Lean.collectAxioms`, what `#print axioms` prints);
 //   - for each named implementation constant: whether it exists, its kind, and whether it occurs in
-//     the theorem's statement (its type).
+//     the theorem's statement (its type);
+//   - the statement itself as Lean prints it, recorded as its sha256 (statementHash).
+// Each record also carries the hash of the formal/ sources it was checked on (formalHash) and the
+// records stamp of the tree (stamp), so a later read can tell a check of other sources from a fresh one.
 // These facts are recorded as they are; the status they give a claim is decided by
 // src/core/claims.js (method `lean-theorem`), so the application derives the same status from the
 // recorded facts without Lean.
@@ -16,11 +19,13 @@
 //   requests: [{theorem, about: [constant]}]; opts.prelude: Lean declarations elaborated before the
 //   check, after `import Exegra` (tests use it for theorems that must be refused).
 
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { formalSourcesHash, recordsStamp } from './tree-stamp.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FORMAL = path.join(ROOT, 'formal');
@@ -29,7 +34,10 @@ const NAME = /^[A-Za-z_][A-Za-z0-9_'.]*$/;
 
 /**
  * @typedef {{theorem: string, about?: string[]}} TheoremRequest
- * @typedef {{found: boolean, kind?: string, kernel?: string, axioms?: string[], about?: Record<string, {kind: string, inStatement: boolean}>, lean?: string, checkedAt?: string}} TheoremRecord
+ * @typedef {{found: boolean, kind?: string, kernel?: string, axioms?: string[], about?: Record<string, {kind: string, inStatement: boolean}>, lean?: string, checkedAt?: string,
+ *   statementHash?: string, formalHash?: string, stamp?: string}} TheoremRecord
+ *   statementHash: sha256 of the theorem's type as Lean printed it; formalHash: tools/tree-stamp.js formalSourcesHash
+ *   of the sources checked; stamp: the records stamp of the tree
  */
 
 /** Lean's name syntax for a dotted name, with «» around components that need it. @param {string} n */
@@ -69,7 +77,7 @@ def exegraCheck (thm : Name) (about : List Name) : CommandElabM Unit := do
         | none => "missing"
       (n.toString, Json.mkObj [("kind", toJson kind), ("inStatement", toJson (used.contains n))])
     IO.println ("${MARK}" ++ (Json.mkObj [("theorem", toJson thm.toString), ("found", toJson true),
-      ("kind", toJson (exegraKind ci)), ("kernel", toJson kernel),
+      ("kind", toJson (exegraKind ci)), ("kernel", toJson kernel), ("statement", toJson (toString ci.type)),
       ("axioms", toJson (axioms.map (·.toString))), ("about", Json.mkObj aboutJson)]).compress)
 `;
 
@@ -106,12 +114,23 @@ export function checkTheorems(requests, opts = {}) {
     const results = {};
     const checkedAt = new Date().toISOString();
     const lean = pinnedLean();
+    // The stamps the check depends on: the Lean sources it ran on and the tree. A later read without Lean
+    // compares formalHash with the current sources (src/core/claims.js) and reads a mismatch as stale.
+    const formalHash = formalSourcesHash(ROOT);
+    /** @type {string|null} */
+    let stamp = null;
+    try { stamp = recordsStamp(ROOT); } catch { stamp = null; }
     for (const line of out.split(/\r?\n/)) {
       if (!line.startsWith(MARK)) continue;
       const rec = JSON.parse(line.slice(MARK.length));
       const name = rec.theorem;
       delete rec.theorem;
-      results[name] = { ...rec, lean, checkedAt };
+      // The statement as Lean printed it is kept as its hash: what the theorem says, pinned for review.
+      if (typeof rec.statement === 'string') {
+        rec.statementHash = createHash('sha256').update(rec.statement, 'utf8').digest('hex');
+        delete rec.statement;
+      }
+      results[name] = { ...rec, lean, checkedAt, formalHash, ...(stamp ? { stamp } : {}) };
     }
     // Elaboration errors in the prelude are reported, but checks after them still ran.
     const missing = requests.filter((q) => !results[q.theorem]);

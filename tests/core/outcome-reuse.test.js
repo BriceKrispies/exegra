@@ -18,10 +18,18 @@ test('a node reference is answered from the recorded tests it matches', () => {
   const doc = nodeDoc({
     'tests/core/a.test.js': { fileOutcome: 'pass', tests: [t('parses text', 'pass'), t('refuses cycles', 'pass'), t('needs lake', 'skipped')] },
   });
-  assert.deepEqual(nodeOutcome(doc, 'tests/core/a.test.js'), { outcome: 'pass', ranAt: 'T' });
+  assert.deepEqual(nodeOutcome(doc, 'tests/core/a.test.js#parses|refuses'), { outcome: 'pass', ranAt: 'T' });
   assert.deepEqual(nodeOutcome(doc, 'tests/core/a.test.js#refuses'), { outcome: 'pass', ranAt: 'T' });
   assert.equal(nodeOutcome(doc, 'tests/core/a.test.js#needs lake')?.outcome, 'skipped');
-  assert.equal(nodeOutcome(doc, 'tests/core/a.test.js#pars|needs lake')?.outcome, 'pass', 'a mixed match passes');
+  assert.equal(nodeOutcome(doc, 'tests/core/a.test.js#pars|needs lake')?.outcome, 'skipped', 'a match part of which skipped is not a pass');
+});
+
+test('a whole-file reference to a file with a self-skipping test is not a pass', () => {
+  const doc = nodeDoc({
+    'tests/core/a.test.js': { fileOutcome: 'pass', tests: [t('parses text', 'pass'), t('needs lake', 'skipped')] },
+  });
+  assert.equal(nodeOutcome(doc, 'tests/core/a.test.js')?.outcome, 'skipped');
+  assert.match(nodeOutcome(doc, 'tests/core/a.test.js')?.detail ?? '', /1 of 2 matching tests/);
 });
 
 test('a reference the recorded run cannot answer is not assumed to pass', () => {

@@ -63,7 +63,9 @@ export function mountVerificationPanel(el, session) {
     if (rec) {
       const n = Object.keys(rec.results ?? {}).length;
       header.append(h('p', { class: 'ver__recorded', 'data-testid': 'recorded-line' },
-        `Recorded results for ${n} evidence item${n === 1 ? '' : 's'} loaded from `, h('code', null, 'evidence/results.json')));
+        `Recorded results for ${n} evidence item${n === 1 ? '' : 's'} loaded from `, h('code', null, 'evidence/results.json'),
+        '. Their freshness is unverifiable here: the page cannot stamp the files they were recorded for, so a result may describe an earlier tree. ',
+        h('code', null, 'exegra claims'), ' compares the stamps and reports stale results as not evaluated.'));
     } else {
       header.append(h('p', { class: 'ver__recorded', 'data-testid': 'recorded-line' },
         'No recorded results. Test evidence shows as not executed. Run ', h('code', null, 'npm run verify'), ' to execute and record it.'));

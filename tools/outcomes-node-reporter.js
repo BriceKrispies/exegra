@@ -27,7 +27,7 @@ function runIsPartial() {
  */
 export default async function* outcomesReporter(source) {
   const treeBefore = treeStamp(repoRoot);
-  /** @type {Record<string, {fileOutcome: 'pass'|'fail', tests: {name: string, path: string, nesting: number, outcome: 'pass'|'fail'|'skipped'}[]}>} */
+  /** @type {Record<string, {fileOutcome: 'pass'|'fail', tests: {name: string, path: string, nesting: number, outcome: 'pass'|'fail'|'skipped'|'todo', suite?: boolean}[]}>} */
   const files = {};
   /** @type {Map<string, string[]>} */
   const stacks = new Map();
@@ -49,11 +49,15 @@ export default async function* outcomesReporter(source) {
         continue;
       }
       const stack = (stacks.get(file) ?? []).slice(0, data.nesting);
+      // A todo test reports test:pass with `todo` set; it proves nothing, like a skipped test. A describe
+      // block is a suite (details.type), not a test of its own: cli/outcomes.js leaves it out of verdicts.
+      const flagged = (/** @type {any} */ v) => v !== undefined && v !== false;
       entry.tests.push({
         name: String(data.name),
         path: [...stack, String(data.name)].join(' '),
         nesting: data.nesting,
-        outcome: failed ? 'fail' : data.skip !== undefined && data.skip !== false ? 'skipped' : 'pass',
+        outcome: failed ? 'fail' : flagged(data.skip) ? 'skipped' : flagged(data.todo) ? 'todo' : 'pass',
+        ...(data.details?.type === 'suite' ? { suite: true } : {}),
       });
     }
   }

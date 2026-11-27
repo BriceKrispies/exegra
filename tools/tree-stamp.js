@@ -3,7 +3,9 @@
 // so an edit that restores a file restores the stamp), the generated build outputs that tests load but git
 // ignores (src/engine/lean/ and src/engine/pkg/), and the Node version. The test reporters write it beside
 // each run's outcomes and `exegra verify` compares it with the current one to decide whether the outcomes of
-// a run still describe the tree it is about to record.
+// a run still describe the tree it is about to record. The records stamp (the same stamp without the files
+// Exegra writes from its results) and the hash of formal/ are recorded with every evidence result and Lean
+// theorem check, and compared at read time, so a result recorded for another tree is read as stale.
 
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -60,12 +62,14 @@ export function stampedFiles(repoRoot) {
  * The stamp of the tree at `repoRoot`: a sha256 over the sorted (path, content hash) pairs. A tracked file
  * deleted in the working tree is left out, as an absent file is.
  * @param {string} repoRoot
+ * @param {{exclude?: (rel: string) => boolean}} [opts] exclude: files left out of the stamp
  * @returns {string}
  */
-export function treeStamp(repoRoot) {
+export function treeStamp(repoRoot, opts = {}) {
   const all = createHash('sha256');
   all.update(`node ${process.version}\n`);
   for (const rel of stampedFiles(repoRoot)) {
+    if (opts.exclude?.(rel)) continue;
     let content;
     try {
       content = fs.readFileSync(path.join(repoRoot, rel));
@@ -75,4 +79,59 @@ export function treeStamp(repoRoot) {
     all.update(`${rel}\0${createHash('sha256').update(content).digest('hex')}\n`);
   }
   return all.digest('hex');
+}
+
+/**
+ * Whether a file is one Exegra writes from its own results: a project's recorded results
+ * (specs/<project>/evidence/results.json) or its generated artifacts (specs/<project>/generated/). Writing them
+ * must not make the results they hold stale, so the records stamp leaves them out.
+ * @param {string} rel repo-relative, forward slashes
+ */
+export function isRecordFile(rel) {
+  return /^specs\/[^/]+\/evidence\/results\.json$/.test(rel) || /^specs\/[^/]+\/generated\//.test(rel);
+}
+
+/**
+ * The stamp recorded with each evidence result and Lean theorem check (exegra verify), and compared with the
+ * current one when claims are evaluated from them: the tree stamp without the record files (isRecordFile).
+ * @param {string} repoRoot
+ */
+export function recordsStamp(repoRoot) {
+  return treeStamp(repoRoot, { exclude: isRecordFile });
+}
+
+/**
+ * A hash over the Lean sources of formal/ that a theorem check depends on: every stamped file under formal/
+ * (the .lean files, the lakefile, lean-toolchain and lake-manifest.json; the ignored build directories
+ * formal/.lake and formal/generated are not stamped), by path and content.
+ * @param {string} repoRoot
+ */
+export function formalSourcesHash(repoRoot) {
+  const all = createHash('sha256');
+  for (const rel of stampedFiles(repoRoot)) {
+    if (!rel.startsWith('formal/')) continue;
+    let content;
+    try {
+      content = fs.readFileSync(path.join(repoRoot, rel));
+    } catch {
+      continue;
+    }
+    all.update(`${rel}\0${createHash('sha256').update(content).digest('hex')}\n`);
+  }
+  return all.digest('hex');
+}
+
+/**
+ * The current stamps a read of recorded results compares with: {tree: recordsStamp, formal: formalSourcesHash}.
+ * Each is null when it cannot be computed (no git checkout at repoRoot); a null stamp makes every recorded
+ * result's freshness unverifiable rather than trusted.
+ * @param {string} repoRoot
+ * @returns {{tree: string|null, formal: string|null}}
+ */
+export function currentStamps(repoRoot) {
+  try {
+    return { tree: recordsStamp(repoRoot), formal: formalSourcesHash(repoRoot) };
+  } catch {
+    return { tree: null, formal: null };
+  }
 }

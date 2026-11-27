@@ -294,24 +294,28 @@ test('markdown renders a document of a specification that holds documents, and r
   }
 });
 
-test('a skipped verify run keeps the outcome recorded before instead of erasing it', () => {
+test('a skipped verify run records the evidence as not run instead of keeping an older pass', () => {
   const prior = {
-    'browser-login': { outcome: 'pass', ranAt: '2026-11-10T09:00:00.000Z' },
-    'node-model': { outcome: 'fail', detail: 'old failure', ranAt: '2026-11-10T09:00:00.000Z' },
+    'browser-login': { outcome: 'pass', ranAt: '2026-11-10T09:00:00.000Z', stamp: 'OLD' },
+    'node-model': { outcome: 'fail', detail: 'old failure', ranAt: '2026-11-10T09:00:00.000Z', stamp: 'OLD' },
   };
   const runs = [
-    { id: 'browser-login', outcome: 'skipped', ranAt: '2026-11-17T10:00:00.000Z' },
-    { id: 'node-model', outcome: 'pass', ranAt: '2026-11-17T10:00:01.000Z' },
-    { id: 'browser-new', outcome: 'skipped', ranAt: '2026-11-17T10:00:02.000Z' },
+    { id: 'browser-login', outcome: /** @type {const} */ ('skipped'), ranAt: '2026-11-17T10:00:00.000Z', attempted: false },
+    { id: 'node-model', outcome: /** @type {const} */ ('pass'), ranAt: '2026-11-17T10:00:01.000Z' },
+    { id: 'browser-new', outcome: /** @type {const} */ ('skipped'), ranAt: '2026-11-17T10:00:02.000Z', attempted: false },
   ];
-  const results = mergeRecordedResults(prior, runs);
+  const results = mergeRecordedResults(prior, runs, 'NEW');
   assert.deepEqual(results, {
-    'browser-login': { outcome: 'pass', ranAt: '2026-11-10T09:00:00.000Z' },
-    'node-model': { outcome: 'pass', ranAt: '2026-11-17T10:00:01.000Z' },
+    'browser-login': { outcome: 'not-run', detail: 'not started (--skip-browser)', ranAt: '2026-11-17T10:00:00.000Z', stamp: 'NEW' },
+    'node-model': { outcome: 'pass', ranAt: '2026-11-17T10:00:01.000Z', stamp: 'NEW' },
+    'browser-new': { outcome: 'not-run', detail: 'not started (--skip-browser)', ranAt: '2026-11-17T10:00:02.000Z', stamp: 'NEW' },
   });
+  // A browser test that was not started keeps a result recorded on this very tree.
+  const same = mergeRecordedResults({ 'browser-login': { outcome: 'pass', ranAt: 't0', stamp: 'NEW' } }, [runs[0]], 'NEW');
+  assert.deepEqual(same['browser-login'], { outcome: 'pass', ranAt: 't0', stamp: 'NEW' });
 });
 
-test('a run that failed records its detail, and an empty prior records only what ran', () => {
+test('a run that failed records its detail, and a skipped run is recorded as not run', () => {
   const results = mergeRecordedResults({}, [
     { id: 'a', outcome: 'fail', detail: 'boom', ranAt: 't1' },
     { id: 'b', outcome: 'pass', ranAt: 't2' },
@@ -320,5 +324,6 @@ test('a run that failed records its detail, and an empty prior records only what
   assert.deepEqual(results, {
     a: { outcome: 'fail', detail: 'boom', ranAt: 't1' },
     b: { outcome: 'pass', ranAt: 't2' },
+    c: { outcome: 'not-run', detail: 'the matching test skipped itself', ranAt: 't3' },
   });
 });

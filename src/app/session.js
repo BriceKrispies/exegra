@@ -672,7 +672,9 @@ export function createSession() {
     const modelHash = textHashes.spec;
     rec('claims-evaluation-requested', { modelHash });
     try {
-      session.claimResults = session.model ? evaluateClaims(session.model, { recorded: session.recorded ?? undefined }) : [];
+      // The page cannot stamp the working tree, so every result resting on recorded facts says its freshness is
+      // unverifiable (src/core/claims.js) instead of being trusted silently.
+      session.claimResults = session.model ? evaluateClaims(session.model, { recorded: session.recorded ?? undefined, stamps: null }) : [];
       rec('claim-scenarios-run', { modelHash });
       rec('claims-evaluated', { modelHash });
     } catch (e) {

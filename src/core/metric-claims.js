@@ -87,12 +87,15 @@ function requestStatistic(trace, metric, seed, truncated) {
   if (!c) throw new Error(`The run measured no request class "${metric.of}".`);
   const st = metric.statistic;
   const n = c.measured;
+  // Starts refused as duplicates (a key equal to that of an unended request) make n depend on the system even for
+  // an open workload, so a run with any is never left out as underpowered (metric-stats.js, evaluateRuns).
+  const duplicates = typeof c.duplicate === 'number' ? c.duplicate : 0;
   if (metric.kind === 'response-time') {
     const w = c.responseTime;
     if (st === 'count') return { seed, truncated, value: rat(BigInt(n)), samples: n };
     if (st === 'max') return { seed, truncated, samples: n, infinite: w.infinite, value: w.infinite ? 'inf' : w.max === null ? null : rat(BigInt(w.max)) };
     if (st === 'mean') {
-      return { seed, truncated, samples: n, infinite: w.infinite, underpowered: underpowered({ statistic: 'mean', n }),
+      return { seed, truncated, samples: n, infinite: w.infinite, underpowered: underpowered({ statistic: 'mean', n }), duplicates,
         value: w.infinite || !n ? null : rat(BigInt(w.sum), BigInt(n)) };
     }
     const m = /^p(.+)$/.exec(st);
@@ -100,7 +103,7 @@ function requestStatistic(trace, metric, seed, truncated) {
       const key = quantileKey(st);
       const q = w.quantiles[key] ?? w.quantiles[m[1]];
       if (!q) throw new Error(`The run did not measure quantile ${key}; add it to the input's metrics.quantiles.`);
-      return { seed, truncated, samples: n, infinite: w.infinite, underpowered: underpowered({ statistic: st, n }),
+      return { seed, truncated, samples: n, infinite: w.infinite, underpowered: underpowered({ statistic: st, n }), duplicates,
         value: q.empty ? null : q.infinite ? 'inf' : rat(BigInt(q.value)) };
     }
   }
@@ -125,7 +128,47 @@ function requestStatistic(trace, metric, seed, truncated) {
 }
 
 /**
- * Run one scenario input N times with the run seeds of the base seed and evaluate the statistic.
+ * Whether the metric's request class is open-started in this engine input (docs/simulation.md, "Request
+ * lifecycle"): every start entry of the class comes from an open workload, so its sample count depends only on
+ * the arrivals. Decided from the declarations, conservatively: the class's named workload is open; or, with no
+ * workload named, at least one open workload issues the start event and nothing else can put it in the queue (no
+ * closed or population workload issues it, no behavior emits it or names it as a `then`, no scenario step and no
+ * fault injects it). Anything else, a metric that is not over a request class included, is not open-started, and
+ * an underpowered run of it then counts as not satisfying the bound.
+ * @param {any} input a version-2 engine input
+ * @param {{kind?: string, of?: string}} metric
+ * @returns {boolean}
+ */
+export function openStartedClass(input, metric) {
+  if (!['response-time', 'outcomes', 'throughput', 'false-positives'].includes(String(metric?.kind))) return false;
+  const cls = (Array.isArray(input?.requests) ? input.requests : []).find((/** @type {any} */ c) => c?.id === metric.of);
+  const event = cls?.start?.event;
+  if (typeof event !== 'string') return false;
+  const workloads = Array.isArray(input?.workloads) ? input.workloads : [];
+  if (typeof cls.start.workload === 'string') {
+    const w = workloads.find((/** @type {any} */ x) => x?.id === cls.start.workload);
+    return w?.kind === 'open';
+  }
+  /** @param {any} w */
+  const issues = (w) => (w?.kind === 'population' ? w?.start?.event === event : w?.event === event);
+  const issuing = workloads.filter(issues);
+  if (!issuing.length || issuing.some((/** @type {any} */ w) => w.kind !== 'open')) return false;
+  /** Whether any object under `v` has `emit` or `then` equal to the event. @param {any} v @returns {boolean} */
+  const emits = (v) => {
+    if (Array.isArray(v)) return v.some(emits);
+    if (!v || typeof v !== 'object') return false;
+    if (v.emit === event || v.then === event || v.then?.event === event) return true;
+    return Object.values(v).some(emits);
+  };
+  if (emits(input.behaviors)) return false;
+  if ((Array.isArray(input?.scenario?.steps) ? input.scenario.steps : []).some((/** @type {any} */ s) => s?.event === event)) return false;
+  if ((Array.isArray(input?.faults) ? input.faults : []).some((/** @type {any} */ f) => f?.kind === 'inject-event' && f?.event === event)) return false;
+  return true;
+}
+
+/**
+ * Run one scenario input N times with the run seeds of the base seed and evaluate the statistic. Whether the
+ * class is open-started is computed from the input (openStartedClass) unless the claim states it.
  * @param {EngineRun} run
  * @param {any} input a version-2 engine input
  * @param {{metric: any, op?: string, bound?: any, approx?: {value: any, tolerance: any},
@@ -145,9 +188,9 @@ export function evaluateScenario(run, input, claim) {
     approx: claim.approx ? { value: parseRational(claim.approx.value), tolerance: parseRational(claim.approx.tolerance) } : undefined,
     fraction: parseRational(claim.fraction ?? '0.95'),
     confidence: parseRational(claim.confidence ?? '0.95'),
-    openStarted: claim.openStarted !== false,
+    openStarted: typeof claim.openStarted === 'boolean' ? claim.openStarted : openStartedClass(input, claim.metric),
   };
-  return { ...evaluateRuns(stats, spec), seeds: stats.map((s) => s.seed), statistics: stats };
+  return { ...evaluateRuns(stats, spec), openStarted: spec.openStarted, seeds: stats.map((s) => s.seed), statistics: stats };
 }
 
 /**

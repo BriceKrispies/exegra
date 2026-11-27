@@ -110,7 +110,7 @@ Validation refuses, as errors: a `refines` that names something other than a beh
 | `supported` | No evaluation; attached evidence supports the claim. Evidence may be author-entered. |
 | `violated` | A counterexample was found, or recorded or declared evidence contradicts the claim. |
 | `inconclusive` | Something was checked, but not enough to decide. |
-| `not-evaluated` | Nothing was checked: no method, an unsupported method, or `external-evidence` with no evidence. |
+| `not-evaluated` | Nothing was checked: no method, an unsupported method, or `external-evidence` with no evidence; or the facts the status would rest on are **stale** (recorded for other files than the current ones, below), and the explanation starts with "Stale:". |
 
 Rules that keep the statuses honest:
 
@@ -120,6 +120,7 @@ Rules that keep the statuses honest:
 - **A requirement shows the checks over the behavior model that restate it.** A claim may name a requirement in a `models` property (a vocabulary property of type `ref` to `claim`, as the Strata specification declares). The requirement's result then carries `modelledBy`, the claims that name it with their statuses (listed by `exegra claims`, and in the inspector under "Checked over the behavior model by"). It is information: the requirement's own status does not change. A `models` value that is not a requirement (a claim of kind `requirement`) is the validation error `claim.models-not-requirement`.
 - **Trace methods check only the listed scenario traces**, run with the scenario's own faults. Every result's `scope` says so: "This is a check of these traces, not of all possible executions." A scenario that ends in an error or hits its step limit before an expected occurrence cannot establish an absence, and makes the claim `inconclusive`.
 - **Evidence can only make a model-evaluated claim worse.** A `verified` result with contradicting evidence (declared `supports: false`, or a recorded `fail`) becomes `violated`.
+- **A stale fact never makes a claim positive.** A recorded result, an external tool's outcome or a Lean theorem check recorded for other files than the current ones is stale ([Freshness](#freshness-of-recorded-facts)): a stale pass establishes nothing and a stale failure still counts.
 - **Every result carries a scope, an explanation, the assumptions, the entities involved** and, when violated, a counterexample (a path, a relationship set, or scenario and step). Results are stamped with the semantic hash they were evaluated at.
 - **Live checks in the simulator** (`checkTrace`) apply only to claims that list the loaded scenario, and distinguish *undecided* (`pending`) from *violated*: an `eventually` still waiting in an unfinished run is undecided, and so is a vacuous implication on a finished trace. See [simulation.md](simulation.md).
 
@@ -129,13 +130,13 @@ A specification's `vocabulary.verificationMethods` declares methods that Exegra 
 
 ## Lean theorems
 
-A `lean-theorem` claim names a theorem of the Lean core and, optionally, the implementation constants it must be about:
+A `lean-theorem` claim names a theorem of the Lean core and the implementation constants it must be about (at least one: a claim with no `about` is refused):
 
 ```jsonc
 "evaluate": { "method": "lean-theorem", "theorem": "Exegra.runInput_terminates", "about": ["Exegra.runInput"] }
 ```
 
-Lean does the checking (`tools/lean-theorems.js`, through `lake env lean` in `formal/` on the built library) and reports facts per theorem: whether it exists and is a theorem, whether the kernel accepts its proof again, the axioms it depends on (`Lean.collectAxioms`, what `#print axioms` prints), and for each `about` constant its kind and whether it occurs in the theorem's statement (its type). `exegra verify` records the facts in `evidence/results.json` under `theorems`; `exegra claims` and `exegra evaluate` check again when Lean is installed (`EXEGRA_NO_LEAN=1` skips it) and otherwise use the recorded facts, as the application does. The rule in `src/core/claims.js` turns the facts into a status: `proved` when all hold; `violated` when Lean refuses (no such constant, not a theorem, the kernel rejects the proof, `sorryAx` from `sorry`, `Lean.ofReduceBool` or `Lean.ofReduceNat` from `native_decide`, an axiom of our own, an `about` constant that is missing, is not a definition, or does not occur in the statement); `not-evaluated` with no recorded check. A refused theorem makes `exegra verify` fail unless the claim is expected to be violated.
+Lean does the checking (`tools/lean-theorems.js`, through `lake env lean` in `formal/` on the built library) and reports facts per theorem: whether it exists and is a theorem, whether the kernel accepts its proof again, the axioms it depends on (`Lean.collectAxioms`, what `#print axioms` prints), and for each `about` constant its kind and whether it occurs in the theorem's statement (its type), and the statement itself as Lean prints it. `exegra verify` records the facts in `evidence/results.json` under `theorems`, each with the hash of the `formal/` sources it was checked on (`formalHash`), the records stamp of the tree (`stamp`) and the sha256 of the statement (`statementHash`); `exegra claims` and `exegra evaluate` check again when Lean is installed (`EXEGRA_NO_LEAN=1` skips it) and otherwise use the recorded facts, as the application does. The rule in `src/core/claims.js` turns the facts into a status: `proved` when all hold; `violated` when Lean refuses (no such constant, not a theorem, the kernel rejects the proof, `sorryAx` from `sorry`, `Lean.ofReduceBool` or `Lean.ofReduceNat` from `native_decide`, an axiom of our own, a claim with no `about` constant, an `about` constant that is missing, is `opaque` (a `partial def` and an `implemented_by` opaque compile to one), is reported `implemented_by`, `extern` or `partial`, is not a definition, or does not occur in the statement); `not-evaluated` with no recorded check, and `not-evaluated` with a "Stale:" explanation when the recorded check ran on other `formal/` sources than the current ones (its `formalHash` differs, or it has none): replacing a proof by `sorry` and evaluating without Lean no longer keeps the claim proved. A refusal recorded on other sources still stands. A refused theorem makes `exegra verify` fail unless the claim is expected to be violated. The checker does not yet report `implemented_by`, `extern` or `partial` for a definition, and does not compare the statement with what the claim says: a theorem that mentions the named code but states nothing about it is still `proved` (statement binding is milestone M3 of [foundations.md](foundations.md)).
 
 Requiring the `about` constants in the statement is what makes the theorem about the code: a true theorem that does not mention `Exegra.runInput` says nothing about the engine. What the check does not establish is that the code which runs is those definitions; that is the trusted base, recorded as assumptions of the self-specification (`trusted-lean-kernel`, `trusted-lean-compiler-runtime`, `trusted-emscripten-toolchain`, `trusted-libuv`, `trusted-js-glue`, `trusted-wasm-engine`, `trusted-os-filesystem`, `trusted-js-shell`) and listed by each claim and by the components' `implementation.trusts`.
 
@@ -149,6 +150,7 @@ For `external-evidence` claims the status is:
 |---|---|
 | none | `not-evaluated` |
 | any contradicting (declared or recorded `fail`) | `violated` |
+| any recorded result that is stale ([Freshness](#freshness-of-recorded-facts)) | `not-evaluated`, explanation "Stale: …" |
 | a recorded `pass` of a `test`, or a non-test item | `supported` (the explanation states which part Exegra executed and which is author-entered) |
 | only `test` items with no recorded result | `inconclusive` |
 
@@ -159,11 +161,25 @@ For `external-evidence` claims the status is:
 `exegra verify` executes the `test` evidence of a project and writes `specs/<project>/evidence/results.json`, keyed by evidence id:
 
 ```jsonc
-{ "results": { "ev-roundtrip-core": { "outcome": "pass", "ranAt": "2026-11-14T18:02:54.354Z" } },
-  "traceability": { /* module/file comparison */ } }
+{ "results": { "ev-roundtrip-core": { "outcome": "pass", "ranAt": "2026-11-14T18:02:54.354Z", "stamp": "4686…" } },
+  "traceability": { /* module/file comparison */ },
+  "theorems": { /* Lean checks, each with formalHash, stamp and statementHash */ },
+  "claimBaseline": { "core-independent-of-ui": { "status": "verified" } /* … each claim of the last passing run */ } }
 ```
 
-The application and CLI read it when evaluating claims. A `fail` records the last 20 lines of test output. A Node test reference that matches no test (a title pattern that selects nothing) is recorded as a `fail` with the detail "the reference matched no test", not as a pass. Evidence in a realisation root ([verification.md](verification.md#realisation-roots-code-and-tests-in-other-repositories)) is decided from that root's JUnit reports and records `root` and `reports` too; its outcome may also be `not-run` (absent from the report, skipped, errored, or failed for an environmental reason), which counts as no recorded result, never as a pass or a failure. Recorded results are **not bound** to a code or model hash, so a stale result is not detected as stale (a recorded limitation on `recorded-results-file`). Only evidence of kind `test` is executed.
+The application and CLI read it when evaluating claims. A `fail` records the last 20 lines of test output. A Node test reference that matches no test (a title pattern that selects nothing) is recorded as a `fail` with the detail "the reference matched no test", not as a pass. A reference passes only when at least one matched test executed and passed and no matched test failed, skipped itself or is a `todo` (a `describe` block is not a test of its own); a reference whose matched tests skipped, wholly or in part, is recorded as `not-run`, and an older pass is not kept for it. Evidence in a realisation root ([verification.md](verification.md#realisation-roots-code-and-tests-in-other-repositories)) is decided from that root's JUnit reports and records `root` and `reports` too; its outcome may also be `not-run` (absent from the report, skipped, errored, or failed for an environmental reason), which counts as no recorded result, never as a pass or a failure. Only evidence of kind `test` is executed.
+
+### Freshness of recorded facts
+
+Every result `exegra verify` records carries `stamp`, the **records stamp** of the tree it was recorded on (`tools/tree-stamp.js`: the tree stamp over every tracked and unignored file and the generated engine builds, without the project's `evidence/results.json` and `generated/`, which Exegra writes from its results), and every Lean check carries `formalHash`, a hash of the `formal/` sources. The command line (`claims`, `evaluate`, `gaps`, `admit`, `generate`, `verify`) evaluates claims against the current stamps:
+
+| The fact | Read as |
+|---|---|
+| recorded with the current stamp (or formal hash, for a Lean check) | fresh: it counts; the result's `freshness` is `fresh` |
+| recorded with another stamp, or with none (results recorded before stamps existed) | stale: a pass establishes nothing, so the claim is `not-evaluated` with an explanation starting "Stale:", `freshness: "stale"` and the diagnostic `claim.stale-evidence` (`claim.stale-theorem` for a Lean check); a `fail` still makes the claim `violated` |
+| read where no stamp can be computed (the application in the browser) | as it is, with `freshness: "unverifiable"`, the info diagnostic `claim.freshness-unverifiable` and, for a positive status, an explanation that says so; the Verification tab says the recorded results' freshness is unverifiable there |
+
+An external tool's outcome under `claims` follows the same rule (it needs the current `stamp`). Concordance results are bound by their own `specSha256` (below), not by the stamp. Staleness is reported through `not-evaluated`, `freshness` and diagnostics rather than as an eighth status, because every consumer of claim statuses (the summaries, `admit`'s ranks, the generators, the UI) enumerates the seven; the status lattice with freshness as a component of its own is milestone M3 of [foundations.md](foundations.md). The stamp is coarse: any edit of a stamped file makes every recorded result stale until `verify` runs again.
 
 ## Concordance results
 
