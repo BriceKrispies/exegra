@@ -175,11 +175,11 @@ end Exegra.Core.Examples
 #guard_msgs in
 #print axioms Exegra.Core.LTS.checkClosed_sound
 
-/-- info: 'Exegra.Core.LTS.invariant_of_search' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.LTS.invariant_of_search' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.LTS.invariant_of_search
 
-/-- info: 'Exegra.Core.LTS.not_invariant_of_search' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.LTS.not_invariant_of_search' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.LTS.not_invariant_of_search
 
