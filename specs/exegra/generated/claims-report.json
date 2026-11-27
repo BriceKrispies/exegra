@@ -1434,31 +1434,37 @@
         }
       ],
       "check": "test",
-      "counterexample": null,
+      "counterexample": {
+        "entities": [
+          "ev-browser-sim-flow"
+        ],
+        "summary": "Contradicting evidence: ev-browser-sim-flow."
+      },
       "evaluator": "exegra.evidence/0.1",
       "evidence": [
         {
+          "detail": "    Test timeout of 60000ms exceeded.\n\n    Error: locator.boundingBox: Test timeout of 60000ms exceeded.\n    Call log:\n      - waiting for locator('.scene-flow-label--edge')\n\n\n      199 |   await page.waitForTimeout(450);\n      200 |   const b = /** @type {any[]} */ (await ex(page, `return view.getFlows();`));\n    > 201 |   const p1 = await label.boundingBox();\n          |                          ^\n      202 |   expect(b[0].progress).toBeGreaterThan(a[0].progress);\n      203 |   expect(p0 && p1 && Math.hypot(p1.x - p0.x, p1.y - p0.y)).toBeGreaterThan(5);\n      204 |   await expect(page.getByTestId('sim-flow')).toHaveText(/Visual interaction and application entry → Transaction system$/);\n        at /home/runner/work/exegra/exegra/tests/browser/interaction.spec.js:201:26\n\n    Error Context: test-results/interaction-stepping-a-sim-1ffc9-dge-from-sender-to-receiver-desktop/error-context.md\n\n  1 failed\n    [desktop] › tests/browser/interaction.spec.js:171:1 › stepping a simulation sends a labelled marker along the edge from sender to receiver",
           "id": "ev-browser-sim-flow",
           "kind": "test",
-          "recorded": "none",
+          "recorded": "fail",
           "ref": "tests/browser/interaction.spec.js#stepping a simulation sends a labelled marker along the edge from sender to receiver",
           "stale": true,
           "supports": true
         }
       ],
-      "explanation": "Stale: the recorded result of \"ev-browser-sim-flow\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
+      "explanation": "Evidence \"ev-browser-sim-flow\" (recorded result: fail) contradicts the claim.",
       "grounding": "not-applicable",
       "id": "sim-step-shows-message-moving",
       "kind": "temporal",
       "method": "external-evidence",
-      "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-browser-sim-flow), of which 0 have a recorded execution result; the rest is author-entered.",
+      "scope": "No model evaluation was performed. This rests on 1 evidence entity (ev-browser-sim-flow), of which 1 has a recorded execution result; the rest is author-entered.",
       "source": {
         "column": 5,
         "line": 15238
       },
       "statement": "Stepping a simulation in a structural view moves a marker labelled with the event's name from the sender's node toward each receiver's node, and the simulator panel states who sent the event to whom.",
-      "status": "not-evaluated",
-      "statusLabel": "Not evaluated",
+      "status": "violated",
+      "statusLabel": "Violated",
       "strength": {
         "check": "The status comes from attached test evidence.",
         "grounding": "The status rests on evidence outside the model."
@@ -2038,15 +2044,15 @@
       "evaluator": "exegra.evidence/0.1",
       "evidence": [
         {
+          "detail": "1 of 5 matching tests skipped themselves or are todos, so the reference was not executed in full",
           "id": "ev-engines-agree",
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/conformance.test.js",
-          "stale": true,
           "supports": true
         }
       ],
-      "explanation": "Stale: the recorded result of \"ev-engines-agree\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
+      "explanation": "Only test evidence (\"ev-engines-agree\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
       "grounding": "not-applicable",
       "id": "engines-agree-on-traces",
       "kind": "invariant",
@@ -2057,8 +2063,8 @@
         "line": 15509
       },
       "statement": "The Rust simulation engine, the differential oracle, native and WebAssembly, reproduces every golden trace of the conformance suite exactly, as the Lean engine does.",
-      "status": "not-evaluated",
-      "statusLabel": "Not evaluated",
+      "status": "inconclusive",
+      "statusLabel": "Inconclusive",
       "strength": {
         "check": "The status comes from attached test evidence.",
         "grounding": "The status rests on evidence outside the model."
@@ -2084,15 +2090,15 @@
       "evaluator": "exegra.evidence/0.1",
       "evidence": [
         {
+          "detail": "1 of 5 matching tests skipped themselves or are todos, so the reference was not executed in full",
           "id": "ev-simulation-contract",
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/conformance.test.js",
-          "stale": true,
           "supports": true
         }
       ],
-      "explanation": "Stale: the recorded result of \"ev-simulation-contract\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
+      "explanation": "Only test evidence (\"ev-simulation-contract\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
       "grounding": "not-applicable",
       "id": "simulation-contract-pinned",
       "kind": "invariant",
@@ -2103,8 +2109,8 @@
         "line": 15526
       },
       "statement": "For every scenario of the golden conformance suite, the simulation engine reproduces the committed trace exactly, both from the model and from the committed engine input alone, and simulationInput derives exactly the committed input.",
-      "status": "not-evaluated",
-      "statusLabel": "Not evaluated",
+      "status": "inconclusive",
+      "statusLabel": "Inconclusive",
       "strength": {
         "check": "The status comes from attached test evidence.",
         "grounding": "The status rests on evidence outside the model."
@@ -2543,15 +2549,15 @@
       "evaluator": "exegra.evidence/0.1",
       "evidence": [
         {
+          "detail": "2 of 4 matching tests skipped themselves or are todos, so the reference was not executed in full",
           "id": "ev-formal-differential",
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/formal-semantics.test.js",
-          "stale": true,
           "supports": true
         }
       ],
-      "explanation": "Stale: the recorded result of \"ev-formal-differential\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
+      "explanation": "Only test evidence (\"ev-formal-differential\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
       "grounding": "not-applicable",
       "id": "engine-matches-formal-semantics",
       "kind": "invariant",
@@ -2562,8 +2568,8 @@
         "line": 15711
       },
       "statement": "The Rust engine and the Lean formal semantics give identical traces on every golden and on every input of a recorded seeded run of the input generator, whose coverage of the language's constructs is stated.",
-      "status": "not-evaluated",
-      "statusLabel": "Not evaluated",
+      "status": "inconclusive",
+      "statusLabel": "Inconclusive",
       "strength": {
         "check": "The status comes from attached test evidence.",
         "grounding": "The status rests on evidence outside the model."
@@ -3537,6 +3543,7 @@
       "evaluator": "exegra.evidence/0.1",
       "evidence": [
         {
+          "detail": "every matching test (1) skipped itself or is a todo, so nothing was executed",
           "id": "ev-mm1-utilisation-fixture",
           "kind": "test",
           "recorded": "none",
@@ -3588,6 +3595,7 @@
       "evaluator": "exegra.evidence/0.1",
       "evidence": [
         {
+          "detail": "every matching test (1) skipped itself or is a todo, so nothing was executed",
           "id": "ev-pool-flood-fixture",
           "kind": "test",
           "recorded": "none",
@@ -3714,6 +3722,7 @@
       "evaluator": "exegra.evidence/0.1",
       "evidence": [
         {
+          "detail": "every matching test (1) skipped itself or is a todo, so nothing was executed",
           "id": "ev-mm1-mean-wait-fixture",
           "kind": "test",
           "recorded": "none",
@@ -6582,6 +6591,7 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/cli.test.js#a skipped verify run records the evidence as not run instead of keeping an older pass",
+          "stale": true,
           "supports": true
         },
         {
@@ -6589,10 +6599,11 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/fact-producers.test.js#a test that skipped now is recorded as not run and no older pass supports its claim",
+          "stale": true,
           "supports": true
         }
       ],
-      "explanation": "Only test evidence (\"ev-verify-skip-records-not-run\" and \"ev-skip-not-supporting\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "explanation": "Stale: the recorded results of \"ev-verify-skip-records-not-run\" and \"ev-skip-not-supporting\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
       "grounding": "not-applicable",
       "id": "verify-skip-records-not-run",
       "kind": "invariant",
@@ -6603,8 +6614,8 @@
         "line": 17479
       },
       "statement": "A verify run in which a test evidence reference skipped (a matched test skipped itself or is a todo, wholly or in part, or a browser test was not started under --skip-browser) records that evidence as not-run, which counts as no result, and never keeps an older pass for it; the only result kept is that of a browser test not started whose earlier result was recorded on the same tree stamp.",
-      "status": "inconclusive",
-      "statusLabel": "Inconclusive",
+      "status": "not-evaluated",
+      "statusLabel": "Not evaluated",
       "strength": {
         "check": "The status comes from attached test evidence.",
         "grounding": "The status rests on evidence outside the model."
@@ -6630,6 +6641,7 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/fact-producers.test.js#a reference whose matched test skipped or is a todo is not a pass on the fresh path",
+          "stale": true,
           "supports": true
         },
         {
@@ -6637,6 +6649,7 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/fact-producers.test.js#a reference whose matched test skipped or is a todo is not a pass on the reuse path",
+          "stale": true,
           "supports": true
         },
         {
@@ -6644,10 +6657,11 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/outcome-reuse.test.js#a whole-file reference to a file with a self-skipping test is not a pass",
+          "stale": true,
           "supports": true
         }
       ],
-      "explanation": "Only test evidence (\"ev-skip-aware-fresh\", \"ev-skip-aware-reuse\" and \"ev-skip-aware-whole-file\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "explanation": "Stale: the recorded results of \"ev-skip-aware-fresh\", \"ev-skip-aware-reuse\" and \"ev-skip-aware-whole-file\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
       "grounding": "not-applicable",
       "id": "test-evidence-skip-aware",
       "kind": "invariant",
@@ -6658,8 +6672,8 @@
         "line": 17495
       },
       "statement": "A test evidence reference passes only when at least one matched leaf test executed and passed and no matched test failed, skipped itself or is a todo; a describe block is not a test of its own; the fresh path (node's TAP output) and the reuse path (outcomes recorded by npm test) decide this with the same function, and a reference whose matched tests skipped, wholly or in part, is recorded as not run on both.",
-      "status": "inconclusive",
-      "statusLabel": "Inconclusive",
+      "status": "not-evaluated",
+      "statusLabel": "Not evaluated",
       "strength": {
         "check": "The status comes from attached test evidence.",
         "grounding": "The status rests on evidence outside the model."
@@ -6685,6 +6699,7 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/fact-producers.test.js#a recorded result whose stamp is not the current stamp leaves its claim not evaluated as stale",
+          "stale": true,
           "supports": true
         },
         {
@@ -6692,6 +6707,7 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/fact-producers.test.js#an outcome an external tool recorded on another tree does not support its claim",
+          "stale": true,
           "supports": true
         },
         {
@@ -6699,10 +6715,11 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/fact-producers.test.js#the records stamp ignores the files Exegra writes from its results and the formal hash follows formal sources",
+          "stale": true,
           "supports": true
         }
       ],
-      "explanation": "Only test evidence (\"ev-stale-evidence\", \"ev-stale-external-tool\" and \"ev-records-stamp\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "explanation": "Stale: the recorded results of \"ev-stale-evidence\", \"ev-stale-external-tool\" and \"ev-records-stamp\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
       "grounding": "not-applicable",
       "id": "recorded-results-read-stale-on-stamp-mismatch",
       "kind": "invariant",
@@ -6713,8 +6730,8 @@
         "line": 17511
       },
       "statement": "exegra verify records every evidence result with the records stamp of the tree (tools/tree-stamp.js: the tree stamp without the project's results.json and generated artifacts), and the command line evaluates claims against the current stamps: an evidence result or an external tool's outcome recorded on another stamp, or on none, is stale; a stale pass establishes nothing, so a claim resting on it is not evaluated, with an explanation that starts with Stale and the diagnostic claim.stale-evidence; a stale fail still contradicts its claim.",
-      "status": "inconclusive",
-      "statusLabel": "Inconclusive",
+      "status": "not-evaluated",
+      "statusLabel": "Not evaluated",
       "strength": {
         "check": "The status comes from attached test evidence.",
         "grounding": "The status rests on evidence outside the model."
@@ -6741,10 +6758,11 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/fact-producers.test.js#without a current stamp recorded results are reported with unverifiable freshness",
+          "stale": true,
           "supports": true
         }
       ],
-      "explanation": "Only test evidence (\"ev-unverifiable-freshness\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "explanation": "Stale: the recorded result of \"ev-unverifiable-freshness\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
       "grounding": "not-applicable",
       "id": "recorded-results-unverifiable-without-stamp",
       "kind": "invariant",
@@ -6755,8 +6773,8 @@
         "line": 17528
       },
       "statement": "Where no current stamp can be computed (the application in the browser), a claim status resting on recorded facts keeps its value but carries freshness unverifiable, the diagnostic claim.freshness-unverifiable and, when the status is positive, an explanation that says so; the verification panel says the recorded results' freshness is unverifiable there.",
-      "status": "inconclusive",
-      "statusLabel": "Inconclusive",
+      "status": "not-evaluated",
+      "statusLabel": "Not evaluated",
       "strength": {
         "check": "The status comes from attached test evidence.",
         "grounding": "The status rests on evidence outside the model."
@@ -6782,10 +6800,11 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/fact-producers.test.js#the lean-theorem rule refuses a claim with no about list and an about constant that is not the code that runs",
+          "stale": true,
           "supports": true
         }
       ],
-      "explanation": "Only test evidence (\"ev-lean-about-refusals\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "explanation": "Stale: the recorded result of \"ev-lean-about-refusals\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
       "grounding": "not-applicable",
       "id": "lean-theorem-requires-code-about",
       "kind": "invariant",
@@ -6796,8 +6815,8 @@
         "line": 17544
       },
       "statement": "A lean-theorem claim is refused (violated) when it names no implementation constant in about, or when a named constant is opaque, or is reported implemented_by, extern or partial, because a theorem about such a constant says nothing about the code that runs.",
-      "status": "inconclusive",
-      "statusLabel": "Inconclusive",
+      "status": "not-evaluated",
+      "statusLabel": "Not evaluated",
       "strength": {
         "check": "The status comes from attached test evidence.",
         "grounding": "The status rests on evidence outside the model."
@@ -6822,10 +6841,11 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/fact-producers.test.js#a recorded Lean check of other formal sources does not keep its claim proved",
+          "stale": true,
           "supports": true
         }
       ],
-      "explanation": "Only test evidence (\"ev-lean-stale-sources\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "explanation": "Stale: the recorded result of \"ev-lean-stale-sources\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
       "grounding": "not-applicable",
       "id": "lean-theorem-records-stale-on-source-change",
       "kind": "invariant",
@@ -6836,8 +6856,8 @@
         "line": 17559
       },
       "statement": "Each recorded Lean theorem check carries the hash of the formal/ sources it was checked on, the records stamp of the tree and the hash of the theorem statement as Lean printed it; when Lean does not run (not installed, or EXEGRA_NO_LEAN=1) a recorded check whose formal hash differs from that of the current sources, or that carries none, does not keep its claim proved: the claim is not evaluated, with an explanation that starts with Stale and the diagnostic claim.stale-theorem.",
-      "status": "inconclusive",
-      "statusLabel": "Inconclusive",
+      "status": "not-evaluated",
+      "statusLabel": "Not evaluated",
       "strength": {
         "check": "The status comes from attached test evidence.",
         "grounding": "The status rests on evidence outside the model."
@@ -6863,6 +6883,7 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/fact-producers.test.js#a closed-workload class whose runs collapse reads violated: underpowered runs are kept and fail",
+          "stale": true,
           "supports": true
         },
         {
@@ -6870,10 +6891,11 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/fact-producers.test.js#open-startedness is computed from the workloads that can start the class",
+          "stale": true,
           "supports": true
         }
       ],
-      "explanation": "Only test evidence (\"ev-metric-closed-violated\" and \"ev-metric-open-started-rule\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "explanation": "Stale: the recorded results of \"ev-metric-closed-violated\" and \"ev-metric-open-started-rule\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
       "grounding": "not-applicable",
       "id": "metric-open-started-computed",
       "kind": "invariant",
@@ -6884,8 +6906,8 @@
         "line": 17575
       },
       "statement": "A metric-bound claim leaves an underpowered run out only for a request class that the engine input shows to be open-started (its named workload is open, or with none named an open workload issues its start event and no closed or population workload, behavior emit or then, scenario step or injected fault can); for every other class, and for a run with duplicate starts, an underpowered run is kept and does not satisfy the bound; nothing defaults a class to open-started.",
-      "status": "inconclusive",
-      "statusLabel": "Inconclusive",
+      "status": "not-evaluated",
+      "statusLabel": "Not evaluated",
       "strength": {
         "check": "The status comes from attached test evidence.",
         "grounding": "The status rests on evidence outside the model."
@@ -6910,10 +6932,11 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/fact-producers.test.js#admit rejects a claim that falls to not evaluated and a positive claim that is removed",
+          "stale": true,
           "supports": true
         }
       ],
-      "explanation": "Only test evidence (\"ev-admit-downgrades\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "explanation": "Stale: the recorded result of \"ev-admit-downgrades\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
       "grounding": "not-applicable",
       "id": "admit-rejects-downgrades-and-removals",
       "kind": "invariant",
@@ -6924,8 +6947,8 @@
         "line": 17590
       },
       "statement": "exegra admit ranks not-evaluated with inconclusive, so a claim that moves from a positive status to not-evaluated is the reason admit.claim-regressed (not acknowledgeable), and a claim that was proved, verified, supported or model-holds and that the change removes is the reason admit.claim-removed, which only an explicit --accept admit.claim-removed acknowledges.",
-      "status": "inconclusive",
-      "statusLabel": "Inconclusive",
+      "status": "not-evaluated",
+      "statusLabel": "Not evaluated",
       "strength": {
         "check": "The status comes from attached test evidence.",
         "grounding": "The status rests on evidence outside the model."
@@ -6950,10 +6973,11 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/fact-producers.test.js#verify fails on a fall from a positive status a removal and a changed counterexample of an expected violation",
+          "stale": true,
           "supports": true
         }
       ],
-      "explanation": "Only test evidence (\"ev-verify-regressions\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "explanation": "Stale: the recorded result of \"ev-verify-regressions\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
       "grounding": "not-applicable",
       "id": "verify-fails-on-regression",
       "kind": "invariant",
@@ -6964,8 +6988,8 @@
         "line": 17605
       },
       "statement": "exegra verify records, with each passing run, every claim's status and the fingerprint of each violated claim's counterexample (claimBaseline in results.json), and fails when, against that baseline, a positive claim falls to a lower status (inconclusive and not-evaluated included), a positive claim no longer exists, or a claim named by --expect-violated is violated with another counterexample; --accept-change names the claims whose change is accepted, and a failing run leaves the baseline as it was.",
-      "status": "inconclusive",
-      "statusLabel": "Inconclusive",
+      "status": "not-evaluated",
+      "statusLabel": "Not evaluated",
       "strength": {
         "check": "The status comes from attached test evidence.",
         "grounding": "The status rests on evidence outside the model."
@@ -7527,6 +7551,7 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/pages-site.test.js#the production build uses relative asset URLs so it loads under a sub-path",
+          "stale": true,
           "supports": true
         },
         {
@@ -7534,6 +7559,7 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/pages-site.test.js#the Pages workflow is triggered by a push to main with no path or tag filter and may deploy to Pages",
+          "stale": true,
           "supports": true
         },
         {
@@ -7541,6 +7567,7 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/pages-site.test.js#the Pages workflow builds the Lean core and validates the specification before it builds and deploys dist",
+          "stale": true,
           "supports": true
         },
         {
@@ -7548,10 +7575,11 @@
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/pages-site.test.js#the workflow checks fail on each of the five publishing mutants",
+          "stale": true,
           "supports": true
         }
       ],
-      "explanation": "Only test evidence (\"ev-pages-relative-base\", \"ev-pages-on-push-to-main\", \"ev-pages-validate-before-deploy\" and \"ev-pages-mutants-refused\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "explanation": "Stale: the recorded results of \"ev-pages-relative-base\", \"ev-pages-on-push-to-main\", \"ev-pages-validate-before-deploy\" and \"ev-pages-mutants-refused\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
       "grounding": "not-applicable",
       "id": "pages-site-published-from-main",
       "kind": "structural",
@@ -7562,8 +7590,8 @@
         "line": 17802
       },
       "statement": "The Pages workflow file .github/workflows/pages.yml is triggered by a push to main with no path, tag or branch filter beyond main, and grants pages: write and id-token: write; its build job, with no condition and no step whose failure is ignored, builds the Lean core, validates Exegra's own specification, builds the bundle and uploads dist, in that order; its deploy job needs the build job, runs only on main and deploys the uploaded artifact; and the Vite configuration's base is relative, so the bundle loads under the repository's sub-path.",
-      "status": "inconclusive",
-      "statusLabel": "Inconclusive",
+      "status": "not-evaluated",
+      "statusLabel": "Not evaluated",
       "strength": {
         "check": "The status comes from attached test evidence.",
         "grounding": "The status rests on evidence outside the model."
@@ -7768,15 +7796,15 @@
       "evaluator": "exegra.evidence/0.1",
       "evidence": [
         {
+          "detail": "1 of 3 matching tests skipped themselves or are todos, so the reference was not executed in full",
           "id": "ev-lean-theorem-method",
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/lean-theorem.test.js",
-          "stale": true,
           "supports": true
         }
       ],
-      "explanation": "Stale: the recorded result of \"ev-lean-theorem-method\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
+      "explanation": "Only test evidence (\"ev-lean-theorem-method\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
       "grounding": "not-applicable",
       "id": "lean-theorem-method-refuses-unsound-proofs",
       "kind": "structural",
@@ -7787,8 +7815,8 @@
         "line": 17914
       },
       "statement": "A lean-theorem claim is proved only when Lean reports a kernel-checked theorem that depends on no axiom beyond propext, Classical.choice and Quot.sound and whose statement mentions every named implementation constant; sorry, native_decide, an axiom of its own and an off-topic statement are refused.",
-      "status": "not-evaluated",
-      "statusLabel": "Not evaluated",
+      "status": "inconclusive",
+      "statusLabel": "Inconclusive",
       "strength": {
         "check": "The status comes from attached test evidence.",
         "grounding": "The status rests on evidence outside the model."
@@ -9199,11 +9227,11 @@
           "supports": true
         },
         {
+          "detail": "every matching test (1) skipped itself or is a todo, so nothing was executed",
           "id": "ev-readiness-shipped-projects",
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/readiness-machines.test.js#the exegra and strata projects have no implementation-level machine and so no readiness diagnostic",
-          "stale": true,
           "supports": true
         },
         {
@@ -9271,7 +9299,7 @@
           "supports": true
         }
       ],
-      "explanation": "Stale: the recorded results of \"ev-readiness-rules\", \"ev-readiness-fixed\", \"ev-readiness-model-level\", \"ev-readiness-shipped-projects\", \"ev-readiness-storage-alone\", \"ev-readiness-storedin-alone\", \"ev-readiness-stateless-exempt\", \"ev-readiness-non-creating\", \"ev-readiness-storage-defaults\", \"ev-readiness-field-fit\", \"ev-storage-key-whole\" and \"ev-storage-key-whole-list\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
+      "explanation": "Stale: the recorded results of \"ev-readiness-rules\", \"ev-readiness-fixed\", \"ev-readiness-model-level\", \"ev-readiness-storage-alone\", \"ev-readiness-storedin-alone\", \"ev-readiness-stateless-exempt\", \"ev-readiness-non-creating\", \"ev-readiness-storage-defaults\", \"ev-readiness-field-fit\", \"ev-storage-key-whole\" and \"ev-storage-key-whole-list\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
       "grounding": "not-applicable",
       "id": "implementation-machine-readiness-rules",
       "kind": "invariant",
@@ -14168,6 +14196,7 @@
           "supports": true
         },
         {
+          "detail": "every matching test (1) skipped itself or is a todo, so nothing was executed",
           "id": "ev-layers-expressions-drift-strata",
           "kind": "test",
           "recorded": "none",
@@ -14862,23 +14891,23 @@
           "supports": true
         },
         {
+          "detail": "every matching test (1) skipped itself or is a todo, so nothing was executed",
           "id": "ev-integrity-relations-nemo-fixture",
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/integrity-nemo.test.js#Nemo derives the same relations as the JavaScript evaluator on the relations fixture",
-          "stale": true,
           "supports": true
         },
         {
+          "detail": "every matching test (1) skipped itself or is a todo, so nothing was executed",
           "id": "ev-integrity-relations-nemo-random",
           "kind": "test",
           "recorded": "none",
           "ref": "tests/core/integrity-nemo.test.js#Nemo derives the same relations as the JavaScript evaluator on seeded random graphs and stratified programs",
-          "stale": true,
           "supports": true
         }
       ],
-      "explanation": "Stale: the recorded results of \"ev-integrity-relations-lean-proved\", \"ev-integrity-relations-lean-refuted\", \"ev-integrity-relations-lean-differential\", \"ev-integrity-relations-nemo-fixture\" and \"ev-integrity-relations-nemo-random\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
+      "explanation": "Stale: the recorded results of \"ev-integrity-relations-lean-proved\", \"ev-integrity-relations-lean-refuted\" and \"ev-integrity-relations-lean-differential\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
       "grounding": "not-applicable",
       "id": "integrity-relations-agree-with-lean-and-nemo",
       "kind": "invariant",
@@ -16017,13 +16046,13 @@
     }
   },
   "summary": {
-    "inconclusive": 13,
-    "not-evaluated": 198,
+    "inconclusive": 7,
+    "not-evaluated": 203,
     "proved": 0,
     "supported": 0,
     "total": 262,
     "verified": 49,
-    "violated": 2
+    "violated": 3
   },
   "version": 1
 }

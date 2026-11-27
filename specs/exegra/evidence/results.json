@@ -1,3053 +1,3806 @@
 {
   "results": {
+    "ev-pages-relative-base": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:33:37.862Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-pages-on-push-to-main": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:33:37.968Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-pages-validate-before-deploy": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:33:38.067Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-pages-mutants-refused": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:33:38.171Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
     "ev-concordance-pass": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:38.351Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-concordance-fail": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:38.531Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-concordance-absent": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:38.707Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-concordance-diagnostics": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:38.897Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-concordance-unknown-claim": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:39.073Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-concordance-unconfigured": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:39.247Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-concordance-directory": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:39.424Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-concordance-watched": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:39.741Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-trace-order-decides": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:40.090Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-trace-precedes-script": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:40.421Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-trace-never-faultonly": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:40.767Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-trace-constant-consequent": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:41.104Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-models-listed": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:41.449Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-models-validated": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:41.793Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-validate-inert-negative": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:42.124Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-validate-not-staged": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:42.460Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-data-declared-markers": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:42.793Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-roundtrip-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:33:43.216Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-browser-inspector-rename": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:13.359Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-browser-source-edit": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:19.026Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-workspace-write": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:19.139Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-browser-persists": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:25.320Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-roundtrip-rejected": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:25.505Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-browser-rejected-source": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:31.108Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-workspace-conflict": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:31.225Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layout-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:31.406Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layout-browser": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:38.216Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-simulation-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:38.594Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generate-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:38.941Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-workspace-confinement": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:39.273Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-roundtrip-invalid-draft": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:39.442Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-browser-invalid-draft": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:44.994Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-model-unsupported": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:45.157Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-flows-trace": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:45.515Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-flows-edges": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:34:45.870Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-browser-sim-flow": {
-      "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "outcome": "fail",
+      "detail": "    Test timeout of 60000ms exceeded.\n\n    Error: locator.boundingBox: Test timeout of 60000ms exceeded.\n    Call log:\n      - waiting for locator('.scene-flow-label--edge')\n\n\n      199 |   await page.waitForTimeout(450);\n      200 |   const b = /** @type {any[]} */ (await ex(page, `return view.getFlows();`));\n    > 201 |   const p1 = await label.boundingBox();\n          |                          ^\n      202 |   expect(b[0].progress).toBeGreaterThan(a[0].progress);\n      203 |   expect(p0 && p1 && Math.hypot(p1.x - p0.x, p1.y - p0.y)).toBeGreaterThan(5);\n      204 |   await expect(page.getByTestId('sim-flow')).toHaveText(/Visual interaction and application entry → Transaction system$/);\n        at /home/runner/work/exegra/exegra/tests/browser/interaction.spec.js:201:26\n\n    Error Context: test-results/interaction-stepping-a-sim-1ffc9-dge-from-sender-to-receiver-desktop/error-context.md\n\n  1 failed\n    [desktop] › tests/browser/interaction.spec.js:171:1 › stepping a simulation sends a labelled marker along the edge from sender to receiver",
+      "ranAt": "2026-11-27T00:35:49.110Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-simulation-contract": {
-      "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "outcome": "not-run",
+      "detail": "1 of 5 matching tests skipped themselves or are todos, so the reference was not executed in full",
+      "ranAt": "2026-11-27T00:35:50.950Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-engines-agree": {
-      "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "outcome": "not-run",
+      "detail": "1 of 5 matching tests skipped themselves or are todos, so the reference was not executed in full",
+      "ranAt": "2026-11-27T00:35:52.809Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-simulation-worker-responsive": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:36:08.962Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-browser-phone-touch-usable": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:36:21.246Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-browser-phone-every-function": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:36:50.204Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-browser-tablet-desktop-expand": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:36:59.357Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-fault-model-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:36:59.746Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-formal-differential": {
-      "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "outcome": "not-run",
+      "detail": "2 of 4 matching tests skipped themselves or are todos, so the reference was not executed in full",
+      "ranAt": "2026-11-27T00:37:00.828Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-formal-proofs": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:01.141Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-contract-events-static": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:01.466Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-contract-trace-checks": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:01.855Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-contract-request-log": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:02.259Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-browser-requests-section": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:08.985Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-data-model-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:09.197Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-record-erasure-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:09.402Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-classification-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:09.608Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-formal-explore": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:13.357Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-formal-explore-bounded": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:14.973Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-negatives-status": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:15.331Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-negatives-validated": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:15.696Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-own-claims-falsifiable": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:16.726Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-formal-explore-temporal": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:18.395Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-distribution-lowering": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:20.364Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-mm1-utilisation-fixture": {
+      "outcome": "not-run",
+      "detail": "every matching test (1) skipped itself or is a todo, so nothing was executed",
+      "ranAt": "2026-11-27T00:37:20.471Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-mm1-mean-wait-fixture": {
+      "outcome": "not-run",
+      "detail": "every matching test (1) skipped itself or is a todo, so nothing was executed",
+      "ranAt": "2026-11-27T00:37:20.582Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-pool-flood-fixture": {
+      "outcome": "not-run",
+      "detail": "every matching test (1) skipped itself or is a todo, so nothing was executed",
+      "ranAt": "2026-11-27T00:37:20.690Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-metric-claims-in-specifications": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:25.246Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-runtime-data-complete": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:25.618Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-verify-reuses-fresh-outcomes": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:25.786Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
-    "ev-verify-skip-keeps-outcome": {
+    "ev-verify-skip-records-not-run": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:25.956Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-skip-not-supporting": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:37:26.127Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-skip-aware-fresh": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:37:26.960Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-skip-aware-reuse": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:37:27.280Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-skip-aware-whole-file": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:37:27.450Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-stale-evidence": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:37:27.618Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-stale-external-tool": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:37:27.788Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-records-stamp": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:37:27.985Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-unverifiable-freshness": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:37:28.148Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-lean-about-refusals": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:37:28.318Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-lean-stale-sources": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:37:28.488Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-metric-closed-violated": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:37:28.718Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-metric-open-started-rule": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:37:28.902Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-admit-downgrades": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:37:29.072Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-verify-regressions": {
+      "outcome": "pass",
+      "ranAt": "2026-11-27T00:37:29.246Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-journal-append-failure": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:29.360Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-changes-pairing-by-revision": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:29.459Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-replay-recorded-stream-clean": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:29.711Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-replay-wrong-order": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:29.961Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-replay-unknown-event": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:30.203Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-replay-missing-response": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:30.453Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-replay-bound": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:30.697Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-replay-payload": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:30.943Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-replay-not-allowed": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:31.190Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-replay-incremental": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:31.445Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-live-browser": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:40.769Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-traffic-bounded": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:40.907Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-traffic-live-seq": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:50.325Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-traffic-server-events": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:50.554Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-traffic-engine-runner": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:50.695Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-traffic-sha256": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:37:50.838Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-traffic-browser-producers": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:00.385Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-evidence-ref-rule": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:00.548Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-lean-boundary": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:00.849Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-lean-theorem-method": {
-      "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "outcome": "not-run",
+      "detail": "1 of 3 matching tests skipped themselves or are todos, so the reference was not executed in full",
+      "ranAt": "2026-11-27T00:38:01.038Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-lean-core-browser": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:11.305Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-register-import-coverage": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:11.485Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-register-import-lost-cell": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:11.648Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-register-import-sources": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:11.817Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-register-import-drafts": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:11.997Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-register-import-authority": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:12.254Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-external-traceability": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:12.456Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-external-junit": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:13.179Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-integrity-core": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:13.512Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-integrity-ratchet": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:13.741Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-integrity-lean": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:24.770Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-reader-counts": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:24.929Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-reader-table": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:25.092Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-reader-list": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:25.254Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-reader-sections": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:25.414Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-reader-default": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:25.570Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-reader-unknown-field": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:25.730Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-reader-browser-select": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:32.463Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-reader-browser-edit": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:18:33.039Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:39.199Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-model-kernel-corpus": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:40.766Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-model-kernel-cases": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:42.527Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-model-kernel-edges": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:42.931Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-readiness-rules": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:43.269Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-readiness-fixed": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:43.600Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-readiness-model-level": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:43.925Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-readiness-shipped-projects": {
-      "outcome": "pass",
-      "ranAt": "2026-11-19T03:58:44.835Z",
-      "obtained": "reused"
+      "outcome": "not-run",
+      "detail": "every matching test (1) skipped itself or is a todo, so nothing was executed",
+      "ranAt": "2026-11-27T00:38:44.243Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-readiness-declarative": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:44.567Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-codegen-consistency-rules-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:44.751Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-codegen-consistency-rules-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:44.933Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-codegen-consistency-rules-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:45.123Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-codegen-consistency-rules-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:45.312Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-codegen-consistency-rules-5": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:45.503Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-codegen-consistency-rules-6": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:45.689Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-codegen-consistency-rules-7": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:45.880Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-codegen-consistency-rules-8": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:46.070Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-codegen-consistency-rules-9": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:46.258Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-codegen-consistency-rules-10": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:46.447Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-codegen-consistency-rules-11": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:46.646Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-codegen-consistency-rules-12": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:46.845Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-codegen-consistency-rules-13": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:47.043Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-codegen-consistency-rules-14": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:47.213Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:47.403Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:47.592Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:47.785Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:47.982Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-5": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:48.166Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-6": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:48.365Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-7": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:48.558Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-8": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:48.750Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-9": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:48.943Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-10": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:49.141Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-11": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:49.333Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-12": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:49.526Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-13": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:49.720Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-14": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:49.918Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-15": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:50.112Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-16": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:50.307Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-17": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:50.494Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-18": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:50.688Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-19": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:50.881Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-20": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:51.074Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-21": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:51.255Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-22": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:51.449Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-23": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:51.637Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-24": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:51.834Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-25": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:52.017Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-26": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:52.220Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-generation-readiness-gated-27": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:52.488Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-verified": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:52.830Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-wrong-state": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:53.157Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-guard-false": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:53.486Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-post-variable": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:53.806Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-false-stutter": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:54.130Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-initial": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:54.455Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-emits": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:54.783Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refinement-refines-rules": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:55.109Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refinement-mapping-rules": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:55.436Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-declaration-order": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:55.760Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-timer-same": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:56.083Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-timer-internal": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:56.412Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-timer-differs": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:56.754Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-cross-refined": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:57.092Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-cross-direct": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:57.419Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-cross-violated": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:57.754Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-readiness-storage-alone": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:58.077Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-readiness-storedin-alone": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:58.400Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-readiness-stateless-exempt": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:58.735Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-constructs-valid-fixture": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:58.904Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-constructs-consistency": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:59.234Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-constructs-durations": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:59.379Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-constructs-readiness": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:59.594Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-constructs-realised-by-valid": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:59.762Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-constructs-realised-by-removed": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:38:59.930Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-retention-erases-records": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:00.096Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-time-scale": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:00.434Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-time-scale-violated": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:00.762Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-time-scale-absent": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:01.098Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refinement-time-scale-rule": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:01.421Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-readiness-non-creating": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:01.744Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-readiness-storage-defaults": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:02.081Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-readiness-field-fit": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:02.420Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui-valid-fixture": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:02.601Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui-consistency": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:03.534Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui-routes": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:03.693Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui-readiness": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:03.928Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui-client-machine": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:04.107Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui-steps-valid": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:04.291Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui-steps-capture": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:04.470Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui-steps-mark": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:04.649Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui-steps-css": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:04.827Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui-steps-attribute": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:05.009Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui-steps-action-item": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:05.187Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui-for-each": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:05.366Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui-label-template": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:05.542Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui-item-argument": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:05.726Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-delayed-emit-scaled": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:06.055Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-delayed-emit-event": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:06.418Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-delayed-emit-delay": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:06.769Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-delayed-emit-at-once": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:07.095Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-refines-timer-not-emit": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:07.429Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-valid": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:07.611Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-options-from": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:07.789Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-options-both": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:07.969Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-catch-all": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:08.148Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-catch-all-nav": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:08.328Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-catch-all-route": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:08.489Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-nav-query": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:08.670Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-nav-form": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:08.849Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-when": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:09.023Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-when-shape": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:09.200Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-toast": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:09.377Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-toast-list": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:09.560Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-derive-cycle": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:09.743Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-derive-self": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:09.920Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-result": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:10.102Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-result-nav": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:10.282Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-local": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:10.461Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-timer-delay-type": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:10.639Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-timer-delay-simulate": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:10.821Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-timer-delay-level": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:10.998Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-timer-delay-refines": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:11.334Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-action-form": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:11.512Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui3-action-form-field": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:11.689Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-wire-case-values": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:11.878Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-wire-case-refused": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:12.069Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-json-resolves": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:12.258Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-json-expr-class": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:12.432Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-json-repr": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:12.621Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-json-refresh-path": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:12.798Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-json-action-argument": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:12.976Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-encode-number": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:13.154Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-encode-key": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:13.331Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-initial": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:13.509Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-initial-where": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:13.686Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-normalize": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:13.862Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-then": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:14.051Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-view-overlay-form": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:14.227Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-view-overlay-action": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:14.410Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-on-error-form": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:14.592Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-on-error-action": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:14.770Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-confirm-announce": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:14.949Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-also-on": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:15.128Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-kinds": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:15.304Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-field": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:15.485Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-template": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:15.664Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-applies-to": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:15.845Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-duplicate": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:16.022Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui4-readiness": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:16.193Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-telemetry-valid": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:16.353Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-telemetry-logging-shape": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:16.510Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-telemetry-sensitivity": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:16.669Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-telemetry-consistency": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:16.904Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-telemetry-readiness": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:17.072Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-telemetry-expect-log": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:17.244Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-telemetry-domain-used": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:17.401Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-scenario-input-typed-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:17.562Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-scenario-input-typed-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:17.722Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-scenario-input-typed-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:17.873Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-scenario-input-typed-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:18.038Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-readiness-declared-types": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:18.357Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-expr-cases-js": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:18.481Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-expr-cases-lean": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:18.781Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-time-readiness-negative": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:19.113Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-time-readiness-fixed": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:19.427Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-union-map-types-rules-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:19.590Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-union-map-types-rules-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:19.753Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-union-map-types-rules-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:19.919Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-union-map-types-rules-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:20.093Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-union-map-types-rules-5": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:20.257Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-union-map-types-rules-6": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:20.428Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-union-map-types-rules-7": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:20.593Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-union-map-types-rules-8": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:20.760Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-union-map-types-rules-9": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:20.919Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-construct-rules-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:21.084Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-construct-rules-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:21.248Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-construct-rules-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:21.414Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-construct-rules-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:21.587Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-construct-rules-5": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:21.753Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-construct-rules-6": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:21.923Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-construct-rules-7": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:22.089Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-construct-rules-8": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:22.260Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-construct-rules-9": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:22.427Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-construct-rules-10": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:22.595Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-construct-rules-11": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:22.758Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-construct-rules-12": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:22.929Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-construct-rules-13": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:23.099Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-construct-rules-14": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:23.248Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-construct-rules-15": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:23.397Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-construct-rules-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:23.608Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-construct-rules-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:23.822Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-construct-rules-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:23.996Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-construct-rules-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:24.173Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-construct-rules-5": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:24.347Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-construct-rules-6": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:24.523Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-construct-rules-7": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:24.703Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-construct-rules-8": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:24.880Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-construct-rules-9": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:25.061Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-construct-rules-10": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:25.241Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-construct-rules-11": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:25.435Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-construct-rules-12": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:25.581Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-construct-rules-13": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:25.738Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-construct-rules-14": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:25.885Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-construct-rules-15": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:26.059Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-set-tuple-nested-types-rules-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:26.216Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-set-tuple-nested-types-rules-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:26.375Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-set-tuple-nested-types-rules-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:26.537Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-set-tuple-nested-types-rules-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:26.703Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-set-tuple-nested-types-rules-5": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:26.866Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-set-tuple-nested-types-rules-6": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:27.036Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-set-tuple-nested-types-rules-7": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:27.197Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-set-tuple-nested-types-rules-8": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:27.357Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-set-tuple-nested-types-rules-9": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:27.515Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-set-tuple-nested-types-rules-10": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:27.683Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-set-tuple-nested-types-rules-11": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:27.838Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-set-tuple-nested-types-rules-12": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:27.996Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-set-tuple-nested-types-rules-13": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:28.150Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-set-tuple-nested-types-rules-14": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:28.320Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-set-tuple-nested-types-rules-15": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:28.484Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-wire-errors-clean": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:28.680Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-wire-error-status-order": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:28.869Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-wire-error-status-range": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:29.059Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-wire-error-kind-unknown": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:29.245Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-wire-error-status-and-kind": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:29.438Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-wire-error-body-runtime": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:29.629Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-wire-error-body-type": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:29.819Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-wire-error-body-code": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:30.010Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-wire-error-status-missing": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:30.195Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-wire-error-kind-missing": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:30.391Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-machine-realisation-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:30.702Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-machine-realisation-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:31.021Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-machine-realisation-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:31.347Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-machine-realisation-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:31.675Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-tenant-data-fixed-rule-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:31.835Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-tenant-data-fixed-rule-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:31.992Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-tenant-data-fixed-rule-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:32.155Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-tenant-data-fixed-rule-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:32.317Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-tenant-data-fixed-rule-5": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:32.479Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-faults-realisable-negative": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:32.810Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-faults-realisable-fixed": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:33.130Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-faults-retry-policy": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:33.454Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-initial-state-negative": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:33.781Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-initial-state-cleared": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:34.098Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-runtime-faults-lowered": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:34.413Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-runtime-faults-run": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:34.747Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-route-ambiguous-tie": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:34.926Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-route-ambiguous-differ": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:35.099Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-clean": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:35.260Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-prose-allowed": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:35.419Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-prose-refused": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:35.575Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-auth-missing": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:35.731Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-auth-shape": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:35.885Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-exposure-missing": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:36.042Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-in-process": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:36.207Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-public-write": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:36.359Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-anonymous-write": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:36.521Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-anonymous-justified": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:36.676Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-anonymous-quota": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:36.834Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-gateway-internal": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:36.996Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-gateway-local": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:37.155Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-policy-unknown": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:37.313Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-service-public": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:37.476Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-dev-only": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:37.634Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-access-tenant-scope": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:37.791Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-construct-rules-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:37.965Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-construct-rules-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:38.136Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-construct-rules-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:38.304Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-construct-rules-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:38.467Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-construct-rules-5": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:38.634Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-construct-rules-6": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:38.806Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-construct-rules-7": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:38.967Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-construct-rules-8": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:39.136Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-construct-rules-9": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:39.277Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-construct-rules-10": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:39.415Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-construct-rules-11": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:39.558Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-storage-key-whole": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:39.880Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-storage-key-whole-list": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:40.203Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-language-kernel-fidelity-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:40.375Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-language-kernel-fidelity-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:40.525Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-language-kernel-fidelity-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:40.724Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-language-kernel-fidelity-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:40.929Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-language-kernel-fidelity-5": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:41.110Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-language-kernel-fidelity-6": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:41.290Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-language-kernel-fidelity-7": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:41.465Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-language-kernel-fidelity-8": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:41.643Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-language-kernel-fidelity-9": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:41.810Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-language-kernel-fidelity-10": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:41.981Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-language-kernel-fidelity-11": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:42.154Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-capability-clean": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:42.313Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-capability-optional": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:42.467Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-capability-required": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:42.626Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-capability-required-internal": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:42.784Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-capability-requires-shape": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:42.943Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-capability-unknown-contract": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:43.107Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-capability-unknown-plan": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:43.261Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-capability-unknown-scope": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:43.419Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-capability-unknown-flag": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:43.577Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-capability-unconferred": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:43.733Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-capability-unentitled": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:43.891Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-delegation-exceeds-scope": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:44.052Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-delegation-exceeds-role": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:44.210Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-grant-exceeds-issuer": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:44.365Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-grant-duration": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:44.522Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-example-fixture-rules-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:44.724Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-example-fixture-rules-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:44.910Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-example-fixture-rules-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:45.092Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-example-fixture-rules-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:45.288Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-example-fixture-rules-5": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:45.467Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-example-fixture-rules-6": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:45.616Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-example-fixture-rules-7": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:45.765Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-machine-transition-coverage-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:46.106Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-machine-transition-coverage-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:46.439Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-machine-transition-coverage-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:47.500Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-machine-transition-coverage-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:48.559Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-machine-transition-coverage-5": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:49.071Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-machine-transition-coverage-6": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:51.151Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-machine-transition-coverage-7": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:51.682Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-machine-transition-coverage-8": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:53.770Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-branch-coverage-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:53.997Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-branch-coverage-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:54.233Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-branch-coverage-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:54.407Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-function-branch-coverage-5": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:54.630Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-store-round-trip": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:55.752Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-store-reimport": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:56.298Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-store-model": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:56.768Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-store-refusal": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:56.968Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-store-cli-refusal": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:57.187Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-store-stale": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:57.392Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-store-cli-stale": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:57.619Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-accepted": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:57.821Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-cli": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:58.049Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-import-unknown": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:58.255Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-redefines": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:58.462Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-redefines-product": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:58.667Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-kind": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:58.892Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-import-missing": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:59.098Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-reference-unknown": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:59.291Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-header-missing": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:59.495Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-import-mismatch": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:59.700Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-cross-product": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:39:59.907Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-transactions": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:00.147Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-platform-hash": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:00.368Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-platform-model": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:00.586Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-platform-cli-hash": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:00.811Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-power": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:01.067Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-power-accepted": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:01.268Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-product-id-duplicate": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:01.476Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-reference-keys": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:01.681Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-platform-references-product": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:01.917Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-reload": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:02.143Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-product-reload-watch": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:02.761Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-product-reload-invalid": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:02.972Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-product-reload-spec": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:03.183Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-cli-project-add": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:03.392Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-cli-project-refusals": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:03.567Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-cli-project-own-spec": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:03.738Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-cli-project-remove": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:03.909Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-cli-project-inline": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:04.130Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-typed-accepted": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:04.364Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-typed-value-invalid": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:04.571Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-typed-catalogue": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:04.780Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-typed-references": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:05.008Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-typed-redefine": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:05.213Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-typed-table": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:05.396Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-typed-check": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:05.492Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-typed-variants": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:05.591Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-namespace": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:05.799Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-capability": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:06.009Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-expressions-scope": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:06.106Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-expressions-check": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:06.206Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-expressions-syntax": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:06.321Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-expressions-types": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:06.438Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-expressions-refused": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:06.688Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-expressions-free": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:06.910Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-retention": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:07.134Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-batched-differential-small": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:08.382Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-batched-differential-benchmark": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:09.314Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-batched-differential-exegra": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:12.179Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-transaction-derives-once": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:12.356Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-format-gaps-rules-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:12.562Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-format-gaps-rules-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:12.738Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-format-gaps-rules-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:12.917Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-format-gaps-rules-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:13.093Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-format-gaps-rules-5": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:13.263Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-format-gaps-rules-6": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:13.439Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-format-gaps-rules-7": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:13.610Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-format-gaps-rules-8": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:13.790Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-format-gaps-rules-9": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:13.967Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-format-gaps-rules-10": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:14.137Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-format-gaps-rules-11": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:14.308Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-format-gaps-rules-12": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:14.486Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-grapheme-emoji-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:14.660Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-grapheme-emoji-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:14.826Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-ancestor-of-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:14.989Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-ancestor-of-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:15.154Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-ancestor-of-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:15.316Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-ancestor-of-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:15.482Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-checked-arithmetic-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:15.657Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-checked-arithmetic-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:15.826Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-language-checked-arithmetic-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:15.996Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-expressions-operators": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:16.090Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-expressions-operator-types": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:16.187Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-expressions-sign": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:16.285Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-expressions-precedence": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:16.385Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-expressions-time-time": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:16.482Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-expressions-step-params": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:16.580Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-expressions-drift": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:16.745Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-expressions-drift-detects": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:16.923Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
+    },
+    "ev-layers-expressions-drift-strata": {
+      "outcome": "not-run",
+      "detail": "every matching test (1) skipped itself or is a todo, so nothing was executed",
+      "ranAt": "2026-11-27T00:40:17.063Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-expressions-corpus": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:17.245Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-header-version-platform": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:17.498Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-integrity-relations-atoms": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:17.643Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-integrity-relations-least": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:17.833Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-integrity-relations-mutations": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:18.087Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-integrity-relations-diagnostics": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:18.315Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-integrity-relations-atom-choice": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:18.493Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-integrity-relations-lean-proved": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:20.841Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-integrity-relations-lean-refuted": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:24.229Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-integrity-relations-lean-differential": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:25.461Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-integrity-relations-nemo-fixture": {
-      "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "outcome": "not-run",
+      "detail": "every matching test (1) skipped itself or is a todo, so nothing was executed",
+      "ranAt": "2026-11-27T00:40:25.608Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-integrity-relations-nemo-random": {
-      "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "outcome": "not-run",
+      "detail": "every matching test (1) skipped itself or is a todo, so nothing was executed",
+      "ranAt": "2026-11-27T00:40:25.756Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-admit-regressed": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:26.006Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-admit-violation": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:26.253Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-admit-weak": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:26.507Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-admit-refused": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:26.744Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-admit-admitted": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:26.991Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-admit-write": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:27.333Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-admit-deterministic": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:27.627Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-admit-privilege-role": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:27.921Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-admit-privilege-removed": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:28.168Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-admit-privilege-grant": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:28.463Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-admit-weakened-copy": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:28.753Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-admit-weakened-rule": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:29.047Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-admit-accept-refused": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:29.219Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-admit-pending-milestone": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:29.478Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-admit-pending-no-milestone": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:29.730Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-admit-pending-weak": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:29.987Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-strength-hbc": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:30.354Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-strength-restated": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:30.689Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-strength-single-trace": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:31.046Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-strength-explored": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:31.391Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-strength-self-contained": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:31.737Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-strength-contract-bound": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:32.084Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-strength-integrity-bound": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:32.432Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-strength-baseline": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:32.782Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-strength-admit": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:33.233Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:33.382Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:33.545Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:33.713Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:33.878Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-5": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:34.049Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-6": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:34.209Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-7": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:34.367Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-8": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:34.531Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-9": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:34.689Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-10": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:34.864Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-11": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:35.026Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-12": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:35.186Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-13": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:35.346Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-14": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:35.505Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-15": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:35.665Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-16": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:35.828Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-17": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:35.988Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-18": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:36.148Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-19": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:36.312Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-residency-20": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:36.478Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-1": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:36.795Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-2": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:37.123Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-3": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:37.448Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-4": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:37.794Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-5": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:39.106Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-6": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:40.265Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-7": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:41.423Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-8": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:41.797Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-9": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:42.121Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-10": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:42.455Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-11": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:42.783Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-12": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:43.098Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-13": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:43.418Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-14": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:43.739Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-15": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:44.058Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-16": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:44.378Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-17": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:44.691Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-18": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:45.008Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-19": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:45.334Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-20": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:45.653Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-21": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:45.988Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-22": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:46.307Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-23": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:46.631Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-24": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:46.955Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-25": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:47.277Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-26": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:47.612Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-pooled-quotas-27": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:47.927Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-ui-steps-fragment": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:48.102Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-typed-queries-views-workflows": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:48.326Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-typed-queries-views-workflows-accepted": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:48.532Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-singleton-key-negative": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:48.849Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-spec-manifest-resolve": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:48.960Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-spec-manifest-refusals": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:49.067Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-spec-manifest-write-back": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:49.181Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-cache-identical": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:49.427Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-layers-cache-read-only": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:49.619Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-cache-identical": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:51.480Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-cache-encoding": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:51.576Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-cache-inputs": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:53.029Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-cache-sources": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:53.837Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-cache-damaged": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:56.171Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     },
     "ev-derivation-cache-concurrent": {
       "outcome": "pass",
-      "ranAt": "2026-11-25T15:15:47.431Z",
-      "obtained": "reused"
+      "ranAt": "2026-11-27T00:40:57.643Z",
+      "obtained": "run",
+      "stamp": "86be68d49676f0e2c9db4c680dda7f64fbe5ab707747f754293683bb6062794f"
     }
   },
   "traceability": {
-    "checkedModules": 230,
+    "checkedModules": 234,
     "missingModules": [],
     "unclaimedFiles": [],
     "claimedFiles": 165

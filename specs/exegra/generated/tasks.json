@@ -4,14 +4,14 @@
   "summary": {
     "byType": {
       "gap": 281,
-      "inconclusive-claim": 13,
+      "inconclusive-claim": 7,
       "not-implemented": 10,
       "traceability": 0,
       "undeclared-realisation": 11,
-      "unevaluated-claim": 198,
+      "unevaluated-claim": 203,
       "unknown": 153,
       "validation": 0,
-      "violated-claim": 2
+      "violated-claim": 3
     },
     "total": 668
   },
@@ -32,6 +32,21 @@
         "line": 14820
       },
       "title": "Claim \"edits-only-via-transactions\" is violated",
+      "type": "violated-claim"
+    },
+    {
+      "detail": "Evidence \"ev-browser-sim-flow\" (recorded result: fail) contradicts the claim. Contradicting evidence: ev-browser-sim-flow.",
+      "entities": [
+        "sim-step-shows-message-moving",
+        "ev-browser-sim-flow"
+      ],
+      "id": "claim:sim-step-shows-message-moving:violated",
+      "severity": "high",
+      "source": {
+        "column": 5,
+        "line": 15238
+      },
+      "title": "Claim \"sim-step-shows-message-moving\" is violated",
       "type": "violated-claim"
     },
     {
@@ -199,6 +214,57 @@
       "type": "not-implemented"
     },
     {
+      "detail": "Only test evidence (\"ev-engines-agree\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "entities": [
+        "engines-agree-on-traces",
+        "simulation-engine",
+        "simulation-contract",
+        "ev-engines-agree"
+      ],
+      "id": "claim:engines-agree-on-traces:inconclusive",
+      "severity": "medium",
+      "source": {
+        "column": 5,
+        "line": 15509
+      },
+      "title": "Claim \"engines-agree-on-traces\" is inconclusive",
+      "type": "inconclusive-claim"
+    },
+    {
+      "detail": "Only test evidence (\"ev-simulation-contract\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "entities": [
+        "simulation-contract-pinned",
+        "simulation-contract",
+        "simulation-engine",
+        "ev-simulation-contract"
+      ],
+      "id": "claim:simulation-contract-pinned:inconclusive",
+      "severity": "medium",
+      "source": {
+        "column": 5,
+        "line": 15526
+      },
+      "title": "Claim \"simulation-contract-pinned\" is inconclusive",
+      "type": "inconclusive-claim"
+    },
+    {
+      "detail": "Only test evidence (\"ev-formal-differential\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "entities": [
+        "engine-matches-formal-semantics",
+        "simulation-engine",
+        "formal-semantics",
+        "ev-formal-differential"
+      ],
+      "id": "claim:engine-matches-formal-semantics:inconclusive",
+      "severity": "medium",
+      "source": {
+        "column": 5,
+        "line": 15711
+      },
+      "title": "Claim \"engine-matches-formal-semantics\" is inconclusive",
+      "type": "inconclusive-claim"
+    },
+    {
       "detail": "Only test evidence (\"ev-mm1-utilisation-fixture\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
       "entities": [
         "metrics-reproduce-mm1-utilisation",
@@ -256,179 +322,20 @@
       "type": "inconclusive-claim"
     },
     {
-      "detail": "Only test evidence (\"ev-verify-skip-records-not-run\" and \"ev-skip-not-supporting\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
+      "detail": "Only test evidence (\"ev-lean-theorem-method\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
       "entities": [
-        "verify-skip-records-not-run",
-        "agent-cli",
-        "recorded-results-file",
-        "ev-verify-skip-records-not-run",
-        "ev-skip-not-supporting"
-      ],
-      "id": "claim:verify-skip-records-not-run:inconclusive",
-      "severity": "medium",
-      "source": {
-        "column": 5,
-        "line": 17479
-      },
-      "title": "Claim \"verify-skip-records-not-run\" is inconclusive",
-      "type": "inconclusive-claim"
-    },
-    {
-      "detail": "Only test evidence (\"ev-skip-aware-fresh\", \"ev-skip-aware-reuse\" and \"ev-skip-aware-whole-file\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
-      "entities": [
-        "test-evidence-skip-aware",
-        "verification-pipeline",
-        "agent-cli",
-        "ev-skip-aware-fresh",
-        "ev-skip-aware-reuse",
-        "ev-skip-aware-whole-file"
-      ],
-      "id": "claim:test-evidence-skip-aware:inconclusive",
-      "severity": "medium",
-      "source": {
-        "column": 5,
-        "line": 17495
-      },
-      "title": "Claim \"test-evidence-skip-aware\" is inconclusive",
-      "type": "inconclusive-claim"
-    },
-    {
-      "detail": "Only test evidence (\"ev-stale-evidence\", \"ev-stale-external-tool\" and \"ev-records-stamp\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
-      "entities": [
-        "recorded-results-read-stale-on-stamp-mismatch",
+        "lean-theorem-method-refuses-unsound-proofs",
         "claim-evaluator",
-        "verification-pipeline",
-        "recorded-results-file",
-        "ev-stale-evidence",
-        "ev-stale-external-tool",
-        "ev-records-stamp"
+        "formal-semantics",
+        "ev-lean-theorem-method"
       ],
-      "id": "claim:recorded-results-read-stale-on-stamp-mismatch:inconclusive",
+      "id": "claim:lean-theorem-method-refuses-unsound-proofs:inconclusive",
       "severity": "medium",
       "source": {
         "column": 5,
-        "line": 17511
+        "line": 17914
       },
-      "title": "Claim \"recorded-results-read-stale-on-stamp-mismatch\" is inconclusive",
-      "type": "inconclusive-claim"
-    },
-    {
-      "detail": "Only test evidence (\"ev-unverifiable-freshness\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
-      "entities": [
-        "recorded-results-unverifiable-without-stamp",
-        "claim-evaluator",
-        "verification-panel",
-        "ev-unverifiable-freshness"
-      ],
-      "id": "claim:recorded-results-unverifiable-without-stamp:inconclusive",
-      "severity": "medium",
-      "source": {
-        "column": 5,
-        "line": 17528
-      },
-      "title": "Claim \"recorded-results-unverifiable-without-stamp\" is inconclusive",
-      "type": "inconclusive-claim"
-    },
-    {
-      "detail": "Only test evidence (\"ev-lean-about-refusals\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
-      "entities": [
-        "lean-theorem-requires-code-about",
-        "claim-evaluator",
-        "ev-lean-about-refusals"
-      ],
-      "id": "claim:lean-theorem-requires-code-about:inconclusive",
-      "severity": "medium",
-      "source": {
-        "column": 5,
-        "line": 17544
-      },
-      "title": "Claim \"lean-theorem-requires-code-about\" is inconclusive",
-      "type": "inconclusive-claim"
-    },
-    {
-      "detail": "Only test evidence (\"ev-lean-stale-sources\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
-      "entities": [
-        "lean-theorem-records-stale-on-source-change",
-        "claim-evaluator",
-        "verification-pipeline",
-        "ev-lean-stale-sources"
-      ],
-      "id": "claim:lean-theorem-records-stale-on-source-change:inconclusive",
-      "severity": "medium",
-      "source": {
-        "column": 5,
-        "line": 17559
-      },
-      "title": "Claim \"lean-theorem-records-stale-on-source-change\" is inconclusive",
-      "type": "inconclusive-claim"
-    },
-    {
-      "detail": "Only test evidence (\"ev-metric-closed-violated\" and \"ev-metric-open-started-rule\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
-      "entities": [
-        "metric-open-started-computed",
-        "metric-claims",
-        "ev-metric-closed-violated",
-        "ev-metric-open-started-rule"
-      ],
-      "id": "claim:metric-open-started-computed:inconclusive",
-      "severity": "medium",
-      "source": {
-        "column": 5,
-        "line": 17575
-      },
-      "title": "Claim \"metric-open-started-computed\" is inconclusive",
-      "type": "inconclusive-claim"
-    },
-    {
-      "detail": "Only test evidence (\"ev-admit-downgrades\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
-      "entities": [
-        "admit-rejects-downgrades-and-removals",
-        "agent-cli",
-        "ev-admit-downgrades"
-      ],
-      "id": "claim:admit-rejects-downgrades-and-removals:inconclusive",
-      "severity": "medium",
-      "source": {
-        "column": 5,
-        "line": 17590
-      },
-      "title": "Claim \"admit-rejects-downgrades-and-removals\" is inconclusive",
-      "type": "inconclusive-claim"
-    },
-    {
-      "detail": "Only test evidence (\"ev-verify-regressions\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
-      "entities": [
-        "verify-fails-on-regression",
-        "agent-cli",
-        "recorded-results-file",
-        "ev-verify-regressions"
-      ],
-      "id": "claim:verify-fails-on-regression:inconclusive",
-      "severity": "medium",
-      "source": {
-        "column": 5,
-        "line": 17605
-      },
-      "title": "Claim \"verify-fails-on-regression\" is inconclusive",
-      "type": "inconclusive-claim"
-    },
-    {
-      "detail": "Only test evidence (\"ev-pages-relative-base\", \"ev-pages-on-push-to-main\", \"ev-pages-validate-before-deploy\" and \"ev-pages-mutants-refused\") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.",
-      "entities": [
-        "pages-site-published-from-main",
-        "build-system",
-        "ev-pages-relative-base",
-        "ev-pages-on-push-to-main",
-        "ev-pages-validate-before-deploy",
-        "ev-pages-mutants-refused"
-      ],
-      "id": "claim:pages-site-published-from-main:inconclusive",
-      "severity": "medium",
-      "source": {
-        "column": 5,
-        "line": 17802
-      },
-      "title": "Claim \"pages-site-published-from-main\" is inconclusive",
+      "title": "Claim \"lean-theorem-method-refuses-unsound-proofs\" is inconclusive",
       "type": "inconclusive-claim"
     },
     {
@@ -588,24 +495,6 @@
         "line": 15222
       },
       "title": "Claim \"sim-flow-never-borrows-edges\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded result of \"ev-browser-sim-flow\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
-      "entities": [
-        "sim-step-shows-message-moving",
-        "scene-renderer",
-        "simulator-panel",
-        "session",
-        "ev-browser-sim-flow"
-      ],
-      "id": "claim:sim-step-shows-message-moving:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 15238
-      },
-      "title": "Claim \"sim-step-shows-message-moving\" is not evaluated",
       "type": "unevaluated-claim"
     },
     {
@@ -847,40 +736,6 @@
       "type": "unevaluated-claim"
     },
     {
-      "detail": "Stale: the recorded result of \"ev-engines-agree\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
-      "entities": [
-        "engines-agree-on-traces",
-        "simulation-engine",
-        "simulation-contract",
-        "ev-engines-agree"
-      ],
-      "id": "claim:engines-agree-on-traces:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 15509
-      },
-      "title": "Claim \"engines-agree-on-traces\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded result of \"ev-simulation-contract\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
-      "entities": [
-        "simulation-contract-pinned",
-        "simulation-contract",
-        "simulation-engine",
-        "ev-simulation-contract"
-      ],
-      "id": "claim:simulation-contract-pinned:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 15526
-      },
-      "title": "Claim \"simulation-contract-pinned\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
       "detail": "Stale: the recorded result of \"ev-simulation-worker-responsive\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
       "entities": [
         "simulation-runs-off-main-thread",
@@ -1041,23 +896,6 @@
         "line": 15695
       },
       "title": "Claim \"claims-monitored-in-production\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded result of \"ev-formal-differential\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
-      "entities": [
-        "engine-matches-formal-semantics",
-        "simulation-engine",
-        "formal-semantics",
-        "ev-formal-differential"
-      ],
-      "id": "claim:engine-matches-formal-semantics:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 15711
-      },
-      "title": "Claim \"engine-matches-formal-semantics\" is not evaluated",
       "type": "unevaluated-claim"
     },
     {
@@ -1766,6 +1604,163 @@
       "type": "unevaluated-claim"
     },
     {
+      "detail": "Stale: the recorded results of \"ev-verify-skip-records-not-run\" and \"ev-skip-not-supporting\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
+      "entities": [
+        "verify-skip-records-not-run",
+        "agent-cli",
+        "recorded-results-file",
+        "ev-verify-skip-records-not-run",
+        "ev-skip-not-supporting"
+      ],
+      "id": "claim:verify-skip-records-not-run:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 17479
+      },
+      "title": "Claim \"verify-skip-records-not-run\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Stale: the recorded results of \"ev-skip-aware-fresh\", \"ev-skip-aware-reuse\" and \"ev-skip-aware-whole-file\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
+      "entities": [
+        "test-evidence-skip-aware",
+        "verification-pipeline",
+        "agent-cli",
+        "ev-skip-aware-fresh",
+        "ev-skip-aware-reuse",
+        "ev-skip-aware-whole-file"
+      ],
+      "id": "claim:test-evidence-skip-aware:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 17495
+      },
+      "title": "Claim \"test-evidence-skip-aware\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Stale: the recorded results of \"ev-stale-evidence\", \"ev-stale-external-tool\" and \"ev-records-stamp\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
+      "entities": [
+        "recorded-results-read-stale-on-stamp-mismatch",
+        "claim-evaluator",
+        "verification-pipeline",
+        "recorded-results-file",
+        "ev-stale-evidence",
+        "ev-stale-external-tool",
+        "ev-records-stamp"
+      ],
+      "id": "claim:recorded-results-read-stale-on-stamp-mismatch:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 17511
+      },
+      "title": "Claim \"recorded-results-read-stale-on-stamp-mismatch\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Stale: the recorded result of \"ev-unverifiable-freshness\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
+      "entities": [
+        "recorded-results-unverifiable-without-stamp",
+        "claim-evaluator",
+        "verification-panel",
+        "ev-unverifiable-freshness"
+      ],
+      "id": "claim:recorded-results-unverifiable-without-stamp:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 17528
+      },
+      "title": "Claim \"recorded-results-unverifiable-without-stamp\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Stale: the recorded result of \"ev-lean-about-refusals\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
+      "entities": [
+        "lean-theorem-requires-code-about",
+        "claim-evaluator",
+        "ev-lean-about-refusals"
+      ],
+      "id": "claim:lean-theorem-requires-code-about:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 17544
+      },
+      "title": "Claim \"lean-theorem-requires-code-about\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Stale: the recorded result of \"ev-lean-stale-sources\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
+      "entities": [
+        "lean-theorem-records-stale-on-source-change",
+        "claim-evaluator",
+        "verification-pipeline",
+        "ev-lean-stale-sources"
+      ],
+      "id": "claim:lean-theorem-records-stale-on-source-change:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 17559
+      },
+      "title": "Claim \"lean-theorem-records-stale-on-source-change\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Stale: the recorded results of \"ev-metric-closed-violated\" and \"ev-metric-open-started-rule\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
+      "entities": [
+        "metric-open-started-computed",
+        "metric-claims",
+        "ev-metric-closed-violated",
+        "ev-metric-open-started-rule"
+      ],
+      "id": "claim:metric-open-started-computed:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 17575
+      },
+      "title": "Claim \"metric-open-started-computed\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Stale: the recorded result of \"ev-admit-downgrades\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
+      "entities": [
+        "admit-rejects-downgrades-and-removals",
+        "agent-cli",
+        "ev-admit-downgrades"
+      ],
+      "id": "claim:admit-rejects-downgrades-and-removals:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 17590
+      },
+      "title": "Claim \"admit-rejects-downgrades-and-removals\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Stale: the recorded result of \"ev-verify-regressions\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
+      "entities": [
+        "verify-fails-on-regression",
+        "agent-cli",
+        "recorded-results-file",
+        "ev-verify-regressions"
+      ],
+      "id": "claim:verify-fails-on-regression:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 17605
+      },
+      "title": "Claim \"verify-fails-on-regression\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
       "detail": "Stale: the recorded result of \"ev-journal-append-failure\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
       "entities": [
         "journal-failure-reported",
@@ -1946,6 +1941,25 @@
       "type": "unevaluated-claim"
     },
     {
+      "detail": "Stale: the recorded results of \"ev-pages-relative-base\", \"ev-pages-on-push-to-main\", \"ev-pages-validate-before-deploy\" and \"ev-pages-mutants-refused\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
+      "entities": [
+        "pages-site-published-from-main",
+        "build-system",
+        "ev-pages-relative-base",
+        "ev-pages-on-push-to-main",
+        "ev-pages-validate-before-deploy",
+        "ev-pages-mutants-refused"
+      ],
+      "id": "claim:pages-site-published-from-main:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 17802
+      },
+      "title": "Claim \"pages-site-published-from-main\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
       "detail": "Lean has not checked \"Exegra.Core.LTS.safe_of_inductive\": run \"exegra verify\" (or \"exegra claims\" where Lean is installed) to record the check.",
       "entities": [
         "lts-safe-of-inductive",
@@ -2018,23 +2032,6 @@
         "line": 17895
       },
       "title": "Claim \"lts-counter-bounded-for-every-limit\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded result of \"ev-lean-theorem-method\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
-      "entities": [
-        "lean-theorem-method-refuses-unsound-proofs",
-        "claim-evaluator",
-        "formal-semantics",
-        "ev-lean-theorem-method"
-      ],
-      "id": "claim:lean-theorem-method-refuses-unsound-proofs:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 17914
-      },
-      "title": "Claim \"lean-theorem-method-refuses-unsound-proofs\" is not evaluated",
       "type": "unevaluated-claim"
     },
     {
@@ -2464,7 +2461,7 @@
       "type": "unevaluated-claim"
     },
     {
-      "detail": "Stale: the recorded results of \"ev-readiness-rules\", \"ev-readiness-fixed\", \"ev-readiness-model-level\", \"ev-readiness-shipped-projects\", \"ev-readiness-storage-alone\", \"ev-readiness-storedin-alone\", \"ev-readiness-stateless-exempt\", \"ev-readiness-non-creating\", \"ev-readiness-storage-defaults\", \"ev-readiness-field-fit\", \"ev-storage-key-whole\" and \"ev-storage-key-whole-list\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
+      "detail": "Stale: the recorded results of \"ev-readiness-rules\", \"ev-readiness-fixed\", \"ev-readiness-model-level\", \"ev-readiness-storage-alone\", \"ev-readiness-storedin-alone\", \"ev-readiness-stateless-exempt\", \"ev-readiness-non-creating\", \"ev-readiness-storage-defaults\", \"ev-readiness-field-fit\", \"ev-storage-key-whole\" and \"ev-storage-key-whole-list\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
       "entities": [
         "implementation-machine-readiness-rules",
         "validator",
@@ -3887,7 +3884,7 @@
       "type": "unevaluated-claim"
     },
     {
-      "detail": "Stale: the recorded results of \"ev-integrity-relations-lean-proved\", \"ev-integrity-relations-lean-refuted\", \"ev-integrity-relations-lean-differential\", \"ev-integrity-relations-nemo-fixture\" and \"ev-integrity-relations-nemo-random\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
+      "detail": "Stale: the recorded results of \"ev-integrity-relations-lean-proved\", \"ev-integrity-relations-lean-refuted\" and \"ev-integrity-relations-lean-differential\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
       "entities": [
         "integrity-relations-agree-with-lean-and-nemo",
         "integrity-rules",

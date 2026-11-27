@@ -13,9 +13,9 @@ Verified means checked by Exegra against this model revision within the stated s
 | proved | 0 |
 | verified | 49 |
 | supported | 0 |
-| violated | 2 |
-| inconclusive | 13 |
-| not-evaluated | 198 |
+| violated | 3 |
+| inconclusive | 7 |
+| not-evaluated | 203 |
 | total | 262 |
 
 ## Check and grounding
@@ -781,12 +781,12 @@ Stepping a simulation in a structural view moves a marker labelled with the even
 
 - Kind: temporal
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Violated
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-browser-sim-flow), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-browser-sim-flow" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-browser-sim-flow), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Evidence "ev-browser-sim-flow" (recorded result: fail) contradicts the claim.
 
 **Holds only if**
 
@@ -796,13 +796,14 @@ Stepping a simulation in a structural view moves a marker labelled with the even
 
 **Counterexample**
 
-None.
+- Summary: Contradicting evidence: ev-browser-sim-flow.
+- Entities: `ev-browser-sim-flow`
 
 **Evidence**
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-browser-sim-flow | test | tests/browser/interaction.spec.js#stepping a simulation sends a labelled marker along the edge from sender to receiver | supports | none |
+| ev-browser-sim-flow | test | tests/browser/interaction.spec.js#stepping a simulation sends a labelled marker along the edge from sender to receiver | supports | fail |
 
 ## simulation-seeded-runs-reproducible
 
@@ -1200,12 +1201,12 @@ The Rust simulation engine, the differential oracle, native and WebAssembly, rep
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Inconclusive
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
 - Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-engines-agree), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-engines-agree" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Explanation: Only test evidence ("ev-engines-agree") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.
 
 **Holds only if**
 
@@ -1228,12 +1229,12 @@ For every scenario of the golden conformance suite, the simulation engine reprod
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Inconclusive
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
 - Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-simulation-contract), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-simulation-contract" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Explanation: Only test evidence ("ev-simulation-contract") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.
 
 **Holds only if**
 
@@ -1526,12 +1527,12 @@ The Rust engine and the Lean formal semantics give identical traces on every gol
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Inconclusive
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
 - Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-formal-differential), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-formal-differential" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Explanation: Only test evidence ("ev-formal-differential") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.
 
 **Holds only if**
 
@@ -3544,12 +3545,12 @@ A verify run in which a test evidence reference skipped (a matched test skipped 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Inconclusive
+- **Status**: Not evaluated
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
 - Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-verify-skip-records-not-run, ev-skip-not-supporting), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Only test evidence ("ev-verify-skip-records-not-run" and "ev-skip-not-supporting") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.
+- Explanation: Stale: the recorded results of "ev-verify-skip-records-not-run" and "ev-skip-not-supporting" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
 
 **Holds only if**
 
@@ -3572,12 +3573,12 @@ A test evidence reference passes only when at least one matched leaf test execut
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Inconclusive
+- **Status**: Not evaluated
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
 - Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-skip-aware-fresh, ev-skip-aware-reuse, ev-skip-aware-whole-file), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Only test evidence ("ev-skip-aware-fresh", "ev-skip-aware-reuse" and "ev-skip-aware-whole-file") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.
+- Explanation: Stale: the recorded results of "ev-skip-aware-fresh", "ev-skip-aware-reuse" and "ev-skip-aware-whole-file" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
 
 **Holds only if**
 
@@ -3601,12 +3602,12 @@ exegra verify records every evidence result with the records stamp of the tree (
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Inconclusive
+- **Status**: Not evaluated
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
 - Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-stale-evidence, ev-stale-external-tool, ev-records-stamp), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Only test evidence ("ev-stale-evidence", "ev-stale-external-tool" and "ev-records-stamp") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.
+- Explanation: Stale: the recorded results of "ev-stale-evidence", "ev-stale-external-tool" and "ev-records-stamp" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
 
 **Holds only if**
 
@@ -3630,12 +3631,12 @@ Where no current stamp can be computed (the application in the browser), a claim
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Inconclusive
+- **Status**: Not evaluated
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
 - Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-unverifiable-freshness), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Only test evidence ("ev-unverifiable-freshness") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.
+- Explanation: Stale: the recorded result of "ev-unverifiable-freshness" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
 
 **Holds only if**
 
@@ -3657,12 +3658,12 @@ A lean-theorem claim is refused (violated) when it names no implementation const
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Inconclusive
+- **Status**: Not evaluated
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
 - Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-lean-about-refusals), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Only test evidence ("ev-lean-about-refusals") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.
+- Explanation: Stale: the recorded result of "ev-lean-about-refusals" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
 
 **Holds only if**
 
@@ -3684,12 +3685,12 @@ Each recorded Lean theorem check carries the hash of the formal/ sources it was 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Inconclusive
+- **Status**: Not evaluated
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
 - Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-lean-stale-sources), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Only test evidence ("ev-lean-stale-sources") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.
+- Explanation: Stale: the recorded result of "ev-lean-stale-sources" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
 
 **Holds only if**
 
@@ -3711,12 +3712,12 @@ A metric-bound claim leaves an underpowered run out only for a request class tha
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Inconclusive
+- **Status**: Not evaluated
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
 - Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-metric-closed-violated, ev-metric-open-started-rule), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Only test evidence ("ev-metric-closed-violated" and "ev-metric-open-started-rule") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.
+- Explanation: Stale: the recorded results of "ev-metric-closed-violated" and "ev-metric-open-started-rule" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
 
 **Holds only if**
 
@@ -3739,12 +3740,12 @@ exegra admit ranks not-evaluated with inconclusive, so a claim that moves from a
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Inconclusive
+- **Status**: Not evaluated
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
 - Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-admit-downgrades), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Only test evidence ("ev-admit-downgrades") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.
+- Explanation: Stale: the recorded result of "ev-admit-downgrades" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
 
 **Holds only if**
 
@@ -3766,12 +3767,12 @@ exegra verify records, with each passing run, every claim's status and the finge
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Inconclusive
+- **Status**: Not evaluated
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
 - Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-verify-regressions), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Only test evidence ("ev-verify-regressions") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.
+- Explanation: Stale: the recorded result of "ev-verify-regressions" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
 
 **Holds only if**
 
@@ -4083,12 +4084,12 @@ The Pages workflow file .github/workflows/pages.yml is triggered by a push to ma
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Inconclusive
+- **Status**: Not evaluated
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
 - Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-pages-relative-base, ev-pages-on-push-to-main, ev-pages-validate-before-deploy, ev-pages-mutants-refused), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Only test evidence ("ev-pages-relative-base", "ev-pages-on-push-to-main", "ev-pages-validate-before-deploy" and "ev-pages-mutants-refused") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.
+- Explanation: Stale: the recorded results of "ev-pages-relative-base", "ev-pages-on-push-to-main", "ev-pages-validate-before-deploy" and "ev-pages-mutants-refused" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
 
 **Holds only if**
 
@@ -4238,12 +4239,12 @@ A lean-theorem claim is proved only when Lean reports a kernel-checked theorem t
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Inconclusive
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
 - Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-lean-theorem-method), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-lean-theorem-method" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Explanation: Only test evidence ("ev-lean-theorem-method") is attached and no result of running it is recorded, so Exegra cannot tell whether the test passes.
 
 **Holds only if**
 
@@ -5020,7 +5021,7 @@ A behavior declared with level "implementation" is reported with an error for ea
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
 - Scope: No model evaluation was performed. This rests on 12 evidence entities (ev-readiness-rules, ev-readiness-fixed, ev-readiness-model-level, ev-readiness-shipped-projects, ev-readiness-storage-alone, ev-readiness-storedin-alone, ev-readiness-stateless-exempt, ev-readiness-non-creating, ev-readiness-storage-defaults, ev-readiness-field-fit, ev-storage-key-whole, ev-storage-key-whole-list), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-readiness-rules", "ev-readiness-fixed", "ev-readiness-model-level", "ev-readiness-shipped-projects", "ev-readiness-storage-alone", "ev-readiness-storedin-alone", "ev-readiness-stateless-exempt", "ev-readiness-non-creating", "ev-readiness-storage-defaults", "ev-readiness-field-fit", "ev-storage-key-whole" and "ev-storage-key-whole-list" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Explanation: Stale: the recorded results of "ev-readiness-rules", "ev-readiness-fixed", "ev-readiness-model-level", "ev-readiness-storage-alone", "ev-readiness-storedin-alone", "ev-readiness-stateless-exempt", "ev-readiness-non-creating", "ev-readiness-storage-defaults", "ev-readiness-field-fit", "ev-storage-key-whole" and "ev-storage-key-whole-list" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
 
 **Holds only if**
 
@@ -7151,7 +7152,7 @@ The JavaScript relation tables equal the tables of the Lean checker and the rela
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
 - Scope: No model evaluation was performed. This rests on 5 evidence entities (ev-integrity-relations-lean-proved, ev-integrity-relations-lean-refuted, ev-integrity-relations-lean-differential, ev-integrity-relations-nemo-fixture, ev-integrity-relations-nemo-random), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-integrity-relations-lean-proved", "ev-integrity-relations-lean-refuted", "ev-integrity-relations-lean-differential", "ev-integrity-relations-nemo-fixture" and "ev-integrity-relations-nemo-random" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Explanation: Stale: the recorded results of "ev-integrity-relations-lean-proved", "ev-integrity-relations-lean-refuted" and "ev-integrity-relations-lean-differential" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
 
 **Holds only if**
 
