@@ -1998,11 +1998,14 @@
         "Distinguish bounded from unbounded results: an invariant is a bounded invariant at every depth (invariant_iff_all_bounds) and no single depth suffices (Exegra.Core.Examples.bounded_not_unbounded)",
         "Carry results of the generic search to transition systems: a holds result is an unbounded invariant of every system the search covers (invariant_of_search) and a counterexample refutes the invariant of every system it is sound for (not_invariant_of_search)",
         "Give the guarded-command calculus a semantics in which out-of-range variables cannot be written, updates read the state before the step (Cmd.exec_get) and steps are labelled by command",
-        "Give Exegra's behaviours (machines with control states and typed variables, events with payloads, guards, effects that set the machine's own variables and emit events) a typed calculus over Int, Bool and String whose semantics is a transition system (Exegra.Core.Behav.Sys.lts): references scoped by Fin, so a missing variable or machine cannot be written; division by zero, inexact division, overflow and reads past the end of a state as errors, never default values; a failing delivery leads to an explicit error state with no successor (err_deadlocked), and every system has an initial state (lts_nonVacuous)",
-        "Prove that under snapshot reads phase 2 of a step does not depend on the order of its winners when they are on distinct machines (Exegra.Core.Behav.phase2_perm, phase2_perm_emitted), and show on the [a, b] / [b, a] example that snapshot reads give one verdict (f4_ab_safe, f4_ba_safe) where today's next-configuration reads give two (f4_next_reads_differ)"
+        "Give Exegra's behaviours (machines with control states and typed variables, events with payloads, guards, effects that set the machine's own variables and emit events) a typed calculus over Int, Bool and String whose semantics is a transition system (Exegra.Core.Behav.Sys.lts): references scoped by Fin, so a missing variable or machine cannot be written; integer arithmetic as format 2 computes it, each arithmetic node checked against the declared integer type format 2's staticTy gives it (operands and result, on every operator), % truncated and typed / truncating; division by zero, inexact untyped division, out-of-range operands and results and reads past the end of a state as errors, never default values or other values; a failing delivery leads to an explicit error state with no successor (err_deadlocked), and every system has an initial state (lts_nonVacuous)",
+        "Prove that under snapshot reads a delivery does not depend on the order in which its winners fire: the machines after phase 2 (Exegra.Core.Behav.phase2_perm), the emitted blocks up to permutation (phase2_perm_emitted), the winners of every step on distinct machines (winners_nodup), and the whole successor configuration, pending list included, equal in every order (deliver_perm), emitted entries being inserted by time in machine-index order as format 2's insertE inserts them; and show on the [a, b] / [b, a] example that snapshot reads give one verdict (f4_ab_safe, f4_ba_safe) where the calculus's model of today's next-configuration reads gives two (f4_next_reads_differ)",
+        "Prove that the shape of a configuration (one state per machine, a control state of the machine, one value of the declared sort per variable) is invariant from a shaped initial configuration (Exegra.Core.Behav.shaped_invariant) and that no step from a reachable configuration then fails with shape (shape_unreachable), and that the static sort of an expression is sound for evaluation (Expr.eval_fits)"
       ],
       "unknowns": [
-        "The guarded-command calculus (Calculus.lean) is single-sorted (Int) with no events, timers, faults or time. The behaviour calculus (Behav.lean) has events, guards and effects but no timers, faults, time bound, stopAt, random draws, payload literals beyond Int, Bool and String, or counted instances, and no static well-formedness predicate that a theorem rests on (Expr.ty? is defined, unused); there is no executable scheduler, so step_sound and successors_complete are not proved, and format-2 input is not elaborated into the calculus, so none of these theorems is about the format-2 interpreter (Exegra.V2), which still computes with Float (milestone M2, increments M2.2 to M2.8 of docs/assessment/2026-11-26/plan-M2.md).",
+        "The guarded-command calculus (Calculus.lean) is single-sorted (Int) with no events, timers, faults or time. The behaviour calculus (Behav.lean) has events, guards and effects but no timers, faults, time bound, stopAt, random draws, payload literals beyond Int, Bool and String, or counted instances, and no static well-formedness predicate Sys.WF from which no step fails with sort (Expr.eval_fits is the lemma it will rest on; the shape of the initial configuration is a hypothesis of shape_unreachable); there is no executable scheduler, so step_sound and successors_complete are not proved, nor phase2_eq_par (the parallel closed form of phase 2), pending_perm_bisim or a renaming theorem giving one verdict for every listing in general; format-2 input is not elaborated into the calculus (the elaboration must give each arithmetic node format 2's staticTy), so none of these theorems is about the format-2 interpreter (Exegra.V2), which still computes with Float (milestone M2, increments M2.2 to M2.8 of docs/assessment/2026-11-26/plan-M2.md).",
+        "By construction the calculus computes format 2's value wherever it computes one (no differential check yet confirms it), but some format-2 values are errors in the calculus: untyped arithmetic with an operand or result outside 2^53 - 1 and untyped / with a remainder (format 2 computes an IEEE double), == and != across sorts (format 2 gives false and true), string +, and a payload field read at a sort it does not fit; there is no > or >= (encoding them as swapped < and <= changes which error is reported), the error reported can depend on the order of the winners, and entries have no target, so a format-2 entry addressed to one instance would reach every machine (M2.2 for targets, M2.4 for elaboration, M2.5 for differential checks of values and errors).",
+        "Steps are labelled by the position of the delivered entry in the pending list, which cannot express per-entry fairness; labels by entry are needed before liveness (milestone M5).",
         "There are no runs, traces, observations, fairness or composition yet (milestones M5 and M6), and no k-induction (M4).",
         "Semantic completeness (invariant_iff_exists_inductive) is over arbitrary predicates; inductive invariants expressible in the calculus's expressions need not exist."
       ],
@@ -2011,7 +2014,7 @@
         "modules": [
           "formal/Exegra/Core/"
         ],
-        "notes": "formal/Exegra/Core/LTS.lean (the theory), Calculus.lean (the guarded-command calculus), Search.lean (the bridge from Exegra.Gen.search), Examples.lean (positive and adversarial examples: counter_le, ne_neg_one_not_inductive, ne_neg_one_invariant, bounded_not_unbounded, vacuous_false, mod3_in_range), Behav.lean (the behaviour calculus of M2.1: typed values and expressions, transitions, Sys.lts, phase2_perm, phase2_perm_emitted), BehavExamples.lean (f4_ab_safe, f4_ba_safe, f4_next_reads_differ, f4_nonVacuous, divZero_counterexample); axioms pinned with #guard_msgs. The files sit inside formal/, which formal-semantics also declares. Checked by lake build in .github/workflows/check.yml.",
+        "notes": "formal/Exegra/Core/LTS.lean (the theory), Calculus.lean (the guarded-command calculus), Search.lean (the bridge from Exegra.Gen.search), Examples.lean (positive and adversarial examples: counter_le, ne_neg_one_not_inductive, ne_neg_one_invariant, bounded_not_unbounded, vacuous_false, mod3_in_range), Behav.lean (the behaviour calculus of M2.1: typed values, arithmetic sorts and expressions, transitions, Sys.lts, phase2_perm, phase2_perm_emitted, winners_nodup, deliver_perm, shaped_invariant, deliver_ne_shape, shape_unreachable, Expr.eval_fits), BehavExamples.lean (f4_ab_safe, f4_ba_safe, f4_next_reads_differ, f4_nonVacuous, f4Init_shaped, f4_ab_no_shape, divZero_counterexample, mod_truncates, typed_div_truncates, untyped_div_inexact, u8_overflow, emitted_inserted_by_time, emission_order_irrelevant); axioms pinned with #guard_msgs. The files sit inside formal/, which formal-semantics also declares. Checked by lake build in .github/workflows/check.yml.",
         "trusts": [
           "trusted-lean-kernel"
         ],
@@ -17916,14 +17919,14 @@
     {
       "id": "behav-phase2-order-independent",
       "kind": "structural",
-      "statement": "In the behaviour calculus, when the winners of a step are on distinct machines and every winner reads other machines from the start-of-step snapshot, the machines after phase 2 are the same for every order in which the winners fire (or phase 2 fails in every order).",
+      "statement": "In the behaviour calculus, when the winners of a step are on distinct machines and every winner reads other machines from the start-of-step snapshot, the machines after phase 2 are the same for every order in which the winners fire (or phase 2 fails in every order). This is about the machines only; the whole configuration after the step is the subject of behav-delivery-order-independent.",
       "subjects": [
         "lts-foundation"
       ],
       "assumptions": [
         "trusted-lean-kernel"
       ],
-      "rationale": "Theorem of formal/Exegra/Core/Behav.lean (plan-M2, M2.1), proved by induction on the permutation with a swap lemma for two winners on distinct machines; it holds for every starting list of machines. The companion phase2_perm_emitted shows the emitted entries are permutations of each other when both orders succeed. Which error is reported when phase 2 fails may depend on the order. It is about the calculus, not about the format-2 interpreter, whose phase 2 reads the configuration being written.",
+      "rationale": "Theorem of formal/Exegra/Core/Behav.lean (plan-M2, M2.1), proved by induction on the permutation with a swap lemma for two winners on distinct machines; it holds for every starting list of machines. The companion phase2_perm_emitted shows the blocks of emitted entries (one per winner, tagged with its machine) are permutations of each other when both orders succeed; winners_nodup discharges the distinct-machines hypothesis for the winners a step computes. Which error is reported when phase 2 fails may depend on the order. It is about the calculus, not about the format-2 interpreter, whose phase 2 reads the configuration being written.",
       "evaluate": {
         "method": "lean-theorem",
         "theorem": "Exegra.Core.Behav.phase2_perm",
@@ -17977,19 +17980,19 @@
     {
       "id": "behav-f4-next-reads-differ",
       "kind": "structural",
-      "statement": "Under the next-configuration rule of today's interpreters, where a winner reads other machines as earlier winners of the same step left them, the same delivery leaves y = 1 when a is listed first and y = 0 when b is listed first.",
+      "statement": "In the calculus's model of today's next-configuration rule (deliverNext, whose phase 2 lets a winner read other machines as earlier winners of the same step left them), the same delivery leaves y = 1 when a is listed first and y = 0 when b is listed first.",
       "subjects": [
         "lts-foundation"
       ],
       "assumptions": [
         "trusted-lean-kernel"
       ],
-      "rationale": "Theorem of formal/Exegra/Core/BehavExamples.lean, by kernel evaluation (decide) of deliverNext, the delivery with phase2Next. It shows that the order dependence the snapshot rule removes is real; it is about the calculus's model of that rule, not about the format-1 or format-2 interpreters themselves.",
+      "rationale": "Theorem of formal/Exegra/Core/BehavExamples.lean, by kernel evaluation (decide) of deliverNext on the two listings; the statement names the successor configurations. It shows that the order dependence the snapshot rule removes is real in the model. phase2Next is a re-implementation in the calculus, linked to the format-2 interpreter (Exegra.V2) by no theorem or test: for this example it follows Format2.lean (winners fire in listing order and effects read the configuration being written), but in general it differs (an absent variable reads as undefined in format 2 and is the error shape here; aggregates and resources are absent). A differential run of Exegra.V2 on the format-2 fixture of the example belongs to M2.5.",
       "evaluate": {
         "method": "lean-theorem",
         "theorem": "Exegra.Core.Behav.Examples.f4_next_reads_differ",
         "about": [
-          "Exegra.Core.Behav.Examples.afterNext",
+          "Exegra.Core.Behav.deliverNext",
           "Exegra.Core.Behav.Examples.f4AB",
           "Exegra.Core.Behav.Examples.f4BA"
         ]
@@ -19812,6 +19815,149 @@
       "rationale": "Supported by tests/core/layers-cache.test.js (the ev-layers-cache-* evidence entries). The platform's parse, syntax tree and line index depend on its text alone; the combined text is still analysed in full for every set of product files.",
       "evaluate": {
         "method": "external-evidence"
+      }
+    },
+    {
+      "id": "behav-delivery-order-independent",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, firing the winners a step computes in any order (any permutation, chosen per configuration and delivered entry) leads to the same successor state as the step itself: the same configuration, with time, machines and pending list equal (not only up to a permutation), or the error state in both orders. Emitted entries enter the pending list in machine-index order, each after every pending entry of no later time.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem deliver_perm of formal/Exegra/Core/Behav.lean (review-M2.1, finding 1), from phase2_perm (machines), phase2_perm_emitted (the emitted blocks are permutations), winners_nodup (the winners are on distinct machines) and the fact that blocks tagged with distinct machines are reassembled in machine-index order whatever their order. Emitted entries are inserted like format 2's insertE (Format2.lean:1022-1025); since format 2 fires winners in listing order, which is machine-index order in the calculus, the queue is format 2's for a given listing. Which error is reported may depend on the order; the error state does not carry it. BehavExamples.lean shows it on two machines emitting on one event (emission_order_irrelevant). It is about the calculus, not about the format-2 interpreter.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.deliver_perm",
+        "about": [
+          "Exegra.Core.Behav.deliver",
+          "Exegra.Core.Behav.deliverWith",
+          "Exegra.Core.Behav.phase2"
+        ]
+      }
+    },
+    {
+      "id": "behav-winners-distinct",
+      "kind": "structural",
+      "statement": "The winners a step of the behaviour calculus computes are on distinct machines, so the order-independence theorems apply to every step.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem winners_nodup of formal/Exegra/Core/Behav.lean (review-M2.1, finding 4): the machines of the winners form a sublist of the machine indices in order, which have no duplicate. It discharges the hypothesis of phase2_perm and phase2_perm_emitted for the winners deliver actually fires.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.winners_nodup",
+        "about": [
+          "Exegra.Core.Behav.winners"
+        ]
+      }
+    },
+    {
+      "id": "behav-shape-invariant",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, from an initial configuration of the shape of its signature (one machine state per machine, each with a control state of its machine and one value of the declared sort per variable), every reachable state has that shape, with no bound on runs.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem shaped_invariant of formal/Exegra/Core/Behav.lean (review-M2.1, finding 9), by an inductive invariant: assignments check the declared sort, a move goes to a control state of the machine, phase 2 writes only the winner's machine, and a failing step keeps the configuration before it. Reads past the end of a state are the error shape; from a shaped configuration that error cannot occur (behav-shape-error-unreachable).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.shaped_invariant",
+        "about": [
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Cfg.Shaped",
+          "Exegra.Core.Behav.State.Shaped",
+          "Exegra.Core.LTS.Invariant"
+        ]
+      }
+    },
+    {
+      "id": "behav-shape-error-unreachable",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, from a shaped initial configuration no step from a reachable configuration fails with the error shape.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem shape_unreachable of formal/Exegra/Core/Behav.lean (review-M2.1, finding 9), from shaped_invariant and deliver_ne_shape: in a shaped configuration every machine, variable and control-state index a step uses is in range. The theorem rests on the shape of the initial configuration as a hypothesis; a static well-formedness predicate Sys.WF that implies it is M2.2's. BehavExamples.lean discharges it for the [a, b] example (f4Init_shaped, f4_ab_no_shape).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.shape_unreachable",
+        "about": [
+          "Exegra.Core.Behav.deliver",
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Cfg.Shaped"
+        ]
+      }
+    },
+    {
+      "id": "behav-static-sort-sound",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, when the static sort of an expression is defined, every value the expression evaluates to in a typed context fits that sort: it has that sort, and an integer lies in the sort's range (an integer literal has the one-point range of its value, an arithmetic node the range of its arithmetic sort).",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem Expr.eval_fits of formal/Exegra/Core/Behav.lean (review-M2.1, finding 6). A typed context has a shaped snapshot, own variables of their declared sorts and a time within 2^53 - 1 (the sort of the time; the bound on time is M2.2's). Every arithmetic node checks its result against its sort and a payload field is checked against its sort when read, so the theorem needs no induction hypothesis on operands. No theorem yet uses it to exclude the error sort from well-formed systems (Sys.WF, M2.2).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Expr.eval_fits",
+        "about": [
+          "Exegra.Core.Behav.Expr.eval",
+          "Exegra.Core.Behav.Val.fits",
+          "Exegra.Core.Behav.Ctx.Typed"
+        ]
+      }
+    },
+    {
+      "id": "behav-integer-overflow-at-node",
+      "kind": "structural",
+      "statement": "In the behaviour calculus an arithmetic node is checked against its declared integer type: with x : u8 = 200, the guard x + 100 > 255 is the error overflow, as format 2 reports, not true.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem u8_overflow of formal/Exegra/Core/BehavExamples.lean (review-M2.1, finding 3, demonstration D3), by kernel evaluation. Each arithmetic node carries the sort format 2's staticTy gives it (Expr.lean:267-277), and both operands and the exact result are checked against it on every operator, as format 2's intResult does (Expr.lean:289-297). That M2.4's elaboration assigns staticTy is not yet proved.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.u8_overflow",
+        "about": [
+          "Exegra.Core.Behav.Expr.eval",
+          "Exegra.Core.Behav.Examples.u8Guard"
+        ]
+      }
+    },
+    {
+      "id": "behav-remainder-truncates",
+      "kind": "structural",
+      "statement": "In the behaviour calculus % is the truncated remainder, as format 2 computes it: -7 % 2 is -1, not 1.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem mod_truncates of formal/Exegra/Core/BehavExamples.lean (review-M2.1, finding 2, demonstration D2), by kernel evaluation of Int.tmod, format 2's Num.fmod (Number.lean:67-69, Expr.lean:364). typed_div_truncates shows that a typed integer / truncates toward zero, as format 2's divIn (Expr.lean:299-304); untyped_div_inexact that an untyped / with a remainder is an error, where format 2 computes a fraction the calculus does not represent.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.mod_truncates",
+        "about": [
+          "Exegra.Core.Behav.BOp.apply"
+        ]
       }
     }
   ],
