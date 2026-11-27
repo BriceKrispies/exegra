@@ -1,6 +1,6 @@
 {
   "format": "exegra-tasks",
-  "semanticHash": "13d27427f3a01a",
+  "semanticHash": "1c9b8cec4a46a5",
   "summary": {
     "byType": {
       "gap": 281,
@@ -8,12 +8,12 @@
       "not-implemented": 10,
       "traceability": 0,
       "undeclared-realisation": 11,
-      "unevaluated-claim": 218,
+      "unevaluated-claim": 188,
       "unknown": 155,
       "validation": 0,
-      "violated-claim": 3
+      "violated-claim": 2
     },
-    "total": 682
+    "total": 651
   },
   "tasks": [
     {
@@ -32,21 +32,6 @@
         "line": 14825
       },
       "title": "Claim \"edits-only-via-transactions\" is violated",
-      "type": "violated-claim"
-    },
-    {
-      "detail": "Evidence \"ev-browser-sim-flow\" (recorded result: fail) contradicts the claim. Contradicting evidence: ev-browser-sim-flow.",
-      "entities": [
-        "sim-step-shows-message-moving",
-        "ev-browser-sim-flow"
-      ],
-      "id": "claim:sim-step-shows-message-moving:violated",
-      "severity": "high",
-      "source": {
-        "column": 5,
-        "line": 15243
-      },
-      "title": "Claim \"sim-step-shows-message-moving\" is violated",
       "type": "violated-claim"
     },
     {
@@ -444,6 +429,24 @@
         "line": 15227
       },
       "title": "Claim \"sim-flow-never-borrows-edges\" is not evaluated",
+      "type": "unevaluated-claim"
+    },
+    {
+      "detail": "Stale: the recorded result of \"ev-browser-sim-flow\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
+      "entities": [
+        "sim-step-shows-message-moving",
+        "scene-renderer",
+        "simulator-panel",
+        "session",
+        "ev-browser-sim-flow"
+      ],
+      "id": "claim:sim-step-shows-message-moving:not-evaluated",
+      "severity": "low",
+      "source": {
+        "column": 5,
+        "line": 15243
+      },
+      "title": "Claim \"sim-step-shows-message-moving\" is not evaluated",
       "type": "unevaluated-claim"
     },
     {
@@ -1854,53 +1857,6 @@
       "type": "unevaluated-claim"
     },
     {
-      "detail": "Stale: the recorded Lean check of \"Exegra.runInput_terminates\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "engine-run-terminates-proved",
-        "formal-semantics",
-        "simulation-engine"
-      ],
-      "id": "claim:engine-run-terminates-proved:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 17707
-      },
-      "title": "Claim \"engine-run-terminates-proved\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Api.runAny_eq_parse_call\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "lean-engine-is-exegra-lean",
-        "lean-call-boundary",
-        "formal-semantics"
-      ],
-      "id": "claim:lean-engine-is-exegra-lean:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 17732
-      },
-      "title": "Claim \"lean-engine-is-exegra-lean\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Api.registry_names_nodup\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "lean-registry-names-unique",
-        "lean-call-boundary"
-      ],
-      "id": "claim:lean-registry-names-unique:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 17758
-      },
-      "title": "Claim \"lean-registry-names-unique\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
       "detail": "Stale: the recorded result of \"ev-lean-boundary\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
       "entities": [
         "lean-boundary-errors-are-values",
@@ -1960,156 +1916,6 @@
       "type": "unevaluated-claim"
     },
     {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Core.LTS.safe_of_inductive\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "lts-safe-of-inductive",
-        "lts-foundation"
-      ],
-      "id": "claim:lts-safe-of-inductive:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 17820
-      },
-      "title": "Claim \"lts-safe-of-inductive\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Core.Examples.bounded_not_unbounded\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "lts-bounded-is-not-unbounded",
-        "lts-foundation"
-      ],
-      "id": "claim:lts-bounded-is-not-unbounded:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 17840
-      },
-      "title": "Claim \"lts-bounded-is-not-unbounded\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Core.LTS.invariant_of_no_init\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "lts-vacuous-without-initial-state",
-        "lts-foundation"
-      ],
-      "id": "claim:lts-vacuous-without-initial-state:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 17860
-      },
-      "title": "Claim \"lts-vacuous-without-initial-state\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Core.LTS.invariant_of_search\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "lts-search-holds-is-invariant",
-        "lts-foundation"
-      ],
-      "id": "claim:lts-search-holds-is-invariant:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 17880
-      },
-      "title": "Claim \"lts-search-holds-is-invariant\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Core.Examples.counter_le\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "lts-counter-bounded-for-every-limit",
-        "lts-foundation"
-      ],
-      "id": "claim:lts-counter-bounded-for-every-limit:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 17900
-      },
-      "title": "Claim \"lts-counter-bounded-for-every-limit\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Core.Behav.phase2_perm\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "behav-phase2-order-independent",
-        "lts-foundation"
-      ],
-      "id": "claim:behav-phase2-order-independent:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 17919
-      },
-      "title": "Claim \"behav-phase2-order-independent\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Core.Behav.Examples.f4_ab_safe\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "behav-f4-ab-safe",
-        "lts-foundation"
-      ],
-      "id": "claim:behav-f4-ab-safe:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 17938
-      },
-      "title": "Claim \"behav-f4-ab-safe\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Core.Behav.Examples.f4_ba_safe\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "behav-f4-ba-safe",
-        "lts-foundation"
-      ],
-      "id": "claim:behav-f4-ba-safe:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 17959
-      },
-      "title": "Claim \"behav-f4-ba-safe\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "The recorded check of \"Exegra.Core.Behav.Examples.f4_next_reads_differ\" did not cover \"Exegra.Core.Behav.deliverNext\": run \"exegra verify\" again.",
-      "entities": [
-        "behav-f4-next-reads-differ",
-        "lts-foundation"
-      ],
-      "id": "claim:behav-f4-next-reads-differ:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 17980
-      },
-      "title": "Claim \"behav-f4-next-reads-differ\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Core.Behav.Examples.divZero_counterexample\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "behav-failed-step-is-counterexample",
-        "lts-foundation"
-      ],
-      "id": "claim:behav-failed-step-is-counterexample:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 18001
-      },
-      "title": "Claim \"behav-failed-step-is-counterexample\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
       "detail": "Stale: the recorded result of \"ev-lean-core-browser\" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.",
       "entities": [
         "lean-core-runs-in-browser",
@@ -2124,54 +1930,6 @@
         "line": 18057
       },
       "title": "Claim \"lean-core-runs-in-browser\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Impl.runAnyValue_eq\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "engine-run-refines-definition",
-        "formal-semantics",
-        "simulation-engine",
-        "lean-call-boundary"
-      ],
-      "id": "claim:engine-run-refines-definition:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 18074
-      },
-      "title": "Claim \"engine-run-refines-definition\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Api.call_engine_run_spec\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "engine-call-computes-definition",
-        "lean-call-boundary",
-        "formal-semantics"
-      ],
-      "id": "claim:engine-call-computes-definition:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 18101
-      },
-      "title": "Claim \"engine-call-computes-definition\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Impl.JsonOut.write'_eq\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "fast-json-writer-is-json-write",
-        "formal-semantics"
-      ],
-      "id": "claim:fast-json-writer-is-json-write:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 18127
-      },
-      "title": "Claim \"fast-json-writer-is-json-write\" is not evaluated",
       "type": "unevaluated-claim"
     },
     {
@@ -2380,99 +2138,6 @@
         "line": 18328
       },
       "title": "Claim \"reader-links-select-through-session\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Model.Model.semanticHash_presentation\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "semantic-hash-ignores-presentation",
-        "model-hash",
-        "model-derivation"
-      ],
-      "id": "claim:semantic-hash-ignores-presentation:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 18346
-      },
-      "title": "Claim \"semantic-hash-ignores-presentation\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Hash.semanticHash_key_order\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "semantic-hash-ignores-key-order",
-        "model-hash"
-      ],
-      "id": "claim:semantic-hash-ignores-key-order:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 18371
-      },
-      "title": "Claim \"semantic-hash-ignores-key-order\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Hash.semanticHash'_eq\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "semantic-hash-runs-definition",
-        "model-hash"
-      ],
-      "id": "claim:semantic-hash-runs-definition:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 18395
-      },
-      "title": "Claim \"semantic-hash-runs-definition\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Api.call_hash_semantic\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "semantic-hash-call-computes-definition",
-        "lean-call-boundary",
-        "model-hash"
-      ],
-      "id": "claim:semantic-hash-call-computes-definition:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 18420
-      },
-      "title": "Claim \"semantic-hash-call-computes-definition\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Model.derive_refs_resolve\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "model-references-resolve",
-        "model-derivation"
-      ],
-      "id": "claim:model-references-resolve:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 18446
-      },
-      "title": "Claim \"model-references-resolve\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Api.call_model_derive_total\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "model-derivation-total",
-        "model-derivation",
-        "lean-call-boundary"
-      ],
-      "id": "claim:model-derivation-total:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 18470
-      },
-      "title": "Claim \"model-derivation-total\" is not evaluated",
       "type": "unevaluated-claim"
     },
     {
@@ -3906,38 +3571,6 @@
       "type": "unevaluated-claim"
     },
     {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Integrity.least_eq_table\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "integrity-relations-least-model",
-        "integrity-rules",
-        "formal-semantics"
-      ],
-      "id": "claim:integrity-relations-least-model:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 19545
-      },
-      "title": "Claim \"integrity-relations-least-model\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Stale: the recorded Lean check of \"Exegra.Integrity.holds_of_eval\" ran on formal/ sources with hash 9046ba22301b, not on the current ones (62c4bffaec62); run \"exegra verify\" where Lean is installed to check it again.",
-      "entities": [
-        "integrity-relations-holds-by-reflection",
-        "integrity-rules",
-        "formal-semantics"
-      ],
-      "id": "claim:integrity-relations-holds-by-reflection:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 19567
-      },
-      "title": "Claim \"integrity-relations-holds-by-reflection\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
       "detail": "Stale: the recorded results of \"ev-integrity-relations-atoms\", \"ev-integrity-relations-least\", \"ev-integrity-relations-mutations\", \"ev-integrity-relations-diagnostics\" and \"ev-integrity-relations-atom-choice\" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.",
       "entities": [
         "integrity-relations-evaluated",
@@ -4277,111 +3910,6 @@
         "line": 19807
       },
       "title": "Claim \"product-layers-share-platform-analysis\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Lean has not checked \"Exegra.Core.Behav.deliver_perm\": run \"exegra verify\" (or \"exegra claims\" where Lean is installed) to record the check.",
-      "entities": [
-        "behav-delivery-order-independent",
-        "lts-foundation"
-      ],
-      "id": "claim:behav-delivery-order-independent:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 19820
-      },
-      "title": "Claim \"behav-delivery-order-independent\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Lean has not checked \"Exegra.Core.Behav.winners_nodup\": run \"exegra verify\" (or \"exegra claims\" where Lean is installed) to record the check.",
-      "entities": [
-        "behav-winners-distinct",
-        "lts-foundation"
-      ],
-      "id": "claim:behav-winners-distinct:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 19841
-      },
-      "title": "Claim \"behav-winners-distinct\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Lean has not checked \"Exegra.Core.Behav.shaped_invariant\": run \"exegra verify\" (or \"exegra claims\" where Lean is installed) to record the check.",
-      "entities": [
-        "behav-shape-invariant",
-        "lts-foundation"
-      ],
-      "id": "claim:behav-shape-invariant:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 19860
-      },
-      "title": "Claim \"behav-shape-invariant\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Lean has not checked \"Exegra.Core.Behav.shape_unreachable\": run \"exegra verify\" (or \"exegra claims\" where Lean is installed) to record the check.",
-      "entities": [
-        "behav-shape-error-unreachable",
-        "lts-foundation"
-      ],
-      "id": "claim:behav-shape-error-unreachable:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 19882
-      },
-      "title": "Claim \"behav-shape-error-unreachable\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Lean has not checked \"Exegra.Core.Behav.Expr.eval_fits\": run \"exegra verify\" (or \"exegra claims\" where Lean is installed) to record the check.",
-      "entities": [
-        "behav-static-sort-sound",
-        "lts-foundation"
-      ],
-      "id": "claim:behav-static-sort-sound:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 19903
-      },
-      "title": "Claim \"behav-static-sort-sound\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Lean has not checked \"Exegra.Core.Behav.Examples.u8_overflow\": run \"exegra verify\" (or \"exegra claims\" where Lean is installed) to record the check.",
-      "entities": [
-        "behav-integer-overflow-at-node",
-        "lts-foundation"
-      ],
-      "id": "claim:behav-integer-overflow-at-node:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 19924
-      },
-      "title": "Claim \"behav-integer-overflow-at-node\" is not evaluated",
-      "type": "unevaluated-claim"
-    },
-    {
-      "detail": "Lean has not checked \"Exegra.Core.Behav.Examples.mod_truncates\": run \"exegra verify\" (or \"exegra claims\" where Lean is installed) to record the check.",
-      "entities": [
-        "behav-remainder-truncates",
-        "lts-foundation"
-      ],
-      "id": "claim:behav-remainder-truncates:not-evaluated",
-      "severity": "low",
-      "source": {
-        "column": 5,
-        "line": 19944
-      },
-      "title": "Claim \"behav-remainder-truncates\" is not evaluated",
       "type": "unevaluated-claim"
     },
     {
