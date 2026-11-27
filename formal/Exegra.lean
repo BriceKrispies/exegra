@@ -27,4 +27,5 @@ import Exegra.Core.Calculus
 import Exegra.Core.Search
 import Exegra.Core.Examples
 import Exegra.Core.Behav
+import Exegra.Core.BehavExec
 import Exegra.Core.BehavExamples

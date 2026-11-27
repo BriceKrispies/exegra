@@ -1998,12 +1998,14 @@
         "Distinguish bounded from unbounded results: an invariant is a bounded invariant at every depth (invariant_iff_all_bounds) and no single depth suffices (Exegra.Core.Examples.bounded_not_unbounded)",
         "Carry results of the generic search to transition systems: a holds result is an unbounded invariant of every system the search covers (invariant_of_search) and a counterexample refutes the invariant of every system it is sound for (not_invariant_of_search)",
         "Give the guarded-command calculus a semantics in which out-of-range variables cannot be written, updates read the state before the step (Cmd.exec_get) and steps are labelled by command",
-        "Give Exegra's behaviours (machines with control states and typed variables, events with payloads, guards, effects that set the machine's own variables and emit events) a typed calculus over Int, Bool and String whose semantics is a transition system (Exegra.Core.Behav.Sys.lts): references scoped by Fin, so a missing variable or machine cannot be written; integer arithmetic as format 2 computes it, each arithmetic node checked against the declared integer type format 2's staticTy gives it (operands and result, on every operator), % truncated and typed / truncating; division by zero, inexact untyped division, out-of-range operands and results and reads past the end of a state as errors, never default values or other values; a failing delivery leads to an explicit error state with no successor (err_deadlocked), and every system has an initial state (lts_nonVacuous)",
+        "Give Exegra's behaviours (machines with control states and typed variables, events with payloads, guards, effects that set the machine's own variables, emit events and set or cancel the machine's own timers, and the scenario's event and transition faults) a typed calculus over Int, Bool and String whose semantics is a transition system (Exegra.Core.Behav.Sys.lts): references scoped by Fin, so a missing variable or machine cannot be written; integer arithmetic as format 2 computes it, each arithmetic node checked against the declared integer type format 2's staticTy gives it, % truncated and typed / truncating; faults all-or-nothing per fault through a mask chosen in the initial state and kept (mask_const), with drop, lose, delay, retry, duplicate, enable, disable and inject faults, occurrences counted per event and windows; times at or beyond 2^53 as the error timeBound and no delivery after stopAt; division by zero, inexact untyped division, out-of-range operands and results and reads past the end of a state as errors, never default values or other values; a failing delivery leads to an explicit error state with no successor (err_deadlocked), and every system has an initial state (lts_nonVacuous)",
         "Prove that under snapshot reads a delivery does not depend on the order in which its winners fire: the machines after phase 2 (Exegra.Core.Behav.phase2_perm), the emitted blocks up to permutation (phase2_perm_emitted), the winners of every step on distinct machines (winners_nodup), and the whole successor configuration, pending list included, equal in every order (deliver_perm), emitted entries being inserted by time in machine-index order as format 2's insertE inserts them; and show on the [a, b] / [b, a] example that snapshot reads give one verdict (f4_ab_safe, f4_ba_safe) where the calculus's model of today's next-configuration reads gives two (f4_next_reads_differ)",
-        "Prove that the shape of a configuration (one state per machine, a control state of the machine, one value of the declared sort per variable) is invariant from a shaped initial configuration (Exegra.Core.Behav.shaped_invariant) and that no step from a reachable configuration then fails with shape (shape_unreachable), and that the static sort of an expression is sound for evaluation (Expr.eval_fits)"
+        "Prove that the shape of a configuration (one state per machine, a control state of the machine, one value of the declared sort per variable) is invariant from a shaped initial configuration (Exegra.Core.Behav.shaped_invariant) and that no step from a reachable configuration then fails with shape (shape_unreachable), and that the static sort of an expression is sound for evaluation (Expr.eval_fits)",
+        "Define a decidable well-formedness of systems (Exegra.Core.Behav.Sys.WF) and prove that no step of a well-formed system fails with sort from a reachable state (sort_unreachable), that times stay in order and below 2^53 (time_invariant) and that the queue stays sorted by time (sorted_invariant)",
+        "Give the calculus an executable scheduler (Exegra.Core.Behav.Exec.step, Exec.run) computed with the relation's own delivery function and prove it is one scheduler of the relation: every committed step is a step labelled 0 (Exec.step_sound), a failed step leads to the error state (Exec.step_failed), it stops only where the relation has no step on a sorted queue (Exec.idle_deadlocked, Exec.stopped_deadlocked) and every state of a run is reachable (run_reach); and give it a successor function equal to the relation's steps (successors_complete, successors_sound), whose search system covers and is sound for the relation (Exec.covers, Exec.sound), so Gen.search results are theorems about the calculus (Exec.holds_invariant, Exec.cex_refutes)"
       ],
       "unknowns": [
-        "The guarded-command calculus (Calculus.lean) is single-sorted (Int) with no events, timers, faults or time. The behaviour calculus (Behav.lean) has events, guards and effects but no timers, faults, time bound, stopAt, random draws, payload literals beyond Int, Bool and String, or counted instances, and no static well-formedness predicate Sys.WF from which no step fails with sort (Expr.eval_fits is the lemma it will rest on; the shape of the initial configuration is a hypothesis of shape_unreachable); there is no executable scheduler, so step_sound and successors_complete are not proved, nor phase2_eq_par (the parallel closed form of phase 2), pending_perm_bisim or a renaming theorem giving one verdict for every listing in general; format-2 input is not elaborated into the calculus (the elaboration must give each arithmetic node format 2's staticTy), so none of these theorems is about the format-2 interpreter (Exegra.V2), which still computes with Float (milestone M2, increments M2.2 to M2.8 of docs/assessment/2026-11-26/plan-M2.md).",
+        "The guarded-command calculus (Calculus.lean) is single-sorted (Int) with no events, timers, faults or time. The behaviour calculus (Behav.lean, BehavExec.lean) has events, guards, effects, timers, the scenario's event and transition faults, attempts, the time bound and stopAt, but no random draws (sample, distributions on after; labels carry no draws), no counted instances, replies or aggregates, no resources, links, workloads, keyed instances or routes, and no payload literals beyond Int, Bool and String. Faults are chosen all-or-nothing per fault (one mask per run), not per occurrence. phase2_eq_par (the parallel closed form of phase 2), pending_perm_bisim and a renaming theorem giving one verdict for every listing in general are not proved. The executable scheduler computes with the relation's delivery function, so step_sound is close to its definition; the substance is in the delivery function and the theorems about it, and no theorem relates it to the format-2 interpreter (Exegra.V2), which still computes with Float (milestone M2, docs/assessment/2026-11-26/plan-M2.md).",
         "By construction the calculus computes format 2's value wherever it computes one (no differential check yet confirms it), but some format-2 values are errors in the calculus: untyped arithmetic with an operand or result outside 2^53 - 1 and untyped / with a remainder (format 2 computes an IEEE double), == and != across sorts (format 2 gives false and true), string +, and a payload field read at a sort it does not fit; there is no > or >= (encoding them as swapped < and <= changes which error is reported), the error reported can depend on the order of the winners, and entries have no target, so a format-2 entry addressed to one instance would reach every machine (M2.2 for targets, M2.4 for elaboration, M2.5 for differential checks of values and errors).",
         "Steps are labelled by the position of the delivered entry in the pending list, which cannot express per-entry fairness; labels by entry are needed before liveness (milestone M5).",
         "There are no runs, traces, observations, fairness or composition yet (milestones M5 and M6), and no k-induction (M4).",
@@ -2014,7 +2016,7 @@
         "modules": [
           "formal/Exegra/Core/"
         ],
-        "notes": "formal/Exegra/Core/LTS.lean (the theory), Calculus.lean (the guarded-command calculus), Search.lean (the bridge from Exegra.Gen.search), Examples.lean (positive and adversarial examples: counter_le, ne_neg_one_not_inductive, ne_neg_one_invariant, bounded_not_unbounded, vacuous_false, mod3_in_range), Behav.lean (the behaviour calculus of M2.1: typed values, arithmetic sorts and expressions, transitions, Sys.lts, phase2_perm, phase2_perm_emitted, winners_nodup, deliver_perm, shaped_invariant, deliver_ne_shape, shape_unreachable, Expr.eval_fits), BehavExamples.lean (f4_ab_safe, f4_ba_safe, f4_next_reads_differ, f4_nonVacuous, f4Init_shaped, f4_ab_no_shape, divZero_counterexample, mod_truncates, typed_div_truncates, untyped_div_inexact, u8_overflow, emitted_inserted_by_time, emission_order_irrelevant); axioms pinned with #guard_msgs. The files sit inside formal/, which formal-semantics also declares. Checked by lake build in .github/workflows/check.yml.",
+        "notes": "formal/Exegra/Core/LTS.lean (the theory), Calculus.lean (the guarded-command calculus), Search.lean (the bridge from Exegra.Gen.search), Examples.lean (positive and adversarial examples: counter_le, ne_neg_one_not_inductive, ne_neg_one_invariant, bounded_not_unbounded, vacuous_false, mod3_in_range), Behav.lean (the behaviour calculus of M2.1 and M2.2: typed values, arithmetic sorts and expressions, transitions, timers, faults, Sys.lts, Sys.WF, phase2_perm, phase2_perm_emitted, winners_nodup, deliver_perm, mask_const, deliver_ok_form, deliver_error_form, shaped_invariant, shape_unreachable, time_invariant, sorted_invariant, Expr.eval_fits, Expr.eval_ne_sort, sort_unreachable), BehavExec.lean (the scheduler of M2.3: Exec.step, Exec.run, Exec.successors, Exec.enum, Exec.gen, Exec.step_sound, Exec.step_failed, Exec.idle_deadlocked, Exec.stopped_deadlocked, Exec.step_live, run_reach, successors_complete, successors_sound, Exec.covers, Exec.sound, Exec.holds_invariant, Exec.cex_refutes), BehavExamples.lean (f4_ab_safe, f4_ba_safe, f4_ab_safe_closed, f4_wf, f4_exec_same_machines, f4_next_reads_differ, f4_nonVacuous, f4Init_shaped, f4_ab_no_shape, divZero_counterexample, mod_truncates, typed_div_truncates, untyped_div_inexact, u8_overflow, emitted_inserted_by_time, emission_order_irrelevant, timer_then_cancel, timer_reset, drop_second_delivery, drop_fault_optional); axioms pinned with #guard_msgs. The files sit inside formal/, which formal-semantics also declares. Checked by lake build in .github/workflows/check.yml.",
         "trusts": [
           "trusted-lean-kernel"
         ],
@@ -19820,7 +19822,7 @@
     {
       "id": "behav-delivery-order-independent",
       "kind": "structural",
-      "statement": "In the behaviour calculus, firing the winners a step computes in any order (any permutation, chosen per configuration and delivered entry) leads to the same successor state as the step itself: the same configuration, with time, machines and pending list equal (not only up to a permutation), or the error state in both orders. Emitted entries enter the pending list in machine-index order, each after every pending entry of no later time.",
+      "statement": "In the behaviour calculus, under every fault mask, firing the winners a step computes in any order (any permutation, chosen per configuration and delivered entry) leads to the same successor state as the step itself: the same configuration, with time, machines, pending list and attempt counts equal (not only up to a permutation), or the error state in both orders. Emitted entries enter the pending list in machine-index order, by time, after the pending entries of the timers the winners set or cancelled are removed.",
       "subjects": [
         "lts-foundation"
       ],
@@ -19957,6 +19959,335 @@
         "theorem": "Exegra.Core.Behav.Examples.mod_truncates",
         "about": [
           "Exegra.Core.Behav.BOp.apply"
+        ]
+      }
+    },
+    {
+      "id": "behav-mask-constant",
+      "kind": "structural",
+      "statement": "In the behaviour calculus the fault mask chosen in the initial state is kept by every step: faults are all-or-nothing per run, as in format 2.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem mask_const of formal/Exegra/Core/Behav.lean (plan-M2, M2.2). Format 2's run is the all-true mask over the scenario's faults; the relation has one initial state per mask, so an invariant of Sys.lts holds under every subset of the scenario's faults. Choosing a fault per occurrence is not modelled.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.mask_const",
+        "about": [
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.State.mask"
+        ]
+      }
+    },
+    {
+      "id": "behav-time-invariant",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, from an initial configuration at time 0 whose pending and injected entries are below 2^53, in every reachable state the current time is below 2^53 and no later than any pending entry's time, and every pending entry's time is below 2^53.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem time_invariant of formal/Exegra/Core/Behav.lean (plan-M2, M2.2), by an inductive invariant over deliver_ok_form: the delivered entry has minimal time, emitted, timer and copied entries are scheduled at the step's time or later, and a time at or beyond 2^53 is the error timeBound, as format 2's 'Value time exceeds 2^53'. It is what lets the time be read at the sort of 0..2^53-1.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.time_invariant",
+        "about": [
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Cfg.TimeOK",
+          "Exegra.Core.Behav.Sys.TimesOK"
+        ]
+      }
+    },
+    {
+      "id": "behav-sorted-invariant",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, when the initial queue is sorted by time, the queue of every reachable state is sorted by time.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem sorted_invariant of formal/Exegra/Core/Behav.lean (plan-M2, M2.2-M2.3). Entries are inserted before the first entry of a later time, and removing entries keeps a list sorted. On a sorted queue the head has minimal time, which the scheduler relies on (behav-exec-idle-deadlocked).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.sorted_invariant",
+        "about": [
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Cfg.Sorted"
+        ]
+      }
+    },
+    {
+      "id": "behav-wf-no-sort-error",
+      "kind": "structural",
+      "statement": "In the behaviour calculus no step of a well-formed system fails with the error sort, from any reachable state: guards are Booleans, operands have the sorts their operators take, and assignments write values of the variable's sort.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem sort_unreachable of formal/Exegra/Core/Behav.lean (plan-M2, M2.2). Sys.WF is decidable (Sys.wf): the initial configuration has the shape of the signature, starts at time 0 with a sorted queue below 2^53, guards have static sort bool and effects are well-typed. It rests on shaped_invariant, time_invariant, Expr.eval_fits and Expr.eval_ne_sort. Other errors (overflow, operand, divZero, inexact, absent or ill-sorted payload fields, timeBound) remain possible and lead to the error state.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.sort_unreachable",
+        "about": [
+          "Exegra.Core.Behav.deliver",
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Sys.WF"
+        ]
+      }
+    },
+    {
+      "id": "behav-exec-step-sound",
+      "kind": "structural",
+      "statement": "Every step the executable scheduler of the behaviour calculus commits is a step of the calculus's transition system, labelled by the head of the queue.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem Exec.step_sound of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3). Exec.step computes with the relation's own delivery function at label 0, so the theorem is close to its definition; what makes the scheduler one scheduler of the relation is that it never stops where the relation has a step (behav-exec-idle-deadlocked, behav-exec-stopped-deadlocked). Exec.step_failed proves the failing case leads to the error state.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Exec.step_sound",
+        "about": [
+          "Exegra.Core.Behav.Exec.step",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-exec-step-failed",
+      "kind": "structural",
+      "statement": "When the executable scheduler of the behaviour calculus fails a step, the calculus's transition system has a step to the explicit error state carrying the configuration before the step.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem Exec.step_failed of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3): a failed step is a counterexample state of the relation, never a missing step.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Exec.step_failed",
+        "about": [
+          "Exegra.Core.Behav.Exec.step",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-exec-idle-deadlocked",
+      "kind": "structural",
+      "statement": "When the executable scheduler of the behaviour calculus is idle on a state whose queue is sorted, the calculus's transition system has no step from that state.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem Exec.idle_deadlocked of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3). With sorted_invariant it covers every reachable state of a well-formed system: the scheduler stops only on quiescence or the error state.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Exec.idle_deadlocked",
+        "about": [
+          "Exegra.Core.Behav.Exec.step",
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Cfg.Sorted"
+        ]
+      }
+    },
+    {
+      "id": "behav-exec-stopped-deadlocked",
+      "kind": "structural",
+      "statement": "When the executable scheduler of the behaviour calculus stops at stopAt on a state whose queue is sorted, the calculus's transition system has no step from that state.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem Exec.stopped_deadlocked of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3): every pending entry is then after stopAt.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Exec.stopped_deadlocked",
+        "about": [
+          "Exegra.Core.Behav.Exec.step",
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Cfg.Sorted"
+        ]
+      }
+    },
+    {
+      "id": "behav-run-states-reachable",
+      "kind": "structural",
+      "statement": "Every state of a run of the executable scheduler of the behaviour calculus from a reachable state is reachable in the calculus's transition system.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem run_reach of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3), from Exec.step_sound and Exec.step_failed. A run truncated by its step limit is a prefix of a run of the relation.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.run_reach",
+        "about": [
+          "Exegra.Core.Behav.Exec.run",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-successors-complete",
+      "kind": "structural",
+      "statement": "Every step of the behaviour calculus's transition system, with its label, is produced by the calculus's successor function.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem successors_complete of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3); successors_sound gives the converse. Exec.enum is therefore a complete enumeration and Exec.covers holds for the search system Exec.gen.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.successors_complete",
+        "about": [
+          "Exegra.Core.Behav.Exec.successors",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-successors-sound",
+      "kind": "structural",
+      "statement": "Every successor the behaviour calculus's successor function produces is a step of its transition system with that label.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem successors_sound of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3); with it Exec.sound holds for the search system Exec.gen.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.successors_sound",
+        "about": [
+          "Exegra.Core.Behav.Exec.successors",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-search-holds-invariant",
+      "kind": "structural",
+      "statement": "When the generic search reports holds on the behaviour calculus's search system, the searched property holds in every reachable state of the calculus's transition system, with no bound.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem Exec.holds_invariant of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3): invariant_of_search instantiated with Exec.covers, discharging the coverage obligation that lts-search-holds-is-invariant leaves as a hypothesis, for the calculus. Failed steps are error states, so a property false on them is refuted, not satisfied by a missing step.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Exec.holds_invariant",
+        "about": [
+          "Exegra.Core.Behav.Exec.gen",
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Gen.search",
+          "Exegra.Core.LTS.Invariant"
+        ]
+      }
+    },
+    {
+      "id": "behav-search-cex-refutes",
+      "kind": "structural",
+      "statement": "When the generic search reports a counterexample on the behaviour calculus's search system, the searched property is not an invariant of the calculus's transition system.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem Exec.cex_refutes of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3): not_invariant_of_search instantiated with Exec.sound.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Exec.cex_refutes",
+        "about": [
+          "Exegra.Core.Behav.Exec.gen",
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Gen.search",
+          "Exegra.Core.LTS.Invariant"
+        ]
+      }
+    },
+    {
+      "id": "behav-timer-cancel",
+      "kind": "structural",
+      "statement": "In the behaviour calculus a transition that sets a timer and then cancels it leaves no entry of that timer, and drops the timer's earlier pending entry.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem timer_then_cancel of formal/Exegra/Core/BehavExamples.lean (plan-M2, M2.2), by kernel evaluation; timer_reset shows that setting a timer replaces its pending entry.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.timer_then_cancel",
+        "about": [
+          "Exegra.Core.Behav.deliver",
+          "Exegra.Core.Behav.Examples.onZero"
+        ]
+      }
+    },
+    {
+      "id": "behav-drop-occurrence",
+      "kind": "structural",
+      "statement": "In the behaviour calculus a drop fault with occurrence 2 drops exactly the second delivery of its event: three deliveries of a counting transition leave the counter at 2 with three attempts counted, and at 3 under the mask without the fault.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorems drop_second_delivery and drop_fault_optional of formal/Exegra/Core/BehavExamples.lean (plan-M2, M2.2), by kernel evaluation of the executable scheduler Exec.run under the two masks.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.drop_second_delivery",
+        "about": [
+          "Exegra.Core.Behav.Exec.run",
+          "Exegra.Core.Behav.Examples.dropSys"
+        ]
+      }
+    },
+    {
+      "id": "behav-f4-exec-same-machines",
+      "kind": "structural",
+      "statement": "The executable scheduler of the behaviour calculus commits the same machines for the [a, b] and [b, a] listings of the example: a has x = 1 and b has y = 0 in both.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem f4_exec_same_machines of formal/Exegra/Core/BehavExamples.lean (plan-M2, M2.3), by kernel evaluation; f4_ab_safe_closed proves the [a, b] invariant again from a closed-set certificate over the executable enumeration Exec.enum.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.f4_exec_same_machines",
+        "about": [
+          "Exegra.Core.Behav.Exec.step",
+          "Exegra.Core.Behav.Examples.f4AB",
+          "Exegra.Core.Behav.Examples.f4BA"
         ]
       }
     }
