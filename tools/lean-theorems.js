@@ -93,8 +93,10 @@ function pinnedLean() {
  * @returns {{available: true, lean: string, checkedAt: string, results: Record<string, TheoremRecord>} | {available: false, reason: string}}
  */
 export function checkTheorems(requests, opts = {}) {
-  const lake = spawnSync('lake', ['--version'], { encoding: 'utf8', windowsHide: true });
-  if (lake.error || lake.status !== 0) return { available: false, reason: 'lake is not on the PATH (install elan with the toolchain of formal/lean-toolchain)' };
+  // Asked from formal/, where formal/lean-toolchain selects the toolchain: elan's lake proxy fails
+  // elsewhere when no default toolchain is set, though lake works for the Lean project.
+  const lake = spawnSync('lake', ['--version'], { cwd: FORMAL, encoding: 'utf8', windowsHide: true });
+  if (lake.error || lake.status !== 0) return { available: false, reason: `lake is not available in formal/ (install elan with the toolchain of formal/lean-toolchain)${lake.stderr ? `: ${String(lake.stderr).trim().split('\n')[0]}` : ''}` };
   for (const r of requests) {
     for (const n of [r.theorem, ...(r.about ?? [])]) if (!NAME.test(n)) return { available: false, reason: `"${n}" is not a Lean constant name` };
   }

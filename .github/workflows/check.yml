@@ -61,12 +61,13 @@ jobs:
       - name: Check the Lean proofs and build the Lean core to WebAssembly
         run: node tools/build-formal-wasm.js --jobs 4
 
-      - name: Build the Rust oracle
+      - name: Build the Rust oracle (WebAssembly and the native exegra-sim)
         run: |
           rustup target add wasm32-unknown-unknown
           want=$(sed -n 's/^wasm-bindgen = "=\([0-9.]*\)"/\1/p' engine/exegra-engine-wasm/Cargo.toml)
           if ! wasm-bindgen --version 2>/dev/null | grep -q "$want"; then cargo install wasm-bindgen-cli --version "$want" --locked --force; fi
           node tools/build-engine.js
+          (cd engine && cargo build --release -p exegra-engine --bin exegra-sim)
 
       - name: Validate Exegra's own specification
         run: node cli/exegra.js validate --project exegra --pretty
