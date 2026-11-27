@@ -12,10 +12,10 @@ Verified means checked by Exegra against this model revision within the stated s
 | --- | --- |
 | proved | 31 |
 | verified | 49 |
-| supported | 0 |
+| supported | 145 |
 | violated | 2 |
 | inconclusive | 4 |
-| not-evaluated | 188 |
+| not-evaluated | 43 |
 | total | 274 |
 
 ## Check and grounding
@@ -269,9 +269,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-roundtrip-core | test | tests/core/roundtrip.test.js | supports | none |
-| ev-browser-inspector-rename | test | tests/browser/exegra.spec.js#inspector rename persists to spec.jsonc and survives reload | supports | none |
-| ev-browser-source-edit | test | tests/browser/exegra.spec.js#source edit updates the scene | supports | none |
+| ev-roundtrip-core | test | tests/core/roundtrip.test.js | supports | pass |
+| ev-browser-inspector-rename | test | tests/browser/exegra.spec.js#inspector rename persists to spec.jsonc and survives reload | supports | pass |
+| ev-browser-source-edit | test | tests/browser/exegra.spec.js#source edit updates the scene | supports | pass |
 
 ## file-matches-model-after-save
 
@@ -303,8 +303,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-workspace-write | test | tests/core/workspace.test.js#write with the current baseHash succeeds | supports | none |
-| ev-browser-persists | test | tests/browser/exegra.spec.js#inspector rename persists to spec.jsonc and survives reload | supports | none |
+| ev-workspace-write | test | tests/core/workspace.test.js#write with the current baseHash succeeds | supports | pass |
+| ev-browser-persists | test | tests/browser/exegra.spec.js#inspector rename persists to spec.jsonc and survives reload | supports | pass |
 
 ## refresh-follows-commit
 
@@ -411,8 +411,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-roundtrip-rejected | test | tests/core/roundtrip.test.js#invalid operations are rejected atomically | supports | none |
-| ev-browser-rejected-source | test | tests/browser/exegra.spec.js#source edit updates the scene | supports | none |
+| ev-roundtrip-rejected | test | tests/core/roundtrip.test.js#invalid operations are rejected atomically | supports | pass |
+| ev-browser-rejected-source | test | tests/browser/exegra.spec.js#source edit updates the scene | supports | pass |
 
 ## rejected-edit-never-refreshes
 
@@ -493,7 +493,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-workspace-conflict | test | tests/core/workspace.test.js#write with a stale baseHash conflicts | supports | none |
+| ev-workspace-conflict | test | tests/core/workspace.test.js#write with a stale baseHash conflicts | supports | pass |
 
 ## conflict-is-flagged
 
@@ -527,12 +527,12 @@ Moving a node changes only the layout file: the semantic hash and the specificat
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-layout-core, ev-layout-browser), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-layout-core" and "ev-layout-browser" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-layout-core, ev-layout-browser), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-layout-core and ev-layout-browser: pass.
 
 **Holds only if**
 
@@ -548,8 +548,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-layout-core | test | tests/core/roundtrip.test.js#moving a node is presentation only | supports | none |
-| ev-layout-browser | test | tests/browser/exegra.spec.js#moving a node changes layout.jsonc only | supports | none |
+| ev-layout-core | test | tests/core/roundtrip.test.js#moving a node is presentation only | supports | pass |
+| ev-layout-browser | test | tests/browser/exegra.spec.js#moving a node changes layout.jsonc only | supports | pass |
 
 ## simulation-deterministic
 
@@ -557,12 +557,12 @@ Running a scenario twice with the same model and faults gives deep-equal traces,
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-simulation-core), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-simulation-core" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-simulation-core), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-simulation-core: pass.
 
 **Holds only if**
 
@@ -577,7 +577,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-simulation-core | test | tests/core/sim.test.js | supports | none |
+| ev-simulation-core | test | tests/core/sim.test.js | supports | pass |
 
 ## generation-deterministic
 
@@ -585,12 +585,12 @@ Two runs of the generators over the same model and inputs produce byte-identical
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-generate-core), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-generate-core" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-generate-core), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-generate-core: pass.
 
 **Holds only if**
 
@@ -605,7 +605,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-generate-core | test | tests/core/generate.test.js | supports | none |
+| ev-generate-core | test | tests/core/generate.test.js | supports | pass |
 
 ## persistence-confined-to-workspace
 
@@ -613,12 +613,12 @@ Project names are validated and every path is resolved inside specs/<project>/ b
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-workspace-confinement), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-workspace-confinement" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-workspace-confinement), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-workspace-confinement: pass.
 
 **Holds only if**
 
@@ -634,7 +634,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-workspace-confinement | test | tests/core/workspace.test.js | supports | none |
+| ev-workspace-confinement | test | tests/core/workspace.test.js | supports | pass |
 
 ## invalid-source-keeps-last-valid-model
 
@@ -642,12 +642,12 @@ An invalid source draft is rejected with diagnostics, the committed model is not
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-roundtrip-invalid-draft, ev-browser-invalid-draft), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-roundtrip-invalid-draft" and "ev-browser-invalid-draft" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-roundtrip-invalid-draft, ev-browser-invalid-draft), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-roundtrip-invalid-draft and ev-browser-invalid-draft: pass.
 
 **Holds only if**
 
@@ -663,8 +663,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-roundtrip-invalid-draft | test | tests/core/roundtrip.test.js#an invalid source draft is rejected | supports | none |
-| ev-browser-invalid-draft | test | tests/browser/exegra.spec.js#source edit updates the scene | supports | none |
+| ev-roundtrip-invalid-draft | test | tests/core/roundtrip.test.js#an invalid source draft is rejected | supports | pass |
+| ev-browser-invalid-draft | test | tests/browser/exegra.spec.js#source edit updates the scene | supports | pass |
 
 ## unsupported-constructs-are-diagnosed
 
@@ -672,12 +672,12 @@ A specification construct the meta-model does not describe (an unknown section, 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-model-unsupported), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-model-unsupported" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-model-unsupported), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-model-unsupported: pass.
 
 **Holds only if**
 
@@ -692,7 +692,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-model-unsupported | test | tests/core/model.test.js#unsupported constructs | supports | none |
+| ev-model-unsupported | test | tests/core/model.test.js#unsupported constructs | supports | pass |
 
 ## benchmark-scene-interactive
 
@@ -725,12 +725,12 @@ For every simulation step, the message flow names as sender the component whose 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-flows-trace), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-flows-trace" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-flows-trace), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-flows-trace: pass.
 
 **Holds only if**
 
@@ -745,7 +745,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-flows-trace | test | tests/core/flows.test.js | supports | none |
+| ev-flows-trace | test | tests/core/flows.test.js | supports | pass |
 
 ## sim-flow-never-borrows-edges
 
@@ -753,12 +753,12 @@ A simulated message is drawn along a scene edge only when that edge connects its
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-flows-edges), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-flows-edges" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-flows-edges), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-flows-edges: pass.
 
 **Holds only if**
 
@@ -773,7 +773,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-flows-edges | test | tests/core/flows.test.js | supports | none |
+| ev-flows-edges | test | tests/core/flows.test.js | supports | pass |
 
 ## sim-step-shows-message-moving
 
@@ -781,12 +781,12 @@ Stepping a simulation in a structural view moves a marker labelled with the even
 
 - Kind: temporal
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-browser-sim-flow), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-browser-sim-flow" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-browser-sim-flow), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-browser-sim-flow: pass.
 
 **Holds only if**
 
@@ -802,7 +802,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-browser-sim-flow | test | tests/browser/interaction.spec.js#stepping a simulation sends a labelled marker along the edge from sender to receiver | supports | none |
+| ev-browser-sim-flow | test | tests/browser/interaction.spec.js#stepping a simulation sends a labelled marker along the edge from sender to receiver | supports | pass |
 
 ## simulation-seeded-runs-reproducible
 
@@ -1200,12 +1200,12 @@ The Rust simulation engine, the differential oracle, native and WebAssembly, rep
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-engines-agree), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-engines-agree" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-engines-agree), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-engines-agree: pass.
 
 **Holds only if**
 
@@ -1220,7 +1220,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-engines-agree | test | tests/core/conformance.test.js | supports | none |
+| ev-engines-agree | test | tests/core/conformance.test.js | supports | pass |
 
 ## simulation-contract-pinned
 
@@ -1228,12 +1228,12 @@ For every scenario of the golden conformance suite, the simulation engine reprod
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-simulation-contract), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-simulation-contract" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-simulation-contract), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-simulation-contract: pass.
 
 **Holds only if**
 
@@ -1248,7 +1248,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-simulation-contract | test | tests/core/conformance.test.js | supports | none |
+| ev-simulation-contract | test | tests/core/conformance.test.js | supports | pass |
 
 ## simulation-runs-off-main-thread
 
@@ -1256,12 +1256,12 @@ The Simulation tab runs a scenario in a Web Worker: while a long run is in progr
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-simulation-worker-responsive), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-simulation-worker-responsive" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-simulation-worker-responsive), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-simulation-worker-responsive: pass.
 
 **Holds only if**
 
@@ -1276,7 +1276,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-simulation-worker-responsive | test | tests/browser/simulation-worker.spec.js#a long simulation runs in a worker while the page stays responsive | supports | none |
+| ev-simulation-worker-responsive | test | tests/browser/simulation-worker.spec.js#a long simulation runs in a worker while the page stays responsive | supports | pass |
 
 ## ui-touch-usable-on-phone
 
@@ -1284,12 +1284,12 @@ At a 390 by 844 touch viewport the page never scrolls horizontally, every visibl
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-browser-phone-touch-usable), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-browser-phone-touch-usable" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-browser-phone-touch-usable), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-browser-phone-touch-usable: pass.
 
 **Holds only if**
 
@@ -1304,7 +1304,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-browser-phone-touch-usable | test | tests/browser/mobile.spec.js#phone layout has no horizontal scroll and 44 px targets and the scene covers most of the screen | supports | none |
+| ev-browser-phone-touch-usable | test | tests/browser/mobile.spec.js#phone layout has no horizontal scroll and 44 px targets and the scene covers most of the screen | supports | pass |
 
 ## ui-expands-to-desktop
 
@@ -1312,12 +1312,12 @@ From 768 CSS pixels wide panels open beside the scene instead of over it, and fr
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-browser-tablet-desktop-expand), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-browser-tablet-desktop-expand" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-browser-tablet-desktop-expand), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-browser-tablet-desktop-expand: pass.
 
 **Holds only if**
 
@@ -1332,7 +1332,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-browser-tablet-desktop-expand | test | tests/browser/mobile.spec.js#panels open beside the scene on a tablet and the desktop shows explorer scene and context panel side by side | supports | none |
+| ev-browser-tablet-desktop-expand | test | tests/browser/mobile.spec.js#panels open beside the scene on a tablet and the desktop shows explorer scene and context panel side by side | supports | pass |
 
 ## fault-model-scoped-claims
 
@@ -1340,12 +1340,12 @@ Every behavioral or reliability claim names the fault model it is evaluated unde
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-fault-model-core), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-fault-model-core" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-fault-model-core), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-fault-model-core: pass.
 
 **Holds only if**
 
@@ -1360,7 +1360,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-fault-model-core | test | tests/core/fault-model.test.js | supports | none |
+| ev-fault-model-core | test | tests/core/fault-model.test.js | supports | pass |
 
 ## exhaustive-exploration-sound
 
@@ -1368,12 +1368,12 @@ Exhaustive exploration within stated bounds finds the known race of a fixture pr
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-formal-explore), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-formal-explore" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-formal-explore), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-formal-explore: pass.
 
 **Holds only if**
 
@@ -1388,7 +1388,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-formal-explore | test | tests/core/formal-explore.test.js | supports | none |
+| ev-formal-explore | test | tests/core/formal-explore.test.js | supports | pass |
 
 ## deployment-cutover-safe
 
@@ -1526,12 +1526,12 @@ The Rust engine and the Lean formal semantics give identical traces on every gol
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-formal-differential), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-formal-differential" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-formal-differential), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-formal-differential: pass.
 
 **Holds only if**
 
@@ -1546,7 +1546,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-formal-differential | test | tests/core/formal-semantics.test.js | supports | none |
+| ev-formal-differential | test | tests/core/formal-semantics.test.js | supports | pass |
 
 ## formal-semantics-properties-proved
 
@@ -1554,12 +1554,12 @@ The formal semantics' step function is proved deterministic, fires at most one t
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-formal-proofs), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-formal-proofs" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-formal-proofs), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-formal-proofs: pass.
 
 **Holds only if**
 
@@ -1574,7 +1574,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-formal-proofs | test | tests/core/formal-semantics.test.js#the Lean proofs build with no sorry and only standard axioms | supports | none |
+| ev-formal-proofs | test | tests/core/formal-semantics.test.js#the Lean proofs build with no sorry and only standard axioms | supports | pass |
 
 ## invariants-proved-unbounded
 
@@ -1608,12 +1608,12 @@ An event that names a contract has a role, and validation rejects, with the posi
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-contract-events-static), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-contract-events-static" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-contract-events-static), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-contract-events-static: pass.
 
 **Holds only if**
 
@@ -1628,7 +1628,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-contract-events-static | test | tests/core/contract-trace.test.js#validate reports contract events that do not fit their contract | supports | none |
+| ev-contract-events-static | test | tests/core/contract-trace.test.js#validate reports contract events that do not fit their contract | supports | pass |
 
 ## trace-contract-conformance
 
@@ -1636,12 +1636,12 @@ On a simulated trace, every contract event's payload values fit the declared typ
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-contract-trace-checks, ev-contract-request-log, ev-browser-requests-section), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-contract-trace-checks", "ev-contract-request-log" and "ev-browser-requests-section" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-contract-trace-checks, ev-contract-request-log, ev-browser-requests-section), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-contract-trace-checks, ev-contract-request-log and ev-browser-requests-section: pass.
 
 **Holds only if**
 
@@ -1657,9 +1657,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-contract-trace-checks | test | tests/core/contract-trace.test.js#simulate checks values error codes and request response pairing | supports | none |
-| ev-contract-request-log | test | tests/core/contract-trace.test.js#the request log renders contract events with binding and outcome | supports | none |
-| ev-browser-requests-section | test | tests/browser/mobile.spec.js#the simulator shows the request log of contract events on a phone | supports | none |
+| ev-contract-trace-checks | test | tests/core/contract-trace.test.js#simulate checks values error codes and request response pairing | supports | pass |
+| ev-contract-request-log | test | tests/core/contract-trace.test.js#the request log renders contract events with binding and outcome | supports | pass |
+| ev-browser-requests-section | test | tests/browser/mobile.spec.js#the simulator shows the request log of contract events on a phone | supports | pass |
 
 ## data-model-rules-computed
 
@@ -1667,12 +1667,12 @@ Records and copies are validated with positions, and the six data rules (erasure
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-data-declared-markers, ev-data-model-core), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-data-declared-markers" and "ev-data-model-core" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-data-declared-markers, ev-data-model-core), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-data-declared-markers and ev-data-model-core: pass.
 
 **Holds only if**
 
@@ -1687,8 +1687,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-data-declared-markers | test | tests/core/claim-diagnostics.test.js#no-principal-in-shared says it reads only declared personal markers | supports | none |
-| ev-data-model-core | test | tests/core/data-model.test.js | supports | none |
+| ev-data-declared-markers | test | tests/core/claim-diagnostics.test.js#no-principal-in-shared says it reads only declared personal markers | supports | pass |
+| ev-data-model-core | test | tests/core/data-model.test.js | supports | pass |
 
 ## personal-records-state-erasure
 
@@ -1696,12 +1696,12 @@ Every record with a field that is personal data or a credential states an erasur
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-record-erasure-core), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-record-erasure-core" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-record-erasure-core), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-record-erasure-core: pass.
 
 **Holds only if**
 
@@ -1716,7 +1716,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-record-erasure-core | test | tests/core/data-model.test.js | supports | none |
+| ev-record-erasure-core | test | tests/core/data-model.test.js | supports | pass |
 
 ## classification-validated
 
@@ -1724,12 +1724,12 @@ A field's optional classification is one of public, internal, personal or creden
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-classification-core), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-classification-core" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-classification-core), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-classification-core: pass.
 
 **Holds only if**
 
@@ -1744,7 +1744,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-classification-core | test | tests/core/data-model.test.js | supports | none |
+| ev-classification-core | test | tests/core/data-model.test.js | supports | pass |
 
 ## specification-copies-fresh-and-related
 
@@ -1777,12 +1777,12 @@ A state-invariant claim reported by exegra prove as holding has a Lean theorem, 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-formal-explore-bounded), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-formal-explore-bounded" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-formal-explore-bounded), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-formal-explore-bounded: pass.
 
 **Holds only if**
 
@@ -1797,7 +1797,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-formal-explore-bounded | test | tests/core/formal-explore.test.js#the atomic store is verified for every configuration within the bound | supports | none |
+| ev-formal-explore-bounded | test | tests/core/formal-explore.test.js#the atomic store is verified for every configuration within the bound | supports | pass |
 
 ## trace-claim-verified-needs-negative
 
@@ -1805,12 +1805,12 @@ A trace claim is reported verified only when it holds on every listed scenario a
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-negatives-status), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-negatives-status" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-negatives-status), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-negatives-status: pass.
 
 **Holds only if**
 
@@ -1825,7 +1825,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-negatives-status | test | tests/core/claims.test.js#negatives: verified needs a violating negative | supports | none |
+| ev-negatives-status | test | tests/core/claims.test.js#negatives: verified needs a violating negative | supports | pass |
 
 ## negatives-are-validated
 
@@ -1833,12 +1833,12 @@ A negative whose scenario is not one of its claim's scenarios, whose fault list 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-negatives-validated), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-negatives-validated" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-negatives-validated), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-negatives-validated: pass.
 
 **Holds only if**
 
@@ -1853,7 +1853,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-negatives-validated | test | tests/core/claims.test.js#negatives: malformed negatives are validation errors and follow renames | supports | none |
+| ev-negatives-validated | test | tests/core/claims.test.js#negatives: malformed negatives are validation errors and follow renames | supports | pass |
 
 ## trace-claims-state-how-decided
 
@@ -1861,12 +1861,12 @@ A trace claim's result says what its verdict rests on: the declaration order of 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-trace-order-decides, ev-trace-precedes-script, ev-trace-never-faultonly, ev-trace-constant-consequent), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-trace-order-decides", "ev-trace-precedes-script", "ev-trace-never-faultonly" and "ev-trace-constant-consequent" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-trace-order-decides, ev-trace-precedes-script, ev-trace-never-faultonly, ev-trace-constant-consequent), of which 4 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-trace-order-decides, ev-trace-precedes-script, ev-trace-never-faultonly and ev-trace-constant-consequent: pass.
 
 **Holds only if**
 
@@ -1881,10 +1881,10 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-trace-order-decides | test | tests/core/claim-diagnostics.test.js#two unguarded transitions on one event are warned about and the result says the order decided | supports | none |
-| ev-trace-precedes-script | test | tests/core/claim-diagnostics.test.js#precedes between two scripted deliveries is not verified and one the system produces is | supports | none |
-| ev-trace-never-faultonly | test | tests/core/claim-diagnostics.test.js#a never over an occurrence only a faultOnly transition produces says it holds for fault-free runs | supports | none |
-| ev-trace-constant-consequent | test | tests/core/claim-diagnostics.test.js#an implication with a constant consequent is not exercised | supports | none |
+| ev-trace-order-decides | test | tests/core/claim-diagnostics.test.js#two unguarded transitions on one event are warned about and the result says the order decided | supports | pass |
+| ev-trace-precedes-script | test | tests/core/claim-diagnostics.test.js#precedes between two scripted deliveries is not verified and one the system produces is | supports | pass |
+| ev-trace-never-faultonly | test | tests/core/claim-diagnostics.test.js#a never over an occurrence only a faultOnly transition produces says it holds for fault-free runs | supports | pass |
+| ev-trace-constant-consequent | test | tests/core/claim-diagnostics.test.js#an implication with a constant consequent is not exercised | supports | pass |
 
 ## models-property-evaluated
 
@@ -1892,12 +1892,12 @@ The models property that links a check over the behavior model to a requirement 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-models-listed, ev-models-validated), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-models-listed" and "ev-models-validated" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-models-listed, ev-models-validated), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-models-listed and ev-models-validated: pass.
 
 **Holds only if**
 
@@ -1912,8 +1912,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-models-listed | test | tests/core/claim-diagnostics.test.js#a requirement shows the model claims that name it and their statuses | supports | none |
-| ev-models-validated | test | tests/core/claim-diagnostics.test.js#a models value that names a claim which is not a requirement is a validation error | supports | none |
+| ev-models-listed | test | tests/core/claim-diagnostics.test.js#a requirement shows the model claims that name it and their statuses | supports | pass |
+| ev-models-validated | test | tests/core/claim-diagnostics.test.js#a models value that names a claim which is not a requirement is a validation error | supports | pass |
 
 ## claim-parameters-always-validated
 
@@ -1921,12 +1921,12 @@ The checks of claims (parameters, scenarios, negatives, models) run even when an
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-validate-inert-negative, ev-validate-not-staged), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-validate-inert-negative" and "ev-validate-not-staged" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-validate-inert-negative, ev-validate-not-staged), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-validate-inert-negative and ev-validate-not-staged: pass.
 
 **Holds only if**
 
@@ -1941,8 +1941,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-validate-inert-negative | test | tests/core/claim-diagnostics.test.js#a negative whose fault targets a transition the scenario does not run is a warning | supports | none |
-| ev-validate-not-staged | test | tests/core/claim-diagnostics.test.js#claim-parameter errors are reported although another reference is unresolved | supports | none |
+| ev-validate-inert-negative | test | tests/core/claim-diagnostics.test.js#a negative whose fault targets a transition the scenario does not run is a warning | supports | pass |
+| ev-validate-not-staged | test | tests/core/claim-diagnostics.test.js#claim-parameter errors are reported although another reference is unresolved | supports | pass |
 
 ## own-behavioral-claims-falsifiable
 
@@ -1950,12 +1950,12 @@ Every behavioral claim of this specification declares a negative that violates i
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-own-claims-falsifiable), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-own-claims-falsifiable" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-own-claims-falsifiable), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-own-claims-falsifiable: pass.
 
 **Holds only if**
 
@@ -1971,7 +1971,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-own-claims-falsifiable | test | tests/core/claims.test.js#negatives: every behavioral claim of the exegra specification is verified with a violating negative | supports | none |
+| ev-own-claims-falsifiable | test | tests/core/claims.test.js#negatives: every behavioral claim of the exegra specification is verified with a violating negative | supports | pass |
 
 ## resource-queues-respect-bounds
 
@@ -2490,12 +2490,12 @@ simulationInput lowers distributions with integer arithmetic only: the exponenti
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-distribution-lowering), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-distribution-lowering" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-distribution-lowering), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-distribution-lowering: pass.
 
 **Holds only if**
 
@@ -2510,7 +2510,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-distribution-lowering | test | tests/core/distributions.test.js | supports | none |
+| ev-distribution-lowering | test | tests/core/distributions.test.js | supports | pass |
 
 ## poisson-arrivals-by-inversion
 
@@ -2622,12 +2622,12 @@ A never, precedes or eventually claim reported by exegra prove as holding has a 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-formal-explore-temporal), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-formal-explore-temporal" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-formal-explore-temporal), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-formal-explore-temporal: pass.
 
 **Holds only if**
 
@@ -2642,7 +2642,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-formal-explore-temporal | test | tests/core/formal-explore.test.js#temporal claims: eventually holds | supports | none |
+| ev-formal-explore-temporal | test | tests/core/formal-explore.test.js#temporal claims: eventually holds | supports | pass |
 
 ## metric-claims-in-specifications
 
@@ -2650,12 +2650,12 @@ A specification that declares resources, workloads, request classes and a format
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-metric-claims-in-specifications), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-metric-claims-in-specifications" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-metric-claims-in-specifications), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-metric-claims-in-specifications: pass.
 
 **Holds only if**
 
@@ -2669,7 +2669,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-metric-claims-in-specifications | test | tests/core/metric-spec.test.js | supports | none |
+| ev-metric-claims-in-specifications | test | tests/core/metric-spec.test.js | supports | pass |
 
 ## runtime-data-copies-fresh-and-related
 
@@ -3127,12 +3127,12 @@ The events a running Exegra really produces (requests and answers of the persist
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 9 evidence entities (ev-replay-recorded-stream-clean, ev-replay-wrong-order, ev-replay-unknown-event, ev-replay-missing-response, ev-replay-bound, ev-replay-payload, ev-replay-not-allowed, ev-replay-incremental, ev-live-browser), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-replay-recorded-stream-clean", "ev-replay-wrong-order", "ev-replay-unknown-event", "ev-replay-missing-response", "ev-replay-bound", "ev-replay-payload", "ev-replay-not-allowed", "ev-replay-incremental" and "ev-live-browser" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 9 evidence entities (ev-replay-recorded-stream-clean, ev-replay-wrong-order, ev-replay-unknown-event, ev-replay-missing-response, ev-replay-bound, ev-replay-payload, ev-replay-not-allowed, ev-replay-incremental, ev-live-browser), of which 9 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-replay-recorded-stream-clean, ev-replay-wrong-order, ev-replay-unknown-event, ev-replay-missing-response, ev-replay-bound, ev-replay-payload, ev-replay-not-allowed, ev-replay-incremental and ev-live-browser: pass.
 
 **Holds only if**
 
@@ -3148,15 +3148,15 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-replay-recorded-stream-clean | test | tests/core/replay.test.js#a recorded open edit and save replays through live-session without a divergence | supports | none |
-| ev-replay-wrong-order | test | tests/core/replay.test.js#an event in the wrong order is a divergence | supports | none |
-| ev-replay-unknown-event | test | tests/core/replay.test.js#an event the specification does not name is a divergence | supports | none |
-| ev-replay-missing-response | test | tests/core/replay.test.js#a predicted response that never comes is a divergence | supports | none |
-| ev-replay-bound | test | tests/core/replay.test.js#a predicted event not seen within the bound is missing even while the stream is open | supports | none |
-| ev-replay-payload | test | tests/core/replay.test.js#a recorded payload value that differs from the prediction is a divergence | supports | none |
-| ev-replay-not-allowed | test | tests/core/replay.test.js#a predicted event that no behavior consuming it accepts in its state is a divergence | supports | none |
-| ev-replay-incremental | test | tests/core/replay.test.js#the replay is incremental and deterministic | supports | none |
-| ev-live-browser | test | tests/browser/live.spec.js#live mode replays an edit and its save through the self-model on the right components without divergence | supports | none |
+| ev-replay-recorded-stream-clean | test | tests/core/replay.test.js#a recorded open edit and save replays through live-session without a divergence | supports | pass |
+| ev-replay-wrong-order | test | tests/core/replay.test.js#an event in the wrong order is a divergence | supports | pass |
+| ev-replay-unknown-event | test | tests/core/replay.test.js#an event the specification does not name is a divergence | supports | pass |
+| ev-replay-missing-response | test | tests/core/replay.test.js#a predicted response that never comes is a divergence | supports | pass |
+| ev-replay-bound | test | tests/core/replay.test.js#a predicted event not seen within the bound is missing even while the stream is open | supports | pass |
+| ev-replay-payload | test | tests/core/replay.test.js#a recorded payload value that differs from the prediction is a divergence | supports | pass |
+| ev-replay-not-allowed | test | tests/core/replay.test.js#a predicted event that no behavior consuming it accepts in its state is a divergence | supports | pass |
+| ev-replay-incremental | test | tests/core/replay.test.js#the replay is incremental and deterministic | supports | pass |
+| ev-live-browser | test | tests/browser/live.spec.js#live mode replays an edit and its save through the self-model on the right components without divergence | supports | pass |
 
 ## sim-cursor-stays-in-trace
 
@@ -3489,12 +3489,12 @@ Every durable store Exegra's code writes (the project files and journal of the w
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-runtime-data-complete), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-runtime-data-complete" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-runtime-data-complete), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-runtime-data-complete: pass.
 
 **Holds only if**
 
@@ -3509,7 +3509,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-runtime-data-complete | test | tests/core/runtime-data-complete.test.js | supports | none |
+| ev-runtime-data-complete | test | tests/core/runtime-data-complete.test.js | supports | pass |
 
 ## verify-reuses-fresh-outcomes-only
 
@@ -3517,12 +3517,12 @@ A verify run takes the outcome of a test evidence entry from a recorded test run
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-verify-reuses-fresh-outcomes), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-verify-reuses-fresh-outcomes" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-verify-reuses-fresh-outcomes), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-verify-reuses-fresh-outcomes: pass.
 
 **Holds only if**
 
@@ -3536,7 +3536,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-verify-reuses-fresh-outcomes | test | tests/core/outcome-reuse.test.js#outcomes are used only while the tree is the one they ran on | supports | none |
+| ev-verify-reuses-fresh-outcomes | test | tests/core/outcome-reuse.test.js#outcomes are used only while the tree is the one they ran on | supports | pass |
 
 ## verify-skip-records-not-run
 
@@ -3544,12 +3544,12 @@ A verify run in which a test evidence reference skipped (a matched test skipped 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-verify-skip-records-not-run, ev-skip-not-supporting), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-verify-skip-records-not-run" and "ev-skip-not-supporting" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-verify-skip-records-not-run, ev-skip-not-supporting), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-verify-skip-records-not-run and ev-skip-not-supporting: pass.
 
 **Holds only if**
 
@@ -3563,8 +3563,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-verify-skip-records-not-run | test | tests/core/cli.test.js#a skipped verify run records the evidence as not run instead of keeping an older pass | supports | none |
-| ev-skip-not-supporting | test | tests/core/fact-producers.test.js#a test that skipped now is recorded as not run and no older pass supports its claim | supports | none |
+| ev-verify-skip-records-not-run | test | tests/core/cli.test.js#a skipped verify run records the evidence as not run instead of keeping an older pass | supports | pass |
+| ev-skip-not-supporting | test | tests/core/fact-producers.test.js#a test that skipped now is recorded as not run and no older pass supports its claim | supports | pass |
 
 ## test-evidence-skip-aware
 
@@ -3572,12 +3572,12 @@ A test evidence reference passes only when at least one matched leaf test execut
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-skip-aware-fresh, ev-skip-aware-reuse, ev-skip-aware-whole-file), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-skip-aware-fresh", "ev-skip-aware-reuse" and "ev-skip-aware-whole-file" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-skip-aware-fresh, ev-skip-aware-reuse, ev-skip-aware-whole-file), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-skip-aware-fresh, ev-skip-aware-reuse and ev-skip-aware-whole-file: pass.
 
 **Holds only if**
 
@@ -3591,9 +3591,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-skip-aware-fresh | test | tests/core/fact-producers.test.js#a reference whose matched test skipped or is a todo is not a pass on the fresh path | supports | none |
-| ev-skip-aware-reuse | test | tests/core/fact-producers.test.js#a reference whose matched test skipped or is a todo is not a pass on the reuse path | supports | none |
-| ev-skip-aware-whole-file | test | tests/core/outcome-reuse.test.js#a whole-file reference to a file with a self-skipping test is not a pass | supports | none |
+| ev-skip-aware-fresh | test | tests/core/fact-producers.test.js#a reference whose matched test skipped or is a todo is not a pass on the fresh path | supports | pass |
+| ev-skip-aware-reuse | test | tests/core/fact-producers.test.js#a reference whose matched test skipped or is a todo is not a pass on the reuse path | supports | pass |
+| ev-skip-aware-whole-file | test | tests/core/outcome-reuse.test.js#a whole-file reference to a file with a self-skipping test is not a pass | supports | pass |
 
 ## recorded-results-read-stale-on-stamp-mismatch
 
@@ -3601,12 +3601,12 @@ exegra verify records every evidence result with the records stamp of the tree (
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-stale-evidence, ev-stale-external-tool, ev-records-stamp), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-stale-evidence", "ev-stale-external-tool" and "ev-records-stamp" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-stale-evidence, ev-stale-external-tool, ev-records-stamp), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-stale-evidence, ev-stale-external-tool and ev-records-stamp: pass.
 
 **Holds only if**
 
@@ -3620,9 +3620,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-stale-evidence | test | tests/core/fact-producers.test.js#a recorded result whose stamp is not the current stamp leaves its claim not evaluated as stale | supports | none |
-| ev-stale-external-tool | test | tests/core/fact-producers.test.js#an outcome an external tool recorded on another tree does not support its claim | supports | none |
-| ev-records-stamp | test | tests/core/fact-producers.test.js#the records stamp ignores the files Exegra writes from its results and the formal hash follows formal sources | supports | none |
+| ev-stale-evidence | test | tests/core/fact-producers.test.js#a recorded result whose stamp is not the current stamp leaves its claim not evaluated as stale | supports | pass |
+| ev-stale-external-tool | test | tests/core/fact-producers.test.js#an outcome an external tool recorded on another tree does not support its claim | supports | pass |
+| ev-records-stamp | test | tests/core/fact-producers.test.js#the records stamp ignores the files Exegra writes from its results and the formal hash follows formal sources | supports | pass |
 
 ## recorded-results-unverifiable-without-stamp
 
@@ -3630,12 +3630,12 @@ Where no current stamp can be computed (the application in the browser), a claim
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-unverifiable-freshness), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-unverifiable-freshness" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-unverifiable-freshness), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-unverifiable-freshness: pass.
 
 **Holds only if**
 
@@ -3649,7 +3649,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-unverifiable-freshness | test | tests/core/fact-producers.test.js#without a current stamp recorded results are reported with unverifiable freshness | supports | none |
+| ev-unverifiable-freshness | test | tests/core/fact-producers.test.js#without a current stamp recorded results are reported with unverifiable freshness | supports | pass |
 
 ## lean-theorem-requires-code-about
 
@@ -3657,12 +3657,12 @@ A lean-theorem claim is refused (violated) when it names no implementation const
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-lean-about-refusals), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-lean-about-refusals" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-lean-about-refusals), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-lean-about-refusals: pass.
 
 **Holds only if**
 
@@ -3676,7 +3676,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-lean-about-refusals | test | tests/core/fact-producers.test.js#the lean-theorem rule refuses a claim with no about list and an about constant that is not the code that runs | supports | none |
+| ev-lean-about-refusals | test | tests/core/fact-producers.test.js#the lean-theorem rule refuses a claim with no about list and an about constant that is not the code that runs | supports | pass |
 
 ## lean-theorem-records-stale-on-source-change
 
@@ -3684,12 +3684,12 @@ Each recorded Lean theorem check carries the hash of the formal/ sources it was 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-lean-stale-sources), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-lean-stale-sources" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-lean-stale-sources), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-lean-stale-sources: pass.
 
 **Holds only if**
 
@@ -3703,7 +3703,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-lean-stale-sources | test | tests/core/fact-producers.test.js#a recorded Lean check of other formal sources does not keep its claim proved | supports | none |
+| ev-lean-stale-sources | test | tests/core/fact-producers.test.js#a recorded Lean check of other formal sources does not keep its claim proved | supports | pass |
 
 ## metric-open-started-computed
 
@@ -3711,12 +3711,12 @@ A metric-bound claim leaves an underpowered run out only for a request class tha
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-metric-closed-violated, ev-metric-open-started-rule), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-metric-closed-violated" and "ev-metric-open-started-rule" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-metric-closed-violated, ev-metric-open-started-rule), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-metric-closed-violated and ev-metric-open-started-rule: pass.
 
 **Holds only if**
 
@@ -3730,8 +3730,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-metric-closed-violated | test | tests/core/fact-producers.test.js#a closed-workload class whose runs collapse reads violated: underpowered runs are kept and fail | supports | none |
-| ev-metric-open-started-rule | test | tests/core/fact-producers.test.js#open-startedness is computed from the workloads that can start the class | supports | none |
+| ev-metric-closed-violated | test | tests/core/fact-producers.test.js#a closed-workload class whose runs collapse reads violated: underpowered runs are kept and fail | supports | pass |
+| ev-metric-open-started-rule | test | tests/core/fact-producers.test.js#open-startedness is computed from the workloads that can start the class | supports | pass |
 
 ## admit-rejects-downgrades-and-removals
 
@@ -3739,12 +3739,12 @@ exegra admit ranks not-evaluated with inconclusive, so a claim that moves from a
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-admit-downgrades), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-admit-downgrades" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-admit-downgrades), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-admit-downgrades: pass.
 
 **Holds only if**
 
@@ -3758,7 +3758,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-admit-downgrades | test | tests/core/fact-producers.test.js#admit rejects a claim that falls to not evaluated and a positive claim that is removed | supports | none |
+| ev-admit-downgrades | test | tests/core/fact-producers.test.js#admit rejects a claim that falls to not evaluated and a positive claim that is removed | supports | pass |
 
 ## verify-fails-on-regression
 
@@ -3766,12 +3766,12 @@ exegra verify records, with each passing run, every claim's status and the finge
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-verify-regressions), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-verify-regressions" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-verify-regressions), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-verify-regressions: pass.
 
 **Holds only if**
 
@@ -3785,7 +3785,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-verify-regressions | test | tests/core/fact-producers.test.js#verify fails on a fall from a positive status a removal and a changed counterexample of an expected violation | supports | none |
+| ev-verify-regressions | test | tests/core/fact-producers.test.js#verify fails on a fall from a positive status a removal and a changed counterexample of an expected violation | supports | pass |
 
 ## journal-failure-reported
 
@@ -3793,12 +3793,12 @@ When a spec or layout write replaces its file but the journal line cannot be app
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-journal-append-failure), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-journal-append-failure" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-journal-append-failure), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-journal-append-failure: pass.
 
 **Holds only if**
 
@@ -3812,7 +3812,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-journal-append-failure | test | tests/core/workspace.test.js#a journal line that cannot be appended is reported and the file write still stands | supports | none |
+| ev-journal-append-failure | test | tests/core/workspace.test.js#a journal line that cannot be appended is reported and the file write still stands | supports | pass |
 
 ## changes-panel-pairs-by-revision
 
@@ -3820,12 +3820,12 @@ The changes panel pairs each history entry with the log entry of its own commit,
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-changes-pairing-by-revision), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-changes-pairing-by-revision" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-changes-pairing-by-revision), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-changes-pairing-by-revision: pass.
 
 **Holds only if**
 
@@ -3839,7 +3839,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-changes-pairing-by-revision | test | tests/core/activity-pairing.test.js | supports | none |
+| ev-changes-pairing-by-revision | test | tests/core/activity-pairing.test.js | supports | pass |
 
 ## traffic-stream-bounded-and-logical
 
@@ -3847,12 +3847,12 @@ The traffic recorder keeps at most 5000 events, numbers them with strictly incre
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-traffic-bounded, ev-traffic-live-seq), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-traffic-bounded" and "ev-traffic-live-seq" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-traffic-bounded, ev-traffic-live-seq), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-traffic-bounded and ev-traffic-live-seq: pass.
 
 **Holds only if**
 
@@ -3868,8 +3868,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-traffic-bounded | test | tests/core/traffic.test.js#the recorder keeps a bounded stream with logical sequence numbers and keeps wall-clock times out of the replay | supports | none |
-| ev-traffic-live-seq | test | tests/browser/live.spec.js#live mode replays an edit and its save through the self-model on the right components without divergence | supports | none |
+| ev-traffic-bounded | test | tests/core/traffic.test.js#the recorder keeps a bounded stream with logical sequence numbers and keeps wall-clock times out of the replay | supports | pass |
+| ev-traffic-live-seq | test | tests/browser/live.spec.js#live mode replays an edit and its save through the self-model on the right components without divergence | supports | pass |
 
 ## traffic-producers-name-spec-events
 
@@ -3877,12 +3877,12 @@ The producers record the events of this specification where its event descriptio
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-traffic-server-events, ev-traffic-engine-runner, ev-traffic-sha256, ev-traffic-browser-producers), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-traffic-server-events", "ev-traffic-engine-runner", "ev-traffic-sha256" and "ev-traffic-browser-producers" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-traffic-server-events, ev-traffic-engine-runner, ev-traffic-sha256, ev-traffic-browser-producers), of which 4 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-traffic-server-events, ev-traffic-engine-runner, ev-traffic-sha256 and ev-traffic-browser-producers: pass.
 
 **Holds only if**
 
@@ -3898,10 +3898,10 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-traffic-server-events | test | tests/core/traffic.test.js#the development server returns its own events with each answer stamped with the request id | supports | none |
-| ev-traffic-engine-runner | test | tests/core/traffic.test.js#the engine runner records the worker messages with the scenario standing for input and trace | supports | none |
-| ev-traffic-sha256 | test | tests/core/traffic.test.js#sha256Hex agrees with the workspace hash | supports | none |
-| ev-traffic-browser-producers | test | tests/browser/live.spec.js#live mode replays an edit and its save through the self-model on the right components without divergence | supports | none |
+| ev-traffic-server-events | test | tests/core/traffic.test.js#the development server returns its own events with each answer stamped with the request id | supports | pass |
+| ev-traffic-engine-runner | test | tests/core/traffic.test.js#the engine runner records the worker messages with the scenario standing for input and trace | supports | pass |
+| ev-traffic-sha256 | test | tests/core/traffic.test.js#sha256Hex agrees with the workspace hash | supports | pass |
+| ev-traffic-browser-producers | test | tests/browser/live.spec.js#live mode replays an edit and its save through the self-model on the right components without divergence | supports | pass |
 
 ## evidence-refs-validated-before-verify
 
@@ -3909,12 +3909,12 @@ A test evidence reference that exegra verify would refuse as unsafe is reported 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-evidence-ref-rule), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-evidence-ref-rule" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-evidence-ref-rule), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-evidence-ref-rule: pass.
 
 **Holds only if**
 
@@ -3928,7 +3928,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-evidence-ref-rule | test | tests/core/model.test.js#test evidence references: an unsafe one is a validation error | supports | none |
+| ev-evidence-ref-rule | test | tests/core/model.test.js#test evidence references: an unsafe one is a validation error | supports | pass |
 
 ## engine-run-terminates-proved
 
@@ -3940,7 +3940,7 @@ Every run of an engine input that the engine accepts stops: its outcome is never
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.runInput_terminates", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.runInput".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.runInput_terminates" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.runInput (statement hash 5e6e66113388).
 
 **Holds only if**
@@ -3970,7 +3970,7 @@ The engine the JavaScript shell calls (engine.run at the Lean call boundary) is 
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Api.runAny_eq_parse_call", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.runAny", "Exegra.Api.call".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Api.runAny_eq_parse_call" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.runAny, Exegra.Api.call (statement hash 150e7c0d4c80).
 
 **Holds only if**
@@ -4000,7 +4000,7 @@ No two functions registered at the Lean call boundary share a name, so a name se
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Api.registry_names_nodup", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Api.registry".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Api.registry_names_nodup" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Api.registry (statement hash 48c2ad40ac81).
 
 **Holds only if**
@@ -4021,12 +4021,12 @@ Every call through the Lean call boundary returns a reply: an unknown function, 
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-lean-boundary), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-lean-boundary" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-lean-boundary), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-lean-boundary: pass.
 
 **Holds only if**
 
@@ -4041,7 +4041,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-lean-boundary | test | tests/core/lean.test.js | supports | none |
+| ev-lean-boundary | test | tests/core/lean.test.js | supports | pass |
 
 ## concordance-results-are-evidence
 
@@ -4049,12 +4049,12 @@ A linked project's Concordance results (concordanceResults in project.jsonc) bec
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 8 evidence entities (ev-concordance-pass, ev-concordance-fail, ev-concordance-absent, ev-concordance-diagnostics, ev-concordance-unknown-claim, ev-concordance-unconfigured, ev-concordance-directory, ev-concordance-watched), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-concordance-pass", "ev-concordance-fail", "ev-concordance-absent", "ev-concordance-diagnostics", "ev-concordance-unknown-claim", "ev-concordance-unconfigured", "ev-concordance-directory" and "ev-concordance-watched" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 8 evidence entities (ev-concordance-pass, ev-concordance-fail, ev-concordance-absent, ev-concordance-diagnostics, ev-concordance-unknown-claim, ev-concordance-unconfigured, ev-concordance-directory, ev-concordance-watched), of which 8 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-concordance-pass, ev-concordance-fail, ev-concordance-absent, ev-concordance-diagnostics, ev-concordance-unknown-claim, ev-concordance-unconfigured, ev-concordance-directory and ev-concordance-watched: pass.
 
 **Holds only if**
 
@@ -4068,14 +4068,14 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-concordance-pass | test | tests/core/concordance.test.js#a Concordance pass makes a requirement supported | supports | none |
-| ev-concordance-fail | test | tests/core/concordance.test.js#a Concordance fail makes a requirement violated | supports | none |
-| ev-concordance-absent | test | tests/core/concordance.test.js#a claim without a Concordance entry stays not evaluated | supports | none |
-| ev-concordance-diagnostics | test | tests/core/concordance.test.js#a Concordance file for another tool or specification changes nothing | supports | none |
-| ev-concordance-unknown-claim | test | tests/core/concordance.test.js#an unknown claim id is a warning and the other entries still apply | supports | none |
-| ev-concordance-unconfigured | test | tests/core/concordance.test.js#a project without concordanceResults is unchanged | supports | none |
-| ev-concordance-directory | test | tests/core/concordance.test.js#a results path that is a directory is a warning and not a load failure | supports | none |
-| ev-concordance-watched | test | tests/core/concordance.test.js#watching a project reports a change to its Concordance results file as a change of the recorded results | supports | none |
+| ev-concordance-pass | test | tests/core/concordance.test.js#a Concordance pass makes a requirement supported | supports | pass |
+| ev-concordance-fail | test | tests/core/concordance.test.js#a Concordance fail makes a requirement violated | supports | pass |
+| ev-concordance-absent | test | tests/core/concordance.test.js#a claim without a Concordance entry stays not evaluated | supports | pass |
+| ev-concordance-diagnostics | test | tests/core/concordance.test.js#a Concordance file for another tool or specification changes nothing | supports | pass |
+| ev-concordance-unknown-claim | test | tests/core/concordance.test.js#an unknown claim id is a warning and the other entries still apply | supports | pass |
+| ev-concordance-unconfigured | test | tests/core/concordance.test.js#a project without concordanceResults is unchanged | supports | pass |
+| ev-concordance-directory | test | tests/core/concordance.test.js#a results path that is a directory is a warning and not a load failure | supports | pass |
+| ev-concordance-watched | test | tests/core/concordance.test.js#watching a project reports a change to its Concordance results file as a change of the recorded results | supports | pass |
 
 ## pages-site-published-from-main
 
@@ -4083,12 +4083,12 @@ The Pages workflow file .github/workflows/pages.yml is triggered by a push to ma
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-pages-relative-base, ev-pages-on-push-to-main, ev-pages-validate-before-deploy, ev-pages-mutants-refused), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-pages-relative-base", "ev-pages-on-push-to-main", "ev-pages-validate-before-deploy" and "ev-pages-mutants-refused" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-pages-relative-base, ev-pages-on-push-to-main, ev-pages-validate-before-deploy, ev-pages-mutants-refused), of which 4 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-pages-relative-base, ev-pages-on-push-to-main, ev-pages-validate-before-deploy and ev-pages-mutants-refused: pass.
 
 **Holds only if**
 
@@ -4102,10 +4102,10 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-pages-relative-base | test | tests/core/pages-site.test.js#the production build uses relative asset URLs so it loads under a sub-path | supports | none |
-| ev-pages-on-push-to-main | test | tests/core/pages-site.test.js#the Pages workflow is triggered by a push to main with no path or tag filter and may deploy to Pages | supports | none |
-| ev-pages-validate-before-deploy | test | tests/core/pages-site.test.js#the Pages workflow builds the Lean core and validates the specification before it builds and deploys dist | supports | none |
-| ev-pages-mutants-refused | test | tests/core/pages-site.test.js#the workflow checks fail on each of the five publishing mutants | supports | none |
+| ev-pages-relative-base | test | tests/core/pages-site.test.js#the production build uses relative asset URLs so it loads under a sub-path | supports | pass |
+| ev-pages-on-push-to-main | test | tests/core/pages-site.test.js#the Pages workflow is triggered by a push to main with no path or tag filter and may deploy to Pages | supports | pass |
+| ev-pages-validate-before-deploy | test | tests/core/pages-site.test.js#the Pages workflow builds the Lean core and validates the specification before it builds and deploys dist | supports | pass |
+| ev-pages-mutants-refused | test | tests/core/pages-site.test.js#the workflow checks fail on each of the five publishing mutants | supports | pass |
 
 ## lts-safe-of-inductive
 
@@ -4117,7 +4117,7 @@ An inductive invariant that implies P proves that P holds in every reachable sta
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.LTS.safe_of_inductive", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Core.LTS.Invariant", "Exegra.Core.LTS.Inductive".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.LTS.safe_of_inductive" is a theorem; the Lean kernel accepted its proof again; it depends only on no axiom; its statement is about Exegra.Core.LTS.Invariant, Exegra.Core.LTS.Inductive (statement hash 9ecdc22d8e23).
 
 **Holds only if**
@@ -4142,7 +4142,7 @@ For every depth k there is a guarded-command program in which a property holds i
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.Examples.bounded_not_unbounded", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Core.LTS.BoundedInvariant", "Exegra.Core.LTS.Invariant".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.Examples.bounded_not_unbounded" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Quot.sound; its statement is about Exegra.Core.LTS.BoundedInvariant, Exegra.Core.LTS.Invariant (statement hash a6937c877885).
 
 **Holds only if**
@@ -4167,7 +4167,7 @@ A labelled transition system with no initial state has every predicate as an inv
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.LTS.invariant_of_no_init", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Core.LTS.Invariant", "Exegra.Core.LTS.NonVacuous".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.LTS.invariant_of_no_init" is a theorem; the Lean kernel accepted its proof again; it depends only on no axiom; its statement is about Exegra.Core.LTS.Invariant, Exegra.Core.LTS.NonVacuous (statement hash fc4c0351bbfe).
 
 **Holds only if**
@@ -4192,7 +4192,7 @@ When the generic search reports holds on a search system that covers a labelled 
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.LTS.invariant_of_search", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Gen.search", "Exegra.Core.LTS.Invariant".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.LTS.invariant_of_search" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Gen.search, Exegra.Core.LTS.Invariant (statement hash 616ec4ea82e1).
 
 **Holds only if**
@@ -4217,7 +4217,7 @@ The guarded-command counter with guard n < L and effect n := n + 1 never exceeds
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.Examples.counter_le", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Core.Prog.lts".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.Examples.counter_le" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Quot.sound; its statement is about Exegra.Core.Prog.lts (statement hash 72c52cd53224).
 
 **Holds only if**
@@ -4242,7 +4242,7 @@ In the behaviour calculus, when the winners of a step are on distinct machines a
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.Behav.phase2_perm", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Core.Behav.phase2".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.Behav.phase2_perm" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Quot.sound; its statement is about Exegra.Core.Behav.phase2 (statement hash 051ab517f911).
 
 **Holds only if**
@@ -4267,7 +4267,7 @@ In the behaviour calculus, two machines reacting to one event at time 0, a setti
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.Behav.Examples.f4_ab_safe", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Core.Behav.Sys.lts", "Exegra.Core.Behav.Examples.f4AB", "Exegra.Core.LTS.Invariant".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.Behav.Examples.f4_ab_safe" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Quot.sound; its statement is about Exegra.Core.Behav.Sys.lts, Exegra.Core.Behav.Examples.f4AB, Exegra.Core.LTS.Invariant (statement hash eaf6600375d7).
 
 **Holds only if**
@@ -4292,7 +4292,7 @@ In the behaviour calculus, the same two machines listed b first also keep y = 0 
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.Behav.Examples.f4_ba_safe", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Core.Behav.Sys.lts", "Exegra.Core.Behav.Examples.f4BA", "Exegra.Core.LTS.Invariant".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.Behav.Examples.f4_ba_safe" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Quot.sound; its statement is about Exegra.Core.Behav.Sys.lts, Exegra.Core.Behav.Examples.f4BA, Exegra.Core.LTS.Invariant (statement hash 4c979bc16cc1).
 
 **Holds only if**
@@ -4317,7 +4317,7 @@ In the calculus's model of today's next-configuration rule (deliverNext, whose p
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.Behav.Examples.f4_next_reads_differ", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Core.Behav.deliverNext", "Exegra.Core.Behav.Examples.f4AB", "Exegra.Core.Behav.Examples.f4BA".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.Behav.Examples.f4_next_reads_differ" is a theorem; the Lean kernel accepted its proof again; it depends only on propext; its statement is about Exegra.Core.Behav.deliverNext, Exegra.Core.Behav.Examples.f4AB, Exegra.Core.Behav.Examples.f4BA (statement hash a7cc28511da5).
 
 **Holds only if**
@@ -4342,7 +4342,7 @@ In the behaviour calculus a delivery whose guard divides by zero leads to the er
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.Behav.Examples.divZero_counterexample", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Core.Behav.Sys.lts", "Exegra.Core.LTS.Invariant".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.Behav.Examples.divZero_counterexample" is a theorem; the Lean kernel accepted its proof again; it depends only on propext; its statement is about Exegra.Core.Behav.Sys.lts, Exegra.Core.LTS.Invariant (statement hash 100709e52062).
 
 **Holds only if**
@@ -4416,12 +4416,12 @@ The Lean core, compiled to WebAssembly (wasm64), runs in the application page an
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-lean-core-browser), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-lean-core-browser" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-lean-core-browser), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-lean-core-browser: pass.
 
 **Holds only if**
 
@@ -4436,7 +4436,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-lean-core-browser | test | tests/browser/lean-core.spec.js | supports | none |
+| ev-lean-core-browser | test | tests/browser/lean-core.spec.js | supports | pass |
 
 ## engine-run-refines-definition
 
@@ -4448,7 +4448,7 @@ The engine the application runs (Exegra.Impl.runAnyValue, registered as engine.r
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Impl.runAnyValue_eq", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Impl.runAnyValue", "Exegra.runAnyValue".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Impl.runAnyValue_eq" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Impl.runAnyValue, Exegra.runAnyValue (statement hash 508b5b40df89).
 
 **Holds only if**
@@ -4478,7 +4478,7 @@ A call of engine.run at the Lean call boundary computes the definition of the se
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Api.call_engine_run_spec", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Api.call", "Exegra.runAnyValue".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Api.call_engine_run_spec" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Api.call, Exegra.runAnyValue (statement hash 9e85bb293222).
 
 **Holds only if**
@@ -4508,7 +4508,7 @@ The in-place JSON writer the engine writes traces with (Exegra.Impl.JsonOut.writ
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Impl.JsonOut.write'_eq", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Impl.JsonOut.write'", "Exegra.Json.write".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Impl.JsonOut.write'_eq" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Impl.JsonOut.write', Exegra.Json.write (statement hash d0921556adc2).
 
 **Holds only if**
@@ -4530,12 +4530,12 @@ The register importer writes nothing unless the Markdown file rebuilds line for 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-register-import-coverage, ev-register-import-lost-cell), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-register-import-coverage" and "ev-register-import-lost-cell" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-register-import-coverage, ev-register-import-lost-cell), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-register-import-coverage and ev-register-import-lost-cell: pass.
 
 **Holds only if**
 
@@ -4550,8 +4550,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-register-import-coverage | test | tests/core/import-register.test.js#the fixture imports and validates and rebuilds line for line | supports | none |
-| ev-register-import-lost-cell | test | tests/core/import-register.test.js#a row that does not render back fails the import | supports | none |
+| ev-register-import-coverage | test | tests/core/import-register.test.js#the fixture imports and validates and rebuilds line for line | supports | pass |
+| ev-register-import-lost-cell | test | tests/core/import-register.test.js#a row that does not render back fails the import | supports | pass |
 
 ## register-import-entities-cite-source
 
@@ -4559,12 +4559,12 @@ Every document, section, table and row entity the register importer writes carri
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-register-import-sources), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-register-import-sources" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-register-import-sources), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-register-import-sources: pass.
 
 **Holds only if**
 
@@ -4579,7 +4579,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-register-import-sources | test | tests/core/import-register.test.js#every imported entity names its source line | supports | none |
+| ev-register-import-sources | test | tests/core/import-register.test.js#every imported entity names its source line | supports | pass |
 
 ## register-import-drafts-are-marked
 
@@ -4587,12 +4587,12 @@ Every entity the register importer takes from a draft fragment carries origin "d
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-register-import-drafts), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-register-import-drafts" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-register-import-drafts), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-register-import-drafts: pass.
 
 **Holds only if**
 
@@ -4607,7 +4607,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-register-import-drafts | test | tests/core/import-register.test.js#a draft fragment is merged with origin and source and a checked basis | supports | none |
+| ev-register-import-drafts | test | tests/core/import-register.test.js#a draft fragment is merged with origin and source and a checked basis | supports | pass |
 
 ## register-import-respects-authority
 
@@ -4615,12 +4615,12 @@ When the import map says the JSONC is the authority, the register importer write
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-register-import-authority), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-register-import-authority" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-register-import-authority), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-register-import-authority: pass.
 
 **Holds only if**
 
@@ -4635,7 +4635,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-register-import-authority | test | tests/core/import-register.test.js#a map whose JSONC is the authority refuses to import and render needs only the JSONC | supports | none |
+| ev-register-import-authority | test | tests/core/import-register.test.js#a map whose JSONC is the authority refuses to import and render needs only the JSONC | supports | pass |
 
 ## realisation-roots-traced
 
@@ -4643,12 +4643,12 @@ When project.jsonc declares realisation roots, traceability checks each module w
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-external-traceability), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-external-traceability" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-external-traceability), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-external-traceability: pass.
 
 **Holds only if**
 
@@ -4663,7 +4663,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-external-traceability | test | tests/core/external-realisation.test.js#traceability | supports | none |
+| ev-external-traceability | test | tests/core/external-realisation.test.js#traceability | supports | pass |
 
 ## external-not-run-distinct-from-fail
 
@@ -4671,12 +4671,12 @@ External test evidence is recorded as fail only when a matched JUnit test case r
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-external-junit), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-external-junit" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-external-junit), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-external-junit: pass.
 
 **Holds only if**
 
@@ -4691,7 +4691,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-external-junit | test | tests/core/external-realisation.test.js#junit | supports | none |
+| ev-external-junit | test | tests/core/external-realisation.test.js#junit | supports | pass |
 
 ## integrity-rules-evaluated
 
@@ -4699,12 +4699,12 @@ Integrity rules are part of the specification and are evaluated on every model: 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-integrity-core), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-integrity-core" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-integrity-core), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-integrity-core: pass.
 
 **Holds only if**
 
@@ -4719,7 +4719,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-integrity-core | test | tests/core/integrity.test.js | supports | none |
+| ev-integrity-core | test | tests/core/integrity.test.js | supports | pass |
 
 ## integrity-ratchet-on-apply
 
@@ -4727,12 +4727,12 @@ A transaction that adds a violation of an integrity rule of severity error is re
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-integrity-ratchet), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-integrity-ratchet" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-integrity-ratchet), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-integrity-ratchet: pass.
 
 **Holds only if**
 
@@ -4747,7 +4747,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-integrity-ratchet | test | tests/core/integrity.test.js#the ratchet | supports | none |
+| ev-integrity-ratchet | test | tests/core/integrity.test.js#the ratchet | supports | pass |
 
 ## integrity-proved-in-lean
 
@@ -4755,12 +4755,12 @@ exegra prove-integrity establishes a rule that holds by a kernel-checked proof b
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-integrity-lean), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-integrity-lean" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-integrity-lean), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-integrity-lean: pass.
 
 **Holds only if**
 
@@ -4775,7 +4775,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-integrity-lean | test | tests/core/formal-integrity.test.js | supports | none |
+| ev-integrity-lean | test | tests/core/formal-integrity.test.js | supports | pass |
 
 ## reader-pages-come-from-model
 
@@ -4783,12 +4783,12 @@ A reader page is derived from the model and its view alone: every row, count and
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 5 evidence entities (ev-reader-counts, ev-reader-table, ev-reader-list, ev-reader-sections, ev-reader-default), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-reader-counts", "ev-reader-table", "ev-reader-list", "ev-reader-sections" and "ev-reader-default" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 5 evidence entities (ev-reader-counts, ev-reader-table, ev-reader-list, ev-reader-sections, ev-reader-default), of which 5 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-reader-counts, ev-reader-table, ev-reader-list, ev-reader-sections and ev-reader-default: pass.
 
 **Holds only if**
 
@@ -4803,11 +4803,11 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-reader-counts | test | tests/core/reader.test.js#counts classify text and group by a reference | supports | none |
-| ev-reader-table | test | tests/core/reader.test.js#a table groups and classifies rows with links and facets | supports | none |
-| ev-reader-list | test | tests/core/reader.test.js#a list honours where and marks rows hidden until asked | supports | none |
-| ev-reader-sections | test | tests/core/reader.test.js#section bodies split into prose and the tables their markers place | supports | none |
-| ev-reader-default | test | tests/core/reader.test.js#a view without blocks reads the system and its kinds and its document | supports | none |
+| ev-reader-counts | test | tests/core/reader.test.js#counts classify text and group by a reference | supports | pass |
+| ev-reader-table | test | tests/core/reader.test.js#a table groups and classifies rows with links and facets | supports | pass |
+| ev-reader-list | test | tests/core/reader.test.js#a list honours where and marks rows hidden until asked | supports | pass |
+| ev-reader-sections | test | tests/core/reader.test.js#section bodies split into prose and the tables their markers place | supports | pass |
+| ev-reader-default | test | tests/core/reader.test.js#a view without blocks reads the system and its kinds and its document | supports | pass |
 
 ## reader-blocks-validated
 
@@ -4815,12 +4815,12 @@ A reader block carrying a field the meta-model does not define is refused with a
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-reader-unknown-field), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-reader-unknown-field" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-reader-unknown-field), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-reader-unknown-field: pass.
 
 **Holds only if**
 
@@ -4835,7 +4835,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-reader-unknown-field | test | tests/core/reader.test.js#unknown fields in a reader block are refused | supports | none |
+| ev-reader-unknown-field | test | tests/core/reader.test.js#unknown fields in a reader block are refused | supports | pass |
 
 ## reader-links-select-through-session
 
@@ -4843,12 +4843,12 @@ The reader surface replaces the scene only while the current view uses the reade
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-reader-browser-select, ev-reader-browser-edit), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-reader-browser-select" and "ev-reader-browser-edit" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-reader-browser-select, ev-reader-browser-edit), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-reader-browser-select and ev-reader-browser-edit: pass.
 
 **Holds only if**
 
@@ -4864,8 +4864,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-reader-browser-select | test | tests/browser/reader.spec.js#reader view replaces the scene and its links select entities | supports | none |
-| ev-reader-browser-edit | test | tests/browser/reader.spec.js#reader page follows an edit of the model | supports | none |
+| ev-reader-browser-select | test | tests/browser/reader.spec.js#reader view replaces the scene and its links select entities | supports | pass |
+| ev-reader-browser-edit | test | tests/browser/reader.spec.js#reader page follows an edit of the model | supports | pass |
 
 ## semantic-hash-ignores-presentation
 
@@ -4877,7 +4877,7 @@ The semantic hash of a model depends only on its schema version, its vocabulary 
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Model.Model.semanticHash_presentation", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Model.Model.semanticHash".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Model.Model.semanticHash_presentation" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Model.Model.semanticHash (statement hash 5f84186c2669).
 
 **Holds only if**
@@ -4907,7 +4907,7 @@ Reordering the members of objects, at every depth, in the vocabulary and in the 
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Hash.semanticHash_key_order", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Hash.semanticHash".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Hash.semanticHash_key_order" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Hash.semanticHash (statement hash 8f69a8dd29b1).
 
 **Holds only if**
@@ -4937,7 +4937,7 @@ The semantic hash that runs (Exegra.Hash.semanticHash': keys converted once for 
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Hash.semanticHash'_eq", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Hash.semanticHash'", "Exegra.Hash.semanticHash".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Hash.semanticHash'_eq" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Hash.semanticHash', Exegra.Hash.semanticHash (statement hash 3b771bbcefd3).
 
 **Holds only if**
@@ -4967,7 +4967,7 @@ A call of hash.semantic at the Lean call boundary returns the definition of the 
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Api.call_hash_semantic", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Api.call", "Exegra.Hash.semanticHash".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Api.call_hash_semantic" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Api.call, Exegra.Hash.semanticHash (statement hash 42bf8ac58777).
 
 **Holds only if**
@@ -4997,7 +4997,7 @@ In a derived model whose diagnostics contain no reference diagnostic (ref.unreso
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Model.derive_refs_resolve", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Model.derive".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Model.derive_refs_resolve" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Model.derive (statement hash 0014f9251492).
 
 **Holds only if**
@@ -5027,7 +5027,7 @@ Model derivation at the Lean call boundary (model.derive) answers every argument
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Api.call_model_derive_total", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Api.call".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Api.call_model_derive_total" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Api.call (statement hash 296c43e0b096).
 
 **Holds only if**
@@ -5053,12 +5053,12 @@ The Lean model derivation and semantic hash give the diagnostics, model and hash
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-model-kernel-corpus, ev-model-kernel-cases, ev-model-kernel-edges), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-model-kernel-corpus", "ev-model-kernel-cases" and "ev-model-kernel-edges" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-model-kernel-corpus, ev-model-kernel-cases, ev-model-kernel-edges), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-model-kernel-corpus, ev-model-kernel-cases and ev-model-kernel-edges: pass.
 
 **Holds only if**
 
@@ -5077,9 +5077,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-model-kernel-corpus | test | tests/core/model-kernel.test.js#the specifications and fixtures the tests read derive identically | supports | none |
-| ev-model-kernel-cases | test | tests/core/model-kernel.test.js#every specification text the core tests parse derives identically | supports | none |
-| ev-model-kernel-edges | test | tests/core/model-kernel.test.js#edge cases derive identically | supports | none |
+| ev-model-kernel-corpus | test | tests/core/model-kernel.test.js#the specifications and fixtures the tests read derive identically | supports | pass |
+| ev-model-kernel-cases | test | tests/core/model-kernel.test.js#every specification text the core tests parse derives identically | supports | pass |
+| ev-model-kernel-edges | test | tests/core/model-kernel.test.js#edge cases derive identically | supports | pass |
 
 ## app-and-cli-run-lean-engine-only
 
@@ -5112,12 +5112,12 @@ Every function the interface offers on a desktop (switching project and view, se
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-browser-phone-every-function), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-browser-phone-every-function" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-browser-phone-every-function), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-browser-phone-every-function: pass.
 
 **Holds only if**
 
@@ -5132,7 +5132,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-browser-phone-every-function | test | tests/browser/mobile.spec.js#every function is reachable by touch on a phone | supports | none |
+| ev-browser-phone-every-function | test | tests/browser/mobile.spec.js#every function is reachable by touch on a phone | supports | pass |
 
 ## implementation-machine-readiness-rules
 
@@ -5140,12 +5140,12 @@ A behavior declared with level "implementation" is reported with an error for ea
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 12 evidence entities (ev-readiness-rules, ev-readiness-fixed, ev-readiness-model-level, ev-readiness-shipped-projects, ev-readiness-storage-alone, ev-readiness-storedin-alone, ev-readiness-stateless-exempt, ev-readiness-non-creating, ev-readiness-storage-defaults, ev-readiness-field-fit, ev-storage-key-whole, ev-storage-key-whole-list), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-readiness-rules", "ev-readiness-fixed", "ev-readiness-model-level", "ev-readiness-storage-alone", "ev-readiness-storedin-alone", "ev-readiness-stateless-exempt", "ev-readiness-non-creating", "ev-readiness-storage-defaults", "ev-readiness-field-fit", "ev-storage-key-whole" and "ev-storage-key-whole-list" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 12 evidence entities (ev-readiness-rules, ev-readiness-fixed, ev-readiness-model-level, ev-readiness-shipped-projects, ev-readiness-storage-alone, ev-readiness-storedin-alone, ev-readiness-stateless-exempt, ev-readiness-non-creating, ev-readiness-storage-defaults, ev-readiness-field-fit, ev-storage-key-whole, ev-storage-key-whole-list), of which 11 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-readiness-rules, ev-readiness-fixed, ev-readiness-model-level, ev-readiness-storage-alone, ev-readiness-storedin-alone, ev-readiness-stateless-exempt, ev-readiness-non-creating, ev-readiness-storage-defaults, ev-readiness-field-fit, ev-storage-key-whole and ev-storage-key-whole-list: pass. Test evidence "ev-readiness-shipped-projects" has no recorded result.
 
 **Holds only if**
 
@@ -5160,18 +5160,18 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-readiness-rules | test | tests/core/readiness-machines.test.js#readiness rule ready | supports | none |
-| ev-readiness-fixed | test | tests/core/readiness-machines.test.js#the fixed implementation-level machine has no readiness diagnostic and no error | supports | none |
-| ev-readiness-model-level | test | tests/core/readiness-machines.test.js#a model-level behavior is not held to the machine rules | supports | none |
+| ev-readiness-rules | test | tests/core/readiness-machines.test.js#readiness rule ready | supports | pass |
+| ev-readiness-fixed | test | tests/core/readiness-machines.test.js#the fixed implementation-level machine has no readiness diagnostic and no error | supports | pass |
+| ev-readiness-model-level | test | tests/core/readiness-machines.test.js#a model-level behavior is not held to the machine rules | supports | pass |
 | ev-readiness-shipped-projects | test | tests/core/readiness-machines.test.js#the exegra and strata projects have no implementation-level machine and so no readiness diagnostic | supports | none |
-| ev-readiness-storage-alone | test | tests/core/readiness-machines.test.js#storage alone | supports | none |
-| ev-readiness-storedin-alone | test | tests/core/readiness-machines.test.js#instances.storedIn alone still says where a keyed implementation machine is held | supports | none |
-| ev-readiness-stateless-exempt | test | tests/core/readiness-machines.test.js#a stateless implementation machine with one state and no variables needs no storage and one with two states does | supports | none |
-| ev-readiness-non-creating | test | tests/core/readiness-machines.test.js#a non-creating machine leaves the required fields it does not hold to whoever creates the record | supports | none |
-| ev-readiness-storage-defaults | test | tests/core/readiness-machines.test.js#storage fields default to the field of the variable name | supports | none |
-| ev-readiness-field-fit | test | tests/core/readiness-machines.test.js#a variable fits a field of its repr | supports | none |
-| ev-storage-key-whole | test | tests/core/readiness-machines.test.js#rule storage.key-whole | supports | none |
-| ev-storage-key-whole-list | test | tests/core/readiness-machines.test.js#storage.key-whole accepts the list | supports | none |
+| ev-readiness-storage-alone | test | tests/core/readiness-machines.test.js#storage alone | supports | pass |
+| ev-readiness-storedin-alone | test | tests/core/readiness-machines.test.js#instances.storedIn alone still says where a keyed implementation machine is held | supports | pass |
+| ev-readiness-stateless-exempt | test | tests/core/readiness-machines.test.js#a stateless implementation machine with one state and no variables needs no storage and one with two states does | supports | pass |
+| ev-readiness-non-creating | test | tests/core/readiness-machines.test.js#a non-creating machine leaves the required fields it does not hold to whoever creates the record | supports | pass |
+| ev-readiness-storage-defaults | test | tests/core/readiness-machines.test.js#storage fields default to the field of the variable name | supports | pass |
+| ev-readiness-field-fit | test | tests/core/readiness-machines.test.js#a variable fits a field of its repr | supports | pass |
+| ev-storage-key-whole | test | tests/core/readiness-machines.test.js#rule storage.key-whole | supports | pass |
+| ev-storage-key-whole-list | test | tests/core/readiness-machines.test.js#storage.key-whole accepts the list | supports | pass |
 
 ## implementation-properties-declarative
 
@@ -5179,12 +5179,12 @@ The implementation-level properties (level, instances.storedIn, delivery, elapse
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-readiness-declarative, ev-readiness-declared-types), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-readiness-declarative" and "ev-readiness-declared-types" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-readiness-declarative, ev-readiness-declared-types), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-readiness-declarative and ev-readiness-declared-types: pass.
 
 **Holds only if**
 
@@ -5199,8 +5199,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-readiness-declarative | test | tests/core/readiness-machines.test.js#the implementation-level properties do not reach the simulation input | supports | none |
-| ev-readiness-declared-types | test | tests/core/readiness-time.test.js#the engine input gives an implementation machine its declared types lowered | supports | none |
+| ev-readiness-declarative | test | tests/core/readiness-machines.test.js#the implementation-level properties do not reach the simulation input | supports | pass |
+| ev-readiness-declared-types | test | tests/core/readiness-time.test.js#the engine input gives an implementation machine its declared types lowered | supports | pass |
 
 ## codegen-consistency-rules
 
@@ -5208,12 +5208,12 @@ Type entities, record constraints and requirement realisation are checked as err
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 14 evidence entities (ev-codegen-consistency-rules-1, ev-codegen-consistency-rules-2, ev-codegen-consistency-rules-3, ev-codegen-consistency-rules-4, ev-codegen-consistency-rules-5, ev-codegen-consistency-rules-6, ev-codegen-consistency-rules-7, ev-codegen-consistency-rules-8, ev-codegen-consistency-rules-9, ev-codegen-consistency-rules-10, ev-codegen-consistency-rules-11, ev-codegen-consistency-rules-12, ev-codegen-consistency-rules-13, ev-codegen-consistency-rules-14), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-codegen-consistency-rules-1", "ev-codegen-consistency-rules-2", "ev-codegen-consistency-rules-3", "ev-codegen-consistency-rules-4", "ev-codegen-consistency-rules-5", "ev-codegen-consistency-rules-6", "ev-codegen-consistency-rules-7", "ev-codegen-consistency-rules-8", "ev-codegen-consistency-rules-9", "ev-codegen-consistency-rules-10", "ev-codegen-consistency-rules-11", "ev-codegen-consistency-rules-12", "ev-codegen-consistency-rules-13" and "ev-codegen-consistency-rules-14" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 14 evidence entities (ev-codegen-consistency-rules-1, ev-codegen-consistency-rules-2, ev-codegen-consistency-rules-3, ev-codegen-consistency-rules-4, ev-codegen-consistency-rules-5, ev-codegen-consistency-rules-6, ev-codegen-consistency-rules-7, ev-codegen-consistency-rules-8, ev-codegen-consistency-rules-9, ev-codegen-consistency-rules-10, ev-codegen-consistency-rules-11, ev-codegen-consistency-rules-12, ev-codegen-consistency-rules-13, ev-codegen-consistency-rules-14), of which 14 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-codegen-consistency-rules-1, ev-codegen-consistency-rules-2, ev-codegen-consistency-rules-3, ev-codegen-consistency-rules-4, ev-codegen-consistency-rules-5, ev-codegen-consistency-rules-6, ev-codegen-consistency-rules-7, ev-codegen-consistency-rules-8, ev-codegen-consistency-rules-9, ev-codegen-consistency-rules-10, ev-codegen-consistency-rules-11, ev-codegen-consistency-rules-12, ev-codegen-consistency-rules-13 and ev-codegen-consistency-rules-14: pass.
 
 **Holds only if**
 
@@ -5228,20 +5228,20 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-codegen-consistency-rules-1 | test | tests/core/codegen-readiness.test.js#set-null without optional is reported once as record.set-null-required | supports | none |
-| ev-codegen-consistency-rules-2 | test | tests/core/codegen-readiness.test.js#onDelete without refersTo is reported once as record.on-delete-without-refers-to | supports | none |
-| ev-codegen-consistency-rules-3 | test | tests/core/codegen-readiness.test.js#a unique set naming an undeclared field is reported once as record.unique-field | supports | none |
-| ev-codegen-consistency-rules-4 | test | tests/core/codegen-readiness.test.js#an index naming an undeclared field is reported once as record.index-field | supports | none |
-| ev-codegen-consistency-rules-5 | test | tests/core/codegen-readiness.test.js#changes with a gap in the versions is reported once as record.changes-version | supports | none |
-| ev-codegen-consistency-rules-6 | test | tests/core/codegen-readiness.test.js#changes that stop before the schema version is reported once as record.changes-version | supports | none |
-| ev-codegen-consistency-rules-7 | test | tests/core/codegen-readiness.test.js#an id type without a representation is reported once as type.repr-missing | supports | none |
-| ev-codegen-consistency-rules-8 | test | tests/core/codegen-readiness.test.js#a scalar over a type that is not built in is reported once as type.repr-not-builtin | supports | none |
-| ev-codegen-consistency-rules-9 | test | tests/core/codegen-readiness.test.js#an enum without values is reported once as type.values-missing | supports | none |
-| ev-codegen-consistency-rules-10 | test | tests/core/codegen-readiness.test.js#a struct field whose type does not resolve is reported once as type.field-unresolved | supports | none |
-| ev-codegen-consistency-rules-11 | test | tests/core/codegen-readiness.test.js#a type with the name of a built-in is reported once as type.shadows-builtin | supports | none |
-| ev-codegen-consistency-rules-12 | test | tests/core/codegen-readiness.test.js#a construction requirement no claim models is reported once as requirement.construction-unmodelled | supports | none |
-| ev-codegen-consistency-rules-13 | test | tests/core/codegen-readiness.test.js#a type name resolves when it is built in or declared or list/option of one that resolves | supports | none |
-| ev-codegen-consistency-rules-14 | test | tests/core/codegen-readiness.test.js#the built-in representation types are the ones the format names | supports | none |
+| ev-codegen-consistency-rules-1 | test | tests/core/codegen-readiness.test.js#set-null without optional is reported once as record.set-null-required | supports | pass |
+| ev-codegen-consistency-rules-2 | test | tests/core/codegen-readiness.test.js#onDelete without refersTo is reported once as record.on-delete-without-refers-to | supports | pass |
+| ev-codegen-consistency-rules-3 | test | tests/core/codegen-readiness.test.js#a unique set naming an undeclared field is reported once as record.unique-field | supports | pass |
+| ev-codegen-consistency-rules-4 | test | tests/core/codegen-readiness.test.js#an index naming an undeclared field is reported once as record.index-field | supports | pass |
+| ev-codegen-consistency-rules-5 | test | tests/core/codegen-readiness.test.js#changes with a gap in the versions is reported once as record.changes-version | supports | pass |
+| ev-codegen-consistency-rules-6 | test | tests/core/codegen-readiness.test.js#changes that stop before the schema version is reported once as record.changes-version | supports | pass |
+| ev-codegen-consistency-rules-7 | test | tests/core/codegen-readiness.test.js#an id type without a representation is reported once as type.repr-missing | supports | pass |
+| ev-codegen-consistency-rules-8 | test | tests/core/codegen-readiness.test.js#a scalar over a type that is not built in is reported once as type.repr-not-builtin | supports | pass |
+| ev-codegen-consistency-rules-9 | test | tests/core/codegen-readiness.test.js#an enum without values is reported once as type.values-missing | supports | pass |
+| ev-codegen-consistency-rules-10 | test | tests/core/codegen-readiness.test.js#a struct field whose type does not resolve is reported once as type.field-unresolved | supports | pass |
+| ev-codegen-consistency-rules-11 | test | tests/core/codegen-readiness.test.js#a type with the name of a built-in is reported once as type.shadows-builtin | supports | pass |
+| ev-codegen-consistency-rules-12 | test | tests/core/codegen-readiness.test.js#a construction requirement no claim models is reported once as requirement.construction-unmodelled | supports | pass |
+| ev-codegen-consistency-rules-13 | test | tests/core/codegen-readiness.test.js#a type name resolves when it is built in or declared or list/option of one that resolves | supports | pass |
+| ev-codegen-consistency-rules-14 | test | tests/core/codegen-readiness.test.js#the built-in representation types are the ones the format names | supports | pass |
 
 ## generation-readiness-gated
 
@@ -5249,12 +5249,12 @@ The readiness rules (unresolved field, contract and event types, a reference wit
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 27 evidence entities (ev-generation-readiness-gated-1, ev-generation-readiness-gated-2, ev-generation-readiness-gated-3, ev-generation-readiness-gated-4, ev-generation-readiness-gated-5, ev-generation-readiness-gated-6, ev-generation-readiness-gated-7, ev-generation-readiness-gated-8, ev-generation-readiness-gated-9, ev-generation-readiness-gated-10, ev-generation-readiness-gated-11, ev-generation-readiness-gated-12, ev-generation-readiness-gated-13, ev-generation-readiness-gated-14, ev-generation-readiness-gated-15, ev-generation-readiness-gated-16, ev-generation-readiness-gated-17, ev-generation-readiness-gated-18, ev-generation-readiness-gated-19, ev-generation-readiness-gated-20, ev-generation-readiness-gated-21, ev-generation-readiness-gated-22, ev-generation-readiness-gated-23, ev-generation-readiness-gated-24, ev-generation-readiness-gated-25, ev-generation-readiness-gated-26, ev-generation-readiness-gated-27), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-generation-readiness-gated-1", "ev-generation-readiness-gated-2", "ev-generation-readiness-gated-3", "ev-generation-readiness-gated-4", "ev-generation-readiness-gated-5", "ev-generation-readiness-gated-6", "ev-generation-readiness-gated-7", "ev-generation-readiness-gated-8", "ev-generation-readiness-gated-9", "ev-generation-readiness-gated-10", "ev-generation-readiness-gated-11", "ev-generation-readiness-gated-12", "ev-generation-readiness-gated-13", "ev-generation-readiness-gated-14", "ev-generation-readiness-gated-15", "ev-generation-readiness-gated-16", "ev-generation-readiness-gated-17", "ev-generation-readiness-gated-18", "ev-generation-readiness-gated-19", "ev-generation-readiness-gated-20", "ev-generation-readiness-gated-21", "ev-generation-readiness-gated-22", "ev-generation-readiness-gated-23", "ev-generation-readiness-gated-24", "ev-generation-readiness-gated-25", "ev-generation-readiness-gated-26" and "ev-generation-readiness-gated-27" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 27 evidence entities (ev-generation-readiness-gated-1, ev-generation-readiness-gated-2, ev-generation-readiness-gated-3, ev-generation-readiness-gated-4, ev-generation-readiness-gated-5, ev-generation-readiness-gated-6, ev-generation-readiness-gated-7, ev-generation-readiness-gated-8, ev-generation-readiness-gated-9, ev-generation-readiness-gated-10, ev-generation-readiness-gated-11, ev-generation-readiness-gated-12, ev-generation-readiness-gated-13, ev-generation-readiness-gated-14, ev-generation-readiness-gated-15, ev-generation-readiness-gated-16, ev-generation-readiness-gated-17, ev-generation-readiness-gated-18, ev-generation-readiness-gated-19, ev-generation-readiness-gated-20, ev-generation-readiness-gated-21, ev-generation-readiness-gated-22, ev-generation-readiness-gated-23, ev-generation-readiness-gated-24, ev-generation-readiness-gated-25, ev-generation-readiness-gated-26, ev-generation-readiness-gated-27), of which 27 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-generation-readiness-gated-1, ev-generation-readiness-gated-2, ev-generation-readiness-gated-3, ev-generation-readiness-gated-4, ev-generation-readiness-gated-5, ev-generation-readiness-gated-6, ev-generation-readiness-gated-7, ev-generation-readiness-gated-8, ev-generation-readiness-gated-9, ev-generation-readiness-gated-10, ev-generation-readiness-gated-11, ev-generation-readiness-gated-12, ev-generation-readiness-gated-13, ev-generation-readiness-gated-14, ev-generation-readiness-gated-15, ev-generation-readiness-gated-16, ev-generation-readiness-gated-17, ev-generation-readiness-gated-18, ev-generation-readiness-gated-19, ev-generation-readiness-gated-20, ev-generation-readiness-gated-21, ev-generation-readiness-gated-22, ev-generation-readiness-gated-23, ev-generation-readiness-gated-24, ev-generation-readiness-gated-25, ev-generation-readiness-gated-26 and ev-generation-readiness-gated-27: pass.
 
 **Holds only if**
 
@@ -5269,33 +5269,33 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-generation-readiness-gated-1 | test | tests/core/codegen-readiness.test.js#a record field whose type is not declared is exactly one ready.field-type-undeclared error when generation is set | supports | none |
-| ev-generation-readiness-gated-2 | test | tests/core/codegen-readiness.test.js#a record field whose type is not declared is no validation diagnostic without the switch and readinessGaps lists ready.field-type-undeclared | supports | none |
-| ev-generation-readiness-gated-3 | test | tests/core/codegen-readiness.test.js#a contract input whose type is not declared is exactly one ready.contract-input-type-undeclared error when generation is set | supports | none |
-| ev-generation-readiness-gated-4 | test | tests/core/codegen-readiness.test.js#a contract input whose type is not declared is no validation diagnostic without the switch and readinessGaps lists ready.contract-input-type-undeclared | supports | none |
-| ev-generation-readiness-gated-5 | test | tests/core/codegen-readiness.test.js#a contract output whose type is not declared is exactly one ready.contract-output-type-undeclared error when generation is set | supports | none |
-| ev-generation-readiness-gated-6 | test | tests/core/codegen-readiness.test.js#a contract output whose type is not declared is no validation diagnostic without the switch and readinessGaps lists ready.contract-output-type-undeclared | supports | none |
-| ev-generation-readiness-gated-7 | test | tests/core/codegen-readiness.test.js#a contract error whose type is not declared is exactly one ready.contract-error-type-undeclared error when generation is set | supports | none |
-| ev-generation-readiness-gated-8 | test | tests/core/codegen-readiness.test.js#a contract error whose type is not declared is no validation diagnostic without the switch and readinessGaps lists ready.contract-error-type-undeclared | supports | none |
-| ev-generation-readiness-gated-9 | test | tests/core/codegen-readiness.test.js#an event payload field whose type is not declared is exactly one ready.event-payload-type-undeclared error when generation is set | supports | none |
-| ev-generation-readiness-gated-10 | test | tests/core/codegen-readiness.test.js#an event payload field whose type is not declared is no validation diagnostic without the switch and readinessGaps lists ready.event-payload-type-undeclared | supports | none |
-| ev-generation-readiness-gated-11 | test | tests/core/codegen-readiness.test.js#a reference without onDelete is exactly one ready.on-delete-missing error when generation is set | supports | none |
-| ev-generation-readiness-gated-12 | test | tests/core/codegen-readiness.test.js#a reference without onDelete is no validation diagnostic without the switch and readinessGaps lists ready.on-delete-missing | supports | none |
-| ev-generation-readiness-gated-13 | test | tests/core/codegen-readiness.test.js#a record without a schema version is exactly one ready.schema-version-missing error when generation is set | supports | none |
-| ev-generation-readiness-gated-14 | test | tests/core/codegen-readiness.test.js#a record without a schema version is no validation diagnostic without the switch and readinessGaps lists ready.schema-version-missing | supports | none |
-| ev-generation-readiness-gated-15 | test | tests/core/codegen-readiness.test.js#a contract without a realisation is exactly one ready.contract-realisation-missing error when generation is set | supports | none |
-| ev-generation-readiness-gated-16 | test | tests/core/codegen-readiness.test.js#a contract without a realisation is no validation diagnostic without the switch and readinessGaps lists ready.contract-realisation-missing | supports | none |
-| ev-generation-readiness-gated-17 | test | tests/core/codegen-readiness.test.js#a hole without an H- ref is exactly one ready.hole-ref-invalid error when generation is set | supports | none |
-| ev-generation-readiness-gated-18 | test | tests/core/codegen-readiness.test.js#a hole without an H- ref is no validation diagnostic without the switch and readinessGaps lists ready.hole-ref-invalid | supports | none |
-| ev-generation-readiness-gated-19 | test | tests/core/codegen-readiness.test.js#a hole without implementedBy is exactly one ready.hole-implemented-by-missing error when generation is set | supports | none |
-| ev-generation-readiness-gated-20 | test | tests/core/codegen-readiness.test.js#a hole without implementedBy is no validation diagnostic without the switch and readinessGaps lists ready.hole-implemented-by-missing | supports | none |
-| ev-generation-readiness-gated-21 | test | tests/core/codegen-readiness.test.js#a hole without a postcondition is exactly one ready.hole-postcondition-missing error when generation is set | supports | none |
-| ev-generation-readiness-gated-22 | test | tests/core/codegen-readiness.test.js#a hole without a postcondition is no validation diagnostic without the switch and readinessGaps lists ready.hole-postcondition-missing | supports | none |
-| ev-generation-readiness-gated-23 | test | tests/core/codegen-readiness.test.js#a requirement without a realisation is exactly one ready.requirement-realisation-missing error when generation is set | supports | none |
-| ev-generation-readiness-gated-24 | test | tests/core/codegen-readiness.test.js#a requirement without a realisation is no validation diagnostic without the switch and readinessGaps lists ready.requirement-realisation-missing | supports | none |
-| ev-generation-readiness-gated-25 | test | tests/core/codegen-readiness.test.js#a ready specification validates with no errors and no readiness gaps | supports | none |
-| ev-generation-readiness-gated-26 | test | tests/core/codegen-readiness.test.js#the readiness command lists the gaps of a specification and exits 0 either way | supports | none |
-| ev-generation-readiness-gated-27 | test | tests/core/codegen-readiness.test.js#the exegra and strata specifications that do not set the switch validate with no errors and no warnings | supports | none |
+| ev-generation-readiness-gated-1 | test | tests/core/codegen-readiness.test.js#a record field whose type is not declared is exactly one ready.field-type-undeclared error when generation is set | supports | pass |
+| ev-generation-readiness-gated-2 | test | tests/core/codegen-readiness.test.js#a record field whose type is not declared is no validation diagnostic without the switch and readinessGaps lists ready.field-type-undeclared | supports | pass |
+| ev-generation-readiness-gated-3 | test | tests/core/codegen-readiness.test.js#a contract input whose type is not declared is exactly one ready.contract-input-type-undeclared error when generation is set | supports | pass |
+| ev-generation-readiness-gated-4 | test | tests/core/codegen-readiness.test.js#a contract input whose type is not declared is no validation diagnostic without the switch and readinessGaps lists ready.contract-input-type-undeclared | supports | pass |
+| ev-generation-readiness-gated-5 | test | tests/core/codegen-readiness.test.js#a contract output whose type is not declared is exactly one ready.contract-output-type-undeclared error when generation is set | supports | pass |
+| ev-generation-readiness-gated-6 | test | tests/core/codegen-readiness.test.js#a contract output whose type is not declared is no validation diagnostic without the switch and readinessGaps lists ready.contract-output-type-undeclared | supports | pass |
+| ev-generation-readiness-gated-7 | test | tests/core/codegen-readiness.test.js#a contract error whose type is not declared is exactly one ready.contract-error-type-undeclared error when generation is set | supports | pass |
+| ev-generation-readiness-gated-8 | test | tests/core/codegen-readiness.test.js#a contract error whose type is not declared is no validation diagnostic without the switch and readinessGaps lists ready.contract-error-type-undeclared | supports | pass |
+| ev-generation-readiness-gated-9 | test | tests/core/codegen-readiness.test.js#an event payload field whose type is not declared is exactly one ready.event-payload-type-undeclared error when generation is set | supports | pass |
+| ev-generation-readiness-gated-10 | test | tests/core/codegen-readiness.test.js#an event payload field whose type is not declared is no validation diagnostic without the switch and readinessGaps lists ready.event-payload-type-undeclared | supports | pass |
+| ev-generation-readiness-gated-11 | test | tests/core/codegen-readiness.test.js#a reference without onDelete is exactly one ready.on-delete-missing error when generation is set | supports | pass |
+| ev-generation-readiness-gated-12 | test | tests/core/codegen-readiness.test.js#a reference without onDelete is no validation diagnostic without the switch and readinessGaps lists ready.on-delete-missing | supports | pass |
+| ev-generation-readiness-gated-13 | test | tests/core/codegen-readiness.test.js#a record without a schema version is exactly one ready.schema-version-missing error when generation is set | supports | pass |
+| ev-generation-readiness-gated-14 | test | tests/core/codegen-readiness.test.js#a record without a schema version is no validation diagnostic without the switch and readinessGaps lists ready.schema-version-missing | supports | pass |
+| ev-generation-readiness-gated-15 | test | tests/core/codegen-readiness.test.js#a contract without a realisation is exactly one ready.contract-realisation-missing error when generation is set | supports | pass |
+| ev-generation-readiness-gated-16 | test | tests/core/codegen-readiness.test.js#a contract without a realisation is no validation diagnostic without the switch and readinessGaps lists ready.contract-realisation-missing | supports | pass |
+| ev-generation-readiness-gated-17 | test | tests/core/codegen-readiness.test.js#a hole without an H- ref is exactly one ready.hole-ref-invalid error when generation is set | supports | pass |
+| ev-generation-readiness-gated-18 | test | tests/core/codegen-readiness.test.js#a hole without an H- ref is no validation diagnostic without the switch and readinessGaps lists ready.hole-ref-invalid | supports | pass |
+| ev-generation-readiness-gated-19 | test | tests/core/codegen-readiness.test.js#a hole without implementedBy is exactly one ready.hole-implemented-by-missing error when generation is set | supports | pass |
+| ev-generation-readiness-gated-20 | test | tests/core/codegen-readiness.test.js#a hole without implementedBy is no validation diagnostic without the switch and readinessGaps lists ready.hole-implemented-by-missing | supports | pass |
+| ev-generation-readiness-gated-21 | test | tests/core/codegen-readiness.test.js#a hole without a postcondition is exactly one ready.hole-postcondition-missing error when generation is set | supports | pass |
+| ev-generation-readiness-gated-22 | test | tests/core/codegen-readiness.test.js#a hole without a postcondition is no validation diagnostic without the switch and readinessGaps lists ready.hole-postcondition-missing | supports | pass |
+| ev-generation-readiness-gated-23 | test | tests/core/codegen-readiness.test.js#a requirement without a realisation is exactly one ready.requirement-realisation-missing error when generation is set | supports | pass |
+| ev-generation-readiness-gated-24 | test | tests/core/codegen-readiness.test.js#a requirement without a realisation is no validation diagnostic without the switch and readinessGaps lists ready.requirement-realisation-missing | supports | pass |
+| ev-generation-readiness-gated-25 | test | tests/core/codegen-readiness.test.js#a ready specification validates with no errors and no readiness gaps | supports | pass |
+| ev-generation-readiness-gated-26 | test | tests/core/codegen-readiness.test.js#the readiness command lists the gaps of a specification and exits 0 either way | supports | pass |
+| ev-generation-readiness-gated-27 | test | tests/core/codegen-readiness.test.js#the exegra and strata specifications that do not set the switch validate with no errors and no warnings | supports | pass |
 
 ## refines-checks-machine-refinement
 
@@ -5303,12 +5303,12 @@ A refines claim is verified only when, in the traces of the scenarios that run t
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 22 evidence entities (ev-refines-verified, ev-refines-wrong-state, ev-refines-guard-false, ev-refines-post-variable, ev-refines-false-stutter, ev-refines-initial, ev-refines-emits, ev-refines-declaration-order, ev-refines-timer-same, ev-refines-timer-internal, ev-refines-timer-differs, ev-refines-cross-refined, ev-refines-cross-direct, ev-refines-cross-violated, ev-refines-time-scale, ev-refines-time-scale-violated, ev-refines-time-scale-absent, ev-refines-delayed-emit-scaled, ev-refines-delayed-emit-event, ev-refines-delayed-emit-delay, ev-refines-delayed-emit-at-once, ev-refines-timer-not-emit), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-refines-verified", "ev-refines-wrong-state", "ev-refines-guard-false", "ev-refines-post-variable", "ev-refines-false-stutter", "ev-refines-initial", "ev-refines-emits", "ev-refines-declaration-order", "ev-refines-timer-same", "ev-refines-timer-internal", "ev-refines-timer-differs", "ev-refines-cross-refined", "ev-refines-cross-direct", "ev-refines-cross-violated", "ev-refines-time-scale", "ev-refines-time-scale-violated", "ev-refines-time-scale-absent", "ev-refines-delayed-emit-scaled", "ev-refines-delayed-emit-event", "ev-refines-delayed-emit-delay", "ev-refines-delayed-emit-at-once" and "ev-refines-timer-not-emit" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 22 evidence entities (ev-refines-verified, ev-refines-wrong-state, ev-refines-guard-false, ev-refines-post-variable, ev-refines-false-stutter, ev-refines-initial, ev-refines-emits, ev-refines-declaration-order, ev-refines-timer-same, ev-refines-timer-internal, ev-refines-timer-differs, ev-refines-cross-refined, ev-refines-cross-direct, ev-refines-cross-violated, ev-refines-time-scale, ev-refines-time-scale-violated, ev-refines-time-scale-absent, ev-refines-delayed-emit-scaled, ev-refines-delayed-emit-event, ev-refines-delayed-emit-delay, ev-refines-delayed-emit-at-once, ev-refines-timer-not-emit), of which 22 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-refines-verified, ev-refines-wrong-state, ev-refines-guard-false, ev-refines-post-variable, ev-refines-false-stutter, ev-refines-initial, ev-refines-emits, ev-refines-declaration-order, ev-refines-timer-same, ev-refines-timer-internal, ev-refines-timer-differs, ev-refines-cross-refined, ev-refines-cross-direct, ev-refines-cross-violated, ev-refines-time-scale, ev-refines-time-scale-violated, ev-refines-time-scale-absent, ev-refines-delayed-emit-scaled, ev-refines-delayed-emit-event, ev-refines-delayed-emit-delay, ev-refines-delayed-emit-at-once and ev-refines-timer-not-emit: pass.
 
 **Holds only if**
 
@@ -5323,28 +5323,28 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-refines-verified | test | tests/core/refinement.test.js#a refinement with an internal state mapped by stutter is verified on the trace | supports | none |
-| ev-refines-wrong-state | test | tests/core/refinement.test.js#refines is violated by a step to the wrong model state | supports | none |
-| ev-refines-guard-false | test | tests/core/refinement.test.js#refines is violated by a step whose model guard is false | supports | none |
-| ev-refines-post-variable | test | tests/core/refinement.test.js#refines is violated by a wrong mapped post-variable | supports | none |
-| ev-refines-false-stutter | test | tests/core/refinement.test.js#refines is violated by a non-stutter step mapped to null | supports | none |
-| ev-refines-initial | test | tests/core/refinement.test.js#refines is violated by a wrong initial state | supports | none |
-| ev-refines-emits | test | tests/core/refinement.test.js#refines is violated when emitted events differ from the model | supports | none |
-| ev-refines-declaration-order | test | tests/core/refinement.test.js#refines and the ordering rule agree | supports | none |
-| ev-refines-timer-same | test | tests/core/refinement.test.js#a timer the implementation sets and receives refines the same timer of the model | supports | none |
-| ev-refines-timer-internal | test | tests/core/refinement.test.js#a timer the model does not set is internal to the implementation | supports | none |
-| ev-refines-timer-differs | test | tests/core/refinement.test.js#refines is violated when the implementation timer emits another event than the model timer | supports | none |
-| ev-refines-cross-refined | test | tests/core/refinement.test.js#a model guard reading another behavior is evaluated through the machine that refines it | supports | none |
-| ev-refines-cross-direct | test | tests/core/refinement.test.js#a model guard reading another behavior is evaluated on that behavior when it runs itself | supports | none |
-| ev-refines-cross-violated | test | tests/core/refinement.test.js#refines is violated when a model guard reading another behavior is false | supports | none |
-| ev-refines-time-scale | test | tests/core/refinement.test.js#a tick-based model and a millisecond implementation at real timings agree through the time scale | supports | none |
-| ev-refines-time-scale-violated | test | tests/core/refinement.test.js#refines is violated when the implementation accepts past the scaled lifetime | supports | none |
-| ev-refines-time-scale-absent | test | tests/core/refinement.test.js#without the time scale the model reads milliseconds as ticks and the same run is violated | supports | none |
-| ev-refines-delayed-emit-scaled | test | tests/core/refinement.test.js#a delayed emit of the model is realised by a delayed emit at the scaled delay | supports | none |
-| ev-refines-delayed-emit-event | test | tests/core/refinement.test.js#refines is violated when the delayed emit realising a delayed emit emits another event | supports | none |
-| ev-refines-delayed-emit-delay | test | tests/core/refinement.test.js#refines is violated when the delayed emit realising a delayed emit has another delay | supports | none |
-| ev-refines-delayed-emit-at-once | test | tests/core/refinement.test.js#refines is violated when a delayed emit of the model is emitted at once | supports | none |
-| ev-refines-timer-not-emit | test | tests/core/refinement.test.js#refines is violated when a timer stands in for a delayed emit of the model | supports | none |
+| ev-refines-verified | test | tests/core/refinement.test.js#a refinement with an internal state mapped by stutter is verified on the trace | supports | pass |
+| ev-refines-wrong-state | test | tests/core/refinement.test.js#refines is violated by a step to the wrong model state | supports | pass |
+| ev-refines-guard-false | test | tests/core/refinement.test.js#refines is violated by a step whose model guard is false | supports | pass |
+| ev-refines-post-variable | test | tests/core/refinement.test.js#refines is violated by a wrong mapped post-variable | supports | pass |
+| ev-refines-false-stutter | test | tests/core/refinement.test.js#refines is violated by a non-stutter step mapped to null | supports | pass |
+| ev-refines-initial | test | tests/core/refinement.test.js#refines is violated by a wrong initial state | supports | pass |
+| ev-refines-emits | test | tests/core/refinement.test.js#refines is violated when emitted events differ from the model | supports | pass |
+| ev-refines-declaration-order | test | tests/core/refinement.test.js#refines and the ordering rule agree | supports | pass |
+| ev-refines-timer-same | test | tests/core/refinement.test.js#a timer the implementation sets and receives refines the same timer of the model | supports | pass |
+| ev-refines-timer-internal | test | tests/core/refinement.test.js#a timer the model does not set is internal to the implementation | supports | pass |
+| ev-refines-timer-differs | test | tests/core/refinement.test.js#refines is violated when the implementation timer emits another event than the model timer | supports | pass |
+| ev-refines-cross-refined | test | tests/core/refinement.test.js#a model guard reading another behavior is evaluated through the machine that refines it | supports | pass |
+| ev-refines-cross-direct | test | tests/core/refinement.test.js#a model guard reading another behavior is evaluated on that behavior when it runs itself | supports | pass |
+| ev-refines-cross-violated | test | tests/core/refinement.test.js#refines is violated when a model guard reading another behavior is false | supports | pass |
+| ev-refines-time-scale | test | tests/core/refinement.test.js#a tick-based model and a millisecond implementation at real timings agree through the time scale | supports | pass |
+| ev-refines-time-scale-violated | test | tests/core/refinement.test.js#refines is violated when the implementation accepts past the scaled lifetime | supports | pass |
+| ev-refines-time-scale-absent | test | tests/core/refinement.test.js#without the time scale the model reads milliseconds as ticks and the same run is violated | supports | pass |
+| ev-refines-delayed-emit-scaled | test | tests/core/refinement.test.js#a delayed emit of the model is realised by a delayed emit at the scaled delay | supports | pass |
+| ev-refines-delayed-emit-event | test | tests/core/refinement.test.js#refines is violated when the delayed emit realising a delayed emit emits another event | supports | pass |
+| ev-refines-delayed-emit-delay | test | tests/core/refinement.test.js#refines is violated when the delayed emit realising a delayed emit has another delay | supports | pass |
+| ev-refines-delayed-emit-at-once | test | tests/core/refinement.test.js#refines is violated when a delayed emit of the model is emitted at once | supports | pass |
+| ev-refines-timer-not-emit | test | tests/core/refinement.test.js#refines is violated when a timer stands in for a delayed emit of the model | supports | pass |
 
 ## refinement-mappings-validated
 
@@ -5352,12 +5352,12 @@ Validation refuses a refines that names a non-behavior, a refines on a model-lev
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-refinement-refines-rules, ev-refinement-mapping-rules, ev-refinement-time-scale-rule), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-refinement-refines-rules", "ev-refinement-mapping-rules" and "ev-refinement-time-scale-rule" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-refinement-refines-rules, ev-refinement-mapping-rules, ev-refinement-time-scale-rule), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-refinement-refines-rules, ev-refinement-mapping-rules and ev-refinement-time-scale-rule: pass.
 
 **Holds only if**
 
@@ -5372,9 +5372,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-refinement-refines-rules | test | tests/core/refinement.test.js#validation refuses a refines that names a non-behavior | supports | none |
-| ev-refinement-mapping-rules | test | tests/core/refinement.test.js#validation refuses mappings with unknown or missing states | supports | none |
-| ev-refinement-time-scale-rule | test | tests/core/refinement.test.js#validation refuses a time scale that is not a positive number | supports | none |
+| ev-refinement-refines-rules | test | tests/core/refinement.test.js#validation refuses a refines that names a non-behavior | supports | pass |
+| ev-refinement-mapping-rules | test | tests/core/refinement.test.js#validation refuses mappings with unknown or missing states | supports | pass |
+| ev-refinement-time-scale-rule | test | tests/core/refinement.test.js#validation refuses a time scale that is not a positive number | supports | pass |
 
 ## construct-consistency-rules
 
@@ -5382,12 +5382,12 @@ The cross-cutting constructs are checked as errors whether or not the specificat
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-constructs-valid-fixture, ev-constructs-consistency, ev-constructs-durations), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-constructs-valid-fixture", "ev-constructs-consistency" and "ev-constructs-durations" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-constructs-valid-fixture, ev-constructs-consistency, ev-constructs-durations), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-constructs-valid-fixture, ev-constructs-consistency and ev-constructs-durations: pass.
 
 **Holds only if**
 
@@ -5402,9 +5402,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-constructs-valid-fixture | test | tests/core/constructs.test.js#a specification with every construct validates with no errors | supports | none |
-| ev-constructs-consistency | test | tests/core/constructs.test.js#construct consistency: | supports | none |
-| ev-constructs-durations | test | tests/core/constructs.test.js#construct durations are a positive decimal | supports | none |
+| ev-constructs-valid-fixture | test | tests/core/constructs.test.js#a specification with every construct validates with no errors | supports | pass |
+| ev-constructs-consistency | test | tests/core/constructs.test.js#construct consistency: | supports | pass |
+| ev-constructs-durations | test | tests/core/constructs.test.js#construct durations are a positive decimal | supports | pass |
 
 ## construct-readiness-gated
 
@@ -5412,12 +5412,12 @@ The readiness rules of the cross-cutting constructs (a contract governed by poli
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-constructs-readiness), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-constructs-readiness" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-constructs-readiness), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-constructs-readiness: pass.
 
 **Holds only if**
 
@@ -5432,7 +5432,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-constructs-readiness | test | tests/core/constructs.test.js#construct readiness: | supports | none |
+| ev-constructs-readiness | test | tests/core/constructs.test.js#construct readiness: | supports | pass |
 
 ## construction-requirement-realised-by-constructs
 
@@ -5440,12 +5440,12 @@ A requirement realised by construction is satisfied by a claim whose models name
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-constructs-realised-by-valid, ev-constructs-realised-by-removed), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-constructs-realised-by-valid" and "ev-constructs-realised-by-removed" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-constructs-realised-by-valid, ev-constructs-realised-by-removed), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-constructs-realised-by-valid and ev-constructs-realised-by-removed: pass.
 
 **Holds only if**
 
@@ -5460,8 +5460,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-constructs-realised-by-valid | test | tests/core/constructs.test.js#a specification with every construct validates with no errors | supports | none |
-| ev-constructs-realised-by-removed | test | tests/core/constructs.test.js#a construction requirement with neither models nor realisedBy | supports | none |
+| ev-constructs-realised-by-valid | test | tests/core/constructs.test.js#a specification with every construct validates with no errors | supports | pass |
+| ev-constructs-realised-by-removed | test | tests/core/constructs.test.js#a construction requirement with neither models nor realisedBy | supports | pass |
 
 ## retention-erases-records
 
@@ -5469,12 +5469,12 @@ A retention construct that deletes a record, or anonymises every personal and cr
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-retention-erases-records), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-retention-erases-records" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-retention-erases-records), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-retention-erases-records: pass.
 
 **Holds only if**
 
@@ -5489,7 +5489,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-retention-erases-records | test | tests/core/constructs.test.js#a retention that deletes a record | supports | none |
+| ev-retention-erases-records | test | tests/core/constructs.test.js#a retention that deletes a record | supports | pass |
 
 ## ui-consistency-rules
 
@@ -5497,12 +5497,12 @@ The user interface constructs are checked as errors whether or not the specifica
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-ui-valid-fixture, ev-ui-consistency, ev-ui-routes), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-ui-valid-fixture", "ev-ui-consistency" and "ev-ui-routes" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-ui-valid-fixture, ev-ui-consistency, ev-ui-routes), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-ui-valid-fixture, ev-ui-consistency and ev-ui-routes: pass.
 
 **Holds only if**
 
@@ -5517,9 +5517,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-ui-valid-fixture | test | tests/core/ui.test.js#a specification with every user interface construct validates with no errors | supports | none |
-| ev-ui-consistency | test | tests/core/ui.test.js#ui consistency: | supports | none |
-| ev-ui-routes | test | tests/core/ui.test.js#route patterns | supports | none |
+| ev-ui-valid-fixture | test | tests/core/ui.test.js#a specification with every user interface construct validates with no errors | supports | pass |
+| ev-ui-consistency | test | tests/core/ui.test.js#ui consistency: | supports | pass |
+| ev-ui-routes | test | tests/core/ui.test.js#route patterns | supports | pass |
 
 ## ui-readiness-gated
 
@@ -5527,12 +5527,12 @@ The readiness rules of the user interface (a screen without a view-model contrac
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-ui-readiness), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-ui-readiness" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-ui-readiness), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-ui-readiness: pass.
 
 **Holds only if**
 
@@ -5547,7 +5547,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-ui-readiness | test | tests/core/ui.test.js#ui readiness: | supports | none |
+| ev-ui-readiness | test | tests/core/ui.test.js#ui readiness: | supports | pass |
 
 ## client-machines-held-to-machine-rules
 
@@ -5555,12 +5555,12 @@ An implementation-level behavior whose subject is a component of category client
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-ui-client-machine), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-ui-client-machine" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-ui-client-machine), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-ui-client-machine: pass.
 
 **Holds only if**
 
@@ -5575,7 +5575,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-ui-client-machine | test | tests/core/ui.test.js#an implementation machine whose subject is a client component | supports | none |
+| ev-ui-client-machine | test | tests/core/ui.test.js#an implementation machine whose subject is a client component | supports | pass |
 
 ## ui-journey-steps-checked
 
@@ -5583,12 +5583,12 @@ Every journey step addresses elements by WAI-ARIA role and an exact or patterned
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 7 evidence entities (ev-ui-steps-valid, ev-ui-steps-capture, ev-ui-steps-mark, ev-ui-steps-css, ev-ui-steps-attribute, ev-ui-steps-action-item, ev-ui-steps-fragment), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-ui-steps-valid", "ev-ui-steps-capture", "ev-ui-steps-mark", "ev-ui-steps-css", "ev-ui-steps-attribute", "ev-ui-steps-action-item" and "ev-ui-steps-fragment" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 7 evidence entities (ev-ui-steps-valid, ev-ui-steps-capture, ev-ui-steps-mark, ev-ui-steps-css, ev-ui-steps-attribute, ev-ui-steps-action-item, ev-ui-steps-fragment), of which 7 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-ui-steps-valid, ev-ui-steps-capture, ev-ui-steps-mark, ev-ui-steps-css, ev-ui-steps-attribute, ev-ui-steps-action-item and ev-ui-steps-fragment: pass.
 
 **Holds only if**
 
@@ -5603,13 +5603,13 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-ui-steps-valid | test | tests/core/ui.test.js#a specification with every user interface construct validates with no errors | supports | none |
-| ev-ui-steps-capture | test | tests/core/ui.test.js#ui consistency: a value used before it is captured | supports | none |
-| ev-ui-steps-mark | test | tests/core/ui.test.js#ui consistency: a no-reload check in a browser the marker was not set in | supports | none |
-| ev-ui-steps-css | test | tests/core/ui.test.js#ui consistency: a selector key inside within | supports | none |
-| ev-ui-steps-attribute | test | tests/core/ui.test.js#ui consistency: an aria attribute read from the document element | supports | none |
-| ev-ui-steps-action-item | test | tests/core/ui.test.js#ui consistency: a per-row action clicked without its row | supports | none |
-| ev-ui-steps-fragment | test | tests/core/ui.test.js#ui consistency: a gotoPath fragment with a character a fragment may not hold | supports | none |
+| ev-ui-steps-valid | test | tests/core/ui.test.js#a specification with every user interface construct validates with no errors | supports | pass |
+| ev-ui-steps-capture | test | tests/core/ui.test.js#ui consistency: a value used before it is captured | supports | pass |
+| ev-ui-steps-mark | test | tests/core/ui.test.js#ui consistency: a no-reload check in a browser the marker was not set in | supports | pass |
+| ev-ui-steps-css | test | tests/core/ui.test.js#ui consistency: a selector key inside within | supports | pass |
+| ev-ui-steps-attribute | test | tests/core/ui.test.js#ui consistency: an aria attribute read from the document element | supports | pass |
+| ev-ui-steps-action-item | test | tests/core/ui.test.js#ui consistency: a per-row action clicked without its row | supports | pass |
+| ev-ui-steps-fragment | test | tests/core/ui.test.js#ui consistency: a gotoPath fragment with a character a fragment may not hold | supports | pass |
 
 ## ui-per-row-actions
 
@@ -5617,12 +5617,12 @@ A per-row action repeats over a path into its screen's view model that reaches a
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-ui-for-each, ev-ui-label-template, ev-ui-item-argument), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-ui-for-each", "ev-ui-label-template" and "ev-ui-item-argument" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-ui-for-each, ev-ui-label-template, ev-ui-item-argument), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-ui-for-each, ev-ui-label-template and ev-ui-item-argument: pass.
 
 **Holds only if**
 
@@ -5637,9 +5637,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-ui-for-each | test | tests/core/ui.test.js#ui consistency: a per-row action over an output that is not a list | supports | none |
-| ev-ui-label-template | test | tests/core/ui.test.js#ui consistency: a per-row label reading a field the rows do not have | supports | none |
-| ev-ui-item-argument | test | tests/core/ui.test.js#ui consistency: a per-row argument reading a field the rows do not have | supports | none |
+| ev-ui-for-each | test | tests/core/ui.test.js#ui consistency: a per-row action over an output that is not a list | supports | pass |
+| ev-ui-label-template | test | tests/core/ui.test.js#ui consistency: a per-row label reading a field the rows do not have | supports | pass |
+| ev-ui-item-argument | test | tests/core/ui.test.js#ui consistency: a per-row argument reading a field the rows do not have | supports | pass |
 
 ## ui-client-constructs-third-set
 
@@ -5647,12 +5647,12 @@ A select or radio field takes options from a list in its screen's view model onl
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 19 evidence entities (ev-ui3-valid, ev-ui3-options-from, ev-ui3-options-both, ev-ui3-catch-all, ev-ui3-catch-all-nav, ev-ui3-catch-all-route, ev-ui3-nav-query, ev-ui3-nav-form, ev-ui3-when, ev-ui3-when-shape, ev-ui3-toast, ev-ui3-toast-list, ev-ui3-derive-cycle, ev-ui3-derive-self, ev-ui3-result, ev-ui3-result-nav, ev-ui3-local, ev-ui3-action-form, ev-ui3-action-form-field), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-ui3-valid", "ev-ui3-options-from", "ev-ui3-options-both", "ev-ui3-catch-all", "ev-ui3-catch-all-nav", "ev-ui3-catch-all-route", "ev-ui3-nav-query", "ev-ui3-nav-form", "ev-ui3-when", "ev-ui3-when-shape", "ev-ui3-toast", "ev-ui3-toast-list", "ev-ui3-derive-cycle", "ev-ui3-derive-self", "ev-ui3-result", "ev-ui3-result-nav", "ev-ui3-local", "ev-ui3-action-form" and "ev-ui3-action-form-field" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 19 evidence entities (ev-ui3-valid, ev-ui3-options-from, ev-ui3-options-both, ev-ui3-catch-all, ev-ui3-catch-all-nav, ev-ui3-catch-all-route, ev-ui3-nav-query, ev-ui3-nav-form, ev-ui3-when, ev-ui3-when-shape, ev-ui3-toast, ev-ui3-toast-list, ev-ui3-derive-cycle, ev-ui3-derive-self, ev-ui3-result, ev-ui3-result-nav, ev-ui3-local, ev-ui3-action-form, ev-ui3-action-form-field), of which 19 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-ui3-valid, ev-ui3-options-from, ev-ui3-options-both, ev-ui3-catch-all, ev-ui3-catch-all-nav, ev-ui3-catch-all-route, ev-ui3-nav-query, ev-ui3-nav-form, ev-ui3-when, ev-ui3-when-shape, ev-ui3-toast, ev-ui3-toast-list, ev-ui3-derive-cycle, ev-ui3-derive-self, ev-ui3-result, ev-ui3-result-nav, ev-ui3-local, ev-ui3-action-form and ev-ui3-action-form-field: pass.
 
 **Holds only if**
 
@@ -5667,25 +5667,25 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-ui3-valid | test | tests/core/ui.test.js#a specification with every user interface construct validates with no errors | supports | none |
-| ev-ui3-options-from | test | tests/core/ui.test.js#ui consistency: optionsFrom over structs taking values from a number field | supports | none |
-| ev-ui3-options-both | test | tests/core/ui.test.js#ui consistency: a select with both options and optionsFrom | supports | none |
-| ev-ui3-catch-all | test | tests/core/ui.test.js#ui consistency: a second catch-all screen | supports | none |
-| ev-ui3-catch-all-nav | test | tests/core/ui.test.js#ui consistency: a navigation to the catch-all screen | supports | none |
-| ev-ui3-catch-all-route | test | tests/core/ui.test.js#route patterns: a catch-all route binds the unmatched path | supports | none |
-| ev-ui3-nav-query | test | tests/core/ui.test.js#ui consistency: a navigation address reading a query parameter the screen does not have | supports | none |
-| ev-ui3-nav-form | test | tests/core/ui.test.js#ui consistency: an action navigation parameter reading a form field | supports | none |
-| ev-ui3-when | test | tests/core/ui.test.js#ui consistency: a live membership of a value of the wrong class | supports | none |
-| ev-ui3-when-shape | test | tests/core/ui.test.js#ui consistency: a live condition of an unknown shape | supports | none |
-| ev-ui3-toast | test | tests/core/ui.test.js#ui consistency: a toast reading an output the contract does not have | supports | none |
-| ev-ui3-toast-list | test | tests/core/ui.test.js#ui consistency: a toast showing a list | supports | none |
-| ev-ui3-derive-cycle | test | tests/core/ui.test.js#ui consistency: two fields derived from each other | supports | none |
-| ev-ui3-derive-self | test | tests/core/ui.test.js#ui consistency: a derived field reading itself | supports | none |
-| ev-ui3-result | test | tests/core/ui.test.js#ui consistency: a result of another type than its screen-local value | supports | none |
-| ev-ui3-result-nav | test | tests/core/ui.test.js#ui consistency: a kept result that also navigates | supports | none |
-| ev-ui3-local | test | tests/core/ui.test.js#ui consistency: a screen-local value declared twice | supports | none |
-| ev-ui3-action-form | test | tests/core/ui.test.js#ui consistency: an action reading a form of another screen | supports | none |
-| ev-ui3-action-form-field | test | tests/core/ui.test.js#ui consistency: an action reading a field its form does not have | supports | none |
+| ev-ui3-valid | test | tests/core/ui.test.js#a specification with every user interface construct validates with no errors | supports | pass |
+| ev-ui3-options-from | test | tests/core/ui.test.js#ui consistency: optionsFrom over structs taking values from a number field | supports | pass |
+| ev-ui3-options-both | test | tests/core/ui.test.js#ui consistency: a select with both options and optionsFrom | supports | pass |
+| ev-ui3-catch-all | test | tests/core/ui.test.js#ui consistency: a second catch-all screen | supports | pass |
+| ev-ui3-catch-all-nav | test | tests/core/ui.test.js#ui consistency: a navigation to the catch-all screen | supports | pass |
+| ev-ui3-catch-all-route | test | tests/core/ui.test.js#route patterns: a catch-all route binds the unmatched path | supports | pass |
+| ev-ui3-nav-query | test | tests/core/ui.test.js#ui consistency: a navigation address reading a query parameter the screen does not have | supports | pass |
+| ev-ui3-nav-form | test | tests/core/ui.test.js#ui consistency: an action navigation parameter reading a form field | supports | pass |
+| ev-ui3-when | test | tests/core/ui.test.js#ui consistency: a live membership of a value of the wrong class | supports | pass |
+| ev-ui3-when-shape | test | tests/core/ui.test.js#ui consistency: a live condition of an unknown shape | supports | pass |
+| ev-ui3-toast | test | tests/core/ui.test.js#ui consistency: a toast reading an output the contract does not have | supports | pass |
+| ev-ui3-toast-list | test | tests/core/ui.test.js#ui consistency: a toast showing a list | supports | pass |
+| ev-ui3-derive-cycle | test | tests/core/ui.test.js#ui consistency: two fields derived from each other | supports | pass |
+| ev-ui3-derive-self | test | tests/core/ui.test.js#ui consistency: a derived field reading itself | supports | pass |
+| ev-ui3-result | test | tests/core/ui.test.js#ui consistency: a result of another type than its screen-local value | supports | pass |
+| ev-ui3-result-nav | test | tests/core/ui.test.js#ui consistency: a kept result that also navigates | supports | pass |
+| ev-ui3-local | test | tests/core/ui.test.js#ui consistency: a screen-local value declared twice | supports | pass |
+| ev-ui3-action-form | test | tests/core/ui.test.js#ui consistency: an action reading a form of another screen | supports | pass |
+| ev-ui3-action-form-field | test | tests/core/ui.test.js#ui consistency: an action reading a field its form does not have | supports | pass |
 
 ## run-time-timer-delays
 
@@ -5693,12 +5693,12 @@ A timer delay read at run time, {expr, simulate}, appears only on an implementat
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-timer-delay-type, ev-timer-delay-simulate, ev-timer-delay-level, ev-timer-delay-refines), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-timer-delay-type", "ev-timer-delay-simulate", "ev-timer-delay-level" and "ev-timer-delay-refines" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-timer-delay-type, ev-timer-delay-simulate, ev-timer-delay-level, ev-timer-delay-refines), of which 4 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-timer-delay-type, ev-timer-delay-simulate, ev-timer-delay-level and ev-timer-delay-refines: pass.
 
 **Holds only if**
 
@@ -5713,10 +5713,10 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-timer-delay-type | test | tests/core/ui.test.js#ui consistency: a run-time timer delay that is not a number | supports | none |
-| ev-timer-delay-simulate | test | tests/core/ui.test.js#ui consistency: a run-time timer delay without its simulated delay | supports | none |
-| ev-timer-delay-level | test | tests/core/ui.test.js#a run-time timer delay is allowed only on an implementation-level machine | supports | none |
-| ev-timer-delay-refines | test | tests/core/refinement.test.js#an implementation timer whose delay is read at run time is simulated with its simulate delay | supports | none |
+| ev-timer-delay-type | test | tests/core/ui.test.js#ui consistency: a run-time timer delay that is not a number | supports | pass |
+| ev-timer-delay-simulate | test | tests/core/ui.test.js#ui consistency: a run-time timer delay without its simulated delay | supports | pass |
+| ev-timer-delay-level | test | tests/core/ui.test.js#a run-time timer delay is allowed only on an implementation-level machine | supports | pass |
+| ev-timer-delay-refines | test | tests/core/refinement.test.js#an implementation timer whose delay is read at run time is simulated with its simulate delay | supports | pass |
 
 ## wire-naming-and-json
 
@@ -5724,12 +5724,12 @@ system.generation.wireCase and a contract's binding.case accept exactly snake_ca
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 7 evidence entities (ev-wire-case-values, ev-wire-case-refused, ev-json-resolves, ev-json-expr-class, ev-json-repr, ev-json-refresh-path, ev-json-action-argument), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-wire-case-values", "ev-wire-case-refused", "ev-json-resolves", "ev-json-expr-class", "ev-json-repr", "ev-json-refresh-path" and "ev-json-action-argument" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 7 evidence entities (ev-wire-case-values, ev-wire-case-refused, ev-json-resolves, ev-json-expr-class, ev-json-repr, ev-json-refresh-path, ev-json-action-argument), of which 7 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-wire-case-values, ev-wire-case-refused, ev-json-resolves, ev-json-expr-class, ev-json-repr, ev-json-refresh-path and ev-json-action-argument: pass.
 
 **Holds only if**
 
@@ -5744,13 +5744,13 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-wire-case-values | test | tests/core/codegen-readiness.test.js#the wire case is set on the system and overridden per contract with the cases WIRE_CASES lists | supports | none |
-| ev-wire-case-refused | test | tests/core/codegen-readiness.test.js#a wire case that is not one of the cases is a property.enum error at its position | supports | none |
-| ev-json-resolves | test | tests/core/codegen-readiness.test.js#json is a built-in that resolves anywhere a type is named and is its own class | supports | none |
-| ev-json-expr-class | test | tests/core/codegen-readiness.test.js#a json value is compared only by equality with json or null and takes no ordering arithmetic or text | supports | none |
-| ev-json-repr | test | tests/core/codegen-readiness.test.js#an id represented as json is reported once as type.repr-json | supports | none |
-| ev-json-refresh-path | test | tests/core/ui.test.js#ui consistency: a refresh of a path into a json output is reported once as liveBinding.refresh | supports | none |
-| ev-json-action-argument | test | tests/core/ui.test.js#ui consistency: an action argument of class json for a number input is reported once as action.expr-type | supports | none |
+| ev-wire-case-values | test | tests/core/codegen-readiness.test.js#the wire case is set on the system and overridden per contract with the cases WIRE_CASES lists | supports | pass |
+| ev-wire-case-refused | test | tests/core/codegen-readiness.test.js#a wire case that is not one of the cases is a property.enum error at its position | supports | pass |
+| ev-json-resolves | test | tests/core/codegen-readiness.test.js#json is a built-in that resolves anywhere a type is named and is its own class | supports | pass |
+| ev-json-expr-class | test | tests/core/codegen-readiness.test.js#a json value is compared only by equality with json or null and takes no ordering arithmetic or text | supports | pass |
+| ev-json-repr | test | tests/core/codegen-readiness.test.js#an id represented as json is reported once as type.repr-json | supports | pass |
+| ev-json-refresh-path | test | tests/core/ui.test.js#ui consistency: a refresh of a path into a json output is reported once as liveBinding.refresh | supports | pass |
+| ev-json-action-argument | test | tests/core/ui.test.js#ui consistency: an action argument of class json for a number input is reported once as action.expr-type | supports | pass |
 
 ## ui-client-constructs-fourth-set
 
@@ -5758,12 +5758,12 @@ A contract input is encoded only as its encode allows: trim, split and as read a
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 18 evidence entities (ev-ui4-encode-number, ev-ui4-encode-key, ev-ui4-initial, ev-ui4-initial-where, ev-ui4-normalize, ev-ui4-then, ev-ui4-view-overlay-form, ev-ui4-view-overlay-action, ev-ui4-on-error-form, ev-ui4-on-error-action, ev-ui4-confirm-announce, ev-ui4-also-on, ev-ui4-kinds, ev-ui4-field, ev-ui4-template, ev-ui4-applies-to, ev-ui4-duplicate, ev-ui4-readiness), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-ui4-encode-number", "ev-ui4-encode-key", "ev-ui4-initial", "ev-ui4-initial-where", "ev-ui4-normalize", "ev-ui4-then", "ev-ui4-view-overlay-form", "ev-ui4-view-overlay-action", "ev-ui4-on-error-form", "ev-ui4-on-error-action", "ev-ui4-confirm-announce", "ev-ui4-also-on", "ev-ui4-kinds", "ev-ui4-field", "ev-ui4-template", "ev-ui4-applies-to", "ev-ui4-duplicate" and "ev-ui4-readiness" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 18 evidence entities (ev-ui4-encode-number, ev-ui4-encode-key, ev-ui4-initial, ev-ui4-initial-where, ev-ui4-normalize, ev-ui4-then, ev-ui4-view-overlay-form, ev-ui4-view-overlay-action, ev-ui4-on-error-form, ev-ui4-on-error-action, ev-ui4-confirm-announce, ev-ui4-also-on, ev-ui4-kinds, ev-ui4-field, ev-ui4-template, ev-ui4-applies-to, ev-ui4-duplicate, ev-ui4-readiness), of which 18 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-ui4-encode-number, ev-ui4-encode-key, ev-ui4-initial, ev-ui4-initial-where, ev-ui4-normalize, ev-ui4-then, ev-ui4-view-overlay-form, ev-ui4-view-overlay-action, ev-ui4-on-error-form, ev-ui4-on-error-action, ev-ui4-confirm-announce, ev-ui4-also-on, ev-ui4-kinds, ev-ui4-field, ev-ui4-template, ev-ui4-applies-to, ev-ui4-duplicate and ev-ui4-readiness: pass.
 
 **Holds only if**
 
@@ -5778,24 +5778,24 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-ui4-encode-number | test | tests/core/ui.test.js#ui consistency: a trim on an input that is a number is reported once as contract.encode | supports | none |
-| ev-ui4-encode-key | test | tests/core/ui.test.js#ui consistency: an encoding that says nothing is reported once as contract.encode | supports | none |
-| ev-ui4-initial | test | tests/core/ui.test.js#ui consistency: an initial value that is a list for a text control is reported once as form.initial | supports | none |
-| ev-ui4-initial-where | test | tests/core/ui.test.js#ui consistency: an item search over a value that is not a list is reported once as form.initial-where | supports | none |
-| ev-ui4-normalize | test | tests/core/ui.test.js#ui consistency: a trim on a select is reported once as form.normalize | supports | none |
-| ev-ui4-then | test | tests/core/ui.test.js#ui consistency: a second call that is not an object is reported once as form.then | supports | none |
-| ev-ui4-view-overlay-form | test | tests/core/ui.test.js#ui consistency: a form success setting a view-model value the target screen does not have is reported once as form.view-overlay | supports | none |
-| ev-ui4-view-overlay-action | test | tests/core/ui.test.js#ui consistency: an action success setting a view-model value the target screen does not have is reported once as action.view-overlay | supports | none |
-| ev-ui4-on-error-form | test | tests/core/ui.test.js#ui consistency: an empty prefix on a form refusal is reported once as form.on-error | supports | none |
-| ev-ui4-on-error-action | test | tests/core/ui.test.js#ui consistency: a blank announcement of an action refusal is reported once as action.on-error | supports | none |
-| ev-ui4-confirm-announce | test | tests/core/ui.test.js#ui consistency: an empty announcement of a confirmation is reported once as action.confirm-announce | supports | none |
-| ev-ui4-also-on | test | tests/core/ui.test.js#ui consistency: an action also offered with an unknown authentication is reported once as action.also-on | supports | none |
-| ev-ui4-kinds | test | tests/core/ui.test.js#ui consistency: an error message naming an error no contract answers is reported once as errorMessage.kinds | supports | none |
-| ev-ui4-field | test | tests/core/ui.test.js#ui consistency: a field on an error message rather than a check is reported once as errorMessage.field | supports | none |
-| ev-ui4-template | test | tests/core/ui.test.js#ui consistency: a check message filling in the error message is reported once as errorMessage.template | supports | none |
-| ev-ui4-applies-to | test | tests/core/ui.test.js#ui consistency: an error message applying to one form twice is reported once as errorMessage.applies-to | supports | none |
-| ev-ui4-duplicate | test | tests/core/ui.test.js#ui consistency: a second default error message is reported once as errorMessage.duplicate | supports | none |
-| ev-ui4-readiness | test | tests/core/ui.test.js#ui readiness: forms and actions with no default error message is exactly one ready.error-message-default-missing error when generation is set | supports | none |
+| ev-ui4-encode-number | test | tests/core/ui.test.js#ui consistency: a trim on an input that is a number is reported once as contract.encode | supports | pass |
+| ev-ui4-encode-key | test | tests/core/ui.test.js#ui consistency: an encoding that says nothing is reported once as contract.encode | supports | pass |
+| ev-ui4-initial | test | tests/core/ui.test.js#ui consistency: an initial value that is a list for a text control is reported once as form.initial | supports | pass |
+| ev-ui4-initial-where | test | tests/core/ui.test.js#ui consistency: an item search over a value that is not a list is reported once as form.initial-where | supports | pass |
+| ev-ui4-normalize | test | tests/core/ui.test.js#ui consistency: a trim on a select is reported once as form.normalize | supports | pass |
+| ev-ui4-then | test | tests/core/ui.test.js#ui consistency: a second call that is not an object is reported once as form.then | supports | pass |
+| ev-ui4-view-overlay-form | test | tests/core/ui.test.js#ui consistency: a form success setting a view-model value the target screen does not have is reported once as form.view-overlay | supports | pass |
+| ev-ui4-view-overlay-action | test | tests/core/ui.test.js#ui consistency: an action success setting a view-model value the target screen does not have is reported once as action.view-overlay | supports | pass |
+| ev-ui4-on-error-form | test | tests/core/ui.test.js#ui consistency: an empty prefix on a form refusal is reported once as form.on-error | supports | pass |
+| ev-ui4-on-error-action | test | tests/core/ui.test.js#ui consistency: a blank announcement of an action refusal is reported once as action.on-error | supports | pass |
+| ev-ui4-confirm-announce | test | tests/core/ui.test.js#ui consistency: an empty announcement of a confirmation is reported once as action.confirm-announce | supports | pass |
+| ev-ui4-also-on | test | tests/core/ui.test.js#ui consistency: an action also offered with an unknown authentication is reported once as action.also-on | supports | pass |
+| ev-ui4-kinds | test | tests/core/ui.test.js#ui consistency: an error message naming an error no contract answers is reported once as errorMessage.kinds | supports | pass |
+| ev-ui4-field | test | tests/core/ui.test.js#ui consistency: a field on an error message rather than a check is reported once as errorMessage.field | supports | pass |
+| ev-ui4-template | test | tests/core/ui.test.js#ui consistency: a check message filling in the error message is reported once as errorMessage.template | supports | pass |
+| ev-ui4-applies-to | test | tests/core/ui.test.js#ui consistency: an error message applying to one form twice is reported once as errorMessage.applies-to | supports | pass |
+| ev-ui4-duplicate | test | tests/core/ui.test.js#ui consistency: a second default error message is reported once as errorMessage.duplicate | supports | pass |
+| ev-ui4-readiness | test | tests/core/ui.test.js#ui readiness: forms and actions with no default error message is exactly one ready.error-message-default-missing error when generation is set | supports | pass |
 
 ## telemetry-logging-rules
 
@@ -5803,12 +5803,12 @@ system.telemetry declares services with distinct ids and relative log paths (tel
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 7 evidence entities (ev-telemetry-valid, ev-telemetry-logging-shape, ev-telemetry-sensitivity, ev-telemetry-consistency, ev-telemetry-readiness, ev-telemetry-expect-log, ev-telemetry-domain-used), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-telemetry-valid", "ev-telemetry-logging-shape", "ev-telemetry-sensitivity", "ev-telemetry-consistency", "ev-telemetry-readiness", "ev-telemetry-expect-log" and "ev-telemetry-domain-used" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 7 evidence entities (ev-telemetry-valid, ev-telemetry-logging-shape, ev-telemetry-sensitivity, ev-telemetry-consistency, ev-telemetry-readiness, ev-telemetry-expect-log, ev-telemetry-domain-used), of which 7 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-telemetry-valid, ev-telemetry-logging-shape, ev-telemetry-sensitivity, ev-telemetry-consistency, ev-telemetry-readiness, ev-telemetry-expect-log and ev-telemetry-domain-used: pass.
 
 **Holds only if**
 
@@ -5823,13 +5823,13 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-telemetry-valid | test | tests/core/telemetry.test.js#a specification with telemetry validates with no errors with and without the switch | supports | none |
-| ev-telemetry-logging-shape | test | tests/core/telemetry.test.js#eventLogging gives the service level log name tenant and the names fields are written under | supports | none |
-| ev-telemetry-sensitivity | test | tests/core/telemetry.test.js#a type is sensitive when marked or through a struct field or through list and option | supports | none |
-| ev-telemetry-consistency | test | tests/core/telemetry.test.js#telemetry consistency: | supports | none |
-| ev-telemetry-readiness | test | tests/core/telemetry.test.js#telemetry readiness: a domain event that does not state its logging is a gap and an error only with the switch | supports | none |
-| ev-telemetry-expect-log | test | tests/core/telemetry.test.js#ui consistency: an expectLog | supports | none |
-| ev-telemetry-domain-used | test | tests/core/telemetry.test.js#a logged domain event is emitted by the running system so it is not an unused event | supports | none |
+| ev-telemetry-valid | test | tests/core/telemetry.test.js#a specification with telemetry validates with no errors with and without the switch | supports | pass |
+| ev-telemetry-logging-shape | test | tests/core/telemetry.test.js#eventLogging gives the service level log name tenant and the names fields are written under | supports | pass |
+| ev-telemetry-sensitivity | test | tests/core/telemetry.test.js#a type is sensitive when marked or through a struct field or through list and option | supports | pass |
+| ev-telemetry-consistency | test | tests/core/telemetry.test.js#telemetry consistency: | supports | pass |
+| ev-telemetry-readiness | test | tests/core/telemetry.test.js#telemetry readiness: a domain event that does not state its logging is a gap and an error only with the switch | supports | pass |
+| ev-telemetry-expect-log | test | tests/core/telemetry.test.js#ui consistency: an expectLog | supports | pass |
+| ev-telemetry-domain-used | test | tests/core/telemetry.test.js#a logged domain event is emitted by the running system so it is not an unused event | supports | pass |
 
 ## scenario-input-typed
 
@@ -5837,12 +5837,12 @@ Every value a scenario feeds a machine has the type its event declares: a step p
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-scenario-input-typed-1, ev-scenario-input-typed-2, ev-scenario-input-typed-3, ev-scenario-input-typed-4), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-scenario-input-typed-1", "ev-scenario-input-typed-2", "ev-scenario-input-typed-3" and "ev-scenario-input-typed-4" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-scenario-input-typed-1, ev-scenario-input-typed-2, ev-scenario-input-typed-3, ev-scenario-input-typed-4), of which 4 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-scenario-input-typed-1, ev-scenario-input-typed-2, ev-scenario-input-typed-3 and ev-scenario-input-typed-4: pass.
 
 **Holds only if**
 
@@ -5857,10 +5857,10 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-scenario-input-typed-1 | test | tests/core/scenario-input.test.js#the negative fixture with a uuid key given as x-1 is refused with exactly one scenario.input-type | supports | none |
-| ev-scenario-input-typed-2 | test | tests/core/scenario-input.test.js#the same finding is a warning when the specification does not set system.generation | supports | none |
-| ev-scenario-input-typed-3 | test | tests/core/scenario-input.test.js#an inject-event fault payload is checked against the event it injects | supports | none |
-| ev-scenario-input-typed-4 | test | tests/core/scenario-input.test.js#values are judged by type: integer bounds and uuid and struct and list and option | supports | none |
+| ev-scenario-input-typed-1 | test | tests/core/scenario-input.test.js#the negative fixture with a uuid key given as x-1 is refused with exactly one scenario.input-type | supports | pass |
+| ev-scenario-input-typed-2 | test | tests/core/scenario-input.test.js#the same finding is a warning when the specification does not set system.generation | supports | pass |
+| ev-scenario-input-typed-3 | test | tests/core/scenario-input.test.js#an inject-event fault payload is checked against the event it injects | supports | pass |
+| ev-scenario-input-typed-4 | test | tests/core/scenario-input.test.js#values are judged by type: integer bounds and uuid and struct and list and option | supports | pass |
 
 ## expression-semantics-shared
 
@@ -5868,12 +5868,12 @@ The JavaScript evaluator (src/core/expr.js) and the Lean core (Exegra.eval, call
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-expr-cases-js, ev-expr-cases-lean), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-expr-cases-js" and "ev-expr-cases-lean" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-expr-cases-js, ev-expr-cases-lean), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-expr-cases-js and ev-expr-cases-lean: pass.
 
 **Holds only if**
 
@@ -5888,8 +5888,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-expr-cases-js | test | tests/core/expr-cases.test.js#expression case on the JavaScript evaluator | supports | none |
-| ev-expr-cases-lean | test | tests/core/expr-cases.test.js#expression cases on the Lean core: every case gives the expected outcome | supports | none |
+| ev-expr-cases-js | test | tests/core/expr-cases.test.js#expression case on the JavaScript evaluator | supports | pass |
+| ev-expr-cases-lean | test | tests/core/expr-cases.test.js#expression cases on the Lean core: every case gives the expected outcome | supports | pass |
 
 ## machine-time-integer-readiness
 
@@ -5897,12 +5897,12 @@ An implementation-level machine is reported with ready.time-epoch when it compar
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-time-readiness-negative, ev-time-readiness-fixed), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-time-readiness-negative" and "ev-time-readiness-fixed" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-time-readiness-negative, ev-time-readiness-fixed), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-time-readiness-negative and ev-time-readiness-fixed: pass.
 
 **Holds only if**
 
@@ -5917,8 +5917,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-time-readiness-negative | test | tests/core/readiness-time.test.js#readiness rule ready | supports | none |
-| ev-time-readiness-fixed | test | tests/core/readiness-time.test.js#the fixed machine has no error | supports | none |
+| ev-time-readiness-negative | test | tests/core/readiness-time.test.js#readiness rule ready | supports | pass |
+| ev-time-readiness-fixed | test | tests/core/readiness-time.test.js#the fixed machine has no error | supports | pass |
 
 ## union-map-types-rules
 
@@ -5926,12 +5926,12 @@ A type may be a tagged union (variants that are unit, struct-like or newtype, wr
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 9 evidence entities (ev-union-map-types-rules-1, ev-union-map-types-rules-2, ev-union-map-types-rules-3, ev-union-map-types-rules-4, ev-union-map-types-rules-5, ev-union-map-types-rules-6, ev-union-map-types-rules-7, ev-union-map-types-rules-8, ev-union-map-types-rules-9), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-union-map-types-rules-1", "ev-union-map-types-rules-2", "ev-union-map-types-rules-3", "ev-union-map-types-rules-4", "ev-union-map-types-rules-5", "ev-union-map-types-rules-6", "ev-union-map-types-rules-7", "ev-union-map-types-rules-8" and "ev-union-map-types-rules-9" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 9 evidence entities (ev-union-map-types-rules-1, ev-union-map-types-rules-2, ev-union-map-types-rules-3, ev-union-map-types-rules-4, ev-union-map-types-rules-5, ev-union-map-types-rules-6, ev-union-map-types-rules-7, ev-union-map-types-rules-8, ev-union-map-types-rules-9), of which 9 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-union-map-types-rules-1, ev-union-map-types-rules-2, ev-union-map-types-rules-3, ev-union-map-types-rules-4, ev-union-map-types-rules-5, ev-union-map-types-rules-6, ev-union-map-types-rules-7, ev-union-map-types-rules-8 and ev-union-map-types-rules-9: pass.
 
 **Holds only if**
 
@@ -5946,15 +5946,15 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-union-map-types-rules-1 | test | tests/core/union-types.test.js#a union without variants is reported once as type.union-variants | supports | none |
-| ev-union-map-types-rules-2 | test | tests/core/union-types.test.js#a variant field whose type does not resolve is reported once as type.union-field | supports | none |
-| ev-union-map-types-rules-3 | test | tests/core/union-types.test.js#a tagField on an external tag is reported once as type.encoding | supports | none |
-| ev-union-map-types-rules-4 | test | tests/core/union-types.test.js#a map keyed by f64 is reported once as type.map-key | supports | none |
-| ev-union-map-types-rules-5 | test | tests/core/union-types.test.js#a struct holding itself is reported once as type.recursion | supports | none |
-| ev-union-map-types-rules-6 | test | tests/core/union-types.test.js#a pattern that is not a regular expression is reported once as type.constraints | supports | none |
-| ev-union-map-types-rules-7 | test | tests/core/union-types.test.js#a specification using unions and maps and constraints in the kernel forms validates | supports | none |
-| ev-union-map-types-rules-8 | test | tests/core/union-types.test.js#map types resolve when key and value resolve | supports | none |
-| ev-union-map-types-rules-9 | test | tests/core/union-types.test.js#a union or map value has the opaque class of json | supports | none |
+| ev-union-map-types-rules-1 | test | tests/core/union-types.test.js#a union without variants is reported once as type.union-variants | supports | pass |
+| ev-union-map-types-rules-2 | test | tests/core/union-types.test.js#a variant field whose type does not resolve is reported once as type.union-field | supports | pass |
+| ev-union-map-types-rules-3 | test | tests/core/union-types.test.js#a tagField on an external tag is reported once as type.encoding | supports | pass |
+| ev-union-map-types-rules-4 | test | tests/core/union-types.test.js#a map keyed by f64 is reported once as type.map-key | supports | pass |
+| ev-union-map-types-rules-5 | test | tests/core/union-types.test.js#a struct holding itself is reported once as type.recursion | supports | pass |
+| ev-union-map-types-rules-6 | test | tests/core/union-types.test.js#a pattern that is not a regular expression is reported once as type.constraints | supports | pass |
+| ev-union-map-types-rules-7 | test | tests/core/union-types.test.js#a specification using unions and maps and constraints in the kernel forms validates | supports | pass |
+| ev-union-map-types-rules-8 | test | tests/core/union-types.test.js#map types resolve when key and value resolve | supports | pass |
+| ev-union-map-types-rules-9 | test | tests/core/union-types.test.js#a union or map value has the opaque class of json | supports | pass |
 
 ## language-construct-rules
 
@@ -5962,12 +5962,12 @@ A specification may state an expression language its users write (section langua
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 15 evidence entities (ev-language-construct-rules-1, ev-language-construct-rules-2, ev-language-construct-rules-3, ev-language-construct-rules-4, ev-language-construct-rules-5, ev-language-construct-rules-6, ev-language-construct-rules-7, ev-language-construct-rules-8, ev-language-construct-rules-9, ev-language-construct-rules-10, ev-language-construct-rules-11, ev-language-construct-rules-12, ev-language-construct-rules-13, ev-language-construct-rules-14, ev-language-construct-rules-15), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-language-construct-rules-1", "ev-language-construct-rules-2", "ev-language-construct-rules-3", "ev-language-construct-rules-4", "ev-language-construct-rules-5", "ev-language-construct-rules-6", "ev-language-construct-rules-7", "ev-language-construct-rules-8", "ev-language-construct-rules-9", "ev-language-construct-rules-10", "ev-language-construct-rules-11", "ev-language-construct-rules-12", "ev-language-construct-rules-13", "ev-language-construct-rules-14" and "ev-language-construct-rules-15" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 15 evidence entities (ev-language-construct-rules-1, ev-language-construct-rules-2, ev-language-construct-rules-3, ev-language-construct-rules-4, ev-language-construct-rules-5, ev-language-construct-rules-6, ev-language-construct-rules-7, ev-language-construct-rules-8, ev-language-construct-rules-9, ev-language-construct-rules-10, ev-language-construct-rules-11, ev-language-construct-rules-12, ev-language-construct-rules-13, ev-language-construct-rules-14, ev-language-construct-rules-15), of which 15 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-language-construct-rules-1, ev-language-construct-rules-2, ev-language-construct-rules-3, ev-language-construct-rules-4, ev-language-construct-rules-5, ev-language-construct-rules-6, ev-language-construct-rules-7, ev-language-construct-rules-8, ev-language-construct-rules-9, ev-language-construct-rules-10, ev-language-construct-rules-11, ev-language-construct-rules-12, ev-language-construct-rules-13, ev-language-construct-rules-14 and ev-language-construct-rules-15: pass.
 
 **Holds only if**
 
@@ -5982,21 +5982,21 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-language-construct-rules-1 | test | tests/core/language.test.js#the kernel rule language as it is today validates and has no readiness gap | supports | none |
-| ev-language-construct-rules-2 | test | tests/core/language.test.js#two operators of one name is reported once as language.operator-duplicate | supports | none |
-| ev-language-construct-rules-3 | test | tests/core/language.test.js#two operators on one symbol is reported once as language.token-clash | supports | none |
-| ev-language-construct-rules-4 | test | tests/core/language.test.js#an infix operator on a word is reported once as language.syntax | supports | none |
-| ev-language-construct-rules-5 | test | tests/core/language.test.js#a binary operator without a precedence is reported once as language.precedence | supports | none |
-| ev-language-construct-rules-6 | test | tests/core/language.test.js#a primitive outside the catalogue is reported once as language.primitive-unknown | supports | none |
-| ev-language-construct-rules-7 | test | tests/core/language.test.js#a call with fewer operands than its primitive is reported once as language.arity | supports | none |
-| ev-language-construct-rules-8 | test | tests/core/language.test.js#a result of an undeclared shape is reported once as language.shape-unknown | supports | none |
-| ev-language-construct-rules-9 | test | tests/core/language.test.js#an operator stating other null handling than its primitive is reported once as language.nulls | supports | none |
-| ev-language-construct-rules-10 | test | tests/core/language.test.js#two operators for one AST variant is reported once as language.variant | supports | none |
-| ev-language-construct-rules-11 | test | tests/core/language.test.js#an operator reading a scope that is not declared is reported once as language.scope | supports | none |
-| ev-language-construct-rules-12 | test | tests/core/language.test.js#an AST variant without an operator is reported once as ready.language-variant-uncovered only when generation is set | supports | none |
-| ev-language-construct-rules-13 | test | tests/core/language.test.js#an operator without a primitive is reported once as ready.language-primitive-missing only when generation is set | supports | none |
-| ev-language-construct-rules-14 | test | tests/core/language.test.js#the primitive catalogue is the fixed set pinned to the kernel and each entry is complete | supports | none |
-| ev-language-construct-rules-15 | test | tests/core/language.test.js#the format documentation states every primitive and every code | supports | none |
+| ev-language-construct-rules-1 | test | tests/core/language.test.js#the kernel rule language as it is today validates and has no readiness gap | supports | pass |
+| ev-language-construct-rules-2 | test | tests/core/language.test.js#two operators of one name is reported once as language.operator-duplicate | supports | pass |
+| ev-language-construct-rules-3 | test | tests/core/language.test.js#two operators on one symbol is reported once as language.token-clash | supports | pass |
+| ev-language-construct-rules-4 | test | tests/core/language.test.js#an infix operator on a word is reported once as language.syntax | supports | pass |
+| ev-language-construct-rules-5 | test | tests/core/language.test.js#a binary operator without a precedence is reported once as language.precedence | supports | pass |
+| ev-language-construct-rules-6 | test | tests/core/language.test.js#a primitive outside the catalogue is reported once as language.primitive-unknown | supports | pass |
+| ev-language-construct-rules-7 | test | tests/core/language.test.js#a call with fewer operands than its primitive is reported once as language.arity | supports | pass |
+| ev-language-construct-rules-8 | test | tests/core/language.test.js#a result of an undeclared shape is reported once as language.shape-unknown | supports | pass |
+| ev-language-construct-rules-9 | test | tests/core/language.test.js#an operator stating other null handling than its primitive is reported once as language.nulls | supports | pass |
+| ev-language-construct-rules-10 | test | tests/core/language.test.js#two operators for one AST variant is reported once as language.variant | supports | pass |
+| ev-language-construct-rules-11 | test | tests/core/language.test.js#an operator reading a scope that is not declared is reported once as language.scope | supports | pass |
+| ev-language-construct-rules-12 | test | tests/core/language.test.js#an AST variant without an operator is reported once as ready.language-variant-uncovered only when generation is set | supports | pass |
+| ev-language-construct-rules-13 | test | tests/core/language.test.js#an operator without a primitive is reported once as ready.language-primitive-missing only when generation is set | supports | pass |
+| ev-language-construct-rules-14 | test | tests/core/language.test.js#the primitive catalogue is the fixed set pinned to the kernel and each entry is complete | supports | pass |
+| ev-language-construct-rules-15 | test | tests/core/language.test.js#the format documentation states every primitive and every code | supports | pass |
 
 ## function-construct-rules
 
@@ -6004,12 +6004,12 @@ A specification may state pure functions (section functions, entity function): t
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 15 evidence entities (ev-function-construct-rules-1, ev-function-construct-rules-2, ev-function-construct-rules-3, ev-function-construct-rules-4, ev-function-construct-rules-5, ev-function-construct-rules-6, ev-function-construct-rules-7, ev-function-construct-rules-8, ev-function-construct-rules-9, ev-function-construct-rules-10, ev-function-construct-rules-11, ev-function-construct-rules-12, ev-function-construct-rules-13, ev-function-construct-rules-14, ev-function-construct-rules-15), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-function-construct-rules-1", "ev-function-construct-rules-2", "ev-function-construct-rules-3", "ev-function-construct-rules-4", "ev-function-construct-rules-5", "ev-function-construct-rules-6", "ev-function-construct-rules-7", "ev-function-construct-rules-8", "ev-function-construct-rules-9", "ev-function-construct-rules-10", "ev-function-construct-rules-11", "ev-function-construct-rules-12", "ev-function-construct-rules-13", "ev-function-construct-rules-14" and "ev-function-construct-rules-15" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 15 evidence entities (ev-function-construct-rules-1, ev-function-construct-rules-2, ev-function-construct-rules-3, ev-function-construct-rules-4, ev-function-construct-rules-5, ev-function-construct-rules-6, ev-function-construct-rules-7, ev-function-construct-rules-8, ev-function-construct-rules-9, ev-function-construct-rules-10, ev-function-construct-rules-11, ev-function-construct-rules-12, ev-function-construct-rules-13, ev-function-construct-rules-14, ev-function-construct-rules-15), of which 15 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-function-construct-rules-1, ev-function-construct-rules-2, ev-function-construct-rules-3, ev-function-construct-rules-4, ev-function-construct-rules-5, ev-function-construct-rules-6, ev-function-construct-rules-7, ev-function-construct-rules-8, ev-function-construct-rules-9, ev-function-construct-rules-10, ev-function-construct-rules-11, ev-function-construct-rules-12, ev-function-construct-rules-13, ev-function-construct-rules-14 and ev-function-construct-rules-15: pass.
 
 **Holds only if**
 
@@ -6024,21 +6024,21 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-function-construct-rules-1 | test | tests/core/functions.test.js#the kernel decisions stated as functions validate with every example holding and nothing missing for generation | supports | none |
-| ev-function-construct-rules-2 | test | tests/core/functions.test.js#the examples are evaluated: each one gives its stated result or error | supports | none |
-| ev-function-construct-rules-3 | test | tests/core/functions.test.js#a body that does not parse is reported once as function.expr-syntax | supports | none |
-| ev-function-construct-rules-4 | test | tests/core/functions.test.js#a field the struct does not have is reported once as function.expr-reference | supports | none |
-| ev-function-construct-rules-5 | test | tests/core/functions.test.js#a comparison of an action with a resource is reported once as function.expr-type | supports | none |
-| ev-function-construct-rules-6 | test | tests/core/functions.test.js#a match that leaves out a variant is reported once as function.match-exhaustive | supports | none |
-| ev-function-construct-rules-7 | test | tests/core/functions.test.js#a function that calls itself is reported once as function.recursion | supports | none |
-| ev-function-construct-rules-8 | test | tests/core/functions.test.js#a fail in a function that declares no errors is reported once as function.error-unknown | supports | none |
-| ev-function-construct-rules-9 | test | tests/core/functions.test.js#two parameters of one name is reported once as function.param | supports | none |
-| ev-function-construct-rules-10 | test | tests/core/functions.test.js#an example whose result is wrong is reported once as function.example-failed | supports | none |
-| ev-function-construct-rules-11 | test | tests/core/functions.test.js#a function without a success example is reported once as ready.function-example-missing only when generation is set | supports | none |
-| ev-function-construct-rules-12 | test | tests/core/functions.test.js#every function code has a negative fixture | supports | none |
-| ev-function-construct-rules-13 | test | tests/core/functions.test.js#the format documentation states every code and operation and that functions are not mirrored in Lean | supports | none |
-| ev-function-construct-rules-14 | test | tests/core/functions.test.js#the body language parses every form of its grammar | supports | none |
-| ev-function-construct-rules-15 | test | tests/core/functions.test.js#eval of the declared language follows its primitives: three-valued logic and comparisons with null | supports | none |
+| ev-function-construct-rules-1 | test | tests/core/functions.test.js#the kernel decisions stated as functions validate with every example holding and nothing missing for generation | supports | pass |
+| ev-function-construct-rules-2 | test | tests/core/functions.test.js#the examples are evaluated: each one gives its stated result or error | supports | pass |
+| ev-function-construct-rules-3 | test | tests/core/functions.test.js#a body that does not parse is reported once as function.expr-syntax | supports | pass |
+| ev-function-construct-rules-4 | test | tests/core/functions.test.js#a field the struct does not have is reported once as function.expr-reference | supports | pass |
+| ev-function-construct-rules-5 | test | tests/core/functions.test.js#a comparison of an action with a resource is reported once as function.expr-type | supports | pass |
+| ev-function-construct-rules-6 | test | tests/core/functions.test.js#a match that leaves out a variant is reported once as function.match-exhaustive | supports | pass |
+| ev-function-construct-rules-7 | test | tests/core/functions.test.js#a function that calls itself is reported once as function.recursion | supports | pass |
+| ev-function-construct-rules-8 | test | tests/core/functions.test.js#a fail in a function that declares no errors is reported once as function.error-unknown | supports | pass |
+| ev-function-construct-rules-9 | test | tests/core/functions.test.js#two parameters of one name is reported once as function.param | supports | pass |
+| ev-function-construct-rules-10 | test | tests/core/functions.test.js#an example whose result is wrong is reported once as function.example-failed | supports | pass |
+| ev-function-construct-rules-11 | test | tests/core/functions.test.js#a function without a success example is reported once as ready.function-example-missing only when generation is set | supports | pass |
+| ev-function-construct-rules-12 | test | tests/core/functions.test.js#every function code has a negative fixture | supports | pass |
+| ev-function-construct-rules-13 | test | tests/core/functions.test.js#the format documentation states every code and operation and that functions are not mirrored in Lean | supports | pass |
+| ev-function-construct-rules-14 | test | tests/core/functions.test.js#the body language parses every form of its grammar | supports | pass |
+| ev-function-construct-rules-15 | test | tests/core/functions.test.js#eval of the declared language follows its primitives: three-valued logic and comparisons with null | supports | pass |
 
 ## set-tuple-nested-types-rules
 
@@ -6046,12 +6046,12 @@ A type text may be set<T>, a JSON array of distinct items in order, which resolv
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 15 evidence entities (ev-set-tuple-nested-types-rules-1, ev-set-tuple-nested-types-rules-2, ev-set-tuple-nested-types-rules-3, ev-set-tuple-nested-types-rules-4, ev-set-tuple-nested-types-rules-5, ev-set-tuple-nested-types-rules-6, ev-set-tuple-nested-types-rules-7, ev-set-tuple-nested-types-rules-8, ev-set-tuple-nested-types-rules-9, ev-set-tuple-nested-types-rules-10, ev-set-tuple-nested-types-rules-11, ev-set-tuple-nested-types-rules-12, ev-set-tuple-nested-types-rules-13, ev-set-tuple-nested-types-rules-14, ev-set-tuple-nested-types-rules-15), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-set-tuple-nested-types-rules-1", "ev-set-tuple-nested-types-rules-2", "ev-set-tuple-nested-types-rules-3", "ev-set-tuple-nested-types-rules-4", "ev-set-tuple-nested-types-rules-5", "ev-set-tuple-nested-types-rules-6", "ev-set-tuple-nested-types-rules-7", "ev-set-tuple-nested-types-rules-8", "ev-set-tuple-nested-types-rules-9", "ev-set-tuple-nested-types-rules-10", "ev-set-tuple-nested-types-rules-11", "ev-set-tuple-nested-types-rules-12", "ev-set-tuple-nested-types-rules-13", "ev-set-tuple-nested-types-rules-14" and "ev-set-tuple-nested-types-rules-15" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 15 evidence entities (ev-set-tuple-nested-types-rules-1, ev-set-tuple-nested-types-rules-2, ev-set-tuple-nested-types-rules-3, ev-set-tuple-nested-types-rules-4, ev-set-tuple-nested-types-rules-5, ev-set-tuple-nested-types-rules-6, ev-set-tuple-nested-types-rules-7, ev-set-tuple-nested-types-rules-8, ev-set-tuple-nested-types-rules-9, ev-set-tuple-nested-types-rules-10, ev-set-tuple-nested-types-rules-11, ev-set-tuple-nested-types-rules-12, ev-set-tuple-nested-types-rules-13, ev-set-tuple-nested-types-rules-14, ev-set-tuple-nested-types-rules-15), of which 15 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-set-tuple-nested-types-rules-1, ev-set-tuple-nested-types-rules-2, ev-set-tuple-nested-types-rules-3, ev-set-tuple-nested-types-rules-4, ev-set-tuple-nested-types-rules-5, ev-set-tuple-nested-types-rules-6, ev-set-tuple-nested-types-rules-7, ev-set-tuple-nested-types-rules-8, ev-set-tuple-nested-types-rules-9, ev-set-tuple-nested-types-rules-10, ev-set-tuple-nested-types-rules-11, ev-set-tuple-nested-types-rules-12, ev-set-tuple-nested-types-rules-13, ev-set-tuple-nested-types-rules-14 and ev-set-tuple-nested-types-rules-15: pass.
 
 **Holds only if**
 
@@ -6066,21 +6066,21 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-set-tuple-nested-types-rules-1 | test | tests/core/set-tuple-types.test.js#a specification with sets and tuple variants and maps of maps validates and has no readiness gap | supports | none |
-| ev-set-tuple-nested-types-rules-2 | test | tests/core/set-tuple-types.test.js#a set of an unresolved type is refused | supports | none |
-| ev-set-tuple-nested-types-rules-3 | test | tests/core/union-types.test.js#a set of an unresolved type in a variant field is reported once as type.union-field | supports | none |
-| ev-set-tuple-nested-types-rules-4 | test | tests/core/union-types.test.js#a map keyed by a set is reported once as type.map-key | supports | none |
-| ev-set-tuple-nested-types-rules-5 | test | tests/core/union-types.test.js#a tuple variant with one field is reported once as type.union-variants | supports | none |
-| ev-set-tuple-nested-types-rules-6 | test | tests/core/union-types.test.js#an internal tag over a tuple variant is reported once as type.encoding | supports | none |
-| ev-set-tuple-nested-types-rules-7 | test | tests/core/set-tuple-types.test.js#set types resolve when their item resolves and have the class list | supports | none |
-| ev-set-tuple-nested-types-rules-8 | test | tests/core/set-tuple-types.test.js#a scenario value of a set type is an array of distinct items of the item type | supports | none |
-| ev-set-tuple-nested-types-rules-9 | test | tests/core/set-tuple-types.test.js#nested generic type texts split at the top-level comma | supports | none |
-| ev-set-tuple-nested-types-rules-10 | test | tests/core/union-types.test.js#a map of maps whose inner value does not resolve is reported once as type.union-field | supports | none |
-| ev-set-tuple-nested-types-rules-11 | test | tests/core/set-tuple-types.test.js#a shared hint parses and resolves | supports | none |
-| ev-set-tuple-nested-types-rules-12 | test | tests/core/set-tuple-types.test.js#a shared field is checked as its type in a specification | supports | none |
-| ev-set-tuple-nested-types-rules-13 | test | tests/core/set-tuple-types.test.js#sensitivity is carried through a shared hint | supports | none |
-| ev-set-tuple-nested-types-rules-14 | test | tests/core/union-types.test.js#a shared of an unresolved type is reported once as type.field-unresolved | supports | none |
-| ev-set-tuple-nested-types-rules-15 | test | tests/core/union-types.test.js#a struct that holds itself through a shared field is reported once as type.recursion | supports | none |
+| ev-set-tuple-nested-types-rules-1 | test | tests/core/set-tuple-types.test.js#a specification with sets and tuple variants and maps of maps validates and has no readiness gap | supports | pass |
+| ev-set-tuple-nested-types-rules-2 | test | tests/core/set-tuple-types.test.js#a set of an unresolved type is refused | supports | pass |
+| ev-set-tuple-nested-types-rules-3 | test | tests/core/union-types.test.js#a set of an unresolved type in a variant field is reported once as type.union-field | supports | pass |
+| ev-set-tuple-nested-types-rules-4 | test | tests/core/union-types.test.js#a map keyed by a set is reported once as type.map-key | supports | pass |
+| ev-set-tuple-nested-types-rules-5 | test | tests/core/union-types.test.js#a tuple variant with one field is reported once as type.union-variants | supports | pass |
+| ev-set-tuple-nested-types-rules-6 | test | tests/core/union-types.test.js#an internal tag over a tuple variant is reported once as type.encoding | supports | pass |
+| ev-set-tuple-nested-types-rules-7 | test | tests/core/set-tuple-types.test.js#set types resolve when their item resolves and have the class list | supports | pass |
+| ev-set-tuple-nested-types-rules-8 | test | tests/core/set-tuple-types.test.js#a scenario value of a set type is an array of distinct items of the item type | supports | pass |
+| ev-set-tuple-nested-types-rules-9 | test | tests/core/set-tuple-types.test.js#nested generic type texts split at the top-level comma | supports | pass |
+| ev-set-tuple-nested-types-rules-10 | test | tests/core/union-types.test.js#a map of maps whose inner value does not resolve is reported once as type.union-field | supports | pass |
+| ev-set-tuple-nested-types-rules-11 | test | tests/core/set-tuple-types.test.js#a shared hint parses and resolves | supports | pass |
+| ev-set-tuple-nested-types-rules-12 | test | tests/core/set-tuple-types.test.js#a shared field is checked as its type in a specification | supports | pass |
+| ev-set-tuple-nested-types-rules-13 | test | tests/core/set-tuple-types.test.js#sensitivity is carried through a shared hint | supports | pass |
+| ev-set-tuple-nested-types-rules-14 | test | tests/core/union-types.test.js#a shared of an unresolved type is reported once as type.field-unresolved | supports | pass |
+| ev-set-tuple-nested-types-rules-15 | test | tests/core/union-types.test.js#a struct that holds itself through a shared field is reported once as type.recursion | supports | pass |
 
 ## contract-errors-on-the-wire
 
@@ -6088,12 +6088,12 @@ A contract error states its HTTP status as status (an integer from 400 to 599, c
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 10 evidence entities (ev-wire-errors-clean, ev-wire-error-status-order, ev-wire-error-status-range, ev-wire-error-kind-unknown, ev-wire-error-status-and-kind, ev-wire-error-body-runtime, ev-wire-error-body-type, ev-wire-error-body-code, ev-wire-error-status-missing, ev-wire-error-kind-missing), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-wire-errors-clean", "ev-wire-error-status-order", "ev-wire-error-status-range", "ev-wire-error-kind-unknown", "ev-wire-error-status-and-kind", "ev-wire-error-body-runtime", "ev-wire-error-body-type", "ev-wire-error-body-code", "ev-wire-error-status-missing" and "ev-wire-error-kind-missing" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 10 evidence entities (ev-wire-errors-clean, ev-wire-error-status-order, ev-wire-error-status-range, ev-wire-error-kind-unknown, ev-wire-error-status-and-kind, ev-wire-error-body-runtime, ev-wire-error-body-type, ev-wire-error-body-code, ev-wire-error-status-missing, ev-wire-error-kind-missing), of which 10 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-wire-errors-clean, ev-wire-error-status-order, ev-wire-error-status-range, ev-wire-error-kind-unknown, ev-wire-error-status-and-kind, ev-wire-error-body-runtime, ev-wire-error-body-type, ev-wire-error-body-code, ev-wire-error-status-missing and ev-wire-error-kind-missing: pass.
 
 **Holds only if**
 
@@ -6108,16 +6108,16 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-wire-errors-clean | test | tests/core/codegen-readiness.test.js#error kinds and an error body and errors naming kinds validate with no errors and no readiness gaps | supports | none |
-| ev-wire-error-status-order | test | tests/core/codegen-readiness.test.js#the status of an error is its own or else the status of its kind or else the default kind or else the default status | supports | none |
-| ev-wire-error-status-range | test | tests/core/codegen-readiness.test.js#an error status outside 400 to 599 is reported once as contract.error-status at contracts.2.errors.1.status | supports | none |
-| ev-wire-error-kind-unknown | test | tests/core/codegen-readiness.test.js#an error kind that is not declared is reported once as contract.error-kind-unknown at contracts.2.errors.1.kind | supports | none |
-| ev-wire-error-status-and-kind | test | tests/core/codegen-readiness.test.js#an error with both a status and a kind is reported once as contract.error-status-kind at contracts.2.errors.1 | supports | none |
-| ev-wire-error-body-runtime | test | tests/core/codegen-readiness.test.js#an error body that leaves a runtime failure out is reported once as generation.error-body-runtime at system.generation.errorBody.runtime | supports | none |
-| ev-wire-error-body-type | test | tests/core/codegen-readiness.test.js#an error body type with a required field it does not fill is reported once as generation.error-body-type at system.generation.errorBody.type | supports | none |
-| ev-wire-error-body-code | test | tests/core/codegen-readiness.test.js#an error body code whose enum lacks a kind is reported once as generation.error-body-code at system.generation.errorBody.code | supports | none |
-| ev-wire-error-status-missing | test | tests/core/codegen-readiness.test.js#a served error with no status or kind or default is exactly one ready.error-status-missing when generation is set | supports | none |
-| ev-wire-error-kind-missing | test | tests/core/codegen-readiness.test.js#under an error body a served error with no kind and no default kind is exactly one ready.error-kind-missing | supports | none |
+| ev-wire-errors-clean | test | tests/core/codegen-readiness.test.js#error kinds and an error body and errors naming kinds validate with no errors and no readiness gaps | supports | pass |
+| ev-wire-error-status-order | test | tests/core/codegen-readiness.test.js#the status of an error is its own or else the status of its kind or else the default kind or else the default status | supports | pass |
+| ev-wire-error-status-range | test | tests/core/codegen-readiness.test.js#an error status outside 400 to 599 is reported once as contract.error-status at contracts.2.errors.1.status | supports | pass |
+| ev-wire-error-kind-unknown | test | tests/core/codegen-readiness.test.js#an error kind that is not declared is reported once as contract.error-kind-unknown at contracts.2.errors.1.kind | supports | pass |
+| ev-wire-error-status-and-kind | test | tests/core/codegen-readiness.test.js#an error with both a status and a kind is reported once as contract.error-status-kind at contracts.2.errors.1 | supports | pass |
+| ev-wire-error-body-runtime | test | tests/core/codegen-readiness.test.js#an error body that leaves a runtime failure out is reported once as generation.error-body-runtime at system.generation.errorBody.runtime | supports | pass |
+| ev-wire-error-body-type | test | tests/core/codegen-readiness.test.js#an error body type with a required field it does not fill is reported once as generation.error-body-type at system.generation.errorBody.type | supports | pass |
+| ev-wire-error-body-code | test | tests/core/codegen-readiness.test.js#an error body code whose enum lacks a kind is reported once as generation.error-body-code at system.generation.errorBody.code | supports | pass |
+| ev-wire-error-status-missing | test | tests/core/codegen-readiness.test.js#a served error with no status or kind or default is exactly one ready.error-status-missing when generation is set | supports | pass |
+| ev-wire-error-kind-missing | test | tests/core/codegen-readiness.test.js#under an error body a served error with no kind and no default kind is exactly one ready.error-kind-missing | supports | pass |
 
 ## machine-realisation-and-durability
 
@@ -6125,12 +6125,12 @@ A machine and a contract say whether they model code that exists or the enterpri
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-machine-realisation-1, ev-machine-realisation-2, ev-machine-realisation-3, ev-machine-realisation-4), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-machine-realisation-1", "ev-machine-realisation-2", "ev-machine-realisation-3" and "ev-machine-realisation-4" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-machine-realisation-1, ev-machine-realisation-2, ev-machine-realisation-3, ev-machine-realisation-4), of which 4 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-machine-realisation-1, ev-machine-realisation-2, ev-machine-realisation-3 and ev-machine-realisation-4: pass.
 
 **Holds only if**
 
@@ -6145,10 +6145,10 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-machine-realisation-1 | test | tests/core/realisation.test.js#realisation defaults from the implementation status of the subject and an explicit value wins | supports | none |
-| ev-machine-realisation-2 | test | tests/core/realisation.test.js#rule behavior.realisation-subject: a machine declared shipped on a not-implemented component gives exactly that one error | supports | none |
-| ev-machine-realisation-3 | test | tests/core/realisation.test.js#rule storage.durability: a memory machine that names a record gives exactly that one error | supports | none |
-| ev-machine-realisation-4 | test | tests/core/realisation.test.js#a memory machine is held to no storage or transaction readiness rule and a record machine still is | supports | none |
+| ev-machine-realisation-1 | test | tests/core/realisation.test.js#realisation defaults from the implementation status of the subject and an explicit value wins | supports | pass |
+| ev-machine-realisation-2 | test | tests/core/realisation.test.js#rule behavior.realisation-subject: a machine declared shipped on a not-implemented component gives exactly that one error | supports | pass |
+| ev-machine-realisation-3 | test | tests/core/realisation.test.js#rule storage.durability: a memory machine that names a record gives exactly that one error | supports | pass |
+| ev-machine-realisation-4 | test | tests/core/realisation.test.js#a memory machine is held to no storage or transaction readiness rule and a record machine still is | supports | pass |
 
 ## tenant-data-fixed-rule
 
@@ -6156,12 +6156,12 @@ A record states whether it is a platform table (scope platform, its fields its w
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 5 evidence entities (ev-tenant-data-fixed-rule-1, ev-tenant-data-fixed-rule-2, ev-tenant-data-fixed-rule-3, ev-tenant-data-fixed-rule-4, ev-tenant-data-fixed-rule-5), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-tenant-data-fixed-rule-1", "ev-tenant-data-fixed-rule-2", "ev-tenant-data-fixed-rule-3", "ev-tenant-data-fixed-rule-4" and "ev-tenant-data-fixed-rule-5" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 5 evidence entities (ev-tenant-data-fixed-rule-1, ev-tenant-data-fixed-rule-2, ev-tenant-data-fixed-rule-3, ev-tenant-data-fixed-rule-4, ev-tenant-data-fixed-rule-5), of which 5 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-tenant-data-fixed-rule-1, ev-tenant-data-fixed-rule-2, ev-tenant-data-fixed-rule-3, ev-tenant-data-fixed-rule-4 and ev-tenant-data-fixed-rule-5: pass.
 
 **Holds only if**
 
@@ -6176,11 +6176,11 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-tenant-data-fixed-rule-1 | test | tests/core/tenant-data.test.js#a metadata model with platform tables and tenant-meta tables described by the tenant schema validates | supports | none |
-| ev-tenant-data-fixed-rule-2 | test | tests/core/tenant-data.test.js#a platform record with a generic map of field values is reported once as record.tenant-data-fixed | supports | none |
-| ev-tenant-data-fixed-rule-3 | test | tests/core/tenant-data.test.js#a record without a scope once a tenant schema is declared is reported once as record.scope-missing | supports | none |
-| ev-tenant-data-fixed-rule-4 | test | tests/core/tenant-data.test.js#a tenant-meta record without describedBy is reported once as record.described-by | supports | none |
-| ev-tenant-data-fixed-rule-5 | test | tests/core/tenant-data.test.js#a specification without a tenant schema needs no scope and keeps its fixed records | supports | none |
+| ev-tenant-data-fixed-rule-1 | test | tests/core/tenant-data.test.js#a metadata model with platform tables and tenant-meta tables described by the tenant schema validates | supports | pass |
+| ev-tenant-data-fixed-rule-2 | test | tests/core/tenant-data.test.js#a platform record with a generic map of field values is reported once as record.tenant-data-fixed | supports | pass |
+| ev-tenant-data-fixed-rule-3 | test | tests/core/tenant-data.test.js#a record without a scope once a tenant schema is declared is reported once as record.scope-missing | supports | pass |
+| ev-tenant-data-fixed-rule-4 | test | tests/core/tenant-data.test.js#a tenant-meta record without describedBy is reported once as record.described-by | supports | pass |
+| ev-tenant-data-fixed-rule-5 | test | tests/core/tenant-data.test.js#a specification without a tenant schema needs no scope and keeps its fixed records | supports | pass |
 
 ## faults-realisable-by-runtime
 
@@ -6188,12 +6188,12 @@ In a scenario that runs an implementation-level machine, a fault the generated r
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-faults-realisable-negative, ev-faults-realisable-fixed, ev-faults-retry-policy), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-faults-realisable-negative", "ev-faults-realisable-fixed" and "ev-faults-retry-policy" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-faults-realisable-negative, ev-faults-realisable-fixed, ev-faults-retry-policy), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-faults-realisable-negative, ev-faults-realisable-fixed and ev-faults-retry-policy: pass.
 
 **Holds only if**
 
@@ -6208,9 +6208,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-faults-realisable-negative | test | tests/core/runtime-faults.test.js#rule fault.unrealisable | supports | none |
-| ev-faults-realisable-fixed | test | tests/core/runtime-faults.test.js#the fixed specification has no error | supports | none |
-| ev-faults-retry-policy | test | tests/core/runtime-faults.test.js#a stated retry policy decides which delays of an at-least-once event are realisable | supports | none |
+| ev-faults-realisable-negative | test | tests/core/runtime-faults.test.js#rule fault.unrealisable | supports | pass |
+| ev-faults-realisable-fixed | test | tests/core/runtime-faults.test.js#the fixed specification has no error | supports | pass |
+| ev-faults-retry-policy | test | tests/core/runtime-faults.test.js#a stated retry policy decides which delays of an at-least-once event are realisable | supports | pass |
 
 ## machine-initial-state-reachable
 
@@ -6218,12 +6218,12 @@ A shipped implementation-level machine (its subject states an implementation sta
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-initial-state-negative, ev-initial-state-cleared), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-initial-state-negative" and "ev-initial-state-cleared" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-initial-state-negative, ev-initial-state-cleared), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-initial-state-negative and ev-initial-state-cleared: pass.
 
 **Holds only if**
 
@@ -6238,8 +6238,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-initial-state-negative | test | tests/core/runtime-faults.test.js#rule machine.initial-unreachable | supports | none |
-| ev-initial-state-cleared | test | tests/core/runtime-faults.test.js#a machine whose records a named contract writes or of a component not built yet reaches its initial state | supports | none |
+| ev-initial-state-negative | test | tests/core/runtime-faults.test.js#rule machine.initial-unreachable | supports | pass |
+| ev-initial-state-cleared | test | tests/core/runtime-faults.test.js#a machine whose records a named contract writes or of a component not built yet reaches its initial state | supports | pass |
 
 ## runtime-fault-kinds-simulated
 
@@ -6247,12 +6247,12 @@ The fault kinds duplicate-event, lose-event and retry-event derive a version-2 e
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-runtime-faults-lowered, ev-runtime-faults-run), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-runtime-faults-lowered" and "ev-runtime-faults-run" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-runtime-faults-lowered, ev-runtime-faults-run), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-runtime-faults-lowered and ev-runtime-faults-run: pass.
 
 **Holds only if**
 
@@ -6267,8 +6267,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-runtime-faults-lowered | test | tests/core/runtime-faults.test.js#the new fault kinds lower into a format-2 engine input | supports | none |
-| ev-runtime-faults-run | test | tests/core/runtime-faults.test.js#the engine delivers a duplicate twice and drops a lost event and delays a retried one by its backoff | supports | none |
+| ev-runtime-faults-lowered | test | tests/core/runtime-faults.test.js#the new fault kinds lower into a format-2 engine input | supports | pass |
+| ev-runtime-faults-run | test | tests/core/runtime-faults.test.js#the engine delivers a duplicate twice and drops a lost event and delays a retried one by its backoff | supports | pass |
 
 ## route-ambiguous-rule
 
@@ -6276,12 +6276,12 @@ Two screens whose routes tie are refused with route.ambiguous: both routes are n
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-route-ambiguous-tie, ev-route-ambiguous-differ), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-route-ambiguous-tie" and "ev-route-ambiguous-differ" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-route-ambiguous-tie, ev-route-ambiguous-differ), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-route-ambiguous-tie and ev-route-ambiguous-differ: pass.
 
 **Holds only if**
 
@@ -6296,8 +6296,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-route-ambiguous-tie | test | tests/core/ui.test.js#ui consistency: two screens whose routes tie is reported once as route.ambiguous | supports | none |
-| ev-route-ambiguous-differ | test | tests/core/ui.test.js#ui consistency: screens whose routes differ do not tie | supports | none |
+| ev-route-ambiguous-tie | test | tests/core/ui.test.js#ui consistency: two screens whose routes tie is reported once as route.ambiguous | supports | pass |
+| ev-route-ambiguous-differ | test | tests/core/ui.test.js#ui consistency: screens whose routes differ do not tie | supports | pass |
 
 ## contract-exposure-and-auth
 
@@ -6305,12 +6305,12 @@ A contract states its exposure (public, internal or local) and its auth as {sche
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 17 evidence entities (ev-access-clean, ev-access-prose-allowed, ev-access-prose-refused, ev-access-auth-missing, ev-access-auth-shape, ev-access-exposure-missing, ev-access-in-process, ev-access-public-write, ev-access-anonymous-write, ev-access-anonymous-justified, ev-access-anonymous-quota, ev-access-gateway-internal, ev-access-gateway-local, ev-access-policy-unknown, ev-access-service-public, ev-access-dev-only, ev-access-tenant-scope), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-access-clean", "ev-access-prose-allowed", "ev-access-prose-refused", "ev-access-auth-missing", "ev-access-auth-shape", "ev-access-exposure-missing", "ev-access-in-process", "ev-access-public-write", "ev-access-anonymous-write", "ev-access-anonymous-justified", "ev-access-anonymous-quota", "ev-access-gateway-internal", "ev-access-gateway-local", "ev-access-policy-unknown", "ev-access-service-public", "ev-access-dev-only" and "ev-access-tenant-scope" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 17 evidence entities (ev-access-clean, ev-access-prose-allowed, ev-access-prose-refused, ev-access-auth-missing, ev-access-auth-shape, ev-access-exposure-missing, ev-access-in-process, ev-access-public-write, ev-access-anonymous-write, ev-access-anonymous-justified, ev-access-anonymous-quota, ev-access-gateway-internal, ev-access-gateway-local, ev-access-policy-unknown, ev-access-service-public, ev-access-dev-only, ev-access-tenant-scope), of which 17 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-access-clean, ev-access-prose-allowed, ev-access-prose-refused, ev-access-auth-missing, ev-access-auth-shape, ev-access-exposure-missing, ev-access-in-process, ev-access-public-write, ev-access-anonymous-write, ev-access-anonymous-justified, ev-access-anonymous-quota, ev-access-gateway-internal, ev-access-gateway-local, ev-access-policy-unknown, ev-access-service-public, ev-access-dev-only and ev-access-tenant-scope: pass.
 
 **Holds only if**
 
@@ -6325,23 +6325,23 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-access-clean | test | tests/core/access.test.js#a specification stating exposure and structured auth on every contract validates with no errors and no readiness gaps | supports | none |
-| ev-access-prose-allowed | test | tests/core/access.test.js#without system.generation a contract may state its auth as a sentence and leave its exposure out | supports | none |
-| ev-access-prose-refused | test | tests/core/access.test.js#access: prose auth under generation is reported once as contract.auth-structured at contracts.2.auth | supports | none |
-| ev-access-auth-missing | test | tests/core/access.test.js#access: a contract with no auth under generation is reported once as contract.auth-structured at contracts.6 | supports | none |
-| ev-access-auth-shape | test | tests/core/access.test.js#access: csrf on a service credential is reported once as contract.auth-structured at contracts.4.auth.csrf | supports | none |
-| ev-access-exposure-missing | test | tests/core/access.test.js#access: a contract with no exposure under generation is reported once as contract.exposure at contracts.4.exposure | supports | none |
-| ev-access-in-process | test | tests/core/access.test.js#access: an internal contract called in-process is reported once as contract.exposure at contracts.4.auth.scheme | supports | none |
-| ev-access-public-write | test | tests/core/access.test.js#access: a public write by session without csrf is reported once as auth.public-write at contracts.2.auth | supports | none |
-| ev-access-anonymous-write | test | tests/core/access.test.js#access: an anonymous public write without csrf and origin is reported once as auth.public-write at contracts.1.auth | supports | none |
-| ev-access-anonymous-justified | test | tests/core/access.test.js#access: an anonymous public write without a justification is reported once as auth.anonymous at contracts.1.auth | supports | none |
-| ev-access-anonymous-quota | test | tests/core/access.test.js#access: an anonymous public contract without a quota is reported once as auth.anonymous at contracts.0.auth | supports | none |
-| ev-access-gateway-internal | test | tests/core/access.test.js#access: an internal contract bound under the gateway is reported once as exposure.gateway at contracts.4.binding.path | supports | none |
-| ev-access-gateway-local | test | tests/core/access.test.js#access: a local contract with an HTTP binding is reported once as exposure.gateway at contracts.6.binding | supports | none |
-| ev-access-policy-unknown | test | tests/core/access.test.js#access: an auth naming a policy that does not exist is reported once as auth.policy-unknown at contracts.2.auth.policies.0 | supports | none |
-| ev-access-service-public | test | tests/core/access.test.js#access: a public contract taking the service credential is reported once as auth.service-public at contracts.0.auth.scheme | supports | none |
-| ev-access-dev-only | test | tests/core/access.test.js#access: a development contract open to anonymous callers is reported once as auth.dev-only at contracts.7.auth.scheme | supports | none |
-| ev-access-tenant-scope | test | tests/core/access.test.js#access: a public contract returning data across tenants is reported once as contract.tenant-scope at contracts.2.tenantScope | supports | none |
+| ev-access-clean | test | tests/core/access.test.js#a specification stating exposure and structured auth on every contract validates with no errors and no readiness gaps | supports | pass |
+| ev-access-prose-allowed | test | tests/core/access.test.js#without system.generation a contract may state its auth as a sentence and leave its exposure out | supports | pass |
+| ev-access-prose-refused | test | tests/core/access.test.js#access: prose auth under generation is reported once as contract.auth-structured at contracts.2.auth | supports | pass |
+| ev-access-auth-missing | test | tests/core/access.test.js#access: a contract with no auth under generation is reported once as contract.auth-structured at contracts.6 | supports | pass |
+| ev-access-auth-shape | test | tests/core/access.test.js#access: csrf on a service credential is reported once as contract.auth-structured at contracts.4.auth.csrf | supports | pass |
+| ev-access-exposure-missing | test | tests/core/access.test.js#access: a contract with no exposure under generation is reported once as contract.exposure at contracts.4.exposure | supports | pass |
+| ev-access-in-process | test | tests/core/access.test.js#access: an internal contract called in-process is reported once as contract.exposure at contracts.4.auth.scheme | supports | pass |
+| ev-access-public-write | test | tests/core/access.test.js#access: a public write by session without csrf is reported once as auth.public-write at contracts.2.auth | supports | pass |
+| ev-access-anonymous-write | test | tests/core/access.test.js#access: an anonymous public write without csrf and origin is reported once as auth.public-write at contracts.1.auth | supports | pass |
+| ev-access-anonymous-justified | test | tests/core/access.test.js#access: an anonymous public write without a justification is reported once as auth.anonymous at contracts.1.auth | supports | pass |
+| ev-access-anonymous-quota | test | tests/core/access.test.js#access: an anonymous public contract without a quota is reported once as auth.anonymous at contracts.0.auth | supports | pass |
+| ev-access-gateway-internal | test | tests/core/access.test.js#access: an internal contract bound under the gateway is reported once as exposure.gateway at contracts.4.binding.path | supports | pass |
+| ev-access-gateway-local | test | tests/core/access.test.js#access: a local contract with an HTTP binding is reported once as exposure.gateway at contracts.6.binding | supports | pass |
+| ev-access-policy-unknown | test | tests/core/access.test.js#access: an auth naming a policy that does not exist is reported once as auth.policy-unknown at contracts.2.auth.policies.0 | supports | pass |
+| ev-access-service-public | test | tests/core/access.test.js#access: a public contract taking the service credential is reported once as auth.service-public at contracts.0.auth.scheme | supports | pass |
+| ev-access-dev-only | test | tests/core/access.test.js#access: a development contract open to anonymous callers is reported once as auth.dev-only at contracts.7.auth.scheme | supports | pass |
+| ev-access-tenant-scope | test | tests/core/access.test.js#access: a public contract returning data across tenants is reported once as contract.tenant-scope at contracts.2.tenantScope | supports | pass |
 
 ## derivation-construct-rules
 
@@ -6349,12 +6349,12 @@ A contract may be derived (realisation derived, with derivation {kind: pure, fun
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 11 evidence entities (ev-derivation-construct-rules-1, ev-derivation-construct-rules-2, ev-derivation-construct-rules-3, ev-derivation-construct-rules-4, ev-derivation-construct-rules-5, ev-derivation-construct-rules-6, ev-derivation-construct-rules-7, ev-derivation-construct-rules-8, ev-derivation-construct-rules-9, ev-derivation-construct-rules-10, ev-derivation-construct-rules-11), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-derivation-construct-rules-1", "ev-derivation-construct-rules-2", "ev-derivation-construct-rules-3", "ev-derivation-construct-rules-4", "ev-derivation-construct-rules-5", "ev-derivation-construct-rules-6", "ev-derivation-construct-rules-7", "ev-derivation-construct-rules-8", "ev-derivation-construct-rules-9", "ev-derivation-construct-rules-10" and "ev-derivation-construct-rules-11" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 11 evidence entities (ev-derivation-construct-rules-1, ev-derivation-construct-rules-2, ev-derivation-construct-rules-3, ev-derivation-construct-rules-4, ev-derivation-construct-rules-5, ev-derivation-construct-rules-6, ev-derivation-construct-rules-7, ev-derivation-construct-rules-8, ev-derivation-construct-rules-9, ev-derivation-construct-rules-10, ev-derivation-construct-rules-11), of which 11 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-derivation-construct-rules-1, ev-derivation-construct-rules-2, ev-derivation-construct-rules-3, ev-derivation-construct-rules-4, ev-derivation-construct-rules-5, ev-derivation-construct-rules-6, ev-derivation-construct-rules-7, ev-derivation-construct-rules-8, ev-derivation-construct-rules-9, ev-derivation-construct-rules-10 and ev-derivation-construct-rules-11: pass.
 
 **Holds only if**
 
@@ -6369,17 +6369,17 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-derivation-construct-rules-1 | test | tests/core/derivations.test.js#pure and read and command derivations over a load and a commit contract and a facade validate with nothing missing for generation | supports | none |
-| ev-derivation-construct-rules-2 | test | tests/core/derivations.test.js#a derived contract without a derivation is reported once as derivation.kind | supports | none |
-| ev-derivation-construct-rules-3 | test | tests/core/derivations.test.js#a function parameter of another type than the input is reported once as derivation.signature | supports | none |
-| ev-derivation-construct-rules-4 | test | tests/core/derivations.test.js#a load contract with an input nothing fills is reported once as derivation.load | supports | none |
-| ev-derivation-construct-rules-5 | test | tests/core/derivations.test.js#a conflict error the commit contract does not have is reported once as derivation.commit | supports | none |
-| ev-derivation-construct-rules-6 | test | tests/core/derivations.test.js#a negative number of need rounds is reported once as derivation.bounds | supports | none |
-| ev-derivation-construct-rules-7 | test | tests/core/derivations.test.js#a facade whose route no served contract states is reported once as contract.facade-route | supports | none |
-| ev-derivation-construct-rules-8 | test | tests/core/derivations.test.js#a derivation naming a function that is not declared is reported once as ready.derived-function-missing only when generation is set | supports | none |
-| ev-derivation-construct-rules-9 | test | tests/core/derivations.test.js#every derivation code has a negative fixture | supports | none |
-| ev-derivation-construct-rules-10 | test | tests/core/derivations.test.js#error variants and contract errors are matched by their words and a route by its method and path and shape | supports | none |
-| ev-derivation-construct-rules-11 | test | tests/core/derivations.test.js#the format documentation states every derivation code and kind | supports | none |
+| ev-derivation-construct-rules-1 | test | tests/core/derivations.test.js#pure and read and command derivations over a load and a commit contract and a facade validate with nothing missing for generation | supports | pass |
+| ev-derivation-construct-rules-2 | test | tests/core/derivations.test.js#a derived contract without a derivation is reported once as derivation.kind | supports | pass |
+| ev-derivation-construct-rules-3 | test | tests/core/derivations.test.js#a function parameter of another type than the input is reported once as derivation.signature | supports | pass |
+| ev-derivation-construct-rules-4 | test | tests/core/derivations.test.js#a load contract with an input nothing fills is reported once as derivation.load | supports | pass |
+| ev-derivation-construct-rules-5 | test | tests/core/derivations.test.js#a conflict error the commit contract does not have is reported once as derivation.commit | supports | pass |
+| ev-derivation-construct-rules-6 | test | tests/core/derivations.test.js#a negative number of need rounds is reported once as derivation.bounds | supports | pass |
+| ev-derivation-construct-rules-7 | test | tests/core/derivations.test.js#a facade whose route no served contract states is reported once as contract.facade-route | supports | pass |
+| ev-derivation-construct-rules-8 | test | tests/core/derivations.test.js#a derivation naming a function that is not declared is reported once as ready.derived-function-missing only when generation is set | supports | pass |
+| ev-derivation-construct-rules-9 | test | tests/core/derivations.test.js#every derivation code has a negative fixture | supports | pass |
+| ev-derivation-construct-rules-10 | test | tests/core/derivations.test.js#error variants and contract errors are matched by their words and a route by its method and path and shape | supports | pass |
+| ev-derivation-construct-rules-11 | test | tests/core/derivations.test.js#the format documentation states every derivation code and kind | supports | pass |
 
 ## function-language-kernel-fidelity
 
@@ -6387,12 +6387,12 @@ The function body language states what the Strata kernel computes without stand-
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 11 evidence entities (ev-function-language-kernel-fidelity-1, ev-function-language-kernel-fidelity-2, ev-function-language-kernel-fidelity-3, ev-function-language-kernel-fidelity-4, ev-function-language-kernel-fidelity-5, ev-function-language-kernel-fidelity-6, ev-function-language-kernel-fidelity-7, ev-function-language-kernel-fidelity-8, ev-function-language-kernel-fidelity-9, ev-function-language-kernel-fidelity-10, ev-function-language-kernel-fidelity-11), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-function-language-kernel-fidelity-1", "ev-function-language-kernel-fidelity-2", "ev-function-language-kernel-fidelity-3", "ev-function-language-kernel-fidelity-4", "ev-function-language-kernel-fidelity-5", "ev-function-language-kernel-fidelity-6", "ev-function-language-kernel-fidelity-7", "ev-function-language-kernel-fidelity-8", "ev-function-language-kernel-fidelity-9", "ev-function-language-kernel-fidelity-10" and "ev-function-language-kernel-fidelity-11" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 11 evidence entities (ev-function-language-kernel-fidelity-1, ev-function-language-kernel-fidelity-2, ev-function-language-kernel-fidelity-3, ev-function-language-kernel-fidelity-4, ev-function-language-kernel-fidelity-5, ev-function-language-kernel-fidelity-6, ev-function-language-kernel-fidelity-7, ev-function-language-kernel-fidelity-8, ev-function-language-kernel-fidelity-9, ev-function-language-kernel-fidelity-10, ev-function-language-kernel-fidelity-11), of which 11 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-function-language-kernel-fidelity-1, ev-function-language-kernel-fidelity-2, ev-function-language-kernel-fidelity-3, ev-function-language-kernel-fidelity-4, ev-function-language-kernel-fidelity-5, ev-function-language-kernel-fidelity-6, ev-function-language-kernel-fidelity-7, ev-function-language-kernel-fidelity-8, ev-function-language-kernel-fidelity-9, ev-function-language-kernel-fidelity-10 and ev-function-language-kernel-fidelity-11: pass.
 
 **Holds only if**
 
@@ -6407,17 +6407,17 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-function-language-kernel-fidelity-1 | test | tests/core/functions.test.js#has_role reads its operand when the AST field is an id over string | supports | none |
-| ev-function-language-kernel-fidelity-2 | test | tests/core/functions.test.js#the body language writes keyword-named variants and fields and the unit value | supports | none |
-| ev-function-language-kernel-fidelity-3 | test | tests/core/functions.test.js#a function may call itself only on a strict sub-value of a union parameter | supports | none |
-| ev-function-language-kernel-fidelity-4 | test | tests/core/functions.test.js#the kernel decisions stated as functions validate with every example holding and nothing missing for generation | supports | none |
-| ev-function-language-kernel-fidelity-5 | test | tests/core/functions.test.js#a call of itself on the whole parameter is reported once as function.recursion | supports | none |
-| ev-function-language-kernel-fidelity-6 | test | tests/core/functions.test.js#a keyword-named field bound without a name is reported once as function.expr-syntax | supports | none |
-| ev-function-language-kernel-fidelity-7 | test | tests/core/functions.test.js#the unit value where a string is expected is reported once as function.expr-type | supports | none |
-| ev-function-language-kernel-fidelity-8 | test | tests/core/functions.test.js#a declared type named unit is reported once as type.shadows-builtin | supports | none |
-| ev-function-language-kernel-fidelity-9 | test | tests/core/language-kernel-cases.test.js#the case table names each case once and has eval and check cases | supports | none |
-| ev-function-language-kernel-fidelity-10 | test | tests/core/language-kernel-cases.test.js#eval gives the kernel result: comparing a string with an int | supports | none |
-| ev-function-language-kernel-fidelity-11 | test | tests/core/language-kernel-cases.test.js#check gives the kernel result: len of a bool | supports | none |
+| ev-function-language-kernel-fidelity-1 | test | tests/core/functions.test.js#has_role reads its operand when the AST field is an id over string | supports | pass |
+| ev-function-language-kernel-fidelity-2 | test | tests/core/functions.test.js#the body language writes keyword-named variants and fields and the unit value | supports | pass |
+| ev-function-language-kernel-fidelity-3 | test | tests/core/functions.test.js#a function may call itself only on a strict sub-value of a union parameter | supports | pass |
+| ev-function-language-kernel-fidelity-4 | test | tests/core/functions.test.js#the kernel decisions stated as functions validate with every example holding and nothing missing for generation | supports | pass |
+| ev-function-language-kernel-fidelity-5 | test | tests/core/functions.test.js#a call of itself on the whole parameter is reported once as function.recursion | supports | pass |
+| ev-function-language-kernel-fidelity-6 | test | tests/core/functions.test.js#a keyword-named field bound without a name is reported once as function.expr-syntax | supports | pass |
+| ev-function-language-kernel-fidelity-7 | test | tests/core/functions.test.js#the unit value where a string is expected is reported once as function.expr-type | supports | pass |
+| ev-function-language-kernel-fidelity-8 | test | tests/core/functions.test.js#a declared type named unit is reported once as type.shadows-builtin | supports | pass |
+| ev-function-language-kernel-fidelity-9 | test | tests/core/language-kernel-cases.test.js#the case table names each case once and has eval and check cases | supports | pass |
+| ev-function-language-kernel-fidelity-10 | test | tests/core/language-kernel-cases.test.js#eval gives the kernel result: comparing a string with an int | supports | pass |
+| ev-function-language-kernel-fidelity-11 | test | tests/core/language-kernel-cases.test.js#check gives the kernel result: len of a bool | supports | pass |
 
 ## capability-model-closed
 
@@ -6425,12 +6425,12 @@ Capability, plan, role, grant, delegation, tokenScope and featureFlag are entity
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 15 evidence entities (ev-capability-clean, ev-capability-optional, ev-capability-required, ev-capability-required-internal, ev-capability-requires-shape, ev-capability-unknown-contract, ev-capability-unknown-plan, ev-capability-unknown-scope, ev-capability-unknown-flag, ev-capability-unconferred, ev-capability-unentitled, ev-delegation-exceeds-scope, ev-delegation-exceeds-role, ev-grant-exceeds-issuer, ev-grant-duration), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-capability-clean", "ev-capability-optional", "ev-capability-required", "ev-capability-required-internal", "ev-capability-requires-shape", "ev-capability-unknown-contract", "ev-capability-unknown-plan", "ev-capability-unknown-scope", "ev-capability-unknown-flag", "ev-capability-unconferred", "ev-capability-unentitled", "ev-delegation-exceeds-scope", "ev-delegation-exceeds-role", "ev-grant-exceeds-issuer" and "ev-grant-duration" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 15 evidence entities (ev-capability-clean, ev-capability-optional, ev-capability-required, ev-capability-required-internal, ev-capability-requires-shape, ev-capability-unknown-contract, ev-capability-unknown-plan, ev-capability-unknown-scope, ev-capability-unknown-flag, ev-capability-unconferred, ev-capability-unentitled, ev-delegation-exceeds-scope, ev-delegation-exceeds-role, ev-grant-exceeds-issuer, ev-grant-duration), of which 15 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-capability-clean, ev-capability-optional, ev-capability-required, ev-capability-required-internal, ev-capability-requires-shape, ev-capability-unknown-contract, ev-capability-unknown-plan, ev-capability-unknown-scope, ev-capability-unknown-flag, ev-capability-unconferred, ev-capability-unentitled, ev-delegation-exceeds-scope, ev-delegation-exceeds-role, ev-grant-exceeds-issuer and ev-grant-duration: pass.
 
 **Holds only if**
 
@@ -6445,21 +6445,21 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-capability-clean | test | tests/core/capabilities.test.js#a specification whose contracts require capabilities that roles confer and plans entitle validates with no errors and no readiness gaps | supports | none |
-| ev-capability-optional | test | tests/core/capabilities.test.js#without system.generation a contract need not require a capability | supports | none |
-| ev-capability-required | test | tests/core/capabilities.test.js#capabilities: a public contract that requires no capability is reported once as capability.required at contracts.1.auth | supports | none |
-| ev-capability-required-internal | test | tests/core/capabilities.test.js#capabilities: an internal contract that requires no capability is reported once as capability.required at contracts.3.auth | supports | none |
-| ev-capability-requires-shape | test | tests/core/capabilities.test.js#capabilities: an empty list of required capabilities is reported once as contract.auth-structured at contracts.2.auth.requires | supports | none |
-| ev-capability-unknown-contract | test | tests/core/capabilities.test.js#capabilities: a contract requiring a capability that does not exist is reported once as capability.unknown at contracts.1.auth.requires.0 | supports | none |
-| ev-capability-unknown-plan | test | tests/core/capabilities.test.js#capabilities: a plan entitling a capability that does not exist is reported once as capability.unknown at plans.1.capabilities.1 | supports | none |
-| ev-capability-unknown-scope | test | tests/core/capabilities.test.js#capabilities: a token scope naming a role as a capability is reported once as capability.unknown at tokenScopes.0.capabilities.2 | supports | none |
-| ev-capability-unknown-flag | test | tests/core/capabilities.test.js#capabilities: a flag gating a capability that does not exist is reported once as capability.unknown at featureFlags.0.gates.0 | supports | none |
-| ev-capability-unconferred | test | tests/core/capabilities.test.js#capabilities: a capability no role or grant confers is reported once as capability.unreachable at capabilities.3 | supports | none |
-| ev-capability-unentitled | test | tests/core/capabilities.test.js#capabilities: a capability that is not core and no plan entitles is reported once as capability.unreachable at capabilities.2 | supports | none |
-| ev-delegation-exceeds-scope | test | tests/core/capabilities.test.js#capabilities: a delegation passing on a capability its token scope does not hold is reported once as delegation.exceeds at delegations.0.capabilities.1 | supports | none |
-| ev-delegation-exceeds-role | test | tests/core/capabilities.test.js#capabilities: a delegation passing on a capability its role does not hold is reported once as delegation.exceeds at delegations.0.capabilities.0 | supports | none |
-| ev-grant-exceeds-issuer | test | tests/core/capabilities.test.js#capabilities: a grant conferring a capability its issuer does not hold is reported once as delegation.exceeds at grants.0.capabilities.1 | supports | none |
-| ev-grant-duration | test | tests/core/capabilities.test.js#capabilities: a grant whose longest duration is not a duration is reported once as capability.duration at grants.0.maxDuration | supports | none |
+| ev-capability-clean | test | tests/core/capabilities.test.js#a specification whose contracts require capabilities that roles confer and plans entitle validates with no errors and no readiness gaps | supports | pass |
+| ev-capability-optional | test | tests/core/capabilities.test.js#without system.generation a contract need not require a capability | supports | pass |
+| ev-capability-required | test | tests/core/capabilities.test.js#capabilities: a public contract that requires no capability is reported once as capability.required at contracts.1.auth | supports | pass |
+| ev-capability-required-internal | test | tests/core/capabilities.test.js#capabilities: an internal contract that requires no capability is reported once as capability.required at contracts.3.auth | supports | pass |
+| ev-capability-requires-shape | test | tests/core/capabilities.test.js#capabilities: an empty list of required capabilities is reported once as contract.auth-structured at contracts.2.auth.requires | supports | pass |
+| ev-capability-unknown-contract | test | tests/core/capabilities.test.js#capabilities: a contract requiring a capability that does not exist is reported once as capability.unknown at contracts.1.auth.requires.0 | supports | pass |
+| ev-capability-unknown-plan | test | tests/core/capabilities.test.js#capabilities: a plan entitling a capability that does not exist is reported once as capability.unknown at plans.1.capabilities.1 | supports | pass |
+| ev-capability-unknown-scope | test | tests/core/capabilities.test.js#capabilities: a token scope naming a role as a capability is reported once as capability.unknown at tokenScopes.0.capabilities.2 | supports | pass |
+| ev-capability-unknown-flag | test | tests/core/capabilities.test.js#capabilities: a flag gating a capability that does not exist is reported once as capability.unknown at featureFlags.0.gates.0 | supports | pass |
+| ev-capability-unconferred | test | tests/core/capabilities.test.js#capabilities: a capability no role or grant confers is reported once as capability.unreachable at capabilities.3 | supports | pass |
+| ev-capability-unentitled | test | tests/core/capabilities.test.js#capabilities: a capability that is not core and no plan entitles is reported once as capability.unreachable at capabilities.2 | supports | pass |
+| ev-delegation-exceeds-scope | test | tests/core/capabilities.test.js#capabilities: a delegation passing on a capability its token scope does not hold is reported once as delegation.exceeds at delegations.0.capabilities.1 | supports | pass |
+| ev-delegation-exceeds-role | test | tests/core/capabilities.test.js#capabilities: a delegation passing on a capability its role does not hold is reported once as delegation.exceeds at delegations.0.capabilities.0 | supports | pass |
+| ev-grant-exceeds-issuer | test | tests/core/capabilities.test.js#capabilities: a grant conferring a capability its issuer does not hold is reported once as delegation.exceeds at grants.0.capabilities.1 | supports | pass |
+| ev-grant-duration | test | tests/core/capabilities.test.js#capabilities: a grant whose longest duration is not a duration is reported once as capability.duration at grants.0.maxDuration | supports | pass |
 
 ## example-fixture-rules
 
@@ -6467,12 +6467,12 @@ A specification may declare example fixtures (section exampleFixtures, entity ex
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 7 evidence entities (ev-example-fixture-rules-1, ev-example-fixture-rules-2, ev-example-fixture-rules-3, ev-example-fixture-rules-4, ev-example-fixture-rules-5, ev-example-fixture-rules-6, ev-example-fixture-rules-7), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-example-fixture-rules-1", "ev-example-fixture-rules-2", "ev-example-fixture-rules-3", "ev-example-fixture-rules-4", "ev-example-fixture-rules-5", "ev-example-fixture-rules-6" and "ev-example-fixture-rules-7" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 7 evidence entities (ev-example-fixture-rules-1, ev-example-fixture-rules-2, ev-example-fixture-rules-3, ev-example-fixture-rules-4, ev-example-fixture-rules-5, ev-example-fixture-rules-6, ev-example-fixture-rules-7), of which 7 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-example-fixture-rules-1, ev-example-fixture-rules-2, ev-example-fixture-rules-3, ev-example-fixture-rules-4, ev-example-fixture-rules-5, ev-example-fixture-rules-6 and ev-example-fixture-rules-7: pass.
 
 **Holds only if**
 
@@ -6487,13 +6487,13 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-example-fixture-rules-1 | test | tests/core/functions.test.js#the kernel decisions stated as functions validate with every example holding and nothing missing for generation | supports | none |
-| ev-example-fixture-rules-2 | test | tests/core/functions.test.js#fixtures are resolved: an override changes only its path and not the declared fixture | supports | none |
-| ev-example-fixture-rules-3 | test | tests/core/functions.test.js#an example that refers to a fixture that is not declared is reported once as example.fixture-unknown | supports | none |
-| ev-example-fixture-rules-4 | test | tests/core/functions.test.js#a fixture whose value is not its type is reported once as example.fixture-type | supports | none |
-| ev-example-fixture-rules-5 | test | tests/core/functions.test.js#an override of a field the struct does not have is reported once as example.fixture-override | supports | none |
-| ev-example-fixture-rules-6 | test | tests/core/functions.test.js#every function code has a negative fixture | supports | none |
-| ev-example-fixture-rules-7 | test | tests/core/functions.test.js#the format documentation states every code and operation and that functions are not mirrored in Lean | supports | none |
+| ev-example-fixture-rules-1 | test | tests/core/functions.test.js#the kernel decisions stated as functions validate with every example holding and nothing missing for generation | supports | pass |
+| ev-example-fixture-rules-2 | test | tests/core/functions.test.js#fixtures are resolved: an override changes only its path and not the declared fixture | supports | pass |
+| ev-example-fixture-rules-3 | test | tests/core/functions.test.js#an example that refers to a fixture that is not declared is reported once as example.fixture-unknown | supports | pass |
+| ev-example-fixture-rules-4 | test | tests/core/functions.test.js#a fixture whose value is not its type is reported once as example.fixture-type | supports | pass |
+| ev-example-fixture-rules-5 | test | tests/core/functions.test.js#an override of a field the struct does not have is reported once as example.fixture-override | supports | pass |
+| ev-example-fixture-rules-6 | test | tests/core/functions.test.js#every function code has a negative fixture | supports | pass |
+| ev-example-fixture-rules-7 | test | tests/core/functions.test.js#the format documentation states every code and operation and that functions are not mirrored in Lean | supports | pass |
 
 ## machine-transition-coverage
 
@@ -6501,12 +6501,12 @@ For every implementation-level machine whose realisation is shipped, exegra cove
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 8 evidence entities (ev-machine-transition-coverage-1, ev-machine-transition-coverage-2, ev-machine-transition-coverage-3, ev-machine-transition-coverage-4, ev-machine-transition-coverage-5, ev-machine-transition-coverage-6, ev-machine-transition-coverage-7, ev-machine-transition-coverage-8), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-machine-transition-coverage-1", "ev-machine-transition-coverage-2", "ev-machine-transition-coverage-3", "ev-machine-transition-coverage-4", "ev-machine-transition-coverage-5", "ev-machine-transition-coverage-6", "ev-machine-transition-coverage-7" and "ev-machine-transition-coverage-8" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 8 evidence entities (ev-machine-transition-coverage-1, ev-machine-transition-coverage-2, ev-machine-transition-coverage-3, ev-machine-transition-coverage-4, ev-machine-transition-coverage-5, ev-machine-transition-coverage-6, ev-machine-transition-coverage-7, ev-machine-transition-coverage-8), of which 8 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-machine-transition-coverage-1, ev-machine-transition-coverage-2, ev-machine-transition-coverage-3, ev-machine-transition-coverage-4, ev-machine-transition-coverage-5, ev-machine-transition-coverage-6, ev-machine-transition-coverage-7 and ev-machine-transition-coverage-8: pass.
 
 **Holds only if**
 
@@ -6521,14 +6521,14 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-machine-transition-coverage-1 | test | tests/core/machine-coverage.test.js#the items are the transitions and both outcomes of each guard | supports | none |
-| ev-machine-transition-coverage-2 | test | tests/core/machine-coverage.test.js#a guard is false when a later transition of the same state and event fires | supports | none |
-| ev-machine-transition-coverage-3 | test | tests/core/machine-coverage.test.js#the scenario covers what it delivers and the search covers the rest and reports the unreachable transition | supports | none |
-| ev-machine-transition-coverage-4 | test | tests/core/machine-coverage.test.js#under system.generation an unreachable transition is an error | supports | none |
-| ev-machine-transition-coverage-5 | test | tests/core/machine-coverage.test.js#a bound too small to reach a transition is reported as unreachable within that bound | supports | none |
-| ev-machine-transition-coverage-6 | test | tests/core/machine-coverage.test.js#the generated scenarios added through their operations cover everything the search found | supports | none |
-| ev-machine-transition-coverage-7 | test | tests/core/machine-coverage.test.js#a door without the jammed state is fully covered and has no finding | supports | none |
-| ev-machine-transition-coverage-8 | test | tests/core/machine-coverage.test.js#cover-machines reports the table and the finding and writes ops.json that apply accepts | supports | none |
+| ev-machine-transition-coverage-1 | test | tests/core/machine-coverage.test.js#the items are the transitions and both outcomes of each guard | supports | pass |
+| ev-machine-transition-coverage-2 | test | tests/core/machine-coverage.test.js#a guard is false when a later transition of the same state and event fires | supports | pass |
+| ev-machine-transition-coverage-3 | test | tests/core/machine-coverage.test.js#the scenario covers what it delivers and the search covers the rest and reports the unreachable transition | supports | pass |
+| ev-machine-transition-coverage-4 | test | tests/core/machine-coverage.test.js#under system.generation an unreachable transition is an error | supports | pass |
+| ev-machine-transition-coverage-5 | test | tests/core/machine-coverage.test.js#a bound too small to reach a transition is reported as unreachable within that bound | supports | pass |
+| ev-machine-transition-coverage-6 | test | tests/core/machine-coverage.test.js#the generated scenarios added through their operations cover everything the search found | supports | pass |
+| ev-machine-transition-coverage-7 | test | tests/core/machine-coverage.test.js#a door without the jammed state is fully covered and has no finding | supports | pass |
+| ev-machine-transition-coverage-8 | test | tests/core/machine-coverage.test.js#cover-machines reports the table and the finding and writes ops.json that apply accepts | supports | pass |
 
 ## function-branch-coverage
 
@@ -6536,12 +6536,12 @@ Exegra records which branches of each function its examples take (both branches 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-function-branch-coverage-1, ev-function-branch-coverage-2, ev-function-branch-coverage-3, ev-function-branch-coverage-5), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-function-branch-coverage-1", "ev-function-branch-coverage-2", "ev-function-branch-coverage-3" and "ev-function-branch-coverage-5" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-function-branch-coverage-1, ev-function-branch-coverage-2, ev-function-branch-coverage-3, ev-function-branch-coverage-5), of which 4 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-function-branch-coverage-1, ev-function-branch-coverage-2, ev-function-branch-coverage-3 and ev-function-branch-coverage-5: pass.
 
 **Holds only if**
 
@@ -6556,10 +6556,10 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-function-branch-coverage-1 | test | tests/core/functions.test.js#every branch of the kernel functions is taken by an example: if and match arms and try and fail | supports | none |
-| ev-function-branch-coverage-2 | test | tests/core/functions.test.js#a branch no example takes is listed uncovered with its location and raises no readiness gap | supports | none |
-| ev-function-branch-coverage-3 | test | tests/core/functions.test.js#system.generation.functionBranches is still accepted and changes nothing | supports | none |
-| ev-function-branch-coverage-5 | test | tests/core/functions.test.js#recording branches does not change what an example evaluates to | supports | none |
+| ev-function-branch-coverage-1 | test | tests/core/functions.test.js#every branch of the kernel functions is taken by an example: if and match arms and try and fail | supports | pass |
+| ev-function-branch-coverage-2 | test | tests/core/functions.test.js#a branch no example takes is listed uncovered with its location and raises no readiness gap | supports | pass |
+| ev-function-branch-coverage-3 | test | tests/core/functions.test.js#system.generation.functionBranches is still accepted and changes nothing | supports | pass |
+| ev-function-branch-coverage-5 | test | tests/core/functions.test.js#recording branches does not change what an example evaluates to | supports | pass |
 
 ## store-export-is-byte-identical
 
@@ -6567,12 +6567,12 @@ Exporting a specification imported into its store gives the imported text byte f
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-store-round-trip), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-store-round-trip" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-store-round-trip), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-store-round-trip: pass.
 
 **Holds only if**
 
@@ -6587,7 +6587,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-store-round-trip | test | tests/core/spec-store.test.js#round trip | supports | none |
+| ev-store-round-trip | test | tests/core/spec-store.test.js#round trip | supports | pass |
 
 ## store-reimport-gives-same-rows
 
@@ -6595,12 +6595,12 @@ Importing the export of a store gives a store whose rows (entity, trivia, ref an
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-store-reimport), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-store-reimport" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-store-reimport), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-store-reimport: pass.
 
 **Holds only if**
 
@@ -6615,7 +6615,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-store-reimport | test | tests/core/spec-store.test.js#reimporting an export gives the same rows | supports | none |
+| ev-store-reimport | test | tests/core/spec-store.test.js#reimporting an export gives the same rows | supports | pass |
 
 ## store-model-equals-text-model
 
@@ -6623,12 +6623,12 @@ The model read from a store has the semantic hash, diagnostics, error count and 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-store-model), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-store-model" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-store-model), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-store-model: pass.
 
 **Holds only if**
 
@@ -6643,7 +6643,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-store-model | test | tests/core/spec-store.test.js#the model read from the store is the model of the text: semantic hash and diagnostics | supports | none |
+| ev-store-model | test | tests/core/spec-store.test.js#the model read from the store is the model of the text: semantic hash and diagnostics | supports | pass |
 
 ## store-refuses-what-it-cannot-return
 
@@ -6651,12 +6651,12 @@ A text that does not parse, is not well-formed Unicode or is not valid UTF-8 is 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-store-refusal, ev-store-cli-refusal), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-store-refusal" and "ev-store-cli-refusal" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-store-refusal, ev-store-cli-refusal), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-store-refusal and ev-store-cli-refusal: pass.
 
 **Holds only if**
 
@@ -6671,8 +6671,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-store-refusal | test | tests/core/spec-store.test.js#a text that does not parse is refused and the store keeps what it held | supports | none |
-| ev-store-cli-refusal | test | tests/core/spec-store.test.js#exegra store import and export through the command line | supports | none |
+| ev-store-refusal | test | tests/core/spec-store.test.js#a text that does not parse is refused and the store keeps what it held | supports | pass |
+| ev-store-cli-refusal | test | tests/core/spec-store.test.js#exegra store import and export through the command line | supports | pass |
 
 ## store-export-never-overwrites-stale-specification
 
@@ -6680,12 +6680,12 @@ exegra store export replaces the specification only when the file is still the t
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-store-stale, ev-store-cli-stale), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-store-stale" and "ev-store-cli-stale" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-store-stale, ev-store-cli-stale), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-store-stale and ev-store-cli-stale: pass.
 
 **Holds only if**
 
@@ -6700,8 +6700,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-store-stale | test | tests/core/spec-store.test.js#files: a WAL database beside the specification and an exact export that never overwrites a stale specification | supports | none |
-| ev-store-cli-stale | test | tests/core/spec-store.test.js#exegra store import and export through the command line | supports | none |
+| ev-store-stale | test | tests/core/spec-store.test.js#files: a WAL database beside the specification and an exact export that never overwrites a stale specification | supports | pass |
+| ev-store-cli-stale | test | tests/core/spec-store.test.js#exegra store import and export through the command line | supports | pass |
 
 ## product-layers-checked
 
@@ -6709,12 +6709,12 @@ A project's product files (project.jsonc "products") are validated together with
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 17 evidence entities (ev-layers-accepted, ev-layers-cli, ev-layers-import-unknown, ev-layers-redefines, ev-layers-redefines-product, ev-layers-kind, ev-layers-import-missing, ev-layers-reference-unknown, ev-layers-header-missing, ev-layers-import-mismatch, ev-layers-cross-product, ev-layers-transactions, ev-layers-product-id-duplicate, ev-layers-reference-keys, ev-layers-platform-references-product, ev-layers-reload, ev-layers-header-version-platform), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-layers-accepted", "ev-layers-cli", "ev-layers-import-unknown", "ev-layers-redefines", "ev-layers-redefines-product", "ev-layers-kind", "ev-layers-import-missing", "ev-layers-reference-unknown", "ev-layers-header-missing", "ev-layers-import-mismatch", "ev-layers-cross-product", "ev-layers-transactions", "ev-layers-product-id-duplicate", "ev-layers-reference-keys", "ev-layers-platform-references-product", "ev-layers-reload" and "ev-layers-header-version-platform" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 17 evidence entities (ev-layers-accepted, ev-layers-cli, ev-layers-import-unknown, ev-layers-redefines, ev-layers-redefines-product, ev-layers-kind, ev-layers-import-missing, ev-layers-reference-unknown, ev-layers-header-missing, ev-layers-import-mismatch, ev-layers-cross-product, ev-layers-transactions, ev-layers-product-id-duplicate, ev-layers-reference-keys, ev-layers-platform-references-product, ev-layers-reload, ev-layers-header-version-platform), of which 17 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-layers-accepted, ev-layers-cli, ev-layers-import-unknown, ev-layers-redefines, ev-layers-redefines-product, ev-layers-kind, ev-layers-import-missing, ev-layers-reference-unknown, ev-layers-header-missing, ev-layers-import-mismatch, ev-layers-cross-product, ev-layers-transactions, ev-layers-product-id-duplicate, ev-layers-reference-keys, ev-layers-platform-references-product, ev-layers-reload and ev-layers-header-version-platform: pass.
 
 **Holds only if**
 
@@ -6728,23 +6728,23 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-layers-accepted | test | tests/core/layers.test.js#a product file importing the platform passes validation | supports | none |
-| ev-layers-cli | test | tests/core/layers.test.js#the CLI validates a project that lists product files and reports the platform hash as semanticHash | supports | none |
-| ev-layers-import-unknown | test | tests/core/layers.test.js#an imported id the platform does not declare is refused with layer.import-unknown | supports | none |
-| ev-layers-redefines | test | tests/core/layers.test.js#a product that redefines a platform entity is refused with layer.redefines-entity | supports | none |
-| ev-layers-redefines-product | test | tests/core/layers.test.js#two product files that declare the same id are refused with layer.redefines-entity | supports | none |
-| ev-layers-kind | test | tests/core/layers.test.js#a section a product may not declare is refused with layer.kind-not-allowed | supports | none |
-| ev-layers-import-missing | test | tests/core/layers.test.js#a platform entity used without being imported is refused with layer.import-missing | supports | none |
-| ev-layers-reference-unknown | test | tests/core/layers.test.js#a reference no layer declares is refused with layer.reference-unknown | supports | none |
-| ev-layers-header-missing | test | tests/core/layers.test.js#a product file without a header is refused with layer.header-missing | supports | none |
-| ev-layers-import-mismatch | test | tests/core/layers.test.js#a product that imports another platform file is refused with layer.import-mismatch | supports | none |
-| ev-layers-cross-product | test | tests/core/layers.test.js#a reference into another product file is refused with layer.cross-product-reference | supports | none |
-| ev-layers-transactions | test | tests/core/layers.test.js#transactions on a layered project edit the platform text and refuse product entities | supports | none |
-| ev-layers-product-id-duplicate | test | tests/core/layers.test.js#two product files with one product id are refused with layer.product-id-duplicate | supports | none |
-| ev-layers-reference-keys | test | tests/core/layers.test.js#a reference through a reference key requires an import | supports | none |
-| ev-layers-platform-references-product | test | tests/core/layers.test.js#a platform entity that references a product entity is refused with layer.platform-references-product | supports | none |
-| ev-layers-reload | test | tests/core/layers.test.js#reload picks up a changed product file | supports | none |
-| ev-layers-header-version-platform | test | tests/core/layers.test.js#a product header takes version and platform and refuses a malformed one with layer.header-invalid | supports | none |
+| ev-layers-accepted | test | tests/core/layers.test.js#a product file importing the platform passes validation | supports | pass |
+| ev-layers-cli | test | tests/core/layers.test.js#the CLI validates a project that lists product files and reports the platform hash as semanticHash | supports | pass |
+| ev-layers-import-unknown | test | tests/core/layers.test.js#an imported id the platform does not declare is refused with layer.import-unknown | supports | pass |
+| ev-layers-redefines | test | tests/core/layers.test.js#a product that redefines a platform entity is refused with layer.redefines-entity | supports | pass |
+| ev-layers-redefines-product | test | tests/core/layers.test.js#two product files that declare the same id are refused with layer.redefines-entity | supports | pass |
+| ev-layers-kind | test | tests/core/layers.test.js#a section a product may not declare is refused with layer.kind-not-allowed | supports | pass |
+| ev-layers-import-missing | test | tests/core/layers.test.js#a platform entity used without being imported is refused with layer.import-missing | supports | pass |
+| ev-layers-reference-unknown | test | tests/core/layers.test.js#a reference no layer declares is refused with layer.reference-unknown | supports | pass |
+| ev-layers-header-missing | test | tests/core/layers.test.js#a product file without a header is refused with layer.header-missing | supports | pass |
+| ev-layers-import-mismatch | test | tests/core/layers.test.js#a product that imports another platform file is refused with layer.import-mismatch | supports | pass |
+| ev-layers-cross-product | test | tests/core/layers.test.js#a reference into another product file is refused with layer.cross-product-reference | supports | pass |
+| ev-layers-transactions | test | tests/core/layers.test.js#transactions on a layered project edit the platform text and refuse product entities | supports | pass |
+| ev-layers-product-id-duplicate | test | tests/core/layers.test.js#two product files with one product id are refused with layer.product-id-duplicate | supports | pass |
+| ev-layers-reference-keys | test | tests/core/layers.test.js#a reference through a reference key requires an import | supports | pass |
+| ev-layers-platform-references-product | test | tests/core/layers.test.js#a platform entity that references a product entity is refused with layer.platform-references-product | supports | pass |
+| ev-layers-reload | test | tests/core/layers.test.js#reload picks up a changed product file | supports | pass |
+| ev-layers-header-version-platform | test | tests/core/layers.test.js#a product header takes version and platform and refuses a malformed one with layer.header-invalid | supports | pass |
 
 ## product-layers-leave-platform-unchanged
 
@@ -6752,12 +6752,12 @@ Adding product files to a project changes neither the platform's parsed model (e
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-layers-platform-hash, ev-layers-platform-model, ev-layers-platform-cli-hash), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-layers-platform-hash", "ev-layers-platform-model" and "ev-layers-platform-cli-hash" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-layers-platform-hash, ev-layers-platform-model, ev-layers-platform-cli-hash), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-layers-platform-hash, ev-layers-platform-model and ev-layers-platform-cli-hash: pass.
 
 **Holds only if**
 
@@ -6771,9 +6771,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-layers-platform-hash | test | tests/core/layers.test.js#adding a product file leaves the platform semantic hash unchanged | supports | none |
-| ev-layers-platform-model | test | tests/core/layers.test.js#the parsed platform specification is unchanged by layering | supports | none |
-| ev-layers-platform-cli-hash | test | tests/core/layers.test.js#the CLI validates a project that lists product files and reports the platform hash as semanticHash | supports | none |
+| ev-layers-platform-hash | test | tests/core/layers.test.js#adding a product file leaves the platform semantic hash unchanged | supports | pass |
+| ev-layers-platform-model | test | tests/core/layers.test.js#the parsed platform specification is unchanged by layering | supports | pass |
+| ev-layers-platform-cli-hash | test | tests/core/layers.test.js#the CLI validates a project that lists product files and reports the platform hash as semanticHash | supports | pass |
 
 ## product-layers-no-platform-power
 
@@ -6781,12 +6781,12 @@ A product file cannot claim what only the platform may have: a role at platform 
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-layers-power, ev-layers-power-accepted), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-layers-power" and "ev-layers-power-accepted" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-layers-power, ev-layers-power-accepted), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-layers-power and ev-layers-power-accepted: pass.
 
 **Holds only if**
 
@@ -6800,8 +6800,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-layers-power | test | tests/core/layers.test.js#a product that claims a platform power or has a malformed entity id is refused with the rule for it | supports | none |
-| ev-layers-power-accepted | test | tests/core/layers.test.js#a product role at tenant level held by people and teams and agents is accepted | supports | none |
+| ev-layers-power | test | tests/core/layers.test.js#a product that claims a platform power or has a malformed entity id is refused with the rule for it | supports | pass |
+| ev-layers-power-accepted | test | tests/core/layers.test.js#a product role at tenant level held by people and teams and agents is accepted | supports | pass |
 
 ## browser-reloads-product-files
 
@@ -6809,12 +6809,12 @@ When a product file of the open project changes, is added or is removed on disk 
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-product-reload-watch, ev-product-reload-invalid, ev-product-reload-spec), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-product-reload-watch", "ev-product-reload-invalid" and "ev-product-reload-spec" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-product-reload-watch, ev-product-reload-invalid, ev-product-reload-spec), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-product-reload-watch, ev-product-reload-invalid and ev-product-reload-spec: pass.
 
 **Holds only if**
 
@@ -6828,9 +6828,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-product-reload-watch | test | tests/core/disk-reload.test.js#an added then changed then removed product file is reported by the watcher and re-derives the session model | supports | none |
-| ev-product-reload-invalid | test | tests/core/disk-reload.test.js#a product file that does not parse keeps the last valid model and the next good read adopts it | supports | none |
-| ev-product-reload-spec | test | tests/core/disk-reload.test.js#a reload of the specification keeps the product layers of the read | supports | none |
+| ev-product-reload-watch | test | tests/core/disk-reload.test.js#an added then changed then removed product file is reported by the watcher and re-derives the session model | supports | pass |
+| ev-product-reload-invalid | test | tests/core/disk-reload.test.js#a product file that does not parse keeps the last valid model and the next good read adopts it | supports | pass |
+| ev-product-reload-spec | test | tests/core/disk-reload.test.js#a reload of the specification keeps the product layers of the read | supports | pass |
 
 ## cli-registers-projects-from-scripts
 
@@ -6838,12 +6838,12 @@ A script can register a spec file (and product files) as a project in one comman
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 5 evidence entities (ev-cli-project-add, ev-cli-project-refusals, ev-cli-project-own-spec, ev-cli-project-remove, ev-cli-project-inline), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-cli-project-add", "ev-cli-project-refusals", "ev-cli-project-own-spec", "ev-cli-project-remove" and "ev-cli-project-inline" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 5 evidence entities (ev-cli-project-add, ev-cli-project-refusals, ev-cli-project-own-spec, ev-cli-project-remove, ev-cli-project-inline), of which 5 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-cli-project-add, ev-cli-project-refusals, ev-cli-project-own-spec, ev-cli-project-remove and ev-cli-project-inline: pass.
 
 **Holds only if**
 
@@ -6857,11 +6857,11 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-cli-project-add | test | tests/core/cli-project.test.js#project add registers a spec file and product files stored relative to the project directory | supports | none |
-| ev-cli-project-refusals | test | tests/core/cli-project.test.js#project add refuses to overwrite a project unless --force and refuses a bad name or an unreadable file | supports | none |
-| ev-cli-project-own-spec | test | tests/core/cli-project.test.js#project add refuses a name whose project keeps its own spec.jsonc | supports | none |
-| ev-cli-project-remove | test | tests/core/cli-project.test.js#project remove deletes the link and the directory only when nothing else is in it | supports | none |
-| ev-cli-project-inline | test | tests/core/cli-project.test.js#validate and other read-only commands accept the project inline with --spec and --product | supports | none |
+| ev-cli-project-add | test | tests/core/cli-project.test.js#project add registers a spec file and product files stored relative to the project directory | supports | pass |
+| ev-cli-project-refusals | test | tests/core/cli-project.test.js#project add refuses to overwrite a project unless --force and refuses a bad name or an unreadable file | supports | pass |
+| ev-cli-project-own-spec | test | tests/core/cli-project.test.js#project add refuses a name whose project keeps its own spec.jsonc | supports | pass |
+| ev-cli-project-remove | test | tests/core/cli-project.test.js#project remove deletes the link and the directory only when nothing else is in it | supports | pass |
+| ev-cli-project-inline | test | tests/core/cli-project.test.js#validate and other read-only commands accept the project inline with --spec and --product | supports | pass |
 
 ## product-layers-typed-sections
 
@@ -6869,12 +6869,12 @@ A product file may declare the typed sections objects, policies, queries, views,
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 10 evidence entities (ev-layers-typed-accepted, ev-layers-typed-value-invalid, ev-layers-typed-catalogue, ev-layers-typed-references, ev-layers-typed-redefine, ev-layers-typed-table, ev-layers-typed-check, ev-layers-typed-variants, ev-layers-typed-queries-views-workflows, ev-layers-typed-queries-views-workflows-accepted), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-layers-typed-accepted", "ev-layers-typed-value-invalid", "ev-layers-typed-catalogue", "ev-layers-typed-references", "ev-layers-typed-redefine", "ev-layers-typed-table", "ev-layers-typed-check", "ev-layers-typed-variants", "ev-layers-typed-queries-views-workflows" and "ev-layers-typed-queries-views-workflows-accepted" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 10 evidence entities (ev-layers-typed-accepted, ev-layers-typed-value-invalid, ev-layers-typed-catalogue, ev-layers-typed-references, ev-layers-typed-redefine, ev-layers-typed-table, ev-layers-typed-check, ev-layers-typed-variants, ev-layers-typed-queries-views-workflows, ev-layers-typed-queries-views-workflows-accepted), of which 10 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-layers-typed-accepted, ev-layers-typed-value-invalid, ev-layers-typed-catalogue, ev-layers-typed-references, ev-layers-typed-redefine, ev-layers-typed-table, ev-layers-typed-check, ev-layers-typed-variants, ev-layers-typed-queries-views-workflows and ev-layers-typed-queries-views-workflows-accepted: pass.
 
 **Holds only if**
 
@@ -6888,16 +6888,16 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-layers-typed-accepted | test | tests/core/layers.test.js#the complete products declare everything they name and pass validation with the platform hash unchanged | supports | none |
-| ev-layers-typed-value-invalid | test | tests/core/layers.test.js#a value that does not fit its platform type is refused with layer.value-invalid | supports | none |
-| ev-layers-typed-catalogue | test | tests/core/layers.test.js#a union value the platform lacks is refused with layer.outside-catalogue | supports | none |
-| ev-layers-typed-references | test | tests/core/layers.test.js#a name in a typed section that no product file declares or that another product declares is refused | supports | none |
-| ev-layers-typed-redefine | test | tests/core/layers.test.js#a typed item may not redefine a platform entity or another item | supports | none |
-| ev-layers-typed-table | test | tests/core/layers.test.js#Exegra and specc read the same table of typed sections | supports | none |
-| ev-layers-typed-check | test | tests/core/layer-values.test.js#a missing field and a stray field and a wrong scalar and an id outside its pattern are refused | supports | none |
-| ev-layers-typed-variants | test | tests/core/layer-values.test.js#a variant the union lacks is outside the catalogue and a variant with fields needs them | supports | none |
-| ev-layers-typed-queries-views-workflows | test | tests/core/layers.test.js#a product file may declare queries and views and workflows and refuses each that does not fit its platform type | supports | none |
-| ev-layers-typed-queries-views-workflows-accepted | test | tests/core/layers.test.js#a product declaring a query and a view and a workflow that fit their platform types is accepted | supports | none |
+| ev-layers-typed-accepted | test | tests/core/layers.test.js#the complete products declare everything they name and pass validation with the platform hash unchanged | supports | pass |
+| ev-layers-typed-value-invalid | test | tests/core/layers.test.js#a value that does not fit its platform type is refused with layer.value-invalid | supports | pass |
+| ev-layers-typed-catalogue | test | tests/core/layers.test.js#a union value the platform lacks is refused with layer.outside-catalogue | supports | pass |
+| ev-layers-typed-references | test | tests/core/layers.test.js#a name in a typed section that no product file declares or that another product declares is refused | supports | pass |
+| ev-layers-typed-redefine | test | tests/core/layers.test.js#a typed item may not redefine a platform entity or another item | supports | pass |
+| ev-layers-typed-table | test | tests/core/layers.test.js#Exegra and specc read the same table of typed sections | supports | pass |
+| ev-layers-typed-check | test | tests/core/layer-values.test.js#a missing field and a stray field and a wrong scalar and an id outside its pattern are refused | supports | pass |
+| ev-layers-typed-variants | test | tests/core/layer-values.test.js#a variant the union lacks is outside the catalogue and a variant with fields needs them | supports | pass |
+| ev-layers-typed-queries-views-workflows | test | tests/core/layers.test.js#a product file may declare queries and views and workflows and refuses each that does not fit its platform type | supports | pass |
+| ev-layers-typed-queries-views-workflows-accepted | test | tests/core/layers.test.js#a product declaring a query and a view and a workflow that fit their platform types is accepted | supports | pass |
 
 ## product-layers-namespace
 
@@ -6905,12 +6905,12 @@ Every entity id of a product file begins with the namespace of its product, the 
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-layers-namespace, ev-layers-capability), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-layers-namespace" and "ev-layers-capability" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-layers-namespace, ev-layers-capability), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-layers-namespace and ev-layers-capability: pass.
 
 **Holds only if**
 
@@ -6924,8 +6924,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-layers-namespace | test | tests/core/layers.test.js#an id outside the namespace of its product is refused with layer.namespace-missing | supports | none |
-| ev-layers-capability | test | tests/core/layers.test.js#a product capability is reachable when a role confers it and a plan is not needed | supports | none |
+| ev-layers-namespace | test | tests/core/layers.test.js#an id outside the namespace of its product is refused with layer.namespace-missing | supports | pass |
+| ev-layers-capability | test | tests/core/layers.test.js#a product capability is reachable when a role confers it and a plan is not needed | supports | pass |
 
 ## product-layers-expressions
 
@@ -6933,12 +6933,12 @@ An expression written as text in a typed section of a product file (a policy con
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 16 evidence entities (ev-layers-expressions-scope, ev-layers-expressions-check, ev-layers-expressions-syntax, ev-layers-expressions-types, ev-layers-expressions-refused, ev-layers-expressions-free, ev-layers-expressions-operators, ev-layers-expressions-operator-types, ev-layers-expressions-sign, ev-layers-expressions-precedence, ev-layers-expressions-time-time, ev-layers-expressions-step-params, ev-layers-expressions-drift, ev-layers-expressions-drift-detects, ev-layers-expressions-drift-strata, ev-layers-expressions-corpus), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-layers-expressions-scope", "ev-layers-expressions-check", "ev-layers-expressions-syntax", "ev-layers-expressions-types", "ev-layers-expressions-refused", "ev-layers-expressions-free", "ev-layers-expressions-operators", "ev-layers-expressions-operator-types", "ev-layers-expressions-sign", "ev-layers-expressions-precedence", "ev-layers-expressions-time-time", "ev-layers-expressions-step-params", "ev-layers-expressions-drift", "ev-layers-expressions-drift-detects" and "ev-layers-expressions-corpus" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 16 evidence entities (ev-layers-expressions-scope, ev-layers-expressions-check, ev-layers-expressions-syntax, ev-layers-expressions-types, ev-layers-expressions-refused, ev-layers-expressions-free, ev-layers-expressions-operators, ev-layers-expressions-operator-types, ev-layers-expressions-sign, ev-layers-expressions-precedence, ev-layers-expressions-time-time, ev-layers-expressions-step-params, ev-layers-expressions-drift, ev-layers-expressions-drift-detects, ev-layers-expressions-drift-strata, ev-layers-expressions-corpus), of which 15 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-layers-expressions-scope, ev-layers-expressions-check, ev-layers-expressions-syntax, ev-layers-expressions-types, ev-layers-expressions-refused, ev-layers-expressions-free, ev-layers-expressions-operators, ev-layers-expressions-operator-types, ev-layers-expressions-sign, ev-layers-expressions-precedence, ev-layers-expressions-time-time, ev-layers-expressions-step-params, ev-layers-expressions-drift, ev-layers-expressions-drift-detects and ev-layers-expressions-corpus: pass. Test evidence "ev-layers-expressions-drift-strata" has no recorded result.
 
 **Holds only if**
 
@@ -6952,22 +6952,22 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-layers-expressions-scope | test | tests/core/layer-expr.test.js#the scope comes from the value that holds the text | supports | none |
-| ev-layers-expressions-check | test | tests/core/layer-expr.test.js#fields hops params and roles are checked against the scope | supports | none |
-| ev-layers-expressions-syntax | test | tests/core/layer-expr.test.js#a name or call the language lacks and malformed text is layer.expr-syntax with its position | supports | none |
-| ev-layers-expressions-types | test | tests/core/layer-expr.test.js#shapes that the operator does not accept are layer.expr-type | supports | none |
-| ev-layers-expressions-refused | test | tests/core/layers.test.js#an expression that does not parse or check in its scope is refused with one rule code per kind | supports | none |
-| ev-layers-expressions-free | test | tests/core/layers.test.js#an automation accepts any field and param but is still checked for syntax and roles | supports | none |
-| ev-layers-expressions-operators | test | tests/core/layer-expr.test.js#each of the nine operators is accepted and the bare result of arithmetic is an expression | supports | none |
-| ev-layers-expressions-operator-types | test | tests/core/layer-expr.test.js#one operand of the wrong shape per operator is layer.expr-type with the kernel message | supports | none |
-| ev-layers-expressions-sign | test | tests/core/layer-expr.test.js#a minus before a digit is a sign only where no operand ends before it | supports | none |
-| ev-layers-expressions-precedence | test | tests/core/layer-expr.test.js#precedence binds the product over the sum over a comparison | supports | none |
-| ev-layers-expressions-time-time | test | tests/core/layer-expr.test.js#Time plus Time and Time minus Time are refused: ms_between gives the difference | supports | none |
-| ev-layers-expressions-step-params | test | tests/core/layer-expr.test.js#a step reads the id of an earlier create step as a parameter | supports | none |
-| ev-layers-expressions-drift | test | tests/core/layer-expr-drift.test.js#layer-expr.js parses and types every operator the fixture language declares | supports | none |
-| ev-layers-expressions-drift-detects | test | tests/core/layer-expr-drift.test.js#the probe fails for an operator layer-expr.js lacks and for one it types differently | supports | none |
+| ev-layers-expressions-scope | test | tests/core/layer-expr.test.js#the scope comes from the value that holds the text | supports | pass |
+| ev-layers-expressions-check | test | tests/core/layer-expr.test.js#fields hops params and roles are checked against the scope | supports | pass |
+| ev-layers-expressions-syntax | test | tests/core/layer-expr.test.js#a name or call the language lacks and malformed text is layer.expr-syntax with its position | supports | pass |
+| ev-layers-expressions-types | test | tests/core/layer-expr.test.js#shapes that the operator does not accept are layer.expr-type | supports | pass |
+| ev-layers-expressions-refused | test | tests/core/layers.test.js#an expression that does not parse or check in its scope is refused with one rule code per kind | supports | pass |
+| ev-layers-expressions-free | test | tests/core/layers.test.js#an automation accepts any field and param but is still checked for syntax and roles | supports | pass |
+| ev-layers-expressions-operators | test | tests/core/layer-expr.test.js#each of the nine operators is accepted and the bare result of arithmetic is an expression | supports | pass |
+| ev-layers-expressions-operator-types | test | tests/core/layer-expr.test.js#one operand of the wrong shape per operator is layer.expr-type with the kernel message | supports | pass |
+| ev-layers-expressions-sign | test | tests/core/layer-expr.test.js#a minus before a digit is a sign only where no operand ends before it | supports | pass |
+| ev-layers-expressions-precedence | test | tests/core/layer-expr.test.js#precedence binds the product over the sum over a comparison | supports | pass |
+| ev-layers-expressions-time-time | test | tests/core/layer-expr.test.js#Time plus Time and Time minus Time are refused: ms_between gives the difference | supports | pass |
+| ev-layers-expressions-step-params | test | tests/core/layer-expr.test.js#a step reads the id of an earlier create step as a parameter | supports | pass |
+| ev-layers-expressions-drift | test | tests/core/layer-expr-drift.test.js#layer-expr.js parses and types every operator the fixture language declares | supports | pass |
+| ev-layers-expressions-drift-detects | test | tests/core/layer-expr-drift.test.js#the probe fails for an operator layer-expr.js lacks and for one it types differently | supports | pass |
 | ev-layers-expressions-drift-strata | test | tests/core/layer-expr-drift.test.js#layer-expr.js parses and types every operator the Strata platform declares | supports | none |
-| ev-layers-expressions-corpus | test | tests/core/layer-expr-drift.test.js#layer-expr.js and the language checker agree on every checked case of the shared table | supports | none |
+| ev-layers-expressions-corpus | test | tests/core/layer-expr-drift.test.js#layer-expr.js and the language checker agree on every checked case of the shared table | supports | pass |
 
 ## product-layers-retention
 
@@ -6975,12 +6975,12 @@ An object type of a product file that has a field with a personal declaration an
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-layers-retention), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-layers-retention" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-layers-retention), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-layers-retention: pass.
 
 **Holds only if**
 
@@ -6994,7 +6994,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-layers-retention | test | tests/core/layers.test.js#a personal field without a retention rule on its object type is refused with layer.retention-missing | supports | none |
+| ev-layers-retention | test | tests/core/layers.test.js#a personal field without a retention rule on its object type is refused with layer.retention-missing | supports | pass |
 
 ## batched-transaction-equals-per-operation
 
@@ -7002,12 +7002,12 @@ For the same operations, a transaction that re-derives the model once produces b
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-batched-differential-small, ev-batched-differential-benchmark, ev-batched-differential-exegra), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-batched-differential-small", "ev-batched-differential-benchmark" and "ev-batched-differential-exegra" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-batched-differential-small, ev-batched-differential-benchmark, ev-batched-differential-exegra), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-batched-differential-small, ev-batched-differential-benchmark and ev-batched-differential-exegra: pass.
 
 **Holds only if**
 
@@ -7022,9 +7022,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-batched-differential-small | test | tests/core/batched-transactions.test.js#batched transactions equal per-operation re-derivation on a hand-written JSONC specification | supports | none |
-| ev-batched-differential-benchmark | test | tests/core/batched-transactions.test.js#batched transactions equal per-operation re-derivation on the benchmark specification | supports | none |
-| ev-batched-differential-exegra | test | tests/core/batched-transactions.test.js#batched transactions equal per-operation re-derivation on the Exegra specification | supports | none |
+| ev-batched-differential-small | test | tests/core/batched-transactions.test.js#batched transactions equal per-operation re-derivation on a hand-written JSONC specification | supports | pass |
+| ev-batched-differential-benchmark | test | tests/core/batched-transactions.test.js#batched transactions equal per-operation re-derivation on the benchmark specification | supports | pass |
+| ev-batched-differential-exegra | test | tests/core/batched-transactions.test.js#batched transactions equal per-operation re-derivation on the Exegra specification | supports | pass |
 
 ## transaction-derives-model-once
 
@@ -7032,12 +7032,12 @@ A transaction of property edits, creations, relationships, nested declarations a
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-transaction-derives-once), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-transaction-derives-once" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-transaction-derives-once), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-transaction-derives-once: pass.
 
 **Holds only if**
 
@@ -7052,7 +7052,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-transaction-derives-once | test | tests/core/batched-transactions.test.js#a batched transaction derives the model once for property edits and creations | supports | none |
+| ev-transaction-derives-once | test | tests/core/batched-transactions.test.js#a batched transaction derives the model once for property edits and creations | supports | pass |
 
 ## format-gaps-rules
 
@@ -7060,12 +7060,12 @@ A contract may be a target (realisation target: specified, not implemented, serv
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 12 evidence entities (ev-format-gaps-rules-1, ev-format-gaps-rules-2, ev-format-gaps-rules-3, ev-format-gaps-rules-4, ev-format-gaps-rules-5, ev-format-gaps-rules-6, ev-format-gaps-rules-7, ev-format-gaps-rules-8, ev-format-gaps-rules-9, ev-format-gaps-rules-10, ev-format-gaps-rules-11, ev-format-gaps-rules-12), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-format-gaps-rules-1", "ev-format-gaps-rules-2", "ev-format-gaps-rules-3", "ev-format-gaps-rules-4", "ev-format-gaps-rules-5", "ev-format-gaps-rules-6", "ev-format-gaps-rules-7", "ev-format-gaps-rules-8", "ev-format-gaps-rules-9", "ev-format-gaps-rules-10", "ev-format-gaps-rules-11" and "ev-format-gaps-rules-12" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 12 evidence entities (ev-format-gaps-rules-1, ev-format-gaps-rules-2, ev-format-gaps-rules-3, ev-format-gaps-rules-4, ev-format-gaps-rules-5, ev-format-gaps-rules-6, ev-format-gaps-rules-7, ev-format-gaps-rules-8, ev-format-gaps-rules-9, ev-format-gaps-rules-10, ev-format-gaps-rules-11, ev-format-gaps-rules-12), of which 12 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-format-gaps-rules-1, ev-format-gaps-rules-2, ev-format-gaps-rules-3, ev-format-gaps-rules-4, ev-format-gaps-rules-5, ev-format-gaps-rules-6, ev-format-gaps-rules-7, ev-format-gaps-rules-8, ev-format-gaps-rules-9, ev-format-gaps-rules-10, ev-format-gaps-rules-11 and ev-format-gaps-rules-12: pass.
 
 **Holds only if**
 
@@ -7080,18 +7080,18 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-format-gaps-rules-1 | test | tests/core/format-gaps.test.js#the fixture validates with every example holding and nothing missing for generation | supports | none |
-| ev-format-gaps-rules-2 | test | tests/core/format-gaps.test.js#an untagged union with two variants written as one shape is reported once as type.encoding | supports | none |
-| ev-format-gaps-rules-3 | test | tests/core/format-gaps.test.js#a supplied input the contract does not have is reported once as contract.supplied-by | supports | none |
-| ev-format-gaps-rules-4 | test | tests/core/format-gaps.test.js#a form field filling an input the session supplies is reported once as form.supplied-input | supports | none |
-| ev-format-gaps-rules-5 | test | tests/core/format-gaps.test.js#an untagged union is written as the raw JSON of its variant and read back in declaration order | supports | none |
-| ev-format-gaps-rules-6 | test | tests/core/format-gaps.test.js#the other tags round-trip too external internal adjacent and tuple variants | supports | none |
-| ev-format-gaps-rules-7 | test | tests/core/format-gaps.test.js#lists and unions are ordered as the kernel orders a Value by variant then item by item | supports | none |
-| ev-format-gaps-rules-8 | test | tests/core/format-gaps.test.js#a null where a string is expected is reported once as function.expr-type | supports | none |
-| ev-format-gaps-rules-9 | test | tests/core/format-gaps.test.js#a reference lookup example that is wrong is reported once as function.example-failed | supports | none |
-| ev-format-gaps-rules-10 | test | tests/core/derivations.test.js#a header whose load output is named like an input is reported once as derivation.load | supports | none |
-| ev-format-gaps-rules-11 | test | tests/core/derivations.test.js#a load contract that is a target is reported once as derivation.load | supports | none |
-| ev-format-gaps-rules-12 | test | tests/core/derivations.test.js#a read with a header loads once with no needs then its needs together in one round which no need round counts | supports | none |
+| ev-format-gaps-rules-1 | test | tests/core/format-gaps.test.js#the fixture validates with every example holding and nothing missing for generation | supports | pass |
+| ev-format-gaps-rules-2 | test | tests/core/format-gaps.test.js#an untagged union with two variants written as one shape is reported once as type.encoding | supports | pass |
+| ev-format-gaps-rules-3 | test | tests/core/format-gaps.test.js#a supplied input the contract does not have is reported once as contract.supplied-by | supports | pass |
+| ev-format-gaps-rules-4 | test | tests/core/format-gaps.test.js#a form field filling an input the session supplies is reported once as form.supplied-input | supports | pass |
+| ev-format-gaps-rules-5 | test | tests/core/format-gaps.test.js#an untagged union is written as the raw JSON of its variant and read back in declaration order | supports | pass |
+| ev-format-gaps-rules-6 | test | tests/core/format-gaps.test.js#the other tags round-trip too external internal adjacent and tuple variants | supports | pass |
+| ev-format-gaps-rules-7 | test | tests/core/format-gaps.test.js#lists and unions are ordered as the kernel orders a Value by variant then item by item | supports | pass |
+| ev-format-gaps-rules-8 | test | tests/core/format-gaps.test.js#a null where a string is expected is reported once as function.expr-type | supports | pass |
+| ev-format-gaps-rules-9 | test | tests/core/format-gaps.test.js#a reference lookup example that is wrong is reported once as function.example-failed | supports | pass |
+| ev-format-gaps-rules-10 | test | tests/core/derivations.test.js#a header whose load output is named like an input is reported once as derivation.load | supports | pass |
+| ev-format-gaps-rules-11 | test | tests/core/derivations.test.js#a load contract that is a target is reported once as derivation.load | supports | pass |
+| ev-format-gaps-rules-12 | test | tests/core/derivations.test.js#a read with a header loads once with no needs then its needs together in one round which no need round counts | supports | pass |
 
 ## language-checked-arithmetic
 
@@ -7099,12 +7099,12 @@ The primitive catalogue holds checked integer arithmetic (add-checked, sub-check
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-language-checked-arithmetic-1, ev-language-checked-arithmetic-2, ev-language-checked-arithmetic-3), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-language-checked-arithmetic-1", "ev-language-checked-arithmetic-2" and "ev-language-checked-arithmetic-3" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-language-checked-arithmetic-1, ev-language-checked-arithmetic-2, ev-language-checked-arithmetic-3), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-language-checked-arithmetic-1, ev-language-checked-arithmetic-2 and ev-language-checked-arithmetic-3: pass.
 
 **Holds only if**
 
@@ -7119,9 +7119,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-language-checked-arithmetic-1 | test | tests/core/language-kernel-cases.test.js#eval gives the kernel result: add past the safe maximum | supports | none |
-| ev-language-checked-arithmetic-2 | test | tests/core/language-kernel-cases.test.js#eval gives the kernel result: concat of two-byte characters past 4096 bytes | supports | none |
-| ev-language-checked-arithmetic-3 | test | tests/core/language-kernel-cases.test.js#check gives the kernel result: adding a timestamp on the right | supports | none |
+| ev-language-checked-arithmetic-1 | test | tests/core/language-kernel-cases.test.js#eval gives the kernel result: add past the safe maximum | supports | pass |
+| ev-language-checked-arithmetic-2 | test | tests/core/language-kernel-cases.test.js#eval gives the kernel result: concat of two-byte characters past 4096 bytes | supports | pass |
+| ev-language-checked-arithmetic-3 | test | tests/core/language-kernel-cases.test.js#check gives the kernel result: adding a timestamp on the right | supports | pass |
 
 ## language-grapheme-emoji
 
@@ -7129,12 +7129,12 @@ The primitive catalogue holds the grapheme and emoji functions (graphemes, is-em
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-language-grapheme-emoji-1, ev-language-grapheme-emoji-2), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-language-grapheme-emoji-1" and "ev-language-grapheme-emoji-2" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-language-grapheme-emoji-1, ev-language-grapheme-emoji-2), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-language-grapheme-emoji-1 and ev-language-grapheme-emoji-2: pass.
 
 **Holds only if**
 
@@ -7149,8 +7149,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-language-grapheme-emoji-1 | test | tests/core/language.test.js#graphemes and is_emoji validate and give Strata results for each case of its table | supports | none |
-| ev-language-grapheme-emoji-2 | test | tests/core/language.test.js#graphemes and is_emoji give null on null and an error on any other kind | supports | none |
+| ev-language-grapheme-emoji-1 | test | tests/core/language.test.js#graphemes and is_emoji validate and give Strata results for each case of its table | supports | pass |
+| ev-language-grapheme-emoji-2 | test | tests/core/language.test.js#graphemes and is_emoji give null on null and an error on any other kind | supports | pass |
 
 ## language-ancestor-of
 
@@ -7158,12 +7158,12 @@ The primitive catalogue holds ancestor-of, and the language evaluator gives for 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-language-ancestor-of-1, ev-language-ancestor-of-2, ev-language-ancestor-of-3, ev-language-ancestor-of-4), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-language-ancestor-of-1", "ev-language-ancestor-of-2", "ev-language-ancestor-of-3" and "ev-language-ancestor-of-4" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-language-ancestor-of-1, ev-language-ancestor-of-2, ev-language-ancestor-of-3, ev-language-ancestor-of-4), of which 4 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-language-ancestor-of-1, ev-language-ancestor-of-2, ev-language-ancestor-of-3 and ev-language-ancestor-of-4: pass.
 
 **Holds only if**
 
@@ -7178,10 +7178,10 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-language-ancestor-of-1 | test | tests/core/language.test.js#ancestor_of validates and answers the walk through a self-reference | supports | none |
-| ev-language-ancestor-of-2 | test | tests/core/language.test.js#ancestor_of is null on a null operand and an error on a non-reference operand | supports | none |
-| ev-language-ancestor-of-3 | test | tests/core/language.test.js#ancestor_of allows 32 hops and refuses longer walks cycles and uncovered records | supports | none |
-| ev-language-ancestor-of-4 | test | tests/core/language.test.js#ancestor_of reads its object type and field only from string literals | supports | none |
+| ev-language-ancestor-of-1 | test | tests/core/language.test.js#ancestor_of validates and answers the walk through a self-reference | supports | pass |
+| ev-language-ancestor-of-2 | test | tests/core/language.test.js#ancestor_of is null on a null operand and an error on a non-reference operand | supports | pass |
+| ev-language-ancestor-of-3 | test | tests/core/language.test.js#ancestor_of allows 32 hops and refuses longer walks cycles and uncovered records | supports | pass |
+| ev-language-ancestor-of-4 | test | tests/core/language.test.js#ancestor_of reads its object type and field only from string literals | supports | pass |
 
 ## integrity-relations-least-model
 
@@ -7193,7 +7193,7 @@ For a program of derived relations that the Lean stratification check wf accepts
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Integrity.least_eq_table", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Integrity.Least", "Exegra.Integrity.solve", "Exegra.Integrity.wf".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Integrity.least_eq_table" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Integrity.Least, Exegra.Integrity.solve, Exegra.Integrity.wf (statement hash 12c9dfbeb695).
 
 **Holds only if**
@@ -7218,7 +7218,7 @@ A rule that the Lean checker eval accepts over the solved table of a stratified 
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Integrity.holds_of_eval", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Integrity.Least", "Exegra.Integrity.eval", "Exegra.Integrity.solve".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Integrity.holds_of_eval" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Integrity.Least, Exegra.Integrity.eval, Exegra.Integrity.solve (statement hash c424fa540f27).
 
 **Holds only if**
@@ -7239,12 +7239,12 @@ Derived relations are evaluated to their least models, recursion and mutual recu
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 5 evidence entities (ev-integrity-relations-atoms, ev-integrity-relations-least, ev-integrity-relations-mutations, ev-integrity-relations-diagnostics, ev-integrity-relations-atom-choice), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-integrity-relations-atoms", "ev-integrity-relations-least", "ev-integrity-relations-mutations", "ev-integrity-relations-diagnostics" and "ev-integrity-relations-atom-choice" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 5 evidence entities (ev-integrity-relations-atoms, ev-integrity-relations-least, ev-integrity-relations-mutations, ev-integrity-relations-diagnostics, ev-integrity-relations-atom-choice), of which 5 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-integrity-relations-atoms, ev-integrity-relations-least, ev-integrity-relations-mutations, ev-integrity-relations-diagnostics and ev-integrity-relations-atom-choice: pass.
 
 **Holds only if**
 
@@ -7259,11 +7259,11 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-integrity-relations-atoms | test | tests/core/integrity-relations.test.js#relation atoms parse with term arguments and their polarity follows negation and implication and filters | supports | none |
-| ev-integrity-relations-least | test | tests/core/integrity-relations.test.js#the relations of the fixture are their least models: reachability and mutual recursion and stratified negation | supports | none |
-| ev-integrity-relations-mutations | test | tests/core/integrity-relations.test.js#every relation rule can be made to fail: each mutation gives its stated counterexample and apply refuses it | supports | none |
-| ev-integrity-relations-diagnostics | test | tests/core/integrity-relations.test.js#invalid relations: each problem is a named diagnostic that makes the relation and every rule using it invalid | supports | none |
-| ev-integrity-relations-atom-choice | test | tests/core/integrity-relations.test.js#an atom holds when some choice of one value per argument is a tuple and a parameter over every kind ranges over every entity | supports | none |
+| ev-integrity-relations-atoms | test | tests/core/integrity-relations.test.js#relation atoms parse with term arguments and their polarity follows negation and implication and filters | supports | pass |
+| ev-integrity-relations-least | test | tests/core/integrity-relations.test.js#the relations of the fixture are their least models: reachability and mutual recursion and stratified negation | supports | pass |
+| ev-integrity-relations-mutations | test | tests/core/integrity-relations.test.js#every relation rule can be made to fail: each mutation gives its stated counterexample and apply refuses it | supports | pass |
+| ev-integrity-relations-diagnostics | test | tests/core/integrity-relations.test.js#invalid relations: each problem is a named diagnostic that makes the relation and every rule using it invalid | supports | pass |
+| ev-integrity-relations-atom-choice | test | tests/core/integrity-relations.test.js#an atom holds when some choice of one value per argument is a tuple and a parameter over every kind ranges over every entity | supports | pass |
 
 ## integrity-relations-agree-with-lean-and-nemo
 
@@ -7271,12 +7271,12 @@ The JavaScript relation tables equal the tables of the Lean checker and the rela
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 5 evidence entities (ev-integrity-relations-lean-proved, ev-integrity-relations-lean-refuted, ev-integrity-relations-lean-differential, ev-integrity-relations-nemo-fixture, ev-integrity-relations-nemo-random), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-integrity-relations-lean-proved", "ev-integrity-relations-lean-refuted" and "ev-integrity-relations-lean-differential" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 5 evidence entities (ev-integrity-relations-lean-proved, ev-integrity-relations-lean-refuted, ev-integrity-relations-lean-differential, ev-integrity-relations-nemo-fixture, ev-integrity-relations-nemo-random), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-integrity-relations-lean-proved, ev-integrity-relations-lean-refuted and ev-integrity-relations-lean-differential: pass. Test evidence "ev-integrity-relations-nemo-fixture" and "ev-integrity-relations-nemo-random" has no recorded result.
 
 **Holds only if**
 
@@ -7291,9 +7291,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-integrity-relations-lean-proved | test | tests/core/formal-integrity.test.js#derived relations: every rule of the relations fixture is proved under the least-model meaning with standard axioms only | supports | none |
-| ev-integrity-relations-lean-refuted | test | tests/core/formal-integrity.test.js#derived relations: every mutation is refuted in Lean under the least-model meaning from its stated counterexample | supports | none |
-| ev-integrity-relations-lean-differential | test | tests/core/formal-integrity.test.js#differential: Lean and JavaScript agree on relation tables and verdicts and counterexamples of seeded random module graphs | supports | none |
+| ev-integrity-relations-lean-proved | test | tests/core/formal-integrity.test.js#derived relations: every rule of the relations fixture is proved under the least-model meaning with standard axioms only | supports | pass |
+| ev-integrity-relations-lean-refuted | test | tests/core/formal-integrity.test.js#derived relations: every mutation is refuted in Lean under the least-model meaning from its stated counterexample | supports | pass |
+| ev-integrity-relations-lean-differential | test | tests/core/formal-integrity.test.js#differential: Lean and JavaScript agree on relation tables and verdicts and counterexamples of seeded random module graphs | supports | pass |
 | ev-integrity-relations-nemo-fixture | test | tests/core/integrity-nemo.test.js#Nemo derives the same relations as the JavaScript evaluator on the relations fixture | supports | none |
 | ev-integrity-relations-nemo-random | test | tests/core/integrity-nemo.test.js#Nemo derives the same relations as the JavaScript evaluator on seeded random graphs and stratified programs | supports | none |
 
@@ -7303,12 +7303,12 @@ The admit command never writes the specification for a rejected verdict, even wi
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 7 evidence entities (ev-admit-regressed, ev-admit-violation, ev-admit-weak, ev-admit-refused, ev-admit-admitted, ev-admit-write, ev-admit-deterministic), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-admit-regressed", "ev-admit-violation", "ev-admit-weak", "ev-admit-refused", "ev-admit-admitted", "ev-admit-write" and "ev-admit-deterministic" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 7 evidence entities (ev-admit-regressed, ev-admit-violation, ev-admit-weak, ev-admit-refused, ev-admit-admitted, ev-admit-write, ev-admit-deterministic), of which 7 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-admit-regressed, ev-admit-violation, ev-admit-weak, ev-admit-refused, ev-admit-admitted, ev-admit-write and ev-admit-deterministic: pass.
 
 **Holds only if**
 
@@ -7322,13 +7322,13 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-admit-regressed | test | tests/core/admit.test.js#a change that worsens a claim is rejected naming the claim with both statuses | supports | none |
-| ev-admit-violation | test | tests/core/admit.test.js#a change that adds an integrity violation is rejected with the rule and its counterexample | supports | none |
-| ev-admit-weak | test | tests/core/admit.test.js#a new claim that is not verified or proved is a reason to reject | supports | none |
-| ev-admit-refused | test | tests/core/admit.test.js#a refused transaction is rejected with the transaction code and message | supports | none |
-| ev-admit-admitted | test | tests/core/admit.test.js#a substantial accepted change is admitted and lists the new claim as verified | supports | none |
-| ev-admit-write | test | tests/core/admit.test.js#--write leaves the spec byte-identical on a rejected change and writes an admitted one | supports | none |
-| ev-admit-deterministic | test | tests/core/admit.test.js#admit output is identical across two runs | supports | none |
+| ev-admit-regressed | test | tests/core/admit.test.js#a change that worsens a claim is rejected naming the claim with both statuses | supports | pass |
+| ev-admit-violation | test | tests/core/admit.test.js#a change that adds an integrity violation is rejected with the rule and its counterexample | supports | pass |
+| ev-admit-weak | test | tests/core/admit.test.js#a new claim that is not verified or proved is a reason to reject | supports | pass |
+| ev-admit-refused | test | tests/core/admit.test.js#a refused transaction is rejected with the transaction code and message | supports | pass |
+| ev-admit-admitted | test | tests/core/admit.test.js#a substantial accepted change is admitted and lists the new claim as verified | supports | pass |
+| ev-admit-write | test | tests/core/admit.test.js#--write leaves the spec byte-identical on a rejected change and writes an admitted one | supports | pass |
+| ev-admit-deterministic | test | tests/core/admit.test.js#admit output is identical across two runs | supports | pass |
 
 ## admit-privilege-and-guarantee-changes-need-acknowledgement
 
@@ -7336,12 +7336,12 @@ The admit command reports every capability a change adds to a role, grant, deleg
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 6 evidence entities (ev-admit-privilege-role, ev-admit-privilege-removed, ev-admit-privilege-grant, ev-admit-weakened-copy, ev-admit-weakened-rule, ev-admit-accept-refused), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-admit-privilege-role", "ev-admit-privilege-removed", "ev-admit-privilege-grant", "ev-admit-weakened-copy", "ev-admit-weakened-rule" and "ev-admit-accept-refused" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 6 evidence entities (ev-admit-privilege-role, ev-admit-privilege-removed, ev-admit-privilege-grant, ev-admit-weakened-copy, ev-admit-weakened-rule, ev-admit-accept-refused), of which 6 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-admit-privilege-role, ev-admit-privilege-removed, ev-admit-privilege-grant, ev-admit-weakened-copy, ev-admit-weakened-rule and ev-admit-accept-refused: pass.
 
 **Holds only if**
 
@@ -7355,12 +7355,12 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-admit-privilege-role | test | tests/core/admit.test.js#a role that gains a capability is a privilege-change reason until it is accepted | supports | none |
-| ev-admit-privilege-removed | test | tests/core/admit.test.js#removing a capability from a role is reported but is not a reason | supports | none |
-| ev-admit-privilege-grant | test | tests/core/admit.test.js#a new grant without maxDuration is a privilege-change reason | supports | none |
-| ev-admit-weakened-copy | test | tests/core/admit.test.js#an edge copy class looser than an existing class of the same record is a guarantee-weakened reason | supports | none |
-| ev-admit-weakened-rule | test | tests/core/admit.test.js#a changed integrity rule is shown before and after and can be accepted | supports | none |
-| ev-admit-accept-refused | test | tests/core/admit.test.js#a reason that is not acknowledgeable cannot be accepted | supports | none |
+| ev-admit-privilege-role | test | tests/core/admit.test.js#a role that gains a capability is a privilege-change reason until it is accepted | supports | pass |
+| ev-admit-privilege-removed | test | tests/core/admit.test.js#removing a capability from a role is reported but is not a reason | supports | pass |
+| ev-admit-privilege-grant | test | tests/core/admit.test.js#a new grant without maxDuration is a privilege-change reason | supports | pass |
+| ev-admit-weakened-copy | test | tests/core/admit.test.js#an edge copy class looser than an existing class of the same record is a guarantee-weakened reason | supports | pass |
+| ev-admit-weakened-rule | test | tests/core/admit.test.js#a changed integrity rule is shown before and after and can be accepted | supports | pass |
+| ev-admit-accept-refused | test | tests/core/admit.test.js#a reason that is not acknowledgeable cannot be accepted | supports | pass |
 
 ## admit-requirement-claims-pend-on-realisation
 
@@ -7368,12 +7368,12 @@ The admit command admits a new claim that is realised by code (a requirement, or
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-admit-pending-milestone, ev-admit-pending-no-milestone, ev-admit-pending-weak), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-admit-pending-milestone", "ev-admit-pending-no-milestone" and "ev-admit-pending-weak" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-admit-pending-milestone, ev-admit-pending-no-milestone, ev-admit-pending-weak), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-admit-pending-milestone, ev-admit-pending-no-milestone and ev-admit-pending-weak: pass.
 
 **Holds only if**
 
@@ -7387,9 +7387,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-admit-pending-milestone | test | tests/core/admit.test.js#a new requirement claim with a milestone is admitted as pending realisation | supports | none |
-| ev-admit-pending-no-milestone | test | tests/core/admit.test.js#a new requirement claim without a milestone is rejected | supports | none |
-| ev-admit-pending-weak | test | tests/core/admit.test.js#a new claim a model method decides stays weak when it is not verified | supports | none |
+| ev-admit-pending-milestone | test | tests/core/admit.test.js#a new requirement claim with a milestone is admitted as pending realisation | supports | pass |
+| ev-admit-pending-no-milestone | test | tests/core/admit.test.js#a new requirement claim without a milestone is rejected | supports | pass |
+| ev-admit-pending-weak | test | tests/core/admit.test.js#a new claim a model method decides stays weak when it is not verified | supports | pass |
 
 ## claim-strength-names-weak-checks
 
@@ -7397,12 +7397,12 @@ claimStrength reports a state invariant whose variables only fault transitions a
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-strength-hbc, ev-strength-restated, ev-strength-single-trace, ev-strength-explored), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-strength-hbc", "ev-strength-restated", "ev-strength-single-trace" and "ev-strength-explored" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-strength-hbc, ev-strength-restated, ev-strength-single-trace, ev-strength-explored), of which 4 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-strength-hbc, ev-strength-restated, ev-strength-single-trace and ev-strength-explored: pass.
 
 **Holds only if**
 
@@ -7416,10 +7416,10 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-strength-hbc | test | tests/core/claim-strength.test.js#a state invariant whose variable only a fault transition changes holds by construction and names the variable and the transition | supports | none |
-| ev-strength-restated | test | tests/core/claim-strength.test.js#a counter bound equal to what its one scenario produces is a restated scenario | supports | none |
-| ev-strength-single-trace | test | tests/core/claim-strength.test.js#a claim decided on one scenario by a literal payload guard is single-trace and self-contained and names the free input | supports | none |
-| ev-strength-explored | test | tests/core/claim-strength.test.js#a trace claim an exhaustive exploration found holding is explored | supports | none |
+| ev-strength-hbc | test | tests/core/claim-strength.test.js#a state invariant whose variable only a fault transition changes holds by construction and names the variable and the transition | supports | pass |
+| ev-strength-restated | test | tests/core/claim-strength.test.js#a counter bound equal to what its one scenario produces is a restated scenario | supports | pass |
+| ev-strength-single-trace | test | tests/core/claim-strength.test.js#a claim decided on one scenario by a literal payload guard is single-trace and self-contained and names the free input | supports | pass |
+| ev-strength-explored | test | tests/core/claim-strength.test.js#a trace claim an exhaustive exploration found holding is explored | supports | pass |
 
 ## claim-strength-grounding
 
@@ -7427,12 +7427,12 @@ claimStrength reports a claim whose behaviors branch only on payload fields of c
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-strength-self-contained, ev-strength-contract-bound, ev-strength-integrity-bound, ev-strength-baseline), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-strength-self-contained", "ev-strength-contract-bound", "ev-strength-integrity-bound" and "ev-strength-baseline" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 4 evidence entities (ev-strength-self-contained, ev-strength-contract-bound, ev-strength-integrity-bound, ev-strength-baseline), of which 4 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-strength-self-contained, ev-strength-contract-bound, ev-strength-integrity-bound and ev-strength-baseline: pass.
 
 **Holds only if**
 
@@ -7446,10 +7446,10 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-strength-self-contained | test | tests/core/claim-strength.test.js#a claim decided on one scenario by a literal payload guard is single-trace and self-contained and names the free input | supports | none |
-| ev-strength-contract-bound | test | tests/core/claim-strength.test.js#a behavior that reacts to a contract event is bound and names the capabilities the contract requires | supports | none |
-| ev-strength-integrity-bound | test | tests/core/claim-strength.test.js#an integrity rule over the real roles is bound | supports | none |
-| ev-strength-baseline | test | tests/core/claim-strength.test.js#under a baseline a contract the change adds anchors nothing | supports | none |
+| ev-strength-self-contained | test | tests/core/claim-strength.test.js#a claim decided on one scenario by a literal payload guard is single-trace and self-contained and names the free input | supports | pass |
+| ev-strength-contract-bound | test | tests/core/claim-strength.test.js#a behavior that reacts to a contract event is bound and names the capabilities the contract requires | supports | pass |
+| ev-strength-integrity-bound | test | tests/core/claim-strength.test.js#an integrity rule over the real roles is bound | supports | pass |
+| ev-strength-baseline | test | tests/core/claim-strength.test.js#under a baseline a contract the change adds anchors nothing | supports | pass |
 
 ## admit-flags-weak-new-claims
 
@@ -7457,12 +7457,12 @@ admit rejects a claim the change creates that is holds-by-construction or restat
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-strength-admit), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-strength-admit" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-strength-admit), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-strength-admit: pass.
 
 **Holds only if**
 
@@ -7476,7 +7476,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-strength-admit | test | tests/core/claim-strength.test.js#admit gives a new vacuous self-contained claim acknowledgeable reasons and only reports existing ones | supports | none |
+| ev-strength-admit | test | tests/core/claim-strength.test.js#admit gives a new vacuous self-contained claim acknowledgeable reasons and only reports existing ones | supports | pass |
 
 ## residency-rules-checked
 
@@ -7484,12 +7484,12 @@ Region, tenantClass and residencyException are entity kinds, components state a 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 20 evidence entities (ev-residency-1, ev-residency-2, ev-residency-3, ev-residency-4, ev-residency-5, ev-residency-6, ev-residency-7, ev-residency-8, ev-residency-9, ev-residency-10, ev-residency-11, ev-residency-12, ev-residency-13, ev-residency-14, ev-residency-15, ev-residency-16, ev-residency-17, ev-residency-18, ev-residency-19, ev-residency-20), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-residency-1", "ev-residency-2", "ev-residency-3", "ev-residency-4", "ev-residency-5", "ev-residency-6", "ev-residency-7", "ev-residency-8", "ev-residency-9", "ev-residency-10", "ev-residency-11", "ev-residency-12", "ev-residency-13", "ev-residency-14", "ev-residency-15", "ev-residency-16", "ev-residency-17", "ev-residency-18", "ev-residency-19" and "ev-residency-20" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 20 evidence entities (ev-residency-1, ev-residency-2, ev-residency-3, ev-residency-4, ev-residency-5, ev-residency-6, ev-residency-7, ev-residency-8, ev-residency-9, ev-residency-10, ev-residency-11, ev-residency-12, ev-residency-13, ev-residency-14, ev-residency-15, ev-residency-16, ev-residency-17, ev-residency-18, ev-residency-19, ev-residency-20), of which 20 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-residency-1, ev-residency-2, ev-residency-3, ev-residency-4, ev-residency-5, ev-residency-6, ev-residency-7, ev-residency-8, ev-residency-9, ev-residency-10, ev-residency-11, ev-residency-12, ev-residency-13, ev-residency-14, ev-residency-15, ev-residency-16, ev-residency-17, ev-residency-18, ev-residency-19 and ev-residency-20: pass.
 
 **Holds only if**
 
@@ -7504,26 +7504,26 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-residency-1 | test | tests/core/residency.test.js#regions tenant classes and residency exceptions are entities of the metamodel with sections of their own | supports | none |
-| ev-residency-2 | test | tests/core/residency.test.js#the Harbourline fixture states BR-04 and BR-05 on the structure and validates with no errors and no warnings | supports | none |
-| ev-residency-3 | test | tests/core/residency.test.js#a fixed holder inside the provisioned regions is accepted for provisioned-regions confinement and refused for home | supports | none |
-| ev-residency-4 | test | tests/core/residency.test.js#a tenant class with confinement none confines nothing | supports | none |
-| ev-residency-5 | test | tests/core/residency.test.js#integrity rules read regions and placements and follow carried data through a recursive relation | supports | none |
-| ev-residency-6 | test | tests/core/residency.test.js#residency: a copy on a global holder with no exception is reported once as residency.copy-outside at copies.3.heldBy | supports | none |
-| ev-residency-7 | test | tests/core/residency.test.js#residency: a copy whose exception has expired is reported once as residency.copy-outside at copies.3.heldBy | supports | none |
-| ev-residency-8 | test | tests/core/residency.test.js#residency: a copy whose exception allows only a region its global holder is not confined to is reported once as residency.copy-outside at copies.3.heldBy | supports | none |
-| ev-residency-9 | test | tests/core/residency.test.js#residency: a bound record owned by a global component is reported once as residency.record-outside at records.2.owner | supports | none |
-| ev-residency-10 | test | tests/core/residency.test.js#residency: a flow of attachments to a sandbox fixed in one region is reported once as residency.flow-outside at relationships.0.to | supports | none |
-| ev-residency-11 | test | tests/core/residency.test.js#residency: a holder of bound data with no placement is reported once as residency.placement-missing at components.2.placement | supports | none |
-| ev-residency-12 | test | tests/core/residency.test.js#residency: a per-region holder with no instance in a provisioned region is reported once as residency.region-uncovered at components.6.regions | supports | none |
-| ev-residency-13 | test | tests/core/residency.test.js#residency: a global component that names regions is reported once as component.placement-regions at components.5.regions | supports | none |
-| ev-residency-14 | test | tests/core/residency.test.js#residency: a tenant class selected by both a flag and a plan is reported once as tenant-class.selector at tenantClasses.0.plan | supports | none |
-| ev-residency-15 | test | tests/core/residency.test.js#residency: a tenant class provisioned in no region is reported once as tenant-class.provisioned-in at tenantClasses.0.provisionedIn | supports | none |
-| ev-residency-16 | test | tests/core/residency.test.js#residency: an exception naming both a copy and a flow is reported once as residency.exception-target at residencyExceptions.0 | supports | none |
-| ev-residency-17 | test | tests/core/residency.test.js#residency: an exception for a copy of no bound record is reported once as residency.exception-target at residencyExceptions.0.copy | supports | none |
-| ev-residency-18 | test | tests/core/residency.test.js#residency: a bounded exception with no purge obligation is reported once as residency.exception-purge at residencyExceptions.0 | supports | none |
-| ev-residency-19 | test | tests/core/residency.test.js#residency: an exception whose longest duration is not a duration is reported once as residency.exception-duration at residencyExceptions.0.maxDuration | supports | none |
-| ev-residency-20 | test | tests/core/residency.test.js#residency: a renewal window not shorter than the longest duration is reported once as residency.exception-renewal at residencyExceptions.0.renewalWindow | supports | none |
+| ev-residency-1 | test | tests/core/residency.test.js#regions tenant classes and residency exceptions are entities of the metamodel with sections of their own | supports | pass |
+| ev-residency-2 | test | tests/core/residency.test.js#the Harbourline fixture states BR-04 and BR-05 on the structure and validates with no errors and no warnings | supports | pass |
+| ev-residency-3 | test | tests/core/residency.test.js#a fixed holder inside the provisioned regions is accepted for provisioned-regions confinement and refused for home | supports | pass |
+| ev-residency-4 | test | tests/core/residency.test.js#a tenant class with confinement none confines nothing | supports | pass |
+| ev-residency-5 | test | tests/core/residency.test.js#integrity rules read regions and placements and follow carried data through a recursive relation | supports | pass |
+| ev-residency-6 | test | tests/core/residency.test.js#residency: a copy on a global holder with no exception is reported once as residency.copy-outside at copies.3.heldBy | supports | pass |
+| ev-residency-7 | test | tests/core/residency.test.js#residency: a copy whose exception has expired is reported once as residency.copy-outside at copies.3.heldBy | supports | pass |
+| ev-residency-8 | test | tests/core/residency.test.js#residency: a copy whose exception allows only a region its global holder is not confined to is reported once as residency.copy-outside at copies.3.heldBy | supports | pass |
+| ev-residency-9 | test | tests/core/residency.test.js#residency: a bound record owned by a global component is reported once as residency.record-outside at records.2.owner | supports | pass |
+| ev-residency-10 | test | tests/core/residency.test.js#residency: a flow of attachments to a sandbox fixed in one region is reported once as residency.flow-outside at relationships.0.to | supports | pass |
+| ev-residency-11 | test | tests/core/residency.test.js#residency: a holder of bound data with no placement is reported once as residency.placement-missing at components.2.placement | supports | pass |
+| ev-residency-12 | test | tests/core/residency.test.js#residency: a per-region holder with no instance in a provisioned region is reported once as residency.region-uncovered at components.6.regions | supports | pass |
+| ev-residency-13 | test | tests/core/residency.test.js#residency: a global component that names regions is reported once as component.placement-regions at components.5.regions | supports | pass |
+| ev-residency-14 | test | tests/core/residency.test.js#residency: a tenant class selected by both a flag and a plan is reported once as tenant-class.selector at tenantClasses.0.plan | supports | pass |
+| ev-residency-15 | test | tests/core/residency.test.js#residency: a tenant class provisioned in no region is reported once as tenant-class.provisioned-in at tenantClasses.0.provisionedIn | supports | pass |
+| ev-residency-16 | test | tests/core/residency.test.js#residency: an exception naming both a copy and a flow is reported once as residency.exception-target at residencyExceptions.0 | supports | pass |
+| ev-residency-17 | test | tests/core/residency.test.js#residency: an exception for a copy of no bound record is reported once as residency.exception-target at residencyExceptions.0.copy | supports | pass |
+| ev-residency-18 | test | tests/core/residency.test.js#residency: a bounded exception with no purge obligation is reported once as residency.exception-purge at residencyExceptions.0 | supports | pass |
+| ev-residency-19 | test | tests/core/residency.test.js#residency: an exception whose longest duration is not a duration is reported once as residency.exception-duration at residencyExceptions.0.maxDuration | supports | pass |
+| ev-residency-20 | test | tests/core/residency.test.js#residency: a renewal window not shorter than the longest duration is reported once as residency.exception-renewal at residencyExceptions.0.renewalWindow | supports | pass |
 
 ## pooled-quotas-executable
 
@@ -7531,12 +7531,12 @@ quotaPool is an entity kind and a scenario lists the pools it runs; a pool runs 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 27 evidence entities (ev-pooled-quotas-1, ev-pooled-quotas-2, ev-pooled-quotas-3, ev-pooled-quotas-4, ev-pooled-quotas-5, ev-pooled-quotas-6, ev-pooled-quotas-7, ev-pooled-quotas-8, ev-pooled-quotas-9, ev-pooled-quotas-10, ev-pooled-quotas-11, ev-pooled-quotas-12, ev-pooled-quotas-13, ev-pooled-quotas-14, ev-pooled-quotas-15, ev-pooled-quotas-16, ev-pooled-quotas-17, ev-pooled-quotas-18, ev-pooled-quotas-19, ev-pooled-quotas-20, ev-pooled-quotas-21, ev-pooled-quotas-22, ev-pooled-quotas-23, ev-pooled-quotas-24, ev-pooled-quotas-25, ev-pooled-quotas-26, ev-pooled-quotas-27), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-pooled-quotas-1", "ev-pooled-quotas-2", "ev-pooled-quotas-3", "ev-pooled-quotas-4", "ev-pooled-quotas-5", "ev-pooled-quotas-6", "ev-pooled-quotas-7", "ev-pooled-quotas-8", "ev-pooled-quotas-9", "ev-pooled-quotas-10", "ev-pooled-quotas-11", "ev-pooled-quotas-12", "ev-pooled-quotas-13", "ev-pooled-quotas-14", "ev-pooled-quotas-15", "ev-pooled-quotas-16", "ev-pooled-quotas-17", "ev-pooled-quotas-18", "ev-pooled-quotas-19", "ev-pooled-quotas-20", "ev-pooled-quotas-21", "ev-pooled-quotas-22", "ev-pooled-quotas-23", "ev-pooled-quotas-24", "ev-pooled-quotas-25", "ev-pooled-quotas-26" and "ev-pooled-quotas-27" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 27 evidence entities (ev-pooled-quotas-1, ev-pooled-quotas-2, ev-pooled-quotas-3, ev-pooled-quotas-4, ev-pooled-quotas-5, ev-pooled-quotas-6, ev-pooled-quotas-7, ev-pooled-quotas-8, ev-pooled-quotas-9, ev-pooled-quotas-10, ev-pooled-quotas-11, ev-pooled-quotas-12, ev-pooled-quotas-13, ev-pooled-quotas-14, ev-pooled-quotas-15, ev-pooled-quotas-16, ev-pooled-quotas-17, ev-pooled-quotas-18, ev-pooled-quotas-19, ev-pooled-quotas-20, ev-pooled-quotas-21, ev-pooled-quotas-22, ev-pooled-quotas-23, ev-pooled-quotas-24, ev-pooled-quotas-25, ev-pooled-quotas-26, ev-pooled-quotas-27), of which 27 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-pooled-quotas-1, ev-pooled-quotas-2, ev-pooled-quotas-3, ev-pooled-quotas-4, ev-pooled-quotas-5, ev-pooled-quotas-6, ev-pooled-quotas-7, ev-pooled-quotas-8, ev-pooled-quotas-9, ev-pooled-quotas-10, ev-pooled-quotas-11, ev-pooled-quotas-12, ev-pooled-quotas-13, ev-pooled-quotas-14, ev-pooled-quotas-15, ev-pooled-quotas-16, ev-pooled-quotas-17, ev-pooled-quotas-18, ev-pooled-quotas-19, ev-pooled-quotas-20, ev-pooled-quotas-21, ev-pooled-quotas-22, ev-pooled-quotas-23, ev-pooled-quotas-24, ev-pooled-quotas-25, ev-pooled-quotas-26 and ev-pooled-quotas-27: pass.
 
 **Holds only if**
 
@@ -7551,33 +7551,33 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-pooled-quotas-1 | test | tests/core/pooled-quotas.test.js#quota pools are entities of the metamodel with a section of their own and scenarios list the pools they run | supports | none |
-| ev-pooled-quotas-2 | test | tests/core/pooled-quotas.test.js#the Harbourline fixture states BR-12 as a pool and validates with no errors and no warnings | supports | none |
-| ev-pooled-quotas-3 | test | tests/core/pooled-quotas.test.js#a pool runs as one machine per pooled limit and modelled member with the pool variables | supports | none |
-| ev-pooled-quotas-4 | test | tests/core/pooled-quotas.test.js#a client over its fair share is admitted while the pool has headroom and throttled after three days and released after two under | supports | none |
-| ev-pooled-quotas-5 | test | tests/core/pooled-quotas.test.js#exploration decides that a burst-eligible client is never throttled after eligibility was set | supports | none |
-| ev-pooled-quotas-6 | test | tests/core/pooled-quotas.test.js#exploration finds a counterexample when eligibility takes effect only from the next day | supports | none |
-| ev-pooled-quotas-7 | test | tests/core/pooled-quotas.test.js#exploration finds a counterexample when the over-share window is four days instead of three | supports | none |
-| ev-pooled-quotas-8 | test | tests/core/pooled-quotas.test.js#a retroactive exemption lifts a throttle already in force and the default one does not | supports | none |
-| ev-pooled-quotas-9 | test | tests/core/pooled-quotas.test.js#a scenario may run a pool and no behavior but not neither | supports | none |
-| ev-pooled-quotas-10 | test | tests/core/pooled-quotas.test.js#pooled quotas: a pool with no limit is reported once as pool.limits at quotaPools.0.limits | supports | none |
-| ev-pooled-quotas-11 | test | tests/core/pooled-quotas.test.js#pooled quotas: two limits with one name is reported once as pool.limits at quotaPools.0.limits.1.name | supports | none |
-| ev-pooled-quotas-12 | test | tests/core/pooled-quotas.test.js#pooled quotas: a limit with both a quota and an amount per member is reported once as pool.limit-contribution at quotaPools.0.limits.0 | supports | none |
-| ev-pooled-quotas-13 | test | tests/core/pooled-quotas.test.js#pooled quotas: a limit whose amount per member is not positive is reported once as pool.limit-contribution at quotaPools.0.limits.1.perMember | supports | none |
-| ev-pooled-quotas-14 | test | tests/core/pooled-quotas.test.js#pooled quotas: a pooled quota counted per principal is reported once as pool.quota-scope at quotaPools.0.limits.0.quota | supports | none |
-| ev-pooled-quotas-15 | test | tests/core/pooled-quotas.test.js#pooled quotas: a pooled quota with another window is reported once as pool.quota-window at quotaPools.0.limits.0.quota | supports | none |
-| ev-pooled-quotas-16 | test | tests/core/pooled-quotas.test.js#pooled quotas: a pooled quota stated as a level is reported once as pool.limit-kind at quotaPools.0.limits.0.kind | supports | none |
-| ev-pooled-quotas-17 | test | tests/core/pooled-quotas.test.js#pooled quotas: a pooled quota held by another component is reported once as pool.held-by at quotaPools.0.heldBy | supports | none |
-| ev-pooled-quotas-18 | test | tests/core/pooled-quotas.test.js#pooled quotas: a usage event with no amount is reported once as pool.event-payload at quotaPools.0.limits.1.usage | supports | none |
-| ev-pooled-quotas-19 | test | tests/core/pooled-quotas.test.js#pooled quotas: an exemption event with no member is reported once as pool.event-payload at quotaPools.0.exemption.event | supports | none |
-| ev-pooled-quotas-20 | test | tests/core/pooled-quotas.test.js#pooled quotas: a level with no usage event is reported once as pool.usage-event at quotaPools.0.limits.1 | supports | none |
-| ev-pooled-quotas-21 | test | tests/core/pooled-quotas.test.js#pooled quotas: a window that is not a duration is reported once as pool.window at quotaPools.0.window | supports | none |
-| ev-pooled-quotas-22 | test | tests/core/pooled-quotas.test.js#pooled quotas: an over-share rule of zero days is reported once as pool.over-share at quotaPools.0.overShare.consecutive | supports | none |
-| ev-pooled-quotas-23 | test | tests/core/pooled-quotas.test.js#pooled quotas: a throttle with no release is reported once as pool.release at quotaPools.0.throttle.release | supports | none |
-| ev-pooled-quotas-24 | test | tests/core/pooled-quotas.test.js#pooled quotas: five modelled members is reported once as pool.model-members at quotaPools.0.modelMembers | supports | none |
-| ev-pooled-quotas-25 | test | tests/core/pooled-quotas.test.js#pooled quotas: an exemption set by a role without its capability is reported once as pool.exemption-capability at quotaPools.0.exemption.capability | supports | none |
-| ev-pooled-quotas-26 | test | tests/core/pooled-quotas.test.js#pooled quotas: a pool machine id that is already an entity is reported once as pool.machine-id at quotaPools.0.limits | supports | none |
-| ev-pooled-quotas-27 | test | tests/core/pooled-quotas.test.js#pooled quotas: a claim reading a variable a pool machine does not have is reported once as expr.reference at claims.0.evaluate.expr | supports | none |
+| ev-pooled-quotas-1 | test | tests/core/pooled-quotas.test.js#quota pools are entities of the metamodel with a section of their own and scenarios list the pools they run | supports | pass |
+| ev-pooled-quotas-2 | test | tests/core/pooled-quotas.test.js#the Harbourline fixture states BR-12 as a pool and validates with no errors and no warnings | supports | pass |
+| ev-pooled-quotas-3 | test | tests/core/pooled-quotas.test.js#a pool runs as one machine per pooled limit and modelled member with the pool variables | supports | pass |
+| ev-pooled-quotas-4 | test | tests/core/pooled-quotas.test.js#a client over its fair share is admitted while the pool has headroom and throttled after three days and released after two under | supports | pass |
+| ev-pooled-quotas-5 | test | tests/core/pooled-quotas.test.js#exploration decides that a burst-eligible client is never throttled after eligibility was set | supports | pass |
+| ev-pooled-quotas-6 | test | tests/core/pooled-quotas.test.js#exploration finds a counterexample when eligibility takes effect only from the next day | supports | pass |
+| ev-pooled-quotas-7 | test | tests/core/pooled-quotas.test.js#exploration finds a counterexample when the over-share window is four days instead of three | supports | pass |
+| ev-pooled-quotas-8 | test | tests/core/pooled-quotas.test.js#a retroactive exemption lifts a throttle already in force and the default one does not | supports | pass |
+| ev-pooled-quotas-9 | test | tests/core/pooled-quotas.test.js#a scenario may run a pool and no behavior but not neither | supports | pass |
+| ev-pooled-quotas-10 | test | tests/core/pooled-quotas.test.js#pooled quotas: a pool with no limit is reported once as pool.limits at quotaPools.0.limits | supports | pass |
+| ev-pooled-quotas-11 | test | tests/core/pooled-quotas.test.js#pooled quotas: two limits with one name is reported once as pool.limits at quotaPools.0.limits.1.name | supports | pass |
+| ev-pooled-quotas-12 | test | tests/core/pooled-quotas.test.js#pooled quotas: a limit with both a quota and an amount per member is reported once as pool.limit-contribution at quotaPools.0.limits.0 | supports | pass |
+| ev-pooled-quotas-13 | test | tests/core/pooled-quotas.test.js#pooled quotas: a limit whose amount per member is not positive is reported once as pool.limit-contribution at quotaPools.0.limits.1.perMember | supports | pass |
+| ev-pooled-quotas-14 | test | tests/core/pooled-quotas.test.js#pooled quotas: a pooled quota counted per principal is reported once as pool.quota-scope at quotaPools.0.limits.0.quota | supports | pass |
+| ev-pooled-quotas-15 | test | tests/core/pooled-quotas.test.js#pooled quotas: a pooled quota with another window is reported once as pool.quota-window at quotaPools.0.limits.0.quota | supports | pass |
+| ev-pooled-quotas-16 | test | tests/core/pooled-quotas.test.js#pooled quotas: a pooled quota stated as a level is reported once as pool.limit-kind at quotaPools.0.limits.0.kind | supports | pass |
+| ev-pooled-quotas-17 | test | tests/core/pooled-quotas.test.js#pooled quotas: a pooled quota held by another component is reported once as pool.held-by at quotaPools.0.heldBy | supports | pass |
+| ev-pooled-quotas-18 | test | tests/core/pooled-quotas.test.js#pooled quotas: a usage event with no amount is reported once as pool.event-payload at quotaPools.0.limits.1.usage | supports | pass |
+| ev-pooled-quotas-19 | test | tests/core/pooled-quotas.test.js#pooled quotas: an exemption event with no member is reported once as pool.event-payload at quotaPools.0.exemption.event | supports | pass |
+| ev-pooled-quotas-20 | test | tests/core/pooled-quotas.test.js#pooled quotas: a level with no usage event is reported once as pool.usage-event at quotaPools.0.limits.1 | supports | pass |
+| ev-pooled-quotas-21 | test | tests/core/pooled-quotas.test.js#pooled quotas: a window that is not a duration is reported once as pool.window at quotaPools.0.window | supports | pass |
+| ev-pooled-quotas-22 | test | tests/core/pooled-quotas.test.js#pooled quotas: an over-share rule of zero days is reported once as pool.over-share at quotaPools.0.overShare.consecutive | supports | pass |
+| ev-pooled-quotas-23 | test | tests/core/pooled-quotas.test.js#pooled quotas: a throttle with no release is reported once as pool.release at quotaPools.0.throttle.release | supports | pass |
+| ev-pooled-quotas-24 | test | tests/core/pooled-quotas.test.js#pooled quotas: five modelled members is reported once as pool.model-members at quotaPools.0.modelMembers | supports | pass |
+| ev-pooled-quotas-25 | test | tests/core/pooled-quotas.test.js#pooled quotas: an exemption set by a role without its capability is reported once as pool.exemption-capability at quotaPools.0.exemption.capability | supports | pass |
+| ev-pooled-quotas-26 | test | tests/core/pooled-quotas.test.js#pooled quotas: a pool machine id that is already an entity is reported once as pool.machine-id at quotaPools.0.limits | supports | pass |
+| ev-pooled-quotas-27 | test | tests/core/pooled-quotas.test.js#pooled quotas: a claim reading a variable a pool machine does not have is reported once as expr.reference at claims.0.evaluate.expr | supports | pass |
 
 ## machine-singleton-key
 
@@ -7585,12 +7585,12 @@ An implementation-level machine that creates its records (storage.creates), has 
 
 - Kind: invariant
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-singleton-key-negative), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-singleton-key-negative" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-singleton-key-negative), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-singleton-key-negative: pass.
 
 **Holds only if**
 
@@ -7605,7 +7605,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-singleton-key-negative | test | tests/core/runtime-faults.test.js#rule machine.singleton-key | supports | none |
+| ev-singleton-key-negative | test | tests/core/runtime-faults.test.js#rule machine.singleton-key | supports | pass |
 
 ## specification-manifest-parts
 
@@ -7613,12 +7613,12 @@ A specification may be a manifest (specParts) listing part files, and Exegra rea
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-spec-manifest-resolve, ev-spec-manifest-refusals, ev-spec-manifest-write-back), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-spec-manifest-resolve", "ev-spec-manifest-refusals" and "ev-spec-manifest-write-back" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-spec-manifest-resolve, ev-spec-manifest-refusals, ev-spec-manifest-write-back), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-spec-manifest-resolve, ev-spec-manifest-refusals and ev-spec-manifest-write-back: pass.
 
 **Holds only if**
 
@@ -7632,9 +7632,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-spec-manifest-resolve | test | tests/core/spec-manifest.test.js#parts assemble in manifest order and array sections concatenate | supports | none |
-| ev-spec-manifest-refusals | test | tests/core/spec-manifest.test.js#an id repeated across parts is refused naming both files | supports | none |
-| ev-spec-manifest-write-back | test | tests/core/spec-manifest.test.js#an edit is written back to the part that holds the entity and new entities go where the table says | supports | none |
+| ev-spec-manifest-resolve | test | tests/core/spec-manifest.test.js#parts assemble in manifest order and array sections concatenate | supports | pass |
+| ev-spec-manifest-refusals | test | tests/core/spec-manifest.test.js#an id repeated across parts is refused naming both files | supports | pass |
+| ev-spec-manifest-write-back | test | tests/core/spec-manifest.test.js#an edit is written back to the part that holds the entity and new entities go where the table says | supports | pass |
 
 ## derivation-cache-transparent
 
@@ -7642,12 +7642,12 @@ A derivation served from the cache is observably identical to one computed: vali
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-derivation-cache-identical, ev-derivation-cache-encoding), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-derivation-cache-identical" and "ev-derivation-cache-encoding" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-derivation-cache-identical, ev-derivation-cache-encoding), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-derivation-cache-identical and ev-derivation-cache-encoding: pass.
 
 **Holds only if**
 
@@ -7661,8 +7661,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-derivation-cache-identical | test | tests/core/derivation-cache.test.js#a hit gives byte-identical validate and claims output to a cold run | supports | none |
-| ev-derivation-cache-encoding | test | tests/core/derivation-cache.test.js#the encoding reproduces Maps and Sets and null prototypes and negative zero and shared references and cycles | supports | none |
+| ev-derivation-cache-identical | test | tests/core/derivation-cache.test.js#a hit gives byte-identical validate and claims output to a cold run | supports | pass |
+| ev-derivation-cache-encoding | test | tests/core/derivation-cache.test.js#the encoding reproduces Maps and Sets and null prototypes and negative zero and shared references and cycles | supports | pass |
 
 ## derivation-cache-keyed-by-content
 
@@ -7670,12 +7670,12 @@ A cached derivation is reused only for the same input contents and the same Exeg
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-derivation-cache-inputs, ev-derivation-cache-sources, ev-derivation-cache-damaged), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-derivation-cache-inputs", "ev-derivation-cache-sources" and "ev-derivation-cache-damaged" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 3 evidence entities (ev-derivation-cache-inputs, ev-derivation-cache-sources, ev-derivation-cache-damaged), of which 3 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-derivation-cache-inputs, ev-derivation-cache-sources and ev-derivation-cache-damaged: pass.
 
 **Holds only if**
 
@@ -7689,9 +7689,9 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-derivation-cache-inputs | test | tests/core/derivation-cache.test.js#changing a specification file or the project config is a miss | supports | none |
-| ev-derivation-cache-sources | test | tests/core/derivation-cache.test.js#editing an Exegra derivation source is a miss | supports | none |
-| ev-derivation-cache-damaged | test | tests/core/derivation-cache.test.js#a damaged entry is a miss and never an error and is replaced | supports | none |
+| ev-derivation-cache-inputs | test | tests/core/derivation-cache.test.js#changing a specification file or the project config is a miss | supports | pass |
+| ev-derivation-cache-sources | test | tests/core/derivation-cache.test.js#editing an Exegra derivation source is a miss | supports | pass |
+| ev-derivation-cache-damaged | test | tests/core/derivation-cache.test.js#a damaged entry is a miss and never an error and is replaced | supports | pass |
 
 ## derivation-cache-concurrent-safe
 
@@ -7699,12 +7699,12 @@ Processes sharing one cache directory at the same time all succeed with the same
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-derivation-cache-concurrent), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded result of "ev-derivation-cache-concurrent" was recorded on another tree than the current one (the stamp differs or is missing), so it establishes nothing now; run exegra verify to record it again.
+- Scope: No model evaluation was performed. This rests on 1 evidence entity (ev-derivation-cache-concurrent), of which 1 has a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-derivation-cache-concurrent: pass.
 
 **Holds only if**
 
@@ -7718,7 +7718,7 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-derivation-cache-concurrent | test | tests/core/derivation-cache.test.js#concurrent processes on one cache all succeed with the same output | supports | none |
+| ev-derivation-cache-concurrent | test | tests/core/derivation-cache.test.js#concurrent processes on one cache all succeed with the same output | supports | pass |
 
 ## product-layers-share-platform-analysis
 
@@ -7726,12 +7726,12 @@ Validating several sets of product files over one platform text in one process p
 
 - Kind: structural
 - Method: external-evidence
-- **Status**: Not evaluated
+- **Status**: Supported by external evidence
 - Check: test: The status comes from attached test evidence.
 - Grounding: not-applicable: The status rests on evidence outside the model.
 - Evaluator: exegra.evidence/0.1
-- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-layers-cache-identical, ev-layers-cache-read-only), of which 0 have a recorded execution result; the rest is author-entered.
-- Explanation: Stale: the recorded results of "ev-layers-cache-identical" and "ev-layers-cache-read-only" were recorded on another tree than the current one (the stamp differs or is missing), so they establish nothing now; run exegra verify to record them again.
+- Scope: No model evaluation was performed. This rests on 2 evidence entities (ev-layers-cache-identical, ev-layers-cache-read-only), of which 2 have a recorded execution result; the rest is author-entered.
+- Explanation: Exegra holds a recorded result of executing ev-layers-cache-identical and ev-layers-cache-read-only: pass.
 
 **Holds only if**
 
@@ -7745,8 +7745,8 @@ None.
 
 | Id | Kind | Ref | Supports | Recorded |
 | --- | --- | --- | --- | --- |
-| ev-layers-cache-identical | test | tests/core/layers-cache.test.js#layer sets over one platform give the output of independent validations and the platform is analysed once | supports | none |
-| ev-layers-cache-read-only | test | tests/core/layers-cache.test.js#the shared platform analysis cannot be corrupted by a caller | supports | none |
+| ev-layers-cache-identical | test | tests/core/layers-cache.test.js#layer sets over one platform give the output of independent validations and the platform is analysed once | supports | pass |
+| ev-layers-cache-read-only | test | tests/core/layers-cache.test.js#the shared platform analysis cannot be corrupted by a caller | supports | pass |
 
 ## behav-delivery-order-independent
 
@@ -7758,7 +7758,7 @@ In the behaviour calculus, firing the winners a step computes in any order (any 
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.Behav.deliver_perm", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Core.Behav.deliver", "Exegra.Core.Behav.deliverWith", "Exegra.Core.Behav.phase2".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.Behav.deliver_perm" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Quot.sound; its statement is about Exegra.Core.Behav.deliver, Exegra.Core.Behav.deliverWith, Exegra.Core.Behav.phase2 (statement hash 757a451b4ce6).
 
 **Holds only if**
@@ -7783,7 +7783,7 @@ The winners a step of the behaviour calculus computes are on distinct machines, 
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.Behav.winners_nodup", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Core.Behav.winners".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.Behav.winners_nodup" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Quot.sound; its statement is about Exegra.Core.Behav.winners (statement hash 5be9fcc8ec8f).
 
 **Holds only if**
@@ -7808,7 +7808,7 @@ In the behaviour calculus, from an initial configuration of the shape of its sig
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.Behav.shaped_invariant", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Core.Behav.Sys.lts", "Exegra.Core.Behav.Cfg.Shaped", "Exegra.Core.Behav.State.Shaped", "Exegra.Core.LTS.Invariant".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.Behav.shaped_invariant" is a theorem; the Lean kernel accepted its proof again; it depends only on propext; its statement is about Exegra.Core.Behav.Sys.lts, Exegra.Core.Behav.Cfg.Shaped, Exegra.Core.Behav.State.Shaped, Exegra.Core.LTS.Invariant (statement hash 79086aebeecb).
 
 **Holds only if**
@@ -7833,7 +7833,7 @@ In the behaviour calculus, from a shaped initial configuration no step from a re
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.Behav.shape_unreachable", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Core.Behav.deliver", "Exegra.Core.Behav.Sys.lts", "Exegra.Core.Behav.Cfg.Shaped".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.Behav.shape_unreachable" is a theorem; the Lean kernel accepted its proof again; it depends only on propext; its statement is about Exegra.Core.Behav.deliver, Exegra.Core.Behav.Sys.lts, Exegra.Core.Behav.Cfg.Shaped (statement hash 38f3be2d53fa).
 
 **Holds only if**
@@ -7858,7 +7858,7 @@ In the behaviour calculus, when the static sort of an expression is defined, eve
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.Behav.Expr.eval_fits", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Core.Behav.Expr.eval", "Exegra.Core.Behav.Val.fits", "Exegra.Core.Behav.Ctx.Typed".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.Behav.Expr.eval_fits" is a theorem; the Lean kernel accepted its proof again; it depends only on propext, Classical.choice, Quot.sound; its statement is about Exegra.Core.Behav.Expr.eval, Exegra.Core.Behav.Val.fits, Exegra.Core.Behav.Ctx.Typed (statement hash 64e99359754a).
 
 **Holds only if**
@@ -7883,7 +7883,7 @@ In the behaviour calculus an arithmetic node is checked against its declared int
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.Behav.Examples.u8_overflow", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Core.Behav.Expr.eval", "Exegra.Core.Behav.Examples.u8Guard".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.Behav.Examples.u8_overflow" is a theorem; the Lean kernel accepted its proof again; it depends only on propext; its statement is about Exegra.Core.Behav.Expr.eval, Exegra.Core.Behav.Examples.u8Guard (statement hash 18d9eeedcd70).
 
 **Holds only if**
@@ -7908,7 +7908,7 @@ In the behaviour calculus % is the truncated remainder, as format 2 computes it:
 - Check: lean-theorem: A theorem of the Lean core, "Exegra.Core.Behav.Examples.mod_truncates", checked by the Lean kernel; it covers every input.
 - Grounding: bound: States a property of the Lean definitions "Exegra.Core.Behav.BOp.apply".
 - Evaluator: lean.kernel/4.35.0
-- Scope: Checked by Lean 4.35.0 at 2026-11-27T01:51:44.014Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
+- Scope: Checked by Lean 4.35.0 at 2026-11-27T02:04:37.543Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).
 - Explanation: "Exegra.Core.Behav.Examples.mod_truncates" is a theorem; the Lean kernel accepted its proof again; it depends only on propext; its statement is about Exegra.Core.Behav.BOp.apply (statement hash 577179f15ccd).
 
 **Holds only if**
