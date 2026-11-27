@@ -202,7 +202,7 @@ maintained with the milestones and moves into a generated artifact derived from 
 |---|---|---|---|
 | 1. Well-formedness | Structural derivation in Lean (16 codes); most rules in JavaScript | JavaScript rules are not Lean; no single `WellFormed` predicate | M3 |
 | 2. Consistency | None | Validation and integrity rules are not joint satisfiability; assumptions are text | M6, then a satisfiability check over typed assumptions |
-| 3. Safety | Bounded exhaustive exploration of format-1 scenarios, sound and complete within the bound for the explorer's own successor function | Bounded; failed steps dropped; within-step order fixed; format 2 refused | M1, M2, M4 |
+| 3. Safety | (a) Bounded exhaustive exploration of format-1 scenarios, sound and complete within the bound for the explorer's own successor function. (b) Since M1: unbounded safety of any labelled transition system from an inductive invariant or a kernel-checked closed-set certificate, and a proved bridge from the generic search's `holds` to an unbounded invariant under a coverage obligation (`lts-foundation`) | (a) is bounded, drops failed steps, fixes within-step order and refuses format 2. (b) is proved for the guarded-command calculus, not yet for Exegra's behaviour language: the coverage obligation for Exegra's explorer is undischarged until M2 | M2, M4 |
 | 4. Liveness | None (`eventually` is a property of the last state of a finite run) | | M5 |
 | 5. Compositionality | None (structural graph claims over hand-declared relationships only) | | M6 |
 | 6. Refinement | Program equivalence of the optimised and reference engines; a JavaScript trace check that is unsound (lease example) | Not a refinement relation | M7 |

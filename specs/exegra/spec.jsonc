@@ -1356,7 +1356,8 @@
         "status": "manual",
         "modules": [
           "vite.config.js",
-          ".github/workflows/pages.yml"
+          ".github/workflows/pages.yml",
+          ".github/workflows/check.yml"
         ],
         "notes": "package.json scripts (dev, build, test, test:browser, typecheck, exegra, generate, verify) are not a scanned source file.",
         "language": "js"
@@ -1980,6 +1981,40 @@
         "The determinism property over seeds is not stated as a theorem for format 2 yet (planned: WG-4741).",
         "Exegra.Impl optimizes format 1; format 2 runs the definition's step semantics (V2.traceOf) with only the fast JSON writer, so its expressions are still parsed at every evaluation (planned: WG-4798). Exegra.Json.parse is a partial definition, shared by the definition and the implementation, so it is outside every theorem (planned: WG-4797)."
       ],
+      "tags": [
+        "verdict-kernel"
+      ]
+    },
+    {
+      "id": "lts-foundation",
+      "name": "Transition-system foundation (Lean 4)",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "The mathematical object every guarantee is a proposition about (docs/foundations.md, section 3 and milestone M1): labelled transition systems as relations, reachability, invariants with no bound on runs, inductive invariants, vacuity, bounded reachability, closed-set certificates, the bridge from the generic search to transition-system invariants, and a minimal well-scoped guarded-command calculus over Int whose semantics is a transition system.",
+      "responsibilities": [
+        "Prove unbounded safety from an inductive invariant (Exegra.Core.LTS.safe_of_inductive) and from a closed-set certificate checked by kernel evaluation (checkClosed_sound)",
+        "State vacuity explicitly: with no initial state every predicate is an invariant (invariant_of_no_init), so an invariant result is only meaningful together with NonVacuous",
+        "Distinguish bounded from unbounded results: an invariant is a bounded invariant at every depth (invariant_iff_all_bounds) and no single depth suffices (Exegra.Core.Examples.bounded_not_unbounded)",
+        "Carry results of the generic search to transition systems: a holds result is an unbounded invariant of every system the search covers (invariant_of_search) and a counterexample refutes the invariant of every system it is sound for (not_invariant_of_search)",
+        "Give the guarded-command calculus a semantics in which out-of-range variables cannot be written, updates read the state before the step (Cmd.exec_get) and steps are labelled by command"
+      ],
+      "unknowns": [
+        "The calculus is single-sorted (Int) and has no division, events, timers, faults or time; Exegra's behaviour language is not yet expressed in it, so none of these theorems is about Exegra's own behaviours (milestone M2).",
+        "There are no runs, traces, observations, fairness or composition yet (milestones M5 and M6), and no k-induction (M4).",
+        "Semantic completeness (invariant_iff_exists_inductive) is over arbitrary predicates; inductive invariants expressible in the calculus's expressions need not exist."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "formal/Exegra/Core/"
+        ],
+        "notes": "formal/Exegra/Core/LTS.lean (the theory), Calculus.lean (the guarded-command calculus), Search.lean (the bridge from Exegra.Gen.search), Examples.lean (positive and adversarial examples: counter_le, ne_neg_one_not_inductive, ne_neg_one_invariant, bounded_not_unbounded, vacuous_false, mod3_in_range); axioms pinned with #guard_msgs. The files sit inside formal/, which formal-semantics also declares. Checked by lake build in .github/workflows/check.yml.",
+        "trusts": [
+          "trusted-lean-kernel"
+        ],
+        "language": "lean"
+      },
       "tags": [
         "verdict-kernel"
       ]
@@ -3002,6 +3037,7 @@
     { "id": "agent-cli-calls-test-suites", "kind": "calls", "from": "agent-cli", "to": "test-suites", "description": "verify executes test evidence by spawning node --test on a core test file." },
     { "id": "agent-cli-calls-playwright-runner", "kind": "calls", "from": "agent-cli", "to": "playwright-runner", "description": "verify executes browser test evidence by spawning Playwright, unless --skip-browser." },
     { "id": "agent-cli-calls-filesystem", "kind": "calls", "from": "agent-cli", "to": "filesystem", "description": "Reads operation files and checks paths." },
+    { "id": "lts-foundation-depends-on-exhaustive-explorer", "kind": "depends-on", "from": "lts-foundation", "to": "exhaustive-explorer", "description": "formal/Exegra/Core/Search.lean imports the generic search (formal/Exegra/Search.lean) and states its results as transition-system invariants." },
     { "id": "build-system-depends-on-vite", "kind": "depends-on", "from": "build-system", "to": "vite-dev-server", "description": "Configures the server (127.0.0.1, specs not watched) and the build." },
     { "id": "build-system-calls-dev-server-plugin", "kind": "calls", "from": "build-system", "to": "dev-server-plugin", "description": "Registers the plugin with the specs directory." },
     { "id": "generators-calls-queries", "kind": "calls", "from": "generators", "to": "queries", "description": "Lists children, relationships and contracts for the architecture document." },
@@ -17774,6 +17810,105 @@
       "rationale": "Supported by tests/core/pages-site.test.js (the ev-pages-* evidence entries), which read the structure of vite.config.js and .github/workflows/pages.yml, and which are shown to fail on the five workflow mutants of docs/assessment/2026-11-26/demos/pages-mutants.mjs (deploy job if: false, build job if: false, || true after validate, a paths filter that never matches, needs: build removed; ev-pages-mutants-refused). It does not establish that GitHub runs the workflow (Pages enabled as the source, the workflow enabled, a push not marked to skip CI), nor that every push to main is published: under the workflow's concurrency group a queued run is replaced when a newer push arrives, so an intermediate push may never be built or deployed. The checks are structural: they catch the listed mutants, not every edit that breaks publishing (a broken build command, a wrong artifact name in a later action version, a failing deploy).",
       "evaluate": {
         "method": "external-evidence"
+      }
+    },
+    {
+      "id": "lts-safe-of-inductive",
+      "kind": "structural",
+      "statement": "An inductive invariant that implies P proves that P holds in every reachable state of a labelled transition system, with no bound on the length of runs.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/LTS.lean. It depends on no axiom. It is the soundness of the proof method, not a result about any particular system.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.safe_of_inductive",
+        "about": [
+          "Exegra.Core.LTS.Invariant",
+          "Exegra.Core.LTS.Inductive"
+        ]
+      }
+    },
+    {
+      "id": "lts-bounded-is-not-unbounded",
+      "kind": "structural",
+      "statement": "For every depth k there is a guarded-command program in which a property holds in every state reachable in at most k steps and does not hold in every reachable state: bounded exploration that finds no counterexample is not a proof.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Examples.lean about the unbounded counter. It records, as a theorem, the distinction between bounded and unbounded results that claim statuses must keep.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Examples.bounded_not_unbounded",
+        "about": [
+          "Exegra.Core.LTS.BoundedInvariant",
+          "Exegra.Core.LTS.Invariant"
+        ]
+      }
+    },
+    {
+      "id": "lts-vacuous-without-initial-state",
+      "kind": "structural",
+      "statement": "A labelled transition system with no initial state has every predicate as an invariant, so an invariant result must be accompanied by a proof that the system has an initial state.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/LTS.lean; Exegra.Core.Examples.vacuous_false instantiates it with False. Every guarded-command program has an initial state (Exegra.Core.Prog.nonVacuous).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.invariant_of_no_init",
+        "about": [
+          "Exegra.Core.LTS.Invariant",
+          "Exegra.Core.LTS.NonVacuous"
+        ]
+      }
+    },
+    {
+      "id": "lts-search-holds-is-invariant",
+      "kind": "structural",
+      "statement": "When the generic search reports holds on a search system that covers a labelled transition system (every initial state and every step present), the searched property holds in every reachable state of that transition system, with no bound.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Search.lean, from Exegra.Gen.search_sound. The coverage obligation is a hypothesis: for Exegra's own explorer it is not yet discharged against a transition-system semantics of the behaviour language (milestone M2).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.invariant_of_search",
+        "about": [
+          "Exegra.Gen.search",
+          "Exegra.Core.LTS.Invariant"
+        ]
+      }
+    },
+    {
+      "id": "lts-counter-bounded-for-every-limit",
+      "kind": "structural",
+      "statement": "The guarded-command counter with guard n < L and effect n := n + 1 never exceeds L, for every L >= 0, in every reachable state with no bound on runs.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Examples.lean, proved by an inductive invariant over Int with omega; the property separates an integer semantics from a Float one (docs/assessment/2026-11-26/foundations.md, cross-challenge C1).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Examples.counter_le",
+        "about": [
+          "Exegra.Core.Prog.lts"
+        ]
       }
     },
     {
