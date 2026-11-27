@@ -155,6 +155,17 @@ step proved to be one scheduler of it (`step_sound`), the explorer's successors 
 *Done when* `step_sound` and `successors_complete` are proved, the `[a, b]` / `[b, a]` example gives one verdict, and
 the golden traces are unchanged or each change is listed and justified.
 
+*Plan* ([assessment/2026-11-26/plan-M2.md](assessment/2026-11-26/plan-M2.md)): format 2's values are `Float`
+throughout, so `step_sound` cannot be proved against today's step; the integer fragment of the behaviour
+language is elaborated into the calculus and run on a proved executable, and inputs outside the fragment run
+on the legacy path, flagged in the trace and covered by no theorem. Increments: M2.1 core calculus with the
+snapshot permutation theorem and the `[a, b]` / `[b, a]` example; M2.2 time, timers, faults and the full
+relation; M2.3 the executable with `step_sound` and `successors_complete`; M2.4 elaboration; M2.5 dispatch,
+Rust oracle and differential checks; M2.6 explorer and temporal monitors on the calculus; M2.7 counted
+instances; M2.8 random draws; M2.9 deletion of format 1. Snapshot reads change no golden trace (checked by
+`scripts/snapshot_diff.py` over 866 steps). Resources, links and workloads, and the removal of `Float` from
+values, are a separate milestone M2b.
+
 **M3. Lean owns lowering and verdicts (after M2, M0).** The specification-to-calculus lowering (`sim-input.js`,
 `pools.js`, `distributions.js`) and the claim semantics move to Lean; the status lattice of section 3 is defined in
 Lean with its rules as theorems; `claims.js` keeps formatting only. *Done when* `sim-input.js` is deleted, the
