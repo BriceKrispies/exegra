@@ -166,6 +166,12 @@ instances; M2.8 random draws; M2.9 deletion of format 1. Snapshot reads change n
 `scripts/snapshot_diff.py` over 866 steps). Resources, links and workloads, and the removal of `Float` from
 values, are a separate milestone M2b.
 
+*Established by M2.1:* the instantaneous behaviour calculus `Exegra.Core.Behav` (typed `Int`/`Bool`/`String`
+values, `Fin`-scoped references, events, guards, effects, failed steps as an explicit error state) with its LTS
+`Sys.lts`, the snapshot theorem `phase2_perm`, and the `[a, b]` / `[b, a]` example giving one verdict under snapshot
+reads (`f4_ab_safe`, `f4_ba_safe`) and two under next-configuration reads (`f4_next_reads_differ`); it covers no
+timers, faults or draws and no theorem yet relates it to the format-2 interpreter (M2.2 onward).
+
 **M3. Lean owns lowering and verdicts (after M2, M0).** The specification-to-calculus lowering (`sim-input.js`,
 `pools.js`, `distributions.js`) and the claim semantics move to Lean; the status lattice of section 3 is defined in
 Lean with its rules as theorems; `claims.js` keeps formatting only. *Done when* `sim-input.js` is deleted, the
