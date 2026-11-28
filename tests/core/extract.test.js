@@ -22,6 +22,8 @@ function repoWith(files) {
   return dir;
 }
 
+// The extractor reads a corpus of JavaScript, Lean and Rust sources and the repository itself, and its facts depend on the bytes only.
+// @evidence static-extractor-reads-exact-imports #
 test('JavaScript: static imports, re-exports, dynamic imports, require and builtins are told apart, comments ignored', () => {
   const text = [
     "import fs from 'node:fs';",
@@ -118,7 +120,7 @@ test('the committed fact file of this repository describes the tree', () => {
   assert.ok(stored, `${FACTS_PATH} exists; write it with node tools/extract.js`);
   assert.deepEqual(checkFacts(stored), []);
   const drift = factsDrift(stored, ROOT);
-  assert.deepEqual(drift, { changed: [], missing: [], gone: [], extractor: false }, 'run node tools/extract.js (or exegra extract) and commit the fact file');
+  assert.deepEqual(drift, { changed: [], missing: [], gone: [], extractor: false, evidence: false }, 'run node tools/extract.js (or exegra extract) and commit the fact file');
   // Every extracted file is a file of the surface, with a resolved import for every relative specifier that exists.
   for (const f of stored.files) for (const i of f.imports) if (i.resolved !== null) assert.ok(fs.existsSync(path.join(ROOT, i.resolved)), `${f.path} imports ${i.spec}, which resolves to ${i.resolved}`);
 });

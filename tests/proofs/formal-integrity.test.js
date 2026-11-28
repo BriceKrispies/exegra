@@ -43,6 +43,8 @@ function mutated(text, ops) {
   return /** @type {any} */ (a.model);
 }
 
+// Every fixture rule holds with a proof by reflection checked by the kernel with standard axioms only; every mutation is refuted from its stated witness; on 25 seeded random mutations the Lean checker and the JavaScript evaluator give the same verdict and counterexamples for every rule, each seen holding and failing. Skipped, with a message, without Lake.
+// @evidence integrity-proved-in-lean #
 test('every fixture rule holds, proved in Lean by reflection with standard axioms only', (t) => {
   if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
   const model = mutated(SPEC, []);
@@ -136,6 +138,8 @@ test('differential: Lean and JavaScript agree on every rule of seeded random mut
 const RELATIONS = fs.readFileSync(path.join(DIR, 'relations.jsonc'), 'utf8');
 const RELATION_MUTATIONS = JSON.parse(fs.readFileSync(path.join(DIR, 'relations-mutations.json'), 'utf8')).mutations;
 
+// Every relation rule of the fixture proved: prog_wf, prog_solved and holds, kernel-checked with standard axioms only.
+// @evidence integrity-relations-agree-with-lean-and-nemo
 test('derived relations: every rule of the relations fixture is proved under the least-model meaning with standard axioms only', (t) => {
   if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
   const model = mutated(RELATIONS, []);
@@ -157,6 +161,8 @@ test('derived relations: every rule of the relations fixture is proved under the
   }
 });
 
+// Every mutation of relations-mutations.json refuted under Least from its stated witness.
+// @evidence integrity-relations-agree-with-lean-and-nemo
 test('derived relations: every mutation is refuted in Lean under the least-model meaning from its stated counterexample', (t) => {
   if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
   for (const m of RELATION_MUTATIONS) {
@@ -173,6 +179,8 @@ test('derived relations: every mutation is refuted in Lean under the least-model
   }
 });
 
+// On 25 seeded random module graphs the Lean tables, verdicts and counterexamples equal the JavaScript ones; every rule is seen holding and failing.
+// @evidence integrity-relations-agree-with-lean-and-nemo
 test('differential: Lean and JavaScript agree on relation tables and verdicts and counterexamples of seeded random module graphs', (t) => {
   if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
   assert.equal(spawnSync('lake', ['build'], { cwd: FORMAL, encoding: 'utf8', windowsHide: true }).status, 0, 'lake build');

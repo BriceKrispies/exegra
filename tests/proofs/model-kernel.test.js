@@ -23,6 +23,8 @@ import { same, jsoncFiles } from '../oracle/same-model.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
+// specs/exegra, specs/benchmark and every tests/fixtures .jsonc: identical diagnostics, model, normal form and hash.
+// @evidence model-derivation-matches-javascript
 test('the specifications and fixtures the tests read derive identically', () => {
   const files = ['specs/exegra/spec.jsonc', 'specs/benchmark/spec.jsonc', ...jsoncFiles(path.join(ROOT, 'tests/fixtures')).map((f) => path.relative(ROOT, f))];
   assert.ok(files.length >= 6);
@@ -40,6 +42,8 @@ test('the specifications and fixtures the tests read derive identically', () => 
   }
 });
 
+// The 206 texts the core tests parse (81 with diagnostics): identical diagnostics, model, normal form and hash.
+// @evidence model-derivation-matches-javascript
 test('every specification text the core tests parse derives identically', () => {
   /** @type {string[]} */
   const cases = JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(ROOT, 'tests/fixtures/parse-corpus/cases.json.gz'))).toString('utf8'));

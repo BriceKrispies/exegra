@@ -57,6 +57,8 @@ const statuses = (recorded) => {
 const lake = spawnSync('lake', ['--version'], { encoding: 'utf8', windowsHide: true });
 const noLean = lake.error || lake.status !== 0 ? 'lake is not on the PATH (install elan with the toolchain of formal/lean-toolchain)' : false;
 
+// Lean proves Exegra.V2.runB_terminates about Exegra.V2.runInput and refuses a sorry, a native_decide, an own axiom and an off-topic statement; the rule on recorded facts; no record gives not evaluated.
+// @evidence lean-theorem-method-refuses-unsound-proofs #
 test('a lean-theorem claim with no recorded check is not evaluated', () => {
   const r = statuses(undefined);
   for (const id of ['terminates', 'with-sorry', 'missing']) assert.equal(r[id].status, 'not-evaluated', id);

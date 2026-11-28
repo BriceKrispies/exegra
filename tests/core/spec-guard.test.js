@@ -31,6 +31,8 @@ const withRepo = (body) => {
   try { body(root); } finally { fs.rmSync(root, { recursive: true, force: true }); }
 };
 
+// Refused calls, including manifest parts and shell readers.
+// @evidence guard-refuses-direct-spec-access
 test('Read Edit Write and MultiEdit of a spec file are refused with the replacement commands', () => withRepo((root) => {
   const f = path.join(root, 'specs', 'plain', 'spec.jsonc');
   for (const tool of ['Read', 'Edit', 'Write', 'MultiEdit']) {
@@ -85,6 +87,8 @@ test('shell commands that print or edit a spec are refused; the CLI and jsonc-pa
   ]) assert.equal(bash(c), true, c);
 }));
 
+// Allowed calls and the exit codes of the hook script.
+// @evidence guard-leaves-other-calls-alone
 test('the hook script exits 2 with the reason on stderr to refuse and 0 silently to allow', () => {
   const run = (payload) => spawnSync(process.execPath, [GUARD], { input: JSON.stringify(payload), encoding: 'utf8', cwd: REPO });
   const refused = run({ tool_name: 'Read', tool_input: { file_path: SPEC } });

@@ -75,6 +75,8 @@ async function openCut(page, hierarchy, cut) {
   await page.waitForTimeout(500);
 }
 
+// Navigation of the accepted hierarchy on the self-specification.
+// @evidence decomposition-acceptance-transaction
 test('an accepted decomposition is navigated at once and its level-bound claim agrees with the command line', { tag: '@full' }, async ({ page }) => {
   test.setTimeout(240_000);
   const logicalBefore = cli(['derive', '--cut', 'l1']);

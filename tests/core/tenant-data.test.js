@@ -10,6 +10,14 @@ import { spec, FIXTURES } from '../fixtures/tenant-data/fixtures.js';
 const errors = (/** @type {any} */ r) => r.diagnostics.filter((/** @type {any} */ d) => d.severity === 'error');
 const codes = (/** @type {any} */ ds) => ds.map((/** @type {any} */ d) => d.code);
 
+// A platform record with a map keyed by the tenant field id: exactly one record.tenant-data-fixed error; further fixtures name an object type id through option and hold a values type.
+// @evidence tenant-data-fixed-rule # a platform record with a generic map of field values is reported once as record.tenant-data-fixed
+// A record without a scope in a specification with a tenant schema: exactly one record.scope-missing error.
+// @evidence tenant-data-fixed-rule # a record without a scope once a tenant schema is declared is reported once as record.scope-missing
+// A tenant-meta record without describedBy: exactly one record.described-by error; further fixtures describe one by a type that is not the tenant schema and put describedBy on a platform record.
+// @evidence tenant-data-fixed-rule # a tenant-meta record without describedBy is reported once as record.described-by
+// Platform tables, generic records, a record index and the schema history as tenant-meta tables described by the tenant schema: no error and no readiness gap, with and without system.generation.
+// @evidence tenant-data-fixed-rule
 test('a metadata model with platform tables and tenant-meta tables described by the tenant schema validates', () => {
   for (const generation of [false, true]) {
     const r = analyzeSpec(spec(undefined, { generation }));
@@ -38,6 +46,8 @@ test('every new code has a negative fixture', () => {
   assert.deepEqual(want.filter((c) => !have.has(c)), []);
 });
 
+// Without a type of metamodel tenant-schema, records need no scope and a fixed record with a map of fields is accepted.
+// @evidence tenant-data-fixed-rule
 test('a specification without a tenant schema needs no scope and keeps its fixed records', () => {
   const r = analyzeSpec(spec((d) => {
     d.types = d.types.filter((/** @type {any} */ t) => t.metamodel === undefined);

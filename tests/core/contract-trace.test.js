@@ -30,6 +30,8 @@ function specWith(events, behaviors = [], scenarios = []) {
 const ev = (id, role, payload, extra = {}) => ({ id, name: id, contract: 'echo', role, payload, ...extra });
 const diag = (text) => analyzeSpec(text).diagnostics.filter((d) => d.severity === 'error');
 
+// A request with an unknown field, a missing input, a wrong type, a response with a foreign field and an error code outside the contract are each reported at the event; a conforming model has no such diagnostic.
+// @evidence contract-events-validated
 test('validate reports contract events that do not fit their contract', () => {
   const good = specWith([
     ev('say', 'request', [{ name: 'text', type: 'string' }, { name: 'mode', type: "'loud'" }]),
@@ -73,6 +75,8 @@ function traceOf(model, steps) {
   };
 }
 
+// A wrong-typed value, an error code outside the contract and a response with no earlier request are failed automatic checks with their step; Exegra's own write-with-stale-base-hash scenario passes them.
+// @evidence trace-contract-conformance
 test('simulate checks values error codes and request response pairing', () => {
   const { model } = analyzeSpec(specWith([
     ev('say', 'request', [{ name: 'text', type: 'string' }, { name: 'mode', type: "'loud' | 'quiet'" }, { name: 'id', type: 'number' }], { correlation: 'id' }),
@@ -110,20 +114,33 @@ test('simulate checks values error codes and request response pairing', () => {
   const checks = checkTrace(own, runScenario(own, 'write-with-stale-base-hash'));
   assert.deepEqual(checks.filter((c) => !c.holds), []);
   assert.ok(checks.some((c) => c.automatic && c.holds));
-  assert.deepEqual(checkTrace(own, runScenario(own, 'visual-edit-flow')).filter((c) => c.automatic), [], 'a scenario without contract events gets no contract check');
+  // visual-edit-flow saves through the session's write-intent, a write-file request since WG-5732 typed the session's
+  // hop; preferences-remembered (the store of the selection and view) exchanges no contract event at all.
+  const quiet = runScenario(own, 'preferences-remembered');
+  assert.ok(quiet.steps.length > 0, 'the scenario runs');
+  assert.deepEqual(checkTrace(own, quiet).filter((c) => c.automatic), [], 'a scenario without contract events gets no contract check');
 });
 
+// The trace of write-with-stale-base-hash renders as a request, a refused write and a retry, using the contract's binding; a trace without contract events renders no lines.
+// @evidence trace-contract-conformance
 test('the request log renders contract events with binding and outcome', () => {
   const own = analyzeSpec(readSpecFile(new URL('../../specs/exegra/spec.jsonc', import.meta.url))).model;
   assert.ok(own);
   const lines = requestLog(own, runScenario(own, 'write-with-stale-base-hash')).map((e) => e.text);
+  // Since WG-5732 typed the session's hop under write-file, the session's write-intent is a request of the contract
+  // (rendered with the contract's binding) just before the persistence client's write-file-request, and the session's
+  // save-succeeded is a response after write-file-ok: each write shows the session's request and answer around the
+  // HTTP ones.
   assert.deepEqual(lines, [
+    '→ POST /__exegra/write {name: "exegra", file: "spec", text: "9b2f1c0e", baseHash: "stale", requestId: 1}',
     '→ POST /__exegra/write {name: "exegra", file: "spec", text: "9b2f1c0e", baseHash: "stale", requestId: 1}',
     '← refused conflict {current: "h1", requestId: 1}',
     '→ POST /__exegra/write {name: "exegra", file: "spec", text: "9b2f1c0e", baseHash: "h1", requestId: 2}',
+    '→ POST /__exegra/write {name: "exegra", file: "spec", text: "9b2f1c0e", baseHash: "h1", requestId: 2}',
     '← ok {ok: true, hash: "9b2f1c0e", requestId: 2}',
+    '← ok {file: "spec", hash: "9b2f1c0e", requestId: 2}',
   ]);
-  assert.deepEqual(requestLog(own, runScenario(own, 'visual-edit-flow')), [], 'steps that are not contract events give no line');
+  assert.deepEqual(requestLog(own, runScenario(own, 'preferences-remembered')), [], 'steps that are not contract events give no line');
 
   // Without a binding the request is named after its event.
   const { model } = analyzeSpec(specWith([ev('say', 'request', [{ name: 'text', type: 'string' }, { name: 'mode', type: "'loud'" }])]).replace('"binding":{"method":"POST","path":"/echo"},', ''));

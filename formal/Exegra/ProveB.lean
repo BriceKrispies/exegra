@@ -157,7 +157,8 @@ def alignMetas (pend : List CEntry) (pairs : List (CEntry × PMeta)) : List PMet
 
 /-- The replay of a search path: each pick is a successor of `Exec.successors`; its step is
 recorded by `stepRec` with the delivered entry moved to the front and the path's draws. -/
-def replay (I : Info) (sys : Core.Behav.Sys) (created : List Nat := []) (rcs : List (String × Nat) := []) :
+def replay (I : Info) (sys : Core.Behav.Sys) (created : List Nat := []) (rcs : List (String × Nat) := [])
+    (lq : LQIds := []) :
     Nat → State → List PMeta → Nat → List Nat → List Step2 × List Nat
   | _, _, _, _, [] => ([], [])
   | idx, s, metas, seq, k :: ks =>
@@ -172,16 +173,16 @@ def replay (I : Info) (sys : Core.Behav.Sys) (created : List Nat := []) (rcs : L
         let metas' := front.map (·.2)
         let head := headOf I c' metas'
         match stepRecWith I sys mask c' metas' seq idx {} (some l.draws) (created := created) (rcs := rcs)
-            (rvOv := some (l.wdraws.take (sys.nR c' l.entry))), t with
+            (rvOv := some (l.wdraws.take (sys.nR c' l.entry))) (lq := lq), t with
         | .ok o, .run _ ct =>
           let ms := alignMetas ct.pending o.pairs
-          let r : Step2 := { blankB I idx (o.head.getD head) o.kind (toConf I ct ms {} (created := o.created) (rcs := o.rcs)) with
+          let r : Step2 := { blankB I idx (o.head.getD head) o.kind (toConf I ct ms {} (created := o.created) (rcs := o.rcs) (lq := o.lq)) with
             fired := o.fired, ignored := o.ignored, faults := o.faults, responsible := o.responsible }
-          let (rest, ps) := replay I sys o.created o.rcs (idx + 1) t ms o.seq ks
+          let (rest, ps) := replay I sys o.created o.rcs o.lq (idx + 1) t ms o.seq ks
           (r :: rest, pos :: ps)
         | .fail kind msg h, _ =>
           let head := h.getD head
-          ([{ blankB I idx head kind (toConf I c metas {} (created := created) (rcs := rcs)) with
+          ([{ blankB I idx head kind (toConf I c metas {} (created := created) (rcs := rcs) (lq := lq)) with
                responsible := [head.event], error := some msg }], [pos])
         | _, _ => ([], [])
     | _, _ => ([], [])
@@ -315,7 +316,7 @@ def cexJson (I : Info) (sys : Core.Behav.Sys) (id : String) (root : State) (pick
   let mask := root.mask
   let (pairs, seq) := initPairs I sys mask
   let metas := alignMetas root.cfg.pending pairs
-  let (steps, positions) := replay I sys [] [] 0 root metas seq picks
+  let (steps, positions) := replay I sys [] [] [] 0 root metas seq picks
   o [("id", s id), ("verdict", s "counterexample"),
      ("mask", a (mask.map Value.bool)), ("picks", a (picks.map nat)), ("positions", a (positions.map nat)),
      ("faults", strings (activeIds I mask)),

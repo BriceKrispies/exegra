@@ -3,6 +3,8 @@
 // result is reported as not evaluated, never as verified.
 
 import { semanticHash } from '../hash.js';
+import { claimSubjects } from '../query.js';
+import { CLAIM_METHODS } from '../claim-methods.js';
 import { claimStrength, strengthCounts, CHECKS, GROUNDINGS } from '../claim-strength.js';
 import {
   text, oneLine, cell, list, sourceOf, statusLabel, json, markdown,
@@ -109,7 +111,7 @@ export function generateClaimsReportJson(model, opts = {}) {
       assumptions: (result.assumptions ?? []).map((id) => ({ id, statement: assumptionStatement(model, id) })),
       counterexample: result.counterexample ?? null,
       evidence: result.evidence ?? [],
-      subjects: list(claim.data.subjects).filter((s) => typeof s === 'string'),
+      subjects: claimSubjects(model, claim, CLAIM_METHODS[claim.data.evaluate?.method]?.params),
       source: sourceOf(claim),
     })),
   });

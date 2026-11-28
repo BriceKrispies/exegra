@@ -43,6 +43,8 @@ function explore(m, scenarioId) {
 const BURST = 'burst-eligible-never-throttled-after-set';
 const THREE = 'three-days-over-throttles';
 
+// Exploration decides that a burst-eligible client is never throttled after eligibility was set.
+// @evidence pooled-quotas-executable
 test('exploration decides that a burst-eligible client is never throttled after eligibility was set', () => {
   const results = explore(model(), 'burst-exploration');
   assert.equal(results.get(BURST)?.verdict, 'holds');
@@ -50,6 +52,8 @@ test('exploration decides that a burst-eligible client is never throttled after 
   assert.ok(results.get(BURST).states > 100, 'every subset of the injected usage and eligibility events was explored');
 });
 
+// Exploration finds a counterexample when eligibility takes effect only from the next day.
+// @evidence pooled-quotas-executable
 test('exploration finds a counterexample when eligibility takes effect only from the next day', () => {
   const results = explore(model((/** @type {any} */ d) => { pool(d).exemption.effective = 'next-window'; }), 'burst-exploration');
   const r = results.get(BURST);
@@ -58,6 +62,8 @@ test('exploration finds a counterexample when eligibility takes effect only from
   assert.ok(['m1-runs-day0', 'm1-runs-day1', 'm1-runs-day2'].every((f) => r.faults.includes(f)));
 });
 
+// Exploration finds a counterexample when the over-share window is four days instead of three.
+// @evidence pooled-quotas-executable
 test('exploration finds a counterexample when the over-share window is four days instead of three', () => {
   const results = explore(model((/** @type {any} */ d) => { pool(d).overShare.consecutive = 4; }), 'burst-exploration');
   assert.equal(results.get(THREE)?.verdict, 'counterexample');

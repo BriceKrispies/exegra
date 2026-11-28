@@ -79,12 +79,16 @@ test('the exposures, schemes and tenant scopes are the ones the metamodel and th
   assert.deepEqual(metamodel.entities.contract.properties.tenantScope.values, [...TENANT_SCOPES]);
 });
 
+// Eight contracts covering every exposure and the anonymous, session, signature, service and in-process schemes validate with no errors and no readiness gaps.
+// @evidence contract-exposure-and-auth
 test('a specification stating exposure and structured auth on every contract validates with no errors and no readiness gaps', () => {
   const r = analyzeSpec(spec());
   assert.deepEqual(errors(r).map((/** @type {any} */ d) => `${d.code} ${d.message}`), []);
   assert.deepEqual(readinessGaps(/** @type {any} */ (r.model)), []);
 });
 
+// Without the switch prose auth and a missing exposure are accepted.
+// @evidence contract-exposure-and-auth
 test('without system.generation a contract may state its auth as a sentence and leave its exposure out', () => {
   const r = analyzeSpec(spec((/** @type {any} */ d) => {
     for (const c of d.contracts) { c.auth = 'Anyone.'; delete c.exposure; delete c.tenantScope; delete c.development; delete c.binding; }
@@ -128,6 +132,36 @@ const RULES = [
 ];
 
 for (const [title, code, at, mutate] of RULES) {
+  // Prose auth under generation is exactly contract.auth-structured.
+  // @evidence contract-exposure-and-auth # access: prose auth under generation is reported once as contract.auth-structured at contracts.2.auth
+  // A contract with no auth under generation is exactly contract.auth-structured.
+  // @evidence contract-exposure-and-auth # access: a contract with no auth under generation is reported once as contract.auth-structured at contracts.6
+  // A member on a scheme it does not apply to is exactly contract.auth-structured.
+  // @evidence contract-exposure-and-auth # access: csrf on a service credential is reported once as contract.auth-structured at contracts.4.auth.csrf
+  // A contract with no exposure under generation is exactly contract.exposure.
+  // @evidence contract-exposure-and-auth # access: a contract with no exposure under generation is reported once as contract.exposure at contracts.4.exposure
+  // The in-process scheme on an internal contract is exactly contract.exposure.
+  // @evidence contract-exposure-and-auth # access: an internal contract called in-process is reported once as contract.exposure at contracts.4.auth.scheme
+  // A public state-changing session contract without csrf is exactly auth.public-write.
+  // @evidence contract-exposure-and-auth # access: a public write by session without csrf is reported once as auth.public-write at contracts.2.auth
+  // An anonymous public write without csrf and origin is exactly auth.public-write.
+  // @evidence contract-exposure-and-auth # access: an anonymous public write without csrf and origin is reported once as auth.public-write at contracts.1.auth
+  // An anonymous public write without a justification is exactly auth.anonymous.
+  // @evidence contract-exposure-and-auth # access: an anonymous public write without a justification is reported once as auth.anonymous at contracts.1.auth
+  // An anonymous public contract no quota limits is exactly auth.anonymous.
+  // @evidence contract-exposure-and-auth # access: an anonymous public contract without a quota is reported once as auth.anonymous at contracts.0.auth
+  // An internal contract bound under the gateway prefix is exactly exposure.gateway.
+  // @evidence contract-exposure-and-auth # access: an internal contract bound under the gateway is reported once as exposure.gateway at contracts.4.binding.path
+  // A local contract with an HTTP binding is exactly exposure.gateway.
+  // @evidence contract-exposure-and-auth # access: a local contract with an HTTP binding is reported once as exposure.gateway at contracts.6.binding
+  // An auth naming a missing policy is exactly auth.policy-unknown.
+  // @evidence contract-exposure-and-auth # access: an auth naming a policy that does not exist is reported once as auth.policy-unknown at contracts.2.auth.policies.0
+  // The service scheme on a public contract is exactly auth.service-public.
+  // @evidence contract-exposure-and-auth # access: a public contract taking the service credential is reported once as auth.service-public at contracts.0.auth.scheme
+  // A development contract open to anonymous callers is exactly auth.dev-only.
+  // @evidence contract-exposure-and-auth # access: a development contract open to anonymous callers is reported once as auth.dev-only at contracts.7.auth.scheme
+  // A public contract with tenantScope platform is exactly contract.tenant-scope.
+  // @evidence contract-exposure-and-auth # access: a public contract returning data across tenants is reported once as contract.tenant-scope at contracts.2.tenantScope
   test(`access: ${title} is reported once as ${code} at ${at}`, () => {
     const r = analyzeSpec(spec(/** @type {any} */ (mutate)));
     assert.deepEqual(errors(r).map((/** @type {any} */ d) => [d.code, d.path.join('.')]), [[code, at]], r.diagnostics.map((/** @type {any} */ d) => `${d.code} ${d.message}`).join('\n'));

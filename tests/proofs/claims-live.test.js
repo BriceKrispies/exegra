@@ -22,6 +22,8 @@ function load(text) {
   return model;
 }
 
+// Loads specs/exegra/spec.jsonc and checks that every trace claim declares negatives and is verified.
+// @evidence own-behavioral-claims-falsifiable
 test('negatives: every behavioral claim of the exegra specification is verified with a violating negative', () => {
   const model = load(readSpecFile(new URL('../../specs/exegra/spec.jsonc', import.meta.url)));
   const trace = evaluateClaims(model).filter((r) => r.evaluator === 'exegra.trace/0.1');
@@ -35,6 +37,8 @@ test('negatives: every behavioral claim of the exegra specification is verified 
 
 // WG-5682: the live view and exegra prove evaluate claim expressions with one Lean evaluator (claimTruth of
 // formal/Exegra/ProveB.lean); an expression that cannot be evaluated is a violation in both.
+// On tests/fixtures/liveness, the claim 1 / 0 == 0 is violated in the live view and has a counterexample in the initial configuration in exegra prove.
+// @evidence trace-claims-share-prove-evaluator
 test('prove and the live view agree on an evaluation error', async (t) => {
   await initEngine();
   const text = readFileSync(new URL('../fixtures/liveness/spec.jsonc', import.meta.url), 'utf8');

@@ -29,6 +29,8 @@ async function runRefs(root, refs, log = []) {
   return { evidence, hasher, ...batch };
 }
 
+// A fixture file with passing, failing, skipped and suite-nested tests and a name that matches nothing: each reference gets its own outcome, a failing test elsewhere in the file does not fail the others, a skipped test stays skipped, and the run starts one process per test file.
+// @evidence verify-batches-test-runs
 test('each reference gets the outcome of its own tests from one process per file', async () => {
   const root = scratch();
   try {
@@ -56,6 +58,8 @@ test('each reference gets the outcome of its own tests from one process per file
   }
 });
 
+// Three fixture test files, one loading a module, one reading a data file, one with neither: editing the module reruns only the first, editing the data file only the second, restoring a file restores the reuse; a reference with no coverage, a changed reference and a recorded failure run again.
+// @evidence verify-reuses-unchanged-passes
 test('a recorded pass is reused until a file its test covered changes and then only that file reruns', async () => {
   const root = scratch();
   try {
@@ -101,6 +105,8 @@ test('a recorded pass is reused until a file its test covered changes and then o
   }
 });
 
+// The static scan of a fixture test file, suite names in front of test names, run-time names, and the diagnostic for a reference to a test that was renamed away, with none for the declared one or a missing file.
+// @evidence evidence-ref-names-a-test
 test('validate refuses a reference whose name matches no test its file declares', () => {
   const source = fs.readFileSync(path.join(FIXTURE, 'mixed.test.js'), 'utf8');
   assert.deepEqual(declaredTestNames(source), {
@@ -125,6 +131,8 @@ test('validate refuses a reference whose name matches no test its file declares'
   assert.deepEqual(diagnostics.map((d) => [d.code, d.entityId]), [['evidence.ref-no-test', 'ev-bad']]);
 });
 
+// exegra validate on a fixture specification with one declared and one renamed-away reference reports exactly evidence.ref-no-test for the second.
+// @evidence evidence-ref-names-a-test
 test('the validate command reports the reference that names no test and only that one', async () => {
   const out = await runCommand('validate', ['--spec', path.join(FIXTURE, 'spec.jsonc')], { cwd: process.cwd(), project: 'ref-names' });
   assert.equal(out.ok, false);

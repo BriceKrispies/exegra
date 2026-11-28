@@ -72,6 +72,8 @@ function refuses(mutate, code, ids) {
   for (const id of ids) assert.ok(hits.some((d) => d.message.includes(`"${id}"`)), `${code} names "${id}": ${hits.map((d) => d.message).join(' | ')}`);
 }
 
+// The well-formed fixture every negative fixture mutates validates with no errors, and its cuts have the expected blocks.
+// @evidence abstraction-diagnostics-name-offenders
 test('a fixture with a declared hierarchy and a facet and every form of cut validates with no errors', () => {
   const r = analyze(base());
   assert.deepEqual(r.diagnostics.filter((d) => d.severity !== 'info').map((d) => `${d.code} ${d.message}`), []);
@@ -86,41 +88,58 @@ test('a fixture with a declared hierarchy and a facet and every form of cut vali
   assert.equal(hierarchyOf(m, 'placement')?.parent.get('checker'), 'host');
 });
 
+// module.multiple-owners names both components.
+// @evidence abstraction-diagnostics-name-offenders
 test('a module declared by two components is module.multiple-owners naming both', () => {
   refuses((d) => d.components.find((/** @type {any} */ c) => c.id === 'panel').implementation.modules.push('src/check.js'), 'module.multiple-owners', ['checker', 'panel']);
 });
 
+// hierarchy.multiple-parents names the element and both parents.
+// @evidence abstraction-diagnostics-name-offenders
 test('an element with two parents in one hierarchy is hierarchy.multiple-parents naming the element and both parents', () => {
   refuses((d) => d.hierarchies[0].groups.push({ parent: 'user', members: ['parser'] }), 'hierarchy.multiple-parents', ['parser', 'host', 'user']);
 });
 
+// Both cycle codes, naming the elements on the cycle.
+// @evidence abstraction-diagnostics-name-offenders
 test('a cycle in a declared hierarchy is hierarchy.cycle and in the logical one component.parent-cycle', () => {
   refuses((d) => { d.hierarchies[0].groups = [{ parent: 'parser', members: ['checker'] }, { parent: 'checker', members: ['parser'] }]; }, 'hierarchy.cycle', ['parser', 'checker']);
   refuses((d) => { d.components.find((/** @type {any} */ c) => c.id === 'core').parent = 'parser'; }, 'component.parent-cycle', ['parser']);
 });
 
+// hierarchy.unknown-parent and hierarchy.reserved-id.
+// @evidence abstraction-diagnostics-name-offenders
 test('a groupBy value that maps to no element is hierarchy.unknown-parent and the id logical is reserved', () => {
   refuses((d) => { d.hierarchies[0].groupBy = { property: 'category', parents: { client: 'nowhere' } }; }, 'hierarchy.unknown-parent', ['nowhere']);
   refuses((d) => { d.hierarchies.push({ id: 'logical', name: 'Again' }); }, 'hierarchy.reserved-id', ['logical']);
 });
 
+// facet.contraction for a facet as a cut's hierarchy, as a hierarchy parent and as an expanded block.
+// facet.contraction for every place a contraction is required.
+// @evidence abstraction-diagnostics-name-offenders facets-selected-never-contracted
 test('a facet used where a contraction is required is facet.contraction', () => {
   refuses((d) => { d.cuts.push({ id: 'by-facet', name: 'By facet', hierarchy: 'kernel-facet', expand: [] }); }, 'facet.contraction', ['by-facet', 'kernel-facet']);
   refuses((d) => { d.hierarchies[0].groups.push({ parent: 'kernel-facet', members: ['user'] }); }, 'facet.contraction', ['placement', 'kernel-facet']);
   refuses((d) => { d.cuts.push({ id: 'open-facet', name: 'Open facet', expand: ['kernel-facet'] }); }, 'facet.contraction', ['open-facet', 'kernel-facet']);
 });
 
+// cut.not-composite and cut.ancestor-not-expanded.
+// @evidence abstraction-diagnostics-name-offenders
 test('expanding a leaf is cut.not-composite and expanding inside an unexpanded ancestor is cut.ancestor-not-expanded', () => {
   refuses((d) => { d.cuts.push({ id: 'bad', name: 'Bad', depth: 1, expand: ['user'] }); }, 'cut.not-composite', ['user']);
   refuses((d) => { d.cuts.push({ id: 'bad', name: 'Bad', expand: ['core'] }); }, 'cut.ancestor-not-expanded', ['core', 'sys']);
 });
 
+// cut.uncovered, cut.not-antichain and cut.form.
+// @evidence abstraction-diagnostics-name-offenders
 test('a cut that omits an element is cut.uncovered and one with an element and its ancestor is cut.not-antichain', () => {
   refuses((d) => { d.cuts.push({ id: 'bad', name: 'Bad', blocks: ['core', 'user', 'host'] }); }, 'cut.uncovered', ['ui']);
   refuses((d) => { d.cuts.push({ id: 'bad', name: 'Bad', blocks: ['core', 'parser', 'ui', 'user', 'host'] }); }, 'cut.not-antichain', ['parser', 'core']);
   refuses((d) => { d.cuts.push({ id: 'bad', name: 'Bad', blocks: ['core', 'ui', 'user', 'host'], depth: 1 }); }, 'cut.form', ['bad']);
 });
 
+// A facet with members and a tag selects both; a tag no facet declares selects its carriers; an unknown facet is refused.
+// @evidence facets-selected-never-contracted
 test('a selector naming no facet or tag is claim.selector.facet and a facet selects its members with a tag as an implicit facet', () => {
   const claim = (/** @type {any} */ select) => ({ id: 'c', kind: 'structural', statement: 's', evaluate: { method: 'property-defined', select, property: 'purpose' } });
   refuses((d) => { d.claims = [claim({ facet: 'nope' })]; }, 'claim.selector.facet', ['nope']);
@@ -135,6 +154,8 @@ test('a selector naming no facet or tag is claim.selector.facet and a facet sele
   assert.equal(evaluateClaim(m, 'c').status, 'verified');
 });
 
+// The claim method agrees with the diagnostics: verified on the fixture, violated with the element that has two parents.
+// @evidence abstraction-diagnostics-name-offenders
 test('abstraction-well-formed is verified on well-formed hierarchies and cuts and violated with the offending element', () => {
   const claim = { id: 'wf', kind: 'structural', statement: 's', evaluate: { method: 'abstraction-well-formed' } };
   const good = base();
@@ -148,6 +169,8 @@ test('abstraction-well-formed is verified on well-formed hierarchies and cuts an
   assert.ok(r.counterexample?.entities.includes('parser'));
 });
 
+// Every declared cut of Exegra's specification maps each element to exactly one ancestor-or-self block, or opens it.
+// @evidence cut-maps-compose
 test('every element maps to exactly one block of each declared cut of the self-specification or is opened by it', () => {
   const m = self();
   const elements = [...elementsOf(m).keys()];
@@ -178,6 +201,8 @@ test('every element maps to exactly one block of each declared cut of the self-s
   assert.equal(blockOf(m, 'l0', moduleId('src/core/query.js')), 'exegra');
 });
 
+// exegra, subsystem, component, module; main.js under the composition root; builtin-types.js with one owner; no missing, unclaimed or doubly claimed file; the actors and the producer of edit-requested.
+// @evidence module-to-element-map-is-a-function
 test('the self-specification is a logical hierarchy from exegra down to module elements with each file under one element', () => {
   const m = self();
   const h = /** @type {any} */ (hierarchyOf(m, LOGICAL));
@@ -192,6 +217,8 @@ test('the self-specification is a logical hierarchy from exegra down to module e
   assert.deepEqual({ missing: t.missingModules, unclaimed: t.unclaimedFiles, multiple: t.multipleOwners, errors: t.errors }, { missing: [], unclaimed: [], multiple: [], errors: [] });
 });
 
+// Every placed component under the host its runsIn names; the runtime cuts refine each other; cuts of different hierarchies are incomparable.
+// @evidence runtime-hierarchy-from-runs-in
 test('the runtime placement hierarchy of the self-specification follows runsIn and has its own valid cuts', () => {
   const m = self();
   const h = /** @type {any} */ (hierarchyOf(m, 'runtime'));
@@ -211,6 +238,9 @@ test('the runtime placement hierarchy of the self-specification follows runsIn a
   assert.equal(cutToCut(m, 'runtime-hosts', 'l0'), null, 'cuts of different hierarchies are not comparable');
 });
 
+// module-level, semantic-core-expanded, l1 and l0 compose pairwise; persistence-expanded and semantic-core-expanded are incomparable.
+// exegra cut on a declared cut, an ad hoc cut of the runtime hierarchy, an invalid one, and the listing.
+// @evidence cut-maps-compose
 test('cut maps compose along the chain of cuts of the self-specification and incomparable cuts have no map', () => {
   const m = self();
   const chain = ['module-level', 'semantic-core-expanded', 'l1', 'l0'];
@@ -258,6 +288,8 @@ function forest(parents) {
   return { id: 'generated', parent, children, roots, depth, order, problems: [] };
 }
 
+// Generated forests; every comparable pair of cuts composes, and comparability is exactly inclusion of the opened sets.
+// @evidence cut-maps-compose
 test('property: for comparable cuts C finer than D of generated laminar hierarchies alpha_D is alpha_C-D composed with alpha_C', () => {
   const random = rng(5692);
   let pairs = 0;
@@ -305,6 +337,8 @@ test('property: for comparable cuts C finer than D of generated laminar hierarch
   assert.ok(incomparable > 50, `only ${incomparable} incomparable pairs`);
 });
 
+// Planned components opaque, a member makes one transparent, declared unknown, actors opaque, module elements transparent leaves.
+// @evidence knowledge-status-derived
 test('knowledge status: planned elements are opaque and a member makes an element transparent and unknown is declared', () => {
   const m = self();
   for (const c of m.byKind.component) {
@@ -327,6 +361,8 @@ test('knowledge status: planned elements are opaque and a member makes an elemen
   assert.equal(knowledgeOf(dm, 'user')?.status, 'opaque');
 });
 
+// Two components on one file and a directory over a file are both errors; exegra traceability fails.
+// @evidence module-to-element-map-is-a-function
 test('traceability: a file covered by two module elements is traceability.multiple-owners and the command fails', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'exegra-ms-'));
   try {
@@ -361,6 +397,8 @@ test('traceability: a file covered by two module elements is traceability.multip
   }
 });
 
+// Benchmark: same hash, diagnostics and claim statuses. Exegra: same diagnostics apart from the listed ones, same statuses for every model-decided claim.
+// @evidence specs-keep-meaning-without-new-constructs
 test('the projects under specs/ keep the diagnostics and claim statuses they had before the element model', () => {
   const baseline = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests/fixtures/multiscale/baseline.json'), 'utf8'));
   const lines = (/** @type {any[]} */ ds) => ds.map((d) => `${d.severity} ${d.code} ${d.entityId ?? ''}`.trim()).sort();

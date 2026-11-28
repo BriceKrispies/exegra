@@ -1,0 +1,18 @@
+{
+  // A machine driven by a workload: workloads are outside the behaviour calculus until WG-5683
+  // criterion 1 covers them, so exploring it is refused (tests/proofs/formal-explore.test.js).
+  "exegra": "0.1",
+  "system": { "id": "behaviour-workload-fixture", "name": "Out-of-fragment exploration fixture", "version": "0.1.0", "description": "A scenario the behaviour calculus does not cover.", "illustrative": true },
+  "components": [{ "id": "server", "name": "Server", "category": "computational", "purpose": "A machine a workload drives.", "illustrative": true }],
+  "events": [{ "id": "go", "name": "Go" }],
+  "behaviors": [
+    {
+      "id": "taker", "name": "Taker", "subject": "server", "initial": "t-s",
+      "states": [{ "id": "t-s", "name": "S" }],
+      "transitions": [{ "id": "t-go", "from": "t-s", "to": "t-s", "on": "go" }]
+    }
+  ],
+  "workloads": [{ "id": "arrivals", "kind": "open", "event": "go", "rate": "10/s", "maxArrivals": 2 }],
+  "scenarios": [{ "id": "driven", "name": "A machine a workload drives", "behaviors": ["taker"], "workloads": ["arrivals"], "seed": 1, "timeUnit": "ms", "horizon": "1 s", "steps": [] }],
+  "claims": [{ "id": "taker-stays", "kind": "invariant", "statement": "The taker stays in its state.", "evaluate": { "method": "state-invariant", "scenarios": ["driven"], "expr": "taker.state == 't-s'" } }]
+}

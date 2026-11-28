@@ -2,7 +2,8 @@
 // semantic model. A view is never a separate dataset; every node and edge is
 // backed by a real entity. Positions are decided elsewhere (layout.js).
 
-import { ancestorsOf, entityLabel, componentsFor, elementsOf, hierarchyOf, ancestorsIn, cutBlocksOf, knowledgeOf, LOGICAL } from './query.js';
+import { ancestorsOf, entityLabel, componentsFor, elementsOf, hierarchyOf, ancestorsIn, cutBlocksOf, knowledgeOf, LOGICAL, claimSubjects } from './query.js';
+import { CLAIM_METHODS } from './claim-methods.js';
 import {
   cutForCollapse, deriveModel, restrictInteraction, baseFacts, endpointElement, cutOfExpanded, expandedOfCut, declaredCutWithBlocks,
   pathSummaries, blocksWithoutPurpose,
@@ -584,7 +585,7 @@ registerProjection('claims', (model, view, ctx) => {
   const aboutOf = new Map();
   for (const claim of claims) {
     const res = results.get(claim.id);
-    const subjects = Array.isArray(claim.data.subjects) ? claim.data.subjects : [];
+    const subjects = claimSubjects(model, claim, CLAIM_METHODS[claim.data.evaluate?.method]?.params);
     const aboutC = new Set();
     const aboutR = new Set();
     for (const s of subjects) resolve(s, aboutC, aboutR);

@@ -72,12 +72,16 @@ test('the kinds that name capabilities are entities of the metamodel, each with 
   assert.deepEqual(metamodel.entities.role.properties.level.values, ['platform', 'tenant']);
 });
 
+// Contracts on every exposure requiring capabilities that platform and tenant roles confer, plans entitle, a grant, a delegation from a token scope and a flag validate with no errors and no readiness gaps.
+// @evidence capability-model-closed
 test('a specification whose contracts require capabilities that roles confer and plans entitle validates with no errors and no readiness gaps', () => {
   const r = analyzeSpec(spec());
   assert.deepEqual(errors(r).map((/** @type {any} */ d) => `${d.code} ${d.message}`), []);
   assert.deepEqual(readinessGaps(/** @type {any} */ (r.model)), []);
 });
 
+// Without the switch a contract with no requires is accepted.
+// @evidence capability-model-closed
 test('without system.generation a contract need not require a capability', () => {
   const r = analyzeSpec(spec((/** @type {any} */ d) => { for (const c of d.contracts) delete c.auth.requires; }, { generation: false }));
   assert.deepEqual(errors(r).map((/** @type {any} */ d) => `${d.code} ${d.message}`), []);
@@ -108,6 +112,32 @@ const RULES = [
 ];
 
 for (const [title, code, at, mutate] of RULES) {
+  // A public contract with no requires under generation is exactly capability.required.
+  // @evidence capability-model-closed # capabilities: a public contract that requires no capability is reported once as capability.required at contracts.1.auth
+  // An internal contract with no requires under generation is exactly capability.required.
+  // @evidence capability-model-closed # capabilities: an internal contract that requires no capability is reported once as capability.required at contracts.3.auth
+  // An empty requires is exactly contract.auth-structured.
+  // @evidence capability-model-closed # capabilities: an empty list of required capabilities is reported once as contract.auth-structured at contracts.2.auth.requires
+  // A contract requiring a missing capability is exactly capability.unknown.
+  // @evidence capability-model-closed # capabilities: a contract requiring a capability that does not exist is reported once as capability.unknown at contracts.1.auth.requires.0
+  // A plan entitling a missing capability is exactly capability.unknown.
+  // @evidence capability-model-closed # capabilities: a plan entitling a capability that does not exist is reported once as capability.unknown at plans.1.capabilities.1
+  // A token scope naming a role as a capability is exactly capability.unknown.
+  // @evidence capability-model-closed # capabilities: a token scope naming a role as a capability is reported once as capability.unknown at tokenScopes.0.capabilities.2
+  // A flag gating a missing capability is exactly capability.unknown.
+  // @evidence capability-model-closed # capabilities: a flag gating a capability that does not exist is reported once as capability.unknown at featureFlags.0.gates.0
+  // A capability no role or grant confers is exactly capability.unreachable.
+  // @evidence capability-model-closed # capabilities: a capability no role or grant confers is reported once as capability.unreachable at capabilities.3
+  // A capability that is not core and that no plan entitles is exactly capability.unreachable.
+  // @evidence capability-model-closed # capabilities: a capability that is not core and no plan entitles is reported once as capability.unreachable at capabilities.2
+  // A delegation passing on more than its token scope holds is exactly delegation.exceeds.
+  // @evidence capability-model-closed # capabilities: a delegation passing on a capability its token scope does not hold is reported once as delegation.exceeds at delegations.0.capabilities.1
+  // A delegation passing on more than its role holds is exactly delegation.exceeds.
+  // @evidence capability-model-closed # capabilities: a delegation passing on a capability its role does not hold is reported once as delegation.exceeds at delegations.0.capabilities.0
+  // A grant conferring more than its issuer role holds is exactly delegation.exceeds.
+  // @evidence capability-model-closed # capabilities: a grant conferring a capability its issuer does not hold is reported once as delegation.exceeds at grants.0.capabilities.1
+  // A grant maxDuration that is not a duration is exactly capability.duration.
+  // @evidence capability-model-closed # capabilities: a grant whose longest duration is not a duration is reported once as capability.duration at grants.0.maxDuration
   test(`capabilities: ${title} is reported once as ${code} at ${at}`, () => {
     const r = analyzeSpec(spec(/** @type {any} */ (mutate)));
     assert.deepEqual(errors(r).map((/** @type {any} */ d) => [d.code, d.path.join('.')]), [[code, at]], r.diagnostics.map((/** @type {any} */ d) => `${d.code} ${d.message}`).join('\n'));

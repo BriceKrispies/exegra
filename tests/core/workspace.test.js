@@ -19,6 +19,8 @@ async function withWorkspace(fn) {
   }
 }
 
+// Invalid names, escaping paths, unknown files and generated paths outside generated/ are refused.
+// @evidence persistence-confined-to-workspace #
 test('invalid project names are rejected', () =>
   withWorkspace(async (ws) => {
     for (const name of ['', 'Demo', '../demo', 'a/b', 'a\\b', '-demo', '.hidden', 'de mo', 'x'.repeat(65)]) {
@@ -39,6 +41,8 @@ test('resolve rejects paths that leave the project', () =>
     );
   }));
 
+// A write with the current base hash replaces the file and changes its hash.
+// @evidence file-matches-model-after-save # write with the current baseHash succeeds
 test('write with the current baseHash succeeds and changes the hash', () =>
   withWorkspace(async (ws) => {
     const { spec } = await ws.read('demo');
@@ -50,6 +54,8 @@ test('write with the current baseHash succeeds and changes the hash', () =>
     assert.equal((await ws.read('demo')).spec.text, next);
   }));
 
+// A write with a stale base hash conflicts and leaves the file untouched.
+// @evidence conflict-never-overwrites # write with a stale baseHash conflicts
 test('write with a stale baseHash conflicts and leaves the file untouched', () =>
   withWorkspace(async (ws) => {
     const first = await ws.read('demo');
@@ -224,6 +230,8 @@ test('watching a linked project reports a change to the file in the other reposi
     }
   }));
 
+// A journal path that is a directory makes the append fail: the write still replaces the file and reports journal.written false with a message.
+// @evidence journal-failure-reported
 test('a journal line that cannot be appended is reported and the file write still stands', () =>
   withWorkspace(async (ws, dir) => {
     // A directory at the journal path makes the append fail after the file was replaced.

@@ -212,6 +212,8 @@ async function searchAndPick(page, id) {
   await expect(page.getByTestId('search-input')).toBeHidden();
 }
 
+// At 390 by 844 with touch: no horizontal scroll, and no visible interactive control under 44 by 44 CSS px (offenders listed) with nothing open, with every destination's sheet at full height, in the More and overflow menus, in a dialog and in search; with no sheet open at least 60% of the window is uncovered scene.
+// @evidence ui-touch-usable-on-phone
 test('phone layout has no horizontal scroll and 44 px targets and the scene covers most of the screen', { tag: ['@phone', '@full'] }, async ({ page }) => {
   // This test is about the layout at rest, checked after every sheet change; with motion reduced the sheets
   // land at once instead of after their 300 ms transition (the touch test below keeps the motion on).
@@ -294,6 +296,8 @@ test('phone layout has no horizontal scroll and 44 px targets and the scene cove
   await expectTouchTargets(page, 'search');
 });
 
+// At 390 by 844, by taps: every destination's sheet, search, selection by tapping the canvas, a property edit, undo and redo, create, connect mode, delete with cascade, rename, explorer collapse, isolate and hide, layout, camera, legend and statistics, a scenario stepped with the docked transport, faults and the timeline, verification, source, realisation, diagnostics, changes, export, and view and project switching.
+// @evidence ui-every-function-on-phone
 test('every function is reachable by touch on a phone', { tag: ['@phone', '@full'] }, async ({ page }) => {
   test.setTimeout(240_000);
   await open(page, 'multiplayer');
@@ -504,6 +508,8 @@ test('every function is reachable by touch on a phone', { tag: ['@phone', '@full
   await expectNoHorizontalScroll(page, 'after every function');
 });
 
+// At 820 px the inspector, explorer and verification panels open beside the scene with no overlap of their boxes; a fresh 1600 by 1000 page shows the explorer, the scene and the context panel side by side with no overlap, nothing opened by hand.
+// @evidence ui-expands-to-desktop
 test('panels open beside the scene on a tablet and the desktop shows explorer scene and context panel side by side', { tag: ['@tablet', '@full'] }, async ({ page, browser }) => {
   /** @param {{x: number, y: number, width: number, height: number}} a @param {{x: number, y: number, width: number, height: number}} b */
   const overlap = (a, b) => Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
@@ -547,6 +553,8 @@ test('panels open beside the scene on a tablet and the desktop shows explorer sc
   await desk.close();
 });
 
+// On a phone, the Requests section of the simulator panel lists the request, the refused write and the retry of write-with-stale-base-hash, with jump targets of at least 44 px and no horizontal scroll.
+// @evidence trace-contract-conformance
 test('the simulator shows the request log of contract events on a phone', { tag: ['@phone', '@full'] }, async ({ page }) => {
   await open(page, 'exegra');
   await page.getByTestId('tab-btn-simulation').tap();
@@ -574,6 +582,8 @@ test('the simulator shows the request log of contract events on a phone', { tag:
   await page.screenshot({ path: path.join(SHOTS, 'test-phone-request-log.png') });
 });
 
+// The same on a phone, by touch.
+// @evidence navigation-facts-are-inspectable
 test('a phone walks the levels of the self-specification by touch and inspects a derived edge and a block', { tag: ['@phone', '@full'] }, async ({ page }) => {
   await open(page, 'exegra');
   await ex(page, `session.setView('architecture');`);

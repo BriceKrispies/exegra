@@ -15,6 +15,8 @@ const BASE = fs.readFileSync(path.join(DIR, 'spec.jsonc'), 'utf8');
 /** @param {string} p */
 const layer = (p) => ({ file: `${p}.jsonc`, text: fs.readFileSync(path.join(DIR, 'products', `${p}.jsonc`), 'utf8'), platform: { declared: '../spec.jsonc', matches: true, expected: '../spec.jsonc' } });
 
+// Each product installed alone is admitted; its one-hold claim holds on every execution of its own scenario.
+// @evidence product-installation-checks-composition
 test('each product alone keeps its one-hold claim on every execution of its own scenario', () => {
   for (const p of ['badges', 'promotions']) {
     const r = admitProduct(BASE, [], layer(p));
@@ -25,6 +27,8 @@ test('each product alone keeps its one-hold claim on every execution of its own 
   }
 });
 
+// Installing promotions after badges is refused for both one-hold claims, naming {ledger, badges__awarder, promotions__awarder} and ledger.held = 2.
+// @evidence product-installation-checks-composition
 test('installing the second product is refused with the composed scenario and held 2', () => {
   const r = admitProduct(BASE, [layer('badges')], layer('promotions'));
   assert.equal(r.verdict, 'rejected');

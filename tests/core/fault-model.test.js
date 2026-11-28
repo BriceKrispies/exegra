@@ -62,6 +62,8 @@ const load = (text) => analyzeSpec(text);
 const codes = (a, sev) => a.diagnostics.filter((d) => d.severity === sev).map((d) => d.code);
 const variant = (from, to) => { assert.ok(SPEC.includes(from), from); return SPEC.replace(from, to); };
 
+// Missing sources and wrong enums are errors; renames and deletes follow references through the new properties, including the any-kind source; gap.no-fault-model and the realises-outside-model warning are reported; a claim result's scope begins with the fault model; realises never reaches the engine input.
+// @evidence fault-model-scoped-claims #
 test('a complete fault model parses and validates without errors', () => {
   const a = load(SPEC);
   assert.deepEqual(a.diagnostics.filter((d) => d.severity === 'error'), []);

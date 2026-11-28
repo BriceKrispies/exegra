@@ -39,6 +39,8 @@ const errors = (/** @type {any} */ r) => r.diagnostics.filter((/** @type {any} *
 const show = (/** @type {any} */ r) => r.diagnostics.map((/** @type {any} */ d) => `${d.severity} ${d.code} ${d.message}`).join('\n');
 const pool = (/** @type {any} */ d) => d.quotaPools[0];
 
+// Quota pools are entities of the metamodel with a section of their own and scenarios list the pools they run.
+// @evidence pooled-quotas-executable
 test('quota pools are entities of the metamodel with a section of their own and scenarios list the pools they run', () => {
   assert.equal(metamodel.sections.quotaPools?.entity, 'quotaPool');
   for (const p of ['memberClass', 'groupedBy', 'heldBy', 'window', 'windowEnd', 'limits', 'overShare', 'throttle', 'exemption', 'modelMembers']) assert.ok(metamodel.entities.quotaPool.properties[p], p);
@@ -46,6 +48,8 @@ test('quota pools are entities of the metamodel with a section of their own and 
   assert.deepEqual(metamodel.entities.scenario.properties.pools.items.ref, ['quotaPool']);
 });
 
+// The Harbourline fixture states BR-12 as a pool and validates with no errors and no warnings.
+// @evidence pooled-quotas-executable
 test('the Harbourline fixture states BR-12 as a pool and validates with no errors and no warnings', () => {
   const r = analyzeSpec(spec());
   assert.deepEqual(r.diagnostics.filter((/** @type {any} */ d) => d.severity !== 'info').map((/** @type {any} */ d) => `${d.code} ${d.message}`), []);
@@ -53,6 +57,8 @@ test('the Harbourline fixture states BR-12 as a pool and validates with no error
   for (const s of d.scenarios) for (const st of s.steps) assert.deepEqual(Object.keys(st.payload ?? {}).filter((k) => !['member', 'amount'].includes(k)), [], 'no scenario input says who is eligible or throttled');
 });
 
+// A pool runs as one machine per pooled limit and modelled member with the pool variables.
+// @evidence pooled-quotas-executable
 test('a pool runs as one machine per pooled limit and modelled member with the pool variables', () => {
   const m = model();
   assert.deepEqual(poolMachineIds(m.entities.get('reseller-pool')), ['reseller-pool-runs-m1', 'reseller-pool-runs-m2', 'reseller-pool-storage-m1', 'reseller-pool-storage-m2']);
@@ -62,6 +68,8 @@ test('a pool runs as one machine per pooled limit and modelled member with the p
   assert.deepEqual(machines.map((b) => b.id), poolMachineIds(m.entities.get('reseller-pool')), 'the scenario runs the pool machines');
 });
 
+// A client over its fair share is admitted while the pool has headroom and throttled after three days and released after two under.
+// @evidence pooled-quotas-executable
 test('a client over its fair share is admitted while the pool has headroom and throttled after three days and released after two under', () => {
   const trace = runScenario(model(), 'throttle-and-release');
   assert.equal(trace.outcome, 'quiescent');
@@ -73,6 +81,8 @@ test('a client over its fair share is admitted while the pool has headroom and t
   assert.deepEqual([m1(trace.final).state, m1(trace.final).vars.throttledOn], ['normal', -1], 'two days under release the throttle');
 });
 
+// A retroactive exemption lifts a throttle already in force and the default one does not.
+// @evidence pooled-quotas-executable
 test('a retroactive exemption lifts a throttle already in force and the default one does not', () => {
   const setOnDay3 = (/** @type {any} */ d) => {
     const s = d.scenarios.find((/** @type {any} */ x) => x.id === 'throttle-and-release');
@@ -106,12 +116,50 @@ const RULES = [
 ];
 
 for (const [title, code, at, mutate] of RULES) {
+  // Pooled quotas: a pool with no limit is reported once as pool.limits at quotaPools.0.limits.
+  // @evidence pooled-quotas-executable # pooled quotas: a pool with no limit is reported once as pool.limits at quotaPools.0.limits
+  // Pooled quotas: two limits with one name is reported once as pool.limits at quotaPools.0.limits.1.name.
+  // @evidence pooled-quotas-executable # pooled quotas: two limits with one name is reported once as pool.limits at quotaPools.0.limits.1.name
+  // Pooled quotas: a limit with both a quota and an amount per member is reported once as pool.limit-contribution at quotaPools.0.limits.0.
+  // @evidence pooled-quotas-executable # pooled quotas: a limit with both a quota and an amount per member is reported once as pool.limit-contribution at quotaPools.0.limits.0
+  // Pooled quotas: a limit whose amount per member is not positive is reported once as pool.limit-contribution at quotaPools.0.limits.1.perMember.
+  // @evidence pooled-quotas-executable # pooled quotas: a limit whose amount per member is not positive is reported once as pool.limit-contribution at quotaPools.0.limits.1.perMember
+  // Pooled quotas: a pooled quota counted per principal is reported once as pool.quota-scope at quotaPools.0.limits.0.quota.
+  // @evidence pooled-quotas-executable # pooled quotas: a pooled quota counted per principal is reported once as pool.quota-scope at quotaPools.0.limits.0.quota
+  // Pooled quotas: a pooled quota with another window is reported once as pool.quota-window at quotaPools.0.limits.0.quota.
+  // @evidence pooled-quotas-executable # pooled quotas: a pooled quota with another window is reported once as pool.quota-window at quotaPools.0.limits.0.quota
+  // Pooled quotas: a pooled quota stated as a level is reported once as pool.limit-kind at quotaPools.0.limits.0.kind.
+  // @evidence pooled-quotas-executable # pooled quotas: a pooled quota stated as a level is reported once as pool.limit-kind at quotaPools.0.limits.0.kind
+  // Pooled quotas: a pooled quota held by another component is reported once as pool.held-by at quotaPools.0.heldBy.
+  // @evidence pooled-quotas-executable # pooled quotas: a pooled quota held by another component is reported once as pool.held-by at quotaPools.0.heldBy
+  // Pooled quotas: a usage event with no amount is reported once as pool.event-payload at quotaPools.0.limits.1.usage.
+  // @evidence pooled-quotas-executable # pooled quotas: a usage event with no amount is reported once as pool.event-payload at quotaPools.0.limits.1.usage
+  // Pooled quotas: an exemption event with no member is reported once as pool.event-payload at quotaPools.0.exemption.event.
+  // @evidence pooled-quotas-executable # pooled quotas: an exemption event with no member is reported once as pool.event-payload at quotaPools.0.exemption.event
+  // Pooled quotas: a level with no usage event is reported once as pool.usage-event at quotaPools.0.limits.1.
+  // @evidence pooled-quotas-executable # pooled quotas: a level with no usage event is reported once as pool.usage-event at quotaPools.0.limits.1
+  // Pooled quotas: a window that is not a duration is reported once as pool.window at quotaPools.0.window.
+  // @evidence pooled-quotas-executable # pooled quotas: a window that is not a duration is reported once as pool.window at quotaPools.0.window
+  // Pooled quotas: an over-share rule of zero days is reported once as pool.over-share at quotaPools.0.overShare.consecutive.
+  // @evidence pooled-quotas-executable # pooled quotas: an over-share rule of zero days is reported once as pool.over-share at quotaPools.0.overShare.consecutive
+  // Pooled quotas: a throttle with no release is reported once as pool.release at quotaPools.0.throttle.release.
+  // @evidence pooled-quotas-executable # pooled quotas: a throttle with no release is reported once as pool.release at quotaPools.0.throttle.release
+  // Pooled quotas: five modelled members is reported once as pool.model-members at quotaPools.0.modelMembers.
+  // @evidence pooled-quotas-executable # pooled quotas: five modelled members is reported once as pool.model-members at quotaPools.0.modelMembers
+  // Pooled quotas: an exemption set by a role without its capability is reported once as pool.exemption-capability at quotaPools.0.exemption.capability.
+  // @evidence pooled-quotas-executable # pooled quotas: an exemption set by a role without its capability is reported once as pool.exemption-capability at quotaPools.0.exemption.capability
+  // Pooled quotas: a pool machine id that is already an entity is reported once as pool.machine-id at quotaPools.0.limits.
+  // @evidence pooled-quotas-executable # pooled quotas: a pool machine id that is already an entity is reported once as pool.machine-id at quotaPools.0.limits
+  // Pooled quotas: a claim reading a variable a pool machine does not have is reported once as expr.reference at claims.0.evaluate.expr.
+  // @evidence pooled-quotas-executable # pooled quotas: a claim reading a variable a pool machine does not have is reported once as expr.reference at claims.0.evaluate.expr
   test(`pooled quotas: ${title} is reported once as ${code} at ${at}`, () => {
     const r = analyzeSpec(spec(/** @type {any} */ (mutate)));
     assert.deepEqual(errors(r).map((/** @type {any} */ d) => [d.code, d.path.join('.')]), [[code, at]], show(r));
   });
 }
 
+// A scenario may run a pool and no behavior but not neither.
+// @evidence pooled-quotas-executable
 test('a scenario may run a pool and no behavior but not neither', () => {
   const r = analyzeSpec(spec((/** @type {any} */ d) => { d.scenarios[1].pools = []; d.claims[1].evaluate.scenarios = ['burst-exploration']; }));
   assert.deepEqual(errors(r).map((/** @type {any} */ d) => d.code), ['scenario.empty'], show(r));

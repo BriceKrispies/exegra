@@ -299,7 +299,7 @@ async function route(req, res, url, ws, streams) {
         t.add('ws-write-done', { file: body.file, hash: result.hash, caller: 'http', requestId });
         t.add('write-file-ok', { ok: true, hash: result.hash, requestId });
       } else if ('conflict' in result && result.conflict) {
-        t.add('ws-write-conflict', { file: body.file, current: result.current.hash, caller: 'http', requestId });
+        t.add('ws-write-conflict', { code: 'conflict', file: body.file, current: result.current.hash, caller: 'http', requestId });
         t.add('write-file-conflict', { code: 'conflict', current: result.current.hash, requestId });
       }
       return send(res, result.ok ? 200 : 409, result);

@@ -55,6 +55,8 @@ function walk() {
   ];
 }
 
+// Every step of the walk projected and compared with deriveModel for its cut.
+// @evidence navigation-scene-is-derived-model
 test('at every step of the walk the architecture scene draws exactly the derived model of its cut', () => {
   const model = self();
   for (const [name, expanded] of walk()) {
@@ -74,6 +76,8 @@ test('at every step of the walk the architecture scene draws exactly the derived
   assert.deepEqual(steps[0].blocks.filter((b) => !b.startsWith('module:')).length, 15, 'L0: the system and its 14 actors and external systems');
 });
 
+// Purposes and responsibilities of every block of l0 and l1.
+// @evidence levels-zero-and-one-state-purposes
 test('L0 draws the system as one block in its environment and every block of L0 and L1 states a purpose and L1 opens the system as a container', () => {
   const model = self();
   const l0 = project(model, 'architecture', { cut: { hierarchy: 'logical', expanded: [] } });
@@ -96,6 +100,8 @@ test('L0 draws the system as one block in its environment and every block of L0 
   assert.equal(l1.nodes.find((n) => n.id === 'semantic-core')?.parent, 'exegra');
 });
 
+// Blocks toggled at every step; the rest unchanged, and the cut restored.
+// @evidence navigation-one-block-changes-alone
 test('expanding or collapsing one block changes no other block of the scene', () => {
   const model = self();
   const h = /** @type {any} */ (hierarchyOf(model, 'logical'));
@@ -117,6 +123,8 @@ test('expanding or collapsing one block changes no other block of the scene', ()
   }
 });
 
+// Every declared cut, logical and runtime.
+// @evidence navigation-scene-is-derived-model
 test('every declared cut of the logical and runtime hierarchies gives the same derived model through the view as through derive', () => {
   const model = self();
   for (const c of model.byKind.cut ?? []) {
@@ -138,6 +146,8 @@ test('every declared cut of the logical and runtime hierarchies gives the same d
   assert.equal(declaredCutWithBlocks(model, 'logical', /** @type {any} */ (cutOfExpanded(model, 'logical', ['exegra'])).blocks), 'l1');
 });
 
+// The four structural views as cuts and filters.
+// @evidence navigation-filters-report-removals
 test('views keep their meaning as cuts and filters: each opens at its declared cut and counts what its filter removes', () => {
   const model = self();
   const views = new Map(listViews(model).map((v) => [v.id, v]));
@@ -159,6 +169,8 @@ test('views keep their meaning as cuts and filters: each opens at its declared c
   assert.ok(flow.notes.some((n) => /relationships? of other kinds between drawn blocks/.test(n)));
 });
 
+// Path summaries through hidden persistence and the badge.
+// @evidence navigation-filters-report-removals
 test('hiding a block on a path draws a labelled path summary through it and the inside badge follows the filter', () => {
   const model = self();
   const l1 = /** @type {any} */ (expandedOfCut(model, 'l1')).expanded;
@@ -184,6 +196,8 @@ test('hiding a block on a path draws a labelled path summary through it and the 
   assert.ok(hidMember.nodes.find((n) => n.id === 'persistence')?.marks?.some((m) => m.kind === 'hidden-inside'));
 });
 
+// A cycle of blocks drawn red and a claim not expressible at its cut.
+// @evidence navigation-level-claims-at-cut
 test('a claim stated at a cut is shown with its result at the drawn cut with its counterexample drawn or as not expressible', () => {
   const doc = {
     exegra: '0.1', system: { id: 'sys', name: 'Sys', purpose: 'p' },
@@ -225,6 +239,8 @@ test('a claim stated at a cut is shown with its result at the drawn cut with its
   assert.equal(evaluateClaim(model, 'a1-alone', { atCut: { hierarchy: 'logical', blocks: fine } }).status, 'violated');
 });
 
+// Cuts, hiding, layout methods and pins leave derived models, verdicts and the hash unchanged.
+// @evidence presentation-holds-no-abstraction
 test('no presentation state changes a derived fact or a claim verdict or the semantic hash', () => {
   const model = self();
   const hash = semanticHash(model);
@@ -243,6 +259,8 @@ test('no presentation state changes a derived fact or a claim verdict or the sem
   assert.equal(verdictsOf(), verdicts);
 });
 
+// Default cuts.
+// @evidence navigation-one-block-changes-alone
 test('the default cut of a view is its declared cut or else the overview of a large model and a within filter opens its element', () => {
   const model = self();
   assert.deepEqual(defaultCut(model, { id: 'x' }), { hierarchy: 'logical', expanded: ['exegra'] }, 'a large model without a declared cut opens with top-level subsystems collapsed');
@@ -251,6 +269,8 @@ test('the default cut of a view is its declared cut or else the overview of a la
   assert.equal(defaultCut(model, { id: 'x', hierarchy: 'runtime' }).hierarchy, 'runtime');
 });
 
+// The presentation modules read for the abstraction primitives.
+// @evidence presentation-holds-no-abstraction
 test('presentation modules compute no lifting or bundling or entity-to-element mapping: they ask the core', () => {
   const forbidden = ['endpointElement', 'restrictInteraction', 'interactionKey', 'combineSummaries', 'summarise(model', 'cutForCollapse', 'relift(', ' lift(', 'blockAt('];
   const dirs = ['src/ui', 'src/render', 'src/app'];
@@ -265,6 +285,8 @@ test('presentation modules compute no lifting or bundling or entity-to-element m
   for (const word of ['function lift', 'witnesses.push', 'interactionKey(']) assert.ok(!proj.includes(word), `projections.js: ${word}`);
 });
 
+// At L1 of the self-specification the opened system spans at least half of the picture on a wide and a tall view, its members inside, its environment around it, and few labels collide.
+// @evidence layout-auto-reads-multiscale
 test('at L1 the automatic layout gives the opened system most of the picture with its environment around it', () => {
   const model = self();
   const scene = project(model, 'architecture', { cut: { hierarchy: 'logical', expanded: ['exegra'] } });

@@ -106,8 +106,17 @@ def holdLean (h : Res.Hold Nat) : String :=
 def rstLean (s : Core.Behav.RSt) : String :=
   s!"\{ capacity := {s.capacity}, holds := {listLean holdLean s.holds}, waiting := {listLean reqLean s.waiting} }"
 
+def msgLean (m : Core.Behav.Msg) : String :=
+  s!"\{ event := {m.event}, payload := {fieldsLean m.payload}, size := {m.size}, target := {optLean m.target}, " ++
+  s!"sender := {optLean m.sender} }"
+
+def lqLean (q : Core.Behav.LQ) : String :=
+  s!"\{ inTransfer := " ++ (match q.inTransfer with | none => "none" | some m => s!"(some {msgLean m})") ++
+  s!", waiting := {listLean msgLean q.waiting}, last := {optLean q.last} }"
+
 def worldLean (w : Core.Behav.World) : String :=
-  s!"\{ res := {listLean rstLean w.res}, nextReq := {w.nextReq}, active := {listLean toString w.active} }"
+  s!"\{ res := {listLean rstLean w.res}, nextReq := {w.nextReq}, active := {listLean toString w.active}, " ++
+  s!"links := {listLean (fun (p : (Nat × Option Nat) × Core.Behav.LQ) => s!"(({p.1.1}, {optLean p.1.2}), {lqLean p.2})") w.links} }"
 
 def wopLean : Core.Behav.WOp → String
   | .req res cls units kind info => s!"(.req {res} {cls} {units} {reqKindLeanW kind} {infoLean info})"
@@ -119,6 +128,8 @@ def ekindLean : Core.Behav.EKind → String
   | .serviceDone res r waited served => s!"(.serviceDone {res} {reqLean r} {waited} {served})"
   | .waitTimeout res q => s!"(.waitTimeout {res} {q})"
   | .faultEdge f on => s!"(.faultEdge {f} {on})"
+  | .send l fan m => s!"(.send {l} {fan} {msgLean m})"
+  | .linkDone l k => s!"(.linkDone {l} {optLean k})"
 
 def routesLean (rs : Option (List (List Nat × Nat))) : String :=
   match rs with

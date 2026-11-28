@@ -24,6 +24,8 @@ import { changed, lowerInput, withFaults } from '../fixtures/queueing/inputs.js'
 
 const FIXTURE = path.join(REPO_ROOT, 'tests', 'fixtures', 'queueing', 'pool-flood.json');
 
+// Runs only with EXEGRA_FIXTURES=1 (354 runs, about 15 minutes on the native engine). Recorded 2026-11-17: model-holds. Per-run p99 of the move leg: base holds 59/59 (spread 2987 / 3433 / 4630 us), control holds 59/59 (1584 / 1802 / 2376 us); the twin collapse-classes fails 0/59 (every run +inf: moves are refused at the shared queue), the twin page-read limit 12 fails 0/59 (70839 / 83599 / 105493 us: moves wait behind page reads on the shared I/O channels); both twin faults hold on the control (59/59; spreads up to 21768 and 13969 us). A model result on assumed parameters, not evidence about any system.
+// @evidence pool-classes-protect-move-db-leg-under-flood #
 test('pool under flood: the move leg holds in base and control, and every twin fails', { skip: process.env.EXEGRA_FIXTURES !== '1' && 'set EXEGRA_FIXTURES=1 to run the pool fixture' }, async (t) => {
   const fx = JSON.parse(fs.readFileSync(FIXTURE, 'utf8'));
   /** @type {(text: string) => any} */

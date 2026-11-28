@@ -9,6 +9,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// The build's bundled specification (the resolved manifest) with the bundled fact file gives the semantic hash and the L1 interactions the command line gives, so the read-only application draws the same derived model.
+// @evidence navigation-scene-is-derived-model #
 test('a production build bundles the self-specification resolved and the shipped application derives the CLI model from it', async () => {
   const { spawnSync } = await import('node:child_process');
   const { exegraLinkedSpecs } = await import('../../tools/vite-plugin-exegra.js');

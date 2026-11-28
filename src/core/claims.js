@@ -12,7 +12,7 @@ import { faultModelOf, faultModelScope, faultCoverage } from './fault-model.js';
 import { CLAIM_METHODS, conformanceStage } from './claim-methods.js';
 import { own } from './own.js';
 import { DEPENDENCY_CLASSES, kindInfo } from './interactions.js';
-import { componentGraph, selectComponents, hierarchyIds, hierarchyOf, cutMap, elementsOf, selectorNames } from './query.js';
+import { componentGraph, selectComponents, hierarchyIds, hierarchyOf, cutMap, elementsOf, selectorNames, claimSubjects } from './query.js';
 import { deriveModel, blockAt, restrictInteraction, abstractionInvariants, ABSTRACTION_INVARIANTS } from './abstraction.js';
 import { parseExpr, evalExpr, exprRefs, ExprError } from './expr.js';
 import { semanticHash } from './hash.js';
@@ -526,7 +526,7 @@ function present(ctx, p, v) {
   if (text.counterexample) result.counterexample = text.counterexample;
   if (p.r?.negatives) result.negatives = p.r.negatives;
   if (p.r?.stage) result.stage = p.r.stage;
-  const subjects = Array.isArray(claim.data.subjects) ? claim.data.subjects.filter((/** @type {any} */ s) => typeof s === 'string') : [];
+  const subjects = claimSubjects(model, claim, CLAIM_METHODS[claim.data.evaluate?.method]?.params);
   result.involved = unique([...subjects, ...(p.r?.selected ?? []), ...(result.counterexample?.entities ?? []), ...(result.counterexample?.path ?? [])]);
 
   // Freshness and its diagnostics, for a status that rests on recorded facts.
@@ -1752,7 +1752,7 @@ function evaluateComposition(model, claim, ev) {
       const r = checkAbstraction(model, id, { scenarios: scenarios.length ? scenarios : undefined, finest: ev.finest === true });
       const selected = unique([id, ...r.members, ...r.runs.map((/** @type {any} */ x) => x.scenario)]);
       const runs = r.runs.map((/** @type {any} */ x) => `${x.scenario} (${x.abstract.boundarySteps} boundary steps, ${x.stutters?.length ?? 0} hidden steps of the members)`).join(', ') || 'no scenario';
-      const scope = `Ran ${runs} with "${id}" in place of its members${ev.finest === true ? ' (expanded to the finest members)' : ''} and with its members, and compared the boundary traces in Lean (engine.refineBoundary): events, kinds, payloads, times under time scale ${r.timeScale}, outcomes and the final configuration of every machine outside the region. A check of these runs, not of every interleaving.`;
+      const scope = `Ran ${runs} with "${id}" in place of its members${ev.finest === true ? ' (expanded to the finest members)' : ''} and with its members, and compared the boundary traces in Lean (engine.refineBoundary): events, kinds, payloads, times under time scale ${r.timeScale}, outcomes and the final configuration of every machine outside the region, up to the order of simultaneous steps of events no machine consumes both of${r.runs.some((/** @type {any} */ x) => x.comparison === 'commutation') ? ` (${r.runs.filter((/** @type {any} */ x) => x.comparison === 'commutation').map((/** @type {any} */ x) => x.scenario).join(', ')} certified only up to that order)` : ''}. A check of these runs, not of every interleaving (exegra refine --explore explores them all).`;
       if (r.verdict === 'counterexample' && r.counterexample) {
         const cx = r.counterexample;
         return { outcome: 'fail', scope, selected, explanation: describeCounterexample(cx), counterexample: { summary: describeCounterexample(cx), entities: [id], scenario: cx.scenario, stepIndex: cx.concreteStep?.index ?? cx.abstractStep?.index }, strength: r.strength, refinement: r };
@@ -1765,8 +1765,10 @@ function evaluateComposition(model, claim, ev) {
       const negs = Array.isArray(ev.negatives) ? ev.negatives : [];
       for (const n of negs) {
         const own = model.entities.get(n?.scenario)?.data.faults ?? [];
-        const nr = checkAbstraction(model, id, { scenarios: [n.scenario], finest: ev.finest === true, faults: [...new Set([...own, ...idList(n.faults)])], perLevelFaults: true });
-        if (nr.verdict !== 'counterexample') return { ...inconclusive(scope, `The negative run of scenario "${n.scenario}" with faults ${idList(n.faults).join(', ')} did not break the refinement, so the check is not shown to be able to fail.`, selected), strength: r.strength };
+        const dependent = Array.isArray(n?.dependent) ? n.dependent.filter((/** @type {any} */ d) => Array.isArray(d) && d.length === 2) : [];
+        const nr = checkAbstraction(model, id, { scenarios: [n.scenario], finest: ev.finest === true, faults: [...new Set([...own, ...idList(n.faults)])], perLevelFaults: true, dependent });
+        const what = [idList(n.faults).length ? `faults ${idList(n.faults).join(', ')}` : '', dependent.length ? `${dependent.map((/** @type {string[]} */ d) => d.join(' and ')).join(', ')} treated as dependent` : ''].filter(Boolean).join(' and ');
+        if (nr.verdict !== 'counterexample') return { ...inconclusive(scope, `The negative run of scenario "${n.scenario}" with ${what} did not break the refinement, so the check is not shown to be able to fail.`, selected), strength: r.strength };
       }
       return { outcome: 'pass', scope, selected, strength: r.strength, refinement: r, explanation: `Certificate: in ${plural(r.runs.length, 'run', 'runs')} every boundary step of "${id}" is realised by a step of its members (${r.runs.map((/** @type {any} */ x) => `${x.scenario}: ${x.correspondence.length} matched, ${x.stutters.length} stutters`).join('; ')}); strength conservative.${negs.length ? ` ${plural(negs.length, 'negative run breaks', 'negative runs break')} it.` : ''}` };
     }

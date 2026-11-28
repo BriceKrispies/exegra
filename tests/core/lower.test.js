@@ -19,6 +19,8 @@ initLean();
 
 const fixture = (/** @type {string} */ name) => JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'tests', 'fixtures', 'lowering', name), 'utf8'));
 
+// The Lean lowering (lower.tables) gives the pinned tables' canonical text, the unitExponential table and every recorded family's table or refusal exactly as tests/fixtures/lowering/tables.json holds them, compared as JSON text.
+// @evidence lowering-in-lean-reproduces-recorded-inputs
 test('tables unchanged', () => {
   const fx = fixture('tables.json');
   const r = call('lower.tables', { families: fx.families.map((/** @type {any} */ f) => ({ path: f.path, family: f.family })) });
@@ -32,6 +34,8 @@ test('tables unchanged', () => {
   });
 });
 
+// engineInput (the Lean lowering) derives the recorded engine input, or throws the recorded refusal message, for every entry of tests/fixtures/lowering/inputs.json.
+// @evidence lowering-in-lean-reproduces-recorded-inputs
 test('engine inputs unchanged', () => {
   const fx = fixture('inputs.json');
   /** @type {Map<string, any>} */

@@ -3,9 +3,9 @@
 // over the model and the claim results, each entry a link to the entity it names.
 
 import { h, clear, on } from './dom.js';
-import { entityLabel, relationshipsOf, dependencies, contractsOf, childrenOf, ancestorsOf, inboundRefs, componentOf, elementsOf } from '../core/query.js';
+import { entityLabel, relationshipsOf, dependencies, contractsOf, childrenOf, ancestorsOf, inboundRefs, componentOf, elementsOf, claimSubjects } from '../core/query.js';
 import { baseFacts, blockReport, deriveModel, witnessOf } from '../core/abstraction.js';
-import { CLAIM_STATUSES } from '../core/claim-methods.js';
+import { CLAIM_STATUSES, CLAIM_METHODS } from '../core/claim-methods.js';
 import { recordFields, copiesOf, copyFields, sourcesOf, isPrincipalData, PRINCIPAL } from '../core/data-model.js';
 import { renderProperty, pathKey } from './property-controls.js';
 import { openDeleteDialog, openConnectDialog, openCreateDialog, openRenameDialog } from './dialogs.js';
@@ -162,7 +162,7 @@ export function mountInspector(el, session) {
     if (kids.length) out.push(section('contains', 'Contains', [ul(kids.map((k) => entityRef(k.id)))]));
     const behaviors = (model.byKind.behavior ?? []).filter((/** @type {any} */ b) => b.data.subject === c.id);
     if (behaviors.length) out.push(section('behaviors', 'Behaviors', [ul(behaviors.map((b) => entityRef(b.id)))]));
-    const claims = (model.byKind.claim ?? []).filter((/** @type {any} */ k) => (session.claimResult(k.id)?.involved ?? []).includes(c.id) || (k.data.subjects ?? []).includes(c.id));
+    const claims = (model.byKind.claim ?? []).filter((/** @type {any} */ k) => (session.claimResult(k.id)?.involved ?? []).includes(c.id) || claimSubjects(model, k, CLAIM_METHODS[k.data.evaluate?.method]?.params).includes(c.id));
     if (claims.length) {
       out.push(section('claims', 'Claims', [ul(claims.map((k) => {
         const r = session.claimResult(k.id);

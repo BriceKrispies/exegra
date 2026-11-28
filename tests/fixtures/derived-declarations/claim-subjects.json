@@ -1,0 +1,143 @@
+{
+ "description": "WG-5705 (in WG-5740): claim subjects removed from the self-specification because the claim's evaluation parameters name exactly the same entities (claimSubjects in src/core/query.js derives them). Each entry is the declaration as it stood at removal time and the value derived then; tests/core/derived-evidence.test.js checks that the derived subjects still equal it. Claims whose declared subjects differed from the derived ones (storage-has-owner, core-static-dependencies-acyclic, core-runtime-dependencies-acyclic) kept their declaration.",
+ "removedAt": "2026-11-28",
+ "claims": [
+  {
+   "claim": "transactions-provide-apply-contract",
+   "declared": [
+    "transactions",
+    "apply-transaction"
+   ],
+   "derivedAtRemoval": [
+    "transactions",
+    "apply-transaction"
+   ]
+  },
+  {
+   "claim": "editing-surfaces-except-import-via-transactions",
+   "declared": [
+    "inspector",
+    "source-editor",
+    "dialogs",
+    "composition-root",
+    "shell",
+    "transactions",
+    "specification-file"
+   ],
+   "derivedAtRemoval": [
+    "composition-root",
+    "shell",
+    "inspector",
+    "dialogs",
+    "source-editor",
+    "specification-file",
+    "transactions"
+   ]
+  },
+  {
+   "claim": "renderer-does-not-own-state",
+   "declared": [
+    "scene-renderer",
+    "specification-file",
+    "layout-file",
+    "transactions",
+    "session"
+   ],
+   "derivedAtRemoval": [
+    "scene-renderer",
+    "session",
+    "specification-file",
+    "layout-file",
+    "transactions"
+   ]
+  },
+  {
+   "claim": "agent-interface-uses-transactions",
+   "declared": [
+    "agent-cli",
+    "transactions"
+   ],
+   "derivedAtRemoval": [
+    "agent-cli",
+    "transactions"
+   ]
+  },
+  {
+   "claim": "persistence-alternatives-reconciled",
+   "declared": [
+    "persistence-client",
+    "dev-server-plugin",
+    "workspace-service"
+   ],
+   "derivedAtRemoval": [
+    "persistence-client",
+    "dev-server-plugin",
+    "workspace-service"
+   ]
+  }
+ ],
+ "kept": [
+  {
+   "claim": "storage-has-owner",
+   "declared": [
+    "metamodel",
+    "claim-method-registry",
+    "specification-file",
+    "layout-file",
+    "recorded-results-file",
+    "generated-artifacts"
+   ],
+   "derived": [
+    "specification-file",
+    "layout-file",
+    "recorded-results-file",
+    "generated-artifacts",
+    "specification-store-file",
+    "metamodel",
+    "claim-method-registry"
+   ]
+  },
+  {
+   "claim": "core-static-dependencies-acyclic",
+   "declared": [
+    "semantic-core"
+   ],
+   "derived": [
+    "semantic-core",
+    "metamodel",
+    "claim-method-registry",
+    "parser",
+    "validator",
+    "expression-language",
+    "model-hash",
+    "queries",
+    "transactions",
+    "claim-evaluator",
+    "contract-conformance",
+    "data-model",
+    "..."
+   ]
+  },
+  {
+   "claim": "core-runtime-dependencies-acyclic",
+   "declared": [
+    "semantic-core"
+   ],
+   "derived": [
+    "semantic-core",
+    "metamodel",
+    "claim-method-registry",
+    "parser",
+    "validator",
+    "expression-language",
+    "model-hash",
+    "queries",
+    "transactions",
+    "claim-evaluator",
+    "contract-conformance",
+    "data-model",
+    "..."
+   ]
+  }
+ ]
+}

@@ -59,6 +59,8 @@ const stub = (seen) => (/** @type {any} */ args) => {
   }));
 };
 
+// Stubs claims.status and verdict.isRegression at the call boundary and checks that every status and regression is the stub's; no claimStatus in src/core or cli.
+// @evidence claim-statuses-decided-in-lean #
 test('every status in evaluateClaims output is the one the Lean function claims.status returned', () => {
   const seen = { calls: 0 };
   const restore = overrideLeanFunction('claims.status', stub(seen));

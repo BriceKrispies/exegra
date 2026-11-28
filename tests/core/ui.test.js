@@ -231,24 +231,38 @@ const draft = (d, i) => entity(d.forms, 'f-draft').fields[i];
 /** The timer whose delay is read at run time. @param {any} d */
 const timer = (d) => entity(d.behaviors, 'page-kernel').transitions[0].effects[2];
 
+// The fixture that uses every user interface construct validates with no error, no warning and no readiness gap.
+// @evidence ui-consistency-rules # a specification with every user interface construct validates with no errors
+// The fixture with a journey that uses every step kind validates with no error.
+// @evidence ui-journey-steps-checked # a specification with every user interface construct validates with no errors
+// The fixture with options from the view model, a catch-all screen, a navigation address from the query, a filtered live binding, templated toasts, a derived slug and a kept preview result validates with no error and no readiness gap.
+// @evidence ui-client-constructs-third-set # a specification with every user interface construct validates with no errors
 test('a specification with every user interface construct validates with no errors, no warnings and no readiness gaps', () => {
   const r = analyzeSpec(spec());
   assert.deepEqual(r.diagnostics.filter((/** @type {any} */ d) => d.severity !== 'info').map((/** @type {any} */ d) => `${d.code} ${d.message}`), []);
   assert.deepEqual(readinessGaps(/** @type {any} */ (r.model)), []);
 });
 
+// A client-side implementation machine validates, and loses its transaction to exactly ready.transaction-missing.
+// @evidence client-machines-held-to-machine-rules # an implementation machine whose subject is a client component
 test('an implementation machine whose subject is a client component is held to the machine rules like any other', () => {
   assert.equal(analyzeSpec(spec()).errorCount, 0);
   const r = analyzeSpec(spec((/** @type {any} */ d) => { delete entity(d.behaviors, 'page-kernel').transaction; }, { generation: false }));
   assert.deepEqual(codes(errors(r)), ['ready.transaction-missing'], explain(r));
 });
 
+// Route patterns accept "/" and literal and :param segments and refuse malformed ones.
+// @evidence ui-consistency-rules # route patterns
+// routeParams accepts "*" and "*name" as catch-alls and refuses other starred routes.
+// @evidence ui-client-constructs-third-set # route patterns: a catch-all route binds the unmatched path
 test('route patterns: a catch-all route binds the unmatched path to its name', () => {
   assert.deepEqual(routeParams('*'), { params: [], catchAll: true });
   assert.deepEqual(routeParams('*missing'), { params: ['missing'], catchAll: true });
   for (const bad of ['**', '*/x', '*Missing', '/a/*']) assert.ok(routeParams(bad).error, bad);
 });
 
+// A run-time delay on a model-level machine is exactly effect.after.
+// @evidence run-time-timer-delays
 test('a run-time timer delay is allowed only on an implementation-level machine', () => {
   const r = analyzeSpec(spec((/** @type {any} */ d) => {
     const b = entity(d.behaviors, 'page-kernel');
@@ -381,6 +395,12 @@ for (const [title, code, mutate] of CONSISTENCY) {
   const modes = generationChecked.has(code.split(".")[0]) ? [false] : [false, true];
   generationChecked.add(code.split(".")[0]);
   for (const generation of modes) {
+    // Option values taken from a number field for a select are exactly form.options-from.
+    // @evidence ui-client-constructs-third-set # ui consistency: optionsFrom over structs taking values from a number field
+    // Two fields derived from each other are exactly form.derive.
+    // @evidence ui-client-constructs-third-set # ui consistency: two fields derived from each other
+    // Two screens whose routes tie (a parameter against a literal, two literal segments each) are exactly route.ambiguous.
+    // @evidence route-ambiguous-rule # ui consistency: two screens whose routes tie is reported once as route.ambiguous
     test(`ui consistency: ${title} is reported once as ${code}${generation ? ' (generation set)' : ''}`, () => {
       const r = analyzeSpec(spec(/** @type {any} */ (mutate), { generation }));
       assert.deepEqual(codes(errors(r)), [code], explain(r));
@@ -390,6 +410,10 @@ for (const [title, code, mutate] of CONSISTENCY) {
 }
 
 // Screens whose routes differ in segment count or in literal count do not tie (route.ambiguous is not reported).
+// Each consistency rule broken once is reported exactly once, with and without the switch.
+// @evidence ui-consistency-rules # ui consistency:
+// Screens whose routes differ in segment count or literal count raise no error.
+// @evidence route-ambiguous-rule
 test('ui consistency: screens whose routes differ do not tie', () => {
   const r = analyzeSpec(spec((/** @type {any} */ d) => {
     d.screens.push({ id: 'desk-short', name: 'Desk slug', route: '/desk/:slug', viewModel: 'view-post', kind: 'article' });
@@ -399,6 +423,96 @@ test('ui consistency: screens whose routes differ do not tie', () => {
 });
 
 // A second call that is not an object: the metamodel accepts only objects for then, so the rule is checked on the model.
+// A run-time delay that is a boolean is exactly effect.after.
+// @evidence run-time-timer-delays # ui consistency: a run-time timer delay that is not a number
+// A run-time delay without simulate is exactly effect.after.
+// @evidence run-time-timer-delays # ui consistency: a run-time timer delay without its simulated delay
+// A value used before it is captured is exactly uiScenario.capture-undefined.
+// @evidence ui-journey-steps-checked # ui consistency: a value used before it is captured
+// A marker set in another browser is exactly uiScenario.mark-undefined.
+// @evidence ui-journey-steps-checked # ui consistency: a no-reload check in a browser the marker was not set in
+// A CSS-like key inside within is refused as uiScenario.step.
+// @evidence ui-journey-steps-checked # ui consistency: a selector key inside within
+// An aria attribute of the document element is exactly uiScenario.attribute.
+// @evidence ui-journey-steps-checked # ui consistency: an aria attribute read from the document element
+// A per-row action clicked without its row is exactly uiScenario.action-item.
+// @evidence ui-journey-steps-checked # ui consistency: a per-row action clicked without its row
+// A forEach that reaches no list is exactly action.for-each.
+// @evidence ui-per-row-actions # ui consistency: a per-row action over an output that is not a list
+// A label reading a field the rows lack is exactly action.label-template.
+// @evidence ui-per-row-actions # ui consistency: a per-row label reading a field the rows do not have
+// An argument reading a field the rows lack is exactly action.expr-reference.
+// @evidence ui-per-row-actions # ui consistency: a per-row argument reading a field the rows do not have
+// A select with both listed options and optionsFrom is exactly form.options.
+// @evidence ui-client-constructs-third-set # ui consistency: a select with both options and optionsFrom
+// A second catch-all screen is exactly screen.catch-all-duplicate.
+// @evidence ui-client-constructs-third-set # ui consistency: a second catch-all screen
+// A navigation to the catch-all screen is exactly form.navigate-params.
+// @evidence ui-client-constructs-third-set # ui consistency: a navigation to the catch-all screen
+// A navigation address reading an undeclared query parameter is exactly form.expr-reference.
+// @evidence ui-client-constructs-third-set # ui consistency: a navigation address reading a query parameter the screen does not have
+// An action navigation parameter reading form.<field> is exactly action.expr-reference.
+// @evidence ui-client-constructs-third-set # ui consistency: an action navigation parameter reading a form field
+// A membership value of another class than the list items is exactly liveBinding.expr-type.
+// @evidence ui-client-constructs-third-set # ui consistency: a live membership of a value of the wrong class
+// A live condition of an unknown shape is exactly liveBinding.when.
+// @evidence ui-client-constructs-third-set # ui consistency: a live condition of an unknown shape
+// A toast placeholder reading an undeclared output is exactly form.toast-template.
+// @evidence ui-client-constructs-third-set # ui consistency: a toast reading an output the contract does not have
+// A toast placeholder reaching a list is exactly form.toast-template.
+// @evidence ui-client-constructs-third-set # ui consistency: a toast showing a list
+// A derived field reading itself is exactly form.expr-reference.
+// @evidence ui-client-constructs-third-set # ui consistency: a derived field reading itself
+// A kept result of another type than its screen-local value is exactly action.result.
+// @evidence ui-client-constructs-third-set # ui consistency: a result of another type than its screen-local value
+// A kept result that also navigates is exactly action.result.
+// @evidence ui-client-constructs-third-set # ui consistency: a kept result that also navigates
+// A screen-local value declared twice is exactly screen.local.
+// @evidence ui-client-constructs-third-set # ui consistency: a screen-local value declared twice
+// An action reading a form of another screen is exactly action.form.
+// @evidence ui-client-constructs-third-set # ui consistency: an action reading a form of another screen
+// An action reading a field its form does not have is exactly action.expr-reference.
+// @evidence ui-client-constructs-third-set # ui consistency: an action reading a field its form does not have
+// A live binding refreshing a path into a json output is exactly liveBinding.refresh.
+// @evidence wire-naming-and-json # ui consistency: a refresh of a path into a json output is reported once as liveBinding.refresh
+// An action passing a json output to a number input is exactly action.expr-type.
+// @evidence wire-naming-and-json # ui consistency: an action argument of class json for a number input is reported once as action.expr-type
+// A trim on a number input is exactly contract.encode.
+// @evidence ui-client-constructs-fourth-set # ui consistency: a trim on an input that is a number is reported once as contract.encode
+// An encode with no key at all is exactly contract.encode (an unknown key is refused by the metamodel first).
+// @evidence ui-client-constructs-fourth-set # ui consistency: an encoding that says nothing is reported once as contract.encode
+// An initial value reaching a list for a text control is exactly form.initial.
+// @evidence ui-client-constructs-fourth-set # ui consistency: an initial value that is a list for a text control is reported once as form.initial
+// An initial item search over a value that is not a list of structs is exactly form.initial-where.
+// @evidence ui-client-constructs-fourth-set # ui consistency: an item search over a value that is not a list is reported once as form.initial-where
+// A normalization on a select is exactly form.normalize.
+// @evidence ui-client-constructs-fourth-set # ui consistency: a trim on a select is reported once as form.normalize
+// A form success that sets a view-model value the target screen does not have is exactly form.view-overlay.
+// @evidence ui-client-constructs-fourth-set # ui consistency: a form success setting a view-model value the target screen does not have is reported once as form.view-overlay
+// An action success that sets an output the target screen view model does not have is exactly action.view-overlay.
+// @evidence ui-client-constructs-fourth-set # ui consistency: an action success setting a view-model value the target screen does not have is reported once as action.view-overlay
+// An empty onError prefix on a form is exactly form.on-error.
+// @evidence ui-client-constructs-fourth-set # ui consistency: an empty prefix on a form refusal is reported once as form.on-error
+// A blank onError announce on an action is exactly action.on-error.
+// @evidence ui-client-constructs-fourth-set # ui consistency: a blank announcement of an action refusal is reported once as action.on-error
+// An empty confirmAnnounce is exactly action.confirm-announce.
+// @evidence ui-client-constructs-fourth-set # ui consistency: an empty announcement of a confirmation is reported once as action.confirm-announce
+// An alsoOn with an authentication that is not none, session or role is exactly action.also-on.
+// @evidence ui-client-constructs-fourth-set # ui consistency: an action also offered with an unknown authentication is reported once as action.also-on
+// An error message naming an error code no contract of its forms answers is exactly errorMessage.kinds.
+// @evidence ui-client-constructs-fourth-set # ui consistency: an error message naming an error no contract answers is reported once as errorMessage.kinds
+// A field on a message for an error rather than a check is exactly errorMessage.field.
+// @evidence ui-client-constructs-fourth-set # ui consistency: a field on an error message rather than a check is reported once as errorMessage.field
+// A check message that fills in error.message is exactly errorMessage.template.
+// @evidence ui-client-constructs-fourth-set # ui consistency: a check message filling in the error message is reported once as errorMessage.template
+// An appliesTo naming one form twice is exactly errorMessage.applies-to.
+// @evidence ui-client-constructs-fourth-set # ui consistency: an error message applying to one form twice is reported once as errorMessage.applies-to
+// A second default message for errors is exactly errorMessage.duplicate.
+// @evidence ui-client-constructs-fourth-set # ui consistency: a second default error message is reported once as errorMessage.duplicate
+// A gotoPath fragment with a space is exactly uiScenario.fragment; the journey that uses every step kind also holds gotoPath with a fragment, expectUrl and captureMail, and validates.
+// @evidence ui-journey-steps-checked # ui consistency: a gotoPath fragment with a character a fragment may not hold
+// A second call that is not an object is exactly form.then, checked on the model because the metamodel accepts only objects for then.
+// @evidence ui-client-constructs-fourth-set
 test('ui consistency: a second call that is not an object is reported once as form.then', () => {
   const r = analyzeSpec(spec());
   entity(r.model.byKind.form, 'f-draft').data.then = 'unpublish';
@@ -417,6 +531,10 @@ const READINESS = [
 ];
 
 for (const [title, code, mutate] of READINESS) {
+  // Each readiness rule is one error with the switch, and only a readiness gap without it.
+  // @evidence ui-readiness-gated # ui readiness:
+  // Deleting the default refusal message leaves exactly one ready.error-message-default-missing gap when generation is set, and none without it.
+  // @evidence ui-client-constructs-fourth-set # ui readiness: forms and actions with no default error message is exactly one ready.error-message-default-missing error when generation is set
   test(`ui readiness: ${title} is exactly one ${code} error when generation is set`, () => {
     const r = analyzeSpec(spec(/** @type {any} */ (mutate)));
     assert.deepEqual(codes(errors(r)), [code], explain(r));

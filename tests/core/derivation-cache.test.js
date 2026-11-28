@@ -46,6 +46,8 @@ function inCache(/** @type {string} */ cache, /** @type {() => any} */ fn) {
 }
 const parseStats = () => ({ hit: 0, miss: 0, store: 0, ...cacheStats.parse });
 
+// Cold, warm and uncached runs of validate and claims print the same bytes; EXEGRA_NO_CACHE=1 writes no entry.
+// @evidence derivation-cache-transparent
 test('a hit gives byte-identical validate and claims output to a cold run', () => {
   const w = workspace();
   const args = ['claims', '--project', 'p', '--specs', w.specs];
@@ -60,6 +62,8 @@ test('a hit gives byte-identical validate and claims output to a cold run', () =
   assert.equal(cold.stdout, off.stdout);
 });
 
+// An edited specification and a project config naming another file are both misses.
+// @evidence derivation-cache-keyed-by-content
 test('changing a specification file or the project config is a miss', () => {
   const w = workspace();
   inCache(w.cache, () => {
@@ -78,6 +82,8 @@ test('changing a specification file or the project config is a miss', () => {
   });
 });
 
+// Editing a file of a copy of src/core changes the source hash and misses.
+// @evidence derivation-cache-keyed-by-content
 test('editing an Exegra derivation source is a miss', () => {
   const root = tmp();
   fs.mkdirSync(path.join(root, 'src', 'core'), { recursive: true });
@@ -98,6 +104,8 @@ test('editing an Exegra derivation source is a miss', () => {
   assert.notEqual(key(), afterCore, 'nor does a changed Lean build');
 });
 
+// A truncated, altered, foreign or empty entry is a miss with the same output, and is rewritten.
+// @evidence derivation-cache-keyed-by-content
 test('a damaged entry is a miss and never an error and is replaced', () => {
   const w = workspace();
   inCache(w.cache, () => {
@@ -122,6 +130,8 @@ test('a damaged entry is a miss and never an error and is replaced', () => {
   });
 });
 
+// Four processes started together on an empty cache succeed with one output and leave two whole entries.
+// @evidence derivation-cache-concurrent-safe
 test('concurrent processes on one cache all succeed with the same output', async () => {
   const w = workspace();
   const args = ['validate', '--project', 'p', '--specs', w.specs];
@@ -139,6 +149,8 @@ test('concurrent processes on one cache all succeed with the same output', async
   assert.deepEqual(fs.readdirSync(w.cache).filter((f) => f.endsWith('.tmp')), []);
 });
 
+// The encoding round-trips the shapes of a derived model and refuses what it cannot reproduce.
+// @evidence derivation-cache-transparent
 test('the encoding reproduces Maps and Sets and null prototypes and negative zero and shared references and cycles', () => {
   const shared = { n: 1 };
   const bare = Object.create(null);

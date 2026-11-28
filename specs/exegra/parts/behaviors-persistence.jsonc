@@ -1361,6 +1361,7 @@
             {
               "emit": "ws-write-conflict",
               "payload": {
+                "code": "'conflict'",
                 "file": "'spec'",
                 "current": "diskSpec",
                 "caller": "event.caller",
@@ -1383,6 +1384,7 @@
             {
               "emit": "ws-write-conflict",
               "payload": {
+                "code": "'conflict'",
                 "file": "'layout'",
                 "current": "diskLayout",
                 "caller": "event.caller",

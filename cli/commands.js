@@ -1406,7 +1406,7 @@ export const COMMANDS = {
 
   extract: {
     usage: 'extract [--check]',
-    summary: 'Run the static extractor (tools/extract.js) over the implementation surface and write the fact file (specs/<project>/extracted/facts.json): per file its digest and its imports, re-exports and dynamic imports, with the extractor identity and version. With --check, write nothing and report whether the fact file describes the tree (exit 1 when it does not). Static structure only.',
+    summary: 'Run the static extractor (tools/extract.js) over the implementation surface and write the fact file (specs/<project>/extracted/facts.json): per file its digest and its imports, re-exports and dynamic imports, with the extractor identity and version, and the claim markers of the test files (// @evidence <claim>...), from which the model derives the test evidence. With --check, write nothing and report whether the fact file describes the tree (exit 1 when it does not). Static structure only.',
     options: { check: { type: 'boolean' } },
     run: async (ctx) => {
       const { project } = await loadProject(ctx);
@@ -1414,14 +1414,14 @@ export const COMMANDS = {
       if (ctx.values.check === true) {
         const stored = readFacts(target);
         const drift = stored ? factsDrift(stored, ctx.repoRoot) : null;
-        const ok = !!drift && !drift.changed.length && !drift.missing.length && !drift.gone.length && !drift.extractor;
-        if (!ok) throw new CliError('extract.stale', stored ? `The fact file does not describe the tree: ${drift?.changed.length} changed, ${drift?.missing.length} new, ${drift?.gone.length} gone file(s).` : 'There is no fact file.', { result: { drift } });
+        const ok = !!drift && !drift.changed.length && !drift.missing.length && !drift.gone.length && !drift.extractor && !drift.evidence;
+        if (!ok) throw new CliError('extract.stale', stored ? `The fact file does not describe the tree: ${drift?.changed.length} changed, ${drift?.missing.length} new, ${drift?.gone.length} gone file(s)${drift?.evidence ? ', and the claim markers of the tests changed' : ''}${drift?.extractor ? ', and another extractor version wrote it' : ''}.` : 'There is no fact file.', { result: { drift } });
         return { result: { current: true, files: stored?.files.length ?? 0 }, semanticHash: project.semanticHash };
       }
       const facts = extractRepository(ctx.repoRoot);
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.writeFileSync(target, factsText(facts));
-      return { result: { wrote: path.relative(ctx.repoRoot, target).split(path.sep).join('/'), files: facts.files.length, imports: facts.files.reduce((n, f) => n + f.imports.length, 0), extractor: facts.extractor }, semanticHash: project.semanticHash };
+      return { result: { wrote: path.relative(ctx.repoRoot, target).split(path.sep).join('/'), files: facts.files.length, imports: facts.files.reduce((n, f) => n + f.imports.length, 0), evidence: facts.evidence?.length ?? 0, evidenceProblems: facts.evidenceProblems?.length ?? 0, extractor: facts.extractor }, semanticHash: project.semanticHash };
     },
   },
 

@@ -294,6 +294,8 @@ test('markdown renders a document of a specification that holds documents, and r
   }
 });
 
+// mergeRecordedResults records a skipped entry as not-run with the current stamp instead of its older pass, records the runs that executed, and keeps a result of a browser test not started only when it was recorded on the same stamp.
+// @evidence verify-skip-records-not-run
 test('a skipped verify run records the evidence as not run instead of keeping an older pass', () => {
   const prior = {
     'browser-login': { outcome: 'pass', ranAt: '2026-11-10T09:00:00.000Z', stamp: 'OLD' },

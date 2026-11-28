@@ -12,6 +12,8 @@ const GOLDENS = path.join(process.cwd(), 'tests', 'conformance', 'goldens');
 /** @type {string[]} */
 let pageErrors = [];
 
+// In Chrome: the page loads the Lean core through src/core/lean.js, lists its functions, gets an error value for an unknown function and reproduces two golden traces.
+// @evidence lean-core-runs-in-browser #
 test.beforeEach(({ page }) => {
   pageErrors = [];
   page.on('pageerror', (e) => pageErrors.push(e.message));

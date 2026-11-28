@@ -30,6 +30,14 @@ function broken(...pairs) {
 }
 const errors = (text) => analyzeSpec(text).diagnostics.filter((d) => d.severity === 'error');
 
+// Nine negative fixtures, each the fixed relay with one fault the runtime cannot produce, each giving exactly fault.unrealisable.
+// @evidence faults-realisable-by-runtime # rule fault.unrealisable
+// The fixed relay without storage.creates gives exactly machine.initial-unreachable.
+// @evidence machine-initial-state-reachable # rule machine.initial-unreachable
+// The fixed relay over a key of type f64 gives exactly machine.singleton-key.
+// @evidence machine-singleton-key # rule machine.singleton-key
+// The fixed relay, whose scenario injects only faults the runtime can produce, has no error.
+// @evidence faults-realisable-by-runtime
 test('the fixed specification has no error', () => {
   assert.deepEqual(errors(FIXED), []);
 });
@@ -68,6 +76,8 @@ for (const [code, what, from, to] of NEGATIVE) {
   });
 }
 
+// storage.createdBy naming a contract, or a not-implemented subject, clears the rule.
+// @evidence machine-initial-state-reachable
 test('a machine whose records a named contract writes or of a component not built yet reaches its initial state', () => {
   assert.deepEqual(errors(broken('"key": "id", "creates": true', '"key": "id", "createdBy": "open-relay"')), []);
   assert.deepEqual(errors(broken('"key": "id", "creates": true', '"key": "id"', '"status": "manual"', '"status": "not-implemented"')), []);
@@ -75,6 +85,8 @@ test('a machine whose records a named contract writes or of a component not buil
   assert.ok(errors(broken('"key": "id", "creates": true', '"key": "id", "createdBy": "relay-svc"')).some((d) => d.code === 'machine.initial-unreachable' || d.code.startsWith('ref.')));
 });
 
+// system.generation.retry changes the backoff sums, and so which delays of an at-least-once event are realisable.
+// @evidence faults-realisable-by-runtime
 test('a stated retry policy decides which delays of an at-least-once event are realisable', () => {
   const policy = '"system": { "id": "relays", "name": "Relays", "generation": { "target": "rust", "retry": { "first": "500 ms", "factor": 2, "max": "1 s" } } }';
   const text = broken('"system": { "id": "relays", "name": "Relays" }', policy);
@@ -91,6 +103,8 @@ test('the runtime default backoff is 1 s, 2 s, 4 s, ... capped at 300 s', () => 
   assert.deepEqual([1, 2, 3, 9, 10].map((n) => retryDelay(m, n, 'ms')), [1000, 3000, 7000, 511000, 811000]);
 });
 
+// The runtime-faults scenario derives a version-2 input whose retry carries the backoff sum and whose duplicate carries its delay, 0 by default.
+// @evidence runtime-fault-kinds-simulated # the new fault kinds lower into a format-2 engine input
 test('the new fault kinds lower into a format-2 engine input: retry by the backoff, duplicate by its delay', () => {
   const m = analyzeSpec(FIXED).model;
   const input = engineInput(m, 'run');
@@ -105,6 +119,8 @@ test('the new fault kinds lower into a format-2 engine input: retry by the backo
   assert.equal(engineInput(noBy, 'run').faults.find((f) => f.id === 'f-notice-twice').by, 0);
 });
 
+// The engine run of the runtime-faults scenario delivers the notice and its duplicate 500 ms later, records the lost and dropped hints, and delays the retried notice by 3 s.
+// @evidence runtime-fault-kinds-simulated
 test('the engine delivers a duplicate twice and drops a lost event and delays a retried one by its backoff', () => {
   const m = analyzeSpec(FIXED).model;
   const tr = runScenario(m, 'run');

@@ -502,6 +502,8 @@ test('checkTrace on an unfinished run holds eventually only if it already occurr
 // Negatives: a trace claim is verified only when a declared negative violates it
 // ---------------------------------------------------------------------------
 
+// A trace claim with a violating negative is verified; with none, with a negative that holds, or with one cut off unfinished, it is inconclusive and says why.
+// @evidence trace-claim-verified-needs-negative
 test('negatives: verified needs a violating negative', () => {
   const ok = tclaim('inv-ok');
   assert.equal(ok.status, 'verified');
@@ -536,6 +538,8 @@ const withClaim = (claimJson) => TRACE_SPEC.replace('"claims": [', `"claims": [ 
 /** @param {string} text */
 const errorCodes = (text) => analyzeSpec(text).diagnostics.filter((d) => d.severity === 'error').map((d) => d.code);
 
+// Each malformed negative is reported with its own diagnostic code; renaming a fault rewrites the negative.
+// @evidence negatives-are-validated
 test('negatives: malformed negatives are validation errors and follow renames', () => {
   /** @param {string} neg */
   const claim = (neg) => withClaim(`{ "id": "bad-neg", "kind": "invariant", "statement": "x", "evaluate": { "method": "state-invariant", "scenarios": ["happy", "lossy"], "expr": "server-fsm.count <= 1", "negatives": ${neg} } }`);

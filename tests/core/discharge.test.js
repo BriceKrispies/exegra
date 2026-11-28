@@ -12,6 +12,8 @@ import { analyzeSpec } from '../../src/core/analyze.js';
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SPEC = fs.readFileSync(path.join(repoRoot, 'tests', 'fixtures', 'discharge-cycle', 'spec.jsonc'), 'utf8');
 
+// The fixture's cycle is one assumption.discharge-cycle error at a, naming a → c1 → b → c2 → a.
+// @evidence discharge-cycle-refused
 test('validation refuses a cycle in the discharge graph', () => {
   const { diagnostics } = analyzeSpec(SPEC);
   const cycles = diagnostics.filter((d) => d.code === 'assumption.discharge-cycle');
@@ -21,6 +23,8 @@ test('validation refuses a cycle in the discharge graph', () => {
   assert.match(cycles[0].message, /a → c1 → b → c2 → a/);
 });
 
+// With c2 no longer citing a, the fixture validates with no error.
+// @evidence discharge-cycle-refused
 test('an acyclic discharge graph is accepted', () => {
   const acyclic = SPEC.replace('"assumptions": ["a"], "discharges": ["b"]', '"discharges": ["b"]');
   assert.notEqual(acyclic, SPEC);

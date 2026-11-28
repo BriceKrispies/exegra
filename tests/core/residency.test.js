@@ -26,6 +26,8 @@ const entity = (list, id) => list.find((e) => e.id === id);
 const errors = (/** @type {any} */ r) => r.diagnostics.filter((/** @type {any} */ d) => d.severity === 'error');
 const show = (/** @type {any} */ r) => r.diagnostics.map((/** @type {any} */ d) => `${d.severity} ${d.code} ${d.message}`).join('\n');
 
+// Regions tenant classes and residency exceptions are entities of the metamodel with sections of their own.
+// @evidence residency-rules-checked
 test('regions tenant classes and residency exceptions are entities of the metamodel with sections of their own', () => {
   for (const [kind, section] of [['region', 'regions'], ['tenantClass', 'tenantClasses'], ['residencyException', 'residencyExceptions']]) {
     assert.ok(metamodel.entities[kind], kind);
@@ -37,6 +39,8 @@ test('regions tenant classes and residency exceptions are entities of the metamo
   assert.deepEqual(metamodel.entities.tenantClass.properties.binds.items.ref, ['record']);
 });
 
+// The Harbourline fixture states BR-04 and BR-05 on the structure and validates with no errors and no warnings.
+// @evidence residency-rules-checked
 test('the Harbourline fixture states BR-04 and BR-05 on the structure and validates with no errors and no warnings', () => {
   const r = analyzeSpec(spec());
   assert.deepEqual(r.diagnostics.filter((/** @type {any} */ d) => d.severity !== 'info').map((/** @type {any} */ d) => `${d.code} ${d.message}`), []);
@@ -70,12 +74,44 @@ const RULES = [
 ];
 
 for (const [title, code, at, mutate] of RULES) {
+  // Residency: a copy on a global holder with no exception is reported once as residency.copy-outside at copies.3.heldBy.
+  // @evidence residency-rules-checked # residency: a copy on a global holder with no exception is reported once as residency.copy-outside at copies.3.heldBy
+  // Residency: a copy whose exception has expired is reported once as residency.copy-outside at copies.3.heldBy.
+  // @evidence residency-rules-checked # residency: a copy whose exception has expired is reported once as residency.copy-outside at copies.3.heldBy
+  // Residency: a copy whose exception allows only a region its global holder is not confined to is reported once as residency.copy-outside at copies.3.heldBy.
+  // @evidence residency-rules-checked # residency: a copy whose exception allows only a region its global holder is not confined to is reported once as residency.copy-outside at copies.3.heldBy
+  // Residency: a bound record owned by a global component is reported once as residency.record-outside at records.2.owner.
+  // @evidence residency-rules-checked # residency: a bound record owned by a global component is reported once as residency.record-outside at records.2.owner
+  // Residency: a flow of attachments to a sandbox fixed in one region is reported once as residency.flow-outside at relationships.0.to.
+  // @evidence residency-rules-checked # residency: a flow of attachments to a sandbox fixed in one region is reported once as residency.flow-outside at relationships.0.to
+  // Residency: a holder of bound data with no placement is reported once as residency.placement-missing at components.2.placement.
+  // @evidence residency-rules-checked # residency: a holder of bound data with no placement is reported once as residency.placement-missing at components.2.placement
+  // Residency: a per-region holder with no instance in a provisioned region is reported once as residency.region-uncovered at components.6.regions.
+  // @evidence residency-rules-checked # residency: a per-region holder with no instance in a provisioned region is reported once as residency.region-uncovered at components.6.regions
+  // Residency: a global component that names regions is reported once as component.placement-regions at components.5.regions.
+  // @evidence residency-rules-checked # residency: a global component that names regions is reported once as component.placement-regions at components.5.regions
+  // Residency: a tenant class selected by both a flag and a plan is reported once as tenant-class.selector at tenantClasses.0.plan.
+  // @evidence residency-rules-checked # residency: a tenant class selected by both a flag and a plan is reported once as tenant-class.selector at tenantClasses.0.plan
+  // Residency: a tenant class provisioned in no region is reported once as tenant-class.provisioned-in at tenantClasses.0.provisionedIn.
+  // @evidence residency-rules-checked # residency: a tenant class provisioned in no region is reported once as tenant-class.provisioned-in at tenantClasses.0.provisionedIn
+  // Residency: an exception naming both a copy and a flow is reported once as residency.exception-target at residencyExceptions.0.
+  // @evidence residency-rules-checked # residency: an exception naming both a copy and a flow is reported once as residency.exception-target at residencyExceptions.0
+  // Residency: an exception for a copy of no bound record is reported once as residency.exception-target at residencyExceptions.0.copy.
+  // @evidence residency-rules-checked # residency: an exception for a copy of no bound record is reported once as residency.exception-target at residencyExceptions.0.copy
+  // Residency: a bounded exception with no purge obligation is reported once as residency.exception-purge at residencyExceptions.0.
+  // @evidence residency-rules-checked # residency: a bounded exception with no purge obligation is reported once as residency.exception-purge at residencyExceptions.0
+  // Residency: an exception whose longest duration is not a duration is reported once as residency.exception-duration at residencyExceptions.0.maxDuration.
+  // @evidence residency-rules-checked # residency: an exception whose longest duration is not a duration is reported once as residency.exception-duration at residencyExceptions.0.maxDuration
+  // Residency: a renewal window not shorter than the longest duration is reported once as residency.exception-renewal at residencyExceptions.0.renewalWindow.
+  // @evidence residency-rules-checked # residency: a renewal window not shorter than the longest duration is reported once as residency.exception-renewal at residencyExceptions.0.renewalWindow
   test(`residency: ${title} is reported once as ${code} at ${at}`, () => {
     const r = analyzeSpec(spec(/** @type {any} */ (mutate)));
     assert.deepEqual(errors(r).map((/** @type {any} */ d) => [d.code, d.path.join('.')]), [[code, at]], show(r));
   });
 }
 
+// A fixed holder inside the provisioned regions is accepted for provisioned-regions confinement and refused for home.
+// @evidence residency-rules-checked
 test('a fixed holder inside the provisioned regions is accepted for provisioned-regions confinement and refused for home', () => {
   const fixed = (/** @type {any} */ d) => { Object.assign(entity(d.components, 'rendition-sandbox'), { placement: 'fixed', regions: ['eu-central', 'ca-central'] }); };
   const regional = analyzeSpec(spec((/** @type {any} */ d) => { fixed(d); d.tenantClasses[0].confinement = 'provisioned-regions'; }));
@@ -84,11 +120,15 @@ test('a fixed holder inside the provisioned regions is accepted for provisioned-
   assert.deepEqual(errors(home).map((/** @type {any} */ d) => d.code), ['residency.flow-outside'], show(home));
 });
 
+// A tenant class with confinement none confines nothing.
+// @evidence residency-rules-checked
 test('a tenant class with confinement none confines nothing', () => {
   const r = analyzeSpec(spec((/** @type {any} */ d) => { d.residencyExceptions = []; d.tenantClasses[0].confinement = 'none'; entity(d.components, 'search-index').placement = 'global'; }));
   assert.deepEqual(errors(r), [], show(r));
 });
 
+// Integrity rules read regions and placements and follow carried data through a recursive relation.
+// @evidence residency-rules-checked
 test('integrity rules read regions and placements and follow carried data through a recursive relation', () => {
   const clean = analyzeSpec(spec());
   const before = evaluateIntegrity(/** @type {any} */ (clean.model));

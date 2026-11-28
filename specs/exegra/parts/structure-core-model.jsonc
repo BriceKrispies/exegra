@@ -878,7 +878,6 @@
       },
       "unknowns": [
         "Integrity rules cannot read derived interactions yet: the rule language quantifies over entities and stores no witnesses, so the derived tuples are read by claims, views and the command line only (WG-5709).",
-        "The invariants (lift functoriality with coarsening, absence transfer, boundary characterisation, reachability and acyclicity transfer, recoverability, incremental equals full re-derivation) are checked by property tests and by the abstraction-invariants claims on this model, not proved in Lean (WG-5710).",
         "Level-bound claim verdicts are decided here in JavaScript, outside the verified kernel of tag verdict-kernel; whether the derivation joins that kernel is part of WG-4785's scope."
       ]
     },

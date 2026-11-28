@@ -24,6 +24,8 @@ test('a node reference is answered from the recorded tests it matches', () => {
   assert.equal(nodeOutcome(doc, 'tests/core/a.test.js#pars|needs lake')?.outcome, 'skipped', 'a match part of which skipped is not a pass');
 });
 
+// A recorded file with one passing and one skipped test answers a whole-file reference with skipped, naming how many matched tests did not execute.
+// @evidence test-evidence-skip-aware
 test('a whole-file reference to a file with a self-skipping test is not a pass', () => {
   const doc = nodeDoc({
     'tests/core/a.test.js': { fileOutcome: 'pass', tests: [t('parses text', 'pass'), t('needs lake', 'skipped')] },
@@ -100,6 +102,8 @@ test('the tree stamp follows content and untracked files and generated outputs b
   }
 });
 
+// An outcome file stamped with the current tree answers a reference; with another stamp it answers nothing. Companion tests cover a reference matching no recorded test, failures, skipped tests, mixed matches and the stamp itself.
+// @evidence verify-reuses-fresh-outcomes-only
 test('outcomes are used only while the tree is the one they ran on', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'exegra-reuse-'));
   try {

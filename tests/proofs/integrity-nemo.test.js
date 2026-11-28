@@ -202,6 +202,8 @@ function rng(seed) {
   };
 }
 
+// Every relation of the fixture translated to Nemo rules; nmo derives the JavaScript tables.
+// @evidence integrity-relations-agree-with-lean-and-nemo
 test('Nemo derives the same relations as the JavaScript evaluator on the relations fixture', (t) => {
   if (!fs.existsSync(NMO)) { t.skip(NO_NEMO); return; }
   const project = new Project({ specText: FIXTURE });
@@ -293,6 +295,8 @@ function randomSpec(rand) {
   };
 }
 
+// On 40 seeded random graphs with random stratified programs (closures, mutual recursion, negation of lower strata) nmo derives the JavaScript tables.
+// @evidence integrity-relations-agree-with-lean-and-nemo
 test('Nemo derives the same relations as the JavaScript evaluator on seeded random graphs and stratified programs', (t) => {
   if (!fs.existsSync(NMO)) { t.skip(NO_NEMO); return; }
   const rand = rng(52630);

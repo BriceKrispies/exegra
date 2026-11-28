@@ -18,6 +18,8 @@ const reply = (attempt,outcome) => ({ kind:'reply',attempt,outcome });
 const read = value => ({kind:'stored', ...scope, revision:'8', value});
 const verify = (...obs) => checkEditHistory(model, capture(obs));
 
+// The replay rejects a crossed reply or inconsistent stored value, accepts either valid serial order and distinguishes witnessed reply loss from incomplete capture.
+// @evidence edit-history-checks-observers #
 test('captured replies and durable state agree with either order only when their identities agree', () => {
   const a = reply('alice','accepted'), b = reply('bob','conflict');
   assert.deepEqual(verify(a,b,read('spring')).orders, [['alice','bob']]);

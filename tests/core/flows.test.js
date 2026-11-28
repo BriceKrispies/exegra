@@ -61,6 +61,10 @@ function setup(scenarioId = 'round-trip', viewOptions = {}) {
   return { model, trace, scene };
 }
 
+// Sender and receivers of every step of a scenario come from the trace; a scenario stimulus comes from outside.
+// @evidence sim-flow-matches-trace #
+// Paths follow the edge between the drawn nodes in either direction; an unconnected pair is undeclared, a relationship the view hides is unshown, a collapsed subsystem stands for its members, a dropped event is lost.
+// @evidence sim-flow-never-borrows-edges #
 test('each step names its sender from the trace and its receivers from the behaviors that fired', () => {
   const { model, trace } = setup();
   const flows = trace.steps.map((s) => stepFlow(model, s));

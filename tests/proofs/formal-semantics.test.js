@@ -57,6 +57,10 @@ function codeOnly(src) {
 /** @type {Map<string, number>} */
 const OPEN_OBLIGATIONS = new Map();
 
+// The Lean executable reproduces every golden trace; the native Rust engine and the Lean executable give identical traces on every golden input and on 150 seeded generated inputs covering every fault kind, run-time and parse errors, step limits and simultaneous events. Skipped, with a message, when a binary is not built.
+// @evidence engine-matches-formal-semantics #
+// Builds formal/ with lake: every theorem of formal/Exegra/ type-checks, and the #guard_msgs axiom checks fail the build on sorryAx or a non-standard axiom; no Lean source uses sorry or admit or declares an axiom. Skipped, with a message, when lake is not on the PATH.
+// @evidence formal-semantics-properties-proved
 test('the Lean proofs build with no sorry and only standard axioms', (t) => {
   const probe = spawnSync('lake', ['--version'], { cwd: FORMAL, encoding: 'utf8', shell: process.platform === 'win32', windowsHide: true });
   if (probe.status !== 0) {

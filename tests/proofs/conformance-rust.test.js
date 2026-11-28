@@ -24,6 +24,8 @@ const rustGoldens = () => {
   return listGoldens().filter((g) => !g.refused && !exp[`golden ${g.source}/${g.name}`]);
 };
 
+// The Rust engine as WebAssembly, and as the native binary when it is built, reproduces every golden trace of the conformance suite.
+// @evidence engines-agree-on-traces #
 test('the Rust WebAssembly engine reproduces every golden trace and agrees with the Lean engine byte for byte', (t) => {
   if (!rustEngineBuilt()) {
     t.skip('src/engine/pkg is not built (npm run build:engine)');

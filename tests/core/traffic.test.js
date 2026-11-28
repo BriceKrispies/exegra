@@ -16,6 +16,8 @@ import { exegraDevServer, changeTrace, hashFiles } from '../../tools/vite-plugin
 import { hashText } from '../../tools/workspace.js';
 import { sha256Hex } from '../../src/core/sha256.js';
 
+// A recorder with a limit of 3 keeps the last 3 events with their sequence numbers, counts the dropped ones, copies payloads, and forReplay carries no wall-clock time.
+// @evidence traffic-stream-bounded-and-logical
 test('the recorder keeps a bounded stream with logical sequence numbers and keeps wall-clock times out of the replay', () => {
   let clock = 1000;
   const r = createTrafficRecorder({ limit: 3, clock: () => (clock += 7) });
@@ -40,6 +42,8 @@ test('the recorder keeps a bounded stream with logical sequence numbers and keep
   assert.equal(r.forReplay().at(-1)?.inferred, true);
 });
 
+// The browser's sha-256 equals the workspace hash for empty, ASCII, non-ASCII and large texts.
+// @evidence traffic-producers-name-spec-events
 test('sha256Hex agrees with the workspace hash', () => {
   for (const text of ['', 'abc', 'é€😀'.repeat(40), 'x'.repeat(100_003)]) {
     assert.equal(sha256Hex(text), crypto.createHash('sha256').update(text, 'utf8').digest('hex'));
@@ -68,6 +72,8 @@ const traceOf = (res) => JSON.parse(decodeURIComponent(res.headers.get('x-exegra
 /** @param {number} requestId @param {any} [body] */
 const headers = (requestId, body) => ({ 'x-exegra-client': '1', 'x-exegra-request-id': String(requestId), ...(body ? { 'Content-Type': 'application/json' } : {}) });
 
+// Against the real middleware: list, read, write, conflict and a missing project each return their workspace events and answer in order with the request id; a request without an id gets none; changeTrace tells own writes from external edits.
+// @evidence traffic-producers-name-spec-events
 test('the development server returns its own events with each answer stamped with the request id', () => withServer(async (base) => {
   const list = await fetch(`${base}/projects`, { headers: headers(1) });
   assert.deepEqual(traceOf(list).map((/** @type {any} */ e) => [e.id, e.payload.requestId]), [['ws-list', 1], ['ws-list-done', 1], ['list-projects-ok', 1]]);
@@ -107,6 +113,8 @@ test('the development server returns its own events with each answer stamped wit
   assert.equal(hashFiles({ b: '2', a: '1' }), sha256Hex(JSON.stringify({ a: '1', b: '2' })));
 }));
 
+// With a stand-in Worker: posts, the termination of a waiting worker, the reply with its generation and a refusal are recorded as the contract's events.
+// @evidence traffic-producers-name-spec-events
 test('the engine runner records the worker messages with the scenario standing for input and trace', async () => {
   /** @type {any[]} */
   const workers = [];

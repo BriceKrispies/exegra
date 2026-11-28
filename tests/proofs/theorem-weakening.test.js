@@ -70,6 +70,8 @@ function leanModel(theorem, supersedes) {
   return model;
 }
 
+// The five counter_le variants checked by Lean.
+// @evidence admit-refuses-theorem-weakening # a weakened theorem is refused
 test('a weakened theorem is refused unless --accept names the claim; a proof change, a strengthening with its implication and a dropped conjunct are admitted', { skip: noLean }, () => {
   const names = ['orig', 'bounded', 'reproved', 'unbounded_again', 'with_axiom', 'stronger'];
   const requests = names.map((n) => ({

@@ -18,7 +18,7 @@ import { semanticHash } from './hash.js';
 import { OPERATIONS, OpError, Tx, parseLayout, EMPTY_LAYOUT } from './operations.js';
 import { own } from './own.js';
 import { newErrorViolations, describeCounterexample } from './integrity.js';
-import { attachExtracted, attachObserved, extractedChange, stripExtracted } from './extraction.js';
+import { attachExtracted, attachObserved, extractedChange, stripExtracted, derivedEvidenceDiagnostics } from './extraction.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Diagnostic} Diagnostic */
@@ -91,8 +91,8 @@ export class Project {
   #derive(analysis) {
     const a = analysis ?? this.#analyze(this.specText);
     this.model = this.#withFacts(a.model);
-    this.diagnostics = a.diagnostics;
-    this.errorCount = a.errorCount;
+    this.#analysisDiagnostics = { diagnostics: a.diagnostics, errorCount: a.errorCount };
+    this.#factDiagnostics();
     if ('baseHash' in a) {
       this.baseModel = a.baseModel;
       this.semanticHash = a.baseHash;
@@ -105,6 +105,16 @@ export class Project {
       this.layeredHash = this.semanticHash;
     }
     this.layout = parseLayout(this.layoutText);
+  }
+
+  /** The diagnostics of the analysis of the specification text, before the facts' are added. */
+  #analysisDiagnostics = { diagnostics: /** @type {Diagnostic[]} */ ([]), errorCount: 0 };
+
+  /** The analysis's diagnostics followed by those of the evidence the facts derive from tests (WG-5705). */
+  #factDiagnostics() {
+    const extra = derivedEvidenceDiagnostics(this.model);
+    this.diagnostics = extra.length ? [...this.#analysisDiagnostics.diagnostics, ...extra] : this.#analysisDiagnostics.diagnostics;
+    this.errorCount = this.#analysisDiagnostics.errorCount + extra.filter((d) => d.severity === 'error').length;
   }
 
   /** The model with this project's extracted and observed facts attached. @param {Model|null} model */
@@ -125,6 +135,7 @@ export class Project {
     if (facts.extracted !== undefined) this.extracted = facts.extracted;
     if (facts.observed !== undefined) this.observed = facts.observed;
     this.model = this.#withFacts(before ? stripExtracted(before) : before);
+    this.#factDiagnostics();
     return { before, after: this.model, affected: before && this.model ? extractedChange(before, this.model) : [] };
   }
 

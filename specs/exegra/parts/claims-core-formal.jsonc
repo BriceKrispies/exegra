@@ -2178,92 +2178,357 @@
           "Exegra.Boundary.Rel2"
         ]
       }
-    }
-  ],
-  "evidence": [
-    {
-      "id": "ev-formal-proofs",
-      "claim": "formal-semantics-properties-proved",
-      "kind": "test",
-      "ref": "tests/proofs/formal-semantics.test.js#the Lean proofs build with no sorry and only standard axioms",
-      "description": "Builds formal/ with lake: every theorem of formal/Exegra/ type-checks, and the #guard_msgs axiom checks fail the build on sorryAx or a non-standard axiom; no Lean source uses sorry or admit or declares an axiom. Skipped, with a message, when lake is not on the PATH."
     },
     {
-      "id": "ev-formal-explore",
-      "claim": "exhaustive-exploration-sound",
-      "kind": "test",
-      "ref": "tests/proofs/formal-explore.test.js",
-      "description": "exegra prove on the race fixture: the lost update is a counterexample accepted by Lean, its scripted run passes the trace check, the atomic store holds for all N configurations with the same N on two runs, and its precedes claim holds on every complete run. Skipped, with a message, when lake is not on the PATH."
+      "id": "boundary-comparison-up-to-commutation",
+      "kind": "invariant",
+      "statement": "The comparison of two boundary traces up to the order of independent steps is sound: a reordering it returns is obtained from the abstract trace by swapping adjacent independent steps, and it is related to the concrete trace position by position.",
+      "rationale": "WG-5734 (in WG-5740): the certificate engine.refineBoundary gives by commutation rests on this theorem.",
+      "subjects": [
+        "formal-semantics",
+        "refinement-checker"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Boundary.commMatch_sound",
+        "about": [
+          "Exegra.Boundary.commMatch",
+          "Exegra.Boundary.Rel2"
+        ]
+      }
     },
     {
-      "id": "ev-formal-explore-bounded",
-      "claim": "invariants-proved-within-bounds",
-      "kind": "test",
-      "ref": "tests/proofs/formal-explore.test.js#the atomic store is verified for every reachable configuration",
-      "description": "exegra prove reports the atomic store's invariant as holding with method lean-exhaustive, the bound and N, after Lean accepted the theorem in the generated file. Skipped, with a message, when lake is not on the PATH."
+      "id": "boundary-commutation-keeps-sequence-verdicts",
+      "kind": "invariant",
+      "statement": "Every pair of boundary traces the comparison as sequences relates is matched by the comparison up to commutation, unreordered: no certificate of the earlier check is lost.",
+      "rationale": "WG-5734 (in WG-5740): the commutation-aware comparison keeps the current verdicts.",
+      "subjects": [
+        "formal-semantics",
+        "refinement-checker"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Boundary.commMatch_of_rel2",
+        "about": [
+          "Exegra.Boundary.commMatch",
+          "Exegra.Boundary.Rel2"
+        ]
+      }
     },
     {
-      "id": "ev-formal-explore-temporal",
-      "claim": "temporal-claims-checked-on-all-runs",
-      "kind": "test",
-      "ref": "tests/proofs/formal-explore.test.js#temporal claims: eventually holds",
-      "description": "exegra prove on the race fixture: an eventually holds on every path; an eventually fails with a counterexample run that drops the event and ends without it; a precedes that the scripted run satisfies is violated by a run that reorders simultaneous events. Skipped, with a message, when lake is not on the PATH."
+      "id": "refinement-exploration-sound",
+      "kind": "invariant",
+      "statement": "The certificate of the refinement explorer is sound: when its search of the product of the members' system with sets of the abstraction's states ends with holds, every run of the members from an initial state shows a boundary trace that a run of the abstraction, from a compatible initial state, shows as well (trace inclusion on the boundary).",
+      "rationale": "WG-5734 (in WG-5740) criterion 2: the Lean soundness theorem of the explorer's certificate.",
+      "subjects": [
+        "formal-semantics",
+        "refinement-checker"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Boundary.explore_holds",
+        "about": [
+          "Exegra.Boundary.explore",
+          "Exegra.Boundary.Rel2"
+        ]
+      }
     },
     {
-      "id": "ev-lean-boundary",
-      "claim": "lean-boundary-errors-are-values",
-      "kind": "test",
-      "ref": "tests/core/lean.test.js",
-      "description": "Calls through src/core/lean.js: the registry lists engine.run, an unknown function, a malformed request and refused arguments come back as errors, and a run returns the trace the engine returns."
+      "id": "refinement-exploration-covers-calculus",
+      "kind": "invariant",
+      "statement": "On the behaviour calculus, a certificate of the refinement explorer covers every interleaving, fault mask and draw: every run of the members' calculus system from any fault mask shows a boundary trace (events, payloads, times under the time scale) that a run of the abstraction's system with the same active faults shows.",
+      "rationale": "WG-5734 (in WG-5740) criterion 2: engine.refineExplore instantiates the explorer with the calculus's complete enumeration of its transition system (Exec.successors).",
+      "subjects": [
+        "formal-semantics",
+        "refinement-checker"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Boundary.exploreB_holds",
+        "about": [
+          "Exegra.Boundary.exploreB",
+          "Exegra.Boundary.calcLts",
+          "Exegra.Boundary.maskCompat"
+        ]
+      }
     },
     {
-      "id": "ev-lean-core-browser",
-      "claim": "lean-core-runs-in-browser",
-      "kind": "test",
-      "ref": "tests/browser/lean-core.spec.js",
-      "description": "In Chrome: the page loads the Lean core through src/core/lean.js, lists its functions, gets an error value for an unknown function and reproduces two golden traces."
+      "id": "structure-p1-alpha-unique",
+      "kind": "invariant",
+      "statement": "For an antichain cut, the abstraction map sends an element to the block among its ancestors-or-self whenever there is one: alpha_C is well defined (P1).",
+      "rationale": "WG-5699 (in WG-5740), P1. Proved over the Lean definitions of laminar hierarchies, cuts, witnessed lifting, boundaries and fibres (formal/Exegra/Multiscale.lean), which agree with M3's executable derivation on every golden cut (tests/core/abstraction-lean.test.js).",
+      "subjects": [
+        "formal-semantics",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Multiscale.p1_alpha_unique",
+        "about": [
+          "Exegra.Multiscale.alpha",
+          "Exegra.Multiscale.Antichain",
+          "Exegra.Multiscale.Hier.ancs"
+        ]
+      }
     },
     {
-      "id": "ev-explore-eight-clients",
-      "claim": "explorer-counts-calculus-states",
-      "kind": "test",
-      "ref": "tests/proofs/formal-explore.test.js#eight independent clients explore exactly 256 states",
-      "description": "The invariant of the eight-client scenario holds with 256 states and no faults."
+      "id": "structure-p1-alpha-total",
+      "kind": "invariant",
+      "statement": "The abstraction map is total: it always sends an element to one of its ancestors-or-self (P1).",
+      "rationale": "WG-5699 (in WG-5740), P1. Proved over the Lean definitions of laminar hierarchies, cuts, witnessed lifting, boundaries and fibres (formal/Exegra/Multiscale.lean), which agree with M3's executable derivation on every golden cut (tests/core/abstraction-lean.test.js).",
+      "subjects": [
+        "formal-semantics",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Multiscale.p1_alpha_total",
+        "about": [
+          "Exegra.Multiscale.alpha",
+          "Exegra.Multiscale.Hier.ancs"
+        ]
+      }
     },
     {
-      "id": "ev-explore-incomplete-bound",
-      "claim": "explorer-incomplete-says-why",
-      "kind": "test",
-      "ref": "tests/proofs/formal-explore.test.js#a counter to 100 with an invariant at 50 and bound 20 is incomplete for its bound and never holds",
-      "description": "The counter's invariant is incomplete with reason bound and is not described as holding for every reachable configuration."
+      "id": "structure-p2-cut-compose",
+      "kind": "invariant",
+      "statement": "Cut refinement composes: for a cut C finer than an antichain cut C', an element at or below C has alpha_C' equal to alpha_C' of its block at C (P2).",
+      "rationale": "WG-5699 (in WG-5740), P2. Proved over the Lean definitions of laminar hierarchies, cuts, witnessed lifting, boundaries and fibres (formal/Exegra/Multiscale.lean), which agree with M3's executable derivation on every golden cut (tests/core/abstraction-lean.test.js).",
+      "subjects": [
+        "formal-semantics",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Multiscale.p2_cut_compose",
+        "about": [
+          "Exegra.Multiscale.alpha",
+          "Exegra.Multiscale.Refines",
+          "Exegra.Multiscale.Below",
+          "Exegra.Multiscale.Antichain"
+        ]
+      }
     },
     {
-      "id": "ev-prove-certificate",
-      "claim": "prove-invariants-certified",
-      "kind": "test",
-      "ref": "tests/proofs/formal-explore.test.js#a holds result carries a closed-set certificate Lean accepts and Lean refuses it without one of its states",
-      "description": "The certificate of b.y == 0 is accepted; with its first state removed, Lean refuses the file."
+      "id": "structure-p3-lift-functorial",
+      "kind": "invariant",
+      "statement": "Lifting is functorial: the witnesses at a coarser cut C' of an interaction, with kinds coarsened by k' after k, are exactly the facts that witness at C an interaction whose blocks map to its blocks and whose kind coarsens to its kind (P3).",
+      "rationale": "WG-5699 (in WG-5740), P3, including kind coarsening. Proved over the Lean definitions of laminar hierarchies, cuts, witnessed lifting, boundaries and fibres (formal/Exegra/Multiscale.lean), which agree with M3's executable derivation on every golden cut (tests/core/abstraction-lean.test.js).",
+      "subjects": [
+        "formal-semantics",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Multiscale.p3_lift_functorial",
+        "about": [
+          "Exegra.Multiscale.witnesses",
+          "Exegra.Multiscale.alpha"
+        ]
+      }
     },
     {
-      "id": "ev-prove-blinker-liveness",
-      "claim": "prove-liveness-under-fairness",
-      "kind": "test",
-      "ref": "tests/proofs/formal-explore.test.js#the F4 blinker: FG on is violated by a lasso and GF on holds under weak fairness of turn-on",
-      "description": "The FG claim reads violated: lasso off -> on -> off; the GF claim reads holds under weak fairness of turn-on, with turn-on-fair as its open assumption."
+      "id": "structure-p3-summary-hom",
+      "kind": "invariant",
+      "statement": "Summaries in a commutative monoid are additive over a disjoint split of the witnesses, so the summary of a coarse interaction is the sum of the summaries of the finer interactions it unites (P3).",
+      "rationale": "WG-5699 (in WG-5740), P3. Proved over the Lean definitions of laminar hierarchies, cuts, witnessed lifting, boundaries and fibres (formal/Exegra/Multiscale.lean), which agree with M3's executable derivation on every golden cut (tests/core/abstraction-lean.test.js).",
+      "subjects": [
+        "formal-semantics",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Multiscale.p3_summary_hom",
+        "about": [
+          "Exegra.Multiscale.summary"
+        ]
+      }
     },
     {
-      "id": "ev-prove-zeno-lasso",
-      "claim": "prove-zeno-lasso-not-proved",
-      "kind": "test",
-      "ref": "tests/proofs/formal-explore.test.js#a zero-delay self-loop gives a Zeno lasso and its liveness claims are not proved",
-      "description": "The waiter's GF claim is violated by a lasso flagged zeno, never proved."
+      "id": "structure-p3-coarsen-union",
+      "kind": "invariant",
+      "statement": "Kind coarsening composes with lifting: a fact witnesses an interaction of kind k under k' after k exactly when it witnesses, under k, an interaction of a kind k' sends to k (P3).",
+      "rationale": "WG-5699 (in WG-5740), P3, kind coarsening. Proved over the Lean definitions of laminar hierarchies, cuts, witnessed lifting, boundaries and fibres (formal/Exegra/Multiscale.lean), which agree with M3's executable derivation on every golden cut (tests/core/abstraction-lean.test.js).",
+      "subjects": [
+        "formal-semantics",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Multiscale.p3_coarsen_union",
+        "about": [
+          "Exegra.Multiscale.witnesses"
+        ]
+      }
     },
     {
-      "id": "ev-decimal-literal",
-      "claim": "numbers-are-exact-rationals",
-      "kind": "test",
-      "ref": "tests/core/formal-elab.test.js#a decimal literal",
-      "description": "Decimal literals and initial values elaborate; 0.1 + 0.2 == 0.3 is true on the calculus path and 0.1 + 0.2 is written as 0.3; the expression-showcase golden input with inexact := 0.1 + 0.2 and quo := a / b is accepted."
+      "id": "structure-p4-absence-transfer",
+      "kind": "invariant",
+      "statement": "Absence transfers downward: when no interaction between blocks X and Y has a kind of class c, no base fact from a member of X to a member of Y has a kind of class c (P4).",
+      "rationale": "WG-5699 (in WG-5740), P4. Proved over the Lean definitions of laminar hierarchies, cuts, witnessed lifting, boundaries and fibres (formal/Exegra/Multiscale.lean), which agree with M3's executable derivation on every golden cut (tests/core/abstraction-lean.test.js).",
+      "subjects": [
+        "formal-semantics",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Multiscale.p4_absence_class",
+        "about": [
+          "Exegra.Multiscale.witnesses",
+          "Exegra.Multiscale.alpha"
+        ]
+      }
+    },
+    {
+      "id": "structure-p5-boundary-interface",
+      "kind": "invariant",
+      "statement": "The derived interface of a block is a function of its boundary alone: two cuts (or fact bases) that give a block the same boundary give it the same interface (P5).",
+      "rationale": "WG-5699 (in WG-5740), P5. Proved over the Lean definitions of laminar hierarchies, cuts, witnessed lifting, boundaries and fibres (formal/Exegra/Multiscale.lean), which agree with M3's executable derivation on every golden cut (tests/core/abstraction-lean.test.js).",
+      "subjects": [
+        "formal-semantics",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Multiscale.p5_boundary_determines_interface",
+        "about": [
+          "Exegra.Multiscale.interface",
+          "Exegra.Multiscale.out",
+          "Exegra.Multiscale.inn"
+        ]
+      }
+    },
+    {
+      "id": "structure-p5-boundary-compose",
+      "kind": "invariant",
+      "statement": "Boundaries compose with cut refinement: the outgoing boundary of a block at C' is the facts leaving one of its finer blocks at C whose target block at C' is another (P5).",
+      "rationale": "WG-5699 (in WG-5740), P5. Proved over the Lean definitions of laminar hierarchies, cuts, witnessed lifting, boundaries and fibres (formal/Exegra/Multiscale.lean), which agree with M3's executable derivation on every golden cut (tests/core/abstraction-lean.test.js).",
+      "subjects": [
+        "formal-semantics",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Multiscale.p5_boundary_compose",
+        "about": [
+          "Exegra.Multiscale.out",
+          "Exegra.Multiscale.alpha"
+        ]
+      }
+    },
+    {
+      "id": "structure-p6-reach-up",
+      "kind": "invariant",
+      "statement": "Reachability transfers upward: a base path from a to b gives a path in the quotient from the block of a to the block of b (P6).",
+      "rationale": "WG-5699 (in WG-5740), P6. Proved over the Lean definitions of laminar hierarchies, cuts, witnessed lifting, boundaries and fibres (formal/Exegra/Multiscale.lean), which agree with M3's executable derivation on every golden cut (tests/core/abstraction-lean.test.js).",
+      "subjects": [
+        "formal-semantics",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Multiscale.p6_reach_up",
+        "about": [
+          "Exegra.Multiscale.Qrel",
+          "Exegra.Multiscale.Edge",
+          "Exegra.Multiscale.alpha"
+        ]
+      }
+    },
+    {
+      "id": "structure-p6-acyclic-down",
+      "kind": "invariant",
+      "statement": "Acyclicity transfers as layering: when the quotient has no cycle, every base cycle lies inside a single block (P6).",
+      "rationale": "WG-5699 (in WG-5740), P6. Proved over the Lean definitions of laminar hierarchies, cuts, witnessed lifting, boundaries and fibres (formal/Exegra/Multiscale.lean), which agree with M3's executable derivation on every golden cut (tests/core/abstraction-lean.test.js).",
+      "subjects": [
+        "formal-semantics",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Multiscale.p6_acyclic_down",
+        "about": [
+          "Exegra.Multiscale.Qrel",
+          "Exegra.Multiscale.Edge",
+          "Exegra.Multiscale.alpha"
+        ]
+      }
+    },
+    {
+      "id": "structure-p6-spurious-path",
+      "kind": "invariant",
+      "statement": "The converse of reachability transfer fails: there is a hierarchy, cut and fact base whose quotient has a path X to Y to Z while no member of X reaches a member of Z in the base (P6, the spurious path).",
+      "rationale": "WG-5699 (in WG-5740), P6, the spurious-path counterexample. Proved over the Lean definitions of laminar hierarchies, cuts, witnessed lifting, boundaries and fibres (formal/Exegra/Multiscale.lean), which agree with M3's executable derivation on every golden cut (tests/core/abstraction-lean.test.js).",
+      "subjects": [
+        "formal-semantics",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Multiscale.p6_spurious_path",
+        "about": [
+          "Exegra.Multiscale.Qrel",
+          "Exegra.Multiscale.Edge",
+          "Exegra.Multiscale.alpha"
+        ]
+      }
+    },
+    {
+      "id": "structure-p7-recover",
+      "kind": "invariant",
+      "statement": "Decompose-then-recompose is the identity on the fact base: a fact is in the base exactly when it is in the fibre of its block or in the witness list of its interaction (P7).",
+      "rationale": "WG-5699 (in WG-5740), P7. Proved over the Lean definitions of laminar hierarchies, cuts, witnessed lifting, boundaries and fibres (formal/Exegra/Multiscale.lean), which agree with M3's executable derivation on every golden cut (tests/core/abstraction-lean.test.js).",
+      "subjects": [
+        "formal-semantics",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Multiscale.p7_recover",
+        "about": [
+          "Exegra.Multiscale.fibre",
+          "Exegra.Multiscale.witnesses",
+          "Exegra.Multiscale.alpha"
+        ]
+      }
+    },
+    {
+      "id": "structure-p13-incremental",
+      "kind": "invariant",
+      "statement": "Incremental re-derivation equals full re-derivation: recomputing only the interactions whose keys a removed or added fact touches, and keeping the rest, gives the witness lists of deriving the new fact base from scratch (P13).",
+      "rationale": "WG-5699 (in WG-5740), P13. Proved over the Lean definitions of laminar hierarchies, cuts, witnessed lifting, boundaries and fibres (formal/Exegra/Multiscale.lean), which agree with M3's executable derivation on every golden cut (tests/core/abstraction-lean.test.js).",
+      "subjects": [
+        "formal-semantics",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Multiscale.p13_incremental_list",
+        "about": [
+          "Exegra.Multiscale.incr",
+          "Exegra.Multiscale.witnesses",
+          "Exegra.Multiscale.alpha"
+        ]
+      }
+    },
+    {
+      "id": "structure-p13-incremental-fibre",
+      "kind": "invariant",
+      "statement": "Incremental re-derivation of fibres equals full re-derivation: recomputing only the blocks a removed or added internal fact touches gives the fibres of the new fact base (P13).",
+      "rationale": "WG-5699 (in WG-5740), P13. Proved over the Lean definitions of laminar hierarchies, cuts, witnessed lifting, boundaries and fibres (formal/Exegra/Multiscale.lean), which agree with M3's executable derivation on every golden cut (tests/core/abstraction-lean.test.js).",
+      "subjects": [
+        "formal-semantics",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Multiscale.p13_incremental_fibre_list",
+        "about": [
+          "Exegra.Multiscale.incrFibre",
+          "Exegra.Multiscale.fibre",
+          "Exegra.Multiscale.alpha"
+        ]
+      }
     }
   ]
 }

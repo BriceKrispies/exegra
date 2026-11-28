@@ -209,13 +209,6 @@
       "statement": "Every component states its purpose.",
       "rule": "forall c : component, nonempty c.purpose",
       "rationale": "A component is specified by what it is for; traceability and the generated architecture document read the purpose."
-    },
-    {
-      "id": "tested-claims-name-subjects",
-      "severity": "error",
-      "statement": "Every claim that test evidence supports names what it is about.",
-      "rule": "forall e : evidence where e.kind == \"test\", forall c in e.claim, nonempty c.subjects",
-      "rationale": "Selecting a claim highlights its subjects; a tested claim with none cannot be found from the scene."
     }
   ],
   "hierarchies": [

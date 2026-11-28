@@ -29,6 +29,8 @@ async function open(page) {
 /** @param {import('@playwright/test').Page} page @param {string} id */
 const setView = (page, id) => page.evaluate((v) => /** @type {any} */ (window).__exegra.session.setView(v), id);
 
+// The reader replaces the scene, a link selects its entity, and the scene returns on leaving the view.
+// @evidence reader-links-select-through-session
 test('reader view replaces the scene and its links select entities', { tag: '@full' }, async ({ page }) => {
   await open(page);
   await setView(page, 'reader');
@@ -52,6 +54,8 @@ test('reader view replaces the scene and its links select entities', { tag: '@fu
   await expect(page.locator('#scene-controls')).toBeVisible();
 });
 
+// A committed edit shows on the page.
+// @evidence reader-links-select-through-session
 test('reader page follows an edit of the model', { tag: '@full' }, async ({ page }) => {
   await open(page);
   await setView(page, 'reader');

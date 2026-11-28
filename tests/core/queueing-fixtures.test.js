@@ -25,6 +25,10 @@ import { initEngine, runEngineText } from '../../src/core/engine.js';
 
 const FIXTURE = path.join(REPO_ROOT, 'tests', 'fixtures', 'queueing', 'mm1.json');
 
+// Runs only with EXEGRA_FIXTURES=1 (236 runs of a 90 s horizon, about 7 minutes on the native engine). Recorded 2026-11-17: model-holds, 59/59 runs, sign-test interval [0.7967, 0.8009] inside [0.784, 0.816]; per-run spread 0.7925 / 0.7988 / 0.8096; the twin, the fault set-capacity 2, fails with [0.3983, 0.4005]. A model result on assumed parameters, not evidence about any system.
+// @evidence metrics-reproduce-mm1-utilisation #
+// Runs only with EXEGRA_FIXTURES=1. Recorded 2026-11-17 on the native engine at a 90 s horizon: model-holds, 59/59 runs, sign-test interval [3910.6, 4032.3] us inside [3800, 4200]; per-run spread 3708.1 / 3965.1 / 4443.3 us (the median of per-run means sits about 0.9% below the analytic 4 ms); the twin, the fault replace-demand with a constant 1 ms service (M/D/1), fails with [1968.4, 2004.3] us. A model result, not evidence about any system.
+// @evidence metrics-reproduce-mm1-mean-wait #
 test('M/M/1 fixture: utilisation and mean wait hold in the model, and their twins fail', { skip: process.env.EXEGRA_FIXTURES !== '1' && 'set EXEGRA_FIXTURES=1 to run the queueing fixtures' }, async (t) => {
   const fx = JSON.parse(fs.readFileSync(FIXTURE, 'utf8'));
   /** @type {(text: string) => any} */

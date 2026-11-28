@@ -34,7 +34,9 @@
           "name": "text",
           "type": "string"
         }
-      ]
+      ],
+      "contract": "apply-transaction",
+      "role": "request"
     },
     { "id": "text-edits-computed", "name": "Text edits computed", "description": "Preconditions held and the operation's source-preserving text edits produced a candidate specification text." },
     { "id": "model-parsed", "name": "Candidate model parsed", "description": "The candidate text was parsed into a candidate model." },
@@ -49,10 +51,37 @@
           "name": "text",
           "type": "string"
         }
-      ] },
+      ],
+      "contract": "apply-transaction",
+      "role": "response"
+    },
     { "id": "transaction-rejected", "name": "Transaction rejected", "description": "The transaction was refused; nothing changed." },
-    { "id": "refresh-requested", "name": "Refresh requested", "description": "The session re-evaluates claims, re-projects and re-lays-out the scene for the committed revision.", "payload": [{ "name": "revision", "type": "number" }] },
-    { "id": "projection-refreshed", "name": "Projection refreshed", "description": "The scene for the committed revision was derived and handed to the renderer.", "payload": [{ "name": "revision", "type": "number" }] },
+    {
+      "id": "refresh-requested",
+      "name": "Refresh requested",
+      "description": "The session re-evaluates claims, re-projects and re-lays-out the scene for the committed revision.",
+      "payload": [
+        {
+          "name": "revision",
+          "type": "number"
+        }
+      ],
+      "contract": "project-scene",
+      "role": "request"
+    },
+    {
+      "id": "projection-refreshed",
+      "name": "Projection refreshed",
+      "description": "The scene for the committed revision was derived and handed to the renderer.",
+      "payload": [
+        {
+          "name": "revision",
+          "type": "number"
+        }
+      ],
+      "contract": "project-scene",
+      "role": "response"
+    },
     { "id": "model-published", "name": "Model published", "description": "The session announced the commit to the inspector and the source editor.", "payload": [{ "name": "revision", "type": "number" }] },
     {
       "id": "save-succeeded",
@@ -71,7 +100,10 @@
           "name": "requestId",
           "type": "number"
         }
-      ]
+      ],
+      "contract": "write-file",
+      "role": "response",
+      "correlation": "requestId"
     },
     {
       "id": "save-conflicted",
@@ -117,7 +149,9 @@
           "name": "requestId",
           "type": "number"
         }
-      ]
+      ],
+      "contract": "write-file",
+      "role": "request"
     },
     {
       "id": "write-file-request",
@@ -916,7 +950,9 @@
           "name": "modelHash",
           "type": "string"
         }
-      ]
+      ],
+      "contract": "evaluate-claims",
+      "role": "request"
     },
     {
       "id": "claim-scenarios-run",
@@ -938,7 +974,9 @@
           "name": "modelHash",
           "type": "string"
         }
-      ]
+      ],
+      "contract": "evaluate-claims",
+      "role": "response"
     },
     {
       "id": "recorded-results-adopted",
@@ -1259,6 +1297,10 @@
       "description": "The workspace call: write() returns {ok: false, conflict: true, current} when the current hash differs from the base hash, before writing anything. Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
       "payload": [
         {
+          "name": "code",
+          "type": "'conflict'"
+        },
+        {
           "name": "file",
           "type": "'spec' | 'layout'"
         },
@@ -1274,7 +1316,10 @@
           "name": "requestId",
           "type": "number"
         }
-      ]
+      ],
+      "contract": "write-file",
+      "role": "error",
+      "correlation": "requestId"
     },
     {
       "id": "ws-write-error",
@@ -1534,7 +1579,9 @@
           "name": "scenario",
           "type": "string"
         }
-      ]
+      ],
+      "contract": "run-scenario",
+      "role": "request"
     },
     {
       "id": "engine-run-finished",
@@ -1545,7 +1592,9 @@
           "name": "steps",
           "type": "number"
         }
-      ]
+      ],
+      "contract": "run-scenario",
+      "role": "response"
     },
     {
       "id": "engine-run-failed",
@@ -1746,7 +1795,9 @@
           "name": "scenario",
           "type": "string"
         }
-      ]
+      ],
+      "contract": "run-scenario",
+      "role": "request"
     },
     {
       "id": "worker-terminated",
@@ -1790,7 +1841,9 @@
           "name": "steps",
           "type": "number"
         }
-      ]
+      ],
+      "contract": "run-scenario",
+      "role": "response"
     },
     {
       "id": "sim-run-failed",

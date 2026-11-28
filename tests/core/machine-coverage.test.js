@@ -32,12 +32,16 @@ test('the fixture validates and its one machine is shipped', () => {
   assert.deepEqual(shippedMachines(/** @type {any} */ (a.model)).map((b) => b.id), ['door']);
 });
 
+// The door's items are its five transitions and the true and false outcome of its one guard.
+// @evidence machine-transition-coverage
 test('the items are the transitions and both outcomes of each guard', () => {
   const m = model(FIXTURE);
   const { items } = machineItems(m, m.entities.get('door'));
   assert.deepEqual(items, ['t:t-open', 'g:t-open:true', 'g:t-open:false', 't:t-open-else', 't:t-close', 't:t-lock', 't:t-unjam']);
 });
 
+// A fired otherwise transition marks the earlier guard of its state and event false; an event ignored as guard-false marks each considered guard false.
+// @evidence machine-transition-coverage
 test('a guard is false when a later transition of the same state and event fires', () => {
   const m = model(FIXTURE);
   const { transitions } = machineItems(m, m.entities.get('door'));
@@ -47,6 +51,9 @@ test('a guard is false when a later transition of the same state and event fires
   assert.deepEqual([...exercisedItems(transitions, 'door', ignored)], ['g:t-open:false']);
 });
 
+// The scenario covers t-open-else and the guard false; generated scenarios cover t-open, its guard true, t-close and t-lock (after its timer); t-unjam is the one machine.transition-unreachable warning, its source state entered by nothing.
+// With system.generation the finding is an error.
+// @evidence machine-transition-coverage
 test('the scenario covers what it delivers and the search covers the rest and reports the unreachable transition', () => {
   const { machines, findings } = base();
   assert.equal(machines.length, 1);
@@ -65,6 +72,8 @@ test('the scenario covers what it delivers and the search covers the rest and re
   assert.match(findings[0].message, /source state "jammed" is entered by no transition/);
 });
 
+// With a bound of one action t-close is reported unreachable within that bound.
+// @evidence machine-transition-coverage
 test('a bound too small to reach a transition is reported as unreachable within that bound', () => {
   const { findings } = machineCoverage(model(FIXTURE), { bound: 1 });
   const close = findings.find((f) => f.entityId === 't-close');
@@ -72,6 +81,8 @@ test('a bound too small to reach a transition is reported as unreachable within 
   assert.match(close.message, /within that bound/);
 });
 
+// The operations are CreateEntity of scenarios tagged generated-coverage; added to the specification they validate and cover every item the search found, and nothing more is generated.
+// @evidence machine-transition-coverage
 test('the generated scenarios added through their operations cover everything the search found', () => {
   const m = model(FIXTURE);
   const { machines } = base();
@@ -94,6 +105,8 @@ test('the generated scenarios added through their operations cover everything th
   assert.deepEqual(again.generated, []);
 });
 
+// Without the state nothing enters, every transition and guard outcome is covered and there is no finding.
+// @evidence machine-transition-coverage
 test('a door without the jammed state is fully covered and has no finding', () => {
   const d = doc();
   const door = d.behaviors[0];
@@ -107,6 +120,8 @@ test('a door without the jammed state is fully covered and has no finding', () =
   assert.deepEqual(machines[0].guards, { covered: 2, total: 2, byScenarios: 1 });
 });
 
+// The command prints the table and the finding, writes ops.json, apply accepts it, and a second run generates nothing.
+// @evidence machine-transition-coverage
 test('cover-machines reports the table and the finding and writes ops.json that apply accepts', async () => {
   const specs = fs.mkdtempSync(path.join(os.tmpdir(), 'exegra-cover-'));
   try {

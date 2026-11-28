@@ -36,6 +36,8 @@ const resultOf = (model, ruleId) => /** @type {any} */ (evaluateIntegrity(model)
 /** Counterexamples as {var: id} objects. @param {any} r */
 const bindings = (r) => r.counterexamples.map((/** @type {any} */ c) => Object.fromEntries(c.vars.map((/** @type {string} */ v, /** @type {number} */ i) => [v, c.values[i].slice(2)])));
 
+// The rule language parses and reports syntax errors with positions; every fixture rule holds with its instance count; every mutation makes its rule fail with the stated counterexample; a decision resting on the gap it resolves holds; diagnostics carry the rule severity and the first entity; invalid and vacuous rules; the integrity command and --rules.
+// @evidence integrity-rules-evaluated #
 test('the rule language parses quantifiers, paths, comparisons and connectives', () => {
   const ok = [
     'forall d : decision, forall x in d.closes, x.resolvedBy == d',
@@ -148,6 +150,8 @@ test('invalid rules are blocking errors; a rule over nothing is vacuous', () => 
   assert.equal(project.apply({ type: 'CreateEntity', kind: 'integrityRule', data: { id: 'extra', severity: 'error', statement: 'x', rule: 'forall d : decison, true' } }).code, 'validation.failed');
 });
 
+// From a fixture with one existing violation: an unrelated edit is accepted, a second violation is refused, the fix is accepted, a warning rule never blocks, promoting it keeps its old violations and stops new ones, and a new error rule that is already violated cannot be added.
+// @evidence integrity-ratchet-on-apply # the ratchet
 test('the ratchet: existing violations do not block unrelated edits, new ones do, fixes are accepted', () => {
   // Start from a specification that already violates "resolution-revisited" (s-1 drops dec-1).
   const start = mutated(SPEC, [{ type: 'SetProperty', id: 's-1', property: 'basis', value: ['g-1'] }]).text;

@@ -38,6 +38,8 @@ function model() {
 
 const NO_LAKE = 'lake is not on the PATH (install elan with the toolchain in formal/lean-toolchain); exhaustive exploration was not checked';
 
+// exegra prove on the race fixture: the lost update is a counterexample accepted by Lean, its scripted run passes the trace check, the atomic store holds for all N configurations with the same N on two runs, and its precedes claim holds on every complete run. Skipped, with a message, when lake is not on the PATH.
+// @evidence exhaustive-exploration-sound #
 test('the scripted run of the racy store passes its trace check', () => {
   const m = model();
   const check = checkTrace(m, runScenario(m, 'lost-update-race')).find((c) => c.claimId === 'racy-no-lost-update');
@@ -64,6 +66,8 @@ test('exhaustive exploration finds the lost update as a counterexample accepted 
   assert.match(c.explanation, /is false after step/);
 });
 
+// exegra prove reports the atomic store's invariant as holding with method lean-exhaustive, the bound and N, after Lean accepted the theorem in the generated file. Skipped, with a message, when lake is not on the PATH.
+// @evidence invariants-proved-within-bounds # the atomic store is verified for every reachable configuration
 test('the atomic store is verified for every reachable configuration, reproducibly', (t) => {
   if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
   const m = model();
@@ -82,6 +86,8 @@ test('the atomic store is verified for every reachable configuration, reproducib
   assert.equal(temporal?.result, 'holds');
 });
 
+// exegra prove on the race fixture: an eventually holds on every path; an eventually fails with a counterexample run that drops the event and ends without it; a precedes that the scripted run satisfies is violated by a run that reorders simultaneous events. Skipped, with a message, when lake is not on the PATH.
+// @evidence temporal-claims-checked-on-all-runs # temporal claims: eventually holds
 test('temporal claims: eventually holds, eventually fails on a path that ends first, precedes fails under reordering', (t) => {
   if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
   const m = model();
@@ -157,10 +163,18 @@ test('(e) a draw with more outcomes than the explorer tries makes the result inc
 
 test('an out-of-fragment scenario is not covered', (t) => {
   if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
+  const text = fs.readFileSync(path.join(HERE, '..', 'fixtures', 'behaviour-order', 'workload.jsonc'), 'utf8');
+  const project = new Project({ name: 'behaviour-workload', specText: text, layoutText: null });
+  assert.ok(project.model, 'the fixture parses');
+  assert.throws(() => proveScenario(project.model, 'driven'), /not covered by the calculus/);
+});
+
+test('a scenario that sends over a link is explored to a verdict', (t) => {
+  if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
   const text = fs.readFileSync(path.join(HERE, '..', 'fixtures', 'behaviour-order', 'linked.jsonc'), 'utf8');
   const project = new Project({ name: 'behaviour-linked', specText: text, layoutText: null });
   assert.ok(project.model, 'the fixture parses');
-  assert.throws(() => proveScenario(project.model, 'linked'), /not covered by the calculus/);
+  assert.equal(claimOf(proveScenario(project.model, 'linked'), 'sender-stays')?.result, 'holds');
 });
 
 test('a variable set from a draw is explored over every outcome', (t) => {
@@ -178,6 +192,8 @@ function liveModel() {
   return project.model;
 }
 
+// The invariant of the eight-client scenario holds with 256 states and no faults.
+// @evidence explorer-counts-calculus-states
 test('eight independent clients explore exactly 256 states', (t) => {
   if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
   const out = proveScenario(liveModel(), 'eight-clients');
@@ -187,6 +203,8 @@ test('eight independent clients explore exactly 256 states', (t) => {
   assert.equal(c.states, 256, 'the reachable configurations are the 2^8 subsets of delivered entries');
 });
 
+// The counter's invariant is incomplete with reason bound and is not described as holding for every reachable configuration.
+// @evidence explorer-incomplete-says-why
 test('a counter to 100 with an invariant at 50 and bound 20 is incomplete for its bound and never holds', (t) => {
   if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
   const c = claimOf(proveScenario(liveModel(), 'count-to-100', { bound: 20 }), 'counter-at-most-50');
@@ -195,6 +213,8 @@ test('a counter to 100 with an invariant at 50 and bound 20 is incomplete for it
   assert.doesNotMatch(c.explanation, /for every reachable configuration/);
 });
 
+// The certificate of b.y == 0 is accepted; with its first state removed, Lean refuses the file.
+// @evidence prove-invariants-certified
 test('a holds result carries a closed-set certificate Lean accepts and Lean refuses it without one of its states', (t) => {
   if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
   // The F4 fixture of the foundations (machines a and b on one event, tests/fixtures/behaviour-order).
@@ -223,6 +243,8 @@ test('a holds result carries a closed-set certificate Lean accepts and Lean refu
   }
 });
 
+// The FG claim reads violated: lasso off -> on -> off; the GF claim reads holds under weak fairness of turn-on, with turn-on-fair as its open assumption.
+// @evidence prove-liveness-under-fairness
 test('the F4 blinker: FG on is violated by a lasso and GF on holds under weak fairness of turn-on', (t) => {
   if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
   const out = proveScenario(liveModel(), 'blink-f4');
@@ -235,6 +257,8 @@ test('the F4 blinker: FG on is violated by a lasso and GF on holds under weak fa
   assert.deepEqual(gf.openAssumptions, ['turn-on-fair'], 'the fairness assumption is cited');
 });
 
+// The waiter's GF claim is violated by a lasso flagged zeno, never proved.
+// @evidence prove-zeno-lasso-not-proved
 test('a zero-delay self-loop gives a Zeno lasso and its liveness claims are not proved', (t) => {
   if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
   const c = claimOf(proveScenario(liveModel(), 'zeno'), 'waiter-finishes-often');

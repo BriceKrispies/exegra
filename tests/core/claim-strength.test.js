@@ -129,6 +129,8 @@ const SPEC = {
 const model = load(JSON.stringify(SPEC, null, 2));
 const strength = claimStrength(model);
 
+// clockRestarts == 0 with only a fault incrementing it is holds-by-construction, naming the variable and the fault transition; the status stays verified.
+// @evidence claim-strength-names-weak-checks
 test('a state invariant whose variable only a fault transition changes holds by construction and names the variable and the transition', () => {
   assert.equal(evaluateClaim(model, 'chk-continuous-renewal').status, 'verified', 'the status itself is unchanged');
   const s = strength.get('chk-continuous-renewal');
@@ -138,6 +140,8 @@ test('a state invariant whose variable only a fault transition changes holds by 
   assert.deepEqual(s?.details.transitions, ['rx-renew-restarts-clock']);
 });
 
+// featureRecords <= 1 over a scenario that creates one record is restated-scenario.
+// @evidence claim-strength-names-weak-checks
 test('a counter bound equal to what its one scenario produces is a restated scenario', () => {
   assert.equal(evaluateClaim(model, 'chk-no-creation-after-loss').status, 'verified');
   const s = strength.get('chk-no-creation-after-loss');
@@ -145,6 +149,9 @@ test('a counter bound equal to what its one scenario produces is a restated scen
   assert.match(s?.details.check ?? '', /gf-flow\.featureRecords.*gf-lost-then-create.*largest value is 1/);
 });
 
+// A never claim decided by a guard on event.changesPower is single-trace.
+// The payload-driven behavior is self-contained and its free input is named.
+// @evidence claim-strength-names-weak-checks claim-strength-grounding
 test('a claim decided on one scenario by a literal payload guard is single-trace and self-contained and names the free input', () => {
   assert.equal(evaluateClaim(model, 'chk-forbidden-refused').status, 'verified');
   const s = strength.get('chk-forbidden-refused');
@@ -154,6 +161,8 @@ test('a claim decided on one scenario by a literal payload guard is single-trace
   assert.deepEqual(s?.details.free, ['event "ag-attempt" field "changesPower"']);
 });
 
+// A behavior that reacts to a contract event is bound, naming the contract and the capability it requires.
+// @evidence claim-strength-grounding
 test('a behavior that reacts to a contract event is bound and names the capabilities the contract requires', () => {
   const s = strength.get('chk-plan-applied');
   assert.equal(s?.check, 'single-trace');
@@ -161,6 +170,8 @@ test('a behavior that reacts to a contract event is bound and names the capabili
   assert.ok(s?.details.reads?.some((r) => /contract "change-plan", which requires "plan-change"/.test(r)), JSON.stringify(s?.details.reads));
 });
 
+// An integrity rule quantifying over every role is bound.
+// @evidence claim-strength-grounding
 test('an integrity rule over the real roles is bound', () => {
   const s = strength.get('agent-roles-hold-no-plan-change');
   assert.equal(s?.entity, 'integrityRule');
@@ -170,18 +181,24 @@ test('an integrity rule over the real roles is bound', () => {
   assert.equal(strengthCounts(strength).integrityRules.grounding.bound, 1);
 });
 
+// A supplied exploration makes a single-trace claim explored and leaves a vacuous claim holds-by-construction.
+// @evidence claim-strength-names-weak-checks
 test('a trace claim an exhaustive exploration found holding is explored', () => {
   const explored = claimStrength(model, { explored: new Set(['chk-forbidden-refused']) });
   assert.equal(explored.get('chk-forbidden-refused')?.check, 'explored');
   assert.equal(explored.get('chk-continuous-renewal')?.check, 'holds-by-construction', 'exploration does not make a vacuous claim strong');
 });
 
+// With the contract outside the baseline the same claim is self-contained.
+// @evidence claim-strength-grounding
 test('under a baseline a contract the change adds anchors nothing', () => {
   const existing = new Set([...model.entities.keys()].filter((id) => id !== 'change-plan'));
   const s = claimStrength(model, { existing }).get('chk-plan-applied');
   assert.equal(s?.grounding, 'self-contained');
 });
 
+// A new never claim over a fault transition gets admit.claim-vacuous and admit.claim-self-contained, both acknowledgeable; the counts include the existing vacuous claim, which is no reason.
+// @evidence admit-flags-weak-new-claims
 test('admit gives a new vacuous self-contained claim acknowledgeable reasons and only reports existing ones', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'exegra-strength-'));
   try {

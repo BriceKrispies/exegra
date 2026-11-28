@@ -68,11 +68,15 @@ test('the case table is well formed', () => {
 });
 
 for (const c of TABLE.cases) {
+  // One test per case of the shared table on the JavaScript evaluator.
+  // @evidence expression-semantics-shared # expression case on the JavaScript evaluator
   test(`expression case on the JavaScript evaluator: ${c.name}`, () => {
     assert.deepEqual(viaJs(c), c.expect, `${c.expr} with ${JSON.stringify(c.env)}`);
   });
 }
 
+// Every case of the shared table on the Lean core through expr.eval.
+// @evidence expression-semantics-shared
 test('expression cases on the Lean core: every case gives the expected outcome', () => {
   initLean();
   for (const c of TABLE.cases) assert.deepEqual(viaLean(c), c.expect, `${c.name}: ${c.expr} with ${JSON.stringify(c.env)}`);

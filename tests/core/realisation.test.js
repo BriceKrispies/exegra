@@ -18,12 +18,18 @@ function broken(from, to) {
 }
 const errors = (text) => analyzeSpec(text).diagnostics.filter((d) => d.severity === 'error').map((d) => d.code);
 
+// The negative fixture for behavior.realisation-subject.
+// @evidence machine-realisation-and-durability # rule behavior.realisation-subject: a machine declared shipped on a not-implemented component gives exactly that one error
+// The negative fixture for storage.durability: a memory machine naming a record.
+// @evidence machine-realisation-and-durability # rule storage.durability: a memory machine that names a record gives exactly that one error
 test('the fixed fixture has no error and no readiness diagnostic', () => {
   const a = analyzeSpec(FIXED);
   assert.deepEqual(a.diagnostics.filter((d) => d.severity === 'error'), []);
   assert.deepEqual(machineReadiness(a.model), []);
 });
 
+// The default from the component's status and the explicit override.
+// @evidence machine-realisation-and-durability
 test('realisation defaults from the implementation status of the subject and an explicit value wins', () => {
   const m = analyzeSpec(FIXED).model;
   const get = (id) => m.entities.get(id);
@@ -57,6 +63,8 @@ for (const [code, what, from, to] of RULES) {
   });
 }
 
+// A memory machine is exempt from the storage and transaction readiness rules.
+// @evidence machine-realisation-and-durability
 test('a memory machine is held to no storage or transaction readiness rule and a record machine still is', () => {
   const a = analyzeSpec(FIXED).model;
   assert.equal(effectiveDurability(a.entities.get('live')), 'memory');

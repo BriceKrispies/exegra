@@ -12,6 +12,8 @@ const SPECS = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../fix
 const opts = { specs: SPECS, project: 'fixture' };
 const ids = (out) => out.result.entities.map((e) => e.id);
 
+// get returns the declaration and both reference lists.
+// @evidence cli-get-prints-entities-with-references
 test('get prints the named entities with declaration and references both ways', async () => {
   const out = await runCommand('get', ['server', 'client-calls-server'], opts);
   assert.equal(out.ok, true);
@@ -54,6 +56,8 @@ test('find --text searches the text of an entity, ignoring case', async () => {
   assert.deepEqual(ids(await runCommand('find', ['--text', 'no such words'], opts)), []);
 });
 
+// Each filter is exercised on a fixture specification.
+// @evidence cli-find-filters-entities
 test('find --fields adds only the requested data fields and --limit truncates', async () => {
   const out = await runCommand('find', ['--kind', 'component', '--fields', 'name,purpose,missing', '--limit', '2'], opts);
   assert.equal(out.result.returned, 2);
@@ -66,6 +70,8 @@ test('find --fields adds only the requested data fields and --limit truncates', 
   assert.equal((await runCommand('find', ['--kind', 'nonsense'], opts)).error.code, 'usage.invalid-argument');
 });
 
+// Compared with the references of a Project built from the same text.
+// @evidence cli-refs-equals-model-refs
 test('refs equals what model.refs holds for the entity', async () => {
   const text = fs.readFileSync(path.join(SPECS, 'fixture', 'spec.jsonc'), 'utf8');
   const model = new Project({ name: 'fixture', specText: text, layoutText: null, layers: [] }).model;

@@ -56,12 +56,16 @@ test('a reader view validates and is listed with its projection', () => {
   assert.equal(scene.nodes.length, 0);
 });
 
+// An unknown block field is an error.
+// @evidence reader-blocks-validated
 test('unknown fields in a reader block are refused', () => {
   const bad = SPEC.replace('"type": "document" }', '"type": "document", "colour": "red" }');
   const r = analyzeSpec(bad);
   assert.ok(r.diagnostics.some((d) => d.severity === 'error' && /colour/.test(d.message)));
 });
 
+// Counts classify a text property and group by a referenced entity.
+// @evidence reader-pages-come-from-model
 test('counts classify text and group by a reference', () => {
   const page = readerPage(model, model.entities.get('books')?.data);
   const counts = page.blocks[0];
@@ -71,6 +75,8 @@ test('counts classify text and group by a reference', () => {
   assert.deepEqual(counts.groups.map((/** @type {any} */ g) => [g.label, g.total]), [['Shelf A', 2], ['Shelf B', 1]]);
 });
 
+// A table groups, classifies, links references and offers facets.
+// @evidence reader-pages-come-from-model
 test('a table groups and classifies rows with links and facets', () => {
   const t = readerPage(model, model.entities.get('books')?.data).blocks[1];
   assert.equal(t.type, 'table');
@@ -82,6 +88,8 @@ test('a table groups and classifies rows with links and facets', () => {
   assert.deepEqual(t.facet.values.map((/** @type {any} */ v) => v.value).sort(), ['in', 'other']);
 });
 
+// A list keeps only rows that meet its conditions and marks the hidden ones.
+// @evidence reader-pages-come-from-model
 test('a list honours where and marks rows hidden until asked', () => {
   const l = readerPage(model, model.entities.get('books')?.data).blocks[2];
   const ids = l.groups[0].rows.map((/** @type {any} */ r) => [r.id, r.optional]);
@@ -89,6 +97,8 @@ test('a list honours where and marks rows hidden until asked', () => {
   assert.equal(l.toggle.label, 'Show all');
 });
 
+// Section bodies split into prose and tables; the outline follows reading order.
+// @evidence reader-pages-come-from-model
 test('section bodies split into prose and the tables their markers place', () => {
   const blocks = sectionBlocks(model, 'sec-intro');
   assert.deepEqual(blocks.map((b) => b.type), ['prose', 'table', 'prose']);
@@ -96,6 +106,8 @@ test('section bodies split into prose and the tables their markers place', () =>
   assert.deepEqual(outline(model).sections.map((s) => [s.id, s.level]), [['sec-intro', 1], ['sec-rules', 2]]);
 });
 
+// A view without blocks gives the default page and a page per kind.
+// @evidence reader-pages-come-from-model
 test('a view without blocks reads the system and its kinds and its document', () => {
   const page = readerPage(model, { name: 'Reader' });
   assert.deepEqual(page.blocks.map((b) => b.type), ['text', 'index', 'document']);

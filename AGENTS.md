@@ -19,9 +19,12 @@ What goes into the specification:
   `notifies`, `composes`, `data-flow`, `projects`, ...; `calls` is legacy, see docs/model-and-format.md#interaction-kinds). Claims such as `core-independent-of-ui` and `core-dependencies-acyclic` are evaluated over them.
 - **Behavior.** A change to a pipeline Exegra simulates about itself (scenarios such as `visual-edit-flow`) changes
   its behaviors, events and scenarios too, so the simulation keeps describing Exegra as it is.
-- **Claims and evidence.** Each new capability gets at least one claim saying precisely what must hold, and an
-  `evidence` entity naming the test that shows it (`tests/core/<file>.test.js`, or `tests/browser/<file>.spec.js#<test
-  title>`). A claim the model can decide (structure, traces) uses that evaluation method instead of evidence.
+- **Claims and evidence.** Each new capability gets at least one claim saying precisely what must hold, and the test
+  that shows it names the claim with a marker comment directly above it, `// @evidence <claim-id>` (then run
+  `exegra extract`): Exegra derives the evidence entity from the marker (docs/claims-and-evidence.md, "Test evidence is
+  derived from the tests"). Declare an `evidence` entity only for what a test cannot carry: a measurement, a review, a
+  document or contradicting evidence. A claim the model can decide (structure, traces) uses that evaluation method
+  instead of evidence.
 - **Unknowns.** What a component cannot do yet goes in its `unknowns`, naming the Workgraph task that would close it.
 
 Planned work is specified too: components with `implementation.status` `not-implemented` and claims that stay
@@ -38,7 +41,7 @@ Use the command line, which answers from the semantic model and gives source lin
   [--limit N]`; `refs <id>`. `list`, `show`, `deps` and `claims` exist too.
 - **Write:** `apply --project exegra --file ops.json --dry-run`, then `apply` without `--dry-run`.
 - A script that parses the file with `jsonc-parser` and prints only what it needs is allowed.
-- **The self-specification is a manifest.** `specs/exegra/spec.jsonc` lists the part files of `specs/exegra/parts/` (27 files,
+- **The self-specification is a manifest.** `specs/exegra/spec.jsonc` lists the part files of `specs/exegra/parts/` (26 files,
   one per area of components, claims, behaviours and the rest, each at most about 120 KB) and a `specSections` table that
   tells `apply` which part a new component, relationship, claim, evidence record or behaviour is written to; `get`, `find`
   and `refs` print the part file and line. **To add a part:** create `specs/exegra/parts/<name>.jsonc` holding the

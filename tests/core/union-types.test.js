@@ -13,6 +13,32 @@ import { spec, FIXTURES } from '../fixtures/union-types/fixtures.js';
 const errors = (/** @type {any} */ r) => r.diagnostics.filter((/** @type {any} */ d) => d.severity === 'error');
 const codes = (/** @type {any} */ ds) => ds.map((/** @type {any} */ d) => d.code);
 
+// A variant field of an undeclared type: exactly one type.union-field error.
+// @evidence union-map-types-rules # a variant field whose type does not resolve is reported once as type.union-field
+// A tagField on an external tag: exactly one type.encoding error; the other encoding fixtures (contentField, missing tagField or contentField, newtype under an internal tag) each give one.
+// @evidence union-map-types-rules # a tagField on an external tag is reported once as type.encoding
+// A map keyed by f64: exactly one type.map-key error; further fixtures key by a union, a list, json and an id over a uuid.
+// @evidence union-map-types-rules # a map keyed by f64 is reported once as type.map-key
+// A struct holding itself, and two structs holding each other: one type.recursion each; a cycle through list, option, map and union variant is allowed.
+// @evidence union-map-types-rules # a struct holding itself is reported once as type.recursion
+// A bad pattern: exactly one type.constraints error; further fixtures put constraints on an enum, a pattern or length on a number, and a minLength above the maxLength.
+// @evidence union-map-types-rules # a pattern that is not a regular expression is reported once as type.constraints
+// A specification using the serde forms of the kernel types (external, internal and adjacent tags, newtype and unit variants, maps, constraints) has no error and no readiness gap.
+// @evidence union-map-types-rules # a specification using unions and maps and constraints in the kernel forms validates
+// A variant field of type set<column>, column undeclared: exactly one type.union-field error.
+// @evidence set-tuple-nested-types-rules # a set of an unresolved type in a variant field is reported once as type.union-field
+// A map keyed by set<string>: exactly one type.map-key error; further fixtures put an f64 key inside a set and inside a map of maps.
+// @evidence set-tuple-nested-types-rules # a map keyed by a set is reported once as type.map-key
+// A tuple variant with one field: exactly one type.union-variants error; further fixtures mark a tuple variant newtype and make a tuple field optional.
+// @evidence set-tuple-nested-types-rules # a tuple variant with one field is reported once as type.union-variants
+// A tuple variant in an internally tagged union: exactly one type.encoding error.
+// @evidence set-tuple-nested-types-rules # an internal tag over a tuple variant is reported once as type.encoding
+// A map of maps whose inner value is undeclared: exactly one type.union-field error.
+// @evidence set-tuple-nested-types-rules # a map of maps whose inner value does not resolve is reported once as type.union-field
+// A struct field of type shared<tag>, tag undeclared: exactly one type.field-unresolved error.
+// @evidence set-tuple-nested-types-rules # a shared of an unresolved type is reported once as type.field-unresolved
+// A struct that holds itself through a shared<T> field: exactly one type.recursion error.
+// @evidence set-tuple-nested-types-rules # a struct that holds itself through a shared field is reported once as type.recursion
 test('a specification using unions and maps and constraints in the kernel forms validates and has no readiness gap', () => {
   for (const generation of [false, true]) {
     const r = analyzeSpec(spec(undefined, { generation }));
@@ -49,6 +75,8 @@ test('a cycle through a list or option or map or union variant is allowed and a 
   assert.match(errors(bad)[0].message, /tree/);
 });
 
+// map<K, V> resolves when K and V do; readiness reports an unresolved map in a record field and an event payload only when system.generation is set.
+// @evidence union-map-types-rules # map types resolve when key and value resolve
 test('map types resolve when key and value resolve and readiness reports the ones that do not', () => {
   const m = /** @type {any} */ (analyzeSpec(spec()).model);
   assert.ok(typeResolves(m, 'map<string, u32>') && typeResolves(m, 'map<field-id, list<value>>') && typeResolves(m, 'option<map<u8, intent>>'));
@@ -61,6 +89,10 @@ test('map types resolve when key and value resolve and readiness reports the one
   assert.deepEqual(codes(errors(analyzeSpec(spec(badEvent, { generation: true })))), ['ready.event-payload-type-undeclared']);
 });
 
+// A union without variants: exactly one type.union-variants error, with and without system.generation.
+// @evidence union-map-types-rules # a union without variants is reported once as type.union-variants
+// A union and a map have the class json in guard expressions: == and != only.
+// @evidence union-map-types-rules # a union or map value has the opaque class of json
 test('a union or map value has the opaque class of json in guard expressions', () => {
   const m = /** @type {any} */ (analyzeSpec(spec()).model);
   assert.equal(typeClass(m, 'value'), 'json');

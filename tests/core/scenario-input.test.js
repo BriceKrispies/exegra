@@ -21,6 +21,8 @@ function analyse(/** @type {any} */ payload, { generation = true, mutate = (/** 
 const inputTypes = (/** @type {any} */ r) => r.diagnostics.filter((/** @type {any} */ d) => d.code === 'scenario.input-type');
 const good = { 'move-id': UUID, kind: 'copy', priority: 3 };
 
+// The negative fixture, a uuid key given as x-1: exactly one scenario.input-type error.
+// @evidence scenario-input-typed
 test('the negative fixture with a uuid key given as x-1 is refused with exactly one scenario.input-type', () => {
   const r = analyzeSpec(FIXTURE);
   assert.deepEqual(r.diagnostics.filter((/** @type {any} */ d) => d.severity === 'error').map((/** @type {any} */ d) => d.code), ['scenario.input-type']);
@@ -35,6 +37,8 @@ test('a scenario whose inputs have the declared types has no scenario.input-type
   assert.deepEqual(inputTypes(analyse({ ...good, note: 'x' })), []);
 });
 
+// Without system.generation the same finding is a warning.
+// @evidence scenario-input-typed
 test('the same finding is a warning when the specification does not set system.generation', () => {
   const r = analyse({ ...good, 'move-id': 'x-1' }, { generation: false });
   assert.deepEqual(inputTypes(r).map((/** @type {any} */ d) => d.severity), ['warning']);
@@ -62,6 +66,8 @@ for (const [title, payload, pattern] of REFUSED) {
   });
 }
 
+// An inject-event fault payload is checked against the event it injects.
+// @evidence scenario-input-typed
 test('an inject-event fault payload is checked against the event it injects', () => {
   const r = analyse(good, { mutate: (d) => { d.faults = [{ id: 'move-repeated', name: 'Repeated', kind: 'inject-event', event: 'move-requested', at: 5, payload: { ...good, 'move-id': 'x-2' } }]; } });
   const [d] = inputTypes(r);
@@ -69,6 +75,8 @@ test('an inject-event fault payload is checked against the event it injects', ()
   assert.equal(d.entityId, 'move-repeated');
 });
 
+// Values are judged by type: integer bounds, uuid, enum, struct, list and option.
+// @evidence scenario-input-typed
 test('values are judged by type: integer bounds and uuid and struct and list and option', () => {
   const model = /** @type {any} */ (analyse(good).model);
   assert.equal(valueProblem(model, 'u8', 255), null);

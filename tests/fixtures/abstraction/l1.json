@@ -113,7 +113,7 @@
    "kind": "subsystem",
    "implicit": false,
    "knowledge": "transparent",
-   "elements": 197
+   "elements": 200
   },
   {
    "id": "sqlite-engine",
@@ -1017,6 +1017,7 @@
    "witnesses": [
     "extracted:imports:src/app/session.js=>src/app/engine-runner.js",
     "extracted:imports:src/app/session.js=>src/core/abstraction.js",
+    "extracted:imports:src/app/session.js=>src/core/claim-methods.js",
     "extracted:imports:src/app/session.js=>src/core/claims.js",
     "extracted:imports:src/app/session.js=>src/core/concordance.js",
     "extracted:imports:src/app/session.js=>src/core/contract-trace.js",
@@ -1052,15 +1053,15 @@
     "extracted:imports:src/ui/verification-panel.js=>src/core/query.js"
    ],
    "summary": {
-    "count": 35,
+    "count": 36,
     "kinds": {
-     "imports": 35
+     "imports": 36
     },
     "contracts": [],
     "carries": [],
     "delivery": [],
     "provenance": {
-     "extracted": 35
+     "extracted": 36
     },
     "ports": []
    },
@@ -1068,6 +1069,7 @@
     "witnesses": [
      "extracted:imports:src/app/session.js=>src/app/engine-runner.js",
      "extracted:imports:src/app/session.js=>src/core/abstraction.js",
+     "extracted:imports:src/app/session.js=>src/core/claim-methods.js",
      "extracted:imports:src/app/session.js=>src/core/claims.js",
      "extracted:imports:src/app/session.js=>src/core/concordance.js",
      "extracted:imports:src/app/session.js=>src/core/contract-trace.js",
@@ -3236,8 +3238,10 @@
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/hash.js",
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/query.js",
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/stable-json.js",
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-strength.js",
     "extracted:imports:src/core/generate/claims-report.js=>src/core/hash.js",
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js",
     "extracted:imports:src/core/generate/index.js=>src/core/claim-strength.js",
     "extracted:imports:src/core/generate/manifest.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/generate/manifest.js=>src/core/hash.js",
@@ -3263,15 +3267,15 @@
     "extracted:imports:tools/tree-stamp.js=>src/core/facts.js"
    ],
    "summary": {
-    "count": 30,
+    "count": 32,
     "kinds": {
-     "imports": 30
+     "imports": 32
     },
     "contracts": [],
     "carries": [],
     "delivery": [],
     "provenance": {
-     "extracted": 30
+     "extracted": 32
     },
     "ports": []
    },
@@ -3282,8 +3286,10 @@
      "extracted:imports:src/core/generate/architecture-doc.js=>src/core/hash.js",
      "extracted:imports:src/core/generate/architecture-doc.js=>src/core/query.js",
      "extracted:imports:src/core/generate/architecture-doc.js=>src/core/stable-json.js",
+     "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js",
      "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-strength.js",
      "extracted:imports:src/core/generate/claims-report.js=>src/core/hash.js",
+     "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js",
      "extracted:imports:src/core/generate/index.js=>src/core/claim-strength.js",
      "extracted:imports:src/core/generate/manifest.js=>src/core/claim-methods.js",
      "extracted:imports:src/core/generate/manifest.js=>src/core/hash.js",
@@ -3594,21 +3600,22 @@
     "extracted:imports:src/core/flows.js=>src/core/abstraction.js",
     "extracted:imports:src/core/flows.js=>src/core/query.js",
     "extracted:imports:src/core/projections.js=>src/core/abstraction.js",
+    "extracted:imports:src/core/projections.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/projections.js=>src/core/data-model.js",
     "extracted:imports:src/core/projections.js=>src/core/interactions.js",
     "extracted:imports:src/core/projections.js=>src/core/own.js",
     "extracted:imports:src/core/projections.js=>src/core/query.js"
    ],
    "summary": {
-    "count": 7,
+    "count": 8,
     "kinds": {
-     "imports": 7
+     "imports": 8
     },
     "contracts": [],
     "carries": [],
     "delivery": [],
     "provenance": {
-     "extracted": 7
+     "extracted": 8
     },
     "ports": []
    },
@@ -3617,6 +3624,7 @@
      "extracted:imports:src/core/flows.js=>src/core/abstraction.js",
      "extracted:imports:src/core/flows.js=>src/core/query.js",
      "extracted:imports:src/core/projections.js=>src/core/abstraction.js",
+     "extracted:imports:src/core/projections.js=>src/core/claim-methods.js",
      "extracted:imports:src/core/projections.js=>src/core/data-model.js",
      "extracted:imports:src/core/projections.js=>src/core/interactions.js",
      "extracted:imports:src/core/projections.js=>src/core/own.js",
@@ -3859,6 +3867,7 @@
    "exhaustive-explorer-depends-on-fault-model",
    "extracted:imports:formal/Exegra.lean=>formal/Exegra/Api.lean",
    "extracted:imports:formal/Exegra.lean=>formal/Exegra/Boundary.lean",
+   "extracted:imports:formal/Exegra.lean=>formal/Exegra/BoundaryExplore.lean",
    "extracted:imports:formal/Exegra.lean=>formal/Exegra/Core/Behav.lean",
    "extracted:imports:formal/Exegra.lean=>formal/Exegra/Core/BehavCheck.lean",
    "extracted:imports:formal/Exegra.lean=>formal/Exegra/Core/BehavExamples.lean",
@@ -3889,6 +3898,7 @@
    "extracted:imports:formal/Exegra.lean=>formal/Exegra/Lower.lean",
    "extracted:imports:formal/Exegra.lean=>formal/Exegra/Model.lean",
    "extracted:imports:formal/Exegra.lean=>formal/Exegra/ModelProps.lean",
+   "extracted:imports:formal/Exegra.lean=>formal/Exegra/Multiscale.lean",
    "extracted:imports:formal/Exegra.lean=>formal/Exegra/Number.lean",
    "extracted:imports:formal/Exegra.lean=>formal/Exegra/Proofs/VisualEditFlow.lean",
    "extracted:imports:formal/Exegra.lean=>formal/Exegra/ProveB.lean",
@@ -3904,10 +3914,12 @@
    "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Boundary.lean",
    "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Engine.lean",
    "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Model.lean",
+   "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Structure.lean",
    "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Verdict.lean",
    "extracted:imports:formal/Exegra/Api/Basic.lean=>formal/Exegra/Json.lean",
    "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Api/Basic.lean",
    "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Boundary.lean",
+   "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/BoundaryExplore.lean",
    "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Api/Basic.lean",
    "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Elab.lean",
    "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Format2.lean",
@@ -3917,12 +3929,16 @@
    "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/ProveLive.lean",
    "extracted:imports:formal/Exegra/Api/Model.lean=>formal/Exegra/Api/Basic.lean",
    "extracted:imports:formal/Exegra/Api/Model.lean=>formal/Exegra/Model.lean",
+   "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Api/Basic.lean",
+   "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Multiscale.lean",
    "extracted:imports:formal/Exegra/Api/Verdict.lean=>formal/Exegra/Api/Basic.lean",
    "extracted:imports:formal/Exegra/Api/Verdict.lean=>formal/Exegra/Impact.lean",
    "extracted:imports:formal/Exegra/Api/Verdict.lean=>formal/Exegra/Verdict.lean",
    "extracted:imports:formal/Exegra/Boundary.lean=>formal/Exegra/Impl/Semantics.lean",
    "extracted:imports:formal/Exegra/Boundary.lean=>formal/Exegra/Json.lean",
    "extracted:imports:formal/Exegra/Boundary.lean=>formal/Exegra/Trace.lean",
+   "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/Boundary.lean",
+   "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/ProveB.lean",
    "extracted:imports:formal/Exegra/Core/Behav.lean=>formal/Exegra/Core/LTS.lean",
    "extracted:imports:formal/Exegra/Core/Behav.lean=>formal/Exegra/Resource.lean",
    "extracted:imports:formal/Exegra/Core/BehavCheck.lean=>formal/Exegra/Core/BehavExec.lean",
@@ -3974,6 +3990,8 @@
    "extracted:imports:formal/Exegra/Model.lean=>formal/Exegra/Hash.lean",
    "extracted:imports:formal/Exegra/ModelProps.lean=>formal/Exegra/HashProps.lean",
    "extracted:imports:formal/Exegra/ModelProps.lean=>formal/Exegra/Model.lean",
+   "extracted:imports:formal/Exegra/Multiscale.lean=>formal/Exegra/Json.lean",
+   "extracted:imports:formal/Exegra/Multiscale.lean=>formal/Exegra/Value.lean",
    "extracted:imports:formal/Exegra/Proofs/VisualEditFlow.lean=>formal/Exegra/ProveKernel.lean",
    "extracted:imports:formal/Exegra/ProveB.lean=>formal/Exegra/Core/BehavCheck.lean",
    "extracted:imports:formal/Exegra/ProveB.lean=>formal/Exegra/Format2B.lean",
@@ -4053,8 +4071,10 @@
    "extracted:imports:src/core/edit-history.js=>src/core/engine.js",
    "extracted:imports:src/core/engine.js=>src/core/lean.js",
    "extracted:imports:src/core/extraction.js=>src/core/abstraction.js",
+   "extracted:imports:src/core/extraction.js=>src/core/claim-methods.js",
    "extracted:imports:src/core/extraction.js=>src/core/interactions.js",
    "extracted:imports:src/core/extraction.js=>src/core/query.js",
+   "extracted:imports:src/core/extraction.js=>src/core/sha256.js",
    "extracted:imports:src/core/fault-lifting.js=>src/core/abstraction.js",
    "extracted:imports:src/core/fault-lifting.js=>src/core/query.js",
    "extracted:imports:src/core/fault-model.js=>src/core/time-units.js",
@@ -4453,6 +4473,7 @@
     "explorer-reads-claim-method-registry",
     "extracted:imports:src/app/session.js=>src/app/engine-runner.js",
     "extracted:imports:src/app/session.js=>src/core/abstraction.js",
+    "extracted:imports:src/app/session.js=>src/core/claim-methods.js",
     "extracted:imports:src/app/session.js=>src/core/claims.js",
     "extracted:imports:src/app/session.js=>src/core/concordance.js",
     "extracted:imports:src/app/session.js=>src/core/contract-trace.js",
@@ -4838,6 +4859,7 @@
     "extracted:imports:src/app/main.js=>src/core/engine.js",
     "extracted:imports:src/app/session.js=>src/app/engine-runner.js",
     "extracted:imports:src/app/session.js=>src/core/abstraction.js",
+    "extracted:imports:src/app/session.js=>src/core/claim-methods.js",
     "extracted:imports:src/app/session.js=>src/core/claims.js",
     "extracted:imports:src/app/session.js=>src/core/concordance.js",
     "extracted:imports:src/app/session.js=>src/core/contract-trace.js",
@@ -4851,8 +4873,10 @@
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/hash.js",
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/query.js",
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/stable-json.js",
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-strength.js",
     "extracted:imports:src/core/generate/claims-report.js=>src/core/hash.js",
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js",
     "extracted:imports:src/core/generate/index.js=>src/core/claim-strength.js",
     "extracted:imports:src/core/generate/manifest.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/generate/manifest.js=>src/core/hash.js",
@@ -4861,6 +4885,7 @@
     "extracted:imports:src/core/generate/task-manifest.js=>src/core/hash.js",
     "extracted:imports:src/core/generate/task-manifest.js=>src/core/query.js",
     "extracted:imports:src/core/projections.js=>src/core/abstraction.js",
+    "extracted:imports:src/core/projections.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/projections.js=>src/core/data-model.js",
     "extracted:imports:src/core/projections.js=>src/core/interactions.js",
     "extracted:imports:src/core/projections.js=>src/core/own.js",
@@ -5000,8 +5025,10 @@
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/hash.js",
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/query.js",
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/stable-json.js",
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-strength.js",
     "extracted:imports:src/core/generate/claims-report.js=>src/core/hash.js",
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js",
     "extracted:imports:src/core/generate/index.js=>src/core/claim-strength.js",
     "extracted:imports:src/core/generate/manifest.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/generate/manifest.js=>src/core/hash.js",
@@ -5105,6 +5132,7 @@
     "extracted:imports:src/core/flows.js=>src/core/abstraction.js",
     "extracted:imports:src/core/flows.js=>src/core/query.js",
     "extracted:imports:src/core/projections.js=>src/core/abstraction.js",
+    "extracted:imports:src/core/projections.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/projections.js=>src/core/data-model.js",
     "extracted:imports:src/core/projections.js=>src/core/interactions.js",
     "extracted:imports:src/core/projections.js=>src/core/own.js",
@@ -5512,6 +5540,7 @@
      "witnesses": [
       "extracted:imports:src/app/session.js=>src/app/engine-runner.js",
       "extracted:imports:src/app/session.js=>src/core/abstraction.js",
+      "extracted:imports:src/app/session.js=>src/core/claim-methods.js",
       "extracted:imports:src/app/session.js=>src/core/claims.js",
       "extracted:imports:src/app/session.js=>src/core/concordance.js",
       "extracted:imports:src/app/session.js=>src/core/contract-trace.js",
@@ -6419,6 +6448,7 @@
       "extracted:imports:src/app/main.js=>src/core/engine.js",
       "extracted:imports:src/app/session.js=>src/app/engine-runner.js",
       "extracted:imports:src/app/session.js=>src/core/abstraction.js",
+      "extracted:imports:src/app/session.js=>src/core/claim-methods.js",
       "extracted:imports:src/app/session.js=>src/core/claims.js",
       "extracted:imports:src/app/session.js=>src/core/concordance.js",
       "extracted:imports:src/app/session.js=>src/core/contract-trace.js",
@@ -6432,8 +6462,10 @@
       "extracted:imports:src/core/generate/architecture-doc.js=>src/core/hash.js",
       "extracted:imports:src/core/generate/architecture-doc.js=>src/core/query.js",
       "extracted:imports:src/core/generate/architecture-doc.js=>src/core/stable-json.js",
+      "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-strength.js",
       "extracted:imports:src/core/generate/claims-report.js=>src/core/hash.js",
+      "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js",
       "extracted:imports:src/core/generate/index.js=>src/core/claim-strength.js",
       "extracted:imports:src/core/generate/manifest.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/generate/manifest.js=>src/core/hash.js",
@@ -6442,6 +6474,7 @@
       "extracted:imports:src/core/generate/task-manifest.js=>src/core/hash.js",
       "extracted:imports:src/core/generate/task-manifest.js=>src/core/query.js",
       "extracted:imports:src/core/projections.js=>src/core/abstraction.js",
+      "extracted:imports:src/core/projections.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/projections.js=>src/core/data-model.js",
       "extracted:imports:src/core/projections.js=>src/core/interactions.js",
       "extracted:imports:src/core/projections.js=>src/core/own.js",
@@ -6877,8 +6910,10 @@
       "extracted:imports:src/core/generate/architecture-doc.js=>src/core/hash.js",
       "extracted:imports:src/core/generate/architecture-doc.js=>src/core/query.js",
       "extracted:imports:src/core/generate/architecture-doc.js=>src/core/stable-json.js",
+      "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-strength.js",
       "extracted:imports:src/core/generate/claims-report.js=>src/core/hash.js",
+      "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js",
       "extracted:imports:src/core/generate/index.js=>src/core/claim-strength.js",
       "extracted:imports:src/core/generate/manifest.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/generate/manifest.js=>src/core/hash.js",
@@ -7090,6 +7125,7 @@
       "extracted:imports:src/core/flows.js=>src/core/abstraction.js",
       "extracted:imports:src/core/flows.js=>src/core/query.js",
       "extracted:imports:src/core/projections.js=>src/core/abstraction.js",
+      "extracted:imports:src/core/projections.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/projections.js=>src/core/data-model.js",
       "extracted:imports:src/core/projections.js=>src/core/interactions.js",
       "extracted:imports:src/core/projections.js=>src/core/own.js",
@@ -7202,13 +7238,14 @@
         "transaction-committed",
         "transaction-rejected"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "operation-submitted",
+        "transaction-committed"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "composition-root-submits-edits-transactions"
-     ]
+     "flagged": []
     },
     {
      "hops": [
@@ -7253,13 +7290,13 @@
         "transaction-committed",
         "transaction-rejected"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "transaction-committed"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "session-calls-transactions"
-     ]
+     "flagged": []
     },
     {
      "hops": [
@@ -7286,13 +7323,13 @@
         "operation-submitted",
         "transaction-rejected"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "operation-submitted"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "source-editor-submits-edits-transactions"
-     ]
+     "flagged": []
     },
     {
      "hops": [
@@ -7374,13 +7411,14 @@
         "claims-evaluated",
         "claims-evaluation-requested"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "claims-evaluated",
+        "claims-evaluation-requested"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "session-calls-claim-evaluator"
-     ]
+     "flagged": []
     }
    ]
   },
@@ -7397,8 +7435,11 @@
         "projection-refreshed",
         "refresh-requested"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "projection-refreshed",
+        "refresh-requested"
+       ],
+       "status": "typed"
       },
       {
        "relationship": "projection-system-projects-scene-renderer",
@@ -7407,14 +7448,13 @@
        "events": [
         "projection-refreshed"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "projection-refreshed"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "session-calls-projection-system",
-      "projection-system-projects-scene-renderer"
-     ]
+     "flagged": []
     }
    ]
   },
@@ -7432,13 +7472,14 @@
         "engine-run-failed",
         "engine-run-finished"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "engine-run-called",
+        "engine-run-finished"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "agent-cli-calls-simulation-engine"
-     ]
+     "flagged": []
     },
     {
      "hops": [
@@ -7481,13 +7522,14 @@
         "sim-run-failed",
         "sim-trace-ready"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "engine-run-intent",
+        "sim-trace-ready"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "session-calls-simulation-engine"
-     ]
+     "flagged": []
     }
    ]
   },
@@ -7531,6 +7573,7 @@
        ],
        "contractEvents": [
         "ws-write",
+        "ws-write-conflict",
         "ws-write-done"
        ],
        "status": "typed"
@@ -7557,8 +7600,11 @@
         "watch-intent",
         "write-intent"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "save-succeeded",
+        "write-intent"
+       ],
+       "status": "typed"
       },
       {
        "relationship": "persistence-client-calls-dev-server-plugin",
@@ -7620,15 +7666,14 @@
        ],
        "contractEvents": [
         "ws-write",
+        "ws-write-conflict",
         "ws-write-done",
         "ws-write-error"
        ],
        "status": "typed"
       }
      ],
-     "flagged": [
-      "session-calls-persistence-client"
-     ]
+     "flagged": []
     }
    ]
   }

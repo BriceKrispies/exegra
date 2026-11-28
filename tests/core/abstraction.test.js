@@ -91,6 +91,8 @@ function independentLift(raw, cut) {
   return { edges: sorted(edges), fibres: sorted(fibres) };
 }
 
+// Each of the five cuts is derived through the core and compared with tests/fixtures/abstraction/<cut>.json and with a lift computed from the raw relationships and parents.
+// @evidence derived-model-goldens
 test('derived models of the five self-specification cuts equal their goldens and an independent recomputation', () => {
   const model = self();
   // The goldens are what the command line derives: the declared relationships plus the extracted facts (WG-5696).
@@ -108,6 +110,8 @@ test('derived models of the five self-specification cuts equal their goldens and
   }
 });
 
+// The derive command runs in a child process that loads no module under src/render or src/ui.
+// @evidence derived-model-goldens
 test('the CLI derives the model with no renderer code loaded', () => {
   // Every module the process resolves passes through this hook, which reports the renderer's and the UI's.
   const hook = "import { registerHooks } from 'node:module'; registerHooks({ resolve(s, c, n) { const r = n(s, c); if (r.url.includes('/src/render/') || r.url.includes('/src/ui/') || r.url.includes('/src/core/abstraction.js')) process.stderr.write('LOADED ' + r.url + String.fromCharCode(10)); return r; } });";
@@ -238,7 +242,9 @@ test('deriving through an intermediate cut equals deriving directly on self-spec
 // ---------------------------------------------------------------------------------------------
 // Interfaces, ports and contracts
 
-test('every declared port of the self-specification is matched or reported unmatched and the write-file path flags its untyped hops', () => {
+// Every port of the self-specification appears in the reconciliation; the write-file path runs session, persistence client, dev-server plugin, workspace service.
+// @evidence interfaces-reconciled
+test('every declared port of the self-specification is matched or reported unmatched and every hop of the write-file path is typed', () => {
   const model = self();
   const d = /** @type {any} */ (deriveModel(model, 'module-level'));
   const ports = model.byKind.port ?? [];
@@ -262,7 +268,9 @@ test('every declared port of the self-specification is matched or reported unmat
   assert.ok(hops[1].contractEvents.includes('write-file-request'));
   assert.equal(hops[2].status, 'typed', 'the in-process hop to the workspace service carries ws-* events of the contract (WG-5728)');
   assert.ok(hops[2].contractEvents.includes('ws-write') && hops[2].contractEvents.includes('ws-write-done'));
-  assert.deepEqual(save.flagged, ['session-calls-persistence-client'], 'only the session hop, whose events carry no contract, is left flagged');
+  assert.equal(hops[0].status, 'typed', 'the session hop carries write-intent and save-succeeded under the contract (WG-5732)');
+  assert.ok(hops[0].contractEvents.includes('write-intent') && hops[0].contractEvents.includes('save-succeeded'));
+  assert.deepEqual(save.flagged, [], 'no hop of the save path is left flagged');
 });
 
 /** Two components joined through ports. @param {any} fromPort @param {any} toPort @param {any} [relMore] */
@@ -274,6 +282,8 @@ function portSpec(fromPort, toPort, relMore = {}) {
   );
 }
 
+// A requires-to-provides connection with one contract validates; requires-to-requires and contract mismatches are validation errors.
+// @evidence abstraction-no-silent-dropping
 test('a relationship can end at a port and incompatible port connections are diagnostics', () => {
   const good = analyze(portSpec({ direction: 'requires', contract: 'c1' }, { direction: 'provides', contract: 'c1' }, { contract: 'c1' }));
   assert.deepEqual(good.diagnostics.filter((d) => d.severity === 'error').map((d) => d.code), []);
@@ -290,6 +300,8 @@ test('a relationship can end at a port and incompatible port connections are dia
 // ---------------------------------------------------------------------------------------------
 // One negative fixture per diagnostic
 
+// One fixture per diagnostic, each producing the expected code.
+// @evidence abstraction-no-silent-dropping
 test('negative fixtures produce one explicit diagnostic each', () => {
   const tree = [comp('s1', { kind: 'subsystem', parent: 'sys' }), comp('s2', { kind: 'subsystem', parent: 'sys' }), comp('a', { parent: 's1' }), comp('b', { parent: 's2' })];
   const top = { cuts: [{ id: 'top', name: 'Top', depth: 1 }] };
@@ -332,6 +344,9 @@ test('negative fixtures produce one explicit diagnostic each', () => {
 // ---------------------------------------------------------------------------------------------
 // Level-aware claims
 
+// The hand-listed leaf form and the restated L1 form are both verified, over target leaves that include the old ones.
+// The hand-listed form and the restated form are both verified, and the restated targets include the old ones and the four top-level components the hand list omitted.
+// @evidence core-independent-of-ui level-claims-sound-transfer
 test('core-independent-of-ui restated at L1 keeps its verdict over the same leaves and covers four more components', () => {
   const model = self();
   const restated = evaluateClaim(model, 'core-independent-of-ui');
@@ -357,6 +372,8 @@ test('core-independent-of-ui restated at L1 keeps its verdict over the same leav
   assert.ok(!newLeaves.has('semantic-core') && ![...newLeaves].some((id) => ancestorsOf(model, id).includes('semantic-core')), 'nothing inside the core is a target');
 });
 
+// A fixture whose coarse path joins two relationships that no path inside the middle block connects is inconclusive, not verified.
+// @evidence level-claims-sound-transfer
 test('a spurious coarse path is may-reachable and not verified', () => {
   const doc = spec(
     [comp('x', { kind: 'subsystem', parent: 'sys' }), comp('y', { kind: 'subsystem', parent: 'sys' }), comp('z', { kind: 'subsystem', parent: 'sys' }), comp('x1', { parent: 'x' }), comp('y1', { parent: 'y' }), comp('y2', { parent: 'y' }), comp('z1', { parent: 'z' })],
@@ -383,6 +400,8 @@ test('a spurious coarse path is may-reachable and not verified', () => {
   assert.equal(evaluateClaim(witnessed, 'coarse-absence').status, 'violated');
 });
 
+// The leaf graph is acyclic and acyclic at the leaves is verified; at the cut of the two subsystems acyclic is violated with the member witnesses.
+// @evidence level-claims-sound-transfer
 test('a cycle only between two subsystems is reported by acyclic at that cut', () => {
   const model = modelOf(spec(
     [comp('s1', { kind: 'subsystem', parent: 'sys' }), comp('s2', { kind: 'subsystem', parent: 'sys' }), comp('a1', { parent: 's1' }), comp('a2', { parent: 's1' }), comp('b1', { parent: 's2' }), comp('b2', { parent: 's2' })],
@@ -408,6 +427,8 @@ test('a cycle only between two subsystems is reported by acyclic at that cut', (
 /** The collapse sets tried: none, each one alone, all together. @param {string[]} xs @returns {string[][]} */
 const subsets = (xs) => [[], ...xs.map((x) => [x]), xs];
 
+// Every structural view under every subset of the six subsystems collapsed.
+// @evidence structural-scene-draws-derived-model
 test('structural scene edges equal derived edges for every view and collapse set of the self-specification', () => {
   const model = self();
   const views = listViews(model).filter((v) => v.projection === 'structural');
@@ -447,6 +468,8 @@ test('structural scene edges equal derived edges for every view and collapse set
   }
 });
 
+// The save-requested hop from the session to the persistence client follows the same relationship in the expanded and the collapsed scene.
+// @evidence flows-classified-on-derived-model
 test('flows follow the declared edge of the visual-edit-flow save hop collapsed and expanded', () => {
   const model = self();
   const trace = runScenario(model, 'visual-edit-flow');
@@ -471,6 +494,8 @@ test('flows follow the declared edge of the visual-edit-flow save hop collapsed 
 // ---------------------------------------------------------------------------------------------
 // Realisation maps and connectors
 
+// A fixture with a logical and a deployment hierarchy: a holding realisation, a broken path and a path from the wrong host.
+// @evidence realisation-maps-checked
 test('realisation maps between a logical and a deployment hierarchy are checked as facts', () => {
   const doc = spec(
     [comp('frontend'), comp('backend'), comp('browser-host', { kind: 'external' }), comp('server-host', { kind: 'external' })],
@@ -496,6 +521,8 @@ test('realisation maps between a logical and a deployment hierarchy are checked 
   assert.deepEqual(/** @type {any} */ (deriveModel(model, { hierarchy: 'deployment', depth: 0 })).realisations.map((/** @type {any} */ x) => [x.id, x.holds]), [['broken', false], ['over-the-network', true], ['wrong-way', false]]);
 });
 
+// A publish and a subscribe through a connector element contract to one notifies between the blocks of producer and consumer.
+// @evidence realisation-maps-checked
 test('connector-mediated interactions contract through declared connectors only', () => {
   const model = modelOf(spec(
     [comp('left', { kind: 'subsystem', parent: 'sys' }), comp('producer', { parent: 'left' }), comp('consumer', { parent: 'sys' }), comp('topic', { kind: 'connector', parent: 'sys' }), comp('loner', { parent: 'sys' })],
@@ -537,6 +564,8 @@ function edited(model, edit) {
   return { ...model, entities, byKind: { ...model.byKind, relationship: rels, component: comps } };
 }
 
+// 200 seeded edits (kind, endpoints, description, additions, deletions) of the self-specification; incremental and full results are deep-equal and the recomputed set is exactly the facts whose footprint holds the edited relationship.
+// @evidence footprint-incremental-equals-full
 test('footprint invalidation equals full re-derivation over a randomised sequence of edits', () => {
   const r = rng(5694);
   const pick = (/** @type {any[]} */ xs) => xs[Math.floor(r() * xs.length)];

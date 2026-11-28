@@ -128,6 +128,8 @@ function dataModelText() {
   return entities.map((e) => ({ id: e.id, kind: e.kind, text: JSON.stringify(e.data) }));
 }
 
+// Every write site found by pattern in src/, cli/ and tools/ belongs to exactly one listed store and every listed store still has a site; each store's locator, every browser storage key the code writes and every workspace project file appear in a record or a copy of specs/exegra/spec.jsonc. A new write site, key or project file fails it until its store is modelled.
+// @evidence runtime-stores-modelled #
 test('every write site in the code belongs to exactly one listed store, and every listed store has a site', () => {
   const sites = writeSites();
   const used = new Set();

@@ -16,6 +16,8 @@ import { same } from '../oracle/same-model.js';
 
 const BASE = (extra) => `{ "exegra": "0.1", "system": { "id": "s", "name": "S" }, ${extra} }`;
 
+// Repeated keys, array-index and non-ASCII keys, -0 and out-of-range numbers, malformed vocabularies: identical results.
+// @evidence model-derivation-matches-javascript
 test('edge cases derive identically', () => {
   const cases = [
     '[]', '"x"', '{}', '{ "exegra": "0.2" }', '{ "exegra": { "v": 1 } }', '{ "exegra": 0.1 }',

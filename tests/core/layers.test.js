@@ -49,6 +49,8 @@ function workspace(products) {
   return { specs, cleanup: () => fs.rmSync(specs, { recursive: true, force: true }) };
 }
 
+// The badges product passes, its entities carry the product file in their locations and paths in that file.
+// @evidence product-layers-checked
 test('a product file importing the platform passes validation', () => {
   const a = analyzeLayers(read(PLATFORM), [layer(BADGES)]);
   assert.equal(a.errorCount, 0, JSON.stringify(a.diagnostics.filter((d) => d.severity === 'error')));
@@ -60,6 +62,9 @@ test('a product file importing the platform passes validation', () => {
   assert.equal(a.model?.entities.get('runtime')?.loc.file, undefined, 'a platform entity has no file');
 });
 
+// validate and show read the product files project.jsonc lists.
+// validate of the layered project and of the platform alone report the same semanticHash.
+// @evidence product-layers-checked product-layers-leave-platform-unchanged
 test('the CLI validates a project that lists product files and reports the platform hash as semanticHash', async () => {
   const ws = workspace([path.join(FIXTURES, 'products')]);
   try {
@@ -77,6 +82,8 @@ test('the CLI validates a project that lists product files and reports the platf
   }
 });
 
+// The layered analysis and a layered Project report the hash of the platform alone.
+// @evidence product-layers-leave-platform-unchanged
 test('adding a product file leaves the platform semantic hash unchanged', () => {
   const alone = parseSpec(read(PLATFORM)).model;
   const a = analyzeLayers(read(PLATFORM), [layer(BADGES)]);
@@ -84,6 +91,8 @@ test('adding a product file leaves the platform semantic hash unchanged', () => 
   assert.equal(new Project({ specText: read(PLATFORM) }).semanticHash, new Project({ specText: read(PLATFORM), layers: [layer(BADGES)] }).semanticHash);
 });
 
+// The platform model, and the platform entities of the combined model, equal the model of the platform alone.
+// @evidence product-layers-leave-platform-unchanged
 test('the parsed platform specification is unchanged by layering', () => {
   const alone = parseSpec(read(PLATFORM)).model;
   const a = analyzeLayers(read(PLATFORM), [layer(BADGES)]);
@@ -93,6 +102,8 @@ test('the parsed platform specification is unchanged by layering', () => {
   assert.deepEqual(combined, entities(alone));
 });
 
+// Negative fixture refused/import-unknown.jsonc.
+// @evidence product-layers-checked
 test('an imported id the platform does not declare is refused with layer.import-unknown', () => {
   const [d, ...rest] = errors([refused('import-unknown')]);
   assert.equal(rest.length, 0);
@@ -102,6 +113,8 @@ test('an imported id the platform does not declare is refused with layer.import-
   assert.equal(d.loc?.file, 'import-unknown.jsonc');
 });
 
+// Negative fixture refused/redefines-entity.jsonc.
+// @evidence product-layers-checked
 test('a product that redefines a platform entity is refused with layer.redefines-entity', () => {
   const found = errors([refused('redefines-entity')]);
   assert.deepEqual(found.map((d) => d.code).sort(), ['layer.namespace-missing', 'layer.redefines-entity']);
@@ -110,6 +123,8 @@ test('a product that redefines a platform entity is refused with layer.redefines
   assert.match(redefines?.message ?? '', /Give the product's entity an id of its own/);
 });
 
+// Two copies of the badges product.
+// @evidence product-layers-checked
 test('two product files that declare the same id are refused with layer.redefines-entity', () => {
   const a = analyzeLayers(read(PLATFORM), [layer(BADGES), { ...layer(BADGES), file: 'copy.jsonc' }]);
   const codes = new Set(a.diagnostics.filter((d) => d.severity === 'error').map((d) => d.code));
@@ -117,6 +132,8 @@ test('two product files that declare the same id are refused with layer.redefine
   assert.match(a.diagnostics.find((d) => d.code === 'layer.redefines-entity')?.message ?? '', /product file badges\.jsonc already declares/);
 });
 
+// Negative fixture refused/kind-not-allowed.jsonc, and vocabulary, functions, capabilities and system.
+// @evidence product-layers-checked
 test('a section a product may not declare is refused with layer.kind-not-allowed', () => {
   const found = errors([refused('kind-not-allowed')]);
   assert.deepEqual(found.map((d) => d.code), ['layer.kind-not-allowed']);
@@ -129,6 +146,8 @@ test('a section a product may not declare is refused with layer.kind-not-allowed
   }
 });
 
+// Negative fixture refused/import-missing.jsonc: a reference and a type text.
+// @evidence product-layers-checked
 test('a platform entity used without being imported is refused with layer.import-missing', () => {
   const found = errors([refused('import-missing')]);
   assert.deepEqual(found.map((d) => d.code), ['layer.import-missing', 'layer.import-missing']);
@@ -136,18 +155,24 @@ test('a platform entity used without being imported is refused with layer.import
   assert.match(found[1].message, /type "tenant-id".*Add "tenant-id" to product\.imports\.entities/);
 });
 
+// Negative fixture refused/reference-unknown.jsonc.
+// @evidence product-layers-checked
 test('a reference no layer declares is refused with layer.reference-unknown', () => {
   const found = errors([refused('reference-unknown')]);
   assert.deepEqual(found.map((d) => d.code), ['layer.reference-unknown']);
   assert.match(found[0].message, /refers to "badge-service", which neither the platform specification nor this product file declares/);
 });
 
+// Negative fixture refused/header-missing.jsonc.
+// @evidence product-layers-checked
 test('a product file without a header is refused with layer.header-missing', () => {
   const found = errors([refused('header-missing')]);
   assert.deepEqual(found.map((d) => d.code), ['layer.header-missing']);
   assert.match(found[0].message, /add it/);
 });
 
+// Negative fixture refused/import-mismatch.jsonc, through the workspace and the CLI.
+// @evidence product-layers-checked
 test('a product that imports another platform file is refused with layer.import-mismatch', async () => {
   const ws = workspace([refused('import-mismatch')]);
   try {
@@ -162,12 +187,16 @@ test('a product that imports another platform file is refused with layer.import-
   }
 });
 
+// Negative fixture refused/cross-product.jsonc beside products/badges.jsonc.
+// @evidence product-layers-checked
 test('a reference into another product file is refused with layer.cross-product-reference', () => {
   const found = errors([BADGES, refused('cross-product')]);
   assert.deepEqual(found.map((d) => d.code), ['layer.cross-product-reference']);
   assert.match(found[0].message, /"badges__award".*product file badges\.jsonc declares/);
 });
 
+// A platform edit applies with the product still layered; an edit of a product entity is refused.
+// @evidence product-layers-checked
 test('transactions on a layered project edit the platform text and refuse product entities', () => {
   const project = new Project({ specText: read(PLATFORM), layers: [layer(BADGES)] });
   const before = project.semanticHash;
@@ -201,6 +230,8 @@ const POWER_REFUSALS = [
   ['setting-platform-level', 'layer.platform-power', /is set at, or locked by, the platform level.*tenant, team and person/],
 ];
 
+// One negative fixture per power: platform-level role, anonymous, service and external holders, public anonymous contract, contract implemented by a platform component, realisation, implementation-level behavior, domain event.
+// @evidence product-layers-no-platform-power
 test('a product that claims a platform power or has a malformed entity id is refused with the rule for it', () => {
   for (const [name, code, message] of POWER_REFUSALS) {
     const found = errors([refused(name)]);
@@ -211,12 +242,16 @@ test('a product that claims a platform power or has a malformed entity id is ref
   }
 });
 
+// A tenant role held by people, teams and agents and a public facade contract on a session scheme are not refused.
+// @evidence product-layers-no-platform-power
 test('a product role at tenant level held by people and teams and agents is accepted', () => {
   const text = JSON.stringify({ product: { id: 'p', name: 'P', imports: { spec: '../platform.jsonc', entities: [] } }, roles: [{ id: 'p-role', name: 'R', level: 'tenant', holders: ['person', 'team', 'agent'], capabilities: [] }], contracts: [{ id: 'p-facade', name: 'F', exposure: 'public', auth: { scheme: 'session' }, realisation: 'facade' }] });
   const a = analyzeLayers(read(PLATFORM), [{ file: 'p.jsonc', text, platform: { declared: '../platform.jsonc', matches: true, expected: '../platform.jsonc' } }]);
   assert.deepEqual(a.diagnostics.filter((d) => d.code === 'layer.platform-power'), []);
 });
 
+// Negative fixture refused/duplicate-product-id.jsonc beside products/badges.jsonc.
+// @evidence product-layers-checked
 test('two product files with one product id are refused with layer.product-id-duplicate', () => {
   const found = errors([BADGES, refused('duplicate-product-id')]);
   const d = found.find((x) => x.code === 'layer.product-id-duplicate');
@@ -225,6 +260,8 @@ test('two product files with one product id are refused with layer.product-id-du
   assert.equal(d.loc?.file, 'duplicate-product-id.jsonc');
 });
 
+// Negative fixture refused/import-missing-reference.jsonc: event.contract, record.owner and behavior.subject.
+// @evidence product-layers-checked
 test('a reference through a reference key requires an import', () => {
   const found = errors([refused('import-missing-reference')]).filter((d) => d.code === 'layer.import-missing');
   assert.equal(found.length, 3, JSON.stringify(found.map((d) => d.message)));
@@ -233,6 +270,8 @@ test('a reference through a reference key requires an import', () => {
   assert.ok(found.some((d) => /"runtime" \(at subject\)/.test(d.message)));
 });
 
+// A platform relationship and a platform type text that name a product entity.
+// @evidence product-layers-checked
 test('a platform entity that references a product entity is refused with layer.platform-references-product', () => {
   const platform = read(PLATFORM);
   const byReference = platform.replace('"to": "runtime"', '"to": "badges__tier"');
@@ -253,6 +292,8 @@ test('a platform entity that references a product entity is refused with layer.p
   assert.equal(clean.diagnostics.some((x) => x.code === 'layer.platform-references-product'), false);
 });
 
+// Project.reload takes the product files as they are now; the layered model and layered hash follow, the platform hash does not.
+// @evidence product-layers-checked
 test('reload picks up a changed product file', () => {
   const project = new Project({ specText: read(PLATFORM), layers: [layer(BADGES)] });
   const platformHash = project.semanticHash;
@@ -285,6 +326,8 @@ test('reload picks up a changed product file', () => {
 const TYPED = path.join(FIXTURES, 'typed');
 const complete = ['badge-milestones.jsonc', 'promotions.jsonc'].map((f) => path.join(TYPED, f));
 
+// The badge-milestones and promotions products declare their object types, policies, ledger units, pools and limits, templates, triggers, automations and operations, pass validation, and leave the platform semantic hash unchanged.
+// @evidence product-layers-typed-sections
 test('the complete products declare everything they name and pass validation with the platform hash unchanged', async () => {
   const ws = workspace(complete);
   try {
@@ -303,6 +346,8 @@ test('the complete products declare everything they name and pass validation wit
   for (const id of ['badge_milestones__award', 'promotions__redeem']) assert.equal(a.model?.entities.has(id), false, `${id} is a typed value, not an entity of the combined model`);
 });
 
+// A field without its type and a member the platform type lacks.
+// @evidence product-layers-typed-sections
 test('a value that does not fit its platform type is refused with layer.value-invalid', () => {
   const found = errors([refused('value-invalid')]).filter((d) => d.code === 'layer.value-invalid');
   assert.equal(found.length, 2, JSON.stringify(found.map((d) => d.message)));
@@ -314,6 +359,8 @@ test('a value that does not fit its platform type is refused with layer.value-in
   assert.equal(read(refused('value-invalid')).split('\n')[(missing.loc?.line ?? 1) - 1].includes('"name"'), true, 'the location is the field that lacks its type');
 });
 
+// A trigger event, an automation step and an operation step outside the platform unions.
+// @evidence product-layers-typed-sections
 test('a union value the platform lacks is refused with layer.outside-catalogue', () => {
   const step = errors([refused('step-outside-catalogue')]).filter((d) => d.code === 'layer.outside-catalogue');
   assert.equal(step.length, 2, JSON.stringify(step.map((d) => d.message)));
@@ -324,6 +371,8 @@ test('a union value the platform lacks is refused with layer.outside-catalogue',
   assert.match(op[0].message, /names "SendMail" at steps\.0.*"tenant-operation-step" has the variants CreateRecord, UpdateRecord, DeleteRecord, PostLedger/);
 });
 
+// An id with no namespace and an id with one underscore.
+// @evidence product-layers-namespace
 test('an id outside the namespace of its product is refused with layer.namespace-missing', () => {
   const found = errors([refused('id-not-namespaced')]).filter((d) => d.code === 'layer.namespace-missing');
   assert.deepEqual(found.map((d) => /"([^"]+)"/.exec(d.message)?.[1]), ['badges-tier', 'badges_rank']);
@@ -331,6 +380,8 @@ test('an id outside the namespace of its product is refused with layer.namespace
   assert.equal(found[0].loc?.file, 'id-not-namespaced.jsonc');
 });
 
+// An object type and an automation no product declares, and an object type another product declares.
+// @evidence product-layers-typed-sections
 test('a name in a typed section that no product file declares or that another product declares is refused', () => {
   const unknown = errors([refused('reference-unknown-object')]).filter((d) => d.code === 'layer.reference-unknown');
   assert.equal(unknown.length, 2, JSON.stringify(unknown.map((d) => d.message)));
@@ -350,6 +401,8 @@ test('a name in a typed section that no product file declares or that another pr
   assert.ok(a.diagnostics.some((d) => d.code === 'layer.cross-product-reference' && /"badge_milestones__award" at on\.RecordCreated\.object, which product file badge-milestones\.jsonc declares/.test(d.message)), JSON.stringify(a.diagnostics.map((d) => d.message)));
 });
 
+// A ledger unit with the id of a platform component, and a unit and a pool with one id.
+// @evidence product-layers-typed-sections
 test('a typed item may not redefine a platform entity or another item', () => {
   const text = JSON.stringify({ product: { id: 'p', name: 'P', imports: { spec: '../platform.jsonc', entities: [] } }, ledgerUnits: [{ id: 'runtime', description: 'd' }, { id: 'p__a', description: 'd' }], ledgerPools: [{ id: 'p__a', description: 'd' }] });
   const a = analyzeLayers(read(PLATFORM), [{ file: 'p.jsonc', text, platform: { declared: '../platform.jsonc', matches: true, expected: '../platform.jsonc' } }]);
@@ -359,6 +412,8 @@ test('a typed item may not redefine a platform entity or another item', () => {
   assert.ok(redefined.some((d) => /"p__a".*already declares it/.test(d.message)));
 });
 
+// A product capability conferred by a role needs no plan; one no role confers is unreachable.
+// @evidence product-layers-namespace
 test('a product capability is reachable when a role confers it and a plan is not needed', () => {
   const file = { file: 'p.jsonc', platform: { declared: '../platform.jsonc', matches: true, expected: '../platform.jsonc' } };
   const header = { id: 'p', name: 'P', imports: { spec: '../platform.jsonc', entities: [] } };
@@ -372,6 +427,8 @@ test('a product capability is reachable when a role confers it and a plan is not
   assert.doesNotMatch(d?.message ?? '', /plan/);
 });
 
+// The sections, in order, and the platform type each names.
+// @evidence product-layers-typed-sections
 test('Exegra and specc read the same table of typed sections', () => {
   assert.deepEqual(TYPED_SECTIONS.map((s) => s.section), ['objects', 'policies', 'queries', 'views', 'workflows', 'segments', 'settings', 'ledgerUnits', 'ledgerPools', 'ledgerLimits', 'mailTemplates', 'noticeTemplates', 'tokens', 'triggers', 'automations', 'operations']);
   for (const key of TYPED_SECTIONS.map((s) => s.section)) assert.ok(PRODUCT_SECTION_NAMES.includes(key), key);
@@ -382,6 +439,8 @@ test('Exegra and specc read the same table of typed sections', () => {
 
 // ---- Expressions and retention of the typed sections (WG-5060, WG-5061) -----------------------------
 
+// The refused fixtures, one rule code per kind.
+// @evidence product-layers-expressions
 test('an expression that does not parse or check in its scope is refused with one rule code per kind', () => {
   const found = (/** @type {string} */ name, /** @type {string} */ code) => errors([refused(name)]).filter((d) => d.code === code);
   const syntax = found('expression-syntax', 'layer.expr-syntax');
@@ -403,6 +462,8 @@ test('an expression that does not parse or check in its scope is refused with on
   }
 });
 
+// The refused fixture and the complete products.
+// @evidence product-layers-retention
 test('a personal field without a retention rule on its object type is refused with layer.retention-missing', () => {
   const all = errors([refused('retention-missing')]);
   assert.deepEqual(all.map((d) => d.code), ['layer.retention-missing'], 'the type without a personal field needs no retention');
@@ -411,6 +472,8 @@ test('a personal field without a retention rule on its object type is refused wi
   assert.equal(errors(complete).length, 0, 'both complete products carry retention');
 });
 
+// An automation's expressions.
+// @evidence product-layers-expressions
 test('an automation accepts any field and param but is still checked for syntax and roles', () => {
   const step = (/** @type {string} */ condition) => JSON.stringify({ product: { id: 'p', name: 'P', imports: { spec: '../platform.jsonc', entities: [] } }, automations: [{ id: 'p__a', label: 'A', 'run-as': { roles: [] }, start: 's', steps: { s: { action: { Branch: { condition, object: 'p__o', record: 'param.r', then: 's', else: 's' } }, next: 's' } } }] });
   const codes = (/** @type {string} */ condition) => analyzeLayers(read(PLATFORM), [{ file: 'p.jsonc', text: step(condition), platform: { declared: '../platform.jsonc', matches: true, expected: '../platform.jsonc' } }]).diagnostics.filter((d) => d.code.startsWith('layer.expr-')).map((d) => d.code);
@@ -420,6 +483,8 @@ test('an automation accepts any field and param but is still checked for syntax 
 });
 
 // The header members version and platform (WG-5174): the same validation and rule code as specc's layers.rs.
+// The header members version and platform are accepted and validated.
+// @evidence product-layers-checked
 test('a product header takes version and platform and refuses a malformed one with layer.header-invalid', () => {
   const withHeader = (/** @type {string} */ members) => analyzeLayers(read(PLATFORM), [{ ...layer(BADGES), text: read(BADGES).replace('"id": "badges",', `"id": "badges", ${members}`) }]).diagnostics.filter((d) => d.severity === 'error');
   assert.deepEqual(withHeader('"version": "1.0.0", "platform": { "min": "0.2-draft", "below": "1.0" },').map((d) => d.code), []);
@@ -435,6 +500,8 @@ test('a product header takes version and platform and refuses a malformed one wi
 
 // ---- Queries, views and workflows in a product file (WG-5081) -----------------------------------
 
+// A member the platform type lacks in a query, a view and a workflow is exactly layer.value-invalid naming query-def, view-def and workflow-def, and a view section over a query nobody declares is layer.reference-unknown.
+// @evidence product-layers-typed-sections
 test('a product file may declare queries and views and workflows and refuses each that does not fit its platform type', () => {
   for (const [name, type] of [['query-value-invalid', 'query-def'], ['view-value-invalid', 'view-def'], ['workflow-value-invalid', 'workflow-def']]) {
     const found = errors([refused(name)]).filter((d) => d.code === 'layer.value-invalid');
@@ -447,6 +514,8 @@ test('a product file may declare queries and views and workflows and refuses eac
   assert.match(unknown[0].message, /ticket_board__ghost/);
 });
 
+// A product declaring one query, one view over it and one workflow validates.
+// @evidence product-layers-typed-sections
 test('a product declaring a query and a view and a workflow that fit their platform types is accepted', () => {
   const product = {
     product: { id: 'ticket-board', name: 'Ticket board', imports: { spec: '../platform.jsonc', entities: [] } },

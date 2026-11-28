@@ -85,6 +85,8 @@ test('V5 reports a message with no relationship between its elements at the base
   assert.equal(checkCoherence(modelOf(specOf([{ id: 'front-imports-store', kind: 'imports', from: 'front', to: 'store' }])), null).findings.length, 1);
 });
 
+// A message with no relationship of its own between its ends is reported at the base and at a cut that draws a coarse edge over another pair of elements.
+// @evidence message-interactions-witnessed
 test('a coarse edge over a different witness is reported at the cut and not accepted', () => {
   const m = modelOf(specOf());
   const cut = { hierarchy: 'logical', blocks: ['front', 'back'] };
@@ -108,6 +110,8 @@ test('a coarse edge over a different witness is reported at the cut and not acce
   assert.equal(coherenceReport(modelOf(specOf([{ id: 'front-calls-store', kind: 'invokes', from: 'front', to: 'store' }]))).ok, true);
 });
 
+// V5 over all 139 behaviour messages of the self-specification at the base, every hierarchy and every declared cut.
+// @evidence message-interactions-witnessed
 test('the self-specification has no unwitnessed message at the base or at any declared cut', () => {
   const { model } = analyzeSpec(readSpecFile(path.join(ROOT, 'specs/exegra/spec.jsonc')));
   assert.ok(model);
@@ -141,6 +145,8 @@ function contractSpec(typed) {
   };
 }
 
+// A relationship declaring a contract over events of no contract is reported untyped; typing the events clears it.
+// @evidence boundary-contracts-typed
 test('V7 reports a hop whose events are not typed by its declared contract', () => {
   const bad = checkContractConformance(modelOf(contractSpec(false)));
   assert.equal(bad.ok, false);
@@ -158,6 +164,8 @@ test('V7 lists a contracted hop no behavior exchanges events over apart from the
   assert.deepEqual(r.unmodelled.map((f) => [f.relationship, f.status]), [['a-calls-b', 'unmodelled']]);
 });
 
+// The hop of the development-server plugin and the hop of the agent command to the workspace service are typed; removing the contract from the events reports them.
+// @evidence boundary-contracts-typed
 test('the write-file workspace hops of the self-specification carry events of the contract', () => {
   const { model } = analyzeSpec(readSpecFile(path.join(ROOT, 'specs/exegra/spec.jsonc')));
   const m = /** @type {any} */ (model);
@@ -173,6 +181,19 @@ test('the write-file workspace hops of the self-specification carry events of th
   const again = checkContractConformance(modelOf(stripped));
   const reported = again.findings.filter((f) => f.contract === 'write-file').map((f) => f.relationship);
   assert.ok(reported.includes('dev-server-plugin-calls-workspace-service') && reported.includes('agent-cli-calls-workspace-service'), reported.join(', '));
+});
+
+// @evidence boundary-contracts-typed
+test('every contracted hop of the self-specification is typed and a workspace conflict is a write-file error with its code', () => {
+  const { model } = analyzeSpec(readSpecFile(path.join(ROOT, 'specs/exegra/spec.jsonc')));
+  const m = /** @type {any} */ (model);
+  const r = checkContractConformance(m);
+  assert.deepEqual(r.findings.map((f) => `${f.contract}:${f.relationship}`), [], 'no untyped hop');
+  assert.equal(r.ok, true);
+  const conflict = m.entities.get('ws-write-conflict').data;
+  assert.deepEqual([conflict.contract, conflict.role, conflict.correlation], ['write-file', 'error', 'requestId']);
+  assert.equal(conflict.payload[0].name, 'code');
+  for (const t of ['ws-conflict-spec', 'ws-conflict-layout']) assert.equal(m.entities.get(t).data.effects[1].payload.code, "'conflict'", t);
 });
 
 /** The self-specification as one JSON document, for a variant with an edit. */

@@ -187,6 +187,9 @@ inductive Err where
   | ambiguous
   /-- The key of a keyed instance read at a sort it is not of. -/
   | keySort
+  /-- The size of a message sent with event `ev` is `v`, not an integer in `[0, 2^40)` (format 2:
+  "Size of emit … must be an integer in [0, 2^40), got …", Format2.lean `sizeOf`). -/
+  | size (ev : Nat) (v : Val)
   deriving DecidableEq, Repr
 
 /-- `v` is a value of sort `τ` (for an integer sort: within its range). -/
@@ -394,6 +397,24 @@ def RQuery.read (q : RQuery) (s : RSt) : Nat :=
   | .inUseC c => Res.heldC s.holds c
   | .waitingC c => Res.waitingC s.waiting c
 
+/-- A message on a link (format 2's `Msg`, Format2.lean:962-971, without its id and sending time:
+the trace's bookkeeping numbers the messages). -/
+structure Msg where
+  event : Nat
+  payload : List (Nat × Val)
+  size : Nat
+  target : Option Nat := none
+  sender : Option Nat := none
+  deriving DecidableEq, Repr, Hashable
+
+/-- A link's transfer queue (format 2's `LQueue`): the message in transfer, the messages waiting,
+and the time of the last delivery (kept on an ordered link). -/
+structure LQ where
+  inTransfer : Option Msg := none
+  waiting : List Msg := []
+  last : Option Nat := none
+  deriving DecidableEq, Repr, Hashable
+
 /-- What a pending entry is: an event delivery, or one of the world's own entries (format 2's
 `EntryKind`, Format2.lean:930-940). An `op` entry is never pending: it is how phase 2 hands an
 operation to the commit. -/
@@ -407,6 +428,12 @@ inductive EKind where
   /-- The window of resource fault `f` (an index of `Sys.faults`) starts (`on`) or ends (format 2's
   `fault-edge` entry, Format2.lean:2197-2221). -/
   | faultEdge (f : Nat) (on : Bool)
+  /-- A message sent over link `link` (an index of `Sys.links`), with fan-out when `fan`: like `op`,
+  never pending; it is how phase 2 hands a send to the commit. -/
+  | send (link : Nat) (fan : Bool) (m : Msg)
+  /-- The transfer of the message in transfer on queue `key` of link `link` ends (format 2's
+  `link-done` entry, Format2.lean:2222-2243). The queue key is the receiver with fan-out. -/
+  | linkDone (link : Nat) (key : Option Nat)
   deriving DecidableEq, Repr, Hashable
 
 /-- The world: the state of each resource of the system, in declaration order, the id the next
@@ -417,7 +444,23 @@ structure World where
   res : List RSt := []
   nextReq : Nat := 0
   active : List Nat := []
+  /-- The link queues by (link, queue key), in creation order (WG-5683). -/
+  links : List ((Nat × Option Nat) × LQ) := []
   deriving DecidableEq, Repr, Hashable
+
+/-- A link (format 2's `LinkIn`, WG-4729): a propagation latency, and with a bandwidth a FIFO
+transfer queue, bounded by `bound`; `ordered` keeps deliveries in sending order; `fanout` sends one
+message per receiver. `receivers` are the machines of the behaviours whose subject is the link's
+target, in behaviour order and instance (slot) order; `perSecond` is the input's time units per
+second (1 without). -/
+structure Link where
+  latency : Dist
+  bandwidth : Option Nat := none
+  bound : Option Nat := none
+  ordered : Bool := false
+  fanout : Bool := false
+  receivers : List Nat := []
+  perSecond : Nat := 1
 
 /-- How a route picks the instance of its behaviour an entry is delivered to (format 2's routes,
 Format2.lean `decideRoutes`). The instances are the live machines of the route's group, in group
@@ -891,6 +934,13 @@ inductive Effect (S : Sig) (me : Fin S.machines) where
       (demand : Dist) (site : Nat × Nat) (payload : List (Nat × Expr S me))
   /-- Release `units` acquired units of class `cls` of resource `res` (format 2's `release`). -/
   | release (res cls units : Nat)
+  /-- Send `event` over link `link` (format 2's `emit` with `via`, Format2.lean:1513-1549), with
+  fan-out when `fan` (or when the link fans out), to the sender of the delivered entry when
+  `reply`. The message's size is `size` (none: 0), checked to be an integer in `[0, 2^40)` when
+  `checked` (an expression; a drawn size is not checked). The send is applied after phase 2, in
+  effect order with the emits. -/
+  | send (event link : Nat) (fan reply : Bool) (size : Option (Expr S me)) (checked : Bool)
+      (payload : List (Nat × Expr S me))
 
 /-- A transition of machine `me`: from control state `src`, on `event`, when `guard` holds, run
 `effects` in order and move to `dst`. A `faultOnly` transition is a candidate only while an active
@@ -1018,6 +1068,8 @@ def Effect.withAfter {S : Sig} {me : Fin S.machines} (a : Nat) : Effect S me →
   /- A sampled `set` (format 2's `sample`, WG-5683): an integer literal at a draw site is the drawn
   value. -/
   | .set v (.val (.int _)) => .set v (.val (.int a))
+  /- A drawn size (format 2's `size` distribution, stream `size:{site}`). -/
+  | .send ev l f r (some (.val (.int _))) false pl => .send ev l f r (some (.val (.int a))) false pl
   | e => e
 
 /-- A system: a signature, the transitions of each machine in declaration order, the initial
@@ -1037,6 +1089,8 @@ structure Sys where
   resources : List Res.ResourceDecl := []
   /-- The routes, in format 2's decision order (WG-5683). -/
   routes : List Route := []
+  /-- The links, in declaration order (WG-5683). -/
+  links : List Link := []
 
 /-- The distributions of a system's sampled delays, in draw-slot order. -/
 def Sys.dists (sys : Sys) : List Dist := sys.samples.map (fun s => s.2.2.2)
@@ -1090,6 +1144,34 @@ def evalPayload {S : Sig} {me : Fin S.machines} (cx : Ctx) :
     | .ok v => match evalPayload cx rest with
       | .error err => .error err
       | .ok vs => .ok ((f, v) :: vs)
+
+/-- The size of a message from the value `v`: a non-negative integer, below `2^40` when `checked`
+(format 2's `sizeOf`). -/
+def sizeOfVal (checked : Bool) (ev : Nat) (v : Val) : Except Err Nat :=
+  match v with
+  | .int n => if 0 ≤ n ∧ (checked = false ∨ n < 1099511627776) then .ok n.toNat else .error (.size ev v)
+  | _ => .error (.size ev v)
+
+/-- The size of a message sent with event `ev`: `0` without a size expression. -/
+def sizeOfE {S : Sig} {me : Fin S.machines} (cx : Ctx) (ev : Nat) (checked : Bool) :
+    Option (Expr S me) → Except Err Nat
+  | none => .ok 0
+  | some x => match x.eval cx with
+    | .error err => .error err
+    | .ok v => sizeOfVal checked ev v
+
+/-- The target of a send: for a reply, the sender of the delivered entry (format 2: "Effect replies
+to …, which has no requester." when it has none). -/
+def replyTo (reply : Bool) (e : Entry) : Except Err (Option Nat) :=
+  if reply then
+    match e.sender with
+    | none => .error .noRequester
+    | some to => .ok (some to)
+  else .ok none
+
+/-- The entry by which machine `m` hands a send of `msg` over link `l` to the commit. -/
+def sendEntry (c : Cfg) (m l : Nat) (fan : Bool) (msg : Msg) : Entry :=
+  { time := c.time, event := 0, payload := [], sender := some m, kind := .send l fan msg }
 
 /-- Runs effects in order. Each reads the snapshot of `c` for other machines and time, and `own`
 as the earlier effects left it; it writes only `own`, the entries it emits and its own timers. A
@@ -1151,6 +1233,18 @@ def runEffects {S : Sig} {me : Fin S.machines} (c : Cfg) (e : Entry) :
     match runEffects c e rest own with
     | .error err => .error err
     | .ok (st, outs, tn) => .ok (st, opEntry c me.val (.release res cls units) :: outs, tn)
+  | .send ev l fan rep size chk pl :: rest, own =>
+    match sizeOfE (ctxOf c e own) ev chk size with
+    | .error err => .error err
+    | .ok sz => match evalPayload (ctxOf c e own) pl with
+      | .error err => .error err
+      | .ok vs => match replyTo rep e with
+        | .error err => .error err
+        | .ok tg => match runEffects c e rest own with
+          | .error err => .error err
+          | .ok (st, outs, tn) =>
+            .ok (st, sendEntry c me.val l fan
+              { event := ev, payload := vs, size := sz, target := tg, sender := some me.val } :: outs, tn)
 
 /-- Fires winner `w` from its machine state `own`: the effects, then the move to `dst`. It reads
 only `own` and the snapshot `c`. -/
@@ -1288,12 +1382,24 @@ def insertByTime (q : List Entry) (e : Entry) : List Entry :=
   | x :: xs => if e.time < x.time then e :: x :: xs else x :: insertByTime xs e
 
 /-- The configuration after a delivery from `c0` (time advanced, delivered entry removed) whose
-phase 2 gave `r`: the machines phase 2 left; the pending entries of the timers the winners set or
-cancelled removed; the emitted entries inserted by time, in machine-index order. -/
-def Cfg.commit (n : Nat) (c0 : Cfg) (ms : List MState) (bs : Emitted) : Cfg :=
-  { c0 with machines := ms,
-            pending := ((inMachineOrder n bs).filter (fun x => x.kind == .event)).foldl insertByTime
-              (c0.pending.filter (fun x => !isTimerOf (touchedOf bs) x)) }
+phase 2 gave `r`: the machines phase 2 left, and the pending entries of the timers the winners set
+or cancelled removed. The emitted entries are inserted by settling (`settleOut`), in machine-index
+order and effect order with the sends (format 2 inserts them during phase 2, Format2.lean
+`insertE`). -/
+def Cfg.commit (_n : Nat) (c0 : Cfg) (ms : List MState) (bs : Emitted) : Cfg :=
+  { c0 with machines := ms, pending := c0.pending.filter (fun x => !isTimerOf (touchedOf bs) x) }
+
+/-- An event entry (not an operation or an entry of the world). -/
+def Entry.isEvent (x : Entry) : Bool := x.kind == .event
+
+/-- `c` with the emitted entries of `outs` inserted by time, in order. -/
+def Cfg.putAll (c : Cfg) (outs : List Entry) : Cfg :=
+  { c with pending := (outs.filter Entry.isEvent).foldl insertByTime c.pending }
+
+/-- The commit with the emitted entries inserted: what a delivery of a system without resources or
+links leaves (`settleOut_nil`). -/
+def Cfg.commitE (n : Nat) (c0 : Cfg) (ms : List MState) (bs : Emitted) : Cfg :=
+  (c0.commit n ms bs).putAll (inMachineOrder n bs)
 
 def afterPhase2 (sys : Sys) (c0 : Cfg) : Except Err (List MState × Emitted) → Except Err Cfg
   | .error err => .error err
@@ -1322,6 +1428,24 @@ def Cfg.pop (c : Cfg) (k : Nat) (e : Entry) : Cfg :=
   { c with time := e.time, pending := c.pending.eraseIdx k,
            attempts := c.bumpAttempts e.event }
 
+/-- The instances of a group: its live machines, in group order. -/
+def instsOf (ms : List MState) (g : List Nat) : List Nat :=
+  g.filter (fun m => (ms[m]?.map (·.live)).getD false)
+
+/-- Queue `(l, k)` of world `w` (empty when it has none). -/
+def World.lq (w : World) (l : Nat) (k : Option Nat) : LQ :=
+  ((w.links.find? (·.1 == (l, k))).map (·.2)).getD {}
+
+/-- `w` with queue `(l, k)` set to `q` (appended when it has none, format 2's `setLQueue`). -/
+def World.setLq (w : World) (l : Nat) (k : Option Nat) (q : LQ) : World :=
+  if w.links.any (·.1 == (l, k)) then
+    { w with links := w.links.map fun p => if p.1 == (l, k) then ((l, k), q) else p }
+  else { w with links := w.links ++ [((l, k), q)] }
+
+/-- The delivery entry of message `m` at `t`. -/
+def propEntry (t : Nat) (m : Msg) : Entry :=
+  { time := t, event := m.event, payload := m.payload, target := m.target, sender := m.sender }
+
 /-! ### Settling the world (WG-5683)
 
 After phase 2 the step's resource operations, in machine order and effect order, are applied to the
@@ -1335,15 +1459,16 @@ draw of the request's demand. `fill` then performs the actions with the step's w
 hole in order. The holes are the step's **draw program**: a label's world draws must be one per
 hole, each in the support of the hole's demand (`DrawsFit`). -/
 
-/-- An event entry (not an operation or an entry of the world). -/
-def Entry.isEvent (x : Entry) : Bool := x.kind == .event
 
 /-- The operations of phase 2's output, tagged with the machine that produced them, in machine
 order and, within a machine, in effect order. -/
-def opsOf (n : Nat) (bs : Emitted) : List (Nat × WOp) :=
-  (inMachineOrder n bs).filterMap fun x => match x.kind, x.sender with
+def opsIn (outs : List Entry) : List (Nat × WOp) :=
+  outs.filterMap fun x => match x.kind, x.sender with
     | .op o, some m => some (m, o)
     | _, _ => none
+
+/-- The operations of phase 2's output in machine order. -/
+def opsOf (n : Nat) (bs : Emitted) : List (Nat × WOp) := opsIn (inMachineOrder n bs)
 
 /-- The resource an operation is on. -/
 def WOp.res : WOp → Nat
@@ -1358,6 +1483,12 @@ inductive Note where
   | removed (res : Nat) (r : RReq) (waited : Nat)
   | completed (res : Nat) (r : RReq) (waited served : Nat)
   | timedOut (res : Nat) (r : RReq) (waited : Nat)
+  /-- Link records (format 2's `LinkRec`): message `m` queued on queue `(l, k)`, lost from it,
+  starting its transfer, or done with its transfer (its propagation is the `prop` action). -/
+  | lqueued (l : Nat) (k : Option Nat) (m : Msg)
+  | llost (l : Nat) (k : Option Nat) (m : Msg) (oldest : Bool)
+  | lstarted (l : Nat) (k : Option Nat) (m : Msg)
+  | ltransferred (l : Nat) (k : Option Nat) (m : Msg)
 
 /-- An action of settling on the queue. `ins res rid outcome e` inserts the answer or wait-timeout
 entry `e` of request `rid` (`outcome` is format 2's source outcome); `hole` inserts the service-done
@@ -1370,12 +1501,24 @@ inductive Act where
   | rm (res rid : Nat)
   | note (n : Note)
   | fail (err : Err)
+  /-- Insert entry `e`: an entry phase 2 emitted, or a link's `link-done` entry. -/
+  | put (e : Entry)
+  /-- Propagate message `m` of queue `(l, k)` (format 2's `propagate`, Format2.lean:1364-1379): its
+  delivery after a latency drawn from `lat` (a hole), on an `ordered` link no earlier than the
+  queue's last delivery, which it then becomes. -/
+  | prop (l : Nat) (k : Option Nat) (ordered : Bool) (lat : Dist) (m : Msg)
+
+/-- The draw site of the latency of link `l` (a site no transition has, so that the run's book can
+name its stream, format 2's `latency:{link}`). -/
+def linkSite (l : Nat) : Nat × Nat × Nat := (l, 1, 4294967296)
 
 /-- The draws a list of actions needs: the demand of each hole, with its draw site (owner,
-transition, effect), in order, up to the first failure (the step ends there). -/
+transition, effect), and the latency of each propagation, in order, up to the first failure (the
+step ends there). -/
 def holesOf : List Act → List ((Nat × Nat × Nat) × Dist)
   | [] => []
   | .hole _ r d _ _ _ :: as => ((r.owner, r.info.site.1, r.info.site.2), d) :: holesOf as
+  | .prop l _ _ d _ :: as => (linkSite l, d) :: holesOf as
   | .fail _ :: _ => []
   | _ :: as => holesOf as
 
@@ -1518,7 +1661,93 @@ def settle (sys : Sys) (now : Nat) (ops : List (Nat × WOp)) (touched : List Nat
     World × List Act :=
   settleAll (sys.acting w) now ops touched ((List.range sys.resources.length).zip sys.resources) w []
 
+/-! ### Links (WG-5683)
+
+Format 2 applies a send during phase 2, in effect order (Format2.lean:1513-1549, `sendMsg`): its
+entries are inserted into the queue interleaved with the emits. The calculus applies the step's
+emits and sends after phase 2, in machine order and effect order (`outActs`), before settling the
+resources: an emit is an inserted entry; a send goes to propagation (a hole: its latency is a world
+draw) or starts its transfer (a `link-done` entry) or waits, by the state of its queue, which is
+threaded from send to send. -/
+
+/-- Message `m` starts its transfer on queue `(li, k)` of link `L` at `now` (format 2's
+`startTransfer`): its `link-done` entry at `now + ⌈size · perSecond / bandwidth⌉`. The flag says
+whether the step fails. -/
+def startOf (L : Link) (li : Nat) (k : Option Nat) (m : Msg) (now : Nat) (w : World) :
+    World × List Act × Bool :=
+  let bw := L.bandwidth.getD 1
+  let tt := (m.size * L.perSecond + bw - 1) / bw
+  if timeLimit ≤ now + tt then (w, [.fail .timeBound], true)
+  else (w.setLq li k { w.lq li k with inTransfer := some m },
+    [.put { time := now + tt, event := 0, payload := [], kind := .linkDone li k }, .note (.lstarted li k m)],
+    false)
+
+/-- Send message `m` on queue `(li, k)` of link `L` at `now` (format 2's `sendMsg`): without a
+bandwidth, or with size 0 on a link that is not ordered, straight to propagation; else it starts
+its transfer when the queue is idle, or waits. Beyond the bound the newest waiting message is lost,
+with fan-out the oldest. -/
+def sendOne (L : Link) (li : Nat) (fan : Bool) (k : Option Nat) (m : Msg) (now : Nat) (w : World) :
+    World × List Act × Bool :=
+  if L.bandwidth.isNone || (!L.ordered && m.size == 0) then (w, [.prop li k L.ordered L.latency m], false)
+  else
+    let q := w.lq li k
+    if q.inTransfer.isNone then startOf L li k m now w
+    else
+      let ws := q.waiting ++ [m]
+      let kept : List Msg × List Msg := match L.bound with
+        | some b => if b < ws.length then (if fan then (ws.drop 1, ws.take 1) else (ws.dropLast, ws.drop (ws.length - 1)))
+                    else (ws, [])
+        | none => (ws, [])
+      (w.setLq li k { q with waiting := kept.1 },
+        Act.note (.lqueued li k m) :: kept.2.map (fun x => Act.note (.llost li k x fan)), false)
+
+/-- Sends message `m` to each receiver `(queue key, target)` in order, stopping at a failure. -/
+def sendTo (L : Link) (li : Nat) (fan : Bool) (now : Nat) (m : Msg) :
+    List (Option Nat × Option Nat) → World → List Act → World × List Act × Bool
+  | [], w, acts => (w, acts, false)
+  | (k, tg) :: rest, w, acts =>
+    let r := sendOne L li fan k { m with target := tg } now w
+    if r.2.2 then (r.1, acts ++ r.2.1, true) else sendTo L li fan now m rest r.1 (acts ++ r.2.1)
+
+/-- The receivers of a send over link `L`: with fan-out, every live receiver (queue key and target
+the receiver, format 2's `fanReceivers`); else the message's own target on the link's one queue. -/
+def receiversOf (L : Link) (fan : Bool) (ms : List MState) (m : Msg) : List (Option Nat × Option Nat) :=
+  if fan then (instsOf ms L.receivers).map (fun r => (some r, some r)) else [(none, m.target)]
+
+/-- The emits and sends of phase 2's output `outs` (in machine order, effect order) applied at
+`now`, with the machines `ms`: the world (its link queues) and the actions, stopping at a failure.
+A send over a link the system does not have does nothing. -/
+def outActs (links : List Link) (now : Nat) (ms : List MState) : List Entry → World → List Act → World × List Act
+  | [], w, acts => (w, acts)
+  | x :: xs, w, acts =>
+    match x.kind with
+    | .event => outActs links now ms xs w (acts ++ [.put x])
+    | .send li fan m =>
+      match links[li]? with
+      | none => outActs links now ms xs w acts
+      | some L =>
+        let r := sendTo L li (fan || L.fanout) now m (receiversOf L (fan || L.fanout) ms m) w acts
+        if r.2.2 then (r.1, r.2.1) else outActs links now ms xs r.1 r.2.1
+    | _ => outActs links now ms xs w acts
+
+/-- **Settling a delivery**: phase 2's output `outs` (in machine order) applied at `now` with the
+machines `ms` after phase 2: the emits and sends (`outActs`), then the resources (`settle`). -/
+def settleOut (sys : Sys) (now : Nat) (ms : List MState) (outs : List Entry) (w : World) : World × List Act :=
+  ((settle sys now (opsIn outs) [] (outActs sys.links now ms outs w []).1).1,
+   (outActs sys.links now ms outs w []).2 ++ (settle sys now (opsIn outs) [] (outActs sys.links now ms outs w []).1).2)
+
 def ceilDiv (a b : Nat) : Nat := (a + b - 1) / b
+
+/-- The delivery time of a message of queue `(l, k)` propagated with latency `d`: on an ordered
+link, no earlier than the queue's last delivery. -/
+def Cfg.propTime (c : Cfg) (l : Nat) (k : Option Nat) (ord : Bool) (d : Nat) : Nat :=
+  if ord then max (c.time + d) ((c.world.lq l k).last.getD 0) else c.time + d
+
+/-- `c` with message `m` of queue `(l, k)` delivered at `t`: its entry inserted, and on an ordered
+link `t` kept as the queue's last delivery. -/
+def Cfg.propagate (c : Cfg) (l : Nat) (k : Option Nat) (ord : Bool) (t : Nat) (m : Msg) : Cfg :=
+  { c.enq (propEntry t m) with
+    world := if ord then c.world.setLq l k { c.world.lq l k with last := some t } else c.world }
 
 /-- Performs the actions in order on `c`, with world draws `ds`, one per hole: a hole's service
 time is `⌈draw · num / den⌉`, `serviceBound` at or beyond `2^53`, and its entry `timeBound` at or
@@ -1536,6 +1765,10 @@ def fill (c : Cfg) : List Act → List Nat → Except Err Cfg
     fill { c with pending := c.pending.filter (fun x => x.kind != .waitTimeout ri rid) } as ds
   | .note _ :: as, ds => fill c as ds
   | .fail err :: _, _ => .error err
+  | .put e :: as, ds => fill (c.enq e) as ds
+  | .prop l k ord _ m :: as, ds =>
+    if timeLimit ≤ c.propTime l k ord (ds.headD 0) then .error .timeBound
+    else fill (c.propagate l k ord (c.propTime l k ord (ds.headD 0)) m) as ds.tail
 
 /-- `c` with the world entry `e` taken: the time advanced to the entry's and the entry removed (a
 world entry is not an attempt of an event). -/
@@ -1598,13 +1831,28 @@ def worldStep (sys : Sys) (c0 : Cfg) (e : Entry) : World × List Act :=
         | some _ => settle sys c0.time [] [f.res] w0
         | none => (w0, [])
       else (c0.world, [])
+  | .linkDone li k =>
+    match sys.links[li]? with
+    | none => (c0.world, [])
+    | some L =>
+      let q := c0.world.lq li k
+      match q.inTransfer with
+      | none => (c0.world, [])
+      | some m =>
+        let pre := [Act.note (.ltransferred li k m), Act.prop li k L.ordered L.latency m]
+        match q.waiting with
+        | m' :: rest =>
+          let r := startOf L li k m' c0.time (c0.world.setLq li k { q with inTransfer := none, waiting := rest })
+          (r.1, pre ++ r.2.1)
+        | [] => (c0.world.setLq li k { q with inTransfer := none }, pre)
   | _ => (c0.world, [])
 
 /-- Settles after a committed delivery (`c1` is the commit) with world draws `ds`: `none` when the
 draws do not fit the holes. -/
-def settleFill (sys : Sys) (c1 : Cfg) (ops : List (Nat × WOp)) (ds : List Nat) : Option (Except Err Cfg) :=
-  if DrawsFit ds (holesOf (settle sys c1.time ops [] c1.world).2) then
-    some (fill { c1 with world := (settle sys c1.time ops [] c1.world).1 } (settle sys c1.time ops [] c1.world).2 ds)
+def settleFill (sys : Sys) (c1 : Cfg) (outs : List Entry) (ds : List Nat) : Option (Except Err Cfg) :=
+  if DrawsFit ds (holesOf (settleOut sys c1.time c1.machines outs c1.world).2) then
+    some (fill { c1 with world := (settleOut sys c1.time c1.machines outs c1.world).1 }
+      (settleOut sys c1.time c1.machines outs c1.world).2 ds)
   else none
 
 /-- The world's step for entry `e` from `c` with world draws `ds`: `none` when the draws do not
@@ -1615,14 +1863,15 @@ def worldFill (sys : Sys) (c : Cfg) (e : Entry) (ds : List Nat) : Option (Except
   else none
 
 @[simp] theorem settle_resolve (sys : Sys) (ds : List Nat) : settle (sys.resolve ds) = settle sys := rfl
+@[simp] theorem settleOut_resolve (sys : Sys) (ds : List Nat) : settleOut (sys.resolve ds) = settleOut sys := rfl
 
 /-- A system without resources settles nothing. -/
 theorem settle_nil_res {sys : Sys} (h : sys.resources = []) (now : Nat) (ops : List (Nat × WOp))
     (touched : List Nat) (w : World) : settle sys now ops touched w = (w, []) := by
   unfold settle; rw [h]; rfl
 
-/-- A system without resources has no world steps. -/
-theorem worldStep_nil_res {sys : Sys} (h : sys.resources = []) (c0 : Cfg) (e : Entry) :
+/-- A system without resources or links has no world steps. -/
+theorem worldStep_nil_res {sys : Sys} (h : sys.resources = []) (hl : sys.links = []) (c0 : Cfg) (e : Entry) :
     worldStep sys c0 e = (c0.world, []) := by
   unfold worldStep
   split
@@ -1631,47 +1880,94 @@ theorem worldStep_nil_res {sys : Sys} (h : sys.resources = []) (c0 : Cfg) (e : E
   · split
     · rfl
     · simp [edgeOk_nil_res h]
+  · simp [hl]
   · rfl
+
+/-- Without links, the emits and sends of a step are its emits, inserted in order. -/
+theorem outActs_nil_links (now : Nat) (ms : List MState) :
+    (outs : List Entry) → (w : World) → (acts : List Act) →
+    outActs [] now ms outs w acts = (w, acts ++ (outs.filter Entry.isEvent).map Act.put)
+  | [], w, acts => by simp [outActs]
+  | x :: xs, w, acts => by
+    simp only [outActs]
+    split
+    · rename_i hk
+      rw [outActs_nil_links now ms xs w _]
+      simp [List.filter_cons, Entry.isEvent, hk]
+    · rename_i hk
+      simp only [List.getElem?_nil]
+      rw [outActs_nil_links now ms xs w _]
+      simp [List.filter_cons, Entry.isEvent, hk]
+    · rename_i hk1 hk2
+      rw [outActs_nil_links now ms xs w _]
+      have : (x.kind == EKind.event) = false := by
+        cases h : x.kind <;> simp_all
+      simp [List.filter_cons, Entry.isEvent, this]
+
+/-- Without resources or links, settling a delivery inserts its emits, in order. -/
+theorem settleOut_nil {sys : Sys} (h : sys.resources = []) (hl : sys.links = []) (now : Nat)
+    (ms : List MState) (outs : List Entry) (w : World) :
+    settleOut sys now ms outs w = (w, (outs.filter Entry.isEvent).map Act.put) := by
+  unfold settleOut
+  rw [hl, outActs_nil_links, settle_nil_res h]
+  simp
+
+/-- Insertions take no draws. -/
+theorem holesOf_puts : (l : List Entry) → holesOf (l.map Act.put) = []
+  | [] => rfl
+  | _ :: xs => by simpa [holesOf] using holesOf_puts xs
+
+/-- Filling with insertions only inserts, in order. -/
+theorem fill_puts (ds : List Nat) : (c : Cfg) → (l : List Entry) →
+    fill c (l.map Act.put) ds = .ok { c with pending := l.foldl insertByTime c.pending }
+  | c, [] => by simp [fill]
+  | c, x :: xs => by
+    simp only [List.map_cons, fill]
+    rw [fill_puts ds (c.enq x) xs]
+    rfl
 @[simp] theorem worldStep_resolve (sys : Sys) (ds : List Nat) : worldStep (sys.resolve ds) = worldStep sys := rfl
 
 /-- Without resources, a committed delivery settles nothing: no world draws, and the configuration
 after settling is the commit. -/
-theorem nores_settle {sys : Sys} (hres : sys.resources = []) {c1 c2 : Cfg} {w : World} {acts : List Act}
-    {wds : List Nat} {ops : List (Nat × WOp)}
-    (hs : settle sys c1.time ops [] c1.world = (w, acts)) (hfit : DrawsFit wds (holesOf acts))
-    (hfill : fill { c1 with world := w } acts wds = .ok c2) : wds = [] ∧ c2 = c1 := by
-  rw [settle_nil_res hres] at hs
+theorem nores_settle {sys : Sys} (hres : sys.resources = []) (hl : sys.links = []) {c1 c2 : Cfg} {w : World}
+    {acts : List Act} {wds : List Nat} {outs : List Entry}
+    (hs : settleOut sys c1.time c1.machines outs c1.world = (w, acts)) (hfit : DrawsFit wds (holesOf acts))
+    (hfill : fill { c1 with world := w } acts wds = .ok c2) :
+    wds = [] ∧ c2 = c1.putAll outs := by
+  rw [settleOut_nil hres hl] at hs
   simp only [Prod.mk.injEq] at hs
   obtain ⟨rfl, rfl⟩ := hs
+  rw [holesOf_puts] at hfit
   refine ⟨List.length_eq_zero_iff.mp hfit.1, ?_⟩
-  simp only [fill, Except.ok.injEq] at hfill
-  subst hfill; rfl
+  rw [fill_puts] at hfill
+  cases hfill; rfl
 
-theorem nores_settle_err {sys : Sys} (hres : sys.resources = []) {c1 : Cfg} {w : World} {acts : List Act}
-    {wds : List Nat} {ops : List (Nat × WOp)} {err : Err}
-    (hs : settle sys c1.time ops [] c1.world = (w, acts))
+theorem nores_settle_err {sys : Sys} (hres : sys.resources = []) (hl : sys.links = []) {c1 : Cfg} {w : World}
+    {acts : List Act} {wds : List Nat} {outs : List Entry} {err : Err}
+    (hs : settleOut sys c1.time c1.machines outs c1.world = (w, acts))
     (hfill : fill { c1 with world := w } acts wds = .error err) : False := by
-  rw [settle_nil_res hres] at hs
+  rw [settleOut_nil hres hl] at hs
   simp only [Prod.mk.injEq] at hs
   obtain ⟨rfl, rfl⟩ := hs
-  simp [fill] at hfill
+  rw [fill_puts] at hfill
+  cases hfill
 
-/-- Without resources, a world entry is taken with no effect. -/
-theorem nores_world {sys : Sys} (hres : sys.resources = []) {c0 c2 : Cfg} {e : Entry} {w : World}
-    {acts : List Act} {wds : List Nat} (hs : worldStep sys c0 e = (w, acts))
+/-- Without resources or links, a world entry is taken with no effect. -/
+theorem nores_world {sys : Sys} (hres : sys.resources = []) (hl : sys.links = []) {c0 c2 : Cfg} {e : Entry}
+    {w : World} {acts : List Act} {wds : List Nat} (hs : worldStep sys c0 e = (w, acts))
     (hfit : DrawsFit wds (holesOf acts)) (hfill : fill { c0 with world := w } acts wds = .ok c2) :
     wds = [] ∧ c2 = c0 := by
-  rw [worldStep_nil_res hres] at hs
+  rw [worldStep_nil_res hres hl] at hs
   simp only [Prod.mk.injEq] at hs
   obtain ⟨rfl, rfl⟩ := hs
   refine ⟨List.length_eq_zero_iff.mp hfit.1, ?_⟩
   simp only [fill, Except.ok.injEq] at hfill
   subst hfill; rfl
 
-theorem nores_world_err {sys : Sys} (hres : sys.resources = []) {c0 : Cfg} {e : Entry} {w : World}
-    {acts : List Act} {wds : List Nat} {err : Err} (hs : worldStep sys c0 e = (w, acts))
+theorem nores_world_err {sys : Sys} (hres : sys.resources = []) (hl : sys.links = []) {c0 : Cfg} {e : Entry}
+    {w : World} {acts : List Act} {wds : List Nat} {err : Err} (hs : worldStep sys c0 e = (w, acts))
     (hfill : fill { c0 with world := w } acts wds = .error err) : False := by
-  rw [worldStep_nil_res hres] at hs
+  rw [worldStep_nil_res hres hl] at hs
   simp only [Prod.mk.injEq] at hs
   obtain ⟨rfl, rfl⟩ := hs
   simp [fill] at hfill
@@ -1679,12 +1975,37 @@ theorem nores_world_err {sys : Sys} (hres : sys.resources = []) {c0 : Cfg} {e : 
 theorem drawsFit_nil {wds : List Nat} (h : wds = []) : DrawsFit wds (holesOf []) := by
   subst h; exact ⟨rfl, by simp⟩
 
-/-- Filling keeps the machines, the time, the attempt counts and the world: it only inserts and
-removes pending entries. -/
+/-- The world `w'` is `w` up to its link queues. -/
+def World.SameRes (w w' : World) : Prop := w'.res = w.res ∧ w'.nextReq = w.nextReq ∧ w'.active = w.active
+
+theorem World.SameRes.refl (w : World) : w.SameRes w := ⟨rfl, rfl, rfl⟩
+
+theorem World.SameRes.trans {w w1 w2 : World} (h1 : w.SameRes w1) (h2 : w1.SameRes w2) : w.SameRes w2 :=
+  ⟨h2.1.trans h1.1, h2.2.1.trans h1.2.1, h2.2.2.trans h1.2.2⟩
+
+theorem World.setLq_sameRes (w : World) (l : Nat) (k : Option Nat) (q : LQ) : w.SameRes (w.setLq l k q) := by
+  unfold World.setLq; split <;> exact ⟨rfl, rfl, rfl⟩
+
+/-- Filling keeps the machines, the time, the attempt counts and the world up to its link queues
+(the last delivery of an ordered link): it inserts and removes pending entries. -/
 theorem fill_frame : {c c' : Cfg} → {acts : List Act} → {ds : List Nat} → fill c acts ds = .ok c' →
     c'.machines = c.machines ∧ c'.time = c.time ∧ c'.attempts = c.attempts ∧ c'.attCap = c.attCap ∧
-      c'.world = c.world
-  | c, c', [], ds, h => by simp only [fill] at h; cases h; exact ⟨rfl, rfl, rfl, rfl, rfl⟩
+      c.world.SameRes c'.world
+  | c, c', [], ds, h => by simp only [fill] at h; cases h; exact ⟨rfl, rfl, rfl, rfl, World.SameRes.refl _⟩
+  | c, c', .put e :: as, ds, h => by
+    simp only [fill] at h
+    have h' := fill_frame h
+    exact h'
+  | c, c', .prop l k ord _ m :: as, ds, h => by
+    simp only [fill] at h
+    split at h
+    · cases h
+    · obtain ⟨h1, h2, h3, h4, h5⟩ := fill_frame h
+      refine ⟨h1, h2, h3, h4, World.SameRes.trans ?_ h5⟩
+      unfold Cfg.propagate
+      split
+      · exact World.setLq_sameRes _ _ _ _
+      · exact World.SameRes.refl _
   | c, c', .ins _ _ _ e :: as, ds, h => by
     simp only [fill] at h
     have h' := fill_frame h
@@ -1731,10 +2052,6 @@ routes of its event are decided first, in `Sys.routes` order, before the faults 
 behaviour, a keyed route creating the instance in the group's next free slot, a round-robin route
 advancing its counter, a random route taking one draw of the step (the first of its world draws).
 The entry then carries the routes, and a delayed or duplicated copy keeps them. -/
-
-/-- The instances of a group: its live machines, in group order. -/
-def instsOf (ms : List MState) (g : List Nat) : List Nat :=
-  g.filter (fun m => (ms[m]?.map (·.live)).getD false)
 
 /-- The units machine `m` holds plus its requests waiting, on resource state `s` (format 2's load
 of an instance for a least-busy route). -/
@@ -1886,7 +2203,7 @@ def deliverEvent (sys : Sys)
       | .ok ws => match p2 (c.pop k e) e ws c.machines with
         | .error err => if wds = [] then some (.error err) else none
         | .ok (ms, bs) =>
-          (settleFill sys ((c.pop k e).commit sys.sig.machines ms bs) (opsOf sys.sig.machines bs) wds).map
+          (settleFill sys ((c.pop k e).commit sys.sig.machines ms bs) (inMachineOrder sys.sig.machines bs) wds).map
             (duplicate act e att)
 
 /-- The delivery of the pending entry at index `k` under fault mask `mask`, with phase 2 given by
@@ -2057,14 +2374,14 @@ inductive Fails (sys : Sys) (act : List (Nat × Fault)) (c0 : Cfg) (e : Entry) (
       phase2 sys c0 e ws c0.machines = .error err → Fails sys act c0 e att ds
   | settle {ws : List (Winner sys)} {ms : List MState} {bs : Emitted} {w : World} {acts : List Act}
       {err : Err} : winners sys act c0 e = .ok ws → phase2 sys c0 e ws c0.machines = .ok (ms, bs) →
-      settle sys (c0.commit sys.sig.machines ms bs).time (opsOf sys.sig.machines bs) []
+      settleOut sys (c0.commit sys.sig.machines ms bs).time (c0.commit sys.sig.machines ms bs).machines (inMachineOrder sys.sig.machines bs)
         (c0.commit sys.sig.machines ms bs).world = (w, acts) →
       DrawsFit ds (holesOf acts) →
       fill { c0.commit sys.sig.machines ms bs with world := w } acts ds = .error err → Fails sys act c0 e att ds
   | dup {ws : List (Winner sys)} {ms : List MState} {bs : Emitted} {w : World} {acts : List Act}
       {c2 : Cfg} {i : Nat} {f : Fault} {err : Err} : winners sys act c0 e = .ok ws →
       phase2 sys c0 e ws c0.machines = .ok (ms, bs) →
-      settle sys (c0.commit sys.sig.machines ms bs).time (opsOf sys.sig.machines bs) []
+      settleOut sys (c0.commit sys.sig.machines ms bs).time (c0.commit sys.sig.machines ms bs).machines (inMachineOrder sys.sig.machines bs)
         (c0.commit sys.sig.machines ms bs).world = (w, acts) →
       DrawsFit ds (holesOf acts) →
       fill { c0.commit sys.sig.machines ms bs with world := w } acts ds = .ok c2 →
@@ -2110,7 +2427,7 @@ inductive Step (sys : Sys) (mask : List Bool) (c : Cfg) : Label → State → Pr
       delayFault (sys.active mask) e1 (c1.attemptsOf e1.event + 1) = none →
       winners (sys.resolve l.draws) (sys.active mask) (c1.popE l.entry) e1 = .ok ws →
       phase2 (sys.resolve l.draws) (c1.popE l.entry) e1 ws c1.machines = .ok (ms, bs) →
-      settle sys ((c1.popE l.entry).commit sys.sig.machines ms bs).time (opsOf sys.sig.machines bs) []
+      settleOut sys ((c1.popE l.entry).commit sys.sig.machines ms bs).time ((c1.popE l.entry).commit sys.sig.machines ms bs).machines (inMachineOrder sys.sig.machines bs)
         ((c1.popE l.entry).commit sys.sig.machines ms bs).world = (w, acts) →
       DrawsFit (l.wdraws.drop (sys.nR c l.entry)) (holesOf acts) →
       fill { (c1.popE l.entry).commit sys.sig.machines ms bs with world := w } acts (l.wdraws.drop (sys.nR c l.entry)) = .ok c2 →
@@ -2771,7 +3088,7 @@ theorem deliver_eq_step {sys : Sys} {mask : List Bool} {c : Cfg} {l : Label} {t 
       rw [hkind]; simp only [routeOf_resolve, nR_resolve, hro, if_true]; unfold deliverEvent; simp only [hpop, resolve_active]
       unfold dropHit at hdr; rw [if_neg hdr]; unfold delayFault at hnone; rw [hnone]; simp only [hw, hp]
       unfold settleFill
-      simp only [settle_resolve, resolve_sig, hs]
+      simp only [settle_resolve, settleOut_resolve, resolve_sig, hs]
       rw [if_pos hfit]
       simp only [hfill, Option.map_some]
       cases hdup with
@@ -2789,18 +3106,18 @@ theorem deliver_eq_step {sys : Sys} {mask : List Bool} {c : Cfg} {l : Label} {t 
         simp only [hw, hp, hw0]; rfl
       | settle hw hp hs hfit hfill =>
         rw [hm] at hp
-        simp only [settle_resolve, resolve_sig] at hs hfill
+        simp only [settle_resolve, settleOut_resolve, resolve_sig] at hs hfill
         simp only [hw, hp]
         unfold settleFill
-        simp only [settle_resolve, resolve_sig, hs]
+        simp only [settle_resolve, settleOut_resolve, resolve_sig, hs]
         rw [if_pos hfit]
         simp only [hfill, Option.map_some, duplicate]; rfl
       | dup hw hp hs hfit hfill h0 hl =>
         rw [hm] at hp
-        simp only [settle_resolve, resolve_sig] at hs hfill
+        simp only [settle_resolve, settleOut_resolve, resolve_sig] at hs hfill
         simp only [hw, hp]
         unfold settleFill
-        simp only [settle_resolve, resolve_sig, hs]
+        simp only [settle_resolve, settleOut_resolve, resolve_sig, hs]
         rw [if_pos hfit]
         unfold dupFault at h0
         simp only [hfill, Option.map_some, duplicate, h0, hl]; rfl
@@ -3199,7 +3516,7 @@ theorem commit_perm {sys : Sys} {c0 : Cfg} {e : Entry} {ws ws' : List (Winner sy
     (h : phase2 sys c0 e ws c0.machines = .ok (ms, bs))
     (h' : phase2 sys c0 e ws' c0.machines = .ok (ms', bs')) :
     c0.commit sys.sig.machines ms' bs' = c0.commit sys.sig.machines ms bs ∧
-      opsOf sys.sig.machines bs' = opsOf sys.sig.machines bs := by
+      inMachineOrder sys.sig.machines bs' = inMachineOrder sys.sig.machines bs := by
   have hm := phase2_perm (c := c0) (e := e) hp hnd
   rw [h, h'] at hm
   simp only [machinesAfter, Except.toOption, Option.map_some, Option.some.injEq] at hm
@@ -3223,9 +3540,8 @@ theorem commit_perm {sys : Sys} {c0 : Cfg} {e : Entry} {ws ws' : List (Winner sy
   have hf : c0.pending.filter (fun x => !isTimerOf (touchedOf bs') x) =
       c0.pending.filter (fun x => !isTimerOf (touchedOf bs) x) :=
     List.filter_congr (fun x _ => by rw [ht x])
-  refine ⟨?_, ?_⟩
-  · simp only [Cfg.commit, hm, hio, hf]
-  · simp only [opsOf, hio]
+  refine ⟨?_, hio⟩
+  simp only [Cfg.commit, hm, hf]
 
 /-- The rest of a delivery after phase 2 does not depend on the order of the winners. -/
 theorem afterP2_perm {sys : Sys} {c0 : Cfg} {e : Entry} {ws ws' : List (Winner sys)}
@@ -3233,11 +3549,11 @@ theorem afterP2_perm {sys : Sys} {c0 : Cfg} {e : Entry} {ws ws' : List (Winner s
     (wds : List Nat) (mask : List Bool) (d : Cfg) :
     (match phase2 sys c0 e ws' c0.machines with
       | .error err => if wds = [] then some (Except.error err) else none
-      | .ok (ms, bs) => (settleFill sys (c0.commit sys.sig.machines ms bs) (opsOf sys.sig.machines bs) wds).map
+      | .ok (ms, bs) => (settleFill sys (c0.commit sys.sig.machines ms bs) (inMachineOrder sys.sig.machines bs) wds).map
           (duplicate act e att)).map (outcome mask d) =
     (match phase2 sys c0 e ws c0.machines with
       | .error err => if wds = [] then some (Except.error err) else none
-      | .ok (ms, bs) => (settleFill sys (c0.commit sys.sig.machines ms bs) (opsOf sys.sig.machines bs) wds).map
+      | .ok (ms, bs) => (settleFill sys (c0.commit sys.sig.machines ms bs) (inMachineOrder sys.sig.machines bs) wds).map
           (duplicate act e att)).map (outcome mask d) := by
   have hm := phase2_perm (c := c0) (e := e) hp hnd
   cases h : phase2 sys c0 e ws c0.machines with
@@ -3425,7 +3741,7 @@ theorem Cfg.enq_approx {c c' : Cfg} (h : c.Approx c') (x : Entry) : (c.enq x).Ap
 theorem Cfg.commit_approx {c c' : Cfg} (h : c.Approx c') (n : Nat) (ms : List MState) (bs : Emitted) :
     (c.commit n ms bs).Approx (c'.commit n ms bs) := by
   obtain ⟨h1, h2, h3, h4⟩ := h
-  exact ⟨h1, rfl, h3, foldl_insertByTime_perm _ _ _ (h4.filter _)⟩
+  exact ⟨h1, rfl, h3, h4.filter _⟩
 
 theorem Cfg.popE_approx {c c' : Cfg} (h : c.Approx c') (e : Entry) : (c.popE e).Approx (c'.popE e) := by
   obtain ⟨h1, h2, h3, h4⟩ := h
@@ -3454,6 +3770,8 @@ theorem runEffects_congr {S : Sig} {me : Fin S.machines} {c1 c2 : Cfg} (e : Entr
     simp only [runEffects, ctxOf_congr e own h1 h2 h3, runEffects_congr e h1 h2 h3 rest, opEntry, h2]
   | .release res cls units :: rest, own => by
     simp only [runEffects, runEffects_congr e h1 h2 h3 rest, opEntry, h2]
+  | .send ev l fan rep size chk pl :: rest, own => by
+    simp only [runEffects, ctxOf_congr e own h1 h2 h3, runEffects_congr e h1 h2 h3 rest, sendEntry, h2]
 
 theorem fireOne_congr {sys : Sys} {c1 c2 : Cfg} (e : Entry) (w : Winner sys) (own : MState)
     (h1 : c1.machines = c2.machines) (h2 : c1.time = c2.time) (h3 : c1.world = c2.world) :
@@ -3543,6 +3861,23 @@ theorem fill_approx : {c c' : Cfg} → c.Approx c' → (acts : List Act) → (ds
   | c, c', h, .fail _ :: as, ds => by
     simp only [fill]
     exact ⟨fun _ h => (by cases h), fun _ h => h⟩
+  | c, c', h, .put e :: as, ds => by
+    simp only [fill]
+    exact fill_approx (Cfg.enq_approx h e) as ds
+  | c, c', h, .prop l k ord _ m :: as, ds => by
+    simp only [fill]
+    have ht : c.propTime l k ord (ds.headD 0) = c'.propTime l k ord (ds.headD 0) := by
+      unfold Cfg.propTime; rw [h.1, h.2.2.1.2.2.1]
+    rw [ht]
+    split
+    · exact ⟨fun _ h => (by cases h), fun _ h => h⟩
+    · have hA : (c.propagate l k ord (c'.propTime l k ord (ds.headD 0)) m).Approx
+          (c'.propagate l k ord (c'.propTime l k ord (ds.headD 0)) m) := by
+        have he := Cfg.enq_approx h (propEntry (c'.propTime l k ord (ds.headD 0)) m)
+        unfold Cfg.propagate
+        rw [h.2.2.1.2.2.1]
+        exact Cfg.withWorld_approx he _
+      exact fill_approx hA as ds.tail
 
 theorem worldStep_congr {sys : Sys} {c1 c2 : Cfg} (e : Entry) (h1 : c1.time = c2.time)
     (h2 : c1.world = c2.world) : worldStep sys c1 e = worldStep sys c2 e := by
@@ -3639,13 +3974,13 @@ theorem pending_perm_bisim {sys : Sys} {m : List Bool} {c c' : Cfg} {l : Label} 
       have hf2 := (fill_approx (Cfg.withWorld_approx (Cfg.commit_approx hpop0 sys.sig.machines _ _) _) _ _).2 _ hfill
       exact Fails.settle ((hwin _ _).trans hw)
         ((hph _ _ _).trans ((congrArg (phase2 _ _ _ _) hmach).trans hp2))
-        (by simp only [settle_resolve, resolve_sig] at hs ⊢; rw [e1]; exact hs) hfit hf2
+        (by simp only [settle_resolve, settleOut_resolve, resolve_sig] at hs ⊢; rw [e1]; exact hs) hfit hf2
     | dup hw hp2 hs hfit hfill h0 hl =>
       obtain ⟨c2', hf2, _⟩ :=
         (fill_approx (Cfg.withWorld_approx (Cfg.commit_approx hpop0 sys.sig.machines _ _) _) _ _).1 _ hfill
       exact Fails.dup ((hwin _ _).trans hw)
         ((hph _ _ _).trans ((congrArg (phase2 _ _ _ _) hmach).trans hp2))
-        (by simp only [settle_resolve, resolve_sig] at hs ⊢; rw [e1]; exact hs) hfit hf2 h0 hl
+        (by simp only [settle_resolve, settleOut_resolve, resolve_sig] at hs ⊢; rw [e1]; exact hs) hfit hf2 h0 hl
   | routeErr hd hr hk hro hw0 =>
     have hro' := ((routeOf_congr (sys := sys) l.entry _ hm ha.2.2.2 ha.2.2.1).2.1 _).mp hro
     rw [← hnR] at hro' hw0
@@ -3674,6 +4009,7 @@ def Err.IsWorld (err : Err) : Prop :=
 when `now` is; a failure is an error of the world. -/
 def ActOK (now : Nat) : Act → Prop
   | .ins _ _ _ e => now ≤ e.time ∧ (now < timeLimit → e.time < timeLimit)
+  | .put e => now ≤ e.time ∧ (now < timeLimit → e.time < timeLimit)
   | .fail err => err.IsWorld
   | _ => True
 
@@ -3797,6 +4133,77 @@ theorem settle_ok (sys : Sys) (now : Nat) (ops : List (Nat × WOp)) (touched : L
     ∀ a ∈ (settle sys now ops touched w).2, ActOK now a :=
   settleAll_ok _ _ _ (by simp)
 
+theorem startOf_ok {L : Link} {li : Nat} {k : Option Nat} {m : Msg} {now : Nat} {w : World} :
+    ∀ a ∈ (startOf L li k m now w).2.1, ActOK now a := by
+  unfold startOf
+  simp only []
+  split
+  · intro a ha; simp only [List.mem_singleton] at ha; subst ha; exact Or.inl rfl
+  · rename_i hlt
+    intro a ha
+    simp only [List.mem_cons, List.not_mem_nil, or_false] at ha
+    rcases ha with rfl | rfl
+    · exact ⟨Nat.le_add_right _ _, fun _ => Nat.lt_of_not_le hlt⟩
+    · trivial
+
+theorem sendOne_ok {L : Link} {li : Nat} {fan : Bool} {k : Option Nat} {m : Msg} {now : Nat} {w : World} :
+    ∀ a ∈ (sendOne L li fan k m now w).2.1, ActOK now a := by
+  unfold sendOne
+  split
+  · intro a ha; simp only [List.mem_singleton] at ha; subst ha; trivial
+  · simp only []
+    split
+    · exact startOf_ok
+    · intro a ha
+      simp only [List.mem_cons, List.mem_map] at ha
+      rcases ha with rfl | ⟨x, _, rfl⟩ <;> trivial
+
+theorem sendTo_ok {L : Link} {li : Nat} {fan : Bool} {now : Nat} {m : Msg} :
+    (rs : List (Option Nat × Option Nat)) → (w : World) → (acts : List Act) → (∀ a ∈ acts, ActOK now a) →
+    ∀ a ∈ (sendTo L li fan now m rs w acts).2.1, ActOK now a
+  | [], w, acts, h => by simpa [sendTo] using h
+  | (k, tg) :: rest, w, acts, h => by
+    simp only [sendTo]
+    have h1 : ∀ a ∈ acts ++ (sendOne L li fan k { m with target := tg } now w).2.1, ActOK now a := by
+      intro a ha; rcases List.mem_append.mp ha with ha | ha
+      · exact h a ha
+      · exact sendOne_ok a ha
+    split
+    · exact h1
+    · exact sendTo_ok rest _ _ h1
+
+theorem outActs_ok {links : List Link} {now : Nat} {ms : List MState} : (outs : List Entry) →
+    (∀ x ∈ outs, x.kind = .event → now ≤ x.time ∧ x.time < timeLimit) → (w : World) → (acts : List Act) →
+    (∀ a ∈ acts, ActOK now a) → ∀ a ∈ (outActs links now ms outs w acts).2, ActOK now a
+  | [], _, w, acts, h => by simpa [outActs] using h
+  | x :: xs, hx, w, acts, h => by
+    have hx' : ∀ y ∈ xs, y.kind = .event → now ≤ y.time ∧ y.time < timeLimit :=
+      fun y hy => hx y (List.mem_cons_of_mem _ hy)
+    simp only [outActs]
+    split
+    · rename_i hk
+      refine outActs_ok xs hx' _ _ (fun a ha => ?_)
+      rcases List.mem_append.mp ha with ha | ha
+      · exact h a ha
+      · simp only [List.mem_singleton] at ha; subst ha
+        obtain ⟨h1, h2⟩ := hx x List.mem_cons_self hk
+        exact ⟨h1, fun _ => h2⟩
+    · split
+      · exact outActs_ok xs hx' _ _ h
+      · split
+        · exact sendTo_ok _ _ _ h
+        · exact outActs_ok xs hx' _ _ (sendTo_ok _ _ _ h)
+    · exact outActs_ok xs hx' _ _ h
+
+theorem settleOut_ok (sys : Sys) (now : Nat) (ms : List MState) (outs : List Entry) (w : World)
+    (hx : ∀ x ∈ outs, x.kind = .event → now ≤ x.time ∧ x.time < timeLimit) :
+    ∀ a ∈ (settleOut sys now ms outs w).2, ActOK now a := by
+  unfold settleOut
+  intro a ha
+  rcases List.mem_append.mp ha with ha | ha
+  · exact outActs_ok outs hx _ _ (by simp) a ha
+  · exact settle_ok _ _ _ _ _ a ha
+
 theorem worldStep_ok (sys : Sys) (c0 : Cfg) (e : Entry) : ∀ a ∈ (worldStep sys c0 e).2, ActOK c0.time a := by
   unfold worldStep
   split
@@ -3828,6 +4235,21 @@ theorem worldStep_ok (sys : Sys) (c0 : Cfg) (e : Entry) : ∀ a ∈ (worldStep s
         · exact settle_ok _ _ _ _ _
         · simp
       · simp
+  · split
+    · simp
+    · dsimp only
+      split
+      · simp
+      · split
+        · intro a ha
+          simp only [List.mem_append, List.mem_cons, List.not_mem_nil, or_false] at ha
+          rcases ha with (rfl | rfl) | ha
+          · trivial
+          · trivial
+          · exact startOf_ok a ha
+        · intro a ha
+          simp only [List.mem_cons, List.not_mem_nil, or_false] at ha
+          rcases ha with rfl | rfl <;> trivial
   · simp
 
 /-- A failing fill fails with an error of the world. -/
@@ -3852,12 +4274,177 @@ theorem fill_err : {c : Cfg} → {acts : List Act} → {ds : List Nat} → {err 
     exact fill_err h (fun a h' => ha a (List.mem_cons_of_mem _ h'))
   | c, .fail e :: as, ds, err, h, ha => by
     simp only [fill] at h; cases h; exact ha _ List.mem_cons_self
+  | c, .put e :: as, ds, err, h, ha => by
+    simp only [fill] at h
+    exact fill_err h (fun a h' => ha a (List.mem_cons_of_mem _ h'))
+  | c, .prop l k ord _ m :: as, ds, err, h, ha => by
+    simp only [fill] at h
+    split at h
+    · cases h; exact Or.inl rfl
+    · exact fill_err h (fun a h' => ha a (List.mem_cons_of_mem _ h'))
 
 theorem Err.IsWorld.ne_shape {err : Err} (h : err.IsWorld) : err ≠ .shape := by
   rcases h with rfl | ⟨_, rfl | rfl⟩ | ⟨_, _, _, _, _, rfl⟩ <;> intro h <;> cases h
 
 theorem Err.IsWorld.ne_sort {err : Err} (h : err.IsWorld) : err ≠ .sort := by
   rcases h with rfl | ⟨_, rfl | rfl⟩ | ⟨_, _, _, _, _, rfl⟩ <;> intro h <;> cases h
+
+/-- The entries a transition emits are at the snapshot's time or later, and below `2^53`. -/
+theorem runEffects_times {S : Sig} {me : Fin S.machines} {c : Cfg} {e : Entry} :
+    (effs : List (Effect S me)) → (own : MState) → (r : MState × Out) →
+    runEffects c e effs own = .ok r → ∀ x ∈ r.2.1, x.kind = .event → c.time ≤ x.time ∧ x.time < timeLimit
+  | [], own, r, h => by simp only [runEffects] at h; cases h; simp
+  | .set v rhs :: rest, own, r, h => by
+    simp only [runEffects] at h
+    split at h
+    · cases h
+    · split at h
+      · cases h
+      · split at h
+        · exact runEffects_times rest _ r h
+        · cases h
+  | .emit ev after pl :: rest, own, r, h => by
+    simp only [runEffects] at h
+    split at h
+    · cases h
+    · rename_i hl
+      split at h
+      · cases h
+      · split at h
+        · cases h
+        · rename_i st outs tn hr
+          cases h
+          intro x hx hk
+          rcases List.mem_cons.mp hx with rfl | hx
+          · exact ⟨Nat.le_add_right _ _, Nat.lt_of_not_le hl⟩
+          · exact runEffects_times rest own (st, outs, tn) hr x hx hk
+  | .timer n after ev pl :: rest, own, r, h => by
+    simp only [runEffects] at h
+    split at h
+    · cases h
+    · rename_i hl
+      split at h
+      · cases h
+      · split at h
+        · cases h
+        · rename_i st outs tn hr
+          cases h
+          intro x hx hk
+          have ih := runEffects_times rest own (st, outs, tn) hr
+          split at hx
+          · exact ih x hx hk
+          · rcases List.mem_cons.mp hx with rfl | hx
+            · exact ⟨Nat.le_add_right _ _, Nat.lt_of_not_le hl⟩
+            · exact ih x hx hk
+  | .cancel n :: rest, own, r, h => by
+    simp only [runEffects] at h
+    split at h
+    · cases h
+    · rename_i st outs tn hr
+      cases h
+      exact runEffects_times rest own (st, outs, tn) hr
+  | .reply ev after pl :: rest, own, r, h => by
+    simp only [runEffects] at h
+    split at h
+    · cases h
+    · rename_i hl
+      split at h
+      · cases h
+      · split at h
+        · cases h
+        · split at h
+          · cases h
+          · rename_i st outs tn hr
+            cases h
+            intro x hx hk
+            rcases List.mem_cons.mp hx with rfl | hx
+            · exact ⟨Nat.le_add_right _ _, Nat.lt_of_not_le hl⟩
+            · exact runEffects_times rest own (st, outs, tn) hr x hx hk
+  | .request _ _ _ _ _ _ _ _ pl :: rest, own, r, h => by
+    simp only [runEffects] at h
+    split at h
+    · cases h
+    · split at h
+      · cases h
+      · rename_i st outs tn hr
+        cases h
+        intro x hx hk
+        rcases List.mem_cons.mp hx with rfl | hx
+        · simp [opEntry] at hk
+        · exact runEffects_times rest own (st, outs, tn) hr x hx hk
+  | .release _ _ _ :: rest, own, r, h => by
+    simp only [runEffects] at h
+    split at h
+    · cases h
+    · rename_i st outs tn hr
+      cases h
+      intro x hx hk
+      rcases List.mem_cons.mp hx with rfl | hx
+      · simp [opEntry] at hk
+      · exact runEffects_times rest own (st, outs, tn) hr x hx hk
+  | .send _ _ _ _ _ _ _ :: rest, own, r, h => by
+    simp only [runEffects] at h
+    split at h
+    · cases h
+    · split at h
+      · cases h
+      · split at h
+        · cases h
+        · split at h
+          · cases h
+          · rename_i st outs tn hr
+            cases h
+            intro x hx hk
+            rcases List.mem_cons.mp hx with rfl | hx
+            · simp [sendEntry] at hk
+            · exact runEffects_times rest own (st, outs, tn) hr x hx hk
+
+theorem phase2_times {sys : Sys} {c : Cfg} {e : Entry} :
+    (ws : List (Winner sys)) → (ms : List MState) → (r : List MState × Emitted) →
+    phase2 sys c e ws ms = .ok r → ∀ b ∈ r.2, ∀ x ∈ b.2.1, x.kind = .event → c.time ≤ x.time ∧ x.time < timeLimit
+  | [], ms, r, h => by simp only [phase2] at h; cases h; simp
+  | w :: ws, ms, r, h => by
+    simp only [phase2] at h
+    split at h
+    · cases h
+    · split at h
+      · cases h
+      · rename_i st out hf
+        split at h
+        · cases h
+        · rename_i ms' outs hr
+          cases h
+          intro b hb
+          rcases List.mem_cons.mp hb with rfl | hb
+          · simp only [fireOne] at hf
+            split at hf
+            · cases hf
+            · rename_i st' out' hre
+              cases hf
+              exact runEffects_times _ _ (st', out) hre
+          · exact phase2_times ws _ (ms', outs) hr b hb
+
+theorem blockOf_mem {x : Entry} {m : Nat} : (bs : Emitted) → x ∈ blockOf m bs → ∃ b ∈ bs, x ∈ b.2.1
+  | [], h => by simp [blockOf] at h
+  | (i, out) :: bs, h => by
+    simp only [blockOf] at h
+    split at h
+    · exact ⟨(i, out), List.mem_cons_self, h⟩
+    · obtain ⟨b, hb, hx⟩ := blockOf_mem bs h
+      exact ⟨b, List.mem_cons_of_mem _ hb, hx⟩
+
+theorem inMachineOrder_mem {x : Entry} {n : Nat} {bs : Emitted} (h : x ∈ inMachineOrder n bs) :
+    ∃ b ∈ bs, x ∈ b.2.1 := by
+  simp only [inMachineOrder, List.mem_flatMap] at h
+  obtain ⟨m, _, hx⟩ := h
+  exact blockOf_mem bs hx
+
+theorem phase2_out_times {sys : Sys} {c : Cfg} {e : Entry} {ws : List (Winner sys)} {ms0 ms : List MState}
+    {bs : Emitted} (hp : phase2 sys c e ws ms0 = .ok (ms, bs)) (n : Nat) :
+    ∀ x ∈ inMachineOrder n bs, x.kind = .event → c.time ≤ x.time ∧ x.time < timeLimit := by
+  intro x hx hk
+  obtain ⟨b, hb, hx⟩ := inMachineOrder_mem hx
+  exact phase2_times _ _ _ hp b hb x hx hk
 
 /-! ### The forms of a delivery -/
 
@@ -3873,9 +4460,9 @@ theorem deliver_ok_form {sys : Sys} {mask : List Bool} {c c' : Cfg} {k : Nat} {w
        (∃ i b cp, later e1 i b = .ok cp ∧ c' = (c1.pop k e1).enq cp) ∨
        ∃ ws ms bs c2, phase2 sys (c1.pop k e1) e1 ws c1.machines = .ok (ms, bs) ∧
          fill { (c1.pop k e1).commit sys.sig.machines ms bs with
-                world := (settle sys ((c1.pop k e1).commit sys.sig.machines ms bs).time (opsOf sys.sig.machines bs) []
+                world := (settleOut sys ((c1.pop k e1).commit sys.sig.machines ms bs).time ((c1.pop k e1).commit sys.sig.machines ms bs).machines (inMachineOrder sys.sig.machines bs)
                   ((c1.pop k e1).commit sys.sig.machines ms bs).world).1 }
-           (settle sys ((c1.pop k e1).commit sys.sig.machines ms bs).time (opsOf sys.sig.machines bs) []
+           (settleOut sys ((c1.pop k e1).commit sys.sig.machines ms bs).time ((c1.pop k e1).commit sys.sig.machines ms bs).machines (inMachineOrder sys.sig.machines bs)
              ((c1.pop k e1).commit sys.sig.machines ms bs).world).2 wr = .ok c2 ∧
          (c' = c2 ∨ ∃ i b cp, later e1 i b = .ok cp ∧ c' = c2.enq cp)) ∨
        fill { c.popW e with world := (worldStep sys (c.popW e) e).1 } (worldStep sys (c.popW e) e).2 wds = .ok c') := by
@@ -4075,7 +4662,7 @@ theorem deliver_error_form {sys : Sys} {mask : List Bool} {c : Cfg} {k : Nat} {w
                     split at h
                     · rename_i er hfill
                       cases h
-                      exact Or.inl (fill_err hfill (settle_ok _ _ _ _ _))
+                      exact Or.inl (fill_err hfill (settleOut_ok _ _ _ _ _ (phase2_out_times hp _)))
                     · split at h
                       · cases h
                       · split at h
@@ -4242,6 +4829,19 @@ theorem runEffects_fit {S : Sig} {me : Fin S.machines} {c : Cfg} {e : Entry} :
     · rename_i st outs tn hr
       cases h
       exact runEffects_fit rest own (st, outs, tn) hf hr
+  | .send _ _ _ _ _ _ _ :: rest, own, r, hf, h => by
+    simp only [runEffects] at h
+    split at h
+    · cases h
+    · split at h
+      · cases h
+      · split at h
+        · cases h
+        · split at h
+          · cases h
+          · rename_i st outs tn hr
+            cases h
+            exact runEffects_fit rest own (st, outs, tn) hf hr
 
 /-- Firing a winner keeps its machine shaped. -/
 theorem fireOne_shaped {sys : Sys} {c : Cfg} {e : Entry} {w : Winner sys} {own : MState}
@@ -4551,6 +5151,29 @@ theorem evalPayload_ne_shape {S : Sig} {me : Fin S.machines} {cx : Ctx} (hcx : c
       · rename_i err hr; exact ne_shape_of (evalPayload_ne_shape hcx rest) hr
       · intro h; cases h
 
+theorem sizeOfVal_err {chk : Bool} {ev : Nat} {v : Val} {err : Err} {n : Nat}
+    (h : sizeOfVal chk ev v = .error err) : err = .size ev v := by
+  unfold sizeOfVal at h
+  split at h
+  · split at h <;> cases h; rfl
+  · cases h; rfl
+
+theorem sizeOfE_ne_shape {S : Sig} {me : Fin S.machines} {cx : Ctx} (hcx : cx.Shaped S me) (ev : Nat)
+    (chk : Bool) : (sz : Option (Expr S me)) → sizeOfE cx ev chk sz ≠ .error .shape
+  | none => by simp [sizeOfE]
+  | some x => by
+    simp only [sizeOfE]
+    split
+    · rename_i err hr; exact ne_shape_of (Expr.eval_ne_shape hcx x) hr
+    · intro h; cases sizeOfVal_err (n := 0) h
+
+theorem replyTo_err {rep : Bool} {e : Entry} {err : Err} (h : replyTo rep e = .error err) :
+    err = .noRequester := by
+  unfold replyTo at h
+  split at h
+  · split at h <;> cases h; rfl
+  · cases h
+
 theorem runEffects_ne_shape {S : Sig} {me : Fin S.machines} {c : Cfg} {e : Entry}
     (hsnap : S.Shaped c.machines) :
     (effs : List (Effect S me)) → (own : MState) → own.vars.length = (S.vars me).length →
@@ -4611,6 +5234,17 @@ theorem runEffects_ne_shape {S : Sig} {me : Fin S.machines} {c : Cfg} {e : Entry
     split
     · rename_i err hr; exact ne_shape_of (runEffects_ne_shape hsnap rest own hl) hr
     · intro h; cases h
+  | .send ev _ _ _ sz chk pl :: rest, own, hl => by
+    simp only [runEffects]
+    split
+    · rename_i err hr; exact ne_shape_of (sizeOfE_ne_shape ⟨hsnap, hl⟩ ev chk sz) hr
+    · split
+      · rename_i err hr; exact ne_shape_of (evalPayload_ne_shape ⟨hsnap, hl⟩ pl) hr
+      · split
+        · rename_i err hr; intro h; injection h with h; subst h; cases replyTo_err hr
+        · split
+          · rename_i err hr; exact ne_shape_of (runEffects_ne_shape hsnap rest own hl) hr
+          · intro h; cases h
 
 theorem fireOne_ne_shape {sys : Sys} {c : Cfg} {e : Entry} {w : Winner sys} {own : MState}
     (hsnap : sys.sig.Shaped c.machines) (hl : own.vars.length = (sys.sig.vars w.mach).length) :
@@ -5109,139 +5743,6 @@ theorem later_ok {e cp : Entry} {i b : Nat} (h : later e i b = .ok cp) :
   · cases h
   · rename_i hl; cases h; exact ⟨Nat.le_add_right _ _, Nat.lt_of_not_le hl⟩
 
-/-- The entries a transition emits are at the snapshot's time or later, and below `2^53`. -/
-theorem runEffects_times {S : Sig} {me : Fin S.machines} {c : Cfg} {e : Entry} :
-    (effs : List (Effect S me)) → (own : MState) → (r : MState × Out) →
-    runEffects c e effs own = .ok r → ∀ x ∈ r.2.1, x.kind = .event → c.time ≤ x.time ∧ x.time < timeLimit
-  | [], own, r, h => by simp only [runEffects] at h; cases h; simp
-  | .set v rhs :: rest, own, r, h => by
-    simp only [runEffects] at h
-    split at h
-    · cases h
-    · split at h
-      · cases h
-      · split at h
-        · exact runEffects_times rest _ r h
-        · cases h
-  | .emit ev after pl :: rest, own, r, h => by
-    simp only [runEffects] at h
-    split at h
-    · cases h
-    · rename_i hl
-      split at h
-      · cases h
-      · split at h
-        · cases h
-        · rename_i st outs tn hr
-          cases h
-          intro x hx hk
-          rcases List.mem_cons.mp hx with rfl | hx
-          · exact ⟨Nat.le_add_right _ _, Nat.lt_of_not_le hl⟩
-          · exact runEffects_times rest own (st, outs, tn) hr x hx hk
-  | .timer n after ev pl :: rest, own, r, h => by
-    simp only [runEffects] at h
-    split at h
-    · cases h
-    · rename_i hl
-      split at h
-      · cases h
-      · split at h
-        · cases h
-        · rename_i st outs tn hr
-          cases h
-          intro x hx hk
-          have ih := runEffects_times rest own (st, outs, tn) hr
-          split at hx
-          · exact ih x hx hk
-          · rcases List.mem_cons.mp hx with rfl | hx
-            · exact ⟨Nat.le_add_right _ _, Nat.lt_of_not_le hl⟩
-            · exact ih x hx hk
-  | .cancel n :: rest, own, r, h => by
-    simp only [runEffects] at h
-    split at h
-    · cases h
-    · rename_i st outs tn hr
-      cases h
-      exact runEffects_times rest own (st, outs, tn) hr
-  | .reply ev after pl :: rest, own, r, h => by
-    simp only [runEffects] at h
-    split at h
-    · cases h
-    · rename_i hl
-      split at h
-      · cases h
-      · split at h
-        · cases h
-        · split at h
-          · cases h
-          · rename_i st outs tn hr
-            cases h
-            intro x hx hk
-            rcases List.mem_cons.mp hx with rfl | hx
-            · exact ⟨Nat.le_add_right _ _, Nat.lt_of_not_le hl⟩
-            · exact runEffects_times rest own (st, outs, tn) hr x hx hk
-  | .request _ _ _ _ _ _ _ _ pl :: rest, own, r, h => by
-    simp only [runEffects] at h
-    split at h
-    · cases h
-    · split at h
-      · cases h
-      · rename_i st outs tn hr
-        cases h
-        intro x hx hk
-        rcases List.mem_cons.mp hx with rfl | hx
-        · simp [opEntry] at hk
-        · exact runEffects_times rest own (st, outs, tn) hr x hx hk
-  | .release _ _ _ :: rest, own, r, h => by
-    simp only [runEffects] at h
-    split at h
-    · cases h
-    · rename_i st outs tn hr
-      cases h
-      intro x hx hk
-      rcases List.mem_cons.mp hx with rfl | hx
-      · simp [opEntry] at hk
-      · exact runEffects_times rest own (st, outs, tn) hr x hx hk
-
-theorem phase2_times {sys : Sys} {c : Cfg} {e : Entry} :
-    (ws : List (Winner sys)) → (ms : List MState) → (r : List MState × Emitted) →
-    phase2 sys c e ws ms = .ok r → ∀ b ∈ r.2, ∀ x ∈ b.2.1, x.kind = .event → c.time ≤ x.time ∧ x.time < timeLimit
-  | [], ms, r, h => by simp only [phase2] at h; cases h; simp
-  | w :: ws, ms, r, h => by
-    simp only [phase2] at h
-    split at h
-    · cases h
-    · split at h
-      · cases h
-      · rename_i st out hf
-        split at h
-        · cases h
-        · rename_i ms' outs hr
-          cases h
-          intro b hb
-          rcases List.mem_cons.mp hb with rfl | hb
-          · simp only [fireOne] at hf
-            split at hf
-            · cases hf
-            · rename_i st' out' hre
-              cases hf
-              exact runEffects_times _ _ (st', out) hre
-          · exact phase2_times ws _ (ms', outs) hr b hb
-
-theorem blockOf_mem {x : Entry} {m : Nat} : (bs : Emitted) → x ∈ blockOf m bs → ∃ b ∈ bs, x ∈ b.2.1
-  | [], h => by simp [blockOf] at h
-  | (i, out) :: bs, h => by
-    simp only [blockOf] at h
-    split at h
-    · exact ⟨(i, out), List.mem_cons_self, h⟩
-    · obtain ⟨b, hb, hx⟩ := blockOf_mem bs h
-      exact ⟨b, List.mem_cons_of_mem _ hb, hx⟩
-
-theorem inMachineOrder_mem {x : Entry} {n : Nat} {bs : Emitted} (h : x ∈ inMachineOrder n bs) :
-    ∃ b ∈ bs, x ∈ b.2.1 := by
-  simp only [inMachineOrder, List.mem_flatMap] at h
-  obtain ⟨m, _, hx⟩ := h
-  exact blockOf_mem bs hx
 
 /-- What filling keeps: times in order and below `2^53`. -/
 theorem fill_timeOK : {c c' : Cfg} → {acts : List Act} → {ds : List Nat} → fill c acts ds = .ok c' →
@@ -5275,6 +5776,28 @@ theorem fill_timeOK : {c c' : Cfg} → {acts : List Act} → {ds : List Nat} →
     simp only [fill] at h
     exact fill_timeOK h ht (fun a h' => ha a (List.mem_cons_of_mem _ h'))
   | c, c', .fail _ :: as, ds, h, ht, ha => by simp only [fill] at h; cases h
+  | c, c', .put e :: as, ds, h, ht, ha => by
+    simp only [fill] at h
+    have hae : ActOK c.time (.put e) := ha _ List.mem_cons_self
+    refine fill_timeOK h ⟨ht.1, fun x hx => ?_⟩ (fun a h' => ha a (List.mem_cons_of_mem _ h'))
+    simp only [Cfg.enq] at hx ⊢
+    rcases mem_insertByTime.mp hx with rfl | hx
+    · exact ⟨hae.1, hae.2 ht.1⟩
+    · exact ht.2 x hx
+  | c, c', .prop l k ord _ m :: as, ds, h, ht, ha => by
+    simp only [fill] at h
+    split at h
+    · cases h
+    · rename_i hlt
+      have hge : c.time ≤ c.propTime l k ord (ds.headD 0) := by
+        unfold Cfg.propTime; split
+        · exact Nat.le_trans (Nat.le_add_right _ _) (Nat.le_max_left _ _)
+        · exact Nat.le_add_right _ _
+      refine fill_timeOK h ⟨ht.1, fun x hx => ?_⟩ (fun a h' => ha a (List.mem_cons_of_mem _ h'))
+      simp only [Cfg.propagate, Cfg.enq] at hx ⊢
+      rcases mem_insertByTime.mp hx with rfl | hx
+      · exact ⟨hge, Nat.lt_of_not_le hlt⟩
+      · exact ht.2 x hx
 
 /-- A successful delivery keeps the times in order and bounded. -/
 theorem deliver_timeOK {sys : Sys} {mask : List Bool} {c c' : Cfg} {k : Nat} {wds : List Nat} (ht : c.TimeOK)
@@ -5303,18 +5826,14 @@ theorem deliver_timeOK {sys : Sys} {mask : List Bool} {c c' : Cfg} {k : Nat} {wd
     · exact hp x hx
   have hcommit : ∀ ws ms bs, phase2 sys (c1.pop k e) e ws c1.machines = .ok (ms, bs) →
       ∀ x ∈ ((c1.pop k e).commit sys.sig.machines ms bs).pending, e.time ≤ x.time ∧ x.time < timeLimit := by
-    intro ws ms bs hp x hx
+    intro ws ms bs _ x hx
     simp only [Cfg.commit] at hx
-    rcases mem_foldl_insertByTime _ _ hx with hx | hx
-    · exact hold x (List.mem_filter.mp hx).1
-    · obtain ⟨hx, hk⟩ := List.mem_filter.mp hx
-      obtain ⟨b, hb, hxb⟩ := inMachineOrder_mem hx
-      exact phase2_times ws c1.machines (ms, bs) hp b hb x hxb (by simpa using hk)
+    exact hold x (List.mem_filter.mp hx).1
   rcases hf with (rfl | ⟨i, b, cp, hcp, rfl⟩ | ⟨ws, ms, bs, c2, hp, hfill, rfl | ⟨i, b, cp, hcp, rfl⟩⟩) | hw
   · exact ⟨hel, hold⟩
   · exact henq _ cp rfl hold (later_ok hcp)
-  · exact fill_timeOK hfill ⟨hel, hcommit ws ms bs hp⟩ (settle_ok _ _ _ _ _)
-  · have h2 := fill_timeOK hfill ⟨hel, hcommit ws ms bs hp⟩ (settle_ok _ _ _ _ _)
+  · exact fill_timeOK hfill ⟨hel, hcommit ws ms bs hp⟩ (settleOut_ok _ _ _ _ _ (phase2_out_times hp _))
+  · have h2 := fill_timeOK hfill ⟨hel, hcommit ws ms bs hp⟩ (settleOut_ok _ _ _ _ _ (phase2_out_times hp _))
     have hf2 := fill_frame hfill
     exact henq _ cp hf2.2.1 (fun x hx => ⟨by have := (h2.2 x hx).1; rw [hf2.2.1] at this; exact this, (h2.2 x hx).2⟩)
       (later_ok hcp)
@@ -5375,6 +5894,14 @@ theorem fill_sorted : {c c' : Cfg} → {acts : List Act} → {ds : List Nat} →
     simp only [fill] at h
     exact fill_sorted h hs
   | c, c', .fail _ :: as, ds, h, hs => by simp only [fill] at h; cases h
+  | c, c', .put e :: as, ds, h, hs => by
+    simp only [fill] at h
+    exact fill_sorted h (insertByTime_sorted hs e)
+  | c, c', .prop l k ord _ m :: as, ds, h, hs => by
+    simp only [fill] at h
+    split at h
+    · cases h
+    · exact fill_sorted h (insertByTime_sorted hs _)
 
 /-- A successful delivery keeps the queue sorted. -/
 theorem deliver_sorted {sys : Sys} {mask : List Bool} {c c' : Cfg} {k : Nat} {wds : List Nat} (hs : c.Sorted)
@@ -5383,8 +5910,7 @@ theorem deliver_sorted {sys : Sys} {mask : List Bool} {c c' : Cfg} {k : Nat} {wd
   have hp : (c1.pop k e).pending.Pairwise (fun a b => a.time ≤ b.time) := by
     simp only [Cfg.pop, hfr.pending]; exact hs.sublist (List.eraseIdx_sublist _ _)
   have hc : ∀ ms bs, ((c1.pop k e).commit sys.sig.machines ms bs).pending.Pairwise
-      (fun a b => a.time ≤ b.time) := fun ms bs =>
-    foldl_insertByTime_sorted _ (hp.sublist List.filter_sublist)
+      (fun a b => a.time ≤ b.time) := fun ms bs => hp.sublist List.filter_sublist
   rcases hf with (rfl | ⟨i, b, cp, _, rfl⟩ | ⟨ws, ms, bs, c2, _, hfill, rfl | ⟨i, b, cp, _, rfl⟩⟩) | hw
   · exact hp
   · exact insertByTime_sorted hp cp
@@ -5549,6 +6075,7 @@ def Effect.wt {S : Sig} {me : Fin S.machines} : Effect S me → Bool
   | .reply _ _ pl => pl.all (fun p => p.2.ty?.isSome)
   | .request _ _ _ _ _ _ _ _ pl => pl.all (fun p => p.2.ty?.isSome)
   | .release _ _ _ => true
+  | .send _ _ _ _ sz _ pl => sz.all (fun x => x.ty?.isSome) && pl.all (fun p => p.2.ty?.isSome)
 
 /-- A well-typed transition: a Boolean guard and well-typed effects. -/
 def Trans.wt {S : Sig} {me : Fin S.machines} (t : Trans S me) : Bool :=
@@ -5645,6 +6172,16 @@ theorem Effect.wt_withAfter {S : Sig} {me : Fin S.machines} (a : Nat) (e : Effec
         cases (S.vars me).get v <;> rfl
       | _ => rfl
     | _ => rfl
+  | send ev l f r sz chk pl =>
+    cases sz with
+    | none => rfl
+    | some x =>
+      cases x with
+      | val w =>
+        cases w with
+        | int n => cases chk <;> simp [Effect.withAfter, Effect.wt, Expr.ty?, Val.fits, Val.ty]
+        | _ => rfl
+      | _ => rfl
   | _ => rfl
 
 theorem mapIdx_all {α β : Type} (f : Nat → α → β) (p : β → Bool) (q : α → Bool)
@@ -6066,6 +6603,18 @@ theorem evalPayload_ne_sort {S : Sig} {me : Fin S.machines} {cx : Ctx} (hcx : cx
       · rename_i err hr; exact ne_sort_of (evalPayload_ne_sort hcx rest hrest) hr
       · intro h; cases h
 
+theorem sizeOfE_ne_sort {S : Sig} {me : Fin S.machines} {cx : Ctx} (hcx : cx.Typed S me) (ev : Nat)
+    (chk : Bool) : (sz : Option (Expr S me)) → sz.all (fun x => x.ty?.isSome) = true →
+    sizeOfE cx ev chk sz ≠ .error .sort
+  | none, _ => by simp [sizeOfE]
+  | some x, h => by
+    simp only [Option.all_some, Option.isSome_iff_exists] at h
+    obtain ⟨τ, hτ⟩ := h
+    simp only [sizeOfE]
+    split
+    · rename_i err hr; exact ne_sort_of (Expr.eval_ne_sort hcx x hτ) hr
+    · intro h; cases sizeOfVal_err (n := 0) h
+
 theorem maxSafe_of_lt {t : Nat} (h : t < timeLimit) : (t : Int) ≤ maxSafe := by
   simp only [timeLimit] at h; simp only [maxSafe]; omega
 
@@ -6159,6 +6708,21 @@ theorem runEffects_ne_sort {S : Sig} {me : Fin S.machines} {c : Cfg} {e : Entry}
     split
     · rename_i err hr; exact ne_sort_of (runEffects_ne_sort hsnap ht rest hrest own hf) hr
     · intro h; cases h
+  | .send ev _ _ _ sz chk pl :: rest, hw, own, hf => by
+    have hwt := hw _ List.mem_cons_self
+    have hrest := fun f hf => hw f (List.mem_cons_of_mem _ hf)
+    simp only [Effect.wt, Bool.and_eq_true] at hwt
+    have hcx : (ctxOf c e own).Typed S me := ⟨hsnap, hf, ht⟩
+    simp only [runEffects]
+    split
+    · rename_i err hr; exact ne_sort_of (sizeOfE_ne_sort hcx ev chk sz hwt.1) hr
+    · split
+      · rename_i err hr; exact ne_sort_of (evalPayload_ne_sort hcx pl hwt.2) hr
+      · split
+        · rename_i err hr; intro h; injection h with h; subst h; cases replyTo_err hr
+        · split
+          · rename_i err hr; exact ne_sort_of (runEffects_ne_sort hsnap ht rest hrest own hf) hr
+          · intro h; cases h
 
 /-- Every transition of the system is well-typed. -/
 def Sys.TransWT (sys : Sys) : Prop := ∀ m, ∀ t ∈ sys.trans m, Trans.wt t = true

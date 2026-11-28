@@ -16,6 +16,8 @@ function session(commits, { logCap = 400 } = {}) {
   return { history, log };
 }
 
+// pairHistoryWithLog pairs more than 400 commits with their own log entries and leaves an entry unpaired when its log entry was dropped.
+// @evidence changes-panel-pairs-by-revision #
 test('pairs each history entry with its own log entry after the log cap has dropped older ones', () => {
   const { history, log } = session(450);
   assert.equal(history.length, 450);

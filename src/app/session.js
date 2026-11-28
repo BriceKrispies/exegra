@@ -15,7 +15,8 @@ import { createTraceCursor, engineInput } from '../core/engine.js';
 
 import { createEngineRunner } from './engine-runner.js';
 import { stepFlow, flowPaths, describeFlow } from '../core/flows.js';
-import { componentsFor, elementsOf, hierarchyOf, hierarchyIds, cutHierarchyId } from '../core/query.js';
+import { componentsFor, elementsOf, hierarchyOf, hierarchyIds, cutHierarchyId, claimSubjects } from '../core/query.js';
+import { CLAIM_METHODS } from '../core/claim-methods.js';
 import { requestLog } from '../core/contract-trace.js';
 import * as persist from '../persist/client.js';
 import { layersOf, factsOf, reloadFromDisk } from './disk-reload.js';
@@ -34,11 +35,16 @@ const PLAY_INTERVAL_MS = 800;
 // Specifications shipped with the build. Used only when the development
 // persistence service is unavailable (a production build), where the
 // application is read-only with respect to disk.
-const SHIPPED = import.meta.glob('/specs/*/{spec,layout}.jsonc', { query: '?raw', import: 'default', eager: true });
-const SHIPPED_RECORDED = import.meta.glob('/specs/*/evidence/results.json', { import: 'default', eager: true });
+//
+// The browser tests' scratch projects (specs/zz-test-*, tests/browser/scratch.js) are never shipped and never globbed:
+// the development server resolves an eager glob into static imports of every matching file, so a scratch project
+// recreated while a page loads would make that page import a file that is momentarily missing (WG-5738). Scratch
+// projects are opened through the persistence service only.
+const SHIPPED = import.meta.glob(['/specs/*/{spec,layout}.jsonc', '!/specs/zz-test-*/**'], { query: '?raw', import: 'default', eager: true });
+const SHIPPED_RECORDED = import.meta.glob(['/specs/*/evidence/results.json', '!/specs/zz-test-*/**'], { import: 'default', eager: true });
 // The extracted and observed facts of each shipped project (src/core/extraction.js), bundled like its specification so the
 // read-only build derives the same model as the command line.
-const SHIPPED_FACTS = import.meta.glob('/specs/*/extracted/{facts,observed}.json', { import: 'default', eager: true });
+const SHIPPED_FACTS = import.meta.glob(['/specs/*/extracted/{facts,observed}.json', '!/specs/zz-test-*/**'], { import: 'default', eager: true });
 // Specifications that live outside specs/ (named by a project's project.jsonc), bundled by the build.
 for (const [name, text] of Object.entries(LINKED)) SHIPPED[`/specs/${name}/spec.jsonc`] = text;
 
@@ -786,7 +792,7 @@ export function createSession() {
     const sel = session.selection ? session.model?.entities.get(session.selection) : null;
     if (sel?.kind === 'claim') {
       const r = session.claimResult(sel.id);
-      const ids = new Set([...(r?.involved ?? sel.data.subjects ?? []), ...(r?.counterexample?.entities ?? [])]);
+      const ids = new Set([...(r?.involved ?? claimSubjects(session.model, sel, CLAIM_METHODS[sel.data.evaluate?.method]?.params)), ...(r?.counterexample?.entities ?? [])]);
       ids.add(sel.id);
       // Entities that have no node in a structural scene are shown on the components they stand for (the core
       // query componentsFor); the behaviors themselves stay highlighted for the behavior view.

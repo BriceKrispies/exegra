@@ -168,6 +168,8 @@ function holdsLanguage(lang, where) {
   }
 }
 
+// Every operator the fixture language declares is parsed and typed as declared.
+// @evidence product-layers-expressions
 test('layer-expr.js parses and types every operator the fixture language declares', () => {
   const model = /** @type {any} */ (analyzeSpec(spec()).model);
   const [lang] = languagesOf(model);
@@ -175,6 +177,8 @@ test('layer-expr.js parses and types every operator the fixture language declare
   holdsLanguage(lang, 'fixture');
 });
 
+// The probe fails for an operator layer-expr.js lacks.
+// @evidence product-layers-expressions
 test('the probe fails for an operator layer-expr.js lacks and for one it types differently', () => {
   const model = /** @type {any} */ (analyzeSpec(spec()).model);
   const lang = structuredClone(languagesOf(model)[0]);
@@ -188,6 +192,8 @@ test('the probe fails for an operator layer-expr.js lacks and for one it types d
   assert.doesNotThrow(() => holdsLanguage(loose, 'mutant'), 'equal precedence has no probe');
 });
 
+// The same probe over the Strata platform language, when its specification is present.
+// @evidence product-layers-expressions
 test('layer-expr.js parses and types every operator the Strata platform declares', { skip: !fs.existsSync(STRATA_SPEC) }, () => {
   const model = /** @type {any} */ (analyzeSpec(fs.readFileSync(STRATA_SPEC, 'utf8')).model);
   const langs = languagesOf(model);
@@ -200,6 +206,8 @@ test('layer-expr.js parses and types every operator the Strata platform declares
   }
 });
 
+// layer-expr.js and the language checker agree on every checked case.
+// @evidence product-layers-expressions
 test('layer-expr.js and the language checker agree on every checked case of the shared table', () => {
   const model = /** @type {any} */ (analyzeSpec(functionsSpec()).model);
   const [lang] = languagesOf(model);

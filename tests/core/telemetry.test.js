@@ -64,6 +64,8 @@ const codes = (a, prefix) => a.diagnostics.filter((x) => x.code.startsWith(prefi
 /** @param {ReturnType<typeof spec>} a */
 const errors = (a) => a.diagnostics.filter((x) => x.severity === 'error');
 
+// The telemetry fixture validates with no error and no logging gap, with and without system.generation.
+// @evidence telemetry-logging-rules
 test('a specification with telemetry validates with no errors with and without the switch', () => {
   for (const generation of [true, false]) {
     const a = spec(undefined, { generation });
@@ -72,6 +74,8 @@ test('a specification with telemetry validates with no errors with and without t
   assert.deepEqual(readinessGaps(spec().model).filter((g) => g.code === 'ready.event-logging-missing'), []);
 });
 
+// eventLogging reads an event's line: service, level, log name (defaulting to the id), tenant and the names its fields are written as; an unlogged event has none.
+// @evidence telemetry-logging-rules
 test('eventLogging gives the service level log name tenant and the names fields are written under', () => {
   const a = spec();
   const e = a.model.entities.get('record-updated');
@@ -81,6 +85,8 @@ test('eventLogging gives the service level log name tenant and the names fields 
   assert.deepEqual(RECORD_FIELDS, ['ts', 'level', 'service', 'event', 'correlation', 'tenant']);
 });
 
+// A type marked sensitive, a struct with a sensitive field, and list and option of them are sensitive; others are not.
+// @evidence telemetry-logging-rules
 test('a type is sensitive when marked or through a struct field or through list and option', () => {
   const m = spec().model;
   assert.equal(typeSensitivity(m, 'session-token'), 'token');
@@ -116,6 +122,8 @@ const BROKEN = /** @type {[string, (d: any) => void, string[]][]} */ ([
 ]);
 
 for (const [title, mutate, expected] of BROKEN) {
+  // Each telemetry consistency rule broken once is reported exactly once, with and without the switch.
+  // @evidence telemetry-logging-rules # telemetry consistency:
   test(`telemetry consistency: ${title}`, () => {
     for (const generation of [true, false]) {
       // Without the journey, whose expectLog steps would also report a broken logging.
@@ -130,6 +138,8 @@ test('a logging level outside debug, info, warn and error is refused by the meta
   assert.ok(errors(a).some((x) => x.code === 'property.enum'), errors(a).map((x) => x.code).join(', '));
 });
 
+// A domain event without logging is ready.event-logging-missing, an error only with system.generation; an event that is not a domain event needs none.
+// @evidence telemetry-logging-rules
 test('telemetry readiness: a domain event that does not state its logging is a gap and an error only with the switch', () => {
   const drop = (/** @type {any} */ d) => { delete d.events[1].logging; d.uiScenarios[0].steps.pop(); };
   assert.deepEqual(codes(spec(drop), 'ready.'), ['ready.event-logging-missing']);
@@ -153,12 +163,16 @@ const BROKEN_STEPS = /** @type {[string, any, string[]][]} */ ([
 ]);
 
 for (const [title, step, expected] of BROKEN_STEPS) {
+  // Each broken expectLog step (an unlogged event, another service, a member outside the allowlist, an unknown event, a bad shape or timeout) is reported with its code.
+  // @evidence telemetry-logging-rules # ui consistency: an expectLog
   test(`ui consistency: ${title}`, () => {
     const a = spec((d) => { d.uiScenarios[0].steps.push(step); });
     assert.deepEqual(errors(a).map((x) => x.code).filter((c) => c !== 'ref.unresolved'), expected, errors(a).map((x) => x.message).join(' | '));
   });
 }
 
+// A logged domain event no behavior names is not gap.unused-event; the same event when not a domain event is.
+// @evidence telemetry-logging-rules
 test('a logged domain event is emitted by the running system so it is not an unused event', () => {
   const unused = (/** @type {ReturnType<typeof spec>} */ a) => a.diagnostics.filter((x) => x.code === 'gap.unused-event').map((x) => x.entityId).sort();
   // record-updated and session-started are logged domain events; page-pinged is a domain event that is not logged.

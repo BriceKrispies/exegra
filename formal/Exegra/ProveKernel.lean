@@ -131,6 +131,8 @@ def effectLean {S : Core.Behav.Sig} {me : Fin S.machines} : Core.Behav.Effect S 
   | .request r cl u k th rf d st pl =>
     s!"(.request {r} {cl} {u} {reqKindLean k} {th} {optLean rf} {distLean0 d} ({st.1}, {st.2}) {payloadLean pl})"
   | .release r cl u => s!"(.release {r} {cl} {u})"
+  | .send ev l f rp sz ck pl =>
+    s!"(.send {ev} {l} {f} {rp} {match sz with | none => "none" | some x => s!"(some {exprLean x})"} {ck} {payloadLean pl})"
 
 def transLean {S : Core.Behav.Sig} {me : Fin S.machines} (t : Core.Behav.Trans S me) : String :=
   s!"\{ src := {finLean t.src.val}, dst := {finLean t.dst.val}, event := {t.event}, guard := {exprLean t.guard}, " ++
@@ -192,6 +194,10 @@ def claimExpr (i : Input) (sys : Core.Behav.Sys) (h : 0 < sys.sig.machines) (src
 claim of a scenario whose reachable states the explorer closes. -/
 def kernelModule (modName sysName : String) (i : Input) (sys : Core.Behav.Sys)
     (claims : List (String × String)) (bound cap : Nat) : Except String String := do
+  -- the module states the system's term; routes (whose key hash is a function) and links are not
+  -- written yet, so a module for a system with either would state another system
+  if !sys.routes.isEmpty then throw "a kernel module does not yet state a system with routes"
+  if !sys.links.isEmpty then throw "a kernel module does not yet state a system with links"
   let some L := Core.Behav.reachable (Core.Behav.Exec.gen sys) bound cap
     | throw "the explorer did not close the reachable states within the bound and the state budget"
   if h : 0 < sys.sig.machines then

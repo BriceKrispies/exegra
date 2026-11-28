@@ -58,6 +58,8 @@ function pingSpec(more = []) {
   };
 }
 
+// V5 negative fixture and its positive.
+// @evidence decomposition-behavioural-validity
 test('V5 rejects a candidate whose block pair carries a message only over a different witness', () => {
   const m = modelOf(pingSpec([{ id: 'front-calls-store', kind: 'invokes', from: 'front', to: 'store' }]));
   // With the relationship between the two elements themselves the message is witnessed, and a candidate that separates them is valid.
@@ -101,6 +103,8 @@ function contractSpec(typed) {
 }
 const AB = { id: 'ab', scope: 'sys', blocks: [{ id: 'a', members: ['a'] }, { id: 'b', members: ['b'] }] };
 
+// V7 negative fixture and its positive.
+// @evidence decomposition-behavioural-validity
 test('V7 rejects a candidate that puts an untyped contract on the boundary between two blocks with the hop and its events', () => {
   const bad = evaluateCandidate(modelOf(contractSpec(false)), AB);
   assert.equal(bad.status, 'invalid');
@@ -137,6 +141,8 @@ const compositionDoc = () => {
 };
 const TOP = { id: 'top-split', scope: 'top', blocks: [{ id: 'app', members: ['app'] }, { id: 'store', members: ['store'] }] };
 
+// V6 certificate and counterexample on the composition fixture.
+// @evidence decomposition-behavioural-validity
 test('V6 checks the abstraction a block declares: a certificate passes and a counterexample rejects with its scenario and events', () => {
   const ok = evaluateCandidate(modelOf(compositionDoc()), TOP);
   assert.equal(ok.status, 'valid');
@@ -154,6 +160,8 @@ test('V6 checks the abstraction a block declares: a certificate passes and a cou
   assert.equal(bad.measurements, null);
 });
 
+// V6 not applicable with its reason.
+// @evidence decomposition-behavioural-validity
 test('V6 is not applicable where no block declares abstract behaviour and says why', () => {
   const r = evaluateCandidate(modelOf(contractSpec(true)), AB);
   assert.equal(r.status, 'valid');
@@ -170,6 +178,8 @@ test('V6 is not applicable where no block declares abstract behaviour and says w
 // ---------------------------------------------------------------------------------------------
 // Acceptance is a transaction
 
+// Acceptance, undo and redo.
+// @evidence decomposition-acceptance-transaction
 test('accepting a candidate records a named hierarchy and the components it needs in one undoable transaction', () => {
   const text = JSON.stringify(contractSpec(true), null, 2);
   const project = new Project({ specText: text });
@@ -202,6 +212,8 @@ test('accepting a candidate records a named hierarchy and the components it need
   assert.equal(project.semanticHash, accepted.transaction.semanticHash);
 });
 
+// Refusals.
+// @evidence decomposition-acceptance-transaction
 test('a candidate that is not valid is not accepted and neither is one that cannot be recorded', () => {
   const project = new Project({ specText: JSON.stringify(contractSpec(false)) });
   const h0 = project.semanticHash;
@@ -217,6 +229,8 @@ test('a candidate that is not valid is not accepted and neither is one that cann
   assert.equal(modules.code, 'accept.unrecordable');
 });
 
+// What a hierarchy cannot record is listed.
+// @evidence decomposition-acceptance-transaction
 test('a module element the candidate places in a block stays with its component and is listed with the elements it empties', () => {
   const doc = {
     exegra: '0.1', system: { id: 'sys', name: 'Sys' },
@@ -282,6 +296,8 @@ function claimAt(project, id, cut, from, to, kinds) {
   return evaluateClaim(/** @type {any} */ (project.model), id);
 }
 
+// The compiler.
+// @evidence decomposition-external-fixtures
 test('compiler: candidates and validity and measurements then acceptance with a level-bound claim and functional composition intact', () => {
   const { text, byId, common, cmp } = external('compiler', 'compiler');
   assert.deepEqual(['compiler-pipeline-thirds', 'compiler-front-and-back', 'compiler-syntax-first', 'compiler-declared'].map((i) => byId[i].status), ['valid', 'valid', 'valid', 'valid']);
@@ -306,6 +322,8 @@ test('compiler: candidates and validity and measurements then acceptance with a 
   assert.equal(analyzeSpec(project.specText).diagnostics.filter((x) => x.code.startsWith('function.')).length, 0, 'the functions still compose');
 });
 
+// The distributed application.
+// @evidence decomposition-external-fixtures
 test('distributed: candidates over services and machines then acceptance that keeps the realisation maps whole', () => {
   const { text, byId, common, cmp } = external('distributed', 'shop');
   for (const id of ['shop-by-tier', 'shop-services-and-machines', 'shop-by-zone', 'shop-declared']) assert.equal(byId[id].status, 'valid', id);
@@ -326,6 +344,8 @@ test('distributed: candidates over services and machines then acceptance that ke
   assert.ok(cmp.reports.every((r) => r.id.startsWith('shop-')));
 });
 
+// The event-driven system.
+// @evidence decomposition-external-fixtures
 test('event-driven: connectors contract the paths and V5 to V7 decide candidates and the accepted cut keeps the contractions', () => {
   const { text, byId, common, generated } = external('event-driven', 'telemetry-platform');
   assert.equal(byId['telemetry-by-role'].status, 'valid');
@@ -354,6 +374,8 @@ test('event-driven: connectors contract the paths and V5 to V7 decide candidates
   assert.equal(claim.status, 'verified');
 });
 
+// The reports under docs/assessment/2026-11-27/m7.
+// @evidence decomposition-external-fixtures
 test('the recorded reports say what the runs said', () => {
   const dir = path.join(ROOT, 'docs/assessment/2026-11-27/m7');
   for (const [name, accepted, n] of [['compiler', 'compiler-pipeline-thirds', 16], ['distributed', 'shop-by-tier', 11], ['event-driven', 'telemetry-by-role', 24]]) {

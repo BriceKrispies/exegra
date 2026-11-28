@@ -46,7 +46,9 @@ const chain = [{ section: 'components', field: 'parent', repeat: true }];
 export function exegraPlacement() {
   const structure = { ...coreValues((a) => STRUCTURE_OF_CORE[a]), ...Object.fromEntries(STRUCTURE_SUBSYSTEMS.map((s) => [s, P(`structure-${s}`)])) };
   const claimsValues = { ...coreValues((a) => `claims-core-${a}`), ...Object.fromEntries(Object.entries(OTHER_ASSURANCE).map(([k, v]) => [k, P(v)])) };
-  const evidenceValues = { ...claimsValues, 'generation-readiness': P('evidence-core-generation') };
+  // Evidence goes with its claim's part. The generation-readiness subsystem's evidence had a part of its own while test
+  // evidence was declared; since it is derived from the tests' markers (WG-5705) that part was empty and is gone.
+  const evidenceValues = claimsValues;
   const behaviours = Object.fromEntries(Object.entries(BEHAVIOUR_PARTS).map(([k, v]) => [k, P(v)]));
   const assuranceDefault = P('claims-app-ui');
   return {
@@ -77,7 +79,7 @@ export function exegraPlacement() {
 const PART_ORDER = [
   'system', 'structure-top', 'structure-application', 'structure-visualization', 'structure-persistence', 'structure-agent-interface', 'structure-tooling',
   'structure-core-model', 'structure-core-engines', 'contracts', 'events-faults', 'behaviors-app', 'behaviors-persistence', 'behaviors-core-tools', 'scenarios', 'assumptions',
-  'claims-core-validation', 'claims-core-derivation', 'claims-core-verdicts', 'claims-core-simulation', 'claims-core-formal', 'claims-core-generation', 'evidence-core-generation',
+  'claims-core-validation', 'claims-core-derivation', 'claims-core-verdicts', 'claims-core-simulation', 'claims-core-formal', 'claims-core-generation',
   'claims-app-ui', 'claims-persistence-agent-tooling', 'records-and-decisions', 'views-and-rest',
 ].map(P);
 
@@ -91,8 +93,7 @@ const DESCRIPTIONS = {
   'events-faults': 'Events and faults.',
   scenarios: 'Scenarios.',
   assumptions: 'Assumptions.',
-  'claims-core-generation': 'Claims of the generation-readiness subsystem (its evidence is in evidence-core-generation.jsonc).',
-  'evidence-core-generation': 'Evidence of the claims of the generation-readiness subsystem.',
+  'claims-core-generation': 'Claims of the generation-readiness subsystem.',
   'records-and-decisions': 'Records, copies and decisions.',
   'views-and-rest': 'Views, environments, failure modes, fault models, integrity rules, hierarchies, facets and cuts.',
 };

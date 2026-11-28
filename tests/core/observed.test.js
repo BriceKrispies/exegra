@@ -19,6 +19,8 @@ const RECORDING = fs.readFileSync(path.join(ROOT, 'tests/fixtures/recordings/liv
 const self = /** @type {any} */ (analyzeSpec(readSpecFile(path.join(ROOT, 'specs/exegra/spec.jsonc'))).model);
 const observed = observeRecording(RECORDING, { id: 'live-session-fixture', source: 'live-session.json' });
 
+// A recorded session fixture gives observed relationships, observed-but-undeclared and not-observed diagnostics.
+// @evidence observed-facts-reconcile #
 test('a recording is counted into observed facts that name it', () => {
   assert.equal(observed.format, OBSERVED_FORMAT);
   assert.equal(observed.provenance, 'observed');

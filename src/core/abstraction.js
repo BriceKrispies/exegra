@@ -31,7 +31,10 @@
 // written in the integrity-rule language (src/core/integrity.js) because that language ranges over entities only
 // (module elements, blocks and implicit blocks are not entities), its relations store no witnesses, and a
 // relation's tuples are not summarised; the function is kept small so it reads as the rule above, and the
-// property tests (tests/core/abstraction.test.js) check it against the invariants I1-I7 of WG-5694.
+// property tests (tests/core/abstraction.test.js) check it against the invariants I1-I7 of WG-5694. The same rule is
+// defined in Lean (formal/Exegra/Multiscale.lean), where P1-P7 and P13 are proved about it (WG-5699); its executable
+// form (structure.derive at the call boundary) agrees with this derivation on every golden cut
+// (tests/core/abstraction-lean.test.js).
 
 import { own } from './own.js';
 import { kindInfo, refines, kindAncestors, provenanceOf, mediatedInteractions, ROOT_KIND } from './interactions.js';

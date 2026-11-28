@@ -19,6 +19,8 @@ const REFUSED = [layer(path.join(FIXTURES, 'refused', 'import-unknown.jsonc'))];
 /** Everything an analysis reports, as plain text: models, diagnostics, hashes, counts. @param {any} a */
 const shown = (a) => JSON.stringify(a, (_k, v) => (v instanceof Map ? [...v.entries()] : v));
 
+// Four validations over one platform text parse it once; each gives the output of the same layer set validated alone.
+// @evidence product-layers-share-platform-analysis
 test('layer sets over one platform give the output of independent validations and the platform is analysed once', () => {
   clearBaseAnalysisCache();
   const alone = [BADGES, REFUSED].map((layers) => { clearBaseAnalysisCache(); return shown(analyzeLayers(PLATFORM, layers)); });
@@ -36,6 +38,8 @@ test('layer sets over one platform give the output of independent validations an
   assert.ok(b.errorCount > 0 && a.errorCount === 0);
 });
 
+// The cached platform model refuses changes; the combined model is rebuilt for each call.
+// @evidence product-layers-share-platform-analysis
 test('the shared platform analysis cannot be corrupted by a caller', () => {
   clearBaseAnalysisCache();
   const a = analyzeLayers(PLATFORM, BADGES);

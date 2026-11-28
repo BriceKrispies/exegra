@@ -50,6 +50,8 @@ test('unresolved and wrongly typed references are reported with locations', () =
   assert.ok(wrongKind.diagnostics.some((d) => d.code === 'ref.kind'));
 });
 
+// Unsupported constructs are diagnosed, never silently dropped.
+// @evidence unsupported-constructs-are-diagnosed # unsupported constructs
 test('unsupported constructs are diagnosed, never silently dropped', () => {
   assert.ok(codes(BASE.replace('"purpose": "b"', '"purpose": "b", "colour": "red"')).includes('property.unknown'));
   assert.ok(codes(BASE.replace('"relationships"', '"deployments": [], "relationships"')).includes('spec.unknown-section'));
@@ -162,6 +164,8 @@ const specWithTestRefs = (refs) => BASE.replace(/\}\s*$/, `,
   "evidence": [ ${refs.map((ref, i) => `{ "id": "ev${i}", "claim": "c", "kind": "test", "ref": ${JSON.stringify(ref)} }`).join(', ')} ]
 }`);
 
+// An unsafe test reference is a validation error and a plain one is not; validate and verify share one rule.
+// @evidence evidence-refs-validated-before-verify # test evidence references: an unsafe one is a validation error
 test('test evidence references: an unsafe one is a validation error and a plain one is not', () => {
   const bad = analyzeSpec(specWithTestRefs(['tests/core/model.test.js#a title, with a comma']));
   const errors = bad.diagnostics.filter((d) => d.code === 'evidence.ref-unsafe');

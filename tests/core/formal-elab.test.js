@@ -103,6 +103,8 @@ function tiny(over = {}) {
   };
 }
 
+// Decimal literals and initial values elaborate; 0.1 + 0.2 == 0.3 is true on the calculus path and 0.1 + 0.2 is written as 0.3; the expression-showcase golden input with inexact := 0.1 + 0.2 and quo := a / b is accepted.
+// @evidence numbers-are-exact-rationals
 test('a decimal literal', () => {
   // Numbers are exact rationals (WG-5683): a decimal literal, an initial value or a payload elaborates,
   // and 0.1 + 0.2 == 0.3 evaluates to true on the calculus path.

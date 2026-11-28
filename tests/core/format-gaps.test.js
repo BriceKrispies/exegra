@@ -19,6 +19,16 @@ const errors = (/** @type {any} */ r) => r.diagnostics.filter((/** @type {any} *
 const codes = (/** @type {any} */ ds) => ds.map((/** @type {any} */ d) => d.code);
 const model = () => /** @type {any} */ (analyzeSpec(spec()).model);
 
+// A suppliedBy naming no input, or a supplier other than route or session: exactly one contract.supplied-by error.
+// @evidence format-gaps-rules # a supplied input the contract does not have is reported once as contract.supplied-by
+// A form field or argument for an input the request supplies: exactly one form.supplied-input error; an action argument: exactly one action.supplied-input.
+// @evidence format-gaps-rules # a form field filling an input the session supplies is reported once as form.supplied-input
+// The JSON null fits json and option, and nothing else; a sortBy by a map or a json value is function.expr-type; an eval lookup of another type or an eval with five arguments too.
+// @evidence format-gaps-rules # a null where a string is expected is reported once as function.expr-type
+// The lookup examples of eval: a target that exists, one that does not, an unset reference, a lookup that does not cover the field, and no lookup.
+// @evidence format-gaps-rules # a reference lookup example that is wrong is reported once as function.example-failed
+// The fixture with an untagged plain-json union, an internally tagged mutation, a contract whose tenant and context the request supplies, and functions using the JSON null, a lookup in eval and lexicographic sortBy has no error and no readiness gap, and every example of those functions holds, with and without system.generation.
+// @evidence format-gaps-rules
 test('the fixture validates with every example holding and nothing missing for generation', () => {
   for (const generation of [false, true]) {
     const r = analyzeSpec(spec(undefined, { generation }));
@@ -46,6 +56,10 @@ test('every new code has a negative fixture', () => {
   for (const code of ['type.encoding', 'contract.supplied-by', 'form.supplied-input', 'action.supplied-input']) assert.ok(have.has(code), code);
 });
 
+// An untagged union with a tagField, a variantCase, two variants of one shape, two unit variants or a json variant that is not last: exactly one type.encoding error each.
+// @evidence format-gaps-rules # an untagged union with two variants written as one shape is reported once as type.encoding
+// An untagged union round-trips through toWire and fromWire for raw JSON values.
+// @evidence format-gaps-rules
 test('an untagged union is written as the raw JSON of its variant and read back in declaration order', () => {
   const t = /** @type {any} */ (typeStructure(model(), 'plain-json'));
   const raw = { a: [1, 'x', null, true], b: {}, c: 'text' };
@@ -58,6 +72,8 @@ test('an untagged union is written as the raw JSON of its variant and read back 
   assert.equal(fromWire(t, 'x').variant, 'Text');
 });
 
+// Internal, external, adjacent and tuple encodings round-trip too, with a wire case.
+// @evidence format-gaps-rules
 test('the other tags round-trip too external internal adjacent and tuple variants', () => {
   const m = model();
   const mutation = /** @type {any} */ (typeStructure(m, 'mutation'));
@@ -84,6 +100,8 @@ test('inputs the route or session supplies are read from the contract binding an
   assert.deepEqual([...suppliedInputs(model().entities.get('view-home'))], []);
 });
 
+// compareOrdered orders lists item by item and unions by variant position then fields, as Rust's derived Ord does.
+// @evidence format-gaps-rules
 test('lists and unions are ordered as the kernel orders a Value by variant then item by item', () => {
   const m = model();
   const list = /** @type {any} */ ({ k: 'list', of: { k: 'prim', name: 'u64' } });

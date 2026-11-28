@@ -1,0 +1,56 @@
+{
+  // Refinement over every interleaving (WG-5734, docs/composition.md): an abstraction that the scripted runs
+  // certify and another interleaving refutes. The pair's members answer a and b independently (left-flow emits x
+  // on a, right-flow emits y on b); the abstraction pair-flow emits x on a and y only after x. The scheduler
+  // delivers a, b, x, y at both levels, so engine.refineBoundary gives a certificate; delivering b first lets the
+  // members show y before x, which no run of pair-flow shows, so engine.refineExplore gives a counterexample with
+  // that interleaving. tests/core/composition.test.js reads this fixture.
+  "exegra": "0.1",
+  "system": { "id": "interleaving-fixture", "name": "Interleaving fixture", "illustrative": true },
+
+  "components": [
+    { "id": "top", "name": "Top", "kind": "subsystem", "category": "logical", "purpose": "Everything." },
+    { "id": "pair", "name": "Pair", "kind": "subsystem", "category": "logical", "parent": "top", "purpose": "Two independent responders." },
+    { "id": "left", "name": "Left", "category": "logical", "parent": "pair", "purpose": "Answers a." },
+    { "id": "right", "name": "Right", "category": "logical", "parent": "pair", "purpose": "Answers b." }
+  ],
+
+  "relationships": [
+    { "id": "left-notifies-right", "kind": "notifies", "from": "left", "to": "right" }
+  ],
+
+  "events": [
+    { "id": "a", "name": "A" },
+    { "id": "b", "name": "B" },
+    { "id": "x", "name": "X" },
+    { "id": "y", "name": "Y" }
+  ],
+
+  "behaviors": [
+    {
+      "id": "left-flow", "name": "Left", "subject": "left", "initial": "l-ready",
+      "states": [{ "id": "l-ready", "name": "Ready" }],
+      "transitions": [{ "id": "l-a", "from": "l-ready", "to": "l-ready", "on": "a", "effects": [{ "emit": "x" }] }]
+    },
+    {
+      "id": "right-flow", "name": "Right", "subject": "right", "initial": "r-ready",
+      "states": [{ "id": "r-ready", "name": "Ready" }],
+      "transitions": [{ "id": "r-b", "from": "r-ready", "to": "r-ready", "on": "b", "effects": [{ "emit": "y" }] }]
+    },
+    {
+      "id": "pair-flow", "name": "Pair (abstract)", "subject": "pair", "initial": "p-ready",
+      "abstracts": { "members": ["left-flow", "right-flow"] },
+      "states": [{ "id": "p-ready", "name": "Ready" }],
+      "transitions": [
+        { "id": "p-a", "from": "p-ready", "to": "p-ready", "on": "a", "effects": [{ "emit": "x" }] },
+        { "id": "p-b", "from": "p-ready", "to": "p-ready", "on": "b" },
+        { "id": "p-x", "from": "p-ready", "to": "p-ready", "on": "x", "effects": [{ "emit": "y" }] }
+      ]
+    }
+  ],
+
+  "scenarios": [
+    { "id": "both-at-members", "name": "a and b at once, members", "behaviors": ["left-flow", "right-flow"],
+      "steps": [{ "at": 0, "event": "a" }, { "at": 0, "event": "b" }] }
+  ]
+}

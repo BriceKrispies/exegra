@@ -3,6 +3,7 @@ import Exegra.Api.Engine
 import Exegra.Api.Model
 import Exegra.Api.Verdict
 import Exegra.Api.Boundary
+import Exegra.Api.Structure
 
 /-!
 The one entry point of the Lean core for the JavaScript shell (`src/core/lean.js`): a JSON
@@ -20,7 +21,7 @@ a name.
 namespace Exegra.Api
 
 /-- The functions of the module ports, in lookup order. -/
-def modules : List Entry := Engine.entries ++ ModelPort.entries ++ VerdictPort.entries ++ BoundaryPort.entries
+def modules : List Entry := Engine.entries ++ ModelPort.entries ++ VerdictPort.entries ++ BoundaryPort.entries ++ StructurePort.entries
 
 def functionsDoc : String := "The registered functions, [{name, doc}], in lookup order."
 
@@ -83,6 +84,13 @@ theorem call_engine_run_spec (v : Value) : call "engine.run" v = runAnyValue v :
 theorem call_engine_refineBoundary (v : Value) : call "engine.refineBoundary" v = Boundary.refineValue v := rfl
 
 theorem call_engine_boundary (v : Value) : call "engine.boundary" v = Boundary.boundaryValue v := rfl
+
+/-- The exploration of an abstraction and its members over every interleaving at the call boundary is
+`Boundary.exploreValue` (`Exegra/BoundaryExplore.lean`, sound by `explore_holds`). -/
+theorem call_engine_refineExplore (v : Value) : call "engine.refineExplore" v = Boundary.exploreValue v := rfl
+
+/-- The structural derivation at the call boundary is `Multiscale.deriveValue` (`Exegra/Multiscale.lean`). -/
+theorem call_structure_derive (v : Value) : call "structure.derive" v = Multiscale.deriveValue v := rfl
 
 theorem call_engine_explore (v : Value) : call "engine.explore" v = V2.ProveB.exploreValue v := rfl
 

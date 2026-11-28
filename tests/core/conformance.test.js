@@ -20,6 +20,10 @@ const viaJson = (v) => JSON.parse(JSON.stringify(v));
 /** @param {string} p */
 const readJson = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
 
+// The WebAssembly engine reproduces every golden trace from the model and from the committed engine input alone, simulationInput derives the committed inputs, and the conformance runner reports an altered trace at the right step and path.
+// @evidence simulation-contract-pinned #
+// Every golden input is what engineInput derives from its source specification, and the engine reproduces its trace when run from the model.
+// @evidence lowering-in-lean-reproduces-recorded-inputs
 test('the Lean WebAssembly engine reproduces every golden trace when run from the model', () => {
   let checked = 0;
   for (const [source, file] of SOURCES) {

@@ -32,6 +32,18 @@ function evidenceStage(stage) {
   return evaluateClaims(model, { recorded: { results: { 'ev-t': { outcome: 'pass', stamp: 'TREE' } } }, stamps: STAMPS })[0];
 }
 
+// The six stages are registered methods, weakest first.
+// @evidence conformance-stages-graded # the six conformance stages are claim methods
+// A fresh passing test and a document give the structural stage checkedOnInstances, subject implementation, not established.
+// @evidence conformance-stages-graded # the structural stage names its stage and gives at most checkedOnInstances
+// A fresh passing test and a document give the interface stage checkedOnInstances, subject implementation, not established.
+// @evidence conformance-stages-graded # the interface stage names its stage and gives at most checkedOnInstances
+// A fresh passing test and a document give the transition stage checkedOnInstances, subject implementation, not established.
+// @evidence conformance-stages-graded # the transition stage names its stage and gives at most checkedOnInstances
+// A fresh passing test and a document give the trace stage checkedOnInstances, subject implementation, not established.
+// @evidence conformance-stages-graded # the trace stage names its stage and gives at most checkedOnInstances
+// A fresh passing test and a document give the runtime-monitor stage checkedOnInstances, subject implementation, not established.
+// @evidence conformance-stages-graded # the runtime-monitor stage names its stage and gives at most checkedOnInstances
 test('the six conformance stages are claim methods, weakest first', () => {
   assert.deepEqual(CONFORMANCE_STAGES, ['structural', 'interface', 'transition', 'trace', 'runtime-monitor', 'verified-refinement']);
   for (const s of CONFORMANCE_STAGES) assert.ok(Object.hasOwn(CLAIM_METHODS, `conformance-${s}`), s);
@@ -48,6 +60,8 @@ for (const stage of ['structural', 'interface', 'transition', 'trace', 'runtime-
   });
 }
 
+// A fresh accepted theorem check gives the verified-refinement stage proved, subject implementation.
+// @evidence conformance-stages-graded
 test('the verified-refinement stage names its stage and is proved with subject implementation', () => {
   const model = modelOf([
     ent('claim', 'c', { kind: 'invariant', statement: 'The implementation refines its specification.', evaluate: { method: 'conformance-verified-refinement', theorem: 'Exegra.Core.LTS.refines_traces', about: ['Exegra.Core.LTS.Simulates'] } }),

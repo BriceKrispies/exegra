@@ -19,6 +19,8 @@ const copy = () => STREAM.map((e) => ({ ...e, payload: { ...e.payload } }));
 const at = (/** @type {any[]} */ s, /** @type {string} */ id) => s.findIndex((e) => e.id === id);
 const kinds = (/** @type {any[]} */ ds) => ds.map((d) => `${d.kind}:${d.event}`);
 
+// A stream recorded from the running application (tests/fixtures/live/open-edit-save.json) replays through live-session with no divergence and nothing awaited; steps carry fired transitions, responsible components and calibrations, and checkTrace and requestLog read the replay.
+// @evidence real-runs-replay-through-self-model
 test('a recorded open edit and save replays through live-session without a divergence', () => {
   assert.ok(model);
   const { trace, divergences, pending } = replayStream(model, STREAM, { closed: true });
@@ -45,6 +47,8 @@ test('a recorded open edit and save replays through live-session without a diver
   assert.deepEqual(replayChecks(/** @type {any} */ (model), divergences, trace.steps.length).map((c) => [c.claimId, c.holds]), [[REPLAY_CLAIM, true]]);
 });
 
+// Negative: save-succeeded moved before the request is reported as unpredicted, under the claim, with its step.
+// @evidence real-runs-replay-through-self-model
 test('an event in the wrong order is a divergence', () => {
   const s = copy();
   // The session reports the save before the server has answered it.
@@ -56,6 +60,8 @@ test('an event in the wrong order is a divergence', () => {
   assert.ok(checks.every((c) => c.claimId === REPLAY_CLAIM && !c.holds && typeof c.stepIndex === 'number'));
 });
 
+// Negative: an event id the specification does not declare is reported as unknown-event.
+// @evidence real-runs-replay-through-self-model
 test('an event the specification does not name is a divergence', () => {
   const s = copy();
   s.splice(at(s, 'write-intent'), 0, { seq: 999, id: 'cache-warmed', payload: {} });
@@ -63,6 +69,8 @@ test('an event the specification does not name is a divergence', () => {
   assert.deepEqual(kinds(divergences), ['unknown-event:cache-warmed']);
 });
 
+// Negative: a stream that ends after the server wrote the file is still waiting while open and reports write-file-ok missing once closed, naming the transition that predicted it.
+// @evidence real-runs-replay-through-self-model
 test('a predicted response that never comes is a divergence', () => {
   // The stream ends after the server wrote the file: the model predicts write-file-ok, which never comes.
   const s = copy().slice(0, at(STREAM, 'ws-write-done') + 1);
@@ -75,6 +83,8 @@ test('a predicted response that never comes is a divergence', () => {
   assert.equal(missing?.transition, 'dev-write-ok');
 });
 
+// Negative: a prediction older than the bound is missing on an open stream.
+// @evidence real-runs-replay-through-self-model
 test('a predicted event not seen within the bound is missing even while the stream is open', () => {
   const s = copy();
   s.splice(at(s, 'write-file-ok'), 1);
@@ -82,6 +92,8 @@ test('a predicted event not seen within the bound is missing even while the stre
   assert.ok(kinds(divergences).includes('missing:write-file-ok'), kinds(divergences).join(', '));
 });
 
+// Negative: a doctored hash in write-file-ok is a payload divergence on that field.
+// @evidence real-runs-replay-through-self-model
 test('a recorded payload value that differs from the prediction is a divergence', () => {
   const s = copy();
   s[at(s, 'write-file-ok')].payload.hash = 'not-the-hash-written';
@@ -91,6 +103,8 @@ test('a recorded payload value that differs from the prediction is a divergence'
   assert.equal(d?.field, 'hash');
 });
 
+// Negative: a camera saved for a view the model's tab storage has no place for is not-allowed.
+// @evidence real-runs-replay-through-self-model
 test('a predicted event that no behavior consuming it accepts in its state is a divergence', () => {
   // A view the tab storage of the model has no place for: the camera saved for it is predicted (camera-keep)
   // but session-storage-flow accepts camera-saved only for the views it holds.
@@ -100,6 +114,8 @@ test('a predicted event that no behavior consuming it accepts in its state is a 
   assert.ok(kinds(divergences).includes('not-allowed:camera-saved'), kinds(divergences).join(', '));
 });
 
+// Consuming events one at a time gives the same trace as replaying the whole stream.
+// @evidence real-runs-replay-through-self-model
 test('the replay is incremental and deterministic', () => {
   const r = createReplay(/** @type {any} */ (model));
   for (const e of STREAM) r.consume(e);
@@ -108,6 +124,8 @@ test('the replay is incremental and deterministic', () => {
   assert.equal(r.trace().outcome, 'running');
 });
 
+// The replay-blind stream of the 2026-11-26 assessment: write-intent without text, a base hash the model never had, and save-requested after close are three divergences.
+// @evidence real-runs-replay-through-self-model
 test('the replay-blind stream yields three divergences', () => {
   // docs/assessment/2026-11-26/demos/replay-blind.mjs (WG-5685, criterion 13): the recorded write-intent drops
   // text and carries a base hash the model never had (baseHash is not declared environment, so it is not

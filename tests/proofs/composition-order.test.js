@@ -12,6 +12,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { runCommand } from '../../cli/commands.js';
 
+// exegra order-check runs every self-specification scenario and the negative runs of its claims with the behaviours reversed and in every rotation, and no invariant or temporal verdict differs from the scenario's own order.
+// @evidence composition-order-independent
 test('reordering the behaviours of any self-specification scenario changes no claim verdict', async () => {
   const r = /** @type {any} */ (await runCommand('order-check', ['--project', 'exegra']));
   assert.equal(r.ok, true);

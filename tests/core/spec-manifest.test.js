@@ -14,6 +14,8 @@ const resolveFixture = (/** @type {string} */ name) => {
   return resolveSpecText(file, fs.readFileSync(file, 'utf8'));
 };
 
+// Parts assemble in manifest order into the canonical text.
+// @evidence specification-manifest-parts
 test('parts assemble in manifest order and array sections concatenate', () => {
   const r = resolveFixture('ok');
   assert.equal(r.manifest, true);
@@ -31,6 +33,8 @@ test('a section that is not an array in two parts is refused, naming both files'
   assert.throws(() => resolveFixture('object-twice'), (e) => e instanceof SpecManifestError && e.code === 'duplicate-section' && /a\.jsonc/.test(e.message) && /b\.jsonc/.test(e.message));
 });
 
+// A duplicate id across parts is refused naming both files; a missing part and a section in two parts likewise (fixtures in tests/fixtures/spec-manifest).
+// @evidence specification-manifest-parts
 test('an id repeated across parts is refused naming both files', () => {
   assert.throws(() => resolveFixture('duplicate-id'), (e) => e instanceof SpecManifestError && e.code === 'duplicate-id' && /c-1/.test(e.message) && /a\.jsonc/.test(e.message) && /b\.jsonc/.test(e.message));
 });
@@ -43,6 +47,8 @@ test('a file that is not a manifest is its own text', () => {
   assert.equal(r.text, text);
 });
 
+// An edit goes to the part that holds the entity and a new entity to the part the table names.
+// @evidence specification-manifest-parts
 test('an edit is written back to the part that holds the entity and new entities go where the table says', () => {
   const r = resolveFixture('ok');
   const edited = r.text
@@ -61,6 +67,8 @@ test('an edit is written back to the part that holds the entity and new entities
   assert.deepEqual(JSON.parse(again.text).claims.map((c) => c.id).sort(), ['m-1', 'm-2', 'r-1', 'r-2', 'r-3']);
 });
 
+// The workspace writes a transaction to the part files only, and refuses a stale base.
+// @evidence self-specification-split-by-area # the workspace reads a manifest and writes an edit to the parts
 test('the workspace reads a manifest and writes an edit to the parts, and refuses a bad manifest', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'exegra-manifest-'));
   try {

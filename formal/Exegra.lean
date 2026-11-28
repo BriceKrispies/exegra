@@ -19,6 +19,8 @@ import Exegra.Verdict
 import Exegra.Impact
 import Exegra.Api
 import Exegra.Boundary
+import Exegra.Multiscale
+import Exegra.BoundaryExplore
 import Exegra.Core.LTS
 import Exegra.Core.Live
 import Exegra.Core.Calculus

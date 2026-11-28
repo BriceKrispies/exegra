@@ -124,6 +124,12 @@ const codes = (/** @type {any} */ ds) => ds.map((/** @type {any} */ d) => d.code
 /** @param {any} r */
 const explain = (r) => r.diagnostics.map((/** @type {any} */ d) => `${d.severity} ${d.code} ${d.message}`).join('\n');
 
+// The fixture that uses every construct validates with no error, no warning and no readiness gap.
+// @evidence construct-consistency-rules # a specification with every construct validates with no errors
+// Construction requirements that name only constructs in realisedBy validate.
+// @evidence construction-requirement-realised-by-constructs # a specification with every construct validates with no errors
+// Removing realisedBy gives exactly requirement.construction-unmodelled.
+// @evidence construction-requirement-realised-by-constructs # a construction requirement with neither models nor realisedBy
 test('a specification with every construct validates with no errors, no warnings and no readiness gaps', () => {
   const r = analyzeSpec(spec());
   assert.deepEqual(r.diagnostics.filter((/** @type {any} */ d) => d.severity !== 'info').map((/** @type {any} */ d) => `${d.code} ${d.message}`), []);
@@ -176,6 +182,8 @@ for (const [title, code, mutate] of CONSISTENCY) {
   const modes = generationChecked.has(code.split(".")[0]) ? [false] : [false, true];
   generationChecked.add(code.split(".")[0]);
   for (const generation of modes) {
+    // Each consistency rule broken once gives exactly that error, with and without system.generation.
+    // @evidence construct-consistency-rules # construct consistency:
     test(`construct consistency: ${title} is reported once as ${code}${generation ? ' (generation set)' : ''}`, () => {
       const r = analyzeSpec(spec(/** @type {any} */ (mutate), { generation }));
       assert.deepEqual(codes(errors(r)), [code], explain(r));
@@ -198,6 +206,8 @@ const READINESS = [
 ];
 
 for (const [title, code, mutate] of READINESS) {
+  // Each readiness rule broken once is exactly that error with the switch, and no diagnostic but one listed gap without it.
+  // @evidence construct-readiness-gated # construct readiness:
   test(`construct readiness: ${title} is exactly one ${code} error when generation is set`, () => {
     const r = analyzeSpec(spec(/** @type {any} */ (mutate)));
     assert.deepEqual(codes(errors(r)), [code], explain(r));
@@ -212,6 +222,8 @@ for (const [title, code, mutate] of READINESS) {
   });
 }
 
+// Durations parse with units ns to d and refuse zero, negative and unknown units.
+// @evidence construct-consistency-rules # construct durations are a positive decimal
 test('construct durations are a positive decimal with a unit from ns to d', () => {
   assert.equal(durationNs('100 ms'), 1e8);
   assert.equal(durationNs('1.5 s'), 1.5e9);
@@ -220,6 +232,8 @@ test('construct durations are a positive decimal with a unit from ns to d', () =
   for (const bad of ['0 s', '5 sec', '1 week', '-1 s', 5, undefined]) assert.equal(durationNs(bad), null, String(bad));
 });
 
+// Anonymising every personal field or deleting satisfies record-erasure-point; anonymising some does not.
+// @evidence retention-erases-records # a retention that deletes a record
 test('a retention that deletes a record, or anonymises its personal fields, satisfies the record erasure rule', () => {
   const rule = (/** @type {any} */ r) => dataFindings(r.model).findings.filter((/** @type {any} */ f) => f.rule === 'record-erasure-point').map((/** @type {any} */ f) => f.entityId);
   assert.deepEqual(rule(analyzeSpec(spec())), []);

@@ -50,6 +50,8 @@ function load(text) {
   return model;
 }
 
+// A small specification with a resource, an open workload, a request class and a metric-bound claim: simulationInput derives version 2; the claim reads model-holds with N = 8, its scale-demand twin fails, and a missed bound reads violated.
+// @evidence metric-claims-in-specifications #
 test('engineInput derives format 2 from declared resources, workloads and request classes', () => {
   const input = /** @type {any} */ (engineInput(load(SPEC('20 ms')), 'steady'));
   assert.equal(input.version, 2);

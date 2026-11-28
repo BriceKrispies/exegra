@@ -48,6 +48,10 @@ async function clickEntity(page, id) {
 const waitSaved = (/** @type {import('@playwright/test').Page} */ page) =>
   page.waitForFunction(() => /** @type {any} */ (window).__exegra.session.saveState === 'saved');
 
+// A rename in the inspector reaches the scene, the source and the file on disk, and survives a reload.
+// @evidence edit-representations-equivalent # inspector rename persists to spec.jsonc and survives reload
+// The edited text is on disk after the edit.
+// @evidence file-matches-model-after-save # inspector rename persists to spec.jsonc and survives reload
 test('selecting a component shows model-derived properties, and an inspector rename persists to spec.jsonc and survives reload', async ({ page }) => {
   await open(page, 'multiplayer');
   await clickEntity(page, 'api-service');
@@ -102,6 +106,12 @@ const pasteSource = (editor, text) => editor.evaluate((/** @type {HTMLTextAreaEl
   ta.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertFromPaste' }));
 }, text);
 
+// A source edit updates the scene. The full title continues '; invalid source is rejected and the draft is kept'.
+// @evidence edit-representations-equivalent # source edit updates the scene
+// An invalid source draft is rejected and the scene keeps showing the committed model.
+// @evidence rejected-edit-changes-nothing # source edit updates the scene
+// In the application the rejected draft is kept as typed.
+// @evidence invalid-source-keeps-last-valid-model # source edit updates the scene
 test('source edit updates the scene; invalid source is rejected and the draft is kept', { tag: '@full' }, async ({ page }) => {
   await open(page, 'multiplayer');
   await page.getByTestId('tab-btn-source').click();
@@ -146,6 +156,8 @@ test('source edit updates the scene; invalid source is rejected and the draft is
   await expect(editor).toHaveValue(edited);
 });
 
+// Dragging a node in the real application changes only layout.jsonc.
+// @evidence layout-moves-are-not-semantic
 test('moving a node changes layout.jsonc only', { tag: '@full' }, async ({ page }) => {
   await open(page, 'multiplayer');
   const specBefore = readScratch('multiplayer', 'spec.jsonc');

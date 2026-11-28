@@ -39,6 +39,8 @@ const byId = (model, opts) => Object.fromEntries(evaluateClaims(model, opts).map
 // ---------------------------------------------------------------------------------------------------------
 // skipped-test-counts-as-pass.test.js
 
+// Runs each demo case on the demo's own model and asserts the Lean verdict.
+// @evidence inflation-demos-honest #
 test('skipped-test-counts-as-pass: a skipped, todo or suite-only reference is not run, and its claim is not supported', () => {
   const file = `${DEMOS}/skipped-test-counts-as-pass.test.js`;
   const env = { ...process.env };

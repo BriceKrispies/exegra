@@ -77,6 +77,8 @@ test('collapsed subsystem lifts edges and drops internal ones', () => {
   assert.ok(scene.notes.some((s) => /drawn to a collapsed block/.test(s)));
 });
 
+// A path summary on a small fixture.
+// @evidence navigation-filters-report-removals
 test('hidden removes components with their descendants and a connection through them becomes a labelled path summary', () => {
   const scene = project(build(), 'structural', { hidden: new Set(['api']) });
   assert.deepEqual(scene.nodes.map((n) => n.id).sort(), ['db', 'lone', 'web']);

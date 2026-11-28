@@ -34,6 +34,8 @@ test('the distributed fixture validates, with logical and deployment hierarchies
   assert.deepEqual(d.result.realisations.map((/** @type {any} */ r) => r.holds), [true, true, true]);
 });
 
+// On the distributed fixture a link partition, a host crash and a zone outage each fail exactly the logical interactions their realisation paths carry.
+// @evidence fault-lifting-through-realisation
 test('a deployment-level failure mode lifts to the logical interactions it affects', async () => {
   const r = await lift(['--cut', 'shop-leaf']);
   // A fault at a network link fails exactly the interaction that link realises.
@@ -56,6 +58,8 @@ test('a failure mode at a logical element fails the interactions across its boun
   assert.equal(m.failure, 'delayed');
 });
 
+// Lifting at the subsystem and the service cuts names the same interactions; an ad hoc cut agrees with the declared one.
+// @evidence fault-lifting-through-realisation
 test('lifting with a cut gives the failures of the derived interactions and the internal failures of a block', async () => {
   const fine = await lift(['--cut', 'shop-leaf']);
   assert.deepEqual(fine.lifted.map((/** @type {any} */ l) => l.key), ['cart->orders:invokes', 'orders->inventory:invokes']);
@@ -71,6 +75,8 @@ test('lifting with a cut gives the failures of the derived interactions and the 
   assert.deepEqual((await lift(['--depth', '1'])).lifted, coarse.lifted);
 });
 
+// The result is equal for a specification with its declarations reversed.
+// @evidence fault-lifting-through-realisation
 test('the lifting does not depend on the order the specification declares things in', async () => {
   const spec = JSON.parse(fs.readFileSync(DISTRIBUTED, 'utf8'));
   for (const k of ['failureModes', 'realisations', 'relationships', 'components']) spec[k].reverse();
@@ -86,6 +92,8 @@ test('the lifting does not depend on the order the specification declares things
   }
 });
 
+// Negative fixture: with the realisation maps removed the deployment faults reach no logical interaction.
+// @evidence fault-lifting-through-realisation
 test('without realisation maps a deployment fault does not lift to the logical interactions', async () => {
   const spec = JSON.parse(fs.readFileSync(DISTRIBUTED, 'utf8'));
   spec.realisations = [];

@@ -63,6 +63,8 @@ const SMALL = {
 const small = () => modelOf(SMALL);
 const P = { id: 'p', scope: 'core', blocks: [{ id: 'X', members: ['a', 'b'] }, { id: 'Y', members: ['c', 'd'] }, { id: 'Z', members: ['e', 'f'] }, { id: 'bus', members: ['bus'] }] };
 
+// Every measurement of a small system checked by hand.
+// @evidence decomposition-measurements-deterministic
 test('a valid candidate is measured by hand-checkable functions of the facts', () => {
   const r = evaluateCandidate(small(), P);
   assert.equal(r.status, 'valid');
@@ -91,6 +93,8 @@ test('a valid candidate is measured by hand-checkable functions of the facts', (
   assert.equal(m.interface.perBlock.find((/** @type {any} */ p) => p.id === 'X').groups, 3);
 });
 
+// Boundary witnesses, back edges by class and uncovered interactions listed per boundary.
+// @evidence decomposition-measurements-deterministic
 test('evidence names crossing witnesses and cycle back edges and uncovered contracts', () => {
   const m = small();
   const r = evaluateCandidate(m, P);
@@ -122,6 +126,8 @@ test('layering minimises the witnesses on back edges and is deterministic', () =
 // ---------------------------------------------------------------------------------------------
 // Validity: V1 to V4, with the failing condition and witnesses
 
+// The overlapping negative.
+// @evidence decomposition-invalid-diagnosed
 test('an overlapping candidate is rejected under V1 with the element and both blocks as witnesses', () => {
   const r = evaluateCandidate(small(), { id: 'o', scope: 'core', blocks: [{ id: 'X', members: ['a', 'b', 'c'] }, { id: 'Y', members: ['c', 'd'] }, { id: 'Z', members: ['e', 'f', 'bus'] }] });
   assert.equal(r.status, 'invalid');
@@ -133,6 +139,8 @@ test('an overlapping candidate is rejected under V1 with the element and both bl
   assert.deepEqual(r.conditions.slice(1, 4).map((c) => c.status), ['skipped', 'skipped', 'skipped']);
 });
 
+// The non-covering negative.
+// @evidence decomposition-invalid-diagnosed
 test('a non-covering candidate is rejected under V1 naming the elements no block holds', () => {
   const r = evaluateCandidate(small(), { id: 'n', scope: 'core', blocks: [{ id: 'X', members: ['a', 'b'] }, { id: 'Y', members: ['c', 'd'] }] });
   assert.equal(r.status, 'invalid');
@@ -141,6 +149,8 @@ test('a non-covering candidate is rejected under V1 naming the elements no block
   assert.deepEqual(f[0].witnesses, ['bus', 'e', 'f']);
 });
 
+// Unknown, outside, below-grain, duplicate, colliding, empty and malformed candidates.
+// @evidence decomposition-invalid-diagnosed
 test('the other ways a candidate is not a partition each get their own code', () => {
   const m = small();
   const codes = (/** @type {any} */ c) => /** @type {any} */ (evaluateCandidate(m, { scope: 'core', ...c }).conditions[0]).failures.map((/** @type {any} */ x) => x.code);
@@ -176,6 +186,8 @@ test('a block named after the element it stands for, or after a composite inside
   assert.deepEqual(r.blocks.map((b) => [b.id, b.existing]), [['b', true], ['mid', true], ['rest', false]]);
 });
 
+// A condition plugs into the registry and decides validity; a registry without the behavioural conditions reports them as not evaluated.
+// @evidence decomposition-invalid-diagnosed
 test('a condition registered in the registry decides validity and removing it restores the report', () => {
   const m = small();
   assert.deepEqual(VALIDITY_CONDITIONS.map((c) => c.id), ['V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7']);
@@ -196,6 +208,8 @@ test('a condition registered in the registry decides validity and removing it re
   assert.deepEqual(r.notEvaluated, ['V5', 'V6', 'V7']);
 });
 
+// A V3 negative.
+// @evidence decomposition-invalid-diagnosed
 test('V3 fails when a block that is an element declares a port its boundary does not realise', () => {
   const doc = { ...SMALL, components: SMALL.components.map((c) => (c.id === 'e' ? { ...c, ports: [{ id: 'e-needs', direction: 'requires', contract: 'c1' }] } : c)) };
   const r = evaluateCandidate(modelOf(doc), { id: 'v3', scope: 'core', blocks: [{ id: 'e', members: ['e'] }, { id: 'rest', members: ['a', 'b', 'c', 'd', 'f', 'bus'] }] });
@@ -248,6 +262,8 @@ test('a candidate given as data is read like a generated one', () => {
 // ---------------------------------------------------------------------------------------------
 // The audit's section 5.3
 
+// The audit section 5.3 figures on the audit-time facts.
+// @evidence decomposition-measurements-deterministic
 test('the audit figures reproduce on the facts the audit used with 53 crossing and the four-block cycle and the named residual witnesses', () => {
   const m = modelOf(readJson('audit-semantic-core.json'));
   const [first, second] = audit().map((c) => evaluateCandidate(m, c));
@@ -266,6 +282,8 @@ test('the audit figures reproduce on the facts the audit used with 53 crossing a
   assert.deepEqual(cycles.map((/** @type {any} */ c) => c.backEdges.map((/** @type {any} */ e) => e.witnesses)), [[['lean-call-boundary-calls-formal-semantics']], [['integrity-rules-calls-proof-export', 'validator-calls-metric-claims']]]);
 });
 
+// The same groupings on the current specification, recounted independently.
+// @evidence decomposition-measurements-deterministic
 test('on the current specification the audit groupings are valid and keep the four-block cycle and name their witnesses', () => {
   const m = self();
   const [first, second] = audit().map((c) => evaluateCandidate(m, c, { provenance: ['declared'] }));
@@ -313,6 +331,8 @@ test('semantic-core has at least three valid candidates, one invalid, and the co
 // ---------------------------------------------------------------------------------------------
 // Purity, determinism, no verdict of meaning
 
+// Model, facts and hash compared before and after.
+// @evidence decomposition-evaluation-pure
 test('evaluating and generating candidates leaves the model and its facts and its hash as they were', () => {
   const m = self();
   const hash = semanticHash(m);
@@ -328,6 +348,8 @@ test('evaluating and generating candidates leaves the model and its facts and it
   assert.equal(m.byKind.relationship.length, rels);
 });
 
+// Two runs and a shuffled candidate give the same text.
+// @evidence decomposition-measurements-deterministic
 test('repeated evaluation is byte-identical in any order of blocks and members', () => {
   const m = self();
   const run = () => stableStringify(compareCandidates(m, audit(), { provenance: ['declared'] }));
@@ -338,6 +360,8 @@ test('repeated evaluation is byte-identical in any order of blocks and members',
   assert.equal(stableStringify(generateCandidates(m, { scope: 'semantic-core' })), stableStringify(generateCandidates(m, { scope: 'semantic-core' })));
 });
 
+// No score, rank or meaning key; acceptance is described and not applied.
+// @evidence decomposition-evaluation-pure
 test('no report ranks or scores or calls a candidate meaningful', () => {
   const m = small();
   const cmp = compareCandidates(m, [P, { id: 'bad', scope: 'core', blocks: [] }]);
@@ -362,6 +386,8 @@ test('what accepting a candidate would record is described: a named hierarchy an
 // ---------------------------------------------------------------------------------------------
 // The command
 
+// The command, including an invalid candidate given as data.
+// @evidence decomposition-invalid-diagnosed
 test('decompose reports candidates and the failing condition of an invalid one and full evidence for one candidate', () => {
   const run = (/** @type {string[]} */ args) => {
     const r = spawnSync(process.execPath, ['cli/exegra.js', 'decompose', '--project', 'exegra', '--scope', 'semantic-core', '--provenance', 'declared', ...args], { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, env: { ...process.env } });

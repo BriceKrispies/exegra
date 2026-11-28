@@ -20,6 +20,8 @@ test('texts of the language are accepted', () => {
   ]) assert.equal(check(ok), null, ok);
 });
 
+// Syntax errors and their positions.
+// @evidence product-layers-expressions
 test('a name or call the language lacks and malformed text is layer.expr-syntax with its position', () => {
   const at = (/** @type {string} */ t) => { const p = check(t); return p && [p.code, p.pos]; };
   assert.deepEqual(at('balance(record.points) > 1'), ['layer.expr-syntax', 0]);
@@ -39,6 +41,8 @@ test('a name or call the language lacks and malformed text is layer.expr-syntax 
   assert.deepEqual(at('len(record.name, 1)'), ['layer.expr-syntax', 15]);
 });
 
+// Unknown fields, hops, params and roles.
+// @evidence product-layers-expressions
 test('fields hops params and roles are checked against the scope', () => {
   assert.deepEqual(check('record.colour == 1'), { code: 'layer.expr-unknown-field', pos: 7, message: 'unknown field colour; the object type has the fields name, points, owner, tags' });
   assert.equal(check('record.owner.phone == null')?.code, 'layer.expr-unknown-field');
@@ -50,6 +54,8 @@ test('fields hops params and roles are checked against the scope', () => {
   assert.equal(check('record.tags.email == 1')?.code, 'layer.expr-type', 'a hop through a list of text');
 });
 
+// Shapes an operator does not accept.
+// @evidence product-layers-expressions
 test('shapes that the operator does not accept are layer.expr-type', () => {
   for (const bad of ['record.name == 1', 'record.name > 1', 'len(record.points) > 0', 'not record.points', 'record.points and true', "lower(record.points) == 'a'", 'record.points in record.points', 'if(record.points, 1, 2) == 1', "if(true, 1, 'a') == 1", 'contains(record.name, 1)', "starts_with(1, 'a')"]) {
     assert.equal(check(bad)?.code, 'layer.expr-type', bad);
@@ -57,6 +63,8 @@ test('shapes that the operator does not accept are layer.expr-type', () => {
   assert.equal(check('record.name == record.points')?.message, 'cannot compare Str with Int');
 });
 
+// The scope of a text: the object type of a policy, segment, trigger or operation, the params an event or an operation binds.
+// @evidence product-layers-expressions
 test('the scope comes from the value that holds the text', () => {
   const names = (/** @type {any} */ scope) => [...(scope.fields ?? [])].map(([n]) => n);
   const objectScope = expressionScope(ctx, 'objects', tier, ['fields', 'x', 'default']);
@@ -81,6 +89,8 @@ test('the scope comes from the value that holds the text', () => {
 /** The shape of a text, or the code and message of its problem. @param {string} text */
 const typed = (text) => { const r = typeExpressionText(text, own); return r.problem ? [r.problem.code, r.problem.message] : r.shape; };
 
+// Each of the nine operators is accepted.
+// @evidence product-layers-expressions
 test('each of the nine operators is accepted and the bare result of arithmetic is an expression', () => {
   const accepted = /** @type {[string, string][]} */ ([
     ['record.points + 1', 'int'], ['record.points - 1', 'int'], ['record.points * 2', 'int'],
@@ -92,6 +102,8 @@ test('each of the nine operators is accepted and the bare result of arithmetic i
   for (const [text, shape] of accepted) assert.equal(typed(text), shape, text);
 });
 
+// One wrong operand per operator is layer.expr-type with the stated message.
+// @evidence product-layers-expressions
 test('one operand of the wrong shape per operator is layer.expr-type with the kernel message', () => {
   const refused = /** @type {[string, string][]} */ ([
     ["'a' + 1", '+ does not accept a Str operand'], ['1 + time(5)', '+ does not accept a Time operand'],
@@ -105,6 +117,8 @@ test('one operand of the wrong shape per operator is layer.expr-type with the ke
   for (const [text, message] of refused) assert.deepEqual(typed(text), ['layer.expr-type', message], text);
 });
 
+// Time + Time is refused.
+// @evidence product-layers-expressions
 test('Time plus Time and Time minus Time are refused: ms_between gives the difference', () => {
   assert.deepEqual(typed('now + now'), ['layer.expr-type', '+ does not accept a Time operand']);
   assert.deepEqual(typed('now - time(1)'), ['layer.expr-type', '- does not accept a Time operand']);
@@ -112,6 +126,8 @@ test('Time plus Time and Time minus Time are refused: ms_between gives the diffe
   assert.equal(check('now + now')?.pos, 6, 'the position is the right operand');
 });
 
+// The sign rule for a minus before a digit.
+// @evidence product-layers-expressions
 test('a minus before a digit is a sign only where no operand ends before it', () => {
   for (const literal of ['-1 < record.points', '2 * -3 > 0', 'record.points in [1, -1]', 'is_null(-1)', '1 - -1 > 0', 'record.points == -1', 'not -1 < 0', 'time(-5) < now', 'record.points > 1 and -1 < 0', 'if(true, -1, 2) == 0']) {
     assert.equal(check(literal), null, literal);
@@ -130,6 +146,8 @@ test('a minus before a digit is a sign only where no operand ends before it', ()
   assert.equal(check('-9223372036854775808 < record.points'), null, 'the smallest integer');
 });
 
+// Precedence and associativity.
+// @evidence product-layers-expressions
 test('precedence binds the product over the sum over a comparison', () => {
   assert.equal(typed('time(1) + 1 * 2'), 'time', 'a product binds tighter than the sum');
   assert.deepEqual(typed('time(1) * 1 + 2'), ['layer.expr-type', '* does not accept a Time operand']);
@@ -143,6 +161,8 @@ test('precedence binds the product over the sum over a comparison', () => {
   assert.equal(typed('(1 + 2) * 3'), 'int');
 });
 
+// A step reads the id of an earlier create step as a param.
+// @evidence product-layers-expressions
 test('a step reads the id of an earlier create step as a parameter', () => {
   const item = { inputs: [{ name: 'tier' }], steps: [{ CreateRecord: { id: 'made', object: 'p__tier' } }, { PostLedger: { id: 'fund', scope: 'text(param.made)' } }, { CreateRecord: { id: 'later' } }] };
   const at = (/** @type {number} */ n) => [...(expressionScope(ctx, 'operations', item, ['steps', n, 'x']).params ?? [])];

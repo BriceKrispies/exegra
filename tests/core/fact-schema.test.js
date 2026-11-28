@@ -12,6 +12,8 @@ import { importScanFacts } from '../../tools/import-scan.js';
 
 const CURRENT = { tree: 'TREE', formal: 'FORMAL' };
 
+// Producers' facts decode; malformed facts are refused with the reason; a refused fact is left out of the verdict with a diagnostic.
+// @evidence facts-meet-lean-schema #
 test('the facts the trusted producers emit decode against the Lean schema', () => {
   const facts = [
     // the test-runner adapters: a pass, a failure, a skip, a reference that matched no test

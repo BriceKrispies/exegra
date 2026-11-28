@@ -7,14 +7,58 @@
       "name": "Apply a transaction",
       "description": "Project.apply: the single entry through which a project's specification or layout changes (UI, source editor, agent command line). Defined by src/core/project.js and src/core/operations.js.",
       "inputs": [
-        { "name": "operations", "type": "Operation | Operation[]", "description": "Typed operations: CreateEntity, DeleteEntity, RenameEntity, SetProperty, CreateRelationship, DeleteRelationship, MovePresentationNode, AddClaim, ModifyClaim, AddState, AddTransition, ReplaceSource, ReplaceLayout." },
-        { "name": "label", "type": "string", "description": "Optional history label." },
-        { "name": "origin", "type": "string", "description": "Optional origin of the change (ui by default, cli, undo, redo, external)." },
-        { "name": "expectRevision / expectHash", "type": "number / string", "description": "Optional optimistic concurrency guards against the project's revision or semantic hash." }
+        {
+          "name": "operations",
+          "type": "Operation | Operation[]",
+          "description": "Typed operations: CreateEntity, DeleteEntity, RenameEntity, SetProperty, CreateRelationship, DeleteRelationship, MovePresentationNode, AddClaim, ModifyClaim, AddState, AddTransition, ReplaceSource, ReplaceLayout. Not carried by the simulated request event (operation-submitted), where the text the operations produce stands for it, so it is optional there.",
+          "optional": true
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "description": "Optional history label.",
+          "optional": true
+        },
+        {
+          "name": "origin",
+          "type": "string",
+          "description": "Optional origin of the change (ui by default, cli, undo, redo, external).",
+          "optional": true
+        },
+        {
+          "name": "expectRevision / expectHash",
+          "type": "number / string",
+          "description": "Optional optimistic concurrency guards against the project's revision or semantic hash.",
+          "optional": true
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "optional": true,
+          "description": "Simulated traces only (operation-submitted): the specification text the operations produce, standing for the operations by its hash."
+        }
       ],
       "outputs": [
-        { "name": "result", "type": "TransactionResult", "description": "ok, revision after the call, semantic hash, affected entity ids, semanticChanged and the diagnostics of the resulting (or rejected) state; on failure also code and message." },
-        { "name": "commit event", "type": "{type: 'commit', result, entry}", "description": "Delivered synchronously to every subscriber after a successful commit; the history entry says whether spec and layout changed." }
+        {
+          "name": "result",
+          "type": "TransactionResult",
+          "description": "ok, revision after the call, semantic hash, affected entity ids, semanticChanged and the diagnostics of the resulting (or rejected) state; on failure also code and message."
+        },
+        {
+          "name": "commit event",
+          "type": "{type: 'commit', result, entry}",
+          "description": "Delivered synchronously to every subscriber after a successful commit; the history entry says whether spec and layout changed."
+        },
+        {
+          "name": "revision",
+          "type": "number",
+          "description": "Simulated traces only (transaction-committed): the revision of the TransactionResult."
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "description": "Simulated traces only (transaction-committed): the specification text after the commit, by its hash."
+        }
       ],
       "preconditions": [
         "The operation list is not empty and every operation names a known type",
@@ -180,15 +224,59 @@
       "name": "Project a model into a scene",
       "description": "project(model, viewId, ctx) in src/core/projections.js, followed by layoutScene(scene, pinned, {method, aspect}) or chooseLayout(scene, pinned, {aspect}) in src/core/layout.js.",
       "inputs": [
-        { "name": "model", "type": "Model", "description": "The committed model snapshot." },
-        { "name": "viewId", "type": "string", "description": "A declared view, or the id of an implicit view; an unknown id falls back to the first view." },
-        { "name": "ctx", "type": "ProjectionContext", "description": "Collapsed and hidden sets, isolated subsystem, focused claim and scenario, the focused entity (for the references projection), claim results, simulation trace and step." },
-        { "name": "layout options", "type": "{method?: string, aspect?: number}", "description": "The layout method (layered, layered-down, packed, radial or auto) and the target width-to-depth ratio of the view; defaults are layered and 1.6." },
-        { "name": "pinned", "type": "Record<sceneNodeId, [x, z]>", "description": "Absolute positions of leaf nodes from the layout file." }
+        {
+          "name": "model",
+          "type": "Model",
+          "description": "The committed model snapshot. Not carried by the simulated request event (refresh-requested), where its revision stands for it, so it is optional there.",
+          "optional": true
+        },
+        {
+          "name": "viewId",
+          "type": "string",
+          "description": "A declared view, or the id of an implicit view; an unknown id falls back to the first view. Not carried by the simulated request event (refresh-requested), where the revision stands for it, so it is optional there.",
+          "optional": true
+        },
+        {
+          "name": "ctx",
+          "type": "ProjectionContext",
+          "description": "Collapsed and hidden sets, isolated subsystem, focused claim and scenario, the focused entity (for the references projection), claim results, simulation trace and step. Optional: the empty context by default.",
+          "optional": true
+        },
+        {
+          "name": "layout options",
+          "type": "{method?: string, aspect?: number}",
+          "description": "The layout method (layered, layered-down, packed, radial or auto) and the target width-to-depth ratio of the view; defaults are layered and 1.6.",
+          "optional": true
+        },
+        {
+          "name": "pinned",
+          "type": "Record<sceneNodeId, [x, z]>",
+          "description": "Absolute positions of leaf nodes from the layout file. Optional: no pinned positions by default.",
+          "optional": true
+        },
+        {
+          "name": "revision",
+          "type": "number",
+          "optional": true,
+          "description": "Simulated traces only (refresh-requested): the revision of the committed model snapshot, standing for it."
+        }
       ],
       "outputs": [
-        { "name": "scene", "type": "SceneModel", "description": "Nodes, edges, legend and notes." },
-        { "name": "placement", "type": "Placement", "description": "A rectangle on the ground plane for every node; chooseLayout also returns the method it chose and the score of every method." }
+        {
+          "name": "scene",
+          "type": "SceneModel",
+          "description": "Nodes, edges, legend and notes."
+        },
+        {
+          "name": "placement",
+          "type": "Placement",
+          "description": "A rectangle on the ground plane for every node; chooseLayout also returns the method it chose and the score of every method."
+        },
+        {
+          "name": "revision",
+          "type": "number",
+          "description": "Simulated traces only (projection-refreshed): the revision the scene was projected from."
+        }
       ],
       "postconditions": [
         "Every node and every edge of the scene is backed by an entity of the model (it carries that entity's id)",
@@ -205,16 +293,33 @@
         {
           "name": "model",
           "type": "Model",
-          "description": "The model whose claims are evaluated."
+          "description": "The model whose claims are evaluated. Not carried by the simulated request event (claims-evaluation-requested), where its semantic hash, modelHash stands for it, so it is optional there.",
+          "optional": true
         },
         {
           "name": "recorded",
           "type": "Recorded | null",
-          "description": "Recorded execution results of evidence, keyed by evidence id (results), and outcomes an external tool recorded per claim (claims, see record external-claim-outcomes)."
+          "description": "Recorded execution results of evidence, keyed by evidence id (results), and outcomes an external tool recorded per claim (claims, see record external-claim-outcomes). Optional: without it no recorded result is applied.",
+          "optional": true
+        },
+        {
+          "name": "modelHash",
+          "type": "string",
+          "optional": true,
+          "description": "Simulated traces only (claims-evaluation-requested): the semantic hash of the model, standing for it."
         }
       ],
       "outputs": [
-        { "name": "results", "type": "ClaimResult[]", "description": "One result per claim in declaration order: status, evaluator, semantic hash, scope, explanation, assumptions, involved entities, counterexample and evidence." }
+        {
+          "name": "results",
+          "type": "ClaimResult[]",
+          "description": "One result per claim in declaration order: status, evaluator, semantic hash, scope, explanation, assumptions, involved entities, counterexample and evidence."
+        },
+        {
+          "name": "modelHash",
+          "type": "string",
+          "description": "Simulated traces only (claims-evaluated): the semantic hash of the model the results are about."
+        }
       ],
       "postconditions": [
         "A status is verified only when an evaluator checked the claim on the model; a selector that selects nothing is inconclusive, not verified",
@@ -235,12 +340,53 @@
       "name": "Run a scenario",
       "description": "runScenario, createSimulation and createTraceCursor in src/core/engine.js, on the Rust engine compiled to WebAssembly; semantics are specified in docs/module-contracts.md.",
       "inputs": [
-        { "name": "model", "type": "Model", "description": "The model holding the behaviors." },
-        { "name": "scenarioId", "type": "string", "description": "A scenario of the model." },
-        { "name": "faults", "type": "string[]", "description": "Optional fault ids replacing the scenario's own list." }
+        {
+          "name": "model",
+          "type": "Model",
+          "description": "The model holding the behaviors. Not carried by the simulated request event (engine-run-called, engine-run-intent), where the scenario stands for it, so it is optional there.",
+          "optional": true
+        },
+        {
+          "name": "scenarioId",
+          "type": "string",
+          "description": "A scenario of the model. Not carried by the simulated request event (engine-run-called, engine-run-intent), where its id as scenario stands for it, so it is optional there.",
+          "optional": true
+        },
+        {
+          "name": "faults",
+          "type": "string[]",
+          "description": "Optional fault ids replacing the scenario's own list.",
+          "optional": true
+        },
+        {
+          "name": "scenario",
+          "type": "string",
+          "optional": true,
+          "description": "Simulated traces only (engine-run-called, engine-run-intent): the scenario id."
+        },
+        {
+          "name": "token",
+          "type": "number",
+          "optional": true,
+          "description": "Simulated traces only (engine-run-intent): the session's load token, which discards a run that is no longer current."
+        }
       ],
       "outputs": [
-        { "name": "trace", "type": "Trace", "description": "Initial configuration, every step with fired transitions, ignored events, faults and the configuration after it, the outcome and the final configuration." }
+        {
+          "name": "trace",
+          "type": "Trace",
+          "description": "Initial configuration, every step with fired transitions, ignored events, faults and the configuration after it, the outcome and the final configuration."
+        },
+        {
+          "name": "steps",
+          "type": "number",
+          "description": "Simulated traces only (engine-run-finished, sim-trace-ready): the number of steps of the trace, standing for it."
+        },
+        {
+          "name": "token",
+          "type": "number",
+          "description": "Simulated traces only (sim-trace-ready): the load token of the run."
+        }
       ],
       "preconditions": ["The scenario, every behavior it lists and every active fault exist in the model"],
       "postconditions": [

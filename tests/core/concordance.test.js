@@ -60,6 +60,8 @@ async function evaluateLinked(ws) {
 /** @param {unknown} payload */
 const concordance = (payload) => JSON.stringify({ tool: 'concordance', version: '0.1.0', source: 'specifications/spec.jsonc', lint: [], claims: {}, ...(payload && typeof payload === 'object' ? payload : {}) });
 
+// A recorded pass of a requirement in the Concordance results is supported, not verified.
+// @evidence concordance-results-are-evidence # a Concordance pass makes a requirement supported
 test('a Concordance pass makes a requirement supported, never verified', () =>
   withLinkedProject(concordance({
     claims: { 'krn-002': { detail: 'Proved by passing test `krn_002_halts`.', outcome: 'pass', proofs: ['krn_002_halts'], status: 'verified' } },
@@ -76,6 +78,8 @@ test('a Concordance pass makes a requirement supported, never verified', () =>
     assert.equal(data.recorded, null);
   }));
 
+// A recorded fail in the Concordance results makes the requirement violated.
+// @evidence concordance-results-are-evidence
 test('a Concordance fail makes a requirement violated', () =>
   withLinkedProject(concordance({
     claims: { 'sim-002': { detail: 'Test failed.', outcome: 'fail', proofs: ['sim_002_repeats'] } },
@@ -86,6 +90,8 @@ test('a Concordance fail makes a requirement violated', () =>
     assert.equal(byId['krn-002'].status, 'not-evaluated');
   }));
 
+// A claim with no entry in the Concordance results stays not evaluated.
+// @evidence concordance-results-are-evidence
 test('a claim without a Concordance entry stays not evaluated', () =>
   withLinkedProject(concordance({
     claims: { 'krn-002': { outcome: 'pass' } },
@@ -95,6 +101,8 @@ test('a claim without a Concordance entry stays not evaluated', () =>
     assert.equal(byId['sim-002'].status, 'not-evaluated');
   }));
 
+// A results file for another tool or another specification, or a missing or invalid one, warns and changes no status.
+// @evidence concordance-results-are-evidence
 test('a Concordance file for another tool or specification changes nothing', () =>
   withLinkedProject(undefined, async (ws, dir) => {
     const demo = path.join(dir, 'specs', 'demo');
@@ -117,6 +125,8 @@ test('a Concordance file for another tool or specification changes nothing', () 
     assert.equal(sourceNamesSpec('ecifications/spec.jsonc', path.join(dir, 'repo', 'specifications', 'spec.jsonc')), false);
   }));
 
+// An entry for an id that is not a claim of the specification warns, naming the id, and the other entries still apply.
+// @evidence concordance-results-are-evidence
 test('an unknown claim id is a warning and the other entries still apply', () =>
   withLinkedProject(concordance({
     claims: { 'no-such-claim': { outcome: 'pass' }, 'krn-002': { outcome: 'pass' } },
@@ -130,6 +140,8 @@ test('an unknown claim id is a warning and the other entries still apply', () =>
     assert.equal(byId['sim-002'].status, 'not-evaluated');
   }));
 
+// A project that names no Concordance results file is evaluated exactly as before.
+// @evidence concordance-results-are-evidence
 test('a project without concordanceResults is unchanged', () =>
   withLinkedProject(concordance({ claims: { 'krn-002': { outcome: 'pass' } } }), async (ws) => {
     const data = await ws.read('demo');
@@ -165,6 +177,8 @@ test('a results file that names no specification text is applied, and the result
     assert.match(byId['krn-002'].explanation, /unknown revision of the specification/);
   }));
 
+// A results path that is a directory warns (concordance.unreadable) and the project still loads.
+// @evidence concordance-results-are-evidence
 test('a results path that is a directory is a warning and not a load failure', () =>
   withLinkedProject(undefined, async (ws, dir) => {
     await fs.mkdir(path.join(dir, 'specs', 'demo', 'concordance.json'));
@@ -176,6 +190,8 @@ test('a results path that is a directory is a warning and not a load failure', (
     for (const id of ['krn-002', 'sim-002', 'lone-003']) assert.equal(byId[id].status, 'not-evaluated');
   }));
 
+// A change to the Concordance results file is reported by the file watcher as a change of the recorded results.
+// @evidence concordance-results-are-evidence
 test('watching a project reports a change to its Concordance results file as a change of the recorded results', () =>
   withLinkedProject(concordance({ claims: { 'krn-002': { outcome: 'pass' } } }), async (ws, dir) => {
     const changes = [];

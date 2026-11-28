@@ -15,6 +15,8 @@ const errors = (/** @type {any} */ r) => r.diagnostics.filter((/** @type {any} *
 const codes = (/** @type {any} */ ds) => ds.map((/** @type {any} */ d) => d.code);
 const model = () => /** @type {any} */ (analyzeSpec(spec()).model);
 
+// A specification using set<T>, tuple variants under the external and adjacent tags and a map of maps has no error and no readiness gap, with and without system.generation.
+// @evidence set-tuple-nested-types-rules
 test('a specification with sets and tuple variants and maps of maps validates and has no readiness gap', () => {
   for (const generation of [false, true]) {
     const r = analyzeSpec(spec(undefined, { generation }));
@@ -23,6 +25,8 @@ test('a specification with sets and tuple variants and maps of maps validates an
   }
 });
 
+// set<T> resolves exactly when T does and has the class list.
+// @evidence set-tuple-nested-types-rules
 test('set types resolve when their item resolves and have the class list', () => {
   const m = model();
   assert.deepEqual(parseTypeName('set<field-id>'), { k: 'set', of: 'field-id' });
@@ -32,6 +36,8 @@ test('set types resolve when their item resolves and have the class list', () =>
   assert.equal(typeClass(m, 'option<set<string>>'), 'list');
 });
 
+// A struct field of type set<tag>, tag undeclared: exactly one type.field-unresolved error.
+// @evidence set-tuple-nested-types-rules
 test('a set of an unresolved type is refused', () => {
   const fixture = FIXTURES.find(([title]) => title === 'a set of an unresolved type');
   assert.ok(fixture);
@@ -40,6 +46,8 @@ test('a set of an unresolved type is refused', () => {
   assert.match(errors(r)[0].message, /set<tag>/);
 });
 
+// A scenario value of a set type that repeats an item, or holds an item of the wrong type, does not have the type.
+// @evidence set-tuple-nested-types-rules
 test('a scenario value of a set type is an array of distinct items of the item type', () => {
   const m = model();
   assert.equal(valueProblem(m, 'set<field-id>', ['a', 'b']), null);
@@ -57,6 +65,8 @@ test('sensitivity is carried through a set', () => {
   assert.equal(typeSensitivity(m, 'map<string, set<field-id>>'), 'personal');
 });
 
+// map<K, map<K2, V>> and list<map<K, V>> parse as nested types; the arrow of (a) => b is not an angle bracket.
+// @evidence set-tuple-nested-types-rules
 test('nested generic type texts split at the top-level comma', () => {
   assert.deepEqual(splitTop('K, map<K2, V>', ','), ['K', 'map<K2, V>']);
   assert.deepEqual(splitTop('list<map<K, V>>, string', ','), ['list<map<K, V>>', 'string']);
@@ -78,6 +88,8 @@ test('tuple variants are accepted under the external and adjacent tags', () => {
 });
 
 // Sharing hints (WG-4960): shared<T> is read as T everywhere, and a refusal names the type it wraps.
+// shared<T> parses as a sharing hint, resolves, classes and holds values as T does, and nests in a type text.
+// @evidence set-tuple-nested-types-rules # a shared hint parses and resolves
 test('a shared hint parses and resolves, and classes and holds values as its type does', () => {
   const m = model();
   assert.deepEqual(parseTypeName('shared<field-id>'), { k: 'shared', of: 'field-id' });
@@ -92,6 +104,8 @@ test('a shared hint parses and resolves, and classes and holds values as its typ
   assert.match(valueProblem(m, 'shared<u8>', 300) ?? '', /outside the range of u8/);
 });
 
+// A shared field of a map key and of a set type validates with no error and no readiness gap.
+// @evidence set-tuple-nested-types-rules # a shared field is checked as its type in a specification
 test('a shared field is checked as its type in a specification, as a map key and as a struct', () => {
   const r = analyzeSpec(spec((d) => {
     const counts = d.types.find((/** @type {any} */ t) => t.id === 'counts');
@@ -101,6 +115,8 @@ test('a shared field is checked as its type in a specification, as a map key and
   assert.deepEqual(readinessGaps(/** @type {any} */ (r.model)), []);
 });
 
+// Sensitivity of a field typed shared<T> is the sensitivity of T.
+// @evidence set-tuple-nested-types-rules
 test('sensitivity is carried through a shared hint', () => {
   const m = /** @type {any} */ (analyzeSpec(spec((d) => {
     d.types.find((/** @type {any} */ t) => t.id === 'field-id').sensitive = 'personal';

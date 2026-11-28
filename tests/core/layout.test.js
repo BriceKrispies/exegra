@@ -199,6 +199,8 @@ test('radial: the best-connected node sits at the centre of its level', () => {
   for (const id of ['n0', 'n1', 'n2', 'n4', 'n5', 'n6']) assert.ok(dist(pl.n3) < dist(pl[id]), id);
 });
 
+// A hub is drawn radially.
+// @evidence layout-auto-reads-multiscale
 test('a hub with fourteen neighbours is drawn with its spokes clear of other nodes on a wide and a tall view', () => {
   // The system in its environment (level 0): three sources and eleven sinks around one block. A tight grid has no
   // crossings (every spoke shares the hub) but draws most spokes through other nodes; the overlap term counts that.
@@ -210,6 +212,8 @@ test('a hub with fourteen neighbours is drawn with its spokes clear of other nod
   }
 });
 
+// The overlap term and parallel edges.
+// @evidence layout-auto-reads-multiscale
 test('scorePlacement counts a line through an unrelated node and counts parallel edges between two nodes once', () => {
   const scene = generated(3, 0, [[0, 2], [0, 2]]);
   const through = {

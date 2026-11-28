@@ -365,7 +365,10 @@ export function behaviorsAtLevels(model, sid, levels, faults) {
       const members = level === 'finest' ? deep : membersOf(model, aid);
       const at = list.indexOf(aid);
       if (at < 0) {
-        if (members.every((m) => list.includes(m))) { replaced.push({ abstraction: aid, level, removed: [], added: [] }); continue; }
+        // The scenario runs the members already: all of them, or the ones it needs (a scenario that leaves out a member
+        // the abstraction also stands for runs the region at the members it lists; an element no running machine covers
+        // makes the refinement check incomplete, never certified).
+        if (members.some((m) => list.includes(m))) { replaced.push({ abstraction: aid, level, removed: [], added: [] }); continue; }
         throw new Error(`Scenario "${sid}" does not run "${aid}".`);
       }
       const added = members.filter((m) => !list.includes(m));
@@ -514,6 +517,45 @@ export function drivingScenarios(model, aid, listed) {
 }
 
 /**
+ * The pairs of boundary events whose simultaneous deliveries commute (WG-5734): two different events no running
+ * machine consumes both of. A delivery changes only the machines that consume it, so two pending deliveries at one
+ * time to disjoint sets of machines give the same configuration in either order; the boundary traces of the
+ * abstraction and of its members are compared up to the order of such steps. The region counts as one machine:
+ * whatever the abstraction or any of its members consumes. `dependent` names pairs to treat as dependent anyway
+ * (a negative run that shows the comparison can fail).
+ * @param {Model} model @param {string} aid @param {string[]} behaviors every behaviour of either run
+ * @param {string[]} hidden @param {string[]} [inputs] events the scenario or its faults inject
+ * @param {string[][]} [dependent]
+ * @returns {[string, string][]}
+ */
+export function independentEvents(model, aid, behaviors, hidden, inputs = [], dependent = []) {
+  const region = new Set([aid, ...membersOf(model, aid), ...membersOf(model, aid, { finest: true }), ...collectAbstractions(model, aid)]);
+  /** @type {Set<string>[]} */
+  const consumers = [];
+  const regionIn = new Set();
+  for (const b of uniq(behaviors)) {
+    const a = alphabetOf(model, b);
+    if (region.has(b)) for (const e of a.inputs) regionIn.add(e);
+    else consumers.push(a.inputs);
+  }
+  consumers.push(regionIn);
+  const hide = new Set(hidden);
+  const events = sorted([...uniq(behaviors).flatMap((b) => [...eventsOf(model, b)]), ...inputs]).filter((e) => !hide.has(e));
+  const forced = new Set(dependent.filter((d) => Array.isArray(d) && d.length === 2).flatMap(([x, y]) => [`${x} ${y}`, `${y} ${x}`]));
+  /** @type {[string, string][]} */
+  const out = [];
+  for (let i = 0; i < events.length; i++) {
+    for (let j = i + 1; j < events.length; j++) {
+      const x = events[i], y = events[j];
+      if (forced.has(`${x} ${y}`)) continue;
+      if (consumers.some((c) => c.has(x) && c.has(y))) continue;
+      out.push([x, y]);
+    }
+  }
+  return out;
+}
+
+/**
  * Check a declared abstraction against the composition of its members, in each driving scenario: run the
  * scenario with the region at the abstraction and at its members (or `finest`: the members of member
  * abstractions too), hide the members' internal events and compare the two boundary traces in Lean
@@ -524,7 +566,14 @@ export function drivingScenarios(model, aid, listed) {
  * Strength (docs/composition.md, "Strength"): `conservative` when every run agrees (a declared abstraction shown
  * to be refined on these runs), `incomplete` when a member of the region has no machine in the run, a fault had
  * to be left out, or no scenario could be run.
- * @param {Model} model @param {string} aid @param {{scenarios?: string[], finest?: boolean, faults?: string[], perLevelFaults?: boolean}} [opts]
+ * Simultaneous boundary steps of events no machine consumes both of may appear in either order (`independentEvents`):
+ * the comparison is up to their commutation, and each run says which comparison certified it (`sequence` or
+ * `commutation`). `dependent` treats listed pairs as dependent. With `explore`, each scenario is also explored over
+ * every interleaving, fault mask and draw (`engine.refineExplore`, sound by `explore_holds` in
+ * formal/Exegra/BoundaryExplore.lean): every boundary trace of the members must be one of the abstraction with the
+ * same faults; the strength is then `explored` when every exploration completes with a certificate.
+ * @param {Model} model @param {string} aid
+ * @param {{scenarios?: string[], finest?: boolean, faults?: string[], perLevelFaults?: boolean, dependent?: string[][], explore?: {bound?: number, maxStates?: number}|boolean}} [opts]
  */
 export function checkAbstraction(model, aid, opts = {}) {
   const a = abstractionOf(model, aid);
@@ -558,8 +607,16 @@ export function checkAbstraction(model, aid, opts = {}) {
     } catch (e) { notes.push(`Scenario "${sid}": ${/** @type {Error} */ (e).message}`); continue; }
     const inputs = [...ai.scenario.steps.map((/** @type {any} */ x) => x.event), ...ai.faults.filter((/** @type {any} */ f) => f.kind === 'inject-event').map((/** @type {any} */ f) => f.event)];
     const hidden = hiddenFor(model, aid, members, others, inputs);
-    const r = call('engine.refineBoundary', { abstract: ai, concrete: ci, hidden, timeScale: a.timeScale, environment: others });
+    const independent = independentEvents(model, aid, [...abs.behaviors, ...con.behaviors], hidden, inputs, opts.dependent ?? []);
+    const r = call('engine.refineBoundary', { abstract: ai, concrete: ci, hidden, timeScale: a.timeScale, environment: others, independent });
     if (!r.ok) { notes.push(`Scenario "${sid}" could not be compared: ${r.error}`); continue; }
+    /** @type {any} */
+    let explored = null;
+    if (opts.explore) {
+      const ex = typeof opts.explore === 'object' ? opts.explore : {};
+      const x = call('engine.refineExplore', { abstract: ai, concrete: ci, hidden, timeScale: a.timeScale, bound: ex.bound ?? 64, maxStates: ex.maxStates ?? 20000 });
+      explored = x.ok ? x.value : { verdict: 'incomplete', reason: x.error };
+    }
     const regionEls = regionOf(model, aid);
     // An element of the region is covered by a running machine that describes it, or by a running abstraction whose region holds it.
     const covered = new Set(con.behaviors.flatMap((b) => (abstractionOf(model, b) ? regionOf(model, b) : [model.entities.get(b)?.data.subject])));
@@ -567,15 +624,17 @@ export function checkAbstraction(model, aid, opts = {}) {
     const sub = model.entities.get(aid)?.data.subject;
     const leaves = typeof sub === 'string' ? descendantsOf(model, sub).filter((c) => !childrenOf(model, c.id).length).map((c) => c.id) : [];
     const opaque = sorted([...regionEls, ...leaves]).filter((el) => !covered.has(el));
-    const run = { scenario: sid, abstraction: aid, abstractBehaviors: abs.behaviors, concreteBehaviors: con.behaviors, faults, droppedFaults: dropped, hidden, opaque, ...r.value };
+    const run = { scenario: sid, abstraction: aid, abstractBehaviors: abs.behaviors, concreteBehaviors: con.behaviors, faults, droppedFaults: dropped, hidden, opaque, independent: independent.length, ...r.value, ...(explored ? { explored } : {}) };
     runs.push(run);
     if (r.value.verdict === 'counterexample' && !counterexample) counterexample = run;
+    else if (explored?.verdict === 'counterexample' && !counterexample) counterexample = { ...run, verdict: 'counterexample', reason: 'interleaving' };
   }
   for (const r of runs) if (r.verdict === 'certificate' && !r.abstract.boundarySteps) notes.push(`Scenario "${r.scenario}" delivers no event in either run, so it checks nothing.`);
   const incomplete = !runs.length || notes.length > 0 || runs.some((r) => r.droppedFaults.length || r.opaque.length);
   const verdict = counterexample ? 'counterexample' : runs.length ? 'certificate' : 'unchecked';
   // A counterexample refutes the abstraction: it has no strength.
-  const strength = verdict === 'counterexample' ? null : verdict === 'certificate' && !incomplete ? 'conservative' : 'incomplete';
+  const allExplored = opts.explore && runs.length > 0 && runs.every((r) => r.explored?.verdict === 'certificate');
+  const strength = verdict === 'counterexample' ? null : verdict === 'certificate' && !incomplete ? (allExplored ? 'explored' : 'conservative') : 'incomplete';
   return {
     abstraction: aid, subject: model.entities.get(aid)?.data.subject ?? null, members, level, region: regionOf(model, aid),
     timeScale: a.timeScale, verdict, strength, runs, notes, counterexample,
@@ -589,6 +648,11 @@ export function checkAbstraction(model, aid, opts = {}) {
 export function describeCounterexample(run) {
   const show = (/** @type {any} */ s) => (s ? `${s.kind} ${s.event} at t=${s.time} ${JSON.stringify(s.payload)} (step ${s.index})` : 'nothing');
   if (run.reason === 'outcome') return `In scenario "${run.scenario}" the boundary traces agree, but the abstract run ends ${run.abstract?.outcome ?? '?'} and the members' run ${run.concrete?.outcome ?? '?'}.`;
+  if (run.reason === 'interleaving') {
+    const ex = run.explored ?? {};
+    const shown = (ex.boundary ?? []).map((/** @type {any} */ o) => `${o.event}@${o.time}`).join(', ');
+    return `In scenario "${run.scenario}" the scripted runs agree, but another interleaving of the members${ex.activeFaults?.length ? ` (faults ${ex.activeFaults.join(', ')})` : ''} shows the boundary trace [${shown}], which no run of the abstraction "${run.abstraction}" shows (picks ${(ex.run?.picks ?? []).join(',')}).`;
+  }
   if (run.reason === 'environment') return `In scenario "${run.scenario}" the boundary traces agree, but machine "${run.machine}" outside the region ends in another configuration.`;
   const ends = (/** @type {any} */ side, /** @type {any} */ step) => (step ? '' : ` (their run ended ${side?.outcome ?? '?'} after ${side?.steps ?? '?'} steps)`);
   return `In scenario "${run.scenario}", boundary step ${run.at} differs (${run.reason}): the abstraction "${run.abstraction}" gives ${show(run.abstractStep)}${ends(run.abstract, run.abstractStep)}, the members give ${show(run.concreteStep)}${ends(run.concrete, run.concreteStep)}.`;

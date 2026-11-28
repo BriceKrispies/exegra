@@ -29,6 +29,8 @@ test('a conforming value is accepted', () => {
   assert.deepEqual(run(STEPS, 'one', { id: 'one', action: { Int: 5 } }).problems, [], 'a newtype variant carries its value directly');
 });
 
+// The generic check over a small platform.
+// @evidence product-layers-typed-sections
 test('a missing field and a stray field and a wrong scalar and an id outside its pattern are refused', () => {
   const messages = (/** @type {any} */ item) => run(STEPS, 'one', item).problems.map((p) => `${p.code} ${p.message}`);
   assert.match(messages({ id: 'one' }).join('\n'), /layer\.value-invalid .*lacks the required field "action"/);
@@ -39,6 +41,8 @@ test('a missing field and a stray field and a wrong scalar and an id outside its
   assert.match(messages({ id: 'one', action: { Int: 'five' } }).join('\n'), /must be a whole number/);
 });
 
+// Union variants by tag.
+// @evidence product-layers-typed-sections
 test('a variant the union lacks is outside the catalogue and a variant with fields needs them', () => {
   const out = run(STEPS, 'one', { id: 'one', action: { Run: { source: 'x' } } }).problems;
   assert.equal(out.length, 1);

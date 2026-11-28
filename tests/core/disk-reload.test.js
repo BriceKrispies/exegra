@@ -39,6 +39,8 @@ async function nextChange(changes, had) {
   return changes[had];
 }
 
+// The watcher reports an added, a changed and a removed product file as products, and the session reload re-derives the layered model each time.
+// @evidence browser-reloads-product-files
 test('an added then changed then removed product file is reported by the watcher and re-derives the session model', () =>
   withProject(async ({ ws, products }) => {
     const first = await ws.read('layered');
@@ -73,6 +75,8 @@ test('an added then changed then removed product file is reported by the watcher
     }
   }));
 
+// A broken product file is seen and the next good read is adopted.
+// @evidence browser-reloads-product-files
 test('a product file that does not parse keeps the last valid model and the next good read adopts it', () =>
   withProject(async ({ ws, products }) => {
     fs.writeFileSync(path.join(products, 'badges.jsonc'), BADGES);
@@ -91,6 +95,8 @@ test('a product file that does not parse keeps the last valid model and the next
     assert.ok(project.model?.entities.has('badges__extra'));
   }));
 
+// A specification reload carries the product layers.
+// @evidence browser-reloads-product-files
 test('a reload of the specification keeps the product layers of the read', async () => {
   const layers = [{ file: 'badges.jsonc', text: BADGES, hash: 'x', platform: { declared: '../platform.jsonc', matches: true, expected: '../platform.jsonc' } }];
   const project = new Project({ specText: PLATFORM, layers: layersOf({ layers }) });

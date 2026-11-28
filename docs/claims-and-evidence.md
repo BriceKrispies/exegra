@@ -193,7 +193,23 @@ Requiring the `about` constants in the statement is what makes the theorem about
 
 ## Evidence
 
-An `evidence` entity attaches an artifact to a claim: `kind` (`test`, `measurement`, `document`, `review`), `ref`, `supports` (default true; false marks contradicting evidence), `description`, `observed`. Evidence is author-entered and is never a result by itself.
+An `evidence` entity attaches an artifact to a claim: `kind` (`test`, `measurement`, `document`, `review`), `ref`, `supports` (default true; false marks contradicting evidence), `description`, `observed`. Evidence is never a result by itself.
+
+### Test evidence is derived from the tests (WG-5705)
+
+A test says which claims it evidences, with a line comment the test runner ignores and the extractor reads:
+
+```js
+// @evidence claim-a claim-b
+test('does the thing the claims ask', () => { ... });
+
+// @evidence claim-c # residency: .* is reported once     (a pattern: for titles built at run time)
+// @evidence claim-d #                                     (an empty pattern: the whole file)
+```
+
+A marker without `#` stands directly above a `test(...)` or `it(...)` call with a literal title (comment lines may come between) and gives the reference `<file>#<title>`; a marker with `#` may stand anywhere in the file and gives `<file>#<pattern>`, or `<file>` for an empty pattern. The reference is the one `exegra verify` runs, so the runner and verify read the same tests. `exegra extract` writes the markers of `tests/core`, `tests/proofs` and `tests/browser` into the fact file (`specs/<project>/extracted/facts.json`, `evidence`), and the model derives one evidence entity of kind `test` per marked claim and reference (id `extracted:evidence:<claim>:<hash>`, `provenance: extracted`), read by claims exactly as a declared test evidence. A test changed without re-extracting leaves the fact file stale (`extract --check`).
+
+Declared `evidence` entities stay for what a test cannot carry: measurements, reviews, documents and contradicting evidence (`supports: false`). Validation reports a marker that names no claim (`evidence.marker-unknown-claim`), a marker it cannot read (`evidence.marker-invalid`), and a declared test evidence that says what a test's marker already derives (`evidence.duplicates-derived`). The self-specification declares no test evidence.
 
 For `external-evidence` claims the status is:
 

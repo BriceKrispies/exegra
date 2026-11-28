@@ -13,6 +13,8 @@ import { GOLDENS_DIR } from '../../tools/conformance.js';
 
 initLean();
 
+// Calls through src/core/lean.js: the registry lists engine.run, an unknown function, a malformed request and refused arguments come back as errors, and a run returns the trace the engine returns.
+// @evidence lean-boundary-errors-are-values #
 test('the Lean core loads synchronously in Node and lists its registered functions', () => {
   assert.equal(leanReady(), true);
   const names = leanFunctions().map((f) => f.name);

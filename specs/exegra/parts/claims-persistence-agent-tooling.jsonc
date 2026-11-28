@@ -6,7 +6,6 @@
       "kind": "structural",
       "statement": "The agent command line reaches the transaction system along its relationships.",
       "rationale": "Every mutation by an agent goes through Project.apply, the same pipeline as the UI.",
-      "subjects": ["agent-cli", "transactions"],
       "assumptions": [
         "static-extractor-sound",
         "extracted-facts-current"
@@ -1064,11 +1063,6 @@
       "kind": "structural",
       "statement": "The persistence client, the development-server plugin and the workspace service each have one behaviour per level: no two of their behaviours share an event without running together or being related by a declared, checked abstraction.",
       "rationale": "WG-5697 criterion 9. write-client-flow (a retrying client, which abstracted the session's overwrite) was removed; write-endpoint-flow and workspace-flow are declared abstractions whose refinement is checked (write-endpoint-abstraction-refined, persistence-abstraction-refined). The session's two machines now run together (session-flow the commit pipeline, project-session-flow the save), and the engine's two are one behaviour (engine-flow); every element is covered by alternatives-reconciled-everywhere.",
-      "subjects": [
-        "persistence-client",
-        "dev-server-plugin",
-        "workspace-service"
-      ],
       "evaluate": {
         "method": "alternatives-reconciled",
         "subjects": [
@@ -1108,551 +1102,55 @@
         "abstraction": "workspace-flow",
         "expect": "not-transferred"
       }
-    }
-  ],
-  // ---- Evidence --------------------------------------------------------------------------
-  // Evidence of kind test is executed by `exegra verify`; until it has run it shows no recorded
-  // execution. A pattern after # is matched against test titles; titles containing a comma or
-  // semicolon are referenced by a prefix because verify accepts neither in a reference.
-  "evidence": [
-    { "id": "ev-pages-relative-base", "claim": "pages-site-published-from-main", "kind": "test", "ref": "tests/core/pages-site.test.js#the production build uses relative asset URLs so it loads under a sub-path", "description": "The Vite configuration's base is relative." },
-    { "id": "ev-pages-on-push-to-main", "claim": "pages-site-published-from-main", "kind": "test", "ref": "tests/core/pages-site.test.js#the Pages workflow is triggered by a push to main with no path or tag filter and may deploy to Pages", "description": "The workflow's push trigger names exactly the branch main and no other filter, and it grants pages: write and id-token: write." },
-    { "id": "ev-pages-validate-before-deploy", "claim": "pages-site-published-from-main", "kind": "test", "ref": "tests/core/pages-site.test.js#the Pages workflow builds the Lean core and validates the specification before it builds and deploys dist", "description": "Read structurally: the build job has no condition and builds the Lean core, validates specs/exegra/spec.jsonc, builds and uploads dist in that order, none of these steps conditional or able to hide a failure; the deploy job needs build, runs only on main and deploys." },
-    { "id": "ev-pages-mutants-refused", "claim": "pages-site-published-from-main", "kind": "test", "ref": "tests/core/pages-site.test.js#the workflow checks fail on each of the five publishing mutants", "description": "The checks of the two workflow tests fail on each of the five mutants of docs/assessment/2026-11-26/demos/pages-mutants.mjs applied to the workflow as it is: if: false on the deploy or the build job, || true after validate, a never-matching paths filter, needs: build removed." },
-    { "id": "ev-workspace-conflict", "claim": "conflict-never-overwrites", "kind": "test", "ref": "tests/core/workspace.test.js#write with a stale baseHash conflicts", "description": "A write with a stale base hash conflicts and leaves the file untouched." },
-    { "id": "ev-generate-core", "claim": "generation-deterministic", "kind": "test", "ref": "tests/core/generate.test.js", "description": "Two runs are byte-identical; equivalent source texts give the same artifacts." },
-    { "id": "ev-workspace-confinement", "claim": "persistence-confined-to-workspace", "kind": "test", "ref": "tests/core/workspace.test.js", "description": "Invalid names, escaping paths, unknown files and generated paths outside generated/ are refused." },
-    {
-      "id": "ev-verify-reuses-fresh-outcomes",
-      "claim": "verify-reuses-fresh-outcomes-only",
-      "kind": "test",
-      "ref": "tests/core/outcome-reuse.test.js#outcomes are used only while the tree is the one they ran on",
-      "description": "An outcome file stamped with the current tree answers a reference; with another stamp it answers nothing. Companion tests cover a reference matching no recorded test, failures, skipped tests, mixed matches and the stamp itself."
-    },
-    {
-      "id": "ev-verify-skip-records-not-run",
-      "claim": "verify-skip-records-not-run",
-      "kind": "test",
-      "ref": "tests/core/cli.test.js#a skipped verify run records the evidence as not run instead of keeping an older pass",
-      "description": "mergeRecordedResults records a skipped entry as not-run with the current stamp instead of its older pass, records the runs that executed, and keeps a result of a browser test not started only when it was recorded on the same stamp."
-    },
-    {
-      "id": "ev-skip-not-supporting",
-      "claim": "verify-skip-records-not-run",
-      "kind": "test",
-      "ref": "tests/core/fact-producers.test.js#a test that skipped now is recorded as not run and no older pass supports its claim",
-      "description": "An older pass followed by a skip is recorded as not-run, and the external-evidence claim resting on it is inconclusive, not supported."
-    },
-    {
-      "id": "ev-skip-aware-fresh",
-      "claim": "test-evidence-skip-aware",
-      "kind": "test",
-      "ref": "tests/core/fact-producers.test.js#a reference whose matched test skipped or is a todo is not a pass on the fresh path",
-      "description": "node --test runs the demo fixture (tests/fixtures/skipped-tests/demo.test.js) with the patterns inner real check, trivially|real check and publishes, and with no pattern; the TAP verdict is skipped for each, a suite and a todo count no pass, and the executed test alone passes."
-    },
-    {
-      "id": "ev-skip-aware-reuse",
-      "claim": "test-evidence-skip-aware",
-      "kind": "test",
-      "ref": "tests/core/fact-producers.test.js#a reference whose matched test skipped or is a todo is not a pass on the reuse path",
-      "description": "The outcomes npm test's reporter records for the same fixture answer the same references with skipped, including an outcome file written before suites and todos were flagged."
-    },
-    {
-      "id": "ev-skip-aware-whole-file",
-      "claim": "test-evidence-skip-aware",
-      "kind": "test",
-      "ref": "tests/core/outcome-reuse.test.js#a whole-file reference to a file with a self-skipping test is not a pass",
-      "description": "A recorded file with one passing and one skipped test answers a whole-file reference with skipped, naming how many matched tests did not execute."
-    },
-    {
-      "id": "ev-admit-downgrades",
-      "claim": "admit-rejects-downgrades-and-removals",
-      "kind": "test",
-      "ref": "tests/core/fact-producers.test.js#admit rejects a claim that falls to not evaluated and a positive claim that is removed",
-      "description": "compare() rejects supported and proved claims falling to not-evaluated (admit.claim-regressed) and a removed verified claim (admit.claim-removed), and admits the removal only when it is accepted."
-    },
-    {
-      "id": "ev-verify-regressions",
-      "claim": "verify-fails-on-regression",
-      "kind": "test",
-      "ref": "tests/core/fact-producers.test.js#verify fails on a fall from a positive status a removal and a changed counterexample of an expected violation",
-      "description": "verifyRegressions over claimBaseline: a proved claim falling to not-evaluated, a supported one to inconclusive, a removed supported claim and an expected-violated claim with a new counterexample entity are each reported; an unchanged run and accepted changes are not."
-    },
-    {
-      "id": "ev-journal-append-failure",
-      "claim": "journal-failure-reported",
-      "kind": "test",
-      "ref": "tests/core/workspace.test.js#a journal line that cannot be appended is reported and the file write still stands",
-      "description": "A journal path that is a directory makes the append fail: the write still replaces the file and reports journal.written false with a message."
-    },
-    {
-      "id": "ev-register-import-coverage",
-      "claim": "register-import-holds-every-line",
-      "kind": "test",
-      "ref": "tests/core/import-register.test.js#the fixture imports and validates and rebuilds line for line",
-      "description": "The fixture converts with both checks passing, the output validates without errors and the sections rebuild the file exactly."
-    },
-    {
-      "id": "ev-register-import-lost-cell",
-      "claim": "register-import-holds-every-line",
-      "kind": "test",
-      "ref": "tests/core/import-register.test.js#a row that does not render back fails the import",
-      "description": "A row whose rendering differs from its source cells fails the import and is named."
-    },
-    {
-      "id": "ev-register-import-sources",
-      "claim": "register-import-entities-cite-source",
-      "kind": "test",
-      "ref": "tests/core/import-register.test.js#every imported entity names its source line",
-      "description": "Every document, section, table and row of the fixture output has a source whose line holds the text it came from, and keyed rows carry ref."
-    },
-    {
-      "id": "ev-register-import-drafts",
-      "claim": "register-import-drafts-are-marked",
-      "kind": "test",
-      "ref": "tests/core/import-register.test.js#a draft fragment is merged with origin and source and a checked basis",
-      "description": "A fixture draft merges with origin and source, its basis references are checked by validation, and the rendered Markdown is unchanged."
-    },
-    {
-      "id": "ev-register-import-authority",
-      "claim": "register-import-respects-authority",
-      "kind": "test",
-      "ref": "tests/core/import-register.test.js#a map whose JSONC is the authority refuses to import and render needs only the JSONC",
-      "description": "An authority map makes the import exit 1 without writing; --render of a written specification gives the source Markdown."
-    },
-    {
-      "id": "ev-external-traceability",
-      "claim": "realisation-roots-traced",
-      "kind": "test",
-      "ref": "tests/core/external-realisation.test.js#traceability",
-      "description": "Modules in a fake external root are checked there; an undeclared alias is missing; only roots with include globs report unclaimed files; no roots gives the earlier result."
-    },
-    {
-      "id": "ev-external-junit",
-      "claim": "external-not-run-distinct-from-fail",
-      "kind": "test",
-      "ref": "tests/core/external-realisation.test.js#junit",
-      "description": "A fixture JUnit report gives pass, fail and not-run per evidence entry, matched by file, describe path and name; verify --ingest-only records them and fails only on a real failure."
-    },
-    {
-      "id": "ev-store-round-trip",
-      "claim": "store-export-is-byte-identical",
-      "kind": "test",
-      "ref": "tests/core/spec-store.test.js#round trip",
-      "description": "Round-trips every project specification, JSONC fixture, parse corpus case and edge case, and checks that the rows are contiguous verbatim slices covering the text."
-    },
-    {
-      "id": "ev-store-reimport",
-      "claim": "store-reimport-gives-same-rows",
-      "kind": "test",
-      "ref": "tests/core/spec-store.test.js#reimporting an export gives the same rows",
-      "description": "Compares every row of a store and of the store imported from its export, for Exegra's specification and two fixtures."
-    },
-    {
-      "id": "ev-store-model",
-      "claim": "store-model-equals-text-model",
-      "kind": "test",
-      "ref": "tests/core/spec-store.test.js#the model read from the store is the model of the text: semantic hash and diagnostics",
-      "description": "Compares loadModelFromStore with analyzeSpec for a valid specification, one with errors, one with a byte order mark and one with an unresolved reference."
-    },
-    {
-      "id": "ev-store-refusal",
-      "claim": "store-refuses-what-it-cannot-return",
-      "kind": "test",
-      "ref": "tests/core/spec-store.test.js#a text that does not parse is refused and the store keeps what it held",
-      "description": "Imports broken, empty, lone-surrogate and invalid UTF-8 input over a stored specification and checks the export is unchanged."
-    },
-    {
-      "id": "ev-store-cli-refusal",
-      "claim": "store-refuses-what-it-cannot-return",
-      "kind": "test",
-      "ref": "tests/core/spec-store.test.js#exegra store import and export through the command line",
-      "description": "store import of a broken specification fails with store.syntax."
-    },
-    {
-      "id": "ev-store-stale",
-      "claim": "store-export-never-overwrites-stale-specification",
-      "kind": "test",
-      "ref": "tests/core/spec-store.test.js#files: a WAL database beside the specification and an exact export that never overwrites a stale specification",
-      "description": "Changes the specification after an import and checks that export to it is refused and the file keeps its new text."
-    },
-    {
-      "id": "ev-store-cli-stale",
-      "claim": "store-export-never-overwrites-stale-specification",
-      "kind": "test",
-      "ref": "tests/core/spec-store.test.js#exegra store import and export through the command line",
-      "description": "store export to a specification changed since the import fails with store.stale."
-    },
-    {
-      "id": "ev-cli-project-add",
-      "claim": "cli-registers-projects-from-scripts",
-      "kind": "test",
-      "ref": "tests/core/cli-project.test.js#project add registers a spec file and product files stored relative to the project directory",
-      "description": "project add writes a relative link that validate reads as a layered project; project list shows it."
-    },
-    {
-      "id": "ev-cli-project-refusals",
-      "claim": "cli-registers-projects-from-scripts",
-      "kind": "test",
-      "ref": "tests/core/cli-project.test.js#project add refuses to overwrite a project unless --force and refuses a bad name or an unreadable file",
-      "description": "Existing project, bad names and unreadable files are refused; --force replaces."
-    },
-    {
-      "id": "ev-cli-project-own-spec",
-      "claim": "cli-registers-projects-from-scripts",
-      "kind": "test",
-      "ref": "tests/core/cli-project.test.js#project add refuses a name whose project keeps its own spec.jsonc",
-      "description": "A project with its own spec.jsonc is never given a link."
-    },
-    {
-      "id": "ev-cli-project-remove",
-      "claim": "cli-registers-projects-from-scripts",
-      "kind": "test",
-      "ref": "tests/core/cli-project.test.js#project remove deletes the link and the directory only when nothing else is in it",
-      "description": "remove deletes the link only."
-    },
-    {
-      "id": "ev-cli-project-inline",
-      "claim": "cli-registers-projects-from-scripts",
-      "kind": "test",
-      "ref": "tests/core/cli-project.test.js#validate and other read-only commands accept the project inline with --spec and --product",
-      "description": "Inline projects on read-only commands; writers refuse the options."
-    },
-    {
-      "id": "ev-admit-regressed",
-      "claim": "admit-never-writes-a-rejected-change",
-      "kind": "test",
-      "ref": "tests/core/admit.test.js#a change that worsens a claim is rejected naming the claim with both statuses",
-      "description": "A change that worsens a claim is rejected, naming the claim with its status before and after."
-    },
-    {
-      "id": "ev-admit-violation",
-      "claim": "admit-never-writes-a-rejected-change",
-      "kind": "test",
-      "ref": "tests/core/admit.test.js#a change that adds an integrity violation is rejected with the rule and its counterexample",
-      "description": "A change that adds an integrity violation is rejected with the rule and the counterexample."
-    },
-    {
-      "id": "ev-admit-weak",
-      "claim": "admit-never-writes-a-rejected-change",
-      "kind": "test",
-      "ref": "tests/core/admit.test.js#a new claim that is not verified or proved is a reason to reject",
-      "description": "A new claim that is only inconclusive is a reason to reject."
-    },
-    {
-      "id": "ev-admit-refused",
-      "claim": "admit-never-writes-a-rejected-change",
-      "kind": "test",
-      "ref": "tests/core/admit.test.js#a refused transaction is rejected with the transaction code and message",
-      "description": "A refused transaction is a rejected verdict carrying the transaction code and message, and writes nothing."
-    },
-    {
-      "id": "ev-admit-admitted",
-      "claim": "admit-never-writes-a-rejected-change",
-      "kind": "test",
-      "ref": "tests/core/admit.test.js#a substantial accepted change is admitted and lists the new claim as verified",
-      "description": "An accepted change with several entities and a claim that verifies is admitted and lists the claim as verified."
-    },
-    {
-      "id": "ev-admit-write",
-      "claim": "admit-never-writes-a-rejected-change",
-      "kind": "test",
-      "ref": "tests/core/admit.test.js#--write leaves the spec byte-identical on a rejected change and writes an admitted one",
-      "description": "With --write a rejected change leaves the file byte-identical and an admitted one writes it."
-    },
-    {
-      "id": "ev-admit-deterministic",
-      "claim": "admit-never-writes-a-rejected-change",
-      "kind": "test",
-      "ref": "tests/core/admit.test.js#admit output is identical across two runs",
-      "description": "Two runs print identical output, with reasons in id order."
-    },
-    {
-      "id": "ev-admit-privilege-role",
-      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
-      "kind": "test",
-      "ref": "tests/core/admit.test.js#a role that gains a capability is a privilege-change reason until it is accepted",
-      "description": "The owner role gains a capability: a privilege-change reason, admitted with --accept admit.privilege-change and listed under acknowledged."
-    },
-    {
-      "id": "ev-admit-privilege-removed",
-      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
-      "kind": "test",
-      "ref": "tests/core/admit.test.js#removing a capability from a role is reported but is not a reason",
-      "description": "A removed capability is listed under diff.privilege.removed and does not block."
-    },
-    {
-      "id": "ev-admit-privilege-grant",
-      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
-      "kind": "test",
-      "ref": "tests/core/admit.test.js#a new grant without maxDuration is a privilege-change reason",
-      "description": "A grant with no maxDuration is a privilege-change reason next to its capabilities."
-    },
-    {
-      "id": "ev-admit-weakened-copy",
-      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
-      "kind": "test",
-      "ref": "tests/core/admit.test.js#an edge copy class looser than an existing class of the same record is a guarantee-weakened reason",
-      "description": "A 72 hour copy class beside a 5 second class of the same record is flagged for freshness and erasure; a tighter class is not."
-    },
-    {
-      "id": "ev-admit-weakened-rule",
-      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
-      "kind": "test",
-      "ref": "tests/core/admit.test.js#a changed integrity rule is shown before and after and can be accepted",
-      "description": "A changed integrity rule is a guarantee-weakened reason with its text before and after."
-    },
-    {
-      "id": "ev-admit-accept-refused",
-      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
-      "kind": "test",
-      "ref": "tests/core/admit.test.js#a reason that is not acknowledgeable cannot be accepted",
-      "description": "Accepting admit.new-claim-weak, admit.claim-regressed or admit.new-error fails with admit.not-acknowledgeable."
-    },
-    {
-      "id": "ev-admit-pending-milestone",
-      "claim": "admit-requirement-claims-pend-on-realisation",
-      "kind": "test",
-      "ref": "tests/core/admit.test.js#a new requirement claim with a milestone is admitted as pending realisation",
-      "description": "A requirement of an external method with a milestone is admitted and listed under pendingRealisation."
-    },
-    {
-      "id": "ev-admit-pending-no-milestone",
-      "claim": "admit-requirement-claims-pend-on-realisation",
-      "kind": "test",
-      "ref": "tests/core/admit.test.js#a new requirement claim without a milestone is rejected",
-      "description": "A requirement without a milestone is rejected as admit.requirement-without-milestone."
-    },
-    {
-      "id": "ev-admit-pending-weak",
-      "claim": "admit-requirement-claims-pend-on-realisation",
-      "kind": "test",
-      "ref": "tests/core/admit.test.js#a new claim a model method decides stays weak when it is not verified",
-      "description": "A structural claim that is not verified is still admit.new-claim-weak, even with a milestone."
-    },
-    {
-      "id": "ev-strength-admit",
-      "claim": "admit-flags-weak-new-claims",
-      "kind": "test",
-      "ref": "tests/core/claim-strength.test.js#admit gives a new vacuous self-contained claim acknowledgeable reasons and only reports existing ones",
-      "description": "A new never claim over a fault transition gets admit.claim-vacuous and admit.claim-self-contained, both acknowledgeable; the counts include the existing vacuous claim, which is no reason."
-    },
-    {
-      "id": "ev-spec-manifest-resolve",
-      "claim": "specification-manifest-parts",
-      "kind": "test",
-      "ref": "tests/core/spec-manifest.test.js#parts assemble in manifest order and array sections concatenate",
-      "description": "Parts assemble in manifest order into the canonical text."
-    },
-    {
-      "id": "ev-spec-manifest-refusals",
-      "claim": "specification-manifest-parts",
-      "kind": "test",
-      "ref": "tests/core/spec-manifest.test.js#an id repeated across parts is refused naming both files",
-      "description": "A duplicate id across parts is refused naming both files; a missing part and a section in two parts likewise (fixtures in tests/fixtures/spec-manifest)."
-    },
-    {
-      "id": "ev-spec-manifest-write-back",
-      "claim": "specification-manifest-parts",
-      "kind": "test",
-      "ref": "tests/core/spec-manifest.test.js#an edit is written back to the part that holds the entity and new entities go where the table says",
-      "description": "An edit goes to the part that holds the entity and a new entity to the part the table names."
-    },
-    {
-      "id": "ev-ms-trace-multiple",
-      "claim": "module-to-element-map-is-a-function",
-      "kind": "test",
-      "ref": "tests/core/multiscale.test.js#traceability: a file covered by two module elements is traceability.multiple-owners and the command fails",
-      "description": "Two components on one file and a directory over a file are both errors; exegra traceability fails."
-    },
-    {
-      "id": "ev-ms-trace-self",
-      "claim": "module-to-element-map-is-a-function",
-      "kind": "test",
-      "ref": "tests/core/multiscale.test.js#the self-specification is a logical hierarchy from exegra down to module elements with each file under one element",
-      "description": "exegra, subsystem, component, module; main.js under the composition root; builtin-types.js with one owner; no missing, unclaimed or doubly claimed file; the actors and the producer of edit-requested."
-    },
-    {
-      "id": "ev-cli-get",
-      "claim": "cli-get-prints-entities-with-references",
-      "kind": "test",
-      "ref": "tests/core/read-commands.test.js#get prints the named entities with declaration and references both ways",
-      "description": "get returns the declaration and both reference lists."
-    },
-    {
-      "id": "ev-cli-find",
-      "claim": "cli-find-filters-entities",
-      "kind": "test",
-      "ref": "tests/core/read-commands.test.js#find --fields adds only the requested data fields and --limit truncates",
-      "description": "Each filter is exercised on a fixture specification."
-    },
-    {
-      "id": "ev-cli-refs",
-      "claim": "cli-refs-equals-model-refs",
-      "kind": "test",
-      "ref": "tests/core/read-commands.test.js#refs equals what model.refs holds for the entity",
-      "description": "Compared with the references of a Project built from the same text."
-    },
-    {
-      "id": "ev-guard-refuses",
-      "claim": "guard-refuses-direct-spec-access",
-      "kind": "test",
-      "ref": "tests/core/spec-guard.test.js#Read Edit Write and MultiEdit of a spec file are refused with the replacement commands",
-      "description": "Refused calls, including manifest parts and shell readers."
-    },
-    {
-      "id": "ev-guard-allows",
-      "claim": "guard-leaves-other-calls-alone",
-      "kind": "test",
-      "ref": "tests/core/spec-guard.test.js#the hook script exits 2 with the reason on stderr to refuse and 0 silently to allow",
-      "description": "Allowed calls and the exit codes of the hook script."
-    },
-    {
-      "id": "ev-capability-matrix",
-      "claim": "capability-matrix-generated",
-      "kind": "test",
-      "ref": "tests/core/generate.test.js#the capability matrix lists a proved claim of class 4 as established in row 4",
-      "description": "A proved claim of class 4 appears in row 4 only; a stale check of it does not."
-    },
-    {
-      "id": "ev-incremental-verify",
-      "claim": "verify-reruns-only-impacted-evidence",
-      "kind": "test",
-      "ref": "tests/core/change-impact.test.js#incremental re-verification",
-      "description": "After the a1 edit the runner adapter is called for exactly the references of c1, c3, c6 and c7."
-    },
-    {
-      "id": "ev-admit-change-set",
-      "claim": "admit-takes-change-sets",
-      "kind": "test",
-      "ref": "tests/core/change-impact.test.js#admit takes a change set",
-      "description": "A change set editing a claim statement and touching F1.lean, t1.test.js and m2.csv."
-    },
-    {
-      "id": "ev-theorem-weakening",
-      "claim": "admit-refuses-theorem-weakening",
-      "kind": "test",
-      "ref": "tests/proofs/theorem-weakening.test.js#a weakened theorem is refused",
-      "description": "The five counter_le variants checked by Lean."
-    },
-    {
-      "id": "ev-import-scan",
-      "claim": "import-scan-checks-relationships",
-      "kind": "test",
-      "ref": "tests/core/import-scan.test.js",
-      "description": "The scan finds the undeclared import and the claim reads undecided."
-    },
-    {
-      "id": "ev-self-spec-split-parts",
-      "claim": "self-specification-split-by-area",
-      "kind": "test",
-      "ref": "tests/core/spec-split.test.js#the self-specification is a manifest of part files none over 120 KB all listed and none stray",
-      "description": "The manifest lists every part, no part is over 120 KB and none in parts/ is unlisted."
-    },
-    {
-      "id": "ev-self-spec-split-hash",
-      "claim": "self-specification-split-by-area",
-      "kind": "test",
-      "ref": "tests/core/spec-split.test.js#splitting a specification keeps its semantic hash and its content and every comment of an entity",
-      "description": "Splitting the self-specification and assembling the parts gives the same semantic hash and document, with every comment kept."
-    },
-    {
-      "id": "ev-self-spec-split-placement",
-      "claim": "self-specification-split-by-area",
-      "kind": "test",
-      "ref": "tests/core/spec-split.test.js#apply places a new component and claim and evidence and relationship in the part its placement names and undo and redo restore the text exactly",
-      "description": "A transaction's new entities are written to the computed parts, an edit stays in its part, and undo restores every part byte for byte."
-    },
-    {
-      "id": "ev-self-spec-split-default",
-      "claim": "self-specification-split-by-area",
-      "kind": "test",
-      "ref": "tests/core/spec-split.test.js#a new entity with no rule goes to its default part",
-      "description": "An entity the table does not name goes to the section's default part."
-    },
-    {
-      "id": "ev-self-spec-split-workspace",
-      "claim": "self-specification-split-by-area",
-      "kind": "test",
-      "ref": "tests/core/spec-manifest.test.js#the workspace reads a manifest and writes an edit to the parts",
-      "description": "The workspace writes a transaction to the part files only, and refuses a stale base."
-    },
-    {
-      "id": "ev-self-spec-split-locate",
-      "claim": "self-specification-split-by-area",
-      "kind": "test",
-      "ref": "tests/core/spec-split.test.js#an entity is located in the part file and the line that hold it",
-      "description": "A source location names the part file and the line in it."
-    },
-    {
-      "id": "ev-self-spec-split-guard",
-      "claim": "self-specification-split-by-area",
-      "kind": "test",
-      "ref": "tests/core/spec-split.test.js#the guard refuses the part files and the directory that holds them and leaves the command line open",
-      "description": "The guard refuses a Read, Edit, Write, Grep or shell read of a part file or the parts directory."
-    },
-    {
-      "id": "ev-self-spec-split-stamp",
-      "claim": "self-specification-split-by-area",
-      "kind": "test",
-      "ref": "tests/core/spec-split.test.js#the tree stamp covers the part files",
-      "description": "The tree stamp covers every part file."
-    },
-    {
-      "id": "ev-static-extractor",
-      "claim": "static-extractor-reads-exact-imports",
-      "kind": "test",
-      "ref": "tests/core/extract.test.js",
-      "description": "The extractor reads a corpus of JavaScript, Lean and Rust sources and the repository itself, and its facts depend on the bytes only."
-    },
-    {
-      "id": "ev-nav-levels",
-      "claim": "levels-zero-and-one-state-purposes",
-      "kind": "test",
-      "ref": "tests/core/navigation.test.js#L0 draws the system as one block in its environment and every block of L0 and L1 states a purpose and L1 opens the system as a container",
-      "description": "Purposes and responsibilities of every block of l0 and l1."
-    },
-    {
-      "id": "ev-ledger-each-alone",
-      "claim": "product-installation-checks-composition",
-      "kind": "test",
-      "ref": "tests/core/two-product-ledger.test.js#each product alone keeps its one-hold claim on every execution of its own scenario",
-      "description": "Each product installed alone is admitted; its one-hold claim holds on every execution of its own scenario."
-    },
-    {
-      "id": "ev-ledger-second-refused",
-      "claim": "product-installation-checks-composition",
-      "kind": "test",
-      "ref": "tests/core/two-product-ledger.test.js#installing the second product is refused with the composed scenario and held 2",
-      "description": "Installing promotions after badges is refused for both one-hold claims, naming {ledger, badges__awarder, promotions__awarder} and ledger.held = 2."
-    },
-    {
-      "id": "ev-verify-batches-attribution",
-      "claim": "verify-batches-test-runs",
-      "kind": "test",
-      "ref": "tests/core/verify-batching.test.js#each reference gets the outcome of its own tests from one process per file",
-      "description": "A fixture file with passing, failing, skipped and suite-nested tests and a name that matches nothing: each reference gets its own outcome, a failing test elsewhere in the file does not fail the others, a skipped test stays skipped, and the run starts one process per test file."
-    },
-    {
-      "id": "ev-verify-reuses-unchanged",
-      "claim": "verify-reuses-unchanged-passes",
-      "kind": "test",
-      "ref": "tests/core/verify-batching.test.js#a recorded pass is reused until a file its test covered changes and then only that file reruns",
-      "description": "Three fixture test files, one loading a module, one reading a data file, one with neither: editing the module reruns only the first, editing the data file only the second, restoring a file restores the reuse; a reference with no coverage, a changed reference and a recorded failure run again."
-    },
-    {
-      "id": "ev-evidence-ref-names-test",
-      "claim": "evidence-ref-names-a-test",
-      "kind": "test",
-      "ref": "tests/core/verify-batching.test.js#validate refuses a reference whose name matches no test its file declares",
-      "description": "The static scan of a fixture test file, suite names in front of test names, run-time names, and the diagnostic for a reference to a test that was renamed away, with none for the declared one or a missing file."
     },
     {
-      "id": "ev-evidence-ref-names-validate",
-      "claim": "evidence-ref-names-a-test",
-      "kind": "test",
-      "ref": "tests/core/verify-batching.test.js#the validate command reports the reference that names no test and only that one",
-      "description": "exegra validate on a fixture specification with one declared and one renamed-away reference reports exactly evidence.ref-no-test for the second."
+      "id": "write-endpoint-refined-in-recorded-write",
+      "kind": "temporal",
+      "statement": "The write endpoint's abstraction write-endpoint-flow is refined by the development-server plugin and the workspace service in the recorded write: running them in its place, with the ws-* hop hidden, gives the same boundary trace up to the order of simultaneous steps of events no machine consumes both of (the members' hidden steps deliver write-file-ok after the recorder's traffic-step-recorded, which commute); treating that pair as dependent breaks it.",
+      "rationale": "WG-5734 (in WG-5740), closing refinement-checker's unknown: compared as sequences, the recorded write was a counterexample a comparison up to the order of independent simultaneous events accepts. The comparison is decided in Lean (commMatch, sound by commMatch_sound).",
+      "subjects": [
+        "dev-server-plugin",
+        "workspace-service",
+        "write-endpoint-flow",
+        "real-write-recorded"
+      ],
+      "evaluate": {
+        "method": "refines-composition",
+        "behavior": "write-endpoint-flow",
+        "scenarios": [
+          "real-write-recorded"
+        ],
+        "negatives": [
+          {
+            "scenario": "real-write-recorded",
+            "dependent": [
+              [
+                "write-file-ok",
+                "traffic-step-recorded"
+              ]
+            ],
+            "note": "Treated as dependent, the reordered pair is a boundary counterexample."
+          }
+        ]
+      }
+    },
+    {
+      "id": "test-evidence-derived-from-markers",
+      "kind": "invariant",
+      "statement": "A test names the claims it evidences with an @evidence marker that the extractor reads into the fact file, and the model derives one test evidence entity per marked claim and reference, which a claim reads exactly as a declared one; validation reports a marker naming no claim, a marker it cannot read, and a declared test evidence that duplicates a derived one. The self-specification declares no test evidence: every one is derived.",
+      "rationale": "WG-5705 (in WG-5740): about 820 hand-declared evidence entities of the self-specification only said that a claim is backed by a test. The test now says it, the runner and exegra verify read the same reference, and declared evidence stays for what a test cannot carry (measurements, reviews, documents, contradicting evidence). Every claim's status with the recorded results was identical before and after the move (docs/assessment/2026-11-28/derived-declarations.json).",
+      "subjects": [
+        "verification-pipeline",
+        "claim-evaluator",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
     }
   ]
 }

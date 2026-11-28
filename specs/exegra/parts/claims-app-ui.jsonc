@@ -35,15 +35,6 @@
       "kind": "structural",
       "statement": "Following submits-edits, data-flow and writes relationships, every path from the inspector, source editor, dialogs, the composition root (scene drags) and shell to the specification file passes through the transaction system.",
       "rationale": "The same check as edits-only-via-transactions without the toolbar, whose Import is the known bypass. It shows that the bypass is confined to that one control. The toolbar's other tools (create, delete, reset layout, undo, redo) do use transactions but cannot be separated from Import at component granularity. The Markdown importer is a tool, not an editing surface, and is not in the source list.",
-      "subjects": [
-        "inspector",
-        "source-editor",
-        "dialogs",
-        "composition-root",
-        "shell",
-        "transactions",
-        "specification-file"
-      ],
       "assumptions": [
         "static-extractor-sound",
         "extracted-facts-current"
@@ -61,7 +52,6 @@
       "kind": "structural",
       "statement": "The Three.js renderer has no writes or submits-edits relationship to the specification file, the layout file, the transaction system or the session.",
       "rationale": "The renderer is a function of the scene it is given. A gesture reaches the model only through the callbacks the composition root (src/app/main.js) supplied, which submit operations.",
-      "subjects": ["scene-renderer", "specification-file", "layout-file", "transactions", "session"],
       "assumptions": [
         "static-extractor-sound",
         "extracted-facts-current"
@@ -194,7 +184,6 @@
       "assumptions": ["tests-exercise-shipped-modules", "browser-tests-run-real-application", "recorded-results-reflect-current-code"],
       "evaluate": { "method": "external-evidence" }
     },
-    // ======== Measured claim without any recorded measurement
     {
       "id": "benchmark-scene-interactive",
       "kind": "measured",
@@ -1148,388 +1137,23 @@
       },
       "faultModel": "local-workstation",
       "rationale": "The model-level check of camera-restored-per-view: true of the camera-memory machine, not of the code (machines-abstract-the-code). The code is checked by camera-restored-per-view at the trace stage. WG-5685 criterion 12."
-    }
-  ],
-  "evidence": [
-    { "id": "ev-roundtrip-invalid-draft", "claim": "invalid-source-keeps-last-valid-model", "kind": "test", "ref": "tests/core/roundtrip.test.js#an invalid source draft is rejected", "description": "An invalid source draft is rejected with diagnostics and the committed model is not corrupted." },
-    { "id": "ev-browser-invalid-draft", "claim": "invalid-source-keeps-last-valid-model", "kind": "test", "ref": "tests/browser/exegra.spec.js#source edit updates the scene", "description": "In the application the rejected draft is kept as typed." },
-    {
-      "id": "ev-flows-trace",
-      "claim": "sim-flow-matches-trace",
-      "kind": "test",
-      "ref": "tests/core/flows.test.js",
-      "description": "Sender and receivers of every step of a scenario come from the trace; a scenario stimulus comes from outside."
     },
     {
-      "id": "ev-flows-edges",
-      "claim": "sim-flow-never-borrows-edges",
-      "kind": "test",
-      "ref": "tests/core/flows.test.js",
-      "description": "Paths follow the edge between the drawn nodes in either direction; an unconnected pair is undeclared, a relationship the view hides is unshown, a collapsed subsystem stands for its members, a dropped event is lost."
-    },
-    {
-      "id": "ev-browser-sim-flow",
-      "claim": "sim-step-shows-message-moving",
-      "kind": "test",
-      "ref": "tests/browser/interaction.spec.js#stepping a simulation sends a labelled marker along the edge from sender to receiver",
-      "description": "In the running application, stepping Exegra's own edit scenario sends a labelled marker into the interaction component from outside, then along the declared edge to the transaction system while it advances, and marks the undeclared save message; the panel names sender and receiver."
-    },
-    {
-      "id": "ev-browser-phone-touch-usable",
-      "claim": "ui-touch-usable-on-phone",
-      "kind": "test",
-      "ref": "tests/browser/mobile.spec.js#phone layout has no horizontal scroll and 44 px targets and the scene covers most of the screen",
-      "description": "At 390 by 844 with touch: no horizontal scroll, and no visible interactive control under 44 by 44 CSS px (offenders listed) with nothing open, with every destination's sheet at full height, in the More and overflow menus, in a dialog and in search; with no sheet open at least 60% of the window is uncovered scene."
-    },
-    {
-      "id": "ev-browser-phone-every-function",
-      "claim": "ui-every-function-on-phone",
-      "kind": "test",
-      "ref": "tests/browser/mobile.spec.js#every function is reachable by touch on a phone",
-      "description": "At 390 by 844, by taps: every destination's sheet, search, selection by tapping the canvas, a property edit, undo and redo, create, connect mode, delete with cascade, rename, explorer collapse, isolate and hide, layout, camera, legend and statistics, a scenario stepped with the docked transport, faults and the timeline, verification, source, realisation, diagnostics, changes, export, and view and project switching."
-    },
-    {
-      "id": "ev-browser-tablet-desktop-expand",
-      "claim": "ui-expands-to-desktop",
-      "kind": "test",
-      "ref": "tests/browser/mobile.spec.js#panels open beside the scene on a tablet and the desktop shows explorer scene and context panel side by side",
-      "description": "At 820 px the inspector, explorer and verification panels open beside the scene with no overlap of their boxes; a fresh 1600 by 1000 page shows the explorer, the scene and the context panel side by side with no overlap, nothing opened by hand."
-    },
-    {
-      "id": "ev-changes-pairing-by-revision",
-      "claim": "changes-panel-pairs-by-revision",
-      "kind": "test",
-      "ref": "tests/core/activity-pairing.test.js",
-      "description": "pairHistoryWithLog pairs more than 400 commits with their own log entries and leaves an entry unpaired when its log entry was dropped."
-    },
-    {
-      "id": "ev-replay-recorded-stream-clean",
-      "claim": "real-runs-replay-through-self-model",
-      "kind": "test",
-      "ref": "tests/core/replay.test.js#a recorded open edit and save replays through live-session without a divergence",
-      "description": "A stream recorded from the running application (tests/fixtures/live/open-edit-save.json) replays through live-session with no divergence and nothing awaited; steps carry fired transitions, responsible components and calibrations, and checkTrace and requestLog read the replay."
-    },
-    {
-      "id": "ev-replay-wrong-order",
-      "claim": "real-runs-replay-through-self-model",
-      "kind": "test",
-      "ref": "tests/core/replay.test.js#an event in the wrong order is a divergence",
-      "description": "Negative: save-succeeded moved before the request is reported as unpredicted, under the claim, with its step."
-    },
-    {
-      "id": "ev-replay-unknown-event",
-      "claim": "real-runs-replay-through-self-model",
-      "kind": "test",
-      "ref": "tests/core/replay.test.js#an event the specification does not name is a divergence",
-      "description": "Negative: an event id the specification does not declare is reported as unknown-event."
-    },
-    {
-      "id": "ev-replay-missing-response",
-      "claim": "real-runs-replay-through-self-model",
-      "kind": "test",
-      "ref": "tests/core/replay.test.js#a predicted response that never comes is a divergence",
-      "description": "Negative: a stream that ends after the server wrote the file is still waiting while open and reports write-file-ok missing once closed, naming the transition that predicted it."
-    },
-    {
-      "id": "ev-replay-bound",
-      "claim": "real-runs-replay-through-self-model",
-      "kind": "test",
-      "ref": "tests/core/replay.test.js#a predicted event not seen within the bound is missing even while the stream is open",
-      "description": "Negative: a prediction older than the bound is missing on an open stream."
-    },
-    {
-      "id": "ev-replay-payload",
-      "claim": "real-runs-replay-through-self-model",
-      "kind": "test",
-      "ref": "tests/core/replay.test.js#a recorded payload value that differs from the prediction is a divergence",
-      "description": "Negative: a doctored hash in write-file-ok is a payload divergence on that field."
-    },
-    {
-      "id": "ev-replay-not-allowed",
-      "claim": "real-runs-replay-through-self-model",
-      "kind": "test",
-      "ref": "tests/core/replay.test.js#a predicted event that no behavior consuming it accepts in its state is a divergence",
-      "description": "Negative: a camera saved for a view the model's tab storage has no place for is not-allowed."
-    },
-    {
-      "id": "ev-replay-incremental",
-      "claim": "real-runs-replay-through-self-model",
-      "kind": "test",
-      "ref": "tests/core/replay.test.js#the replay is incremental and deterministic",
-      "description": "Consuming events one at a time gives the same trace as replaying the whole stream."
-    },
-    {
-      "id": "ev-live-browser",
-      "claim": "real-runs-replay-through-self-model",
-      "kind": "test",
-      "ref": "tests/browser/live.spec.js#live mode replays an edit and its save through the self-model on the right components without divergence",
-      "description": "The running application opens a copy of its own specification; with Live mode on, an edit and its save are recorded in order on the components the model names, replay without divergence and without failed checks, the request log shows the write, and the panel works at phone width with 44 px source buttons and no horizontal scroll."
-    },
-    {
-      "id": "ev-traffic-bounded",
-      "claim": "traffic-stream-bounded-and-logical",
-      "kind": "test",
-      "ref": "tests/core/traffic.test.js#the recorder keeps a bounded stream with logical sequence numbers and keeps wall-clock times out of the replay",
-      "description": "A recorder with a limit of 3 keeps the last 3 events with their sequence numbers, counts the dropped ones, copies payloads, and forReplay carries no wall-clock time."
-    },
-    {
-      "id": "ev-traffic-live-seq",
-      "claim": "traffic-stream-bounded-and-logical",
-      "kind": "test",
-      "ref": "tests/browser/live.spec.js#live mode replays an edit and its save through the self-model on the right components without divergence",
-      "description": "In the running application the live trace's times are the recorded sequence numbers."
-    },
-    {
-      "id": "ev-traffic-server-events",
-      "claim": "traffic-producers-name-spec-events",
-      "kind": "test",
-      "ref": "tests/core/traffic.test.js#the development server returns its own events with each answer stamped with the request id",
-      "description": "Against the real middleware: list, read, write, conflict and a missing project each return their workspace events and answer in order with the request id; a request without an id gets none; changeTrace tells own writes from external edits."
-    },
-    {
-      "id": "ev-traffic-engine-runner",
-      "claim": "traffic-producers-name-spec-events",
-      "kind": "test",
-      "ref": "tests/core/traffic.test.js#the engine runner records the worker messages with the scenario standing for input and trace",
-      "description": "With a stand-in Worker: posts, the termination of a waiting worker, the reply with its generation and a refusal are recorded as the contract's events."
-    },
-    {
-      "id": "ev-traffic-sha256",
-      "claim": "traffic-producers-name-spec-events",
-      "kind": "test",
-      "ref": "tests/core/traffic.test.js#sha256Hex agrees with the workspace hash",
-      "description": "The browser's sha-256 equals the workspace hash for empty, ASCII, non-ASCII and large texts."
-    },
-    {
-      "id": "ev-traffic-browser-producers",
-      "claim": "traffic-producers-name-spec-events",
-      "kind": "test",
-      "ref": "tests/browser/live.spec.js#live mode replays an edit and its save through the self-model on the right components without divergence",
-      "description": "The session, the persistence client and the scene record the open, the edit and the save in the running application, matching the server's events by request id."
-    },
-    {
-      "id": "ev-reader-browser-select",
-      "claim": "reader-links-select-through-session",
-      "kind": "test",
-      "ref": "tests/browser/reader.spec.js#reader view replaces the scene and its links select entities",
-      "description": "The reader replaces the scene, a link selects its entity, and the scene returns on leaving the view."
-    },
-    {
-      "id": "ev-reader-browser-edit",
-      "claim": "reader-links-select-through-session",
-      "kind": "test",
-      "ref": "tests/browser/reader.spec.js#reader page follows an edit of the model",
-      "description": "A committed edit shows on the page."
-    },
-    {
-      "id": "ev-product-reload-watch",
-      "claim": "browser-reloads-product-files",
-      "kind": "test",
-      "ref": "tests/core/disk-reload.test.js#an added then changed then removed product file is reported by the watcher and re-derives the session model",
-      "description": "The watcher reports an added, a changed and a removed product file as products, and the session reload re-derives the layered model each time."
-    },
-    {
-      "id": "ev-product-reload-invalid",
-      "claim": "browser-reloads-product-files",
-      "kind": "test",
-      "ref": "tests/core/disk-reload.test.js#a product file that does not parse keeps the last valid model and the next good read adopts it",
-      "description": "A broken product file is seen and the next good read is adopted."
-    },
-    {
-      "id": "ev-product-reload-spec",
-      "claim": "browser-reloads-product-files",
-      "kind": "test",
-      "ref": "tests/core/disk-reload.test.js#a reload of the specification keeps the product layers of the read",
-      "description": "A specification reload carries the product layers."
-    },
-    {
-      "id": "ev-scene-equals-derived",
-      "kind": "test",
-      "ref": "tests/core/abstraction.test.js#structural scene edges equal derived edges for every view and collapse set of the self-specification",
-      "claim": "structural-scene-draws-derived-model",
-      "description": "Every structural view under every subset of the six subsystems collapsed."
-    },
-    {
-      "id": "ev-flows-collapse-invariant",
-      "kind": "test",
-      "ref": "tests/core/abstraction.test.js#flows follow the declared edge of the visual-edit-flow save hop collapsed and expanded",
-      "claim": "flows-classified-on-derived-model",
-      "description": "The save-requested hop from the session to the persistence client follows the same relationship in the expanded and the collapsed scene."
-    },
-    {
-      "id": "ev-nav-walk-core",
-      "claim": "navigation-scene-is-derived-model",
-      "kind": "test",
-      "ref": "tests/core/navigation.test.js#at every step of the walk the architecture scene draws exactly the derived model of its cut",
-      "description": "Every step of the walk projected and compared with deriveModel for its cut."
-    },
-    {
-      "id": "ev-nav-walk-browser",
-      "claim": "navigation-scene-is-derived-model",
-      "kind": "test",
-      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to an expanded subsystem with each step equal to the CLI",
-      "description": "The walk in the running application, each step compared with exegra derive."
-    },
-    {
-      "id": "ev-nav-cuts",
-      "claim": "navigation-scene-is-derived-model",
-      "kind": "test",
-      "ref": "tests/core/navigation.test.js#every declared cut of the logical and runtime hierarchies gives the same derived model through the view as through derive",
-      "description": "Every declared cut, logical and runtime."
-    },
-    {
-      "id": "ev-nav-hierarchy-browser",
-      "claim": "navigation-scene-is-derived-model",
-      "kind": "test",
-      "ref": "tests/browser/navigation.spec.js#a hidden block on a path becomes a labelled path summary and the view switches hierarchy",
-      "description": "The view switched to the runtime hierarchy equals exegra derive."
-    },
-    {
-      "id": "ev-nav-one-block",
-      "claim": "navigation-one-block-changes-alone",
-      "kind": "test",
-      "ref": "tests/core/navigation.test.js#expanding or collapsing one block changes no other block of the scene",
-      "description": "Blocks toggled at every step; the rest unchanged, and the cut restored."
-    },
-    {
-      "id": "ev-nav-one-block-browser",
-      "claim": "navigation-one-block-changes-alone",
-      "kind": "test",
-      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to an expanded subsystem with each step equal to the CLI",
-      "description": "Expanding persistence in the application leaves every other node as it was."
-    },
-    {
-      "id": "ev-nav-default-cut",
-      "claim": "navigation-one-block-changes-alone",
-      "kind": "test",
-      "ref": "tests/core/navigation.test.js#the default cut of a view is its declared cut or else the overview of a large model and a within filter opens its element",
-      "description": "Default cuts."
-    },
-    {
-      "id": "ev-nav-inspect-browser",
-      "claim": "navigation-facts-are-inspectable",
-      "kind": "test",
-      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to an expanded subsystem with each step equal to the CLI",
-      "description": "Witness lists and block panels checked against exegra derive at every step."
-    },
-    {
-      "id": "ev-nav-inspect-phone",
-      "claim": "navigation-facts-are-inspectable",
-      "kind": "test",
-      "ref": "tests/browser/mobile.spec.js#a phone walks the levels of the self-specification by touch and inspects a derived edge and a block",
-      "description": "The same on a phone, by touch."
-    },
-    {
-      "id": "ev-nav-filter-core",
-      "claim": "navigation-filters-report-removals",
-      "kind": "test",
-      "ref": "tests/core/navigation.test.js#hiding a block on a path draws a labelled path summary through it and the inside badge follows the filter",
-      "description": "Path summaries through hidden persistence and the badge."
-    },
-    {
-      "id": "ev-nav-views-core",
-      "claim": "navigation-filters-report-removals",
-      "kind": "test",
-      "ref": "tests/core/navigation.test.js#views keep their meaning as cuts and filters: each opens at its declared cut and counts what its filter removes",
-      "description": "The four structural views as cuts and filters."
-    },
-    {
-      "id": "ev-nav-filter-browser",
-      "claim": "navigation-filters-report-removals",
-      "kind": "test",
-      "ref": "tests/browser/navigation.spec.js#a hidden block on a path becomes a labelled path summary and the view switches hierarchy",
-      "description": "A hidden block on a path in the application."
-    },
-    {
-      "id": "ev-nav-filter-fixture",
-      "claim": "navigation-filters-report-removals",
-      "kind": "test",
-      "ref": "tests/core/projections.test.js#hidden removes components with their descendants and a connection through them becomes a labelled path summary",
-      "description": "A path summary on a small fixture."
-    },
-    {
-      "id": "ev-nav-code-check",
-      "claim": "presentation-holds-no-abstraction",
-      "kind": "test",
-      "ref": "tests/core/navigation.test.js#presentation modules compute no lifting or bundling or entity-to-element mapping: they ask the core",
-      "description": "The presentation modules read for the abstraction primitives."
-    },
-    {
-      "id": "ev-nav-no-semantics",
-      "claim": "presentation-holds-no-abstraction",
-      "kind": "test",
-      "ref": "tests/core/navigation.test.js#no presentation state changes a derived fact or a claim verdict or the semantic hash",
-      "description": "Cuts, hiding, layout methods and pins leave derived models, verdicts and the hash unchanged."
-    },
-    {
-      "id": "ev-nav-no-semantics-browser",
-      "claim": "presentation-holds-no-abstraction",
-      "kind": "test",
-      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to an expanded subsystem with each step equal to the CLI",
-      "description": "The walk ends with the hash and every verdict unchanged and nothing to undo."
-    },
-    {
-      "id": "ev-layout-hub",
-      "claim": "layout-auto-reads-multiscale",
-      "kind": "test",
-      "ref": "tests/core/layout.test.js#a hub with fourteen neighbours is drawn with its spokes clear of other nodes on a wide and a tall view",
-      "description": "A hub is drawn radially."
-    },
-    {
-      "id": "ev-layout-overlaps",
-      "claim": "layout-auto-reads-multiscale",
-      "kind": "test",
-      "ref": "tests/core/layout.test.js#scorePlacement counts a line through an unrelated node and counts parallel edges between two nodes once",
-      "description": "The overlap term and parallel edges."
-    },
-    {
-      "id": "ev-nav-extracted-facts-browser",
-      "claim": "navigation-scene-is-derived-model",
-      "kind": "test",
-      "ref": "tests/browser/navigation.spec.js#the application attaches the extracted facts as the CLI does and adopts a changed fact file",
-      "description": "The application attaches the extracted facts like the command line: at L1 its imports interactions equal exegra derive and are marked extracted, and removing and restoring the fact file on disk removes and restores them."
-    },
-    {
-      "id": "ev-layout-opened-system",
-      "claim": "layout-auto-reads-multiscale",
-      "kind": "test",
-      "ref": "tests/core/navigation.test.js#at L1 the automatic layout gives the opened system most of the picture with its environment around it",
-      "description": "At L1 of the self-specification the opened system spans at least half of the picture on a wide and a tall view, its members inside, its environment around it, and few labels collide."
-    },
-    {
-      "id": "ev-nav-production-bundle",
-      "claim": "navigation-scene-is-derived-model",
-      "kind": "test",
-      "ref": "tests/proofs/spec-bundle.test.js",
-      "description": "The build's bundled specification (the resolved manifest) with the bundled fact file gives the semantic hash and the L1 interactions the command line gives, so the read-only application draws the same derived model."
-    },
-    {
-      "id": "ev-camera-trace-stage",
-      "claim": "camera-restored-per-view",
-      "kind": "test",
-      "ref": "tests/core/camera-conformance.test.js#the camera code of main.js restores the camera a view was left with",
-      "description": "The camera code of main.js, run with a stand-in session storage, restores camera cA on coming back to the structural view."
-    },
-    {
-      "id": "ev-camera-edit-stale-refuted",
-      "claim": "camera-restored-per-view",
-      "kind": "test",
-      "ref": "tests/core/camera-conformance.test.js#an edit of main.js that stores no camera makes the camera claims stale and the trace stage refutes it",
-      "description": "In a temporary copy, main.js stores an empty camera: without rerunning, the claim and the claims whose evidence covers main.js read stale; the trace-stage check then refutes the claim."
-    },
-    {
-      "id": "ev-replay-blind-three",
-      "claim": "real-runs-replay-through-self-model",
-      "kind": "test",
-      "ref": "tests/core/replay.test.js#the replay-blind stream yields three divergences",
-      "description": "The replay-blind stream of the 2026-11-26 assessment: write-intent without text, a base hash the model never had, and save-requested after close are three divergences."
-    },
-    {
-      "id": "ev-nav-walk-modules-browser",
-      "claim": "navigation-scene-is-derived-model",
-      "kind": "test",
-      "ref": "tests/browser/navigation.spec.js#a component opens into its module elements and the semantic core expands with each step equal to the CLI",
-      "description": "The deeper steps of the walk in the running application, outside the browser gate: a component opened into its module elements and the semantic core expanded, each compared with exegra derive."
+      "id": "scratch-projects-outside-app-glob",
+      "kind": "invariant",
+      "statement": "The application imports no file of a browser test's scratch project (specs/zz-test-*): its globs over specs/ leave them out, scratch projects are reset in place without deleting a directory, and deleting and recreating a whole scratch project while the application is loaded never breaks a page load.",
+      "rationale": "WG-5738 (in WG-5740): exegra verify failed browser references that pass in a full run, because the development server resolved the eager glob of src/app/session.js into static imports of every scratch project's results and facts files, and a page loaded while another test recreated its scratch project imported a file that was momentarily missing. The fix removes the cause, not by retrying.",
+      "subjects": [
+        "session",
+        "test-suites"
+      ],
+      "assumptions": [
+        "browser-tests-run-real-application",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
     }
   ]
 }

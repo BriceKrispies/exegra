@@ -115,7 +115,7 @@ theorem f4BA_deliver : (deliver f4BA [] f4Init (headLabel f4Init)).map (outcome 
 /-- The two reachable states of a system with no faults and no sampled delays whose initial
 configuration has one pending entry, delivered to `c₁`, which has nothing pending. -/
 theorem two_state_inductive {sys : Sys} {c₁ : Cfg} (hf : sys.faults = []) (hsm : sys.samples = [])
-    (hres : sys.resources = []) (hrt : sys.routes = []) (hlen : sys.init.pending.length = 1)
+    (hres : sys.resources = []) (hlk : sys.links = []) (hrt : sys.routes = []) (hlen : sys.init.pending.length = 1)
     (hd : (deliver sys [] sys.init (headLabel sys.init)).map (outcome [] sys.init) = some (.run [] c₁))
     (h₁ : c₁.pending = []) :
     (Sys.lts sys).Inductive (fun s => s = .run [] sys.init ∨ s = .run [] c₁) := by
@@ -135,7 +135,7 @@ theorem two_state_inductive {sys : Sys} {c₁ : Cfg} (hf : sys.faults = []) (hsm
         have hmem := hrdy.1
         rw [hx] at hmem
         have hxe : l.entry = x := List.mem_singleton.mp hmem
-        have hwd : l.wdraws = [] := wdraws_nil_of_nores hres hrt hst'
+        have hwd : l.wdraws = [] := wdraws_nil_of_nores hres hlk hrt hst'
         cases l
         simp only [headLabel, hx] at hdl hxe hwd ⊢
         rw [hxe, hdl, hwd]; rfl
@@ -146,13 +146,13 @@ theorem two_state_inductive {sys : Sys} {c₁ : Cfg} (hf : sys.faults = []) (hsm
 
 /-- **`[a, b]`: `b.y = 0` in every reachable state**, and no run fails. -/
 theorem f4_ab_safe : (Sys.lts f4AB).Invariant (fun s => yAB s = some (.int 0)) :=
-  safe_of_inductive (two_state_inductive (c₁ := f4AB1) rfl rfl rfl rfl rfl f4AB_deliver rfl) (by
+  safe_of_inductive (two_state_inductive (c₁ := f4AB1) rfl rfl rfl rfl rfl rfl f4AB_deliver rfl) (by
     intro s hs
     rcases hs with rfl | rfl <;> decide)
 
 /-- **`[b, a]`: `b.y = 0` in every reachable state**, and no run fails: the same verdict. -/
 theorem f4_ba_safe : (Sys.lts f4BA).Invariant (fun s => yBA s = some (.int 0)) :=
-  safe_of_inductive (two_state_inductive (c₁ := f4BA1) rfl rfl rfl rfl rfl f4BA_deliver rfl) (by
+  safe_of_inductive (two_state_inductive (c₁ := f4BA1) rfl rfl rfl rfl rfl rfl f4BA_deliver rfl) (by
     intro s hs
     rcases hs with rfl | rfl <;> decide)
 
@@ -252,12 +252,12 @@ theorem aggFirst_deliver :
 `worker.sum.x + worker.count.busy` is `0` in every reachable state of both listings, although
 both workers fire in the same step. -/
 theorem agg_last_safe : (Sys.lts aggLast).Invariant (fun s => yOf 2 s = some (.int 0)) :=
-  safe_of_inductive (two_state_inductive (c₁ := aggLast1) rfl rfl rfl rfl rfl aggLast_deliver rfl) (by
+  safe_of_inductive (two_state_inductive (c₁ := aggLast1) rfl rfl rfl rfl rfl rfl aggLast_deliver rfl) (by
     intro s hs
     rcases hs with rfl | rfl <;> decide)
 
 theorem agg_first_safe : (Sys.lts aggFirst).Invariant (fun s => yOf 0 s = some (.int 0)) :=
-  safe_of_inductive (two_state_inductive (c₁ := aggFirst1) rfl rfl rfl rfl rfl aggFirst_deliver rfl) (by
+  safe_of_inductive (two_state_inductive (c₁ := aggFirst1) rfl rfl rfl rfl rfl rfl aggFirst_deliver rfl) (by
     intro s hs
     rcases hs with rfl | rfl <;> decide)
 
@@ -616,7 +616,7 @@ theorem ctr_step (L : Int) (hL : L < 9007199254740991) {s' : State} {l : Label} 
   | routeErr _ _ _ hro => rw [routeOf_nil rfl] at hro; cases hro
   | deliverOk hd hr _ hro hdr hnone hw hp2 hs hfit hfill hdup =>
     obtain ⟨rfl, rfl, -⟩ := routeOf_nil_eq (sys := ctrSys L) rfl hro
-    obtain ⟨-, rfl⟩ := nores_settle (sys := ctrSys L) rfl hs hfit hfill
+    obtain ⟨-, rfl⟩ := nores_settle (sys := ctrSys L) rfl rfl hs hfit hfill
     generalize hS : (ctrSys L).resolve l.draws = S at *
     have hS' := hS.symm.trans (resolve_nil (sys := ctrSys L) rfl l.draws)
     subst hS'
@@ -633,7 +633,7 @@ theorem ctr_step (L : Int) (hL : L < 9007199254740991) {s' : State} {l : Label} 
       cases hp2
       cases hdup with
       | none h0 =>
-        exact ⟨n + 1, n, [{ time := n + 1, event := 0, payload := [], sender := some 0 }], setAt a 0 (a.getD 0 0 + 1), by omega, by omega, Or.inr ⟨some 0, rfl⟩, by simp [Cfg.commit, Cfg.popE, Cfg.bumpAttempts, inMachineOrder, blockOf, isTimerOf, touchedOf, Cfg.attemptsOf, hmach, List.range_succ, insertByTime]⟩
+        exact ⟨n + 1, n, [{ time := n + 1, event := 0, payload := [], sender := some 0 }], setAt a 0 (a.getD 0 0 + 1), by omega, by omega, Or.inr ⟨some 0, rfl⟩, by simp [Cfg.putAll, Entry.isEvent, Cfg.commit, Cfg.popE, Cfg.bumpAttempts, inMachineOrder, blockOf, isTimerOf, touchedOf, Cfg.attemptsOf, hmach, List.range_succ, insertByTime]⟩
       | some h0 hl => simp [dupFault] at h0
     · rw [if_neg hlt] at hw
       cases hw
@@ -641,7 +641,7 @@ theorem ctr_step (L : Int) (hL : L < 9007199254740991) {s' : State} {l : Label} 
       cases hp2
       cases hdup with
       | none h0 =>
-        exact ⟨n, n, [], setAt a 0 (a.getD 0 0 + 1), by omega, by omega, Or.inl rfl, by simp [Cfg.commit, Cfg.popE, Cfg.bumpAttempts, inMachineOrder, blockOf, isTimerOf, touchedOf, Cfg.attemptsOf, hmach, List.range_succ, insertByTime]⟩
+        exact ⟨n, n, [], setAt a 0 (a.getD 0 0 + 1), by omega, by omega, Or.inl rfl, by simp [Cfg.putAll, Entry.isEvent, Cfg.commit, Cfg.popE, Cfg.bumpAttempts, inMachineOrder, blockOf, isTimerOf, touchedOf, Cfg.attemptsOf, hmach, List.range_succ, insertByTime]⟩
       | some h0 hl => simp [dupFault] at h0
   | deliverErr hd hr _ hro hdr hnone hfail =>
     obtain ⟨rfl, rfl, -⟩ := routeOf_nil_eq (sys := ctrSys L) rfl hro
@@ -653,7 +653,7 @@ theorem ctr_step (L : Int) (hL : L < 9007199254740991) {s' : State} {l : Label} 
     have hT1 : n + 1 < timeLimit := by rw [hTL]; omega
     cases hfail with
     | winners _ hw => rw [ctr_winners L _ _ n rfl rfl rfl rfl] at hw; cases hw
-    | settle _ _ hs _ hfill => exact (nores_settle_err (sys := ctrSys L) rfl hs hfill).elim
+    | settle _ _ hs _ hfill => exact (nores_settle_err (sys := ctrSys L) rfl rfl hs hfill).elim
     | phase2 _ hw hp2 =>
       rw [ctr_winners L _ _ n rfl rfl rfl rfl] at hw
       by_cases hlt : (n : Int) < L

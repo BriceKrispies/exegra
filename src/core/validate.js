@@ -340,9 +340,14 @@ export function validateModel(model, opts = {}) {
         v.forEach((/** @type {any} */ neg, /** @type {number} */ i) => {
           const at = [...sub, i];
           if (!neg || typeof neg !== 'object' || Array.isArray(neg)) { report('error', 'claim.negative.type', c, `Negative ${i} must be {"scenario": id, "faults": [ids]}.`, at); return; }
-          for (const k of Object.keys(neg)) if (k !== 'scenario' && k !== 'faults' && k !== 'note') report('error', 'claim.negative.unknown', c, `Negative ${i} has no field "${k}" (fields: scenario, faults, note).`, [...at, k]);
+          // refines-composition also takes `dependent`: pairs of events its comparison must treat as dependent (WG-5734).
+          const takesDependent = ev.method === 'refines-composition';
+          for (const k of Object.keys(neg)) if (k !== 'scenario' && k !== 'faults' && k !== 'note' && !(takesDependent && k === 'dependent')) report('error', 'claim.negative.unknown', c, `Negative ${i} has no field "${k}" (fields: scenario, faults, note${takesDependent ? ', dependent' : ''}).`, [...at, k]);
+          const dependentOk = takesDependent && Array.isArray(neg.dependent) && neg.dependent.length > 0 && neg.dependent.every((/** @type {any} */ d) => Array.isArray(d) && d.length === 2 && d.every((/** @type {any} */ x) => typeof x === 'string' && get(x)?.kind === 'event'));
+          if (takesDependent && neg.dependent !== undefined && !dependentOk) report('error', 'claim.negative.dependent', c, `Negative ${i}: "dependent" must be a non-empty list of pairs of event ids.`, [...at, 'dependent']);
           if (typeof neg.scenario !== 'string') report('error', 'claim.negative.scenario', c, `Negative ${i} needs a "scenario".`, at);
           else if (!listed.includes(neg.scenario)) report('error', 'claim.negative.scenario', c, `Negative ${i} runs "${neg.scenario}", which is not one of the claim's scenarios; a negative is a listed scenario with extra faults.`, [...at, 'scenario']);
+          if (dependentOk && neg.faults === undefined) return;
           if (!Array.isArray(neg.faults) || !neg.faults.length || !neg.faults.every((/** @type {any} */ x) => typeof x === 'string')) {
             report('error', 'claim.negative.faults', c, `Negative ${i} needs a non-empty "faults" list: a negative removes a protection by injecting at least one fault.`, [...at, 'faults']);
             return;

@@ -22,6 +22,8 @@ test('rowCells splits on unescaped pipes only and keeps the escape', () => {
   assert.equal(sectionKey('Appendix A. Register'), 'sec-appendix-a');
 });
 
+// The fixture converts with both checks passing, the output validates without errors and the sections rebuild the file exactly.
+// @evidence register-import-holds-every-line
 test('the fixture imports and validates and rebuilds line for line', () => {
   const r = run();
   assert.ok(r.ok, 'both checks pass');
@@ -53,6 +55,8 @@ test('ids, mentions and citations follow the map', () => {
   assert.deepEqual(sec('sec-appendix-m').citations, ['REPO:b `c.ts`'], 'a bracket opened in code is not a citation');
 });
 
+// A row whose rendering differs from its source cells fails the import and is named.
+// @evidence register-import-holds-every-line
 test('a row that does not render back fails the import', () => {
   const spec = parseJsonc(run().text);
   const cap = spec.features.find((/** @type {any} */ c) => c.id === 'cap-01');
@@ -64,6 +68,8 @@ test('a row that does not render back fails the import', () => {
   assert.equal(bad[0].id, 'cap-01');
 });
 
+// Every document, section, table and row of the fixture output has a source whose line holds the text it came from, and keyed rows carry ref.
+// @evidence register-import-entities-cite-source
 test('every imported entity names its source line', () => {
   const spec = parseJsonc(run().text);
   const lines = fileLines(text);
@@ -80,6 +86,8 @@ test('every imported entity names its source line', () => {
   for (const c of [...spec.components, ...spec.features, ...spec.interfaces, ...spec.conflicts]) assert.equal(typeof c.ref, 'string', `${c.id} carries ref`);
 });
 
+// A fixture draft merges with origin and source, its basis references are checked by validation, and the rendered Markdown is unchanged.
+// @evidence register-import-drafts-are-marked
 test('a draft fragment is merged with origin and source and a checked basis', () => {
   const draftText = fs.readFileSync(path.join(FIXTURE, 'repo', 'draft.jsonc'), 'utf8');
   const drafts = [readDraft('draft.jsonc', draftText)];
@@ -99,6 +107,8 @@ test('a draft fragment is merged with origin and source and a checked basis', ()
   assert.ok(analyzeSpec(bad.text).errorCount > 0, 'a basis naming no entity is an error');
 });
 
+// An authority map makes the import exit 1 without writing; --render of a written specification gives the source Markdown.
+// @evidence register-import-respects-authority
 test('a map whose JSONC is the authority refuses to import and render needs only the JSONC', async () => {
   const { spawnSync } = await import('node:child_process');
   const os = await import('node:os');

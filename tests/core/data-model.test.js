@@ -34,6 +34,12 @@ const PROFILE = {
 
 const notInfo = (ds) => ds.filter((d) => d.severity !== 'info');
 
+// The data-model fixture validates with exactly one data-rule finding, the missing erasure point; a wrong enum and an unknown key field are errors with their positions; each rule reports its entity and field on a constructed violation; a data-model claim is violated, verified or inconclusive as the findings say; the Data projection draws records, copies and their edges.
+// @evidence data-model-rules-computed #
+// A record with a personal field and no erasure is a record-erasure-point finding, and a data-model claim over it is violated with the record as counterexample; a record that states an erasure point or a bounded erasure passes.
+// @evidence personal-records-state-erasure #
+// A classification is accepted when it is in the closed set and consistent with the personal class, rejected otherwise; the data-model fixture, which carries no classifications, validates unchanged.
+// @evidence classification-validated #
 test('the data slice validates and the rules find exactly the missing erasure point', () => {
   const r = analyzeSpec(FIXTURE);
   assert.equal(r.errorCount, 0);

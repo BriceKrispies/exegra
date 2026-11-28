@@ -1,8 +1,8 @@
 {
-  // A machine that sends over a link: links are outside the behaviour calculus until WG-5683
-  // criterion 1 covers them, so exploring it is refused (tests/proofs/formal-explore.test.js).
+  // A machine that sends over a link: links are in the behaviour calculus since WG-5683, so its
+  // scenario is explored to a verdict (tests/proofs/formal-explore.test.js).
   "exegra": "0.1",
-  "system": { "id": "behaviour-linked-fixture", "name": "Out-of-fragment exploration fixture", "version": "0.1.0", "description": "A scenario the behaviour calculus does not cover.", "illustrative": true },
+  "system": { "id": "behaviour-linked-fixture", "name": "Linked exploration fixture", "version": "0.1.0", "description": "A scenario that sends over a link.", "illustrative": true },
   "components": [{ "id": "pair", "name": "Pair", "category": "computational", "purpose": "A machine that sends over a link.", "illustrative": true }],
   "events": [{ "id": "go", "name": "Go" }, { "id": "done", "name": "Done" }],
   "behaviors": [

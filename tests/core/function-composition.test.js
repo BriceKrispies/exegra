@@ -27,6 +27,8 @@ function analyseEdited(edit) {
 /** @param {any} spec @param {string} id */
 const fn = (spec, id) => spec.functions.find((/** @type {any} */ f) => f.id === id);
 
+// The compiler fixture (pipeline, shared diagnostics, three levels of composition) validates, and the compose command derives each composite's signature from its stages.
+// @evidence function-composition-along-hierarchy
 test('the compiler fixture validates and composes its function entities along the hierarchy', async () => {
   const v = /** @type {any} */ (await runCommand('validate', ['--spec', COMPILER]));
   assert.equal(v.ok, true);
@@ -47,6 +49,8 @@ test('the compiler fixture validates and composes its function entities along th
   assert.equal(c.result.attached.length, 8);
 });
 
+// The compiler-mismatch fixture is refused with function.composition-returns and, one level up, function.composition-chain.
+// @evidence function-composition-along-hierarchy
 test('a composite whose declared signature differs from its members composition is diagnosed in the negative fixture', async () => {
   const v = /** @type {any} */ (await runCommand('validate', ['--spec', MISMATCH]));
   assert.equal(v.ok, false);
@@ -57,6 +61,8 @@ test('a composite whose declared signature differs from its members composition 
   assert.match(c.result.composites[0].problems[0].message, /declares that it returns syntax-tree, but its last stage "check" returns typed-tree/);
 });
 
+// Each rule of the signature, each with a negative edit of the compiler fixture.
+// @evidence function-composition-along-hierarchy
 test('each part of the signature is checked with a negative edit', () => {
   assert.deepEqual(codes(analyseEdited(() => {})), []);
   assert.deepEqual(codes(analyseEdited((s) => { fn(s, 'analyse').params[0].type = 'token-stream'; fn(s, 'analyse').body = 'try call check(try call parse(try call lex(source)))'; })).filter((c) => c.startsWith('function.composition')), ['function.composition-params', 'function.composition-params'], 'analyse against its first stage, and compile against analyse as its first stage');

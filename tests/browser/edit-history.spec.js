@@ -10,6 +10,8 @@ const hash = (s) => createHash('sha256').update(s).digest('hex');
 const workspaceName = text => parse(text).components.find(c => c.id === 'workspace-service').name;
 
 for (const [winner, cross] of [[0,false],[1,false],[0,true]]) {
+  // Two Exegra sessions submitting changes from the same hash see the replies predicted by the shared-base scenario, for either forced order, and a separate read of the file confirms the winning change.
+  // @evidence two-browser-writes-match-model # two editing sessions
   test(`two editing sessions from one hash with editor ${winner + 1} first and ${cross ? 'crossed' : 'normal'} replies`, { tag: '@full' }, async ({ browser, baseURL }, info) => {
     test.setTimeout(120_000);
     resetScratch('exegra');

@@ -29,6 +29,6 @@ test('golden changes are exactly the manifest', (t) => {
   // The exegra goldens changed again on purpose after WG-5681: the composition root of the multiscale work (WG-5692)
   // re-addressed behaviours, and the two-session-write event (WG-5720) joined every exegra input; the two-session
   // edit race is a new golden. Re-subjecting workspace-flow (WG-5728) edited the source-edit-flow input as well, and the
-  // save path speaking the persistence client's interface (WG-5729) re-recorded write-with-stale-base-hash. Merging the engine's two machines into engine-flow (WG-5733) re-recorded the traces of live-session, cli-trace-written and cli-trace-refused (one variable set for the merged machine).
-  assert.deepEqual(counts, { 'version 2': 43, 'input re-recorded, trace equal under strip': 28, 'trace removed (refused)': 2, 'input edited, trace re-recorded': 15, added: 1 });
+  // save path speaking the persistence client's interface (WG-5729) re-recorded write-with-stale-base-hash. Merging the engine's two machines into engine-flow (WG-5733) re-recorded the traces of live-session, cli-trace-written and cli-trace-refused (one variable set for the merged machine). Typing ws-write-conflict as the write-file error (WG-5732) re-recorded conflict-resolved-by-reload, conflict-resolved-by-overwrite and cli-apply-partial-write (the conflict carries its code).
+  assert.deepEqual(counts, { 'version 2': 43, 'input re-recorded, trace equal under strip': 25, 'trace removed (refused)': 2, 'input edited, trace re-recorded': 18, added: 1 });
 });

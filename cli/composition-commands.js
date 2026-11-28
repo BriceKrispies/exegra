@@ -16,6 +16,17 @@ import { checkTrace } from '../src/core/claims.js';
  * The verdict of every applicable invariant and temporal claim on a trace (checkTrace), by claim id.
  * @param {Model} model @param {any} trace @returns {Record<string, string>}
  */
+/**
+ * A positive whole-number option, or its default.
+ * @param {any} v @param {number} d @param {string} name @param {(code: string, message: string) => Error} usage
+ */
+function positiveInt(v, d, name, usage) {
+  if (v === undefined) return d;
+  const n = Number(v);
+  if (!Number.isInteger(n) || n <= 0) throw usage('invalid-argument', `${name} must be a positive whole number, not "${v}".`);
+  return n;
+}
+
 export function traceVerdicts(model, trace) {
   /** @type {Record<string, string>} */
   const out = {};
@@ -120,9 +131,9 @@ export function compositionCommands(h) {
     },
 
     refine: {
-      usage: 'refine <abstractionId> [--scenarios a,b] [--finest] [--faults a,b]',
-      summary: 'Check a declared abstraction (a behaviour with `abstracts`) against the composition of its members: each driving scenario runs with the region at the abstraction and at its members (--finest: members of member abstractions too), the members\' internal events hidden, and Lean compares the boundary traces (events, kinds, payloads, times under the time scale, outcome, and the final configuration of the machines outside the region). The result is a step correspondence per scenario (certificate) or the first boundary counterexample, with the strength: conservative (declared and refined on these runs) or incomplete (an opaque member, a fault left out, or nothing checked).',
-      options: { scenarios: { type: 'string' }, finest: { type: 'boolean' }, faults: { type: 'string' }, ...INLINE_OPTIONS },
+      usage: 'refine <abstractionId> [--scenarios a,b] [--finest] [--faults a,b] [--dependent a:b,...] [--explore] [--bound N] [--max-states N]',
+      summary: 'Check a declared abstraction (a behaviour with `abstracts`) against the composition of its members: each driving scenario runs with the region at the abstraction and at its members (--finest: members of member abstractions too), the members\' internal events hidden, and Lean compares the boundary traces (events, kinds, payloads, times under the time scale, outcome, and the final configuration of the machines outside the region). Simultaneous steps of events no machine consumes both of may appear in either order: the traces are compared up to their commutation (each run says whether by sequence or by commutation); --dependent a:b treats a pair as dependent. The result is a step correspondence per scenario (certificate) or the first boundary counterexample, with the strength: conservative (declared and refined on these runs) or incomplete (an opaque member, a fault left out, or nothing checked). --explore also explores both systems over every interleaving, fault mask and draw (within --bound steps, default 64, and --max-states product nodes, default 20000) and checks trace inclusion on the boundary in Lean (engine.refineExplore): strength explored when every exploration ends with a certificate, a counterexample with the interleaving of the members otherwise.',
+      options: { scenarios: { type: 'string' }, finest: { type: 'boolean' }, faults: { type: 'string' }, dependent: { type: 'string' }, explore: { type: 'boolean' }, bound: { type: 'string' }, 'max-states': { type: 'string' }, ...INLINE_OPTIONS },
       run: async (/** @type {any} */ ctx) => {
         const { project } = await loadProject(ctx);
         const model = requireModel(project);
@@ -134,6 +145,12 @@ export function compositionCommands(h) {
           scenarios: ctx.values.scenarios === undefined ? undefined : listValue(ctx.values.scenarios),
           finest: ctx.values.finest === true,
           faults: ctx.values.faults === undefined ? undefined : listValue(ctx.values.faults),
+          dependent: ctx.values.dependent === undefined ? undefined : listValue(ctx.values.dependent).map((/** @type {string} */ p) => {
+            const pair = p.split(':');
+            if (pair.length !== 2 || !pair[0] || !pair[1]) throw usage('invalid-argument', `--dependent takes pairs of events a:b, not "${p}".`);
+            return pair;
+          }),
+          explore: ctx.values.explore === true ? { bound: positiveInt(ctx.values.bound, 64, '--bound', usage), maxStates: positiveInt(ctx.values['max-states'], 20000, '--max-states', usage) } : undefined,
         });
         return { result: { ...r, ...(r.counterexample ? { explanation: describeCounterexample(r.counterexample) } : {}) }, semanticHash: project.semanticHash };
       },

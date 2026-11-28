@@ -73,6 +73,8 @@ const ROOTS = {
 /** @param {any} document */
 const modelOf = (document) => /** @type {any} */ (new Project({ name: 'ext', specText: JSON.stringify(document) }).model);
 
+// Modules in a fake external root are checked there; an undeclared alias is missing; only roots with include globs report unclaimed files; no roots gives the earlier result.
+// @evidence realisation-roots-traced # traceability
 test('traceability: modules are checked in their root, an undeclared alias is missing, only roots with include globs report unclaimed files', async () => {
   await withProject(ROOTS, async ({ specs }) => {
     const out = await runCommand('traceability', [], { specs, project: 'ext' });
@@ -136,6 +138,8 @@ test('splitRootRef only takes an alias before the first "#"', () => {
   assert.equal(splitRootRef('C:/abs/path.ts'), null);
 });
 
+// A fixture JUnit report gives pass, fail and not-run per evidence entry, matched by file, describe path and name; verify --ingest-only records them and fails only on a real failure.
+// @evidence external-not-run-distinct-from-fail # junit
 test('junit: a bun report parses into cases with the describe path, file and status', () => {
   const cases = parseJUnit(fs.readFileSync(path.join(FIXTURE, 'platform', REPORT), 'utf8'));
   assert.equal(cases.length, 7);

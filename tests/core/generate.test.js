@@ -66,6 +66,8 @@ function dataById(entities) {
   return Object.fromEntries(entities.map((e) => [e.id, e.data]));
 }
 
+// Two runs are byte-identical; equivalent source texts give the same artifacts.
+// @evidence generation-deterministic #
 test('generateAll returns exactly the six artifacts', () => {
   const out = outputs(SPEC);
   assert.deepEqual(Object.keys(out).sort(), [
@@ -145,6 +147,8 @@ test('no artifact contains undefined or object placeholders', () => {
 
 // The capability matrix (WG-5684, criterion 6): a claim of class 4 (liveness) with a proved, fresh status and no
 // open assumption is listed as established in row 4, and only there.
+// A proved claim of class 4 appears in row 4 only; a stale check of it does not.
+// @evidence capability-matrix-generated
 test('the capability matrix lists a proved claim of class 4 as established in row 4', () => {
   const claim = { id: 'alpha-terminates', kind: 'invariant', statement: 'Alpha always terminates.', guaranteeClass: 'liveness', evaluate: { method: 'lean-theorem', theorem: 'Exegra.alpha_terminates', about: ['Exegra.alpha'] } };
   const withClaim = SPEC.replace('"claims": [', `"claims": [

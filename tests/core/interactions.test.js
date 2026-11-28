@@ -38,6 +38,8 @@ const meta = /** @type {any} */ ({ relationshipKinds: builtin });
 
 // ---- the taxonomy ---------------------------------------------------------------------------------
 
+// Every built-in relationship kind states a class a direction and a parent and the kind tree is rooted at interacts-with.
+// @evidence interaction-kinds-declare-taxonomy
 test('every built-in relationship kind states a class a direction and a parent and the kind tree is rooted at interacts-with', () => {
   for (const [id, k] of Object.entries(builtin)) {
     assert.ok(DEPENDENCY_CLASSES.includes(k.class), `${id} class`);
@@ -53,6 +55,8 @@ test('every built-in relationship kind states a class a direction and a parent a
   for (const id of ['imports', 'invokes', 'notifies', 'composes', 'network-link', 'data-flow', 'reads', 'writes', 'subscribes', 'publishes', 'observes', 'depends-on', 'calls']) assert.ok(builtin[id], id);
 });
 
+// The built-in kinds keep the dependency flag they had and classify as designed.
+// @evidence interaction-kinds-declare-taxonomy
 test('the built-in kinds keep the dependency flag they had and classify as designed', () => {
   const oldFlags = { 'depends-on': true, calls: true, 'data-flow': false, publishes: false, subscribes: true, reads: true, writes: true, observes: false };
   for (const [id, flag] of Object.entries(oldFlags)) assert.equal(builtin[id].dependency, flag, id);
@@ -64,6 +68,8 @@ test('the built-in kinds keep the dependency flag they had and classify as desig
   assert.deepEqual(kindInfo(meta, 'subscribes').direction, { control: 'against', data: 'against' });
 });
 
+// Coarsening a kind relabels it to an ancestor and never changes what analyses read.
+// @evidence interaction-kinds-declare-taxonomy
 test('coarsening a kind relabels it to an ancestor and never changes what analyses read', () => {
   assert.deepEqual(kindAncestors(meta, 'imports'), ['depends-on', ROOT_KIND]);
   assert.deepEqual(kindAncestors(meta, 'calls'), ['invokes', 'depends-on', ROOT_KIND]);
@@ -77,6 +83,8 @@ test('coarsening a kind relabels it to an ancestor and never changes what analys
 // The three tests below declare vocabulary kinds with class, direction and parent: they need the Lean core built
 // from formal/Exegra/Model.lean as changed by WG-5693 (npm run build:formal-wasm).
 
+// A vocabulary kind that states class direction and parent is accepted and its dependency flag is derived.
+// @evidence interaction-kinds-declare-taxonomy
 test('a vocabulary kind that states class direction and parent is accepted and its dependency flag is derived', () => {
   const text = spec({
     vocabulary: { relationshipKinds: { 'ships-to': { label: 'Ships to', line: 'solid', color: 'blue', class: 'runtime', direction: { control: 'with', data: 'with' }, parent: 'invokes', description: 'Sends a parcel.' } } },
@@ -93,6 +101,8 @@ test('a vocabulary kind that states class direction and parent is accepted and i
   assert.ok(!warningCodes(r).includes('vocabulary.kind-unclassified'));
 });
 
+// A vocabulary kind with a partial taxonomy an unknown parent a bad class or a contradicting flag is an error.
+// @evidence interaction-kinds-declare-taxonomy
 test('a vocabulary kind with a partial taxonomy an unknown parent a bad class or a contradicting flag is an error', () => {
   const base = { label: 'K', line: 'solid', color: 'blue', description: 'k' };
   /** @param {any} kind */
@@ -110,6 +120,8 @@ test('a vocabulary kind with a partial taxonomy an unknown parent a bad class or
   assert.deepEqual(codes({ ...full, dependency: false }), ['vocabulary.kind-taxonomy'], 'class runtime with dependency false contradicts');
 });
 
+// A cycle in the vocabulary kind tree is an error that names the cycle.
+// @evidence interaction-kinds-declare-taxonomy
 test('a cycle in the vocabulary kind tree is an error that names the cycle', () => {
   /** @param {string} parent */
   const k = (parent) => ({ label: 'K', line: 'solid', color: 'blue', description: 'k', class: 'none', direction: { control: 'none', data: 'none' }, parent });
@@ -123,6 +135,8 @@ test('a cycle in the vocabulary kind tree is an error that names the cycle', () 
   assert.match(cyc[0].message, /kind-a -> kind-b -> kind-c -> kind-a/);
 });
 
+// A vocabulary kind written before the taxonomy still works and is warned about not refused.
+// @evidence interaction-kinds-declare-taxonomy
 test('a vocabulary kind written before the taxonomy still works and is warned about not refused', () => {
   const r = analyzeSpec(spec({
     vocabulary: { relationshipKinds: { mirrors: { label: 'Mirrors', line: 'dotted', color: 'violet', dependency: true, description: 'Mirrors.' } } },
@@ -152,6 +166,8 @@ const graphSpec = (kind) => spec({
   ],
 });
 
+// Calls is a legacy kind: one warning names it there is no error and every verdict equals the one with invokes.
+// @evidence legacy-calls-behaves-as-invokes
 test('calls is a legacy kind: one warning names it there is no error and every verdict equals the one with invokes', () => {
   const legacy = analyzeSpec(graphSpec('calls'));
   const current = analyzeSpec(graphSpec('invokes'));
@@ -172,6 +188,8 @@ test('calls is a legacy kind: one warning names it there is no error and every v
 
 // ---- provenance -----------------------------------------------------------------------------------
 
+// A relationship states its provenance declared by default and queries expose it.
+// @evidence relationships-state-provenance-and-carried-data
 test('a relationship states its provenance declared by default and queries expose it', () => {
   const r = analyzeSpec(spec({
     components: [comp('a'), comp('b'), comp('c'), comp('d'), comp('e')],
@@ -192,6 +210,8 @@ test('a relationship states its provenance declared by default and queries expos
   assert.equal(componentGraph(model).get('b')?.[0].provenance, 'assumed');
 });
 
+// A provenance outside the five values is an error.
+// @evidence relationships-state-provenance-and-carried-data
 test('a provenance outside the five values is an error', () => {
   const r = analyzeSpec(spec({ components: [comp('a'), comp('b')], relationships: [rel('r1', 'imports', 'a', 'b', { provenance: 'guessed' })] }));
   assert.deepEqual(errorsOf(r).map((/** @type {any} */ d) => d.code), ['property.enum']);
@@ -205,6 +225,8 @@ const DATA = {
   events: [{ id: 'order-placed', name: 'Order placed' }],
 };
 
+// Carries may name records types and events.
+// @evidence relationships-state-provenance-and-carried-data
 test('carries may name records types and events', () => {
   const r = analyzeSpec(spec({
     components: [comp('a'), comp('b')], ...DATA,
@@ -214,6 +236,8 @@ test('carries may name records types and events', () => {
   assert.deepEqual(/** @type {any} */ (r.model).entities.get('flow').data.carries, ['order', 'order-dto', 'order-placed']);
 });
 
+// Carries that names a component or nothing is an error.
+// @evidence relationships-state-provenance-and-carried-data
 test('carries that names a component or nothing is an error', () => {
   /** @param {any} carries */
   const codes = (carries) => errorsOf(analyzeSpec(spec({ components: [comp('a'), comp('b')], ...DATA, relationships: [rel('flow', 'data-flow', 'a', 'b', { carries })] }))).map((/** @type {any} */ d) => d.code);
@@ -249,6 +273,8 @@ const CLASS_SPEC = spec({
   ],
 });
 
+// The class filter selects the edges of componentGraph and of dependencies.
+// @evidence structural-methods-select-by-dependency-class
 test('the class filter selects the edges of componentGraph and of dependencies', () => {
   const r = analyzeSpec(CLASS_SPEC);
   assert.deepEqual(errorsOf(r), []);
@@ -264,6 +290,8 @@ test('the class filter selects the edges of componentGraph and of dependencies',
   assert.deepEqual(dependencies(model, 'b', { classes: ['runtime'] }).map((d) => d.id), ['a']);
 });
 
+// Acyclic restricted to one class reports cycles of that class only and the kind-based behaviour is unchanged.
+// @evidence structural-methods-select-by-dependency-class
 test('acyclic restricted to one class reports cycles of that class only and the kind-based behaviour is unchanged', () => {
   const model = /** @type {any} */ (analyzeSpec(CLASS_SPEC).model);
   assert.equal(claimOf(model, 'acyclic-static').status, 'verified', 'one static edge');
@@ -274,12 +302,16 @@ test('acyclic restricted to one class reports cycles of that class only and the 
   assert.equal(claimOf(model, 'acyclic-none').status, 'violated', 'a->c, c->d, d->a close a cycle of class none');
 });
 
+// Classes combine with kinds as an intersection and a misspelt class cannot pass vacuously.
+// @evidence structural-methods-select-by-dependency-class
 test('classes combine with kinds as an intersection and a misspelt class cannot pass vacuously', () => {
   const model = /** @type {any} */ (analyzeSpec(CLASS_SPEC).model);
   assert.equal(claimOf(model, 'acyclic-intersection').status, 'verified', 'only a->b is both an imports and static, so the cycle through b->a is not followed');
   assert.match(claimOf(model, 'acyclic-intersection').scope, /kinds imports, invokes of class static/);
 });
 
+// No-relationship and reachable accept a class filter.
+// @evidence structural-methods-select-by-dependency-class
 test('no-relationship and reachable accept a class filter', () => {
   const model = /** @type {any} */ (analyzeSpec(CLASS_SPEC).model);
   assert.equal(claimOf(model, 'no-dependency-a-to-c').status, 'verified', 'a reaches c only by composes, whose class is none');
@@ -289,6 +321,8 @@ test('no-relationship and reachable accept a class filter', () => {
   assert.match(claimOf(model, 'no-none-a-to-c').scope, /of class none/);
 });
 
+// A misspelt class is inconclusive never verified.
+// @evidence structural-methods-select-by-dependency-class
 test('a misspelt class is inconclusive never verified', () => {
   const bad = claimOf(/** @type {any} */ (analyzeSpec(CLASS_SPEC).model), 'acyclic-misspelt');
   assert.equal(bad.status, 'inconclusive');
@@ -312,6 +346,8 @@ const CONNECTOR_SPEC = spec({
   events: [{ id: 'order-placed', name: 'Order placed' }],
 });
 
+// A producer a connector and two consumers contract to producer-to-consumer notifies naming the connector.
+// @evidence connector-contracts-to-notifies
 test('a producer a connector and two consumers contract to producer-to-consumer notifies naming the connector', () => {
   const r = analyzeSpec(CONNECTOR_SPEC);
   assert.deepEqual(errorsOf(r).filter((/** @type {any} */ d) => d.code !== 'property.enum'), [], 'the connector kind is the only thing a pre-M1 enum refuses');
@@ -326,6 +362,8 @@ test('a producer a connector and two consumers contract to producer-to-consumer 
   assert.equal(m[0].provenance, 'derived');
 });
 
+// The contracted graph hides the connector and shows notifies edges the uncontracted graph is unchanged.
+// @evidence connector-contracts-to-notifies
 test('the contracted graph hides the connector and shows notifies edges the uncontracted graph is unchanged', () => {
   const model = /** @type {any} */ (analyzeSpec(CONNECTOR_SPEC).model);
   const contracted = componentGraph(model, { contractConnectors: true });
@@ -336,6 +374,8 @@ test('the contracted graph hides the connector and shows notifies edges the unco
   assert.equal(componentGraph(model, { contractConnectors: true, classes: ['runtime'] }).get('producer')?.length, 0, 'notifies is class none');
 });
 
+// No mediated interaction exists without a declared connector element.
+// @evidence connector-contracts-to-notifies
 test('no mediated interaction exists without a declared connector element', () => {
   // The same specification with the bus an ordinary component: no contraction and no invented direct edge.
   const model = /** @type {any} */ (analyzeSpec(CONNECTOR_SPEC.replace('"kind": "connector"', '"kind": "component"')).model);
@@ -344,6 +384,8 @@ test('no mediated interaction exists without a declared connector element', () =
   assert.deepEqual(g.get('producer')?.map((e) => e.to), ['bus'], 'nothing is contracted, so nothing is hidden either');
 });
 
+// A publisher with no subscriber through the same connector is paired with nobody.
+// @evidence connector-contracts-to-notifies
 test('a publisher with no subscriber through the same connector is paired with nobody', () => {
   const text = spec({
     components: [comp('p'), comp('bus-1', { kind: 'connector' }), comp('bus-2', { kind: 'connector' }), comp('s')],
@@ -361,6 +403,8 @@ const leaf = (id) => ({ id, entityId: id, entityKind: 'component', label: id, sh
 /** @param {any[]} edges */
 const sceneOf = (edges) => /** @type {any} */ ({ viewId: 'x', projection: 'structural', legend: [], notes: [], nodes: ['a', 'b', 'c'].map(leaf), edges });
 
+// Layout orders components by static and runtime edges only.
+// @evidence layout-follows-dependency-classes
 test('layout orders components by static and runtime edges only', () => {
   assert.equal(isFlowEdge(edge('e', 'a', 'b', { dependencyClass: 'static' })), true);
   assert.equal(isFlowEdge(edge('e', 'a', 'b', { dependencyClass: 'runtime' })), true);
@@ -372,6 +416,8 @@ test('layout orders components by static and runtime edges only', () => {
   assert.deepEqual(edgesAt.get(null), [['a', 'b']]);
 });
 
+// An edge of class none against the dependency direction no longer changes the layered order.
+// @evidence layout-follows-dependency-classes
 test('an edge of class none against the dependency direction no longer changes the layered order', () => {
   const dep = edge('dep', 'a', 'b', { dependencyClass: 'runtime' });
   const dep2 = edge('dep2', 'b', 'c', { dependencyClass: 'runtime' });
@@ -387,6 +433,8 @@ test('an edge of class none against the dependency direction no longer changes t
   assert.deepEqual(withBack, xOf(sceneOf([dep, dep2, back])), 'deterministic');
 });
 
+// The structural projection marks each relationship edge with the class of its kind.
+// @evidence layout-follows-dependency-classes
 test('the structural projection marks each relationship edge with the class of its kind', () => {
   const text = spec({
     components: [comp('a'), comp('b'), comp('c')],

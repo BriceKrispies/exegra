@@ -26,6 +26,8 @@ function exegraModel() {
   return attachExtracted(model, readFacts(path.join(repoRoot, FACTS_PATH)));
 }
 
+// The scan finds the undeclared import and the claim reads undecided.
+// @evidence import-scan-checks-relationships #
 test('the import scan reads static, dynamic and builtin imports and ignores comments', () => {
   const text = [
     "import fs from 'node:fs';",

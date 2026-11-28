@@ -50,6 +50,8 @@ function interactionAt(/** @type {any} */ m, /** @type {string} */ cut, /** @typ
   return /** @type {any} */ (deriveModel(m, { cut })).interactions.find((/** @type {any} */ i) => i.from === from && i.to === to && i.kind === 'imports') ?? null;
 }
 
+// The fixture repository scenarios: add, remove, retarget, with per-cut before and after models and the equality with a derivation from scratch.
+// @evidence extracted-changes-propagate #
 test('the fixture repository starts clean: no import crosses the subsystems, and the claims hold', () => {
   const m = modelAt(copyRepo());
   assert.equal(extractionOf(m)?.edges.length, 2, 'a-one imports a-two, b-one imports b-two');

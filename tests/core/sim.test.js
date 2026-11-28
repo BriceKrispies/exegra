@@ -89,6 +89,8 @@ function loadModel(d) {
   return model;
 }
 
+// Identical inputs give deep-equal traces; reset and stepwise runs equal a single run.
+// @evidence simulation-deterministic #
 test('request/ack exchange between two machines with emitted events and after delays', () => {
   const model = loadModel(doc());
   const trace = runScenario(model, 'basic-exchange');

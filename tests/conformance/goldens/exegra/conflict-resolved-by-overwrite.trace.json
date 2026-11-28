@@ -4550,6 +4550,7 @@
       },
       "payload": {
        "caller": "http",
+       "code": "conflict",
        "current": "hx",
        "file": "spec",
        "requestId": 2
@@ -4637,6 +4638,7 @@
        "event": "ws-write-conflict",
        "payload": {
         "caller": "http",
+        "code": "conflict",
         "current": "hx",
         "file": "spec",
         "requestId": 2
@@ -4859,6 +4861,7 @@
     "id": "ws-write-conflict",
     "payload": {
      "caller": "http",
+     "code": "conflict",
      "current": "hx",
      "file": "spec",
      "requestId": 2

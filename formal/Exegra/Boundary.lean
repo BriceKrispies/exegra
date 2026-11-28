@@ -31,9 +31,13 @@ projections of the two traces it returns.
   a step correspondence (the certificate: which concrete step realises each abstract boundary step,
   and which concrete steps are stutters of hidden events) or the first boundary counterexample.
 
+* **Up to commutation** (WG-5734): `commMatch` compares the two boundary traces up to swaps of adjacent
+  independent steps (`Comm`); `commMatch_sound` makes what it accepts a reordering that agrees position
+  by position, and `commMatch_of_rel2` keeps every verdict of the comparison as sequences.
+
 What is not here: a theorem that the composition of two separately elaborated systems is the system
-of the composed input (WG-5685 develops `Sys.compose`); refinement over every interleaving (the check
-compares the deterministic scheduler's runs; `exegra prove` explores interleavings of one system).
+of the composed input (WG-5685 develops `Sys.compose`). Refinement over every interleaving is
+`Exegra/BoundaryExplore.lean`.
 -/
 
 namespace Exegra.Boundary
@@ -206,6 +210,145 @@ theorem Agrees.hide_more (he : ∀ x y, r x y = true → ev x = ev y) (H H' : Li
 
 end Agrees
 
+/-! ### Comparison up to the order of independent simultaneous steps (WG-5734) -/
+
+section Comm
+
+variable {α β : Type} (ind : α → α → Bool)
+
+/-- One swap of two adjacent steps that `ind` says are independent. -/
+inductive Swap : List α → List α → Prop
+  | here {x y : α} {xs : List α} : ind x y = true → Swap (x :: y :: xs) (y :: x :: xs)
+  | cons {x : α} {xs ys : List α} : Swap xs ys → Swap (x :: xs) (x :: ys)
+
+/-- Equivalence up to commutation of adjacent independent steps (a Mazurkiewicz trace, read one
+way): any number of swaps. -/
+inductive Comm : List α → List α → Prop
+  | refl (xs : List α) : Comm xs xs
+  | step {xs ys zs : List α} : Swap ind xs ys → Comm ys zs → Comm xs zs
+
+variable {ind}
+
+theorem Comm.trans {xs ys zs : List α} (h₁ : Comm ind xs ys) (h₂ : Comm ind ys zs) : Comm ind xs zs := by
+  induction h₁ with
+  | refl => exact h₂
+  | step hs _ ih => exact .step hs (ih h₂)
+
+theorem Comm.cons (x : α) {xs ys : List α} (h : Comm ind xs ys) : Comm ind (x :: xs) (x :: ys) := by
+  induction h with
+  | refl => exact .refl _
+  | step hs _ ih => exact .step (.cons hs) ih
+
+theorem Comm.single {xs ys : List α} (h : Swap ind xs ys) : Comm ind xs ys := .step h (.refl _)
+
+variable (ind)
+
+/-- Bring the first step that satisfies `p` to the front, past steps that are each independent of it:
+the step and the rest, or `none` when no step satisfies `p` or a step before it is dependent on it. -/
+def pickFront (p : α → Bool) : List α → Option (α × List α)
+  | [] => none
+  | a :: as =>
+    if p a then some (a, as)
+    else match pickFront p as with
+      | some (y, rest) => if ind a y then some (y, a :: rest) else none
+      | none => none
+
+variable {ind}
+
+/-- **What `pickFront` picks can be moved to the front**: the list is the picked step followed by the
+rest, up to commutation of independent steps. -/
+theorem pickFront_comm {p : α → Bool} : ∀ {as : List α} {y : α} {rest : List α},
+    pickFront ind p as = some (y, rest) → p y = true ∧ Comm ind as (y :: rest)
+  | [], _, _, h => by simp [pickFront] at h
+  | a :: as, y, rest, h => by
+    unfold pickFront at h
+    by_cases hp : p a = true
+    · simp only [hp, ite_true, Option.some.injEq, Prod.mk.injEq] at h
+      obtain ⟨rfl, rfl⟩ := h
+      exact ⟨hp, .refl _⟩
+    · simp only [hp, Bool.false_eq_true, ite_false] at h
+      split at h
+      · rename_i y' rest' hrec
+        by_cases hi : ind a y' = true
+        · simp only [hi, ite_true, Option.some.injEq, Prod.mk.injEq] at h
+          obtain ⟨rfl, rfl⟩ := h
+          obtain ⟨hpy, hc⟩ := pickFront_comm hrec
+          exact ⟨hpy, (Comm.cons a hc).trans (Comm.single (.here hi))⟩
+        · simp [hi] at h
+      · cases h
+
+variable (ind)
+
+/-- Match a concrete list against an abstract one up to the order of independent steps: each concrete
+step takes the first abstract step related to it by `r`, moved to the front past independent steps.
+The reordered abstract list, or the position of the first concrete step that has no such partner (or
+the length of the concrete list, when abstract steps are left over). -/
+def commMatch (r : α → β → Bool) : List α → List β → Nat → Except Nat (List α)
+  | [], [], _ => .ok []
+  | as, c :: cs, i =>
+    match pickFront ind (fun a => r a c) as with
+    | some (y, rest) => (commMatch r rest cs (i + 1)).map (y :: ·)
+    | none => .error i
+  | _ :: _, [], i => .error i
+
+variable {ind}
+
+/-- **The comparison up to commutation is sound**: a reordering it returns is a reordering of the
+abstract list by swaps of independent adjacent steps, and it is related to the concrete list position by
+position by `r`. -/
+theorem commMatch_sound {r : α → β → Bool} : ∀ (cs : List β) (as : List α) (i : Nat) (as' : List α),
+    commMatch ind r as cs i = .ok as' → Comm ind as as' ∧ Rel2 r as' cs
+  | [], [], _, as', h => by
+    simp only [commMatch, Except.ok.injEq] at h
+    subst h
+    exact ⟨.refl _, trivial⟩
+  | [], _ :: _, _, _, h => by simp [commMatch] at h
+  | c :: cs, as, i, as', h => by
+    cases hp : pickFront ind (fun a => r a c) as with
+    | none => simp [commMatch, hp] at h
+    | some yr =>
+      obtain ⟨y, rest⟩ := yr
+      cases hm : commMatch ind r rest cs (i + 1) with
+      | error e => simp [commMatch, hp, hm, Except.map] at h
+      | ok bs =>
+        simp only [commMatch, hp, hm, Except.map, Except.ok.injEq] at h
+        subst h
+        obtain ⟨hpy, hc⟩ := pickFront_comm hp
+        obtain ⟨hc', hr⟩ := commMatch_sound cs rest (i + 1) bs hm
+        exact ⟨hc.trans (Comm.cons y hc'), hpy, hr⟩
+
+/-- **The comparison up to commutation keeps every verdict of the comparison as sequences**: lists
+related position by position are matched, unreordered. -/
+theorem commMatch_of_rel2 {r : α → β → Bool} : ∀ (as : List α) (cs : List β) (i : Nat),
+    Rel2 r as cs → commMatch ind r as cs i = .ok as
+  | [], [], _, _ => by simp [commMatch]
+  | a :: as, c :: cs, i, ⟨h1, h2⟩ => by
+    simp only [commMatch, pickFront, h1, ite_true]
+    rw [commMatch_of_rel2 as cs (i + 1) h2]
+    rfl
+  | [], _ :: _, _, h => h.elim
+  | _ :: _, [], _, h => h.elim
+
+/-- With no independent pair, the comparison up to commutation is the comparison as sequences. -/
+theorem commMatch_none_indep {r : α → β → Bool} (hn : ∀ x y, ind x y = false) :
+    ∀ (as : List α) (cs : List β) (i : Nat) (as' : List α), commMatch ind r as cs i = .ok as' →
+      as' = as ∧ Rel2 r as cs := by
+  intro as cs i as' h
+  obtain ⟨hc, hr⟩ := commMatch_sound cs as i as' h
+  have hs0 : ∀ {xs ys : List α}, Swap ind xs ys → False := by
+    intro xs ys hs
+    induction hs with
+    | here hi => simp [hn] at hi
+    | cons _ ih => exact ih
+  have : as = as' := by
+    cases hc with
+    | refl => rfl
+    | step hs _ => exact (hs0 hs).elim
+  subst this
+  exact ⟨rfl, hr⟩
+
+end Comm
+
 /-! ### Observations of a trace (executable) -/
 
 /-- What a boundary step shows: its index in the trace, kind, delivered event, time and payload. -/
@@ -300,8 +443,12 @@ open Encode in
 /-- `{abstract, concrete, hidden, timeScale, environment}`: run both engine inputs, project both traces
 by hiding `hidden`, and compare. `environment` lists the machines both runs share (outside the region
 being compared), whose final configurations must be equal. The reply is
-`{verdict: "certificate", correspondence, stutters, ...}` or `{verdict: "counterexample", at, reason,
-abstract, concrete, ...}`. -/
+`{verdict: "certificate", comparison, correspondence, stutters, ...}` or `{verdict: "counterexample", at,
+reason, abstract, concrete, ...}`. `independent` (optional) lists pairs of boundary events whose
+simultaneous steps may appear in either order: when the traces differ as sequences, they are compared up to
+the commutation of such steps (`commMatch`, sound by `commMatch_sound`), and a certificate says which
+comparison gave it (`sequence` or `commutation`); the correspondence then pairs each concrete step with the
+abstract step it was matched to. -/
 def refineValue (args : Value) : Except String String := do
   let ai ← match field? args "abstract" with
     | some v => pure v
@@ -332,29 +479,41 @@ def refineValue (args : Value) : Except String String := do
       ("abstractStep", match ab[k]? with | some x => obsJson x | none => .null),
       ("concreteStep", match cb[k]? with | some x => obsJson x | none => .null),
       ("agreedPrefix", a ((ab.take k).map obsJson))] ++ extra ++ common))
-  match zipCheck (stepMatch scale) ab cb 0 with
-  | some k =>
-    let reason := match ab[k]?, cb[k]? with
-      | none, _ => "concrete-longer"
-      | _, none => "abstract-longer"
-      | some x, some y =>
-        if x.event != y.event then "event" else if x.kind != y.kind then "kind"
-        else if !veq x.payload y.payload then "payload" else "time"
-    pure (cex k reason [])
-  | none =>
+  -- Pairs of boundary events declared independent (their machines share no consumer): two simultaneous
+  -- steps of such events may appear in either order (WG-5734).
+  let pairs : List (String × String) := (items (field? args "independent")).filterMap fun v =>
+    match v with
+    | .arr _ [.str x, .str y] => some (x, y)
+    | _ => none
+  let ind := fun (x y : Obs) => x.time == y.time && x.event != y.event &&
+    pairs.any (fun (p, q) => (p == x.event && q == y.event) || (p == y.event && q == x.event))
+  let verdictOf (ab' : List Obs) (comparison : String) : String :=
     let oa := str? (field? at_ "outcome")
     let oc := str? (field? ct "outcome")
-    if oa != oc then pure (cex ab.length "outcome" [])
+    if oa != oc then cex ab.length "outcome" []
     else match machineMismatch env at_ ct with
-      | some m => pure (cex ab.length "environment" [("machine", s m)])
+      | some m => cex ab.length "environment" [("machine", s m)]
       | none =>
-        pure (Json.write (o ([("verdict", s "certificate"),
-          ("correspondence", a ((ab.zip cb).map (fun (x, y) =>
+        Json.write (o ([("verdict", s "certificate"), ("comparison", s comparison),
+          ("correspondence", a ((ab'.zip cb).map (fun (x, y) =>
             o [("abstractIndex", nat x.index), ("concreteIndex", nat y.index), ("event", s x.event),
                ("time", .num x.time)]))),
           ("stutters", a stutters),
           ("abstractHidden", a ((ao.filter (fun x => H.contains x.event)).map (fun x => nat x.index)))]
-          ++ common)))
+          ++ common))
+  match zipCheck (stepMatch scale) ab cb 0 with
+  | some k =>
+    match commMatch ind (stepMatch scale) ab cb 0 with
+    | .ok ab' => pure (verdictOf ab' "commutation")
+    | .error _ =>
+      let reason := match ab[k]?, cb[k]? with
+        | none, _ => "concrete-longer"
+        | _, none => "abstract-longer"
+        | some x, some y =>
+          if x.event != y.event then "event" else if x.kind != y.kind then "kind"
+          else if !veq x.payload y.payload then "payload" else "time"
+      pure (cex k reason [])
+  | none => pure (verdictOf ab "sequence")
 
 /-! ### Axioms: only the standard ones -/
 
@@ -397,5 +556,17 @@ def refineValue (args : Value) : Except String String := do
 /-- info: 'Exegra.Boundary.Agrees.hide_more' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Boundary.Agrees.hide_more
+
+/-- info: 'Exegra.Boundary.commMatch_sound' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms Exegra.Boundary.commMatch_sound
+
+/-- info: 'Exegra.Boundary.commMatch_of_rel2' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms Exegra.Boundary.commMatch_of_rel2
+
+/-- info: 'Exegra.Boundary.pickFront_comm' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms Exegra.Boundary.pickFront_comm
 
 end Exegra.Boundary

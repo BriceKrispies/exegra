@@ -237,6 +237,31 @@ export function dependencies(model, id, opts = {}) {
  * @param {Model} model @param {any} selector @param {{exact?: boolean}} [opts]
  * @returns {Entity[]}
  */
+/**
+ * The subjects of a claim: those it declares, or, when it declares none, the entities its evaluation's parameters
+ * name (WG-5705): every component a selector parameter selects and every id of an id-list parameter other than a cut,
+ * in the order the parameters are written. A structural claim that checks named components names its subjects there,
+ * so declaring them again is redundant.
+ * @param {Model} model @param {Entity} claim @param {Record<string, {type: string}>} [params] the method's parameter
+ *   types (src/core/claim-methods.js), passed in by callers that know the registry
+ * @returns {string[]}
+ */
+export function claimSubjects(model, claim, params) {
+  const declared = Array.isArray(claim.data.subjects) ? claim.data.subjects.filter((/** @type {any} */ s) => typeof s === 'string') : null;
+  if (declared && declared.length) return declared;
+  const ev = claim.data.evaluate;
+  if (!params || !ev || typeof ev !== 'object') return declared ?? [];
+  /** @type {string[]} */
+  const out = [];
+  for (const [name, value] of Object.entries(ev)) {
+    const type = params[name]?.type;
+    if (!type) continue;
+    if (type === 'selector') out.push(...selectComponents(model, value).map((c) => c.id));
+    else if (type.startsWith('ids:') && type !== 'ids:cut') out.push(...[].concat(value).filter((x) => typeof x === 'string'));
+  }
+  return [...new Set(out)];
+}
+
 export function selectComponents(model, selector, opts = {}) {
   const all = model.byKind.component ?? [];
   /** @type {(c: Entity) => boolean} */

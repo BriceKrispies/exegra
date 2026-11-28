@@ -39,6 +39,8 @@ function sameDocument(/** @type {string} */ actual, /** @type {string} */ expect
   assert.equal(hashOf(actual), hashOf(expected));
 }
 
+// The manifest lists every part, no part is over 120 KB and none in parts/ is unlisted.
+// @evidence self-specification-split-by-area
 test('the self-specification is a manifest of part files none over 120 KB all listed and none stray', () => {
   assert.equal(resolved.manifest, true);
   const { parts } = readManifest(manifestText, MANIFEST);
@@ -49,6 +51,8 @@ test('the self-specification is a manifest of part files none over 120 KB all li
   assert.ok(Buffer.byteLength(manifestText) < 32 * 1024, 'the manifest is small');
 });
 
+// Splitting the self-specification and assembling the parts gives the same semantic hash and document, with every comment kept.
+// @evidence self-specification-split-by-area
 test('splitting a specification keeps its semantic hash and its content and every comment of an entity', () => {
   const text = resolved.text;
   const { manifest, parts, table } = splitSpec(text);
@@ -64,6 +68,8 @@ test('splitting a specification keeps its semantic hash and its content and ever
   assert.ok(Object.keys(table).length >= 20);
 });
 
+// A transaction's new entities are written to the computed parts, an edit stays in its part, and undo restores every part byte for byte.
+// @evidence self-specification-split-by-area
 test('apply places a new component and claim and evidence and relationship in the part its placement names and undo and redo restore the text exactly', () => {
   const project = new Project({ name: 'exegra', specText: resolved.text, layoutText: null });
   const hashBefore = project.semanticHash;
@@ -107,6 +113,8 @@ test('apply places a new component and claim and evidence and relationship in th
   assert.equal(project.specText, edited);
 });
 
+// An entity the table does not name goes to the section's default part.
+// @evidence self-specification-split-by-area
 test('a new entity with no rule goes to its default part', () => {
   const project = new Project({ name: 'exegra', specText: resolved.text, layoutText: null });
   const result = project.apply([
@@ -120,6 +128,8 @@ test('a new entity with no rule goes to its default part', () => {
   assert.deepEqual(where('zz-t-claim2'), ['claims-app-ui.jsonc']);
 });
 
+// A source location names the part file and the line in it.
+// @evidence self-specification-split-by-area
 test('an entity is located in the part file and the line that hold it', () => {
   const offset = resolved.text.indexOf('"id": "transactions"');
   assert.ok(offset > 0);
@@ -131,6 +141,8 @@ test('an entity is located in the part file and the line that hold it', () => {
   assert.equal(resolveSpecText(path.join(ROOT, 'specs', 'benchmark', 'spec.jsonc'), '{}').locate(1), null);
 });
 
+// The guard refuses a Read, Edit, Write, Grep or shell read of a part file or the parts directory.
+// @evidence self-specification-split-by-area
 test('the guard refuses the part files and the directory that holds them and leaves the command line open', () => {
   assert.deepEqual(partDirs(ROOT), ['specs/exegra/parts']);
   const call = (/** @type {string} */ tool_name, /** @type {any} */ tool_input) => decide({ tool_name, tool_input }, { root: ROOT }).allow;
@@ -147,6 +159,8 @@ test('the guard refuses the part files and the directory that holds them and lea
   assert.equal(call('Grep', { pattern: 'x', path: path.join(ROOT, 'src') }), true);
 });
 
+// The tree stamp covers every part file.
+// @evidence self-specification-split-by-area
 test('the tree stamp covers the part files', () => {
   const files = stampedFiles(ROOT);
   for (const p of resolved.parts) assert.ok(files.includes(`specs/exegra/parts/${path.basename(p.file)}`), path.basename(p.file));

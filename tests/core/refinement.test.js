@@ -109,6 +109,8 @@ function assertFailsAt(r, reason, stepIndex, transition) {
   assert.ok(cx.trace.slice(0, -1).every((/** @type {any} */ s) => s.ok));
 }
 
+// An implementation of a lease with an internal renewing state mapped by stutter refines its model: verified, with two matched steps and two stutters.
+// @evidence refines-checks-machine-refinement
 test('a refinement with an internal state mapped by stutter is verified on the trace', () => {
   const r = result(leaseSpec());
   assert.equal(r.status, 'verified', r.explanation);
@@ -118,6 +120,8 @@ test('a refinement with an internal state mapped by stutter is verified on the t
   assert.ok(r.involved.includes('lease-model') && r.involved.includes('lease-cycle'));
 });
 
+// acquire and release at the same time: the engine order refines the model, release first reaches a stutter that writes the mapped holder; violated with the order [release].
+// @evidence refines-checks-machine-refinement
 test('a refinement that holds on the scenario trace but fails under another delivery order is violated at that step', () => {
   // acquire and release arrive at the same time. The engine delivers acquire first, and that trace refines the
   // model; delivered first, release reaches li-early-release, which writes the mapped holder in a stutter.
@@ -135,6 +139,8 @@ test('a refinement that holds on the scenario trace but fails under another deli
   assert.match(r.explanation, /the engine's order does not reach it/);
 });
 
+// With a cap of 2 configurations the exploration of the lease reports incomplete.
+// @evidence refines-checks-machine-refinement
 test('an exploration that reaches its configuration cap is incomplete', () => {
   const model = load(leaseSpec());
   const x = exploreRefinement(model, /** @type {any} */ (model.entities.get('lease-impl')), 'lease-cycle', { stateCap: 2 });
@@ -142,6 +148,8 @@ test('an exploration that reaches its configuration cap is incomplete', () => {
   assert.match(/** @type {any} */ (x).reason, /cap of 2 configurations/);
 });
 
+// With maxSteps 2 the exploration reaches the step limit with entries pending: inconclusive.
+// @evidence refines-checks-machine-refinement
 test('an exploration that reaches the step limit is inconclusive and never verified', () => {
   const spec = leaseSpec();
   /** @type {any} */ (spec.scenarios[0]).maxSteps = 2;
@@ -150,6 +158,8 @@ test('an exploration that reaches the step limit is inconclusive and never verif
   assert.match(r.explanation, /step limit/);
 });
 
+// The lease implementation ignores release in li-renewing while the model releases from lm-held: violated at that step (ignored-input), strength refuted, with acquire, renew and the ignored release as the counterexample trace.
+// @evidence refines-checks-machine-refinement
 test('an implementation that ignores release is refused', () => {
   // docs/assessment/2026-11-26/demos/refines-ignore.mjs: li-renewing ignores release, which the model's lm-held
   // accepts from the holder, so the implementation holds the lease forever and never grants b.
@@ -168,6 +178,8 @@ test('an implementation that ignores release is refused', () => {
   assert.deepEqual(r.counterexample.trace.map((/** @type {any} */ s) => s.transition), ['li-acquire', 'li-renew', null]);
 });
 
+// A step whose target maps to another model state than the model transition enters is violated at that step (model-to).
+// @evidence refines-checks-machine-refinement
 test('refines is violated by a step to the wrong model state', () => {
   const spec = leaseSpec();
   spec.behaviors[1].states.push({ id: 'li-limbo', name: 'Limbo', ignores: ['acquire', 'renew', 'renewed', 'release'] });
@@ -176,6 +188,8 @@ test('refines is violated by a step to the wrong model state', () => {
   assertFailsAt(result(spec), 'model-to', 0, 'li-acquire');
 });
 
+// A release by a client that does not hold the lease is violated at that step (model-guard-false).
+// @evidence refines-checks-machine-refinement
 test('refines is violated by a step whose model guard is false', () => {
   const spec = leaseSpec();
   spec.scenarios[0].steps[3].payload = { client: 'b' };
@@ -184,6 +198,8 @@ test('refines is violated by a step whose model guard is false', () => {
   assert.equal(r.counterexample.trace.length, 4);
 });
 
+// An implementation step that sets a mapped variable differently from the model is violated at that step (post-variables).
+// @evidence refines-checks-machine-refinement
 test('refines is violated by a wrong mapped post-variable', () => {
   const spec = leaseSpec();
   implTransition(spec, 'li-acquire').effects[1].to = 'gen + 2';
@@ -192,12 +208,16 @@ test('refines is violated by a wrong mapped post-variable', () => {
   assert.match(r.counterexample.summary, /"epoch" maps to 2, but model transition "lm-acquire" makes it 1/);
 });
 
+// A step that moves the mapped state but is mapped to a stutter is violated at that step (stutter-state).
+// @evidence refines-checks-machine-refinement
 test('refines is violated by a non-stutter step mapped to null', () => {
   const spec = leaseSpec();
   /** @type {any} */ (spec.behaviors[1].refinement.transitions)['li-release'] = null;
   assertFailsAt(result(spec), 'stutter-state', 4, 'li-release');
 });
 
+// An implementation whose initial state maps to another state than the model initial state is violated on the initial configuration (initial-state).
+// @evidence refines-checks-machine-refinement
 test('refines is violated by a wrong initial state', () => {
   const spec = leaseSpec();
   spec.behaviors[1].initial = 'li-held';
@@ -205,12 +225,16 @@ test('refines is violated by a wrong initial state', () => {
   assertFailsAt(result(spec), 'initial-state', -1, null);
 });
 
+// An implementation step that does not emit the event the model transition emits is violated at that step (emits).
+// @evidence refines-checks-machine-refinement
 test('refines is violated when emitted events differ from the model', () => {
   const spec = leaseSpec();
   implTransition(spec, 'li-acquire').effects.pop();
   assertFailsAt(result(spec), 'emits', 0, 'li-acquire');
 });
 
+// A step mapped to the otherwise transition of a model group is violated when an earlier guarded transition would fire (model-not-chosen), and verified when that guard is false.
+// @evidence refines-checks-machine-refinement # refines and the ordering rule agree
 test('refines and the ordering rule agree: the model transition is the one declaration order chooses, otherwise last', () => {
   // The model gets an earlier guarded acquire for client "a"; lm-acquire becomes the fall-through (otherwise).
   const ordered = () => {
@@ -234,6 +258,8 @@ test('refines and the ordering rule agree: the model transition is the one decla
 /** @param {any} spec */
 const errorCodes = (spec) => analyzeSpec(JSON.stringify(spec)).diagnostics.filter((d) => d.severity === 'error').map((d) => d.code);
 
+// A refines naming a state, a refines on a model-level machine and a refinement chain are errors (ref.kind, behavior.refines-model-level, behavior.refines-chain).
+// @evidence refinement-mappings-validated # validation refuses a refines that names a non-behavior
 test('validation refuses a refines that names a non-behavior, a model-level refiner and a chain', () => {
   const notBehavior = leaseSpec();
   notBehavior.behaviors[1].refines = 'lm-free';
@@ -251,6 +277,8 @@ test('validation refuses a refines that names a non-behavior, a model-level refi
   assert.ok(errorCodes(chain).includes('behavior.refines-chain'));
 });
 
+// Unknown states, transitions and variables on either side, and unmapped implementation states, transitions and model variables, are errors.
+// @evidence refinement-mappings-validated # validation refuses mappings with unknown or missing states
 test('validation refuses mappings with unknown or missing states, transitions and variables', () => {
   const unknown = leaseSpec();
   const m = /** @type {any} */ (unknown.behaviors[1].refinement);
@@ -376,17 +404,23 @@ function crossSpec({ direct = false, checksRevocation = true } = {}) {
   };
 }
 
+// An implementation that sets a timer on acquire and expires when it fires refines a model that sets a timer for the same event: verified.
+// @evidence refines-checks-machine-refinement
 test('a timer the implementation sets and receives refines the same timer of the model', () => {
   const r = result(timerSpec());
   assert.equal(r.status, 'verified', r.explanation);
   assert.match(r.explanation, /2 steps \(2 matched/);
 });
 
+// When the model transition sets no timer, the implementation timer is not compared: verified.
+// @evidence refines-checks-machine-refinement
 test('a timer the model does not set is internal to the implementation', () => {
   const r = result(timerSpec({ modelTimer: false }));
   assert.equal(r.status, 'verified', r.explanation);
 });
 
+// A timer for another event than the model timer is violated at the step that sets it (timers).
+// @evidence refines-checks-machine-refinement
 test('refines is violated when the implementation timer emits another event than the model timer', () => {
   const r = result(timerSpec({ implTimerEvent: 'lease-other' }));
   assert.equal(r.status, 'violated', r.explanation);
@@ -395,17 +429,23 @@ test('refines is violated when the implementation timer emits another event than
   assert.equal(r.counterexample.trace.at(-1).transition, 'li-acquire');
 });
 
+// A model guard reading rev-model.revoked is evaluated through the refinement mapping of rev-impl, which runs in its place: verified.
+// @evidence refines-checks-machine-refinement
 test('a model guard reading another behavior is evaluated through the machine that refines it', () => {
   const r = result(crossSpec());
   assert.equal(r.status, 'verified', r.explanation);
   assert.match(r.explanation, /2 steps \(2 matched/);
 });
 
+// A model guard reading a behavior that runs in the scenario reads its machine directly: verified.
+// @evidence refines-checks-machine-refinement
 test('a model guard reading another behavior is evaluated on that behavior when it runs itself', () => {
   const r = result(crossSpec({ direct: true }));
   assert.equal(r.status, 'verified', r.explanation);
 });
 
+// An implementation that accepts after revocation is violated where the model guard reading the other behavior is false (model-guard-false).
+// @evidence refines-checks-machine-refinement
 test('refines is violated when a model guard reading another behavior is false', () => {
   const r = result(crossSpec({ checksRevocation: false }));
   assert.equal(r.status, 'violated', r.explanation);
@@ -478,6 +518,8 @@ function scaledSpec({ lifetimeMs = 900000, presentAt = 840000, timeScale = /** @
   };
 }
 
+// A model in one-minute ticks and an implementation in milliseconds with timeScale 60000 agree at real timings, inside and past the lifetime: verified.
+// @evidence refines-checks-machine-refinement
 test('a tick-based model and a millisecond implementation at real timings agree through the time scale', () => {
   const r = result(scaledSpec());
   assert.equal(r.status, 'verified', r.explanation);
@@ -486,6 +528,8 @@ test('a tick-based model and a millisecond implementation at real timings agree 
   assert.equal(result(scaledSpec({ presentAt: 960000 })).status, 'verified');
 });
 
+// An implementation timer with a run-time delay refines a tick-based model with a matching simulated delay and is violated with a disagreeing one.
+// @evidence run-time-timer-delays # an implementation timer whose delay is read at run time is simulated with its simulate delay
 test('an implementation timer whose delay is read at run time is simulated with its simulate delay and still refines the model', () => {
   const spec = scaledSpec();
   const impl = /** @type {any} */ (spec.behaviors[1]);
@@ -499,6 +543,8 @@ test('an implementation timer whose delay is read at run time is simulated with 
   assert.equal(result(spec).status, 'violated');
 });
 
+// An implementation that accepts 16 minutes after issue is violated where the model guard over the scaled time is false (model-guard-false).
+// @evidence refines-checks-machine-refinement
 test('refines is violated when the implementation accepts past the scaled lifetime', () => {
   const r = result(scaledSpec({ lifetimeMs: 1200000, presentAt: 960000 }));
   assert.equal(r.status, 'violated', r.explanation);
@@ -507,6 +553,8 @@ test('refines is violated when the implementation accepts past the scaled lifeti
   assert.equal(r.counterexample.trace.at(-1).transition, 'lk-accept-i');
 });
 
+// The same run without timeScale is violated: the model timer delay is compared in raw trace units (timers).
+// @evidence refines-checks-machine-refinement
 test('without the time scale the model reads milliseconds as ticks and the same run is violated', () => {
   const r = result(scaledSpec({ timeScale: null }));
   assert.equal(r.status, 'violated', r.explanation);
@@ -514,6 +562,8 @@ test('without the time scale the model reads milliseconds as ticks and the same 
   assert.equal(r.counterexample.reason, 'timers');
 });
 
+// A timeScale of 0 or below is the error refinement.time-scale.
+// @evidence refinement-mappings-validated
 test('validation refuses a time scale that is not a positive number', () => {
   for (const bad of [0, -1000]) {
     assert.ok(errorCodes(scaledSpec({ timeScale: /** @type {any} */ (bad) })).includes('refinement.time-scale'), String(bad));
@@ -578,25 +628,35 @@ function assertDelayFails(r, reason) {
   assert.equal(r.counterexample.trace.at(-1).transition, 'tk-start-i');
 }
 
+// A model emit 5 ticks later, realised by an implementation emit 5000 ms later with timeScale 1000, refines it: verified.
+// @evidence refines-checks-machine-refinement
 test('a delayed emit of the model is realised by a delayed emit at the scaled delay', () => {
   const r = result(delaySpec());
   assert.equal(r.status, 'verified', r.explanation);
   assert.match(r.explanation, /2 steps \(2 matched/);
 });
 
+// A delayed emit at another delay than the model's scaled delay is violated at that step (emits).
+// @evidence refines-checks-machine-refinement
 test('refines is violated when the delayed emit realising a delayed emit has another delay', () => {
   assertDelayFails(result(delaySpec({ after: 4000 })), 'emits');
 });
 
+// A delayed emit of another event than the model's delayed emit is violated at that step (emits).
+// @evidence refines-checks-machine-refinement
 test('refines is violated when the delayed emit realising a delayed emit emits another event', () => {
   assertDelayFails(result(delaySpec({ event: 'other' })), 'emits');
 });
 
+// A timer with the model's event and scaled delay, in place of the model's delayed emit, is violated at that step (emits): a timer fires at its own machine, not at the receivers.
+// @evidence refines-checks-machine-refinement
 test('refines is violated when a timer stands in for a delayed emit of the model', () => {
   // The timer has the model's event and delay, but fires it at its own machine; the receivers never get it.
   assertDelayFails(result(delaySpec({ impl: 'timer' })), 'emits');
 });
 
+// An undelayed emit where the model delays it is violated at that step (emits).
+// @evidence refines-checks-machine-refinement
 test('refines is violated when a delayed emit of the model is emitted at once', () => {
   assertDelayFails(result(delaySpec({ impl: 'emit' })), 'emits');
 });

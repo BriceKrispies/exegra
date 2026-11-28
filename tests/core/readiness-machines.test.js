@@ -20,6 +20,8 @@ function broken(from, to) {
 }
 const readyCodes = (text) => analyzeSpec(text).diagnostics.filter((d) => d.code.startsWith('ready.')).map((d) => d.code);
 
+// The fixed fixture machine has no error and no readiness diagnostic.
+// @evidence implementation-machine-readiness-rules
 test('the fixed implementation-level machine has no readiness diagnostic and no error', () => {
   const a = analyzeSpec(FIXED);
   assert.deepEqual(a.diagnostics.filter((d) => d.severity === 'error'), []);
@@ -51,6 +53,8 @@ const RULES = [
 ];
 
 for (const [code, what, from, to] of RULES) {
+  // Twenty-one tests, one per ready.* code: the fixture machines with one deliberate break give exactly that one error.
+  // @evidence implementation-machine-readiness-rules # readiness rule ready
   test(`readiness rule ${code}: ${what} gives exactly that one error`, () => {
     const a = analyzeSpec(broken(from, to));
     const ready = a.diagnostics.filter((d) => d.code.startsWith('ready.'));
@@ -60,6 +64,8 @@ for (const [code, what, from, to] of RULES) {
   });
 }
 
+// A machine that does not create records reports nothing for a required record field it does not hold; creating, it reports nothing once that field is optional.
+// @evidence implementation-machine-readiness-rules
 test('a non-creating machine leaves the required fields it does not hold to whoever creates the record', () => {
   // "label" of tally-rec is required and not held by the tally machine, which does not create records.
   assert.deepEqual(readyCodes(FIXED), []);
@@ -67,6 +73,8 @@ test('a non-creating machine leaves the required fields it does not hold to whoe
   assert.deepEqual(readyCodes(broken('"state": "phase",', '"state": "phase", "creates": true,').replace('{ "name": "label", "type": "string" }', '{ "name": "label", "type": "string", "optional": true }')), []);
 });
 
+// Without storage.fields a variable is held in the field of its name, the state in field "state"; an enum whose values are the state ids needs no stateValues.
+// @evidence implementation-machine-readiness-rules # storage fields default to the field of the variable name
 test('storage fields default to the field of the variable name and the state to field "state"', () => {
   // The session machine declares no mapping: count is held in "count", the state in "state".
   assert.deepEqual(readyCodes(broken('{ "name": "count", "type": "u32" }, ', '')), ['ready.storage-variable-unmapped']);
@@ -75,6 +83,8 @@ test('storage fields default to the field of the variable name and the state to 
   assert.deepEqual(readyCodes(broken('"values": ["open", "shut"]', '"values": ["t-open", "t-shut"]').replace(', "stateValues": { "t-open": "open", "t-shut": "shut" }', '')), []);
 });
 
+// A variable fits an optional field of its repr and a declared id type over its repr; mapping a variable to the key field is refused.
+// @evidence implementation-machine-readiness-rules # a variable fits a field of its repr
 test('a variable fits a field of its repr, of a declared type over its repr, or an optional one', () => {
   assert.deepEqual(readyCodes(broken('{ "name": "sum", "type": "u16" }', '{ "name": "sum", "type": "u16", "optional": true }')), []);
   assert.deepEqual(readyCodes(broken('"fields": { "total": "sum" }', '"fields": { "total": "tid" }')), ['ready.storage-field-unknown']);
@@ -88,14 +98,20 @@ test('type names resolve as built-ins, declared types, list<T> and option<T>', (
   assert.ok(!typeResolves(m, 'int') && !typeResolves(m, 'list<int>') && !typeResolves(m, undefined));
 });
 
+// An unkeyed implementation machine with storage and no instances has no readiness error.
+// @evidence implementation-machine-readiness-rules # storage alone
 test('storage alone, without instances, says where an unkeyed implementation machine is held', () => {
   assert.deepEqual(readyCodes(broken('"instances": { "key": "id", "storedIn": "session" }, ', '')), []);
 });
 
+// A keyed implementation machine with instances.storedIn and no storage has no readiness error.
+// @evidence implementation-machine-readiness-rules
 test('instances.storedIn alone still says where a keyed implementation machine is held', () => {
   assert.deepEqual(readyCodes(broken(' "storage": { "record": "session", "key": "id" },', '')), []);
 });
 
+// A machine with one state and no variables needs no storage; with a second state it does.
+// @evidence implementation-machine-readiness-rules
 test('a stateless implementation machine with one state and no variables needs no storage and one with two states does', () => {
   const spec = (states) => JSON.stringify({
     exegra: '0.1',
@@ -114,10 +130,14 @@ test('a stateless implementation machine with one state and no variables needs n
   assert.deepEqual(storageCodes(spec(['s-ready', 's-done'])), ['ready.storage-missing']);
 });
 
+// The same machine at level model reports no readiness diagnostic.
+// @evidence implementation-machine-readiness-rules
 test('a model-level behavior is not held to the machine rules', () => {
   assert.deepEqual(readyCodes(broken('"level": "implementation",', '"level": "model",').replace(', "repr": "u32" }', ' }')), []);
 });
 
+// The engine input derived from the fixture machine contains none of the implementation-level properties and keeps its instance key.
+// @evidence implementation-properties-declarative
 test('the implementation-level properties do not reach the simulation input', () => {
   const input = JSON.stringify(engineInput(analyzeSpec(FIXED).model, 'run'));
   for (const key of ['storedIn', '"storage"', 'otherwise', 'ignores', 'transaction', 'level', 'repr', 'delivery', 'elapsed', 'mailer']) assert.ok(!input.includes(key), key);
@@ -143,6 +163,8 @@ const MACHINE_READY_CODES = new Set([
 const specsDir = fileURLToPath(new URL('../../specs', import.meta.url));
 const strataLinked = existsSync(fileURLToPath(new URL('../../specs/strata/project.jsonc', import.meta.url)));
 
+// The exegra and strata projects report no ready.* diagnostic.
+// @evidence implementation-machine-readiness-rules
 test('the exegra and strata projects have no implementation-level machine and so no readiness diagnostic', { skip: strataLinked ? false : 'the strata project is not linked (specs/strata/project.jsonc is a local link)' }, async () => {
   for (const name of ['exegra', 'strata']) {
     const data = await createWorkspace(specsDir).read(name);
@@ -157,6 +179,8 @@ test('the exegra and strata projects have no implementation-level machine and so
 const COMPOSITE_RECORD = ['{ "id": "session", "name": "Session", "owner": "svc", "key": ["id"],', '{ "id": "session", "name": "Session", "owner": "svc", "key": ["other", "id"],'];
 const wholeCodes = (text) => analyzeSpec(text).diagnostics.filter((d) => d.code === 'storage.key-whole');
 
+// Negative fixture (WG-4907): a machine keyed by one field of a two-field record key gets storage.key-whole for storage.key and for instances.key, and nothing else.
+// @evidence implementation-machine-readiness-rules # rule storage.key-whole
 test('rule storage.key-whole: a key naming part of the record key is refused, once for storage.key and once for instances.key', () => {
   assert.deepEqual(wholeCodes(FIXED), []);
   const found = wholeCodes(broken(...COMPOSITE_RECORD));
@@ -170,6 +194,8 @@ test('rule storage.key-whole: a key naming part of the record key is refused, on
   assert.deepEqual(analyzeSpec(broken(...COMPOSITE_RECORD)).diagnostics.filter((d) => d.severity === 'error' && d.code !== 'storage.key-whole'), []);
 });
 
+// The list of every key field in the record's order is accepted; another order, a short list or a single field of a composite key is refused.
+// @evidence implementation-machine-readiness-rules # storage.key-whole accepts the list
 test('storage.key-whole accepts the list of every key field in the record order, and refuses another order or a short list', () => {
   const held = (key) => broken(...COMPOSITE_RECORD).replace('"instances": { "key": "id", "storedIn": "session" }, "storage": { "record": "session", "key": "id" },', `"storage": { "record": "session", "key": ${key} },`);
   assert.deepEqual(wholeCodes(held('["other", "id"]')), []);

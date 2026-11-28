@@ -18,7 +18,7 @@ import { project } from '../../src/core/projections.js';
 import {
   inferredInterface, interfaceReport, crossReads, eventInterfaces, compositeBehavior, checkAbstraction, behaviorsAtLevels,
   inputWith, environmentReport, scenarioCut, orderIndependence, canonicalTrace, transferClaim, alternativeMachines,
-  membersOf, regionOf, describeCounterexample,
+  membersOf, regionOf, describeCounterexample, independentEvents,
 } from '../../src/core/composition.js';
 import { orderCheck, traceVerdicts } from '../../cli/composition-commands.js';
 import { runCommand } from '../../cli/commands.js';
@@ -159,6 +159,7 @@ test('the self-specification\'s visual edit gives the same boundary trace with p
 // Criterion 4: refinement along the hierarchy
 // ---------------------------------------------------------------------------
 
+// @evidence refinement-agrees-at-boundary
 test('a declared abstraction refined by its members gives a step correspondence with the hidden steps as stutters: conservative', () => {
   const m = modelOf(fixtureDoc());
   const r = checkAbstraction(m, 'store-flow');
@@ -170,6 +171,7 @@ test('a declared abstraction refined by its members gives a step correspondence 
   assert.equal(run.stutters.length, 2, 'put-req and put-ok are stutters of the members');
 });
 
+// @evidence refinement-agrees-at-boundary
 test('an abstraction that disagrees with its members gives the first boundary counterexample and no strength', () => {
   const doc = fixtureDoc();
   behavior(doc, 'store-flow').variables[0].initial = 't9';
@@ -185,6 +187,7 @@ test('an abstraction that disagrees with its members gives the first boundary co
   assert.match(describeCounterexample(cx), /boundary step 2 differs/);
 });
 
+// @evidence refinement-agrees-at-boundary
 test('abstractions at several levels: checked level by level and against the finest members', () => {
   const m = modelOf(fixtureDoc());
   assert.deepEqual(membersOf(m, 'store-top-flow'), ['store-flow']);
@@ -198,6 +201,7 @@ test('abstractions at several levels: checked level by level and against the fin
   assert.deepEqual(finest.members, ['front-flow', 'disk-flow']);
 });
 
+// @evidence refinement-agrees-at-boundary
 test('a time scale relates the times of the members to those of the abstraction and a wrong one is a time counterexample', () => {
   const doc = fixtureDoc();
   behavior(doc, 'disk-flow').transitions[0].effects[1].after = 2;
@@ -222,6 +226,7 @@ test('a fault that acts at one level only is left out and makes the strength inc
   assert.equal(neg.verdict, 'counterexample');
 });
 
+// @evidence refinement-agrees-at-boundary
 test('an element of the composite of an abstraction that no running machine covers is opaque: incomplete', () => {
   const doc = fixtureDoc();
   doc.components.push({ id: 'cache', name: 'Cache', category: 'logical', parent: 'store', purpose: 'Holds nothing yet.' });
@@ -271,6 +276,57 @@ test('the self-specification\'s persistence abstractions are refined: workspace-
   assert.deepEqual(ep.runs.map((/** @type {any} */ r) => r.scenario), ['write-with-stale-base-hash']);
   const neg = checkAbstraction(m, 'write-endpoint-flow', { faults: ['endpoint-ignores-base-hash'], perLevelFaults: true });
   assert.equal(neg.verdict, 'counterexample');
+});
+
+test('the write endpoint is refined in the recorded write up to the order of independent simultaneous events, and not when that pair is dependent', () => {
+  const m = self();
+  // The members' hidden ws-* steps deliver write-file-ok after the recorder's traffic-step-recorded; no machine
+  // consumes both, so the two deliveries commute and the comparison up to their order certifies the run.
+  const r = checkAbstraction(m, 'write-endpoint-flow', { scenarios: ['real-write-recorded'] });
+  assert.equal(r.verdict, 'certificate');
+  assert.equal(r.strength, 'conservative');
+  assert.equal(r.runs[0].comparison, 'commutation');
+  assert.deepEqual(r.runs[0].concreteBehaviors, ['persistence-client-flow', 'dev-server-flow', 'workspace-disk-flow', 'traffic-recorder-flow']);
+  const pairs = independentEvents(m, 'write-endpoint-flow', [...r.runs[0].abstractBehaviors, ...r.runs[0].concreteBehaviors], r.runs[0].hidden);
+  assert.ok(pairs.some(([x, y]) => (x === 'traffic-step-recorded' && y === 'write-file-ok') || (x === 'write-file-ok' && y === 'traffic-step-recorded')));
+  // Treated as dependent, the reordered pair is a counterexample, at the step where the orders part.
+  const d = checkAbstraction(m, 'write-endpoint-flow', { scenarios: ['real-write-recorded'], dependent: [['write-file-ok', 'traffic-step-recorded']] });
+  assert.equal(d.verdict, 'counterexample');
+  assert.equal(d.counterexample.reason, 'event');
+  assert.equal(d.counterexample.abstractStep.event, 'write-file-ok');
+  assert.equal(d.counterexample.concreteStep.event, 'traffic-step-recorded');
+});
+
+// @evidence declared-abstractions-refined-over-interleavings
+test('an abstraction the scripted run certifies but another interleaving refutes is a counterexample with that interleaving', () => {
+  const doc = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests/fixtures/composition/interleaving.jsonc'), 'utf8').split(/\r?\n/).filter((l) => !l.trim().startsWith('//')).join('\n'));
+  const m = modelOf(doc);
+  const scripted = checkAbstraction(m, 'pair-flow');
+  assert.equal(scripted.verdict, 'certificate', 'the scheduler delivers a, b, x, y at both levels');
+  const r = checkAbstraction(m, 'pair-flow', { explore: { bound: 32, maxStates: 5000 } });
+  assert.equal(r.verdict, 'counterexample');
+  assert.equal(r.strength, null);
+  const cx = r.counterexample;
+  assert.equal(cx.reason, 'interleaving');
+  assert.equal(cx.explored.verdict, 'counterexample');
+  // The members' run delivers b first and shows y before x; pair-flow emits y only after x.
+  assert.deepEqual(cx.explored.boundary.map((/** @type {any} */ o) => o.event), ['b', 'y']);
+  assert.ok(cx.explored.run.picks.length > 0 && Array.isArray(cx.explored.run.steps));
+  assert.match(describeCounterexample(cx), /another interleaving of the members shows the boundary trace \[b@0, y@0\]/);
+});
+
+// @evidence declared-abstractions-refined-over-interleavings
+test('exploring the store abstraction covers every interleaving and fault mask of its scenario and gives strength explored', () => {
+  const m = modelOf(fixtureDoc());
+  const r = checkAbstraction(m, 'store-flow', { explore: true });
+  assert.equal(r.verdict, 'certificate');
+  assert.equal(r.strength, 'explored');
+  for (const run of r.runs) {
+    assert.equal(run.explored.verdict, 'certificate', run.scenario);
+    assert.ok(run.explored.states > 0);
+  }
+  // Without exploring, the same runs are conservative.
+  assert.equal(checkAbstraction(m, 'store-flow').strength, 'conservative');
 });
 
 test('the persistence check exposes the initial disk-hash mismatch the specification had (h2 against h1) as a counterexample', () => {
@@ -326,6 +382,7 @@ test('an omitted element that receives an event needs an environment assumption'
   assert.deepEqual(assumed.assumed.map((u) => u.event), ['put-req']);
 });
 
+// @evidence simulation-depth-follows-collapse
 test('no presentation state changes a trace or a refinement verdict or a claim verdict', () => {
   const m = self();
   const before = { trace: runScenario(m, 'visual-edit-flow'), refine: checkAbstraction(m, 'workspace-flow', { scenarios: ['visual-edit-flow'] }).verdict, claim: evaluateClaim(m, 'file-matches-model-after-save').status };
@@ -342,6 +399,7 @@ test('no presentation state changes a trace or a refinement verdict or a claim v
   assert.deepEqual(engineInput(m, 'visual-edit-flow'), engineInput(m, 'visual-edit-flow'));
 });
 
+// @evidence simulation-depth-follows-collapse
 test('simulate runs a region at another level from the command line and refuses an unknown abstraction', async () => {
   const out = await runCommand('simulate', ['writer-at-store', '--spec', FIXTURE, '--level', 'store-flow=members']);
   assert.ok(out.ok, JSON.stringify(out.error));

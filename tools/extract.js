@@ -21,7 +21,7 @@ import { createHash } from 'node:crypto';
 import { scanSurface, slash } from './surface.js';
 
 /** The identity and version stamped on every fact file. Bump the version whenever extraction logic changes. */
-export const EXTRACTOR = { id: 'exegra-static-extractor', version: '1' };
+export const EXTRACTOR = { id: 'exegra-static-extractor', version: '2' };
 /** The format of the fact file (src/core/extraction.js validates it). */
 export const FACTS_FORMAT = 'exegra-extracted-facts/1';
 /** Where the fact file of this repository lives, relative to the repository root. */
@@ -209,11 +209,107 @@ function rustFacts(repoRoot, file, text, crates) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Claim markers of tests (WG-5705)
+//
+// A test names the claims it evidences with a line comment the test runner ignores and the extractor reads:
+//
+//   // @evidence claim-a claim-b               directly above a test(...) or it(...) call with a literal title (more
+//                                              marker or comment lines may come between): the reference file#title
+//   // @evidence claim-a # <title pattern>     anywhere: the reference file#<pattern>, for titles built at run time
+//   // @evidence claim-a #                     anywhere: the whole file
+//
+// The reference is what `exegra verify` runs (cli/test-batch.js), so the runner and verify read the same tests.
+// Each (claim, reference) becomes an evidence entity of the model (src/core/extraction.js, derivedEvidence).
+
+/** The directories whose test files carry claim markers. */
+export const TEST_DIRS = ['tests/core', 'tests/proofs', 'tests/browser'];
+const TEST_FILE = /\.(test|spec)\.js$/;
+const MARKER = /^\s*\/\/\s*@evidence\b(.*)$/;
+const TEST_CALL = /^\s*(?:test|it)(?:\.(?:only|skip|fixme|slow|fail|serial))*\s*\(\s*(['"`])/;
+
+/**
+ * The claim markers of one test file's text.
+ * @param {string} file repo-relative @param {string} text
+ * @returns {{evidence: {claim: string, ref: string, file: string, line: number}[], problems: {file: string, line: number, message: string}[]}}
+ */
+export function markersOf(file, text) {
+  const lines = text.split(/\r?\n/);
+  /** @type {{claim: string, ref: string, file: string, line: number}[]} */
+  const evidence = [];
+  /** @type {{file: string, line: number, message: string}[]} */
+  const problems = [];
+  lines.forEach((l, i) => {
+    const m = MARKER.exec(l);
+    if (!m) return;
+    const body = m[1];
+    const hash = body.indexOf('#');
+    const ids = (hash < 0 ? body : body.slice(0, hash)).trim().split(/[\s,]+/).filter(Boolean);
+    if (!ids.length) { problems.push({ file, line: i + 1, message: 'an @evidence marker names no claim.' }); return; }
+    const bad = ids.filter((id) => !/^[a-z0-9][a-z0-9-]*$/.test(id));
+    if (bad.length) { problems.push({ file, line: i + 1, message: `an @evidence marker names ${bad.map((b) => `"${b}"`).join(', ')}, which is not a claim id.` }); return; }
+    /** @type {string|null} */
+    let ref = null;
+    if (hash >= 0) {
+      const pattern = body.slice(hash + 1).trim();
+      ref = pattern ? `${file}#${pattern}` : file;
+    } else {
+      // The next line that is not a comment must start a test with a literal title.
+      let j = i + 1;
+      while (j < lines.length && /^\s*\/\//.test(lines[j])) j++;
+      const call = j < lines.length ? TEST_CALL.exec(lines[j]) : null;
+      if (!call) { problems.push({ file, line: i + 1, message: 'an @evidence marker without "#" must stand directly above a test(...) or it(...) call with a literal title; give the title pattern after "#" otherwise.' }); return; }
+      const q = call[1];
+      let k = (call.index ?? 0) + call[0].length;
+      let title = '';
+      const src = lines[j];
+      while (k < src.length && src[k] !== q) {
+        if (src[k] === '\\') { title += src[k + 1] ?? ''; k += 2; continue; }
+        if (q === '`' && src[k] === '$' && src[k + 1] === '{') { title = ''; k = -1; break; }
+        title += src[k];
+        k++;
+      }
+      if (k < 0 || k >= src.length) { problems.push({ file, line: i + 1, message: 'the test below this @evidence marker has a title built at run time or spread over lines; give the title pattern after "#".' }); return; }
+      ref = `${file}#${title}`;
+    }
+    for (const claim of ids) evidence.push({ claim, ref, file, line: i + 1 });
+  });
+  return { evidence, problems };
+}
+
+/**
+ * Every test file's claim markers, in file order then line order. Deterministic.
+ * @param {string} repoRoot
+ */
+export function testEvidence(repoRoot) {
+  /** @type {string[]} */
+  const files = [];
+  const walk = (/** @type {string} */ rel) => {
+    let entries;
+    try { entries = fs.readdirSync(path.join(repoRoot, rel), { withFileTypes: true }); } catch { return; }
+    for (const e of entries) {
+      const child = `${rel}/${e.name}`;
+      if (e.isDirectory()) { if (e.name !== 'fixtures' && e.name !== 'node_modules') walk(child); }
+      else if (TEST_FILE.test(e.name)) files.push(child);
+    }
+  };
+  for (const d of TEST_DIRS) walk(d);
+  files.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  /** @type {ReturnType<typeof markersOf>} */
+  const all = { evidence: [], problems: [] };
+  for (const f of files) {
+    const r = markersOf(f, fs.readFileSync(path.join(repoRoot, f), 'utf8'));
+    all.evidence.push(...r.evidence);
+    all.problems.push(...r.problems);
+  }
+  return all;
+}
+
+// ---------------------------------------------------------------------------------------------
 // The fact file
 
 /**
  * @typedef {{path: string, language: string, digest: string, imports: ImportFact[]}} FileFact
- * @typedef {{format: string, provenance: 'extracted', extractor: {id: string, version: string}, files: FileFact[]}} Facts
+ * @typedef {{format: string, provenance: 'extracted', extractor: {id: string, version: string}, files: FileFact[], evidence?: {claim: string, ref: string, file: string, line: number}[], evidenceProblems?: {file: string, line: number, message: string}[]}} Facts
  */
 
 const LANGUAGE = { '.js': 'js', '.lean': 'lean', '.rs': 'rust', '.json': 'json', '.css': 'css', '.html': 'html' };
@@ -241,14 +337,19 @@ export function extractFile(repoRoot, file, crates = rustCrates(repoRoot)) {
 export function extractRepository(repoRoot, opts = {}) {
   const crates = rustCrates(repoRoot);
   const files = (opts.files ?? scanSurface(repoRoot)).map(slash).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-  return { format: FACTS_FORMAT, provenance: 'extracted', extractor: { ...EXTRACTOR }, files: files.map((f) => extractFile(repoRoot, f, crates)) };
+  /** @type {Facts} */
+  const facts = { format: FACTS_FORMAT, provenance: /** @type {const} */ ('extracted'), extractor: { ...EXTRACTOR }, files: files.map((f) => extractFile(repoRoot, f, crates)) };
+  if (opts.files) return facts;
+  const markers = testEvidence(repoRoot);
+  return { ...facts, evidence: markers.evidence, ...(markers.problems.length ? { evidenceProblems: markers.problems } : {}) };
 }
 
 /**
  * Compare a stored fact file with the tree: the files whose digest differs, the files the tree has and the facts
  * lack, and the facts of files the tree no longer has. An empty result means the facts describe the tree.
  * @param {Facts} stored @param {string} repoRoot
- * @returns {{changed: string[], missing: string[], gone: string[], extractor: boolean}}
+ * `evidence` is true when the claim markers of the tests differ from those the facts record.
+ * @returns {{changed: string[], missing: string[], gone: string[], extractor: boolean, evidence: boolean}}
  */
 export function factsDrift(stored, repoRoot) {
   const have = new Map(stored.files.map((f) => [f.path, f.digest]));
@@ -259,7 +360,9 @@ export function factsDrift(stored, repoRoot) {
     if (digestOf(fs.readFileSync(path.join(repoRoot, f))) !== have.get(f)) changed.push(f);
   }
   const live = new Set(surface);
-  return { changed, missing, gone: [...have.keys()].filter((f) => !live.has(f)), extractor: stored.extractor?.version !== EXTRACTOR.version || stored.extractor?.id !== EXTRACTOR.id };
+  const markers = testEvidence(repoRoot);
+  const evidence = JSON.stringify(stored.evidence ?? []) !== JSON.stringify(markers.evidence) || JSON.stringify(stored.evidenceProblems ?? []) !== JSON.stringify(markers.problems);
+  return { changed, missing, gone: [...have.keys()].filter((f) => !live.has(f)), extractor: stored.extractor?.version !== EXTRACTOR.version || stored.extractor?.id !== EXTRACTOR.id, evidence };
 }
 
 /** The fact file as text: stable key order, one file per block. @param {Facts} facts */
@@ -281,7 +384,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(im
   if (args.includes('--check')) {
     const stored = readFacts(out);
     const drift = stored ? factsDrift(stored, root) : null;
-    const ok = !!drift && !drift.changed.length && !drift.missing.length && !drift.gone.length && !drift.extractor;
+    const ok = !!drift && !drift.changed.length && !drift.missing.length && !drift.gone.length && !drift.extractor && !drift.evidence;
     process.stdout.write(`${JSON.stringify({ ok, drift })}\n`);
     process.exit(ok ? 0 : 1);
   }

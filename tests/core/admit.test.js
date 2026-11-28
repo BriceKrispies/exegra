@@ -49,6 +49,8 @@ const admit = (specs, ops, extra = []) => runCommand('admit', ['--project', 'sho
 const DIRECT = { type: 'CreateRelationship', id: 'r-web-db', kind: 'calls', from: 'web', to: 'db' };
 const REACHES = { id: 'c-web-reaches-db', kind: 'structural', statement: 'Web reaches the db.', evaluate: { method: 'reachable', from: 'web', to: 'db' } };
 
+// A change that worsens a claim is rejected, naming the claim with its status before and after.
+// @evidence admit-never-writes-a-rejected-change
 test('a change that worsens a claim is rejected naming the claim with both statuses', () =>
   withProject(async ({ specs }) => {
     const r = await admit(specs, [DIRECT]);
@@ -62,6 +64,8 @@ test('a change that worsens a claim is rejected naming the claim with both statu
     assert.match(r.result.diff.claims.changed[0].explanation, /r-web-db/);
   }));
 
+// A change that adds an integrity violation is rejected with the rule and the counterexample.
+// @evidence admit-never-writes-a-rejected-change
 test('a change that adds an integrity violation is rejected with the rule and its counterexample', () =>
   withProject(async ({ specs }) => {
     const r = await admit(specs, [{ type: 'CreateEntity', kind: 'component', data: { id: 'queue', name: 'Queue', category: 'storage' } }]);
@@ -73,6 +77,8 @@ test('a change that adds an integrity violation is rejected with the rule and it
     assert.equal(r.result.diff.integrity.new.length, 1);
   }));
 
+// A new claim that is only inconclusive is a reason to reject.
+// @evidence admit-never-writes-a-rejected-change
 test('a new claim that is not verified or proved is a reason to reject', () =>
   withProject(async ({ specs }) => {
     const weak = { id: 'c-nobody', kind: 'structural', statement: 'Nothing tagged nope reaches the db.', evaluate: { method: 'no-relationship', from: { tag: 'nope' }, to: 'db' } };
@@ -83,6 +89,8 @@ test('a new claim that is not verified or proved is a reason to reject', () =>
     assert.notEqual(r.result.diff.claims.added[0].status, 'verified');
   }));
 
+// A refused transaction is a rejected verdict carrying the transaction code and message, and writes nothing.
+// @evidence admit-never-writes-a-rejected-change
 test('a refused transaction is rejected with the transaction code and message', () =>
   withProject(async ({ specs, file }) => {
     const r = await admit(specs, [{ type: 'DeleteEntity', id: 'no-such-entity' }], ['--write']);
@@ -96,6 +104,8 @@ test('a refused transaction is rejected with the transaction code and message', 
     assert.equal(fs.readFileSync(file, 'utf8'), SPEC);
   }));
 
+// An accepted change with several entities and a claim that verifies is admitted and lists the claim as verified.
+// @evidence admit-never-writes-a-rejected-change
 test('a substantial accepted change is admitted and lists the new claim as verified', () =>
   withProject(async ({ specs, file }) => {
     const ops = [
@@ -116,6 +126,8 @@ test('a substantial accepted change is admitted and lists the new claim as verif
     assert.equal(fs.readFileSync(file, 'utf8'), SPEC);
   }));
 
+// With --write a rejected change leaves the file byte-identical and an admitted one writes it.
+// @evidence admit-never-writes-a-rejected-change
 test('--write leaves the spec byte-identical on a rejected change and writes an admitted one', () =>
   withProject(async ({ specs, file }) => {
     const rejected = await admit(specs, [DIRECT], ['--write']);
@@ -131,6 +143,8 @@ test('--write leaves the spec byte-identical on a rejected change and writes an 
     assert.equal(claims.result.find((/** @type {any} */ c) => c.claimId === 'c-web-reaches-db').status, 'verified');
   }));
 
+// Two runs print identical output, with reasons in id order.
+// @evidence admit-never-writes-a-rejected-change
 test('admit output is identical across two runs', () =>
   withProject(async ({ specs }) => {
     const ops = [DIRECT, { type: 'CreateEntity', kind: 'component', data: { id: 'queue', name: 'Queue', category: 'storage' } }, { type: 'AddClaim', data: REACHES }];
@@ -201,6 +215,8 @@ async function withAccessProject(body) {
 /** @param {any} r @param {string} code */
 const reasonsOf = (r, code) => (r.result.reasons ?? []).filter((/** @type {any} */ x) => x.code === code);
 
+// The owner role gains a capability: a privilege-change reason, admitted with --accept admit.privilege-change and listed under acknowledged.
+// @evidence admit-privilege-and-guarantee-changes-need-acknowledgement
 test('a role that gains a capability is a privilege-change reason until it is accepted', () =>
   withAccessProject(async ({ specs }) => {
     const ops = [{ type: 'SetProperty', id: 'owner', property: 'capabilities', value: ['content-edit', 'billing-read', 'model-optin'] }];
@@ -220,6 +236,8 @@ test('a role that gains a capability is a privilege-change reason until it is ac
     assert.deepEqual(ok.result.acknowledged.map((/** @type {any} */ x) => [x.code, x.capability]), [['admit.privilege-change', 'model-optin']]);
   }));
 
+// A removed capability is listed under diff.privilege.removed and does not block.
+// @evidence admit-privilege-and-guarantee-changes-need-acknowledgement
 test('removing a capability from a role is reported but is not a reason', () =>
   withAccessProject(async ({ specs }) => {
     const r = await admit(specs, [{ type: 'SetProperty', id: 'owner', property: 'capabilities', value: ['content-edit'] }]);
@@ -228,6 +246,8 @@ test('removing a capability from a role is reported but is not a reason', () =>
     assert.deepEqual(r.result.reasons, []);
   }));
 
+// A grant with no maxDuration is a privilege-change reason next to its capabilities.
+// @evidence admit-privilege-and-guarantee-changes-need-acknowledgement
 test('a new grant without maxDuration is a privilege-change reason', () =>
   withAccessProject(async ({ specs }) => {
     const grant = { id: 'open-grant', issuer: 'owner', grantee: 'support', capabilities: ['billing-read'] };
@@ -241,6 +261,8 @@ test('a new grant without maxDuration is a privilege-change reason', () =>
     assert.equal(ok.result.acknowledged.length, 2);
   }));
 
+// A 72 hour copy class beside a 5 second class of the same record is flagged for freshness and erasure; a tighter class is not.
+// @evidence admit-privilege-and-guarantee-changes-need-acknowledgement
 test('an edge copy class looser than an existing class of the same record is a guarantee-weakened reason', () =>
   withAccessProject(async ({ specs }) => {
     const slow = { id: 'copy-edge-slow', name: 'Slow edge', of: ['page'], heldBy: 'edge', scope: 'shared', freshness: { bound: 72, unit: 'hour' }, erasure: { bound: 72, unit: 'hour' } };
@@ -256,6 +278,8 @@ test('an edge copy class looser than an existing class of the same record is a g
     assert.equal(fine.ok, true, JSON.stringify(fine));
   }));
 
+// A changed integrity rule is a guarantee-weakened reason with its text before and after.
+// @evidence admit-privilege-and-guarantee-changes-need-acknowledgement
 test('a changed integrity rule is shown before and after and can be accepted', () =>
   withAccessProject(async ({ specs }) => {
     const ops = [{ type: 'SetProperty', id: 'pages-have-owner', property: 'rule', value: 'forall r : record, true' }, { type: 'SetProperty', id: 'pages-have-owner', property: 'statement', value: 'Every record is fine.' }];
@@ -270,6 +294,8 @@ test('a changed integrity rule is shown before and after and can be accepted', (
     assert.equal(ok.result.acknowledged.length, 1);
   }));
 
+// A requirement of an external method with a milestone is admitted and listed under pendingRealisation.
+// @evidence admit-requirement-claims-pend-on-realisation
 test('a new requirement claim with a milestone is admitted as pending realisation', () =>
   withAccessProject(async ({ specs }) => {
     const claim = { id: 'req-page-erasure', kind: 'requirement', statement: 'A page SHALL be erased from every edge within a minute of deletion.', milestone: 2, evaluate: { method: 'property' } };
@@ -279,6 +305,8 @@ test('a new requirement claim with a milestone is admitted as pending realisatio
     assert.deepEqual(r.result.pendingRealisation.map((/** @type {any} */ x) => [x.id, x.milestone, x.status]), [['req-page-erasure', 2, 'not-evaluated']]);
   }));
 
+// A requirement without a milestone is rejected as admit.requirement-without-milestone.
+// @evidence admit-requirement-claims-pend-on-realisation
 test('a new requirement claim without a milestone is rejected', () =>
   withAccessProject(async ({ specs }) => {
     const claim = { id: 'req-page-erasure', kind: 'requirement', statement: 'A page SHALL be erased from every edge within a minute of deletion.', evaluate: { method: 'property' } };
@@ -288,6 +316,8 @@ test('a new requirement claim without a milestone is rejected', () =>
     assert.deepEqual(r.result.pendingRealisation, []);
   }));
 
+// Accepting admit.new-claim-weak, admit.claim-regressed or admit.new-error fails with admit.not-acknowledgeable.
+// @evidence admit-privilege-and-guarantee-changes-need-acknowledgement
 test('a reason that is not acknowledgeable cannot be accepted', () =>
   withProject(async ({ specs }) => {
     const weak = { id: 'c-nobody', kind: 'structural', statement: 'Nothing tagged nope reaches the db.', evaluate: { method: 'no-relationship', from: { tag: 'nope' }, to: 'db' } };
@@ -299,6 +329,8 @@ test('a reason that is not acknowledgeable cannot be accepted', () =>
     assert.equal(again.error?.code, 'admit.not-acknowledgeable');
   }));
 
+// A structural claim that is not verified is still admit.new-claim-weak, even with a milestone.
+// @evidence admit-requirement-claims-pend-on-realisation
 test('a new claim a model method decides stays weak when it is not verified', () =>
   withAccessProject(async ({ specs }) => {
     const claim = { id: 'c-nobody', kind: 'structural', statement: 'Nothing tagged nope reaches the db.', milestone: 2, evaluate: { method: 'no-relationship', from: { tag: 'nope' }, to: 'db' } };

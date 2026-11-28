@@ -254,16 +254,22 @@ function projectDifferential(spec, layout, seeds, offset) {
   }
 }
 
+// Seeded random transactions on a JSONC specification with comments, one-line declarations and trailing commas, through Tx and through Project.apply.
+// @evidence batched-transaction-equals-per-operation
 test('batched transactions equal per-operation re-derivation on a hand-written JSONC specification', () => {
   differential('small', SMALL, EMPTY_LAYOUT, 8 * SCALE);
   projectDifferential(SMALL, EMPTY_LAYOUT, 3 * SCALE, 1000);
 });
 
+// Seeded random transactions on specs/benchmark.
+// @evidence batched-transaction-equals-per-operation
 test('batched transactions equal per-operation re-derivation on the benchmark specification', () => {
   const spec = fs.readFileSync(path.join(ROOT, 'specs/benchmark/spec.jsonc'), 'utf8');
   differential('benchmark', spec, EMPTY_LAYOUT, 1 * SCALE);
 });
 
+// Seeded random transactions on Exegra's own specification, through Tx and through Project.apply.
+// @evidence batched-transaction-equals-per-operation
 test('batched transactions equal per-operation re-derivation on the Exegra specification', () => {
   const spec = readSpecFile(path.join(ROOT, 'specs/exegra/spec.jsonc'));
   differential('exegra', spec, EMPTY_LAYOUT, 1 * SCALE);
@@ -275,6 +281,8 @@ test('batched transactions equal per-operation re-derivation on EXEGRA_TX_DIFF_S
   differential(path.basename(file), spec, EMPTY_LAYOUT, 2 * SCALE);
 });
 
+// Counts the derivations of one transaction through edits, creations, a replacement of nested declarations, a rename and a deletion.
+// @evidence transaction-derives-model-once
 test('a batched transaction derives the model once for property edits and creations', () => {
   const p = new Project({ specText: SMALL });
   const tx = new Tx(p.specText, p.layoutText, /** @type {any} */ (p.model), { diagnostics: p.diagnostics });

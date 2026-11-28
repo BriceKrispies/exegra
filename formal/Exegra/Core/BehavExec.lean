@@ -272,8 +272,8 @@ def holesAt (R : Sys) (mask : List Bool) (c : Cfg) (e : Entry) (rv : List Nat) :
           | .error _ => []
           | .ok ws => match phase2 R (c1.popE e) e1 ws c1.machines with
             | .error _ => []
-            | .ok (ms, bs) => holesOf (settle R ((c1.popE e).commit R.sig.machines ms bs).time
-                (opsOf R.sig.machines bs) [] ((c1.popE e).commit R.sig.machines ms bs).world).2
+            | .ok (ms, bs) => holesOf (settleOut R ((c1.popE e).commit R.sig.machines ms bs).time ((c1.popE e).commit R.sig.machines ms bs).machines
+                (inMachineOrder R.sig.machines bs) ((c1.popE e).commit R.sig.machines ms bs).world).2
     | _ => []
   | _ => holesOf (worldStep R (c.popW e) e).2
 
@@ -320,7 +320,7 @@ theorem Step.holes {sys : Sys} {mask : List Bool} {c : Cfg} {l : Label} {t : Sta
     rw [hk]; simp only [routeOf_resolve, hro]
     unfold dropHit at hdr; unfold delayFault at hnone; simp only [resolve_active]
     simp only [hdr, Bool.false_eq_true, ↓reduceIte, hnone]
-    simp only [hw, hp, settle_resolve, resolve_sig, hs]
+    simp only [hw, hp, settle_resolve, settleOut_resolve, resolve_sig, hs]
     exact hfit
   | deliverErr _ _ hk hro hdr hnone hfail =>
     refine ⟨routeOf_fit.1.1 _ _ hro, ?_⟩
@@ -335,12 +335,12 @@ theorem Step.holes {sys : Sys} {mask : List Bool} {c : Cfg} {l : Label} {t : Sta
       simp only [hw, hp, hw0]; exact ⟨rfl, by simp⟩
     | settle hw hp hs hfit _ =>
       rw [hm] at hp
-      simp only [settle_resolve, resolve_sig] at hs
-      simp only [hw, hp, settle_resolve, resolve_sig, hs]; exact hfit
+      simp only [settle_resolve, settleOut_resolve, resolve_sig] at hs
+      simp only [hw, hp, settle_resolve, settleOut_resolve, resolve_sig, hs]; exact hfit
     | dup hw hp hs hfit _ _ _ =>
       rw [hm] at hp
-      simp only [settle_resolve, resolve_sig] at hs
-      simp only [hw, hp, settle_resolve, resolve_sig, hs]; exact hfit
+      simp only [settle_resolve, settleOut_resolve, resolve_sig] at hs
+      simp only [hw, hp, settle_resolve, settleOut_resolve, resolve_sig, hs]; exact hfit
   | routeErr _ _ hk hro hw0 =>
     refine ⟨routeOf_fit.1.2 _ hro, ?_⟩
     rw [hk]; simp only [routeOf_resolve, hro, hw0]; exact ⟨rfl, by simp⟩
@@ -357,8 +357,8 @@ theorem Step.holes {sys : Sys} {mask : List Bool} {c : Cfg} {l : Label} {t : Sta
     · rename_i heq; exact absurd heq hk
     · simp only [List.drop_zero, worldStep_resolve, hs]; exact hfit
 
-/-- A system without resources or routes has no world draws. -/
-theorem holesAt_nil_res {R : Sys} (h : R.resources = []) (mask : List Bool) (c : Cfg) (e : Entry) (rv : List Nat) :
+/-- A system without resources, links or routes has no world draws. -/
+theorem holesAt_nil_res {R : Sys} (h : R.resources = []) (hl : R.links = []) (mask : List Bool) (c : Cfg) (e : Entry) (rv : List Nat) :
     holesAt R mask c e rv = [] := by
   unfold holesAt
   split
@@ -372,15 +372,15 @@ theorem holesAt_nil_res {R : Sys} (h : R.resources = []) (mask : List Bool) (c :
           · rfl
           · split
             · rfl
-            · rw [settle_nil_res h]; rfl
+            · rw [settleOut_nil h hl, holesOf_puts]
     · rfl
-  · rw [worldStep_nil_res h]; rfl
+  · rw [worldStep_nil_res h hl]; rfl
 
-/-- A step of a system without resources or routes takes no world draws. -/
-theorem wdraws_nil_of_nores {sys : Sys} (h : sys.resources = []) (hr : sys.routes = []) {mask : List Bool}
+/-- A step of a system without resources, links or routes takes no world draws. -/
+theorem wdraws_nil_of_nores {sys : Sys} (h : sys.resources = []) (hl : sys.links = []) (hr : sys.routes = []) {mask : List Bool}
     {c : Cfg} {l : Label} {t : State} (hs : Step sys mask c l t) : l.wdraws = [] := by
   have hf := (Step.holes hs).2
-  rw [Exec.holes, holesAt_nil_res (R := sys.resolve l.draws) h, nR_nil hr, List.drop_zero] at hf
+  rw [Exec.holes, holesAt_nil_res (R := sys.resolve l.draws) h hl, nR_nil hr, List.drop_zero] at hf
   exact List.length_eq_zero_iff.mp hf.1
 
 theorem Dist.support_nil_of_not_wf {d : Dist} (h : d.wf = false) : d.support = [] := by

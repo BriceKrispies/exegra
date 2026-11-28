@@ -59,6 +59,8 @@ async function containerPoint(page, id) {
 const waitSaved = (/** @type {import('@playwright/test').Page} */ page) =>
   page.waitForFunction(() => /** @type {any} */ (window).__exegra.session.saveState === 'saved');
 
+// In the running application, stepping Exegra's own edit scenario sends a labelled marker into the interaction component from outside, then along the declared edge to the transaction system while it advances, and marks the undeclared save message; the panel names sender and receiver.
+// @evidence sim-step-shows-message-moving
 test('stepping a simulation sends a labelled marker along the edge from sender to receiver', { tag: '@full' }, async ({ page }) => {
   // Exegra's own edit scenario, in its architecture view with every subsystem open.
   await page.goto('/?project=exegra');

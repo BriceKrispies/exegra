@@ -1404,6 +1404,7 @@
       },
       "payload": {
        "caller": "cli",
+       "code": "conflict",
        "current": "Lx",
        "file": "layout",
        "requestId": 1
@@ -1458,6 +1459,7 @@
        "event": "ws-write-conflict",
        "payload": {
         "caller": "cli",
+        "code": "conflict",
         "current": "Lx",
         "file": "layout",
         "requestId": 1
@@ -1583,6 +1585,7 @@
     "id": "ws-write-conflict",
     "payload": {
      "caller": "cli",
+     "code": "conflict",
      "current": "Lx",
      "file": "layout",
      "requestId": 1

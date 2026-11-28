@@ -18,6 +18,8 @@ test.afterEach(() => {
 /** @param {import('@playwright/test').Page} page @param {string} body */
 const ex = (page, body) => page.evaluate(`(() => { const { session, view } = window.__exegra; ${body} })()`);
 
+// A scenario added through a transaction loops up to 20000 steps; while it runs, frames keep coming, the toolbar reacts and the tab shows it as running, and the finished trace steps as before.
+// @evidence simulation-runs-off-main-thread
 test('a long simulation runs in a worker while the page stays responsive', { tag: '@full' }, async ({ page }) => {
   await page.goto(`/?project=${SCRATCH.multiplayer}`);
   await page.waitForFunction((name) => {

@@ -183,7 +183,7 @@
    "kind": "component",
    "implicit": false,
    "knowledge": "transparent",
-   "elements": 16
+   "elements": 18
   },
   {
    "id": "generation-readiness",
@@ -232,7 +232,7 @@
    "kind": "component",
    "implicit": false,
    "knowledge": "transparent",
-   "elements": 7
+   "elements": 8
   },
   {
    "id": "load-aspect",
@@ -2558,6 +2558,7 @@
    "class": "static",
    "lifted": true,
    "witnesses": [
+    "extracted:imports:src/app/session.js=>src/core/claim-methods.js",
     "extracted:imports:src/ui/explorer.js=>src/core/claim-methods.js",
     "extracted:imports:src/ui/inspector.js=>src/core/claim-methods.js",
     "extracted:imports:src/ui/property-controls.js=>src/core/claim-methods.js",
@@ -2565,20 +2566,21 @@
     "extracted:imports:src/ui/verification-panel.js=>src/core/claim-methods.js"
    ],
    "summary": {
-    "count": 5,
+    "count": 6,
     "kinds": {
-     "imports": 5
+     "imports": 6
     },
     "contracts": [],
     "carries": [],
     "delivery": [],
     "provenance": {
-     "extracted": 5
+     "extracted": 6
     },
     "ports": []
    },
    "footprint": {
     "witnesses": [
+     "extracted:imports:src/app/session.js=>src/core/claim-methods.js",
      "extracted:imports:src/ui/explorer.js=>src/core/claim-methods.js",
      "extracted:imports:src/ui/inspector.js=>src/core/claim-methods.js",
      "extracted:imports:src/ui/property-controls.js=>src/core/claim-methods.js",
@@ -6838,39 +6840,43 @@
    "lifted": true,
    "witnesses": [
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Boundary.lean",
+    "extracted:imports:formal/Exegra.lean=>formal/Exegra/BoundaryExplore.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Expr.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Format2B.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Impl/Refinement.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Impl/Semantics.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Input.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Json.lean",
+    "extracted:imports:formal/Exegra.lean=>formal/Exegra/Multiscale.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Number.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Trace.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Value.lean",
     "extracted:imports:formal/Main.lean=>formal/Exegra/Impl/Semantics.lean"
    ],
    "summary": {
-    "count": 11,
+    "count": 13,
     "kinds": {
-     "imports": 11
+     "imports": 13
     },
     "contracts": [],
     "carries": [],
     "delivery": [],
     "provenance": {
-     "extracted": 11
+     "extracted": 13
     },
     "ports": []
    },
    "footprint": {
     "witnesses": [
      "extracted:imports:formal/Exegra.lean=>formal/Exegra/Boundary.lean",
+     "extracted:imports:formal/Exegra.lean=>formal/Exegra/BoundaryExplore.lean",
      "extracted:imports:formal/Exegra.lean=>formal/Exegra/Expr.lean",
      "extracted:imports:formal/Exegra.lean=>formal/Exegra/Format2B.lean",
      "extracted:imports:formal/Exegra.lean=>formal/Exegra/Impl/Refinement.lean",
      "extracted:imports:formal/Exegra.lean=>formal/Exegra/Impl/Semantics.lean",
      "extracted:imports:formal/Exegra.lean=>formal/Exegra/Input.lean",
      "extracted:imports:formal/Exegra.lean=>formal/Exegra/Json.lean",
+     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Multiscale.lean",
      "extracted:imports:formal/Exegra.lean=>formal/Exegra/Number.lean",
      "extracted:imports:formal/Exegra.lean=>formal/Exegra/Trace.lean",
      "extracted:imports:formal/Exegra.lean=>formal/Exegra/Value.lean",
@@ -6931,18 +6937,19 @@
    "witnesses": [
     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Basic.lean",
     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Boundary.lean",
-    "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Engine.lean"
+    "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Engine.lean",
+    "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Structure.lean"
    ],
    "summary": {
-    "count": 3,
+    "count": 4,
     "kinds": {
-     "imports": 3
+     "imports": 4
     },
     "contracts": [],
     "carries": [],
     "delivery": [],
     "provenance": {
-     "extracted": 3
+     "extracted": 4
     },
     "ports": []
    },
@@ -6950,7 +6957,8 @@
     "witnesses": [
      "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Basic.lean",
      "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Boundary.lean",
-     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Engine.lean"
+     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Engine.lean",
+     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Structure.lean"
     ],
     "reads": [],
     "query": {
@@ -7286,6 +7294,41 @@
     "query": {
      "from": "formal-semantics",
      "to": "lts-foundation",
+     "kind": "imports"
+    }
+   }
+  },
+  {
+   "key": "formal-semantics->proof-export:imports",
+   "from": "formal-semantics",
+   "to": "proof-export",
+   "kind": "imports",
+   "class": "static",
+   "lifted": true,
+   "witnesses": [
+    "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/ProveB.lean"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/ProveB.lean"
+    ],
+    "reads": [],
+    "query": {
+     "from": "formal-semantics",
+     "to": "proof-export",
      "kind": "imports"
     }
    }
@@ -7804,18 +7847,20 @@
    "witnesses": [
     "extracted:imports:formal/Exegra/Api/Basic.lean=>formal/Exegra/Json.lean",
     "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Boundary.lean",
-    "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Impl/Refinement.lean"
+    "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/BoundaryExplore.lean",
+    "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Impl/Refinement.lean",
+    "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Multiscale.lean"
    ],
    "summary": {
-    "count": 3,
+    "count": 5,
     "kinds": {
-     "imports": 3
+     "imports": 5
     },
     "contracts": [],
     "carries": [],
     "delivery": [],
     "provenance": {
-     "extracted": 3
+     "extracted": 5
     },
     "ports": []
    },
@@ -7823,7 +7868,9 @@
     "witnesses": [
      "extracted:imports:formal/Exegra/Api/Basic.lean=>formal/Exegra/Json.lean",
      "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Boundary.lean",
-     "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Impl/Refinement.lean"
+     "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/BoundaryExplore.lean",
+     "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Impl/Refinement.lean",
+     "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Multiscale.lean"
     ],
     "reads": [],
     "query": {
@@ -10553,6 +10600,41 @@
    }
   },
   {
+   "key": "semantic-abstraction->claim-method-registry:imports",
+   "from": "semantic-abstraction",
+   "to": "claim-method-registry",
+   "kind": "imports",
+   "class": "static",
+   "lifted": true,
+   "witnesses": [
+    "extracted:imports:src/core/extraction.js=>src/core/claim-methods.js"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:src/core/extraction.js=>src/core/claim-methods.js"
+    ],
+    "reads": [],
+    "query": {
+     "from": "semantic-abstraction",
+     "to": "claim-method-registry",
+     "kind": "imports"
+    }
+   }
+  },
+  {
    "key": "semantic-abstraction->queries:imports",
    "from": "semantic-abstraction",
    "to": "queries",
@@ -10641,6 +10723,41 @@
      "from": "semantic-abstraction",
      "to": "queries",
      "kind": "invokes"
+    }
+   }
+  },
+  {
+   "key": "semantic-abstraction->stable-serialization:imports",
+   "from": "semantic-abstraction",
+   "to": "stable-serialization",
+   "kind": "imports",
+   "class": "static",
+   "lifted": true,
+   "witnesses": [
+    "extracted:imports:src/core/extraction.js=>src/core/sha256.js"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:src/core/extraction.js=>src/core/sha256.js"
+    ],
+    "reads": [],
+    "query": {
+     "from": "semantic-abstraction",
+     "to": "stable-serialization",
+     "kind": "imports"
     }
    }
   },
@@ -11780,23 +11897,25 @@
    "class": "static",
    "lifted": true,
    "witnesses": [
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/generate/manifest.js=>src/core/claim-methods.js"
    ],
    "summary": {
-    "count": 1,
+    "count": 2,
     "kinds": {
-     "imports": 1
+     "imports": 2
     },
     "contracts": [],
     "carries": [],
     "delivery": [],
     "provenance": {
-     "extracted": 1
+     "extracted": 2
     },
     "ports": []
    },
    "footprint": {
     "witnesses": [
+     "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js",
      "extracted:imports:src/core/generate/manifest.js=>src/core/claim-methods.js"
     ],
     "reads": [],
@@ -12698,27 +12817,29 @@
    "lifted": true,
    "witnesses": [
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/query.js",
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js",
     "extracted:imports:src/core/generate/manifest.js=>src/core/query.js",
     "extracted:imports:src/core/generate/task-manifest.js=>src/core/query.js",
     "extracted:imports:tools/import-scan.js=>src/core/query.js",
     "extracted:imports:tools/traceability.js=>src/core/query.js"
    ],
    "summary": {
-    "count": 5,
+    "count": 6,
     "kinds": {
-     "imports": 5
+     "imports": 6
     },
     "contracts": [],
     "carries": [],
     "delivery": [],
     "provenance": {
-     "extracted": 5
+     "extracted": 6
     },
     "ports": []
    },
    "footprint": {
     "witnesses": [
      "extracted:imports:src/core/generate/architecture-doc.js=>src/core/query.js",
+     "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js",
      "extracted:imports:src/core/generate/manifest.js=>src/core/query.js",
      "extracted:imports:src/core/generate/task-manifest.js=>src/core/query.js",
      "extracted:imports:tools/import-scan.js=>src/core/query.js",
@@ -15082,6 +15203,41 @@
    }
   },
   {
+   "key": "visualization->claim-method-registry:imports",
+   "from": "visualization",
+   "to": "claim-method-registry",
+   "kind": "imports",
+   "class": "static",
+   "lifted": true,
+   "witnesses": [
+    "extracted:imports:src/core/projections.js=>src/core/claim-methods.js"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:src/core/projections.js=>src/core/claim-methods.js"
+    ],
+    "reads": [],
+    "query": {
+     "from": "visualization",
+     "to": "claim-method-registry",
+     "kind": "imports"
+    }
+   }
+  },
+  {
    "key": "visualization->composition-root:invokes",
    "from": "visualization",
    "to": "composition-root",
@@ -15567,6 +15723,7 @@
    "extracted:imports:formal/Exegra/Boundary.lean=>formal/Exegra/Impl/Semantics.lean",
    "extracted:imports:formal/Exegra/Boundary.lean=>formal/Exegra/Json.lean",
    "extracted:imports:formal/Exegra/Boundary.lean=>formal/Exegra/Trace.lean",
+   "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/Boundary.lean",
    "extracted:imports:formal/Exegra/Expr.lean=>formal/Exegra/Value.lean",
    "extracted:imports:formal/Exegra/Impl/Json.lean=>formal/Exegra/Json.lean",
    "extracted:imports:formal/Exegra/Impl/Refinement.lean=>formal/Exegra/Impl/Semantics.lean",
@@ -15574,6 +15731,8 @@
    "extracted:imports:formal/Exegra/Impl/Semantics.lean=>formal/Exegra/Impl/Json.lean",
    "extracted:imports:formal/Exegra/Input.lean=>formal/Exegra/Json.lean",
    "extracted:imports:formal/Exegra/Json.lean=>formal/Exegra/Value.lean",
+   "extracted:imports:formal/Exegra/Multiscale.lean=>formal/Exegra/Json.lean",
+   "extracted:imports:formal/Exegra/Multiscale.lean=>formal/Exegra/Value.lean",
    "extracted:imports:formal/Exegra/Trace.lean=>formal/Exegra/Json.lean",
    "extracted:imports:formal/Exegra/Value.lean=>formal/Exegra/Number.lean"
   ],
@@ -15625,7 +15784,8 @@
   "jsonc-parser-library": [],
   "lean-call-boundary": [
    "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Api/Basic.lean",
-   "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Api/Basic.lean"
+   "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Api/Basic.lean",
+   "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Api/Basic.lean"
   ],
   "load-aspect": [],
   "lts-composition": [
@@ -15928,6 +16088,7 @@
     "explorer-reads-claim-method-registry",
     "extracted:imports:src/app/session.js=>src/app/engine-runner.js",
     "extracted:imports:src/app/session.js=>src/core/abstraction.js",
+    "extracted:imports:src/app/session.js=>src/core/claim-methods.js",
     "extracted:imports:src/app/session.js=>src/core/claims.js",
     "extracted:imports:src/app/session.js=>src/core/concordance.js",
     "extracted:imports:src/app/session.js=>src/core/contract-trace.js",
@@ -16153,9 +16314,13 @@
     "explorer-reads-claim-method-registry",
     "extracted:imports:cli/admit.js=>src/core/claim-methods.js",
     "extracted:imports:cli/commands.js=>src/core/claim-methods.js",
+    "extracted:imports:src/app/session.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/claims.js=>src/core/claim-methods.js",
+    "extracted:imports:src/core/extraction.js=>src/core/claim-methods.js",
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/generate/manifest.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/parse.js=>src/core/claim-methods.js",
+    "extracted:imports:src/core/projections.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/validate.js=>src/core/claim-methods.js",
     "extracted:imports:src/ui/explorer.js=>src/core/claim-methods.js",
     "extracted:imports:src/ui/inspector.js=>src/core/claim-methods.js",
@@ -16405,6 +16570,7 @@
   "formal-root": {
    "out": [
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Boundary.lean",
+    "extracted:imports:formal/Exegra.lean=>formal/Exegra/BoundaryExplore.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Core/Behav.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Core/BehavCheck.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Core/BehavExamples.lean",
@@ -16435,6 +16601,7 @@
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Lower.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Model.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/ModelProps.lean",
+    "extracted:imports:formal/Exegra.lean=>formal/Exegra/Multiscale.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Number.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Proofs/VisualEditFlow.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/ProveB.lean",
@@ -16450,6 +16617,7 @@
     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Boundary.lean",
     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Engine.lean",
     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Model.lean",
+    "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Structure.lean",
     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Verdict.lean",
     "extracted:imports:formal/Main.lean=>formal/Exegra/Elab.lean",
     "extracted:imports:formal/Main.lean=>formal/Exegra/Format2.lean",
@@ -16463,22 +16631,27 @@
   },
   "formal-semantics": {
    "out": [
+    "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/ProveB.lean",
     "extracted:imports:formal/Exegra/Format2B.lean=>formal/Exegra/Elab.lean"
    ],
    "in": [
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Boundary.lean",
+    "extracted:imports:formal/Exegra.lean=>formal/Exegra/BoundaryExplore.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Expr.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Format2B.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Impl/Refinement.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Impl/Semantics.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Input.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Json.lean",
+    "extracted:imports:formal/Exegra.lean=>formal/Exegra/Multiscale.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Number.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Trace.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Value.lean",
     "extracted:imports:formal/Exegra/Api/Basic.lean=>formal/Exegra/Json.lean",
     "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Boundary.lean",
+    "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/BoundaryExplore.lean",
     "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Impl/Refinement.lean",
+    "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Multiscale.lean",
     "extracted:imports:formal/Exegra/Format2.lean=>formal/Exegra/Expr.lean",
     "extracted:imports:formal/Exegra/Format2.lean=>formal/Exegra/Input.lean",
     "extracted:imports:formal/Exegra/Format2.lean=>formal/Exegra/Trace.lean",
@@ -16619,12 +16792,14 @@
    "out": [
     "extracted:imports:formal/Exegra/Api/Basic.lean=>formal/Exegra/Json.lean",
     "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Boundary.lean",
+    "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/BoundaryExplore.lean",
     "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Elab.lean",
     "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Format2.lean",
     "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Impl/Refinement.lean",
     "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Lower.lean",
     "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/ProveB.lean",
     "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/ProveLive.lean",
+    "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Multiscale.lean",
     "lean-call-boundary-calls-claim-verdict",
     "lean-call-boundary-calls-formal-semantics",
     "lean-call-boundary-calls-model-derivation",
@@ -16638,6 +16813,7 @@
     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Basic.lean",
     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Boundary.lean",
     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Engine.lean",
+    "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Structure.lean",
     "extracted:imports:formal/Exegra/Api/Model.lean=>formal/Exegra/Api/Basic.lean",
     "extracted:imports:formal/Exegra/Api/Verdict.lean=>formal/Exegra/Api/Basic.lean",
     "extracted:imports:src/core/claims.js=>src/core/lean.js",
@@ -16923,6 +17099,7 @@
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/ProveLive.lean",
     "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/ProveB.lean",
     "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/ProveLive.lean",
+    "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/ProveB.lean",
     "extracted:imports:formal/Main.lean=>formal/Exegra/ProveB.lean",
     "extracted:imports:formal/Main.lean=>formal/Exegra/ProveKernel.lean",
     "extracted:imports:formal/Main.lean=>formal/Exegra/ProveLive.lean",
@@ -16963,6 +17140,7 @@
     "extracted:imports:src/core/footprints.js=>src/core/query.js",
     "extracted:imports:src/core/function-composition.js=>src/core/query.js",
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/query.js",
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js",
     "extracted:imports:src/core/generate/manifest.js=>src/core/query.js",
     "extracted:imports:src/core/generate/task-manifest.js=>src/core/query.js",
     "extracted:imports:src/core/operations.js=>src/core/query.js",
@@ -17072,8 +17250,10 @@
     "extracted:imports:src/core/abstraction.js=>src/core/query.js",
     "extracted:imports:src/core/coherence.js=>src/core/interactions.js",
     "extracted:imports:src/core/coherence.js=>src/core/query.js",
+    "extracted:imports:src/core/extraction.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/extraction.js=>src/core/interactions.js",
     "extracted:imports:src/core/extraction.js=>src/core/query.js",
+    "extracted:imports:src/core/extraction.js=>src/core/sha256.js",
     "extracted:imports:src/core/fault-lifting.js=>src/core/query.js",
     "extracted:imports:src/core/footprints.js=>src/core/interactions.js",
     "extracted:imports:src/core/footprints.js=>src/core/own.js",
@@ -17223,6 +17403,7 @@
     "agent-cli-calls-stable-serialization",
     "extracted:imports:cli/commands.js=>src/core/stable-json.js",
     "extracted:imports:src/app/session.js=>src/core/sha256.js",
+    "extracted:imports:src/core/extraction.js=>src/core/sha256.js",
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/stable-json.js",
     "extracted:imports:src/core/generate/manifest.js=>src/core/stable-json.js",
     "extracted:imports:src/core/impact.js=>src/core/stable-json.js",
@@ -17257,8 +17438,10 @@
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/hash.js",
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/query.js",
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/stable-json.js",
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-strength.js",
     "extracted:imports:src/core/generate/claims-report.js=>src/core/hash.js",
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js",
     "extracted:imports:src/core/generate/index.js=>src/core/claim-strength.js",
     "extracted:imports:src/core/generate/manifest.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/generate/manifest.js=>src/core/hash.js",
@@ -17504,6 +17687,7 @@
     "extracted:imports:src/core/flows.js=>src/core/abstraction.js",
     "extracted:imports:src/core/flows.js=>src/core/query.js",
     "extracted:imports:src/core/projections.js=>src/core/abstraction.js",
+    "extracted:imports:src/core/projections.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/projections.js=>src/core/data-model.js",
     "extracted:imports:src/core/projections.js=>src/core/interactions.js",
     "extracted:imports:src/core/projections.js=>src/core/own.js",
@@ -17924,6 +18108,7 @@
      "witnesses": [
       "extracted:imports:src/app/session.js=>src/app/engine-runner.js",
       "extracted:imports:src/app/session.js=>src/core/abstraction.js",
+      "extracted:imports:src/app/session.js=>src/core/claim-methods.js",
       "extracted:imports:src/app/session.js=>src/core/claims.js",
       "extracted:imports:src/app/session.js=>src/core/concordance.js",
       "extracted:imports:src/app/session.js=>src/core/contract-trace.js",
@@ -18455,9 +18640,13 @@
      "witnesses": [
       "extracted:imports:cli/admit.js=>src/core/claim-methods.js",
       "extracted:imports:cli/commands.js=>src/core/claim-methods.js",
+      "extracted:imports:src/app/session.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/claims.js=>src/core/claim-methods.js",
+      "extracted:imports:src/core/extraction.js=>src/core/claim-methods.js",
+      "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/generate/manifest.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/parse.js=>src/core/claim-methods.js",
+      "extracted:imports:src/core/projections.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/validate.js=>src/core/claim-methods.js",
       "extracted:imports:src/ui/explorer.js=>src/core/claim-methods.js",
       "extracted:imports:src/ui/inspector.js=>src/core/claim-methods.js",
@@ -19288,6 +19477,7 @@
      "contract": null,
      "witnesses": [
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Boundary.lean",
+      "extracted:imports:formal/Exegra.lean=>formal/Exegra/BoundaryExplore.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Core/Behav.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Core/BehavCheck.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Core/BehavExamples.lean",
@@ -19318,6 +19508,7 @@
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Lower.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Model.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/ModelProps.lean",
+      "extracted:imports:formal/Exegra.lean=>formal/Exegra/Multiscale.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Number.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Proofs/VisualEditFlow.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/ProveB.lean",
@@ -19333,6 +19524,7 @@
       "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Boundary.lean",
       "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Engine.lean",
       "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Model.lean",
+      "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Structure.lean",
       "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Verdict.lean",
       "extracted:imports:formal/Main.lean=>formal/Exegra/Elab.lean",
       "extracted:imports:formal/Main.lean=>formal/Exegra/Format2.lean",
@@ -19384,18 +19576,22 @@
      "contract": null,
      "witnesses": [
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Boundary.lean",
+      "extracted:imports:formal/Exegra.lean=>formal/Exegra/BoundaryExplore.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Expr.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Format2B.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Impl/Refinement.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Impl/Semantics.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Input.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Json.lean",
+      "extracted:imports:formal/Exegra.lean=>formal/Exegra/Multiscale.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Number.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Trace.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Value.lean",
       "extracted:imports:formal/Exegra/Api/Basic.lean=>formal/Exegra/Json.lean",
       "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Boundary.lean",
+      "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/BoundaryExplore.lean",
       "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Impl/Refinement.lean",
+      "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Multiscale.lean",
       "extracted:imports:formal/Exegra/Format2.lean=>formal/Exegra/Expr.lean",
       "extracted:imports:formal/Exegra/Format2.lean=>formal/Exegra/Input.lean",
       "extracted:imports:formal/Exegra/Format2.lean=>formal/Exegra/Trace.lean",
@@ -19443,6 +19639,7 @@
      "kind": "imports",
      "contract": null,
      "witnesses": [
+      "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/ProveB.lean",
       "extracted:imports:formal/Exegra/Format2B.lean=>formal/Exegra/Elab.lean"
      ],
      "events": [],
@@ -19771,6 +19968,7 @@
       "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Basic.lean",
       "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Boundary.lean",
       "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Engine.lean",
+      "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Structure.lean",
       "extracted:imports:formal/Exegra/Api/Model.lean=>formal/Exegra/Api/Basic.lean",
       "extracted:imports:formal/Exegra/Api/Verdict.lean=>formal/Exegra/Api/Basic.lean",
       "extracted:imports:src/core/claims.js=>src/core/lean.js",
@@ -19822,12 +20020,14 @@
      "witnesses": [
       "extracted:imports:formal/Exegra/Api/Basic.lean=>formal/Exegra/Json.lean",
       "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Boundary.lean",
+      "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/BoundaryExplore.lean",
       "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Elab.lean",
       "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Format2.lean",
       "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Impl/Refinement.lean",
       "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Lower.lean",
       "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/ProveB.lean",
-      "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/ProveLive.lean"
+      "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/ProveLive.lean",
+      "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Multiscale.lean"
      ],
      "events": [],
      "ports": [],
@@ -20733,6 +20933,7 @@
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/ProveLive.lean",
       "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/ProveB.lean",
       "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/ProveLive.lean",
+      "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/ProveB.lean",
       "extracted:imports:formal/Main.lean=>formal/Exegra/ProveB.lean",
       "extracted:imports:formal/Main.lean=>formal/Exegra/ProveKernel.lean",
       "extracted:imports:formal/Main.lean=>formal/Exegra/ProveLive.lean",
@@ -20825,6 +21026,7 @@
       "extracted:imports:src/core/footprints.js=>src/core/query.js",
       "extracted:imports:src/core/function-composition.js=>src/core/query.js",
       "extracted:imports:src/core/generate/architecture-doc.js=>src/core/query.js",
+      "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js",
       "extracted:imports:src/core/generate/manifest.js=>src/core/query.js",
       "extracted:imports:src/core/generate/task-manifest.js=>src/core/query.js",
       "extracted:imports:src/core/operations.js=>src/core/query.js",
@@ -21188,8 +21390,10 @@
       "extracted:imports:src/core/abstraction.js=>src/core/query.js",
       "extracted:imports:src/core/coherence.js=>src/core/interactions.js",
       "extracted:imports:src/core/coherence.js=>src/core/query.js",
+      "extracted:imports:src/core/extraction.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/extraction.js=>src/core/interactions.js",
       "extracted:imports:src/core/extraction.js=>src/core/query.js",
+      "extracted:imports:src/core/extraction.js=>src/core/sha256.js",
       "extracted:imports:src/core/fault-lifting.js=>src/core/query.js",
       "extracted:imports:src/core/footprints.js=>src/core/interactions.js",
       "extracted:imports:src/core/footprints.js=>src/core/own.js",
@@ -21632,6 +21836,7 @@
      "witnesses": [
       "extracted:imports:cli/commands.js=>src/core/stable-json.js",
       "extracted:imports:src/app/session.js=>src/core/sha256.js",
+      "extracted:imports:src/core/extraction.js=>src/core/sha256.js",
       "extracted:imports:src/core/generate/architecture-doc.js=>src/core/stable-json.js",
       "extracted:imports:src/core/generate/manifest.js=>src/core/stable-json.js",
       "extracted:imports:src/core/impact.js=>src/core/stable-json.js",
@@ -21830,8 +22035,10 @@
       "extracted:imports:src/core/generate/architecture-doc.js=>src/core/hash.js",
       "extracted:imports:src/core/generate/architecture-doc.js=>src/core/query.js",
       "extracted:imports:src/core/generate/architecture-doc.js=>src/core/stable-json.js",
+      "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-strength.js",
       "extracted:imports:src/core/generate/claims-report.js=>src/core/hash.js",
+      "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js",
       "extracted:imports:src/core/generate/index.js=>src/core/claim-strength.js",
       "extracted:imports:src/core/generate/manifest.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/generate/manifest.js=>src/core/hash.js",
@@ -22441,6 +22648,7 @@
       "extracted:imports:src/core/flows.js=>src/core/abstraction.js",
       "extracted:imports:src/core/flows.js=>src/core/query.js",
       "extracted:imports:src/core/projections.js=>src/core/abstraction.js",
+      "extracted:imports:src/core/projections.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/projections.js=>src/core/data-model.js",
       "extracted:imports:src/core/projections.js=>src/core/interactions.js",
       "extracted:imports:src/core/projections.js=>src/core/own.js",
@@ -22632,13 +22840,14 @@
         "transaction-committed",
         "transaction-rejected"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "operation-submitted",
+        "transaction-committed"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "composition-root-submits-edits-transactions"
-     ]
+     "flagged": []
     },
     {
      "hops": [
@@ -22683,13 +22892,13 @@
         "transaction-committed",
         "transaction-rejected"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "transaction-committed"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "session-calls-transactions"
-     ]
+     "flagged": []
     },
     {
      "hops": [
@@ -22716,13 +22925,13 @@
         "operation-submitted",
         "transaction-rejected"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "operation-submitted"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "source-editor-submits-edits-transactions"
-     ]
+     "flagged": []
     },
     {
      "hops": [
@@ -22804,13 +23013,14 @@
         "claims-evaluated",
         "claims-evaluation-requested"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "claims-evaluated",
+        "claims-evaluation-requested"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "session-calls-claim-evaluator"
-     ]
+     "flagged": []
     }
    ]
   },
@@ -22827,8 +23037,11 @@
         "projection-refreshed",
         "refresh-requested"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "projection-refreshed",
+        "refresh-requested"
+       ],
+       "status": "typed"
       },
       {
        "relationship": "projection-system-projects-scene-renderer",
@@ -22837,14 +23050,13 @@
        "events": [
         "projection-refreshed"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "projection-refreshed"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "session-calls-projection-system",
-      "projection-system-projects-scene-renderer"
-     ]
+     "flagged": []
     }
    ]
   },
@@ -22862,13 +23074,14 @@
         "engine-run-failed",
         "engine-run-finished"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "engine-run-called",
+        "engine-run-finished"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "agent-cli-calls-simulation-engine"
-     ]
+     "flagged": []
     },
     {
      "hops": [
@@ -22911,13 +23124,14 @@
         "sim-run-failed",
         "sim-trace-ready"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "engine-run-intent",
+        "sim-trace-ready"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "session-calls-simulation-engine"
-     ]
+     "flagged": []
     }
    ]
   },
@@ -22961,6 +23175,7 @@
        ],
        "contractEvents": [
         "ws-write",
+        "ws-write-conflict",
         "ws-write-done"
        ],
        "status": "typed"
@@ -22987,8 +23202,11 @@
         "watch-intent",
         "write-intent"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "save-succeeded",
+        "write-intent"
+       ],
+       "status": "typed"
       },
       {
        "relationship": "persistence-client-calls-dev-server-plugin",
@@ -23050,15 +23268,14 @@
        ],
        "contractEvents": [
         "ws-write",
+        "ws-write-conflict",
         "ws-write-done",
         "ws-write-error"
        ],
        "status": "typed"
       }
      ],
-     "flagged": [
-      "session-calls-persistence-client"
-     ]
+     "flagged": []
     }
    ]
   }

@@ -42,6 +42,10 @@ const openSimulation = async (page) => {
   await expect(page.getByTestId('sim-live')).toBeVisible();
 };
 
+// The running application opens a copy of its own specification; with Live mode on, an edit and its save are recorded in order on the components the model names, replay without divergence and without failed checks, the request log shows the write, and the panel works at phone width with 44 px source buttons and no horizontal scroll.
+// In the running application the live trace's times are the recorded sequence numbers.
+// The session, the persistence client and the scene record the open, the edit and the save in the running application, matching the server's events by request id.
+// @evidence real-runs-replay-through-self-model traffic-stream-bounded-and-logical traffic-producers-name-spec-events
 test('live mode replays an edit and its save through the self-model on the right components without divergence', { tag: '@full' }, async ({ page }) => {
   await openSelf(page);
   // Settle: the change stream is open and nothing is awaited before the edit.

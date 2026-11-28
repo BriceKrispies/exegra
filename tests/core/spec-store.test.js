@@ -103,6 +103,8 @@ for (const file of jsoncFiles(FIXTURES)) {
   });
 }
 
+// Round-trips every project specification, JSONC fixture, parse corpus case and edge case, and checks that the rows are contiguous verbatim slices covering the text.
+// @evidence store-export-is-byte-identical # round trip
 test('round trip of every parse corpus case and refusal of a case that does not parse', () => {
   // Every case is sliced (cheap); the round trip, which writes a database, runs for every eighth kept case.
   const cases = JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(FIXTURES, 'parse-corpus/cases.json.gz'))).toString('utf8'));
@@ -125,6 +127,8 @@ test('round trip of every parse corpus case and refusal of a case that does not 
   assert.ok(kept > 0 && refused > 0 && kept + refused === cases.length);
 });
 
+// Compares every row of a store and of the store imported from its export, for Exegra's specification and two fixtures.
+// @evidence store-reimport-gives-same-rows
 test('reimporting an export gives the same rows', () => {
   for (const file of [path.join(FIXTURES, 'multiplayer/spec.jsonc'), path.join(FIXTURES, 'register-import/repo/draft.jsonc')]) {
     const d = stored(readSpecFile(file));
@@ -184,6 +188,8 @@ function analyzeOne(source) {
   return JSON.parse(entities[0].json);
 }
 
+// Imports broken, empty, lone-surrogate and invalid UTF-8 input over a stored specification and checks the export is unchanged.
+// @evidence store-refuses-what-it-cannot-return
 test('a text that does not parse is refused and the store keeps what it held', () => {
   const db = stored(EDGE_CASES.crlf);
   const broken = '{\n  "exegra": "0.1",\n  "system": { "id": "s" \n}\n';
@@ -195,6 +201,8 @@ test('a text that does not parse is refused and the store keeps what it held', (
   assert.equal(exportText(db), EDGE_CASES.crlf);
 });
 
+// Compares loadModelFromStore with analyzeSpec for a valid specification, one with errors, one with a byte order mark and one with an unresolved reference.
+// @evidence store-model-equals-text-model
 test('the model read from the store is the model of the text: semantic hash and diagnostics', () => {
   const texts = [
     fs.readFileSync(path.join(FIXTURES, 'register-import/repo/draft.jsonc'), 'utf8'),
@@ -212,6 +220,8 @@ test('the model read from the store is the model of the text: semantic hash and 
   }
 });
 
+// Changes the specification after an import and checks that export to it is refused and the file keeps its new text.
+// @evidence store-export-never-overwrites-stale-specification
 test('files: a WAL database beside the specification and an exact export that never overwrites a stale specification', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'exegra-store-'));
   try {
@@ -235,6 +245,9 @@ test('files: a WAL database beside the specification and an exact export that ne
   }
 });
 
+// store import of a broken specification fails with store.syntax.
+// store export to a specification changed since the import fails with store.stale.
+// @evidence store-refuses-what-it-cannot-return store-export-never-overwrites-stale-specification
 test('exegra store import and export through the command line', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'exegra-store-cli-'));
   try {

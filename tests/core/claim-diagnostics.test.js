@@ -91,6 +91,8 @@ const model = load(SPEC);
 const results = Object.fromEntries(evaluateClaims(model).map((r) => [r.claimId, r]));
 const warningCodes = (text) => analyzeSpec(text).diagnostics.filter((d) => d.severity === 'warning').map((d) => d.code);
 
+// Two unguarded transitions on one event warn, and the claim scope names the transition the declaration order chose; a guard removes both.
+// @evidence trace-claims-state-how-decided
 test('two unguarded transitions on one event are warned about and the result says the order decided', () => {
   assert.ok(warningCodes(SPEC).includes('transition.order-decides'));
   const r = results.ord;
@@ -103,6 +105,8 @@ test('two unguarded transitions on one event are warned about and the result say
   assert.doesNotMatch(evaluateClaim(load(guarded), 'ord').scope, /Declaration order decided/);
 });
 
+// An ordering between two scripted deliveries is inconclusive; one a transition produces is verified.
+// @evidence trace-claims-state-how-decided
 test('precedes between two scripted deliveries is not verified and one the system produces is', () => {
   const script = results['pr-script'];
   assert.equal(script.status, 'inconclusive');
@@ -112,6 +116,8 @@ test('precedes between two scripted deliveries is not verified and one the syste
   assert.match(system.scope, /produced by the system/);
 });
 
+// A never over an occurrence only a faultOnly transition emits says so in its scope; it does not when the scenario enables the fault.
+// @evidence trace-claims-state-how-decided
 test('a never over an occurrence only a faultOnly transition produces says it holds for fault-free runs', () => {
   const r = results['nv-leak'];
   assert.equal(r.status, 'verified', r.explanation);
@@ -124,12 +130,16 @@ test('a never over an occurrence only a faultOnly transition produces says it ho
   assert.doesNotMatch(evaluateClaim(load(enabled), 'nv-leak').scope, /faultOnly/);
 });
 
+// An implication whose consequent names no state or variable is inconclusive.
+// @evidence trace-claims-state-how-decided
 test('an implication with a constant consequent is not exercised', () => {
   const r = results['inv-const'];
   assert.equal(r.status, 'inconclusive');
   assert.match(r.explanation, /consequent names no state or variable/);
 });
 
+// A requirement result lists the claims whose models property names it with their statuses, and its own status is unchanged.
+// @evidence models-property-evaluated
 test('a requirement shows the model claims that name it and their statuses', () => {
   assert.deepEqual(results['req-1'].modelledBy, [{ claimId: 'ord', status: 'verified' }]);
   assert.deepEqual(results['req-2'].modelledBy, [{ claimId: 'nv-leak', status: 'verified' }]);
@@ -140,6 +150,8 @@ test('a requirement shows the model claims that name it and their statuses', () 
   assert.equal(results['req-1'].status, 'not-evaluated');
 });
 
+// A models value that is not a requirement is the error claim.models-not-requirement.
+// @evidence models-property-evaluated
 test('a models value that names a claim which is not a requirement is a validation error', () => {
   const bad = SPEC.replace('"models": "req-1"', '"models": "pr-script"');
   const d = analyzeSpec(bad).diagnostics.find((x) => x.code === 'claim.models-not-requirement');
@@ -148,6 +160,8 @@ test('a models value that names a claim which is not a requirement is a validati
   assert.equal(d.entityId, 'ord');
 });
 
+// A negative that enables a transition of a behavior its scenario does not run is warned about.
+// @evidence claim-parameters-always-validated
 test('a negative whose fault targets a transition the scenario does not run is a warning', () => {
   const inert = SPEC.replace('"negatives": [ { "scenario": "s-order", "faults": ["f-disable-first"] } ]', '"negatives": [ { "scenario": "s-order", "faults": ["f-disable-first", "f-enable-defect"] } ]');
   assert.notEqual(inert, SPEC);
@@ -158,6 +172,8 @@ test('a negative whose fault targets a transition the scenario does not run is a
   assert.ok(!warningCodes(SPEC).includes('claim.negative.fault-inert'));
 });
 
+// A claim parameter error is reported together with an unresolved reference elsewhere.
+// @evidence claim-parameters-always-validated
 test('claim-parameter errors are reported although another reference is unresolved', () => {
   const broken = SPEC
     .replace('"from": "a", "to": "b" }', '"from": "a", "to": "nowhere" }')
@@ -168,6 +184,8 @@ test('claim-parameter errors are reported although another reference is unresolv
   assert.ok(codes.includes('claim.param.value'), `the claim parameter error: ${codes}`);
 });
 
+// The scope of a no-principal-in-shared result states that only declared personal markers are read.
+// @evidence data-model-rules-computed
 test('no-principal-in-shared says it reads only declared personal markers', () => {
   const text = JSON.stringify({
     exegra: '0.1',

@@ -38,6 +38,8 @@ const resultOf = (model, ruleId) => /** @type {any} */ (evaluateIntegrity(model)
 /** Counterexamples as {var: id} objects. @param {any} r */
 const bindings = (r) => r.counterexamples.map((/** @type {any} */ c) => Object.fromEntries(c.vars.map((/** @type {string} */ v, /** @type {number} */ i) => [v, c.values[i].slice(2)])));
 
+// Atoms parse with term arguments; their polarity flips under !, the left side of => and a forall filter, not an exists filter.
+// @evidence integrity-relations-evaluated
 test('relation atoms parse with term arguments and their polarity follows negation and implication and filters', () => {
   const p = parseRule('forall a : module where live(a), exists b in a.uses, !reaches(b, a) && reaches(a.uses, [\'m-store\'])');
   assert.ok(p.ok);
@@ -55,6 +57,8 @@ test('relation atoms parse with term arguments and their polarity follows negati
   if (!bad.ok) assert.match(bad.error.message, /Expected "\)" after the arguments of a relation/);
 });
 
+// The fixture tables equal the least models written out by hand; strata are ordered; a cycle and a deprecation give exactly the expected tuples.
+// @evidence integrity-relations-evaluated
 test('the relations of the fixture are their least models: reachability and mutual recursion and stratified negation', () => {
   const project = new Project({ specText: SPEC });
   assert.equal(project.errorCount, 0);
@@ -93,6 +97,8 @@ test('the relations of the fixture are their least models: reachability and mutu
   assert.deepEqual(tuples(dep, 'stale-dep'), ['m-model', 'm-rules', 'm-shell', 'm-view']);
 });
 
+// Each relation rule fails after its mutation with the stated counterexample, and Project.apply refuses the mutation.
+// @evidence integrity-relations-evaluated
 test('every relation rule can be made to fail: each mutation gives its stated counterexample and apply refuses it', () => {
   const model = /** @type {any} */ (new Project({ specText: SPEC }).model);
   for (const r of model.byKind.integrityRule) assert.ok(MUTATIONS.some((/** @type {any} */ m) => m.rule === r.id), `rule "${r.id}" has a mutation`);
@@ -109,6 +115,8 @@ test('every relation rule can be made to fail: each mutation gives its stated co
   }
 });
 
+// Each integrity.relation-* problem is an error on the relation and on the rule using it; invalidity propagates to relations that use it; negation of a lower stratum is accepted.
+// @evidence integrity-relations-evaluated
 test('invalid relations: each problem is a named diagnostic that makes the relation and every rule using it invalid', () => {
   /** @param {any} data @param {string} [rule] */
   const withRelation = (data, rule) => {
@@ -163,6 +171,8 @@ test('invalid relations: each problem is a named diagnostic that makes the relat
   assert.equal(tx.code, 'validation.failed');
 });
 
+// Set-valued arguments hold when some choice is a tuple; a parameter over * covers every entity.
+// @evidence integrity-relations-evaluated
 test('an atom holds when some choice of one value per argument is a tuple and a parameter over every kind ranges over every entity', () => {
   const { model } = mutated([
     { type: 'CreateEntity', kind: 'integrityRelation', data: { id: 'any-entity', statement: 'x', params: [{ name: 'e', kinds: '*' }], clauses: ['true'] } },

@@ -40,6 +40,8 @@ function after(ops) {
 /** @param {any} change */
 const impactOf = (change) => changeImpact(before(), after(change.ops ?? []), { files: change.files ?? [], recorded: RECORDED });
 
+// The graph has the node kinds and edges of the fixture.
+// @evidence change-impact-remarks-dependents # the dependency graph has the node kinds
 test('the dependency graph has the node kinds and edges of the fixture', () => {
   const g = dependencyGraph(before(), { recorded: RECORDED });
   const has = (/** @type {string} */ a, /** @type {string} */ b) => g.edges.some(([x, y]) => `${x.kind}:${x.id}` === a && `${y.kind}:${y.id}` === b);
@@ -55,6 +57,8 @@ test('the dependency graph has the node kinds and edges of the fixture', () => {
 });
 
 for (const c of EXPECTED.changes) {
+  // Set equality of the re-marked claims for each change of expected.json.
+  // @evidence change-impact-remarks-dependents # change impact on the fixture
   test(`change impact on the fixture: ${c.name} re-marks exactly ${JSON.stringify(c.remark)}`, () => {
     const r = impactOf(c.change);
     assert.deepEqual(new Set(r.remark), new Set(c.remark));
@@ -80,6 +84,8 @@ async function withFixture(body) {
   }
 }
 
+// The impact command prints the claims a change set re-marks.
+// @evidence change-impact-remarks-dependents
 test('exegra impact --change prints the claims to re-mark', () => withFixture(async (specs, dir) => {
   const file = path.join(dir, 'change.json');
   fs.writeFileSync(file, JSON.stringify(EXPECTED.changes[0].change));
@@ -92,6 +98,8 @@ test('exegra impact --change prints the claims to re-mark', () => withFixture(as
   assert.deepEqual(named.result.remark, ['c2', 'c3', 'c4']);
 }));
 
+// After the a1 edit the runner adapter is called for exactly the references of c1, c3, c6 and c7.
+// @evidence verify-reruns-only-impacted-evidence # incremental re-verification
 test('incremental re-verification: after the a1 edit only the evidence of c1, c3, c6 and c7 runs', () => {
   const remark = new Set(impactOf(EXPECTED.changes[0].change).remark);
   const model = after(EXPECTED.changes[0].change.ops);
@@ -117,6 +125,8 @@ test('incremental re-verification: after the a1 edit only the evidence of c1, c3
   assert.equal(all.length, 6);
 });
 
+// A change set editing a claim statement and touching F1.lean, t1.test.js and m2.csv.
+// @evidence admit-takes-change-sets # admit takes a change set
 test('admit takes a change set touching the specification, Lean, test and measurement files, and lists guarantee changes apart', () => withFixture(async (specs, dir) => {
   const file = path.join(dir, 'change.json');
   const change = {

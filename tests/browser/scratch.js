@@ -26,29 +26,58 @@ export function workerCount() { return Math.max(1, Number(process.env.EXEGRA_TES
 // not a shipped project.
 const SOURCES = { exegra: path.join(SPECS, 'exegra'), multiplayer: path.join(ROOT, 'tests', 'fixtures', 'multiplayer') };
 
-/** @param {'exegra'|'multiplayer'} which @param {number} [index] */
-export function resetScratch(which, index = slot()) {
-  const dir = path.join(SPECS, scratchName(which, index));
-  // Reset in place: the dev server's glob of specs/*/spec.jsonc must never see the file missing,
-  // or a page load in that moment fails to resolve its import.
-  fs.mkdirSync(dir, { recursive: true });
-  for (const entry of fs.readdirSync(dir)) {
-    if (entry !== 'spec.jsonc') fs.rmSync(path.join(dir, entry), { recursive: true, force: true });
+/**
+ * Make `to` hold exactly the files of `from` (recursively), in place: files are overwritten or added, files `from`
+ * lacks are removed, and no directory is ever deleted (one `from` lacks is emptied).
+ * @param {string|null} from @param {string} to
+ */
+function syncInPlace(from, to) {
+  fs.mkdirSync(to, { recursive: true });
+  const wanted = new Set(from && fs.existsSync(from) ? fs.readdirSync(from) : []);
+  for (const entry of fs.readdirSync(to, { withFileTypes: true })) {
+    const at = path.join(to, entry.name);
+    if (entry.isDirectory()) { if (!wanted.has(entry.name)) syncInPlace(null, at); continue; }
+    if (!wanted.has(entry.name)) fs.rmSync(at, { force: true });
   }
-  // The part files of a manifest specification first, so the manifest never names a part that is not there; then
-  // the facts extracted from the implementation, which the application attaches as the command line does.
-  for (const sub of ['parts', 'extracted']) {
-    const from = path.join(SOURCES[which], sub);
-    if (fs.existsSync(from)) fs.cpSync(from, path.join(dir, sub), { recursive: true });
-  }
-  fs.copyFileSync(path.join(SOURCES[which], 'spec.jsonc'), path.join(dir, 'spec.jsonc'));
-  const recorded = path.join(SOURCES[which], 'evidence', 'results.json');
-  if (fs.existsSync(recorded)) {
-    fs.mkdirSync(path.join(dir, 'evidence'), { recursive: true });
-    fs.copyFileSync(recorded, path.join(dir, 'evidence', 'results.json'));
+  for (const name of wanted) {
+    const src = path.join(/** @type {string} */ (from), name);
+    if (fs.statSync(src).isDirectory()) syncInPlace(src, path.join(to, name));
+    else fs.copyFileSync(src, path.join(to, name));
   }
 }
 
+/** @param {'exegra'|'multiplayer'} which @param {number} [index] */
+export function resetScratch(which, index = slot()) {
+  const dir = path.join(SPECS, scratchName(which, index));
+  // Reset in place, never deleting a directory (WG-5738): the specification file is never missing, and a directory
+  // the development server or a page might be reading is never removed. The application does not glob scratch
+  // projects at all (src/app/session.js leaves out specs/zz-test-*), so a reset cannot break a page that is loading.
+  fs.mkdirSync(dir, { recursive: true });
+  // The part files of a manifest specification first, so the manifest never names a part that is not there; then
+  // the facts extracted from the implementation, which the application attaches as the command line does, and the
+  // recorded results. Anything else in the scratch project (a journal, a layout the last test saved) is emptied.
+  const source = SOURCES[which];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === 'spec.jsonc' || ['parts', 'extracted', 'evidence'].includes(entry.name)) continue;
+    if (entry.isDirectory()) syncInPlace(null, path.join(dir, entry.name));
+    else fs.rmSync(path.join(dir, entry.name), { force: true });
+  }
+  for (const sub of ['parts', 'extracted']) syncInPlace(fs.existsSync(path.join(source, sub)) ? path.join(source, sub) : null, path.join(dir, sub));
+  fs.copyFileSync(path.join(source, 'spec.jsonc'), path.join(dir, 'spec.jsonc'));
+  const recorded = path.join(source, 'evidence', 'results.json');
+  syncInPlace(null, path.join(dir, 'evidence'));
+  if (fs.existsSync(recorded)) fs.copyFileSync(recorded, path.join(dir, 'evidence', 'results.json'));
+}
+
+/** Every directory a scratch project of this run may hold, for checks that no helper deletes one (WG-5738). */
+export function scratchDirs() {
+  return fs.readdirSync(SPECS).filter((e) => e.startsWith('zz-test-')).map((e) => path.join(SPECS, e));
+}
+
+/**
+ * Remove every scratch project. Only the global teardown calls it, after the last test; the application never globs
+ * specs/zz-test-* (src/app/session.js), so removing them cannot reach a page.
+ */
 export function removeScratch() {
   for (const entry of fs.readdirSync(SPECS)) {
     if (entry.startsWith('zz-test-')) fs.rmSync(path.join(SPECS, entry), { recursive: true, force: true });

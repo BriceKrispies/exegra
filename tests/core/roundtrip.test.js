@@ -39,6 +39,8 @@ const SPEC = `{
 
 const fresh = () => new Project({ specText: SPEC });
 
+// Visual and textual routes to a change yield equal semantic state; a visual edit changes exactly one value in the source; undo and redo restore the exact text.
+// @evidence edit-representations-equivalent #
 test('a visual edit (SetProperty) changes exactly one value in the source', () => {
   const p = fresh();
   const r = p.apply({ type: 'SetProperty', id: 'api', property: 'name', value: 'Gateway' });
@@ -147,6 +149,8 @@ test('deleting a subsystem moves its children up instead of orphaning them', () 
   assert.equal(p.errorCount, 0);
 });
 
+// A rejected operation leaves the committed model untouched.
+// @evidence rejected-edit-changes-nothing # invalid operations are rejected atomically
 test('invalid operations are rejected atomically and leave the committed model untouched', () => {
   const p = fresh();
   const before = { text: p.specText, hash: p.semanticHash, revision: p.revision };
@@ -168,6 +172,8 @@ test('invalid operations are rejected atomically and leave the committed model u
   }
 });
 
+// An invalid source draft is rejected with diagnostics and the committed model is not corrupted.
+// @evidence invalid-source-keeps-last-valid-model # an invalid source draft is rejected
 test('an invalid source draft is rejected with diagnostics and does not corrupt the committed model', () => {
   const p = fresh();
   const broken = SPEC.replace('"name": "API",', '"name": "API"');
@@ -207,6 +213,8 @@ test('undo and redo restore the exact text and semantic state', () => {
   assert.equal(p.canRedo, false);
 });
 
+// Moving a node cannot change the semantic hash or the specification text.
+// @evidence layout-moves-are-not-semantic # moving a node is presentation only
 test('moving a node is presentation only: the semantic hash and the spec text cannot change', () => {
   const p = fresh();
   const h = p.semanticHash;

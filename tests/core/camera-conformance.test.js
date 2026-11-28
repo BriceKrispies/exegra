@@ -18,11 +18,13 @@ import { readSpecFile } from '../../tools/spec-manifest.js';
 import { evaluateClaim } from '../../src/core/claims.js';
 import { dependencyGraph } from '../../src/core/impact.js';
 import { recordsStamp, formalSourcesHash } from '../../tools/tree-stamp.js';
+import { attachExtracted, derivedEvidenceId } from '../../src/core/extraction.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const MAIN = 'src/app/main.js';
 const CLAIM = 'camera-restored-per-view';
-const EVIDENCE = 'ev-camera-trace-stage';
+// The evidence this file's marker derives for the claim (the test evidence is derived from markers, WG-5705).
+const EVIDENCE = derivedEvidenceId(CLAIM, 'tests/core/camera-conformance.test.js#the camera code of main.js restores the camera a view was left with');
 const SAVE = 'sessionStorage.setItem(cameraKey(), camera)';
 
 /**
@@ -60,12 +62,16 @@ export function cameraTrace(text) {
   return { outcome: camera === 'cA' ? 'pass' : 'fail', restored: camera, trace };
 }
 
+// The camera code of main.js, run with a stand-in session storage, restores camera cA on coming back to the structural view.
+// @evidence camera-restored-per-view
 test('the camera code of main.js restores the camera a view was left with', () => {
   const r = cameraTrace(fs.readFileSync(path.join(ROOT, MAIN), 'utf8'));
   assert.equal(r.outcome, 'pass', r.trace.join(', '));
   assert.ok(r.trace.includes('camera-restored'));
 });
 
+// In a temporary copy, main.js stores an empty camera: without rerunning, the claim and the claims whose evidence covers main.js read stale; the trace-stage check then refutes the claim.
+// @evidence camera-restored-per-view
 test('an edit of main.js that stores no camera makes the camera claims stale and the trace stage refutes it', () => {
   const original = fs.readFileSync(path.join(ROOT, MAIN), 'utf8');
   assert.ok(original.includes(SAVE), `main.js saves the camera with ${SAVE}`);
@@ -74,8 +80,10 @@ test('an edit of main.js that stores no camera makes the camera claims stale and
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'exegra-camera-'));
   try {
     fs.writeFileSync(path.join(dir, 'main.js'), edited);
-    const { model } = analyzeSpec(readSpecFile(path.join(ROOT, 'specs/exegra/spec.jsonc')));
+    const facts = JSON.parse(fs.readFileSync(path.join(ROOT, 'specs/exegra/extracted/facts.json'), 'utf8'));
+    const model = /** @type {any} */ (attachExtracted(/** @type {any} */ (analyzeSpec(readSpecFile(path.join(ROOT, 'specs/exegra/spec.jsonc'))).model), facts));
     assert.ok(model);
+    assert.ok(model.entities.get(EVIDENCE), 'the marker of the camera test derives its evidence');
     const before = recordsStamp(ROOT);
     const after = recordsStamp(ROOT, { [MAIN]: edited });
     assert.notEqual(before, after);

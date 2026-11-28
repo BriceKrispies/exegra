@@ -31,6 +31,8 @@ async function withDir(body) {
   }
 }
 
+// project add writes a relative link that validate reads as a layered project; project list shows it.
+// @evidence cli-registers-projects-from-scripts
 test('project add registers a spec file and product files stored relative to the project directory', () =>
   withDir(async ({ specs, spec, product }) => {
     const added = await runCommand('project', ['add', 'strata', '--spec', spec, '--product', product], { specs });
@@ -44,6 +46,8 @@ test('project add registers a spec file and product files stored relative to the
     assert.deepEqual(listed.result.map((/** @type {any} */ p) => [p.name, p.products]), [['strata', ['../../products']]]);
   }));
 
+// Existing project, bad names and unreadable files are refused; --force replaces.
+// @evidence cli-registers-projects-from-scripts
 test('project add refuses to overwrite a project unless --force and refuses a bad name or an unreadable file', () =>
   withDir(async ({ specs, spec }) => {
     assert.equal((await runCommand('project', ['add', 'strata', '--spec', spec], { specs })).ok, true);
@@ -67,6 +71,8 @@ test('project add refuses to overwrite a project unless --force and refuses a ba
     assert.equal(exitCodeOf(noSpec), 2);
   }));
 
+// A project with its own spec.jsonc is never given a link.
+// @evidence cli-registers-projects-from-scripts
 test('project add refuses a name whose project keeps its own spec.jsonc', () =>
   withDir(async ({ specs, spec }) => {
     fs.mkdirSync(path.join(specs, 'own'));
@@ -76,6 +82,8 @@ test('project add refuses a name whose project keeps its own spec.jsonc', () =>
     assert.equal(fs.existsSync(path.join(specs, 'own', 'project.jsonc')), false);
   }));
 
+// remove deletes the link only.
+// @evidence cli-registers-projects-from-scripts
 test('project remove deletes the link and the directory only when nothing else is in it', () =>
   withDir(async ({ specs, spec }) => {
     await runCommand('project', ['add', 'strata', '--spec', spec], { specs });
@@ -95,6 +103,8 @@ test('project remove deletes the link and the directory only when nothing else i
     assert.equal(gone.error?.code, 'project.not-found');
   }));
 
+// Inline projects on read-only commands; writers refuse the options.
+// @evidence cli-registers-projects-from-scripts
 test('validate and other read-only commands accept the project inline with --spec and --product', () =>
   withDir(async ({ specs, spec, product }) => {
     const alone = await runCommand('validate', ['--spec', spec], { specs });

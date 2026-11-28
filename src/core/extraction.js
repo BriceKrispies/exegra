@@ -19,7 +19,9 @@
 // never flagged merely for being unextracted, and a declared runtime interaction no recording shows is "not observed",
 // never "false".
 
-import { moduleDeclarations, elementsOf, componentOf } from './query.js';
+import { moduleDeclarations, elementsOf, componentOf, claimSubjects } from './query.js';
+import { CLAIM_METHODS } from './claim-methods.js';
+import { sha256Hex } from './sha256.js';
 import { kindInfo, provenanceOf } from './interactions.js';
 import { eventExchange, eventsBetween } from './abstraction.js';
 
@@ -30,6 +32,8 @@ export const FACTS_FORMAT = 'exegra-extracted-facts/1';
 export const OBSERVED_FORMAT = 'exegra-observed-facts/1';
 /** Id prefixes of the relationships the facts become. */
 export const EXTRACTED_PREFIX = 'extracted:';
+/** Id prefix of the evidence entities derived from the claim markers of tests (WG-5705). */
+export const DERIVED_EVIDENCE_PREFIX = 'extracted:evidence:';
 export const OBSERVED_PREFIX = 'observed:';
 
 /** The scope sentence every result that rests on extracted relationships carries. */
@@ -43,10 +47,13 @@ const byText = (/** @type {string} */ a, /** @type {string} */ b) => (a < b ? -1
 /**
  * @typedef {{spec: string, how: string, resolved: string|null, external: boolean}} ImportFact
  * @typedef {{path: string, language: string, digest: string, imports: ImportFact[]}} FileFact
- * @typedef {{format: string, provenance: 'extracted', extractor: {id: string, version: string}, files: FileFact[]}} ExtractedFacts
+ * @typedef {{claim: string, ref: string, file: string, line: number}} EvidenceFact
+ *   a test's claim marker (tools/extract.js, testEvidence): the test `ref` evidences `claim`
+ * @typedef {{file: string, line: number, message: string}} EvidenceProblem
+ * @typedef {{format: string, provenance: 'extracted', extractor: {id: string, version: string}, files: FileFact[], evidence?: EvidenceFact[], evidenceProblems?: EvidenceProblem[]}} ExtractedFacts
  * @typedef {{format: string, provenance: 'observed', recording: {id: string, source?: string, digest?: string, events: number}, events: Record<string, number>}} ObservedFacts
  * @typedef {{id: string, from: string, to: string, fromPath: string, toPath: string, sources: {from: string, to: string, how: string}[], dynamic: boolean}} ExtractedEdge
- * @typedef {{facts: ExtractedFacts, edges: ExtractedEdge[], external: {from: string, spec: string, how: string}[], unowned: string[], notExtracted: {component: string, path: string}[], relationshipIds: string[]}} Extraction
+ * @typedef {{facts: ExtractedFacts, edges: ExtractedEdge[], external: {from: string, spec: string, how: string}[], unowned: string[], notExtracted: {component: string, path: string}[], relationshipIds: string[], evidenceIds?: string[]}} Extraction
  */
 
 /**
@@ -61,6 +68,7 @@ export function checkFacts(facts) {
   if (facts.provenance !== 'extracted') out.push('provenance is not "extracted"');
   if (!facts.extractor || typeof facts.extractor.id !== 'string' || typeof facts.extractor.version !== 'string') out.push('the extractor identity and version are missing');
   if (!Array.isArray(facts.files)) { out.push('files is not a list'); return out; }
+  if (facts.evidence !== undefined && (!Array.isArray(facts.evidence) || !facts.evidence.every((/** @type {any} */ e) => e && typeof e.claim === 'string' && typeof e.ref === 'string' && typeof e.file === 'string'))) out.push('evidence is not a list of {claim, ref, file, line}');
   const seen = new Set();
   for (const f of facts.files) {
     if (!f || typeof f.path !== 'string' || typeof f.digest !== 'string' || !Array.isArray(f.imports)) { out.push(`a file entry lacks a path, a digest or imports: ${JSON.stringify(f)?.slice(0, 80)}`); continue; }
@@ -148,9 +156,93 @@ function edgeEntity(e, facts) {
   }));
 }
 
+// ---------------------------------------------------------------------------------------------
+// Evidence derived from tests (WG-5705)
+//
+// A test names the claims it evidences with a marker comment (tools/extract.js reads it, docs/claims-and-evidence.md):
+//
+//   // @evidence claim-a claim-b               directly above a test with a literal title: the reference file#title
+//   // @evidence claim-a # <title pattern>     anywhere in the file: the reference file#pattern (generated titles)
+//   // @evidence claim-a #                     anywhere in the file: the whole file
+//
+// The extractor records each (claim, reference) in the fact file; they enter the model as evidence entities of kind
+// test, after the declared ones, exactly as a declared test evidence would. Declared evidence stays for what a test
+// cannot carry: measurements, reviews, documents and contradicting evidence (supports: false).
+
+const SEP = String.fromCharCode(0);
+
+/** The id of the evidence entity a test's marker derives for a claim and a reference. @param {string} claim @param {string} ref */
+export function derivedEvidenceId(claim, ref) {
+  return `${DERIVED_EVIDENCE_PREFIX}${claim}:${sha256Hex(`${claim}${SEP}${ref}`).slice(0, 12)}`;
+}
+
+/**
+ * The evidence entities the facts' test markers derive, one per distinct (claim, reference), in the facts' order.
+ * @param {ExtractedFacts} facts @returns {Entity[]}
+ */
+export function derivedEvidence(facts) {
+  /** @type {Map<string, Entity>} */
+  const out = new Map();
+  for (const e of facts.evidence ?? []) {
+    const id = derivedEvidenceId(e.claim, e.ref);
+    if (out.has(id)) continue;
+    out.set(id, /** @type {Entity} */ (/** @type {unknown} */ ({
+      id, kind: 'evidence', owner: null, path: [id], loc: NO_LOC,
+      data: { id, claim: e.claim, kind: 'test', ref: e.ref, provenance: 'extracted', source: { file: e.file, line: e.line } },
+    })));
+  }
+  return [...out.values()];
+}
+
+/** Whether an evidence entity was derived from a test's marker. @param {Entity|{id: string}} e */
+export const isDerivedEvidence = (e) => e.id.startsWith(DERIVED_EVIDENCE_PREFIX);
+
+/**
+ * Diagnostics of the evidence derived from tests (WG-5705): a marker that names no claim of the model, a marker the
+ * extractor could not read, and a declared test evidence that says what a test's marker already derives (the
+ * declaration is redundant and must go; declared evidence is for what a test cannot carry).
+ * @param {Model|null} model
+ * @returns {import('./types.js').Diagnostic[]}
+ */
+export function derivedEvidenceDiagnostics(model) {
+  const x = model ? extractionOf(model) : null;
+  if (!model || !x) return [];
+  /** @type {any[]} */
+  const out = [];
+  const derived = (model.byKind.evidence ?? []).filter(isDerivedEvidence);
+  const derivedKeys = new Set(derived.map((e) => `${e.data.claim}${SEP}${e.data.ref}`));
+  /** @type {Set<string>} */
+  const unnamed = new Set();
+  for (const e of derived) {
+    const c = model.entities.get(e.data.claim);
+    if (!c || c.kind !== 'claim') {
+      out.push({ code: 'evidence.marker-unknown-claim', severity: 'error', entityId: e.id, path: ['claim'],
+        message: `${e.data.source?.file}:${e.data.source?.line}: the test marker names "${e.data.claim}", which is not a claim of the specification.` });
+    } else if (!unnamed.has(c.id) && !claimSubjects(model, c, CLAIM_METHODS[c.data.evaluate?.method]?.params).length) {
+      // Selecting a claim highlights its subjects: a tested claim with none cannot be found from the scene (this was
+      // the integrity rule tested-claims-name-subjects while test evidence was declared).
+      unnamed.add(c.id);
+      out.push({ code: 'evidence.claim-without-subjects', severity: 'error', entityId: c.id, path: ['subjects'],
+        message: `Claim "${c.id}" is evidenced by tests (${e.data.ref}) but names no subjects, so selecting it highlights nothing in the scene.` });
+    }
+  }
+  for (const p of x.facts.evidenceProblems ?? []) {
+    out.push({ code: 'evidence.marker-invalid', severity: 'error', message: `${p.file}:${p.line}: ${p.message}` });
+  }
+  for (const e of model.byKind.evidence ?? []) {
+    if (isDerivedEvidence(e) || e.data.kind !== 'test' || e.data.supports === false) continue;
+    if (derivedKeys.has(`${e.data.claim}${SEP}${e.data.ref}`)) {
+      out.push({ code: 'evidence.duplicates-derived', severity: 'error', entityId: e.id, path: ['ref'],
+        message: `Evidence "${e.id}" declares that ${e.data.ref} evidences "${e.data.claim}", which the test's own marker already says: remove the declaration (declared evidence is for measurements, reviews, documents and contradicting evidence).` });
+    }
+  }
+  return out;
+}
+
 /**
  * The model with the extracted facts as relationships, after the declared ones. The declared relationships are not
  * touched; `model.extraction` records what was read. Facts whose shape is unreadable leave the model unchanged.
+ * The evidence the facts' test markers derive (derivedEvidence) is added after the declared evidence.
  * @param {Model} model @param {ExtractedFacts|null|undefined} facts
  * @returns {Model}
  */
@@ -159,19 +251,24 @@ export function attachExtracted(model, facts) {
   const stripped = stripExtracted(model);
   const extraction = liftExtracted(stripped, facts);
   const entities = extraction.edges.map((e) => edgeEntity(e, facts));
+  const evidence = derivedEvidence(facts).filter((e) => !stripped.entities.has(e.id));
+  extraction.evidenceIds = evidence.map((e) => e.id);
   const map = new Map(stripped.entities);
-  for (const e of entities) map.set(e.id, e);
-  return /** @type {Model} */ ({ ...stripped, entities: map, byKind: { ...stripped.byKind, relationship: [...(stripped.byKind.relationship ?? []), ...entities] }, extraction });
+  for (const e of [...entities, ...evidence]) map.set(e.id, e);
+  return /** @type {Model} */ ({ ...stripped, entities: map, byKind: { ...stripped.byKind, relationship: [...(stripped.byKind.relationship ?? []), ...entities], evidence: [...(stripped.byKind.evidence ?? []), ...evidence] }, extraction });
 }
 
 /** The model without any attached extracted or observed relationships. @param {Model} model @returns {Model} */
 export function stripExtracted(model) {
   const m = /** @type {any} */ (model);
   if (!m.extraction && !m.observation) return model;
-  const dropped = new Set([...(m.extraction?.relationshipIds ?? []), ...(m.observation?.relationshipIds ?? [])]);
+  const dropped = new Set([...(m.extraction?.relationshipIds ?? []), ...(m.extraction?.evidenceIds ?? []), ...(m.observation?.relationshipIds ?? [])]);
   const entities = new Map([...model.entities].filter(([id]) => !dropped.has(id)));
   const { extraction, observation, ...rest } = m;
-  return /** @type {Model} */ ({ ...rest, entities, byKind: { ...model.byKind, relationship: (model.byKind.relationship ?? []).filter((r) => !dropped.has(r.id)) } });
+  /** @type {Record<string, Entity[]>} */
+  const byKind = { ...model.byKind, relationship: (model.byKind.relationship ?? []).filter((r) => !dropped.has(r.id)) };
+  if (m.extraction?.evidenceIds?.length) byKind.evidence = (model.byKind.evidence ?? []).filter((e) => !dropped.has(e.id));
+  return /** @type {Model} */ ({ ...rest, entities, byKind });
 }
 
 /** The extraction attached to a model, or null. @param {Model} model @returns {Extraction|null} */
@@ -184,7 +281,10 @@ export const extractionOf = (model) => /** @type {any} */ (model).extraction ?? 
  */
 export function extractedChange(before, after) {
   /** @param {Model} m @returns {Map<string, string>} */
-  const sig = (m) => new Map((extractionOf(m)?.edges ?? []).map((/** @type {ExtractedEdge} */ e) => [e.id, JSON.stringify([e.dynamic, e.sources])]));
+  const sig = (m) => new Map(/** @type {[string, string][]} */ ([
+    ...(extractionOf(m)?.edges ?? []).map((/** @type {ExtractedEdge} */ e) => [e.id, JSON.stringify([e.dynamic, e.sources])]),
+    ...(extractionOf(m)?.evidenceIds ?? []).map((/** @type {string} */ id) => [id, JSON.stringify(m.entities.get(id)?.data ?? null)]),
+  ]));
   const a = sig(before), b = sig(after);
   const out = new Set();
   for (const [id, s] of a) if (b.get(id) !== s) out.add(id);

@@ -133,6 +133,12 @@ async function checkStep(page, name, blockId) {
   return sem;
 }
 
+// The shown result equals exegra evaluate --cut at every step.
+// The walk in the running application, each step compared with exegra derive.
+// Expanding persistence in the application leaves every other node as it was.
+// Witness lists and block panels checked against exegra derive at every step.
+// The walk ends with the hash and every verdict unchanged and nothing to undo.
+// @evidence navigation-level-claims-at-cut navigation-scene-is-derived-model navigation-one-block-changes-alone navigation-facts-are-inspectable presentation-holds-no-abstraction
 test('the self-specification is walked from the system in its environment down to an expanded subsystem with each step equal to the CLI', async ({ page }) => {
   test.setTimeout(180_000);
   await openArchitecture(page);
@@ -185,6 +191,8 @@ test('the self-specification is walked from the system in its environment down t
 
 // The deeper steps of the walk, outside the gate (@full): from persistence expanded, a component opened into its
 // module elements, then the semantic core expanded, each step equal to the CLI.
+// The deeper steps of the walk in the running application, outside the browser gate: a component opened into its module elements and the semantic core expanded, each compared with exegra derive.
+// @evidence navigation-scene-is-derived-model
 test('a component opens into its module elements and the semantic core expands with each step equal to the CLI', { tag: '@full' }, async ({ page }) => {
   test.setTimeout(180_000);
   await openArchitecture(page);
@@ -214,6 +222,9 @@ test('a component opens into its module elements and the semantic core expands w
   expect(await ex(page, 'return session.project.canUndo;')).toBe(false);
 });
 
+// The view switched to the runtime hierarchy equals exegra derive.
+// A hidden block on a path in the application.
+// @evidence navigation-scene-is-derived-model navigation-filters-report-removals
 test('a hidden block on a path becomes a labelled path summary and the view switches hierarchy', { tag: '@full' }, async ({ page }) => {
   await openArchitecture(page);
   await page.getByTestId('cut-select').selectOption('l1');
@@ -246,6 +257,8 @@ test('a hidden block on a path becomes a labelled path summary and the view swit
   expect({ blocks: [...rt.blocks, ...notDrawn].sort(), interactions: rt.interactions }).toEqual({ blocks: d.blocks, interactions: d.interactions });
 });
 
+// The application attaches the extracted facts like the command line: at L1 its imports interactions equal exegra derive and are marked extracted, and removing and restoring the fact file on disk removes and restores them.
+// @evidence navigation-scene-is-derived-model
 test('the application attaches the extracted facts as the CLI does and adopts a changed fact file', { tag: '@full' }, async ({ page }) => {
   await openArchitecture(page);
   await page.getByTestId('cut-select').selectOption('l1');

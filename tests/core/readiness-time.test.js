@@ -25,6 +25,8 @@ const errors = (text) => analyzeSpec(text).diagnostics.filter((d) => d.severity 
 
 const GUARD = '"guard": "checked && checkedAt <= time && time - checkedAt < 5000"';
 
+// The fixed time fixture has no error.
+// @evidence machine-time-integer-readiness
 test('the fixed machine has no error', () => {
   assert.deepEqual(errors(FIXED), []);
 });
@@ -40,6 +42,8 @@ const NEGATIVE = [
 ];
 
 for (const [code, what, from, to] of NEGATIVE) {
+  // Seven negative fixtures, each the fixed machine with one thing missing, each giving exactly its ready.* error.
+  // @evidence machine-time-integer-readiness # readiness rule ready
   test(`readiness rule ${code}: ${what} gives exactly that one error`, () => {
     const got = errors(broken(from, to));
     assert.deepEqual(got.map((d) => d.code), [code]);
@@ -72,6 +76,8 @@ test('the machine time unit is the unit of the scenarios that run it, ms when no
   assert.equal(machineTimeUnit(noScenario, 'copy').unit, 'ms');
 });
 
+// The engine input of the time fixture gives its machine exactly the lowered types of time, its variables and its payload field.
+// @evidence implementation-properties-declarative
 test('the engine input gives an implementation machine its declared types lowered', () => {
   const input = engineInput(analyzeSpec(FIXED).model, 'run');
   assert.deepEqual(input.behaviors[0].types, { time: 'i64', checkedAt: 'i64', checked: 'bool', hits: 'u32', 'event.n': 'u32' });

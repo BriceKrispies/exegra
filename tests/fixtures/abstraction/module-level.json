@@ -585,6 +585,13 @@
    "elements": 1
   },
   {
+   "id": "module:formal/Exegra/Api/Structure.lean",
+   "kind": "module",
+   "implicit": false,
+   "knowledge": "transparent",
+   "elements": 1
+  },
+  {
    "id": "module:formal/Exegra/Api/Verdict.lean",
    "kind": "module",
    "implicit": false,
@@ -593,6 +600,13 @@
   },
   {
    "id": "module:formal/Exegra/Boundary.lean",
+   "kind": "module",
+   "implicit": false,
+   "knowledge": "transparent",
+   "elements": 1
+  },
+  {
+   "id": "module:formal/Exegra/BoundaryExplore.lean",
    "kind": "module",
    "implicit": false,
    "knowledge": "transparent",
@@ -838,6 +852,13 @@
   },
   {
    "id": "module:formal/Exegra/ModelProps.lean",
+   "kind": "module",
+   "implicit": false,
+   "knowledge": "transparent",
+   "elements": 1
+  },
+  {
+   "id": "module:formal/Exegra/Multiscale.lean",
    "kind": "module",
    "implicit": false,
    "knowledge": "transparent",
@@ -11220,6 +11241,41 @@
    }
   },
   {
+   "key": "module:formal/Exegra.lean->module:formal/Exegra/BoundaryExplore.lean:imports",
+   "from": "module:formal/Exegra.lean",
+   "to": "module:formal/Exegra/BoundaryExplore.lean",
+   "kind": "imports",
+   "class": "static",
+   "lifted": false,
+   "witnesses": [
+    "extracted:imports:formal/Exegra.lean=>formal/Exegra/BoundaryExplore.lean"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:formal/Exegra.lean=>formal/Exegra/BoundaryExplore.lean"
+    ],
+    "reads": [],
+    "query": {
+     "from": "module:formal/Exegra.lean",
+     "to": "module:formal/Exegra/BoundaryExplore.lean",
+     "kind": "imports"
+    }
+   }
+  },
+  {
    "key": "module:formal/Exegra.lean->module:formal/Exegra/Core/Behav.lean:imports",
    "from": "module:formal/Exegra.lean",
    "to": "module:formal/Exegra/Core/Behav.lean",
@@ -12270,6 +12326,41 @@
    }
   },
   {
+   "key": "module:formal/Exegra.lean->module:formal/Exegra/Multiscale.lean:imports",
+   "from": "module:formal/Exegra.lean",
+   "to": "module:formal/Exegra/Multiscale.lean",
+   "kind": "imports",
+   "class": "static",
+   "lifted": false,
+   "witnesses": [
+    "extracted:imports:formal/Exegra.lean=>formal/Exegra/Multiscale.lean"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Multiscale.lean"
+    ],
+    "reads": [],
+    "query": {
+     "from": "module:formal/Exegra.lean",
+     "to": "module:formal/Exegra/Multiscale.lean",
+     "kind": "imports"
+    }
+   }
+  },
+  {
    "key": "module:formal/Exegra.lean->module:formal/Exegra/Number.lean:imports",
    "from": "module:formal/Exegra.lean",
    "to": "module:formal/Exegra/Number.lean",
@@ -12795,6 +12886,41 @@
    }
   },
   {
+   "key": "module:formal/Exegra/Api.lean->module:formal/Exegra/Api/Structure.lean:imports",
+   "from": "module:formal/Exegra/Api.lean",
+   "to": "module:formal/Exegra/Api/Structure.lean",
+   "kind": "imports",
+   "class": "static",
+   "lifted": false,
+   "witnesses": [
+    "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Structure.lean"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Structure.lean"
+    ],
+    "reads": [],
+    "query": {
+     "from": "module:formal/Exegra/Api.lean",
+     "to": "module:formal/Exegra/Api/Structure.lean",
+     "kind": "imports"
+    }
+   }
+  },
+  {
    "key": "module:formal/Exegra/Api.lean->module:formal/Exegra/Api/Verdict.lean:imports",
    "from": "module:formal/Exegra/Api.lean",
    "to": "module:formal/Exegra/Api/Verdict.lean",
@@ -12930,6 +13056,41 @@
     "query": {
      "from": "module:formal/Exegra/Api/Boundary.lean",
      "to": "module:formal/Exegra/Boundary.lean",
+     "kind": "imports"
+    }
+   }
+  },
+  {
+   "key": "module:formal/Exegra/Api/Boundary.lean->module:formal/Exegra/BoundaryExplore.lean:imports",
+   "from": "module:formal/Exegra/Api/Boundary.lean",
+   "to": "module:formal/Exegra/BoundaryExplore.lean",
+   "kind": "imports",
+   "class": "static",
+   "lifted": false,
+   "witnesses": [
+    "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/BoundaryExplore.lean"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/BoundaryExplore.lean"
+    ],
+    "reads": [],
+    "query": {
+     "from": "module:formal/Exegra/Api/Boundary.lean",
+     "to": "module:formal/Exegra/BoundaryExplore.lean",
      "kind": "imports"
     }
    }
@@ -13250,6 +13411,76 @@
    }
   },
   {
+   "key": "module:formal/Exegra/Api/Structure.lean->module:formal/Exegra/Api/Basic.lean:imports",
+   "from": "module:formal/Exegra/Api/Structure.lean",
+   "to": "module:formal/Exegra/Api/Basic.lean",
+   "kind": "imports",
+   "class": "static",
+   "lifted": false,
+   "witnesses": [
+    "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Api/Basic.lean"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Api/Basic.lean"
+    ],
+    "reads": [],
+    "query": {
+     "from": "module:formal/Exegra/Api/Structure.lean",
+     "to": "module:formal/Exegra/Api/Basic.lean",
+     "kind": "imports"
+    }
+   }
+  },
+  {
+   "key": "module:formal/Exegra/Api/Structure.lean->module:formal/Exegra/Multiscale.lean:imports",
+   "from": "module:formal/Exegra/Api/Structure.lean",
+   "to": "module:formal/Exegra/Multiscale.lean",
+   "kind": "imports",
+   "class": "static",
+   "lifted": false,
+   "witnesses": [
+    "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Multiscale.lean"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Multiscale.lean"
+    ],
+    "reads": [],
+    "query": {
+     "from": "module:formal/Exegra/Api/Structure.lean",
+     "to": "module:formal/Exegra/Multiscale.lean",
+     "kind": "imports"
+    }
+   }
+  },
+  {
    "key": "module:formal/Exegra/Api/Verdict.lean->module:formal/Exegra/Api/Basic.lean:imports",
    "from": "module:formal/Exegra/Api/Verdict.lean",
    "to": "module:formal/Exegra/Api/Basic.lean",
@@ -13455,6 +13686,76 @@
     "query": {
      "from": "module:formal/Exegra/Boundary.lean",
      "to": "module:formal/Exegra/Trace.lean",
+     "kind": "imports"
+    }
+   }
+  },
+  {
+   "key": "module:formal/Exegra/BoundaryExplore.lean->module:formal/Exegra/Boundary.lean:imports",
+   "from": "module:formal/Exegra/BoundaryExplore.lean",
+   "to": "module:formal/Exegra/Boundary.lean",
+   "kind": "imports",
+   "class": "static",
+   "lifted": false,
+   "witnesses": [
+    "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/Boundary.lean"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/Boundary.lean"
+    ],
+    "reads": [],
+    "query": {
+     "from": "module:formal/Exegra/BoundaryExplore.lean",
+     "to": "module:formal/Exegra/Boundary.lean",
+     "kind": "imports"
+    }
+   }
+  },
+  {
+   "key": "module:formal/Exegra/BoundaryExplore.lean->module:formal/Exegra/ProveB.lean:imports",
+   "from": "module:formal/Exegra/BoundaryExplore.lean",
+   "to": "module:formal/Exegra/ProveB.lean",
+   "kind": "imports",
+   "class": "static",
+   "lifted": false,
+   "witnesses": [
+    "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/ProveB.lean"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/ProveB.lean"
+    ],
+    "reads": [],
+    "query": {
+     "from": "module:formal/Exegra/BoundaryExplore.lean",
+     "to": "module:formal/Exegra/ProveB.lean",
      "kind": "imports"
     }
    }
@@ -15245,6 +15546,76 @@
    }
   },
   {
+   "key": "module:formal/Exegra/Multiscale.lean->module:formal/Exegra/Json.lean:imports",
+   "from": "module:formal/Exegra/Multiscale.lean",
+   "to": "module:formal/Exegra/Json.lean",
+   "kind": "imports",
+   "class": "static",
+   "lifted": false,
+   "witnesses": [
+    "extracted:imports:formal/Exegra/Multiscale.lean=>formal/Exegra/Json.lean"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:formal/Exegra/Multiscale.lean=>formal/Exegra/Json.lean"
+    ],
+    "reads": [],
+    "query": {
+     "from": "module:formal/Exegra/Multiscale.lean",
+     "to": "module:formal/Exegra/Json.lean",
+     "kind": "imports"
+    }
+   }
+  },
+  {
+   "key": "module:formal/Exegra/Multiscale.lean->module:formal/Exegra/Value.lean:imports",
+   "from": "module:formal/Exegra/Multiscale.lean",
+   "to": "module:formal/Exegra/Value.lean",
+   "kind": "imports",
+   "class": "static",
+   "lifted": false,
+   "witnesses": [
+    "extracted:imports:formal/Exegra/Multiscale.lean=>formal/Exegra/Value.lean"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:formal/Exegra/Multiscale.lean=>formal/Exegra/Value.lean"
+    ],
+    "reads": [],
+    "query": {
+     "from": "module:formal/Exegra/Multiscale.lean",
+     "to": "module:formal/Exegra/Value.lean",
+     "kind": "imports"
+    }
+   }
+  },
+  {
    "key": "module:formal/Exegra/Proofs/VisualEditFlow.lean->module:formal/Exegra/ProveKernel.lean:imports",
    "from": "module:formal/Exegra/Proofs/VisualEditFlow.lean",
    "to": "module:formal/Exegra/ProveKernel.lean",
@@ -16500,6 +16871,41 @@
     "query": {
      "from": "module:src/app/session.js",
      "to": "module:src/core/abstraction.js",
+     "kind": "imports"
+    }
+   }
+  },
+  {
+   "key": "module:src/app/session.js->module:src/core/claim-methods.js:imports",
+   "from": "module:src/app/session.js",
+   "to": "module:src/core/claim-methods.js",
+   "kind": "imports",
+   "class": "static",
+   "lifted": false,
+   "witnesses": [
+    "extracted:imports:src/app/session.js=>src/core/claim-methods.js"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:src/app/session.js=>src/core/claim-methods.js"
+    ],
+    "reads": [],
+    "query": {
+     "from": "module:src/app/session.js",
+     "to": "module:src/core/claim-methods.js",
      "kind": "imports"
     }
    }
@@ -19025,6 +19431,41 @@
    }
   },
   {
+   "key": "module:src/core/extraction.js->module:src/core/claim-methods.js:imports",
+   "from": "module:src/core/extraction.js",
+   "to": "module:src/core/claim-methods.js",
+   "kind": "imports",
+   "class": "static",
+   "lifted": false,
+   "witnesses": [
+    "extracted:imports:src/core/extraction.js=>src/core/claim-methods.js"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:src/core/extraction.js=>src/core/claim-methods.js"
+    ],
+    "reads": [],
+    "query": {
+     "from": "module:src/core/extraction.js",
+     "to": "module:src/core/claim-methods.js",
+     "kind": "imports"
+    }
+   }
+  },
+  {
    "key": "module:src/core/extraction.js->module:src/core/interactions.js:imports",
    "from": "module:src/core/extraction.js",
    "to": "module:src/core/interactions.js",
@@ -19090,6 +19531,41 @@
     "query": {
      "from": "module:src/core/extraction.js",
      "to": "module:src/core/query.js",
+     "kind": "imports"
+    }
+   }
+  },
+  {
+   "key": "module:src/core/extraction.js->module:src/core/sha256.js:imports",
+   "from": "module:src/core/extraction.js",
+   "to": "module:src/core/sha256.js",
+   "kind": "imports",
+   "class": "static",
+   "lifted": false,
+   "witnesses": [
+    "extracted:imports:src/core/extraction.js=>src/core/sha256.js"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:src/core/extraction.js=>src/core/sha256.js"
+    ],
+    "reads": [],
+    "query": {
+     "from": "module:src/core/extraction.js",
+     "to": "module:src/core/sha256.js",
      "kind": "imports"
     }
    }
@@ -19970,6 +20446,41 @@
    }
   },
   {
+   "key": "module:src/core/generate/claims-report.js->module:src/core/claim-methods.js:imports",
+   "from": "module:src/core/generate/claims-report.js",
+   "to": "module:src/core/claim-methods.js",
+   "kind": "imports",
+   "class": "static",
+   "lifted": false,
+   "witnesses": [
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js"
+    ],
+    "reads": [],
+    "query": {
+     "from": "module:src/core/generate/claims-report.js",
+     "to": "module:src/core/claim-methods.js",
+     "kind": "imports"
+    }
+   }
+  },
+  {
    "key": "module:src/core/generate/claims-report.js->module:src/core/claim-strength.js:imports",
    "from": "module:src/core/generate/claims-report.js",
    "to": "module:src/core/claim-strength.js",
@@ -20070,6 +20581,41 @@
     "query": {
      "from": "module:src/core/generate/claims-report.js",
      "to": "module:src/core/hash.js",
+     "kind": "imports"
+    }
+   }
+  },
+  {
+   "key": "module:src/core/generate/claims-report.js->module:src/core/query.js:imports",
+   "from": "module:src/core/generate/claims-report.js",
+   "to": "module:src/core/query.js",
+   "kind": "imports",
+   "class": "static",
+   "lifted": false,
+   "witnesses": [
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js"
+    ],
+    "reads": [],
+    "query": {
+     "from": "module:src/core/generate/claims-report.js",
+     "to": "module:src/core/query.js",
      "kind": "imports"
     }
    }
@@ -22275,6 +22821,41 @@
     "query": {
      "from": "module:src/core/projections.js",
      "to": "module:src/core/abstraction.js",
+     "kind": "imports"
+    }
+   }
+  },
+  {
+   "key": "module:src/core/projections.js->module:src/core/claim-methods.js:imports",
+   "from": "module:src/core/projections.js",
+   "to": "module:src/core/claim-methods.js",
+   "kind": "imports",
+   "class": "static",
+   "lifted": false,
+   "witnesses": [
+    "extracted:imports:src/core/projections.js=>src/core/claim-methods.js"
+   ],
+   "summary": {
+    "count": 1,
+    "kinds": {
+     "imports": 1
+    },
+    "contracts": [],
+    "carries": [],
+    "delivery": [],
+    "provenance": {
+     "extracted": 1
+    },
+    "ports": []
+   },
+   "footprint": {
+    "witnesses": [
+     "extracted:imports:src/core/projections.js=>src/core/claim-methods.js"
+    ],
+    "reads": [],
+    "query": {
+     "from": "module:src/core/projections.js",
+     "to": "module:src/core/claim-methods.js",
      "kind": "imports"
     }
    }
@@ -36355,8 +36936,10 @@
   "module:formal/Exegra/Api/Boundary.lean": [],
   "module:formal/Exegra/Api/Engine.lean": [],
   "module:formal/Exegra/Api/Model.lean": [],
+  "module:formal/Exegra/Api/Structure.lean": [],
   "module:formal/Exegra/Api/Verdict.lean": [],
   "module:formal/Exegra/Boundary.lean": [],
+  "module:formal/Exegra/BoundaryExplore.lean": [],
   "module:formal/Exegra/Core/Behav.lean": [],
   "module:formal/Exegra/Core/BehavCheck.lean": [],
   "module:formal/Exegra/Core/BehavExamples.lean": [],
@@ -36392,6 +36975,7 @@
   "module:formal/Exegra/Lower/Pinned.lean": [],
   "module:formal/Exegra/Model.lean": [],
   "module:formal/Exegra/ModelProps.lean": [],
+  "module:formal/Exegra/Multiscale.lean": [],
   "module:formal/Exegra/Number.lean": [],
   "module:formal/Exegra/Proofs/VisualEditFlow.lean": [],
   "module:formal/Exegra/ProveB.lean": [],
@@ -37525,6 +38109,7 @@
    "out": [
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Api.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Boundary.lean",
+    "extracted:imports:formal/Exegra.lean=>formal/Exegra/BoundaryExplore.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Core/Behav.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Core/BehavCheck.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Core/BehavExamples.lean",
@@ -37555,6 +38140,7 @@
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Lower.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Model.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/ModelProps.lean",
+    "extracted:imports:formal/Exegra.lean=>formal/Exegra/Multiscale.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Number.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Proofs/VisualEditFlow.lean",
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/ProveB.lean",
@@ -37575,6 +38161,7 @@
     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Boundary.lean",
     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Engine.lean",
     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Model.lean",
+    "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Structure.lean",
     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Verdict.lean"
    ],
    "in": [
@@ -37591,13 +38178,15 @@
     "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Api/Basic.lean",
     "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Api/Basic.lean",
     "extracted:imports:formal/Exegra/Api/Model.lean=>formal/Exegra/Api/Basic.lean",
+    "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Api/Basic.lean",
     "extracted:imports:formal/Exegra/Api/Verdict.lean=>formal/Exegra/Api/Basic.lean"
    ]
   },
   "module:formal/Exegra/Api/Boundary.lean": {
    "out": [
     "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Api/Basic.lean",
-    "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Boundary.lean"
+    "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Boundary.lean",
+    "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/BoundaryExplore.lean"
    ],
    "in": [
     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Boundary.lean"
@@ -37626,6 +38215,15 @@
     "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Model.lean"
    ]
   },
+  "module:formal/Exegra/Api/Structure.lean": {
+   "out": [
+    "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Api/Basic.lean",
+    "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Multiscale.lean"
+   ],
+   "in": [
+    "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Structure.lean"
+   ]
+  },
   "module:formal/Exegra/Api/Verdict.lean": {
    "out": [
     "extracted:imports:formal/Exegra/Api/Verdict.lean=>formal/Exegra/Api/Basic.lean",
@@ -37644,7 +38242,18 @@
    ],
    "in": [
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Boundary.lean",
-    "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Boundary.lean"
+    "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Boundary.lean",
+    "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/Boundary.lean"
+   ]
+  },
+  "module:formal/Exegra/BoundaryExplore.lean": {
+   "out": [
+    "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/Boundary.lean",
+    "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/ProveB.lean"
+   ],
+   "in": [
+    "extracted:imports:formal/Exegra.lean=>formal/Exegra/BoundaryExplore.lean",
+    "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/BoundaryExplore.lean"
    ]
   },
   "module:formal/Exegra/Core/Behav.lean": {
@@ -37928,6 +38537,7 @@
     "extracted:imports:formal/Exegra/Impl/Json.lean=>formal/Exegra/Json.lean",
     "extracted:imports:formal/Exegra/Input.lean=>formal/Exegra/Json.lean",
     "extracted:imports:formal/Exegra/Integrity.lean=>formal/Exegra/Json.lean",
+    "extracted:imports:formal/Exegra/Multiscale.lean=>formal/Exegra/Json.lean",
     "extracted:imports:formal/Exegra/Trace.lean=>formal/Exegra/Json.lean",
     "extracted:imports:formal/Exegra/Verdict.lean=>formal/Exegra/Json.lean"
    ]
@@ -37995,6 +38605,16 @@
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/ModelProps.lean"
    ]
   },
+  "module:formal/Exegra/Multiscale.lean": {
+   "out": [
+    "extracted:imports:formal/Exegra/Multiscale.lean=>formal/Exegra/Json.lean",
+    "extracted:imports:formal/Exegra/Multiscale.lean=>formal/Exegra/Value.lean"
+   ],
+   "in": [
+    "extracted:imports:formal/Exegra.lean=>formal/Exegra/Multiscale.lean",
+    "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Multiscale.lean"
+   ]
+  },
   "module:formal/Exegra/Number.lean": {
    "out": [],
    "in": [
@@ -38018,6 +38638,7 @@
    "in": [
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/ProveB.lean",
     "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/ProveB.lean",
+    "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/ProveB.lean",
     "extracted:imports:formal/Exegra/ProveLive.lean=>formal/Exegra/ProveB.lean",
     "extracted:imports:formal/Main.lean=>formal/Exegra/ProveB.lean"
    ]
@@ -38085,7 +38706,8 @@
     "extracted:imports:formal/Exegra.lean=>formal/Exegra/Value.lean",
     "extracted:imports:formal/Exegra/Expr.lean=>formal/Exegra/Value.lean",
     "extracted:imports:formal/Exegra/Json.lean=>formal/Exegra/Value.lean",
-    "extracted:imports:formal/Exegra/Lower/Dist.lean=>formal/Exegra/Value.lean"
+    "extracted:imports:formal/Exegra/Lower/Dist.lean=>formal/Exegra/Value.lean",
+    "extracted:imports:formal/Exegra/Multiscale.lean=>formal/Exegra/Value.lean"
    ]
   },
   "module:formal/Exegra/Verdict.lean": {
@@ -38185,6 +38807,7 @@
     "extracted:imports:src/app/session.js=>src/app/engine-runner.js",
     "extracted:imports:src/app/session.js=>src/app/traffic-recorder.js",
     "extracted:imports:src/app/session.js=>src/core/abstraction.js",
+    "extracted:imports:src/app/session.js=>src/core/claim-methods.js",
     "extracted:imports:src/app/session.js=>src/core/claims.js",
     "extracted:imports:src/app/session.js=>src/core/concordance.js",
     "extracted:imports:src/app/session.js=>src/core/contract-trace.js",
@@ -38280,9 +38903,13 @@
    "in": [
     "extracted:imports:cli/admit.js=>src/core/claim-methods.js",
     "extracted:imports:cli/commands.js=>src/core/claim-methods.js",
+    "extracted:imports:src/app/session.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/claims.js=>src/core/claim-methods.js",
+    "extracted:imports:src/core/extraction.js=>src/core/claim-methods.js",
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/generate/manifest.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/parse.js=>src/core/claim-methods.js",
+    "extracted:imports:src/core/projections.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/validate.js=>src/core/claim-methods.js",
     "extracted:imports:src/ui/explorer.js=>src/core/claim-methods.js",
     "extracted:imports:src/ui/inspector.js=>src/core/claim-methods.js",
@@ -38529,8 +39156,10 @@
   "module:src/core/extraction.js": {
    "out": [
     "extracted:imports:src/core/extraction.js=>src/core/abstraction.js",
+    "extracted:imports:src/core/extraction.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/extraction.js=>src/core/interactions.js",
-    "extracted:imports:src/core/extraction.js=>src/core/query.js"
+    "extracted:imports:src/core/extraction.js=>src/core/query.js",
+    "extracted:imports:src/core/extraction.js=>src/core/sha256.js"
    ],
    "in": [
     "extracted:imports:cli/commands.js=>src/core/extraction.js",
@@ -38666,9 +39295,11 @@
   },
   "module:src/core/generate/claims-report.js": {
    "out": [
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-strength.js",
     "extracted:imports:src/core/generate/claims-report.js=>src/core/generate/manifest.js",
-    "extracted:imports:src/core/generate/claims-report.js=>src/core/hash.js"
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/hash.js",
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js"
    ],
    "in": [
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/generate/claims-report.js",
@@ -39012,6 +39643,7 @@
   "module:src/core/projections.js": {
    "out": [
     "extracted:imports:src/core/projections.js=>src/core/abstraction.js",
+    "extracted:imports:src/core/projections.js=>src/core/claim-methods.js",
     "extracted:imports:src/core/projections.js=>src/core/data-model.js",
     "extracted:imports:src/core/projections.js=>src/core/interactions.js",
     "extracted:imports:src/core/projections.js=>src/core/own.js",
@@ -39053,6 +39685,7 @@
     "extracted:imports:src/core/footprints.js=>src/core/query.js",
     "extracted:imports:src/core/function-composition.js=>src/core/query.js",
     "extracted:imports:src/core/generate/architecture-doc.js=>src/core/query.js",
+    "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js",
     "extracted:imports:src/core/generate/manifest.js=>src/core/query.js",
     "extracted:imports:src/core/generate/task-manifest.js=>src/core/query.js",
     "extracted:imports:src/core/operations.js=>src/core/query.js",
@@ -39176,6 +39809,7 @@
    "out": [],
    "in": [
     "extracted:imports:src/app/session.js=>src/core/sha256.js",
+    "extracted:imports:src/core/extraction.js=>src/core/sha256.js",
     "extracted:imports:src/ui/realisation-panel.js=>src/core/sha256.js",
     "extracted:imports:src/ui/toolbar.js=>src/core/sha256.js"
    ]
@@ -43672,6 +44306,7 @@
      "witnesses": [
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Api.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Boundary.lean",
+      "extracted:imports:formal/Exegra.lean=>formal/Exegra/BoundaryExplore.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Core/Behav.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Core/BehavCheck.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Core/BehavExamples.lean",
@@ -43702,6 +44337,7 @@
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Lower.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Model.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/ModelProps.lean",
+      "extracted:imports:formal/Exegra.lean=>formal/Exegra/Multiscale.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Number.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Proofs/VisualEditFlow.lean",
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/ProveB.lean",
@@ -43747,6 +44383,7 @@
       "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Boundary.lean",
       "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Engine.lean",
       "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Model.lean",
+      "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Structure.lean",
       "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Verdict.lean"
      ],
      "events": [],
@@ -43769,6 +44406,7 @@
       "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Api/Basic.lean",
       "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/Api/Basic.lean",
       "extracted:imports:formal/Exegra/Api/Model.lean=>formal/Exegra/Api/Basic.lean",
+      "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Api/Basic.lean",
       "extracted:imports:formal/Exegra/Api/Verdict.lean=>formal/Exegra/Api/Basic.lean"
      ],
      "events": [],
@@ -43812,7 +44450,8 @@
      "contract": null,
      "witnesses": [
       "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Api/Basic.lean",
-      "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Boundary.lean"
+      "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Boundary.lean",
+      "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/BoundaryExplore.lean"
      ],
      "events": [],
      "ports": [],
@@ -43889,6 +44528,37 @@
    ],
    "ports": []
   },
+  "module:formal/Exegra/Api/Structure.lean": {
+   "authority": "derived",
+   "groups": [
+    {
+     "direction": "in",
+     "kind": "imports",
+     "contract": null,
+     "witnesses": [
+      "extracted:imports:formal/Exegra/Api.lean=>formal/Exegra/Api/Structure.lean"
+     ],
+     "events": [],
+     "ports": [],
+     "id": "in:imports:-",
+     "matchedBy": []
+    },
+    {
+     "direction": "out",
+     "kind": "imports",
+     "contract": null,
+     "witnesses": [
+      "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Api/Basic.lean",
+      "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Multiscale.lean"
+     ],
+     "events": [],
+     "ports": [],
+     "id": "out:imports:-",
+     "matchedBy": []
+    }
+   ],
+   "ports": []
+  },
   "module:formal/Exegra/Api/Verdict.lean": {
    "authority": "derived",
    "groups": [
@@ -43930,7 +44600,8 @@
      "contract": null,
      "witnesses": [
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Boundary.lean",
-      "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Boundary.lean"
+      "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/Boundary.lean",
+      "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/Boundary.lean"
      ],
      "events": [],
      "ports": [],
@@ -43945,6 +44616,38 @@
       "extracted:imports:formal/Exegra/Boundary.lean=>formal/Exegra/Impl/Semantics.lean",
       "extracted:imports:formal/Exegra/Boundary.lean=>formal/Exegra/Json.lean",
       "extracted:imports:formal/Exegra/Boundary.lean=>formal/Exegra/Trace.lean"
+     ],
+     "events": [],
+     "ports": [],
+     "id": "out:imports:-",
+     "matchedBy": []
+    }
+   ],
+   "ports": []
+  },
+  "module:formal/Exegra/BoundaryExplore.lean": {
+   "authority": "derived",
+   "groups": [
+    {
+     "direction": "in",
+     "kind": "imports",
+     "contract": null,
+     "witnesses": [
+      "extracted:imports:formal/Exegra.lean=>formal/Exegra/BoundaryExplore.lean",
+      "extracted:imports:formal/Exegra/Api/Boundary.lean=>formal/Exegra/BoundaryExplore.lean"
+     ],
+     "events": [],
+     "ports": [],
+     "id": "in:imports:-",
+     "matchedBy": []
+    },
+    {
+     "direction": "out",
+     "kind": "imports",
+     "contract": null,
+     "witnesses": [
+      "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/Boundary.lean",
+      "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/ProveB.lean"
      ],
      "events": [],
      "ports": [],
@@ -44822,6 +45525,7 @@
       "extracted:imports:formal/Exegra/Impl/Json.lean=>formal/Exegra/Json.lean",
       "extracted:imports:formal/Exegra/Input.lean=>formal/Exegra/Json.lean",
       "extracted:imports:formal/Exegra/Integrity.lean=>formal/Exegra/Json.lean",
+      "extracted:imports:formal/Exegra/Multiscale.lean=>formal/Exegra/Json.lean",
       "extracted:imports:formal/Exegra/Trace.lean=>formal/Exegra/Json.lean",
       "extracted:imports:formal/Exegra/Verdict.lean=>formal/Exegra/Json.lean"
      ],
@@ -45062,6 +45766,38 @@
    ],
    "ports": []
   },
+  "module:formal/Exegra/Multiscale.lean": {
+   "authority": "derived",
+   "groups": [
+    {
+     "direction": "in",
+     "kind": "imports",
+     "contract": null,
+     "witnesses": [
+      "extracted:imports:formal/Exegra.lean=>formal/Exegra/Multiscale.lean",
+      "extracted:imports:formal/Exegra/Api/Structure.lean=>formal/Exegra/Multiscale.lean"
+     ],
+     "events": [],
+     "ports": [],
+     "id": "in:imports:-",
+     "matchedBy": []
+    },
+    {
+     "direction": "out",
+     "kind": "imports",
+     "contract": null,
+     "witnesses": [
+      "extracted:imports:formal/Exegra/Multiscale.lean=>formal/Exegra/Json.lean",
+      "extracted:imports:formal/Exegra/Multiscale.lean=>formal/Exegra/Value.lean"
+     ],
+     "events": [],
+     "ports": [],
+     "id": "out:imports:-",
+     "matchedBy": []
+    }
+   ],
+   "ports": []
+  },
   "module:formal/Exegra/Number.lean": {
    "authority": "derived",
    "groups": [
@@ -45121,6 +45857,7 @@
      "witnesses": [
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/ProveB.lean",
       "extracted:imports:formal/Exegra/Api/Engine.lean=>formal/Exegra/ProveB.lean",
+      "extracted:imports:formal/Exegra/BoundaryExplore.lean=>formal/Exegra/ProveB.lean",
       "extracted:imports:formal/Exegra/ProveLive.lean=>formal/Exegra/ProveB.lean",
       "extracted:imports:formal/Main.lean=>formal/Exegra/ProveB.lean"
      ],
@@ -45313,7 +46050,8 @@
       "extracted:imports:formal/Exegra.lean=>formal/Exegra/Value.lean",
       "extracted:imports:formal/Exegra/Expr.lean=>formal/Exegra/Value.lean",
       "extracted:imports:formal/Exegra/Json.lean=>formal/Exegra/Value.lean",
-      "extracted:imports:formal/Exegra/Lower/Dist.lean=>formal/Exegra/Value.lean"
+      "extracted:imports:formal/Exegra/Lower/Dist.lean=>formal/Exegra/Value.lean",
+      "extracted:imports:formal/Exegra/Multiscale.lean=>formal/Exegra/Value.lean"
      ],
      "events": [],
      "ports": [],
@@ -45560,6 +46298,7 @@
       "extracted:imports:src/app/session.js=>src/app/engine-runner.js",
       "extracted:imports:src/app/session.js=>src/app/traffic-recorder.js",
       "extracted:imports:src/app/session.js=>src/core/abstraction.js",
+      "extracted:imports:src/app/session.js=>src/core/claim-methods.js",
       "extracted:imports:src/app/session.js=>src/core/claims.js",
       "extracted:imports:src/app/session.js=>src/core/concordance.js",
       "extracted:imports:src/app/session.js=>src/core/contract-trace.js",
@@ -45776,9 +46515,13 @@
      "witnesses": [
       "extracted:imports:cli/admit.js=>src/core/claim-methods.js",
       "extracted:imports:cli/commands.js=>src/core/claim-methods.js",
+      "extracted:imports:src/app/session.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/claims.js=>src/core/claim-methods.js",
+      "extracted:imports:src/core/extraction.js=>src/core/claim-methods.js",
+      "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/generate/manifest.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/parse.js=>src/core/claim-methods.js",
+      "extracted:imports:src/core/projections.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/validate.js=>src/core/claim-methods.js",
       "extracted:imports:src/ui/explorer.js=>src/core/claim-methods.js",
       "extracted:imports:src/ui/inspector.js=>src/core/claim-methods.js",
@@ -46367,8 +47110,10 @@
      "contract": null,
      "witnesses": [
       "extracted:imports:src/core/extraction.js=>src/core/abstraction.js",
+      "extracted:imports:src/core/extraction.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/extraction.js=>src/core/interactions.js",
-      "extracted:imports:src/core/extraction.js=>src/core/query.js"
+      "extracted:imports:src/core/extraction.js=>src/core/query.js",
+      "extracted:imports:src/core/extraction.js=>src/core/sha256.js"
      ],
      "events": [],
      "ports": [],
@@ -46759,9 +47504,11 @@
      "kind": "imports",
      "contract": null,
      "witnesses": [
+      "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/generate/claims-report.js=>src/core/claim-strength.js",
       "extracted:imports:src/core/generate/claims-report.js=>src/core/generate/manifest.js",
-      "extracted:imports:src/core/generate/claims-report.js=>src/core/hash.js"
+      "extracted:imports:src/core/generate/claims-report.js=>src/core/hash.js",
+      "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js"
      ],
      "events": [],
      "ports": [],
@@ -47690,6 +48437,7 @@
      "contract": null,
      "witnesses": [
       "extracted:imports:src/core/projections.js=>src/core/abstraction.js",
+      "extracted:imports:src/core/projections.js=>src/core/claim-methods.js",
       "extracted:imports:src/core/projections.js=>src/core/data-model.js",
       "extracted:imports:src/core/projections.js=>src/core/interactions.js",
       "extracted:imports:src/core/projections.js=>src/core/own.js",
@@ -47758,6 +48506,7 @@
       "extracted:imports:src/core/footprints.js=>src/core/query.js",
       "extracted:imports:src/core/function-composition.js=>src/core/query.js",
       "extracted:imports:src/core/generate/architecture-doc.js=>src/core/query.js",
+      "extracted:imports:src/core/generate/claims-report.js=>src/core/query.js",
       "extracted:imports:src/core/generate/manifest.js=>src/core/query.js",
       "extracted:imports:src/core/generate/task-manifest.js=>src/core/query.js",
       "extracted:imports:src/core/operations.js=>src/core/query.js",
@@ -48116,6 +48865,7 @@
      "contract": null,
      "witnesses": [
       "extracted:imports:src/app/session.js=>src/core/sha256.js",
+      "extracted:imports:src/core/extraction.js=>src/core/sha256.js",
       "extracted:imports:src/ui/realisation-panel.js=>src/core/sha256.js",
       "extracted:imports:src/ui/toolbar.js=>src/core/sha256.js"
      ],
@@ -53417,13 +54167,14 @@
         "transaction-committed",
         "transaction-rejected"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "operation-submitted",
+        "transaction-committed"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "composition-root-submits-edits-transactions"
-     ]
+     "flagged": []
     },
     {
      "hops": [
@@ -53468,13 +54219,13 @@
         "transaction-committed",
         "transaction-rejected"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "transaction-committed"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "session-calls-transactions"
-     ]
+     "flagged": []
     },
     {
      "hops": [
@@ -53501,13 +54252,13 @@
         "operation-submitted",
         "transaction-rejected"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "operation-submitted"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "source-editor-submits-edits-transactions"
-     ]
+     "flagged": []
     },
     {
      "hops": [
@@ -53589,13 +54340,14 @@
         "claims-evaluated",
         "claims-evaluation-requested"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "claims-evaluated",
+        "claims-evaluation-requested"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "session-calls-claim-evaluator"
-     ]
+     "flagged": []
     }
    ]
   },
@@ -53612,8 +54364,11 @@
         "projection-refreshed",
         "refresh-requested"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "projection-refreshed",
+        "refresh-requested"
+       ],
+       "status": "typed"
       },
       {
        "relationship": "projection-system-projects-scene-renderer",
@@ -53622,14 +54377,13 @@
        "events": [
         "projection-refreshed"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "projection-refreshed"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "session-calls-projection-system",
-      "projection-system-projects-scene-renderer"
-     ]
+     "flagged": []
     }
    ]
   },
@@ -53647,13 +54401,14 @@
         "engine-run-failed",
         "engine-run-finished"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "engine-run-called",
+        "engine-run-finished"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "agent-cli-calls-simulation-engine"
-     ]
+     "flagged": []
     },
     {
      "hops": [
@@ -53696,13 +54451,14 @@
         "sim-run-failed",
         "sim-trace-ready"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "engine-run-intent",
+        "sim-trace-ready"
+       ],
+       "status": "typed"
       }
      ],
-     "flagged": [
-      "session-calls-simulation-engine"
-     ]
+     "flagged": []
     }
    ]
   },
@@ -53746,6 +54502,7 @@
        ],
        "contractEvents": [
         "ws-write",
+        "ws-write-conflict",
         "ws-write-done"
        ],
        "status": "typed"
@@ -53772,8 +54529,11 @@
         "watch-intent",
         "write-intent"
        ],
-       "contractEvents": [],
-       "status": "untyped"
+       "contractEvents": [
+        "save-succeeded",
+        "write-intent"
+       ],
+       "status": "typed"
       },
       {
        "relationship": "persistence-client-calls-dev-server-plugin",
@@ -53835,15 +54595,14 @@
        ],
        "contractEvents": [
         "ws-write",
+        "ws-write-conflict",
         "ws-write-done",
         "ws-write-error"
        ],
        "status": "typed"
       }
      ],
-     "flagged": [
-      "session-calls-persistence-client"
-     ]
+     "flagged": []
     }
    ]
   }

@@ -8,7 +8,7 @@ increment M2.4; the task's criteria 13 and 17).
 `Elab.elab : V2.Input → Except Refusal Core.Behav.Sys` turns a decoded version-2 input into a
 calculus system, or refuses it:
 
-* `outOfFragment what`: the input uses a construct the calculus does not cover (links, workloads,
+* `outOfFragment what`: the input uses a construct the calculus does not cover (workloads,
   option types, a scenario step addressed to an instance of a keyed behaviour).
   A `sample` effect (a variable set from a draw) is covered: an integer literal at a draw site; so
   are resources, their `use`, `acquire` and `release` effects, the counts expressions read,
@@ -525,7 +525,23 @@ def elabEffect (cx : Ctx) (what : String) (ti ei : Nat) : Effect → E (Core.Beh
       match classIndex (cx.input.resources.getD ri default) cls with
       | none => .error (.illTyped s!"{what} names no class of {res}")
       | some ci => .ok (.release ri ci units, none)
-  | .send .. => .error (.outOfFragment s!"links ({what})")
+  | .send ev size pl reply via fan =>
+    -- a send over a link (WG-5683): the message's size is an expression (checked to be an integer
+    -- in [0, 2^40) when it is evaluated), none (0), or a draw (`size:{site}`, at a draw site)
+    if !cx.input.isEvent ev then .error (.illTyped s!"{what} emits {ev}, which is not an event") else
+    match cx.input.links.findIdx? (·.id == via) with
+    | none => .error (.illTyped s!"{what} sends over {via}, which is not a link")
+    | some li => do
+      let pl' ← elabPayload me cx pl what
+      let evi := evIdx cx.input ev
+      match size with
+      | .none => pure (.send evi li fan reply none true pl', none)
+      | .expr src => do
+        let x ← elabSrc me cx Core.Behav.Ty.num src s!"the size of {what}"
+        pure (.send evi li fan reply (some x) true pl', none)
+      | .dist d => match d with
+        | .fixed n => pure (.send evi li fan reply (some (.val (.int n))) false pl', none)
+        | d => pure (.send evi li fan reply (some (.val (.int 0))) false pl', some (distOf d))
   | .malformed => .error (.illTyped s!"{what} is malformed")
 
 end
@@ -586,7 +602,6 @@ def occOf : Occurrence → Core.Behav.Occ
 /-- The checks that precede the layout: constructs outside the calculus, and the WG-4688
 decisions on ids and variable names. -/
 def preCheck (i : Input) : E Unit := do
-  unless i.links.isEmpty do throw (.outOfFragment "links")
   unless i.workloads.isEmpty do throw (.outOfFragment "workloads")
   -- a scenario step addressed to an instance of a keyed behaviour names a key, not a slot
   for st in i.scenario.steps do
@@ -707,7 +722,14 @@ def build (i : Input) : E Core.Behav.Sys := do
     { res := i.resources.map fun d => { capacity := d.capacity, holds := [], waiting := [] }, nextReq := 0 }
   return { sig, trans, init := { time := 0, machines, pending, attCap := some attCap, world }, faults,
            stopAt := i.scenario.stopAt, samples, resources := i.resources,
-           routes := (routeList i).map fun (j, r) => routeOfIn i j r }
+           routes := (routeList i).map fun (j, r) => routeOfIn i j r,
+           links := i.links.map fun l =>
+             { latency := distOf l.latency, bandwidth := l.bandwidth, bound := l.queueBound,
+               ordered := l.ordered, fanout := l.fanout, perSecond := i.perSecond.getD 1,
+               -- the receivers of a fan-out: the instances of every behaviour whose subject is the
+               -- link's target, in behaviour order and instance (slot) order
+               receivers := (behs.zipIdx.filter (·.1.subject == some l.target)).flatMap fun (b, j) =>
+                 (List.range (instCount b)).map (machineOf behs j) } }
 
 /-- **Elaboration**: the calculus system of a format-2 input, or why there is none. The last check
 is the decidable well-formedness of the calculus (`Sys.wf`). -/

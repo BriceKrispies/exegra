@@ -25,6 +25,8 @@ function tables(families) {
 /** @param {any} family */
 const lower = (family) => tables([family]).families[0];
 
+// exp_fp and ln_fp meet their exact checks; Qexp and Qnorm give the reference values and the canonical table text hashes to the pinned SHA-256; the log-normal, exponential, empirical, uniform and constant families lower to the reference tables; values of 2^53 base units or more, sigma above 8 and p99 above 10^6 times the median are refused.
+// @evidence distribution-lowering-bit-exact #
 test('the pinned tables give the reference values and the pinned hash', () => {
   const t = tables([]);
   const rows = t.canonical.trimEnd().split('\n').map((l) => l.split(' ').map(BigInt));

@@ -199,21 +199,29 @@ function mutants(orig) {
   };
 }
 
+// The Vite configuration's base is relative.
+// @evidence pages-site-published-from-main
 test('the production build uses relative asset URLs so it loads under a sub-path', async () => {
   const config = (await import('../../vite.config.js')).default;
   assert.equal(config.base, './');
 });
 
+// The workflow's push trigger names exactly the branch main and no other filter, and it grants pages: write and id-token: write.
+// @evidence pages-site-published-from-main
 test('the Pages workflow is triggered by a push to main with no path or tag filter and may deploy to Pages', () => {
   const problems = publishingProblems(workflowText);
   const trigger = problems.filter((p) => /push|pages: write/.test(p));
   assert.deepEqual(trigger, []);
 });
 
+// Read structurally: the build job has no condition and builds the Lean core, validates specs/exegra/spec.jsonc, builds and uploads dist in that order, none of these steps conditional or able to hide a failure; the deploy job needs build, runs only on main and deploys.
+// @evidence pages-site-published-from-main
 test('the Pages workflow builds the Lean core and validates the specification before it builds and deploys dist', () => {
   assert.deepEqual(publishingProblems(workflowText), []);
 });
 
+// The checks of the two workflow tests fail on each of the five mutants of docs/assessment/2026-11-26/demos/pages-mutants.mjs applied to the workflow as it is: if: false on the deploy or the build job, || true after validate, a never-matching paths filter, needs: build removed.
+// @evidence pages-site-published-from-main
 test('the workflow checks fail on each of the five publishing mutants', () => {
   for (const [name, text] of Object.entries(mutants(workflowText))) {
     assert.notEqual(text, workflowText, `the mutation "${name}" applies to the workflow as it is`);

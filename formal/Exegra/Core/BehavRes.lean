@@ -188,6 +188,55 @@ theorem WorldOk.edge {sys : Sys} (hlow : sys.NoLowering) {w : World} (h : WorldO
   obtain ⟨l, hl, hle⟩ := hlim c l' hl'
   exact Nat.le_trans (hc c l hl) hle
 
+/-- The link queues do not bear on the resources' limits. -/
+theorem WorldOk.sameRes {sys : Sys} {w w' : World} (h : WorldOk sys w) (hs : w.SameRes w') : WorldOk sys w' := by
+  have ha : sys.acting w' = sys.acting w := by unfold Sys.acting; rw [hs.2.2]
+  intro ri d s hd hw
+  rw [ha]; rw [hs.1] at hw; exact h ri d s hd hw
+
+theorem startOf_sameRes (L : Link) (li : Nat) (k : Option Nat) (m : Msg) (now : Nat) (w : World) :
+    w.SameRes (startOf L li k m now w).1 := by
+  unfold startOf; simp only []; split
+  · exact World.SameRes.refl _
+  · exact World.setLq_sameRes _ _ _ _
+
+theorem sendOne_sameRes (L : Link) (li : Nat) (fan : Bool) (k : Option Nat) (m : Msg) (now : Nat) (w : World) :
+    w.SameRes (sendOne L li fan k m now w).1 := by
+  unfold sendOne; split
+  · exact World.SameRes.refl _
+  · simp only []; split
+    · exact startOf_sameRes _ _ _ _ _ _
+    · exact World.setLq_sameRes _ _ _ _
+
+theorem sendTo_sameRes (L : Link) (li : Nat) (fan : Bool) (now : Nat) (m : Msg) :
+    (rs : List (Option Nat × Option Nat)) → (w : World) → (acts : List Act) →
+    w.SameRes (sendTo L li fan now m rs w acts).1
+  | [], w, acts => World.SameRes.refl _
+  | (k, tg) :: rest, w, acts => by
+    simp only [sendTo]
+    split
+    · exact sendOne_sameRes _ _ _ _ _ _ _
+    · exact (sendOne_sameRes _ _ _ _ _ _ _).trans (sendTo_sameRes L li fan now m rest _ _)
+
+theorem outActs_sameRes (links : List Link) (now : Nat) (ms : List MState) :
+    (outs : List Entry) → (w : World) → (acts : List Act) → w.SameRes (outActs links now ms outs w acts).1
+  | [], w, acts => World.SameRes.refl _
+  | x :: xs, w, acts => by
+    simp only [outActs]
+    split
+    · exact outActs_sameRes links now ms xs _ _
+    · split
+      · exact outActs_sameRes links now ms xs _ _
+      · split
+        · exact sendTo_sameRes _ _ _ _ _ _ _ _
+        · exact (sendTo_sameRes _ _ _ _ _ _ _ _).trans (outActs_sameRes links now ms xs _ _)
+    · exact outActs_sameRes links now ms xs _ _
+
+theorem settleOut_worldOk (sys : Sys) (now : Nat) (ms : List MState) (outs : List Entry) {w : World}
+    (h : WorldOk sys w) : WorldOk sys (settleOut sys now ms outs w).1 := by
+  unfold settleOut
+  exact settle_worldOk _ _ _ _ (h.sameRes (outActs_sameRes _ _ _ _ _ _))
+
 theorem worldStep_worldOk (sys : Sys) (hlow : sys.NoLowering) (c0 : Cfg) (e : Entry) (h : WorldOk sys c0.world) :
     WorldOk sys (worldStep sys c0 e).1 := by
   unfold worldStep
@@ -231,6 +280,20 @@ theorem worldStep_worldOk (sys : Sys) (hlow : sys.NoLowering) (c0 : Cfg) (e : En
         | none => exact WorldOk.edge hlow h fi on
         | some _ => exact settle_worldOk _ _ _ _ (WorldOk.edge hlow h fi on)
       · exact h
+  | send _ _ _ => exact h
+  | linkDone li k =>
+    simp only []
+    cases sys.links[li]? with
+    | none => exact h
+    | some L =>
+      simp only []
+      cases (c0.world.lq li k).inTransfer with
+      | none => exact h
+      | some m =>
+        simp only []
+        cases (c0.world.lq li k).waiting with
+        | nil => exact h.sameRes (World.setLq_sameRes _ _ _ _)
+        | cons m' rest => exact (h.sameRes (World.setLq_sameRes _ _ _ _)).sameRes (startOf_sameRes _ _ _ _ _ _)
 
 theorem Dup.world {act : List (Nat × Fault)} {e : Entry} {att : Nat} {c1 c2 : Cfg}
     (h : Dup act e att c1 c2) : c2.world = c1.world := by
@@ -287,20 +350,20 @@ theorem heldOk_invariant (sys : Sys) (hlow : sys.NoLowering)
       | delayTimeErr => exact hs
       | @deliverOk c1 e1 ws ms bs w acts c2 c'' _ _ _ hro _ _ _ _ hset _ hfill hdup =>
         simp only [State.cfg]
-        rw [Dup.world hdup, (fill_frame hfill).2.2.2.2]
+        rw [Dup.world hdup]
         have hw1 : WorldOk sys c1.world := (routeOf_frame hro).1.world.symm ▸ hs
-        have := settle_worldOk sys ((c1.popE l.entry).commit sys.sig.machines ms bs).time (opsOf sys.sig.machines bs) []
+        have := settleOut_worldOk sys ((c1.popE l.entry).commit sys.sig.machines ms bs).time
+          ((c1.popE l.entry).commit sys.sig.machines ms bs).machines (inMachineOrder sys.sig.machines bs)
           (w := ((c1.popE l.entry).commit sys.sig.machines ms bs).world) hw1
         rw [hset] at this
-        exact this
+        exact this.sameRes (fill_frame hfill).2.2.2.2
       | deliverErr => exact hs
       | routeErr => exact hs
       | worldOk _ _ _ hws _ hfill =>
         simp only [State.cfg]
-        rw [(fill_frame hfill).2.2.2.2]
         have := worldStep_worldOk sys hlow (c.popW l.entry) l.entry hs
         rw [hws] at this
-        exact this
+        exact this.sameRes (fill_frame hfill).2.2.2.2
       | worldErr => exact hs
 
 /-- `heldOk_invariant` for a system whose initial world holds no units (as `Exegra.V2.Elab.elab`
