@@ -932,10 +932,10 @@
    ]
   },
   {
-   "id": "engine-call-flow",
-   "initial": "engine-call-ready",
+   "id": "engine-flow",
+   "initial": "engine-ready",
    "states": [
-    "engine-call-ready"
+    "engine-ready"
    ],
    "subject": "simulation-engine",
    "transitions": [
@@ -947,11 +947,31 @@
       }
      ],
      "faultOnly": false,
-     "from": "engine-call-ready",
+     "from": "engine-ready",
      "guard": null,
-     "id": "engine-call-missing",
+     "id": "engine-missing",
      "on": "engine-not-built",
-     "to": "engine-call-ready"
+     "to": "engine-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "loaded",
+       "to": "built"
+      },
+      {
+       "emit": "engine-load-settled",
+       "payload": {
+        "ok": "built"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "engine-ready",
+     "guard": null,
+     "id": "engine-load",
+     "on": "engine-load-requested",
+     "to": "engine-ready"
     },
     {
      "effects": [
@@ -967,11 +987,11 @@
       }
      ],
      "faultOnly": false,
-     "from": "engine-call-ready",
+     "from": "engine-ready",
      "guard": "built",
-     "id": "engine-call-run",
+     "id": "engine-run",
      "on": "engine-run-called",
-     "to": "engine-call-ready"
+     "to": "engine-ready"
     },
     {
      "effects": [
@@ -980,17 +1000,21 @@
       }
      ],
      "faultOnly": false,
-     "from": "engine-call-ready",
+     "from": "engine-ready",
      "guard": "!built",
-     "id": "engine-call-refuse",
+     "id": "engine-refuse",
      "on": "engine-run-called",
-     "to": "engine-call-ready"
+     "to": "engine-ready"
     }
    ],
    "variables": [
     {
      "initial": true,
      "name": "built"
+    },
+    {
+     "initial": false,
+     "name": "loaded"
     },
     {
      "initial": 0,

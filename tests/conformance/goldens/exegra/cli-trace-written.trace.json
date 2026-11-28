@@ -5,7 +5,7 @@
   "down": [],
   "incarnations": {
    "cli-process-flow": 0,
-   "engine-call-flow": 0,
+   "engine-flow": 0,
    "workspace-disk-flow": 0
   },
   "links": {},
@@ -26,10 +26,11 @@
      "wroteSpec": false
     }
    },
-   "engine-call-flow": {
-    "state": "engine-call-ready",
+   "engine-flow": {
+    "state": "engine-ready",
     "vars": {
      "built": true,
+     "loaded": false,
      "runs": 1
     }
    },
@@ -62,7 +63,7 @@
   "down": [],
   "incarnations": {
    "cli-process-flow": 0,
-   "engine-call-flow": 0,
+   "engine-flow": 0,
    "workspace-disk-flow": 0
   },
   "links": {},
@@ -83,10 +84,11 @@
      "wroteSpec": false
     }
    },
-   "engine-call-flow": {
-    "state": "engine-call-ready",
+   "engine-flow": {
+    "state": "engine-ready",
     "vars": {
      "built": true,
+     "loaded": false,
      "runs": 0
     }
    },
@@ -141,7 +143,7 @@
     "down": [],
     "incarnations": {
      "cli-process-flow": 0,
-     "engine-call-flow": 0,
+     "engine-flow": 0,
      "workspace-disk-flow": 0
     },
     "links": {},
@@ -162,10 +164,11 @@
        "wroteSpec": false
       }
      },
-     "engine-call-flow": {
-      "state": "engine-call-ready",
+     "engine-flow": {
+      "state": "engine-ready",
       "vars": {
        "built": true,
+       "loaded": false,
        "runs": 0
       }
      },
@@ -278,7 +281,7 @@
      "reason": "no-transition"
     },
     {
-     "behavior": "engine-call-flow",
+     "behavior": "engine-flow",
      "considered": [],
      "instance": 0,
      "reason": "no-transition"
@@ -302,7 +305,7 @@
     "down": [],
     "incarnations": {
      "cli-process-flow": 0,
-     "engine-call-flow": 0,
+     "engine-flow": 0,
      "workspace-disk-flow": 0
     },
     "links": {},
@@ -323,10 +326,11 @@
        "wroteSpec": false
       }
      },
-     "engine-call-flow": {
-      "state": "engine-call-ready",
+     "engine-flow": {
+      "state": "engine-ready",
       "vars": {
        "built": true,
+       "loaded": false,
        "runs": 0
       }
      },
@@ -433,7 +437,7 @@
      "reason": "no-transition"
     },
     {
-     "behavior": "engine-call-flow",
+     "behavior": "engine-flow",
      "considered": [],
      "instance": 0,
      "reason": "no-transition"
@@ -457,7 +461,7 @@
     "down": [],
     "incarnations": {
      "cli-process-flow": 0,
-     "engine-call-flow": 0,
+     "engine-flow": 0,
      "workspace-disk-flow": 0
     },
     "links": {},
@@ -478,10 +482,11 @@
        "wroteSpec": false
       }
      },
-     "engine-call-flow": {
-      "state": "engine-call-ready",
+     "engine-flow": {
+      "state": "engine-ready",
       "vars": {
        "built": true,
+       "loaded": false,
        "runs": 0
       }
      },
@@ -582,7 +587,7 @@
      "reason": "no-transition"
     },
     {
-     "behavior": "engine-call-flow",
+     "behavior": "engine-flow",
      "considered": [],
      "instance": 0,
      "reason": "no-transition"
@@ -606,7 +611,7 @@
     "down": [],
     "incarnations": {
      "cli-process-flow": 0,
-     "engine-call-flow": 0,
+     "engine-flow": 0,
      "workspace-disk-flow": 0
     },
     "links": {},
@@ -627,10 +632,11 @@
        "wroteSpec": false
       }
      },
-     "engine-call-flow": {
-      "state": "engine-call-ready",
+     "engine-flow": {
+      "state": "engine-ready",
       "vars": {
        "built": true,
+       "loaded": false,
        "runs": 1
       }
      },
@@ -654,7 +660,7 @@
      {
       "event": "engine-run-finished",
       "from": {
-       "behavior": "engine-call-flow",
+       "behavior": "engine-flow",
        "incarnation": 0,
        "instance": 0
       },
@@ -664,9 +670,9 @@
       "scheduledAt": 0,
       "seq": 4,
       "source": {
-       "behavior": "engine-call-flow",
+       "behavior": "engine-flow",
        "kind": "transition",
-       "transition": "engine-call-run"
+       "transition": "engine-run"
       },
       "time": 0
      }
@@ -700,7 +706,7 @@
    "faults": [],
    "fired": [
     {
-     "behavior": "engine-call-flow",
+     "behavior": "engine-flow",
      "emitted": [
       {
        "event": "engine-run-finished",
@@ -711,7 +717,7 @@
        "time": 0
       }
      ],
-     "from": "engine-call-ready",
+     "from": "engine-ready",
      "guard": "built",
      "instance": 0,
      "sets": [
@@ -721,8 +727,8 @@
        "variable": "runs"
       }
      ],
-     "to": "engine-call-ready",
-     "transition": "engine-call-run"
+     "to": "engine-ready",
+     "transition": "engine-run"
     }
    ],
    "ignored": [
@@ -745,8 +751,8 @@
    "resources": [],
    "responsible": [
     "engine-run-called",
-    "engine-call-run",
-    "engine-call-flow",
+    "engine-run",
+    "engine-flow",
     "simulation-engine"
    ],
    "time": 0
@@ -757,7 +763,7 @@
     "down": [],
     "incarnations": {
      "cli-process-flow": 0,
-     "engine-call-flow": 0,
+     "engine-flow": 0,
      "workspace-disk-flow": 0
     },
     "links": {},
@@ -778,10 +784,11 @@
        "wroteSpec": false
       }
      },
-     "engine-call-flow": {
-      "state": "engine-call-ready",
+     "engine-flow": {
+      "state": "engine-ready",
       "vars": {
        "built": true,
+       "loaded": false,
        "runs": 1
       }
      },
@@ -832,7 +839,7 @@
    "draws": [],
    "event": {
     "from": {
-     "behavior": "engine-call-flow",
+     "behavior": "engine-flow",
      "incarnation": 0,
      "instance": 0
     },
@@ -843,9 +850,9 @@
     "scheduledAt": 0,
     "seq": 4,
     "source": {
-     "behavior": "engine-call-flow",
+     "behavior": "engine-flow",
      "kind": "transition",
-     "transition": "engine-call-run"
+     "transition": "engine-run"
     }
    },
    "faults": [],
@@ -884,7 +891,7 @@
      "reason": "no-transition"
     },
     {
-     "behavior": "engine-call-flow",
+     "behavior": "engine-flow",
      "considered": [],
      "instance": 0,
      "reason": "no-transition"
@@ -908,7 +915,7 @@
     "down": [],
     "incarnations": {
      "cli-process-flow": 0,
-     "engine-call-flow": 0,
+     "engine-flow": 0,
      "workspace-disk-flow": 0
     },
     "links": {},
@@ -929,10 +936,11 @@
        "wroteSpec": false
       }
      },
-     "engine-call-flow": {
-      "state": "engine-call-ready",
+     "engine-flow": {
+      "state": "engine-ready",
       "vars": {
        "built": true,
+       "loaded": false,
        "runs": 1
       }
      },
@@ -1050,7 +1058,7 @@
      "reason": "no-transition"
     },
     {
-     "behavior": "engine-call-flow",
+     "behavior": "engine-flow",
      "considered": [],
      "instance": 0,
      "reason": "no-transition"
@@ -1074,7 +1082,7 @@
     "down": [],
     "incarnations": {
      "cli-process-flow": 0,
-     "engine-call-flow": 0,
+     "engine-flow": 0,
      "workspace-disk-flow": 0
     },
     "links": {},
@@ -1095,10 +1103,11 @@
        "wroteSpec": false
       }
      },
-     "engine-call-flow": {
-      "state": "engine-call-ready",
+     "engine-flow": {
+      "state": "engine-ready",
       "vars": {
        "built": true,
+       "loaded": false,
        "runs": 1
       }
      },
@@ -1166,7 +1175,7 @@
      "reason": "no-transition"
     },
     {
-     "behavior": "engine-call-flow",
+     "behavior": "engine-flow",
      "considered": [],
      "instance": 0,
      "reason": "no-transition"

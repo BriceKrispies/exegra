@@ -155,7 +155,7 @@
           {
             "scenario": "rejected-edit",
             "faults": [
-              "rejection-refreshes"
+              "rejection-saves"
             ]
           }
         ]
@@ -174,7 +174,7 @@
         "scenarios": [
           "edit-with-disk-conflict"
         ],
-        "expr": "session-flow.saveState == 'conflict' && renderer-flow.shownRevision == transaction-flow.revision && workspace-flow.diskSpec != transaction-flow.textHash",
+        "expr": "project-session-flow.saveState == 'conflict' && renderer-flow.shownRevision == transaction-flow.revision && workspace-flow.diskSpec != transaction-flow.textHash",
         "negatives": [
           {
             "scenario": "edit-with-disk-conflict",

@@ -225,6 +225,14 @@
         "revision": "revision",
         "text": "textHash"
        }
+      },
+      {
+       "after": 1,
+       "emit": "edit-applied",
+       "payload": {
+        "origin": "'ui'",
+        "specHash": "textHash"
+       }
       }
      ],
      "faultOnly": false,
@@ -359,26 +367,10 @@
    "initial": "session-in-sync",
    "states": [
     "session-in-sync",
-    "session-refreshing",
-    "session-save-pending",
-    "session-conflicted"
+    "session-refreshing"
    ],
    "subject": "session",
    "transitions": [
-    {
-     "effects": [
-      {
-       "set": "saveState",
-       "to": "'saved'"
-      }
-     ],
-     "faultOnly": true,
-     "from": "session-save-pending",
-     "guard": null,
-     "id": "session-swallow-conflict",
-     "on": "save-conflicted",
-     "to": "session-in-sync"
-    },
     {
      "effects": [
       {
@@ -398,10 +390,6 @@
     {
      "effects": [
       {
-       "set": "textHash",
-       "to": "event.text"
-      },
-      {
        "emit": "refresh-requested",
        "payload": {
         "revision": "event.revision"
@@ -418,24 +406,9 @@
     {
      "effects": [
       {
-       "set": "saveState",
-       "to": "'saving'"
-      },
-      {
        "emit": "model-published",
        "payload": {
         "revision": "event.revision"
-       }
-      },
-      {
-       "after": 1,
-       "emit": "write-intent",
-       "payload": {
-        "baseHash": "baseHash",
-        "file": "'spec'",
-        "name": "'exegra'",
-        "requestId": "event.revision",
-        "text": "textHash"
        }
       }
      ],
@@ -444,39 +417,7 @@
      "guard": null,
      "id": "session-on-refreshed",
      "on": "projection-refreshed",
-     "to": "session-save-pending"
-    },
-    {
-     "effects": [
-      {
-       "set": "saveState",
-       "to": "'saved'"
-      },
-      {
-       "set": "baseHash",
-       "to": "event.hash"
-      }
-     ],
-     "faultOnly": false,
-     "from": "session-save-pending",
-     "guard": null,
-     "id": "session-on-saved",
-     "on": "save-succeeded",
      "to": "session-in-sync"
-    },
-    {
-     "effects": [
-      {
-       "set": "saveState",
-       "to": "'conflict'"
-      }
-     ],
-     "faultOnly": false,
-     "from": "session-save-pending",
-     "guard": null,
-     "id": "session-on-conflict",
-     "on": "save-conflicted",
-     "to": "session-conflicted"
     },
     {
      "effects": [
@@ -495,20 +436,1111 @@
    ],
    "variables": [
     {
-     "initial": "saved",
-     "name": "saveState"
-    },
-    {
      "initial": 0,
      "name": "rejectionsLogged"
+    }
+   ]
+  },
+  {
+   "id": "project-session-flow",
+   "initial": "session-closed",
+   "states": [
+    "session-closed",
+    "session-opening",
+    "session-open",
+    "session-saving",
+    "session-conflict",
+    "session-error",
+    "session-readonly"
+   ],
+   "subject": "session",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "pendingName",
+       "to": "event.project"
+      },
+      {
+       "set": "persistent",
+       "to": true
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "list-intent",
+       "payload": {
+        "requestId": "reqSeq"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-closed",
+     "guard": "event.persistent",
+     "id": "session-init",
+     "on": "session-init-requested",
+     "to": "session-closed"
     },
     {
-     "initial": "h1",
+     "effects": [
+      {
+       "set": "persistent",
+       "to": false
+      },
+      {
+       "emit": "project-open-requested",
+       "payload": {
+        "name": "event.project"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-closed",
+     "guard": "!event.persistent",
+     "id": "session-init-readonly",
+     "on": "session-init-requested",
+     "to": "session-closed"
+    },
+    {
+     "effects": [
+      {
+       "set": "projectsListed",
+       "to": "projectsListed + 1"
+      },
+      {
+       "emit": "project-open-requested",
+       "payload": {
+        "name": "pendingName"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-closed",
+     "guard": null,
+     "id": "session-listed-open",
+     "on": "projects-listed",
+     "to": "session-closed"
+    },
+    {
+     "effects": [
+      {
+       "set": "pendingName",
+       "to": "event.name"
+      },
+      {
+       "set": "readPurpose",
+       "to": "'open'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "read-intent",
+       "payload": {
+        "name": "event.name",
+        "purpose": "'open'",
+        "requestId": "reqSeq"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-closed",
+     "guard": "persistent",
+     "id": "session-open-read",
+     "on": "project-open-requested",
+     "to": "session-opening"
+    },
+    {
+     "effects": [
+      {
+       "set": "projectName",
+       "to": "event.name"
+      },
+      {
+       "set": "textHash",
+       "to": "'shipped'"
+      },
+      {
+       "set": "saveState",
+       "to": "'readonly'"
+      },
+      {
+       "emit": "project-opened",
+       "payload": {
+        "layoutHash": "'shipped-layout'",
+        "name": "event.name",
+        "specHash": "'shipped'"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-closed",
+     "guard": "!persistent",
+     "id": "session-open-shipped",
+     "on": "project-open-requested",
+     "to": "session-readonly"
+    },
+    {
+     "effects": [
+      {
+       "set": "pendingName",
+       "to": "event.name"
+      },
+      {
+       "set": "readPurpose",
+       "to": "'open'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "read-intent",
+       "payload": {
+        "name": "event.name",
+        "purpose": "'open'",
+        "requestId": "reqSeq"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": null,
+     "id": "session-switch",
+     "on": "project-open-requested",
+     "to": "session-opening"
+    },
+    {
+     "effects": [
+      {
+       "set": "errorsLogged",
+       "to": "errorsLogged + 1"
+      },
+      {
+       "emit": "open-refused",
+       "payload": {
+        "name": "event.name"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": null,
+     "id": "session-switch-refused-saving",
+     "on": "project-open-requested",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "errorsLogged",
+       "to": "errorsLogged + 1"
+      },
+      {
+       "emit": "open-refused",
+       "payload": {
+        "name": "event.name"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-conflict",
+     "guard": null,
+     "id": "session-switch-refused-conflict",
+     "on": "project-open-requested",
+     "to": "session-conflict"
+    },
+    {
+     "effects": [
+      {
+       "set": "errorsLogged",
+       "to": "errorsLogged + 1"
+      },
+      {
+       "emit": "open-refused",
+       "payload": {
+        "name": "event.name"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-error",
+     "guard": null,
+     "id": "session-switch-refused-error",
+     "on": "project-open-requested",
+     "to": "session-error"
+    },
+    {
+     "effects": [
+      {
+       "set": "projectName",
+       "to": "pendingName"
+      },
+      {
+       "set": "textHash",
+       "to": "event.specHash"
+      },
+      {
+       "set": "layoutHash",
+       "to": "event.layoutHash"
+      },
+      {
+       "set": "saveState",
+       "to": "'saved'"
+      },
+      {
+       "emit": "project-opened",
+       "payload": {
+        "layoutHash": "event.layoutHash",
+        "name": "pendingName",
+        "specHash": "event.specHash"
+       }
+      },
+      {
+       "emit": "watch-intent",
+       "payload": {
+        "name": "pendingName"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-opening",
+     "guard": null,
+     "id": "session-opened-without-base",
+     "on": "project-files-read",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "projectName",
+       "to": "pendingName"
+      },
+      {
+       "set": "baseHash",
+       "to": "event.specHash"
+      },
+      {
+       "set": "textHash",
+       "to": "event.specHash"
+      },
+      {
+       "set": "layoutBase",
+       "to": "event.layoutHash"
+      },
+      {
+       "set": "layoutHash",
+       "to": "event.layoutHash"
+      },
+      {
+       "set": "recordedVersion",
+       "to": "event.recorded"
+      },
+      {
+       "set": "saveState",
+       "to": "'saved'"
+      },
+      {
+       "set": "pendingAgain",
+       "to": false
+      },
+      {
+       "set": "conflictHash",
+       "to": "'none'"
+      },
+      {
+       "emit": "project-opened",
+       "payload": {
+        "layoutHash": "event.layoutHash",
+        "name": "pendingName",
+        "specHash": "event.specHash"
+       }
+      },
+      {
+       "emit": "watch-intent",
+       "payload": {
+        "name": "pendingName"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-opening",
+     "guard": null,
+     "id": "session-opened",
+     "on": "project-files-read",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "errorsLogged",
+       "to": "errorsLogged + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-opening",
+     "guard": "projectName == 'none'",
+     "id": "session-open-failed",
+     "on": "project-read-failed",
+     "to": "session-closed"
+    },
+    {
+     "effects": [
+      {
+       "set": "errorsLogged",
+       "to": "errorsLogged + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-opening",
+     "guard": "projectName != 'none'",
+     "id": "session-open-failed-keep",
+     "on": "project-read-failed",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "textHash",
+       "to": "event.text"
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-open",
+     "guard": "event.origin == 'undo'",
+     "id": "session-skip-flush-on-undo",
+     "on": "commit-notified",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "textHash",
+       "to": "event.text"
+      },
+      {
+       "set": "saveState",
+       "to": "'saving'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "write-intent",
+       "payload": {
+        "baseHash": "baseHash",
+        "file": "'spec'",
+        "name": "projectName",
+        "requestId": "reqSeq",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-open",
+     "guard": "event.origin == 'external'",
+     "id": "session-flush-external-reload",
+     "on": "commit-notified",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "textHash",
+       "to": "event.text"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.origin == 'external'",
+     "id": "session-commit-external",
+     "on": "commit-notified",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "textHash",
+       "to": "event.text"
+      },
+      {
+       "set": "saveState",
+       "to": "'saving'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "write-intent",
+       "payload": {
+        "baseHash": "baseHash",
+        "file": "'spec'",
+        "name": "projectName",
+        "requestId": "reqSeq",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.file == 'spec'",
+     "id": "session-commit-spec",
+     "on": "commit-notified",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "layoutHash",
+       "to": "event.text"
+      },
+      {
+       "set": "saveState",
+       "to": "'saving'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "write-intent",
+       "payload": {
+        "baseHash": "layoutBase",
+        "file": "'layout'",
+        "name": "projectName",
+        "requestId": "reqSeq",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.file == 'layout'",
+     "id": "session-commit-layout",
+     "on": "commit-notified",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "textHash",
+       "to": "event.text"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "write-intent",
+       "payload": {
+        "baseHash": "baseHash",
+        "file": "'spec'",
+        "name": "projectName",
+        "requestId": "reqSeq",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-readonly",
+     "guard": null,
+     "id": "session-readonly-flush",
+     "on": "commit-notified",
+     "to": "session-readonly"
+    },
+    {
+     "effects": [
+      {
+       "set": "textHash",
+       "to": "event.text"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-readonly",
+     "guard": null,
+     "id": "session-readonly-commit",
+     "on": "commit-notified",
+     "to": "session-readonly"
+    },
+    {
+     "effects": [
+      {
+       "set": "textHash",
+       "to": "event.text"
+      },
+      {
+       "set": "pendingAgain",
+       "to": true
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": "event.file == 'spec' && event.origin != 'external'",
+     "id": "session-commit-while-saving",
+     "on": "commit-notified",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "baseHash",
+       "to": "event.hash"
+      },
+      {
+       "set": "pendingAgain",
+       "to": false
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "write-intent",
+       "payload": {
+        "baseHash": "event.hash",
+        "file": "'spec'",
+        "name": "projectName",
+        "requestId": "reqSeq",
+        "text": "textHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": "event.file == 'spec' && pendingAgain",
+     "id": "session-saved-again",
+     "on": "save-succeeded",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "baseHash",
+       "to": "event.hash"
+      },
+      {
+       "set": "saveState",
+       "to": "'saved'"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": "event.file == 'spec'",
+     "id": "session-saved",
+     "on": "save-succeeded",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "layoutBase",
+       "to": "event.hash"
+      },
+      {
+       "set": "saveState",
+       "to": "'saved'"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": "event.file == 'layout'",
+     "id": "session-layout-saved",
+     "on": "save-succeeded",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "saveState",
+       "to": "'saved'"
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-saving",
+     "guard": null,
+     "id": "session-swallow-conflict",
+     "on": "save-conflicted",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "conflictHash",
+       "to": "event.currentHash"
+      },
+      {
+       "set": "saveState",
+       "to": "'conflict'"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": null,
+     "id": "session-save-conflict",
+     "on": "save-conflicted",
+     "to": "session-conflict"
+    },
+    {
+     "effects": [
+      {
+       "set": "saveState",
+       "to": "'error'"
+      },
+      {
+       "set": "errorsLogged",
+       "to": "errorsLogged + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": null,
+     "id": "session-save-failed",
+     "on": "save-failed",
+     "to": "session-error"
+    },
+    {
+     "effects": [
+      {
+       "set": "textHash",
+       "to": "event.text"
+      },
+      {
+       "set": "saveState",
+       "to": "'saving'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "write-intent",
+       "payload": {
+        "baseHash": "baseHash",
+        "file": "'spec'",
+        "name": "projectName",
+        "requestId": "reqSeq",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-error",
+     "guard": "event.file == 'spec' && event.origin != 'external'",
+     "id": "session-retry-on-commit",
+     "on": "commit-notified",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "baseHash",
+       "to": "conflictHash"
+      },
+      {
+       "set": "saveState",
+       "to": "'saved'"
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-conflict",
+     "guard": "event.how == 'reload'",
+     "id": "session-resolve-reload-keeps-text",
+     "on": "conflict-resolution-chosen",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "baseHash",
+       "to": "conflictHash"
+      },
+      {
+       "set": "saveState",
+       "to": "'saved'"
+      },
+      {
+       "emit": "reload-requested",
+       "payload": {
+        "file": "'spec'",
+        "text": "conflictHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-conflict",
+     "guard": "event.how == 'reload'",
+     "id": "session-resolve-reload",
+     "on": "conflict-resolution-chosen",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "saveState",
+       "to": "'saving'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "write-intent",
+       "payload": {
+        "baseHash": "baseHash",
+        "file": "'spec'",
+        "name": "projectName",
+        "requestId": "reqSeq",
+        "text": "textHash"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-conflict",
+     "guard": "event.how == 'overwrite'",
+     "id": "session-overwrite-stale-base",
+     "on": "conflict-resolution-chosen",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "baseHash",
+       "to": "conflictHash"
+      },
+      {
+       "set": "saveState",
+       "to": "'saving'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "write-intent",
+       "payload": {
+        "baseHash": "conflictHash",
+        "file": "'spec'",
+        "name": "projectName",
+        "requestId": "reqSeq",
+        "text": "textHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-conflict",
+     "guard": "event.how == 'overwrite'",
+     "id": "session-resolve-overwrite",
+     "on": "conflict-resolution-chosen",
+     "to": "session-saving"
+    },
+    {
+     "effects": [
+      {
+       "set": "readPurpose",
+       "to": "'recorded'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "read-intent",
+       "payload": {
+        "name": "projectName",
+        "purpose": "'recorded'",
+        "requestId": "reqSeq"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.file == 'recorded'",
+     "id": "session-recorded-changed",
+     "on": "external-change-received",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "externalReloads",
+       "to": "externalReloads + 1"
+      },
+      {
+       "emit": "reload-requested",
+       "payload": {
+        "file": "'spec'",
+        "text": "event.hash"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-open",
+     "guard": "event.file == 'spec'",
+     "id": "session-reload-own-write",
+     "on": "external-change-received",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "ownNotices",
+       "to": "ownNotices + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.file == 'spec' && event.hash == baseHash",
+     "id": "session-ignore-own-write",
+     "on": "external-change-received",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "ownNotices",
+       "to": "ownNotices + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.file == 'layout' && event.hash == layoutBase",
+     "id": "session-ignore-own-layout-write",
+     "on": "external-change-received",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "readPurpose",
+       "to": "'external-layout'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "read-intent",
+       "payload": {
+        "name": "projectName",
+        "purpose": "'external'",
+        "requestId": "reqSeq"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.file == 'layout'",
+     "id": "session-external-layout-read",
+     "on": "external-change-received",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "readPurpose",
+       "to": "'external'"
+      },
+      {
+       "set": "reqSeq",
+       "to": "reqSeq + 1"
+      },
+      {
+       "emit": "read-intent",
+       "payload": {
+        "name": "projectName",
+        "purpose": "'external'",
+        "requestId": "reqSeq"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "event.file == 'spec'",
+     "id": "session-external-read",
+     "on": "external-change-received",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "layoutBase",
+       "to": "event.layoutHash"
+      },
+      {
+       "set": "externalReloads",
+       "to": "externalReloads + 1"
+      },
+      {
+       "emit": "reload-requested",
+       "payload": {
+        "file": "'layout'",
+        "text": "event.layoutHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "readPurpose == 'external-layout' && event.layoutHash != layoutBase",
+     "id": "session-external-layout-adopted",
+     "on": "project-files-read",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "recordedVersion",
+       "to": "event.recorded"
+      },
+      {
+       "emit": "recorded-results-adopted",
+       "payload": {
+        "version": "event.recorded"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "readPurpose == 'recorded'",
+     "id": "session-recorded-adopted",
+     "on": "project-files-read",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "baseHash",
+       "to": "event.specHash"
+      },
+      {
+       "set": "externalReloads",
+       "to": "externalReloads + 1"
+      },
+      {
+       "emit": "reload-requested",
+       "payload": {
+        "file": "'spec'",
+        "text": "event.specHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "readPurpose == 'external' && event.specHash != baseHash",
+     "id": "session-external-adopted",
+     "on": "project-files-read",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "projectsListed",
+       "to": "projectsListed + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": null,
+     "id": "session-projects-refreshed",
+     "on": "projects-listed",
+     "to": "session-open"
+    },
+    {
+     "effects": [],
+     "faultOnly": false,
+     "from": "session-open",
+     "guard": "readPurpose == 'external' || readPurpose == 'external-layout'",
+     "id": "session-external-unchanged",
+     "on": "project-files-read",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "ownNotices",
+       "to": "ownNotices + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "session-saving",
+     "guard": null,
+     "id": "session-notice-while-saving",
+     "on": "external-change-received",
+     "to": "session-saving"
+    }
+   ],
+   "variables": [
+    {
+     "initial": true,
+     "name": "persistent"
+    },
+    {
+     "initial": "none",
+     "name": "projectName"
+    },
+    {
+     "initial": "none",
+     "name": "pendingName"
+    },
+    {
+     "initial": "none",
+     "name": "baseHash"
+    },
+    {
+     "initial": "none",
+     "name": "layoutBase"
+    },
+    {
+     "initial": "none",
      "name": "textHash"
     },
     {
-     "initial": "h1",
-     "name": "baseHash"
+     "initial": "none",
+     "name": "layoutHash"
+    },
+    {
+     "initial": "none",
+     "name": "saveState"
+    },
+    {
+     "initial": false,
+     "name": "pendingAgain"
+    },
+    {
+     "initial": "none",
+     "name": "conflictHash"
+    },
+    {
+     "initial": 0,
+     "name": "reqSeq"
+    },
+    {
+     "initial": "none",
+     "name": "readPurpose"
+    },
+    {
+     "initial": "none",
+     "name": "recordedVersion"
+    },
+    {
+     "initial": 0,
+     "name": "externalReloads"
+    },
+    {
+     "initial": 0,
+     "name": "ownNotices"
+    },
+    {
+     "initial": 0,
+     "name": "errorsLogged"
+    },
+    {
+     "initial": 0,
+     "name": "projectsListed"
     }
    ]
   },
@@ -682,6 +1714,36 @@
         "hash": "event.text",
         "requestId": "event.requestId"
        }
+      },
+      {
+       "after": 1,
+       "emit": "external-change-received",
+       "payload": {
+        "file": "event.file",
+        "hash": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "workspace-clean",
+     "guard": "event.file == 'spec' && event.baseHash == diskSpec && watching",
+     "id": "workspace-write-watched",
+     "on": "write-intent",
+     "to": "workspace-clean"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskSpec",
+       "to": "event.text"
+      },
+      {
+       "emit": "save-succeeded",
+       "payload": {
+        "file": "event.file",
+        "hash": "event.text",
+        "requestId": "event.requestId"
+       }
       }
      ],
      "faultOnly": false,
@@ -710,6 +1772,36 @@
      "from": "workspace-clean",
      "guard": "event.file == 'spec' && event.baseHash != diskSpec",
      "id": "workspace-refuse-stale-base",
+     "on": "write-intent",
+     "to": "workspace-clean"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskLayout",
+       "to": "event.text"
+      },
+      {
+       "emit": "save-succeeded",
+       "payload": {
+        "file": "event.file",
+        "hash": "event.text",
+        "requestId": "event.requestId"
+       }
+      },
+      {
+       "after": 1,
+       "emit": "external-change-received",
+       "payload": {
+        "file": "event.file",
+        "hash": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "workspace-clean",
+     "guard": "event.file == 'layout' && event.baseHash == diskLayout && watching",
+     "id": "workspace-write-layout-watched",
      "on": "write-intent",
      "to": "workspace-clean"
     },
@@ -756,6 +1848,39 @@
      "id": "workspace-refuse-stale-layout",
      "on": "write-intent",
      "to": "workspace-clean"
+    },
+    {
+     "effects": [
+      {
+       "emit": "project-files-read",
+       "payload": {
+        "layoutHash": "diskLayout",
+        "recorded": "'r1'",
+        "requestId": "event.requestId",
+        "specHash": "diskSpec"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "workspace-clean",
+     "guard": null,
+     "id": "workspace-read",
+     "on": "read-intent",
+     "to": "workspace-clean"
+    },
+    {
+     "effects": [
+      {
+       "set": "watching",
+       "to": "true"
+      }
+     ],
+     "faultOnly": false,
+     "from": "workspace-clean",
+     "guard": null,
+     "id": "workspace-watch",
+     "on": "watch-intent",
+     "to": "workspace-clean"
     }
    ],
    "variables": [
@@ -770,6 +1895,370 @@
     {
      "initial": false,
      "name": "conflict"
+    },
+    {
+     "initial": false,
+     "name": "watching"
+    }
+   ]
+  },
+  {
+   "id": "project-history-flow",
+   "initial": "history-ready",
+   "states": [
+    "history-ready"
+   ],
+   "subject": "transactions",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "specHash",
+       "to": "event.specHash"
+      },
+      {
+       "set": "layoutHash",
+       "to": "event.layoutHash"
+      },
+      {
+       "set": "undoDepth",
+       "to": 0
+      },
+      {
+       "set": "redoDepth",
+       "to": 0
+      },
+      {
+       "set": "revision",
+       "to": 1
+      }
+     ],
+     "faultOnly": false,
+     "from": "history-ready",
+     "guard": null,
+     "id": "history-open",
+     "on": "project-opened",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "undoHash",
+       "to": "specHash"
+      },
+      {
+       "set": "specHash",
+       "to": "event.specHash"
+      },
+      {
+       "set": "undoDepth",
+       "to": "undoDepth + 1"
+      },
+      {
+       "set": "redoDepth",
+       "to": 0
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'spec'",
+        "origin": "event.origin",
+        "text": "event.specHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "history-ready",
+     "guard": null,
+     "id": "history-edit",
+     "on": "edit-applied",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "layoutHash",
+       "to": "event.layoutHash"
+      },
+      {
+       "set": "specHash",
+       "to": "'h-moved'"
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'spec'",
+        "origin": "'ui'",
+        "text": "'h-moved'"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "history-ready",
+     "guard": null,
+     "id": "history-move-edits-spec",
+     "on": "node-moved",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "layoutHash",
+       "to": "event.layoutHash"
+      },
+      {
+       "set": "undoDepth",
+       "to": "undoDepth + 1"
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'layout'",
+        "origin": "'ui'",
+        "text": "event.layoutHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "history-ready",
+     "guard": null,
+     "id": "history-move",
+     "on": "node-moved",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "undoDepth",
+       "to": "undoDepth - 1"
+      },
+      {
+       "set": "redoDepth",
+       "to": "redoDepth + 1"
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'spec'",
+        "origin": "'undo'",
+        "text": "specHash"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "history-ready",
+     "guard": "undoDepth > 0",
+     "id": "history-undo-keeps-text",
+     "on": "undo-requested",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "redoHash",
+       "to": "specHash"
+      },
+      {
+       "set": "specHash",
+       "to": "undoHash"
+      },
+      {
+       "set": "undoDepth",
+       "to": "undoDepth - 1"
+      },
+      {
+       "set": "redoDepth",
+       "to": "redoDepth + 1"
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'spec'",
+        "origin": "'undo'",
+        "text": "specHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "history-ready",
+     "guard": "undoDepth > 0",
+     "id": "history-undo",
+     "on": "undo-requested",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "undoHash",
+       "to": "specHash"
+      },
+      {
+       "set": "specHash",
+       "to": "redoHash"
+      },
+      {
+       "set": "undoDepth",
+       "to": "undoDepth + 1"
+      },
+      {
+       "set": "redoDepth",
+       "to": "redoDepth - 1"
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'spec'",
+        "origin": "'redo'",
+        "text": "specHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "history-ready",
+     "guard": "redoDepth > 0",
+     "id": "history-redo",
+     "on": "redo-requested",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "layoutHash",
+       "to": "event.text"
+      },
+      {
+       "set": "undoDepth",
+       "to": 0
+      },
+      {
+       "set": "redoDepth",
+       "to": 0
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'layout'",
+        "origin": "'external'",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "history-ready",
+     "guard": "event.file == 'layout'",
+     "id": "history-reload-layout",
+     "on": "reload-requested",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "specHash",
+       "to": "event.text"
+      },
+      {
+       "set": "undoDepth",
+       "to": 0
+      },
+      {
+       "set": "redoDepth",
+       "to": 0
+      },
+      {
+       "set": "revision",
+       "to": "revision + 1"
+      },
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'spec'",
+        "origin": "'external'",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "history-ready",
+     "guard": null,
+     "id": "history-reload",
+     "on": "reload-requested",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'spec'",
+        "origin": "'ui'",
+        "text": "'h2'"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "history-ready",
+     "guard": null,
+     "id": "history-commit-on-rejection",
+     "on": "transaction-rejected",
+     "to": "history-ready"
+    }
+   ],
+   "variables": [
+    {
+     "initial": 1,
+     "name": "revision"
+    },
+    {
+     "initial": "none",
+     "name": "specHash"
+    },
+    {
+     "initial": "none",
+     "name": "layoutHash"
+    },
+    {
+     "initial": "none",
+     "name": "undoHash"
+    },
+    {
+     "initial": "none",
+     "name": "redoHash"
+    },
+    {
+     "initial": 0,
+     "name": "undoDepth"
+    },
+    {
+     "initial": 0,
+     "name": "redoDepth"
     }
    ]
   }
@@ -1265,6 +2754,13 @@
   "steps": [
    {
     "at": 0,
+    "event": "project-open-requested",
+    "payload": {
+     "name": "exegra"
+    }
+   },
+   {
+    "at": 3,
     "event": "edit-requested",
     "payload": {
      "text": "h2"

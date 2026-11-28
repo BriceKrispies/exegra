@@ -64,7 +64,7 @@ The browser session saves in this order: **commit, refresh, persist**.
 
 `flush` writes the current text (not one write per revision, so quick commits may coalesce) with the SHA-256 `baseHash` last seen from the server. A matching base hash writes atomically and returns the new hash. A mismatch returns `409` with the current disk text; the session sets its save state to `conflict`, writes nothing and offers *Reload from disk* (adopts the disk text, which clears the undo history) or *Overwrite disk* (re-bases on the disk hash and writes). A failed request leaves the file pending and the state `error`; there is no automatic retry. Save state (`saved`, `saving`, `conflict`, `error`, `readonly`) is shown in the app bar: below desktop width as a badge on the overflow button and a line at the top of its menu, on a desktop as a small button when it needs attention. A conflict opens the menu from either.
 
-This order differs from a strict persist-then-refresh pipeline: the views show a revision before it is on disk. The self-specification models it as it is (behavior `session-flow`, claims `refresh-follows-commit` and `save-follows-refresh`).
+This order differs from a strict persist-then-refresh pipeline: the views show a revision before it is on disk. The self-specification models it as it is (behaviors `session-flow` and `project-session-flow`, claims `refresh-follows-commit` and `save-follows-refresh`).
 
 **Switching projects** is refused while a save is pending, in conflict or in error: the session reports that the pending save must be resolved or finished first and stays on the current project.
 

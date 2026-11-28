@@ -2382,6 +2382,20 @@
     {
      "effects": [
       {
+       "set": "saveState",
+       "to": "'saved'"
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-saving",
+     "guard": null,
+     "id": "session-swallow-conflict",
+     "on": "save-conflicted",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
        "set": "conflictHash",
        "to": "event.currentHash"
       },

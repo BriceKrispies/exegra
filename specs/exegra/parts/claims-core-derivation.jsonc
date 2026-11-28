@@ -134,7 +134,7 @@
           "visual-edit-flow",
           "source-edit-flow"
         ],
-        "expr": "workspace-flow.diskSpec == transaction-flow.textHash && session-flow.saveState == 'saved'",
+        "expr": "workspace-flow.diskSpec == transaction-flow.textHash && project-session-flow.saveState == 'saved'",
         "negatives": [
           {
             "scenario": "visual-edit-flow",
@@ -223,7 +223,7 @@
         "scenarios": [
           "rejected-edit"
         ],
-        "expr": "transaction-flow.revision == 1 && projection-flow.shownRevision == 1 && renderer-flow.shownRevision == 1 && inspector-flow.shownRevision == 1 && source-editor-flow.shownRevision == 1 && workspace-flow.diskSpec == 'h1' && session-flow.saveState == 'saved'",
+        "expr": "transaction-flow.revision == 1 && projection-flow.shownRevision == 1 && renderer-flow.shownRevision == 1 && inspector-flow.shownRevision == 1 && source-editor-flow.shownRevision == 1 && workspace-flow.diskSpec == 'h1' && project-session-flow.saveState != 'saving' && project-session-flow.saveState != 'conflict' && project-session-flow.saveState != 'error'",
         "negatives": [
           {
             "scenario": "rejected-edit",

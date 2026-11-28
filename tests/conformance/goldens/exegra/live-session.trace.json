@@ -8,7 +8,7 @@
    "camera-memory-flow": 0,
    "claim-evaluation-flow": 0,
    "dev-server-flow": 0,
-   "engine-module-flow": 0,
+   "engine-flow": 0,
    "engine-runner-flow": 0,
    "engine-worker-flow": 0,
    "interaction-prefs-flow": 0,
@@ -54,11 +54,12 @@
      "requests": 0
     }
    },
-   "engine-module-flow": {
-    "state": "engine-unloaded",
+   "engine-flow": {
+    "state": "engine-ready",
     "vars": {
      "built": true,
-     "loaded": false
+     "loaded": false,
+     "runs": 0
     }
    },
    "engine-runner-flow": {
@@ -238,7 +239,7 @@
    "camera-memory-flow": 0,
    "claim-evaluation-flow": 0,
    "dev-server-flow": 0,
-   "engine-module-flow": 0,
+   "engine-flow": 0,
    "engine-runner-flow": 0,
    "engine-worker-flow": 0,
    "interaction-prefs-flow": 0,
@@ -284,11 +285,12 @@
      "requests": 0
     }
    },
-   "engine-module-flow": {
-    "state": "engine-unloaded",
+   "engine-flow": {
+    "state": "engine-ready",
     "vars": {
      "built": true,
-     "loaded": false
+     "loaded": false,
+     "runs": 0
     }
    },
    "engine-runner-flow": {

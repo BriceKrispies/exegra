@@ -85,11 +85,10 @@
    ]
   },
   {
-   "id": "engine-module-flow",
-   "initial": "engine-unloaded",
+   "id": "engine-flow",
+   "initial": "engine-ready",
    "states": [
-    "engine-unloaded",
-    "engine-settled"
+    "engine-ready"
    ],
    "subject": "simulation-engine",
    "transitions": [
@@ -101,11 +100,11 @@
       }
      ],
      "faultOnly": false,
-     "from": "engine-unloaded",
+     "from": "engine-ready",
      "guard": null,
-     "id": "engine-module-missing",
+     "id": "engine-missing",
      "on": "engine-not-built",
-     "to": "engine-unloaded"
+     "to": "engine-ready"
     },
     {
      "effects": [
@@ -121,11 +120,44 @@
       }
      ],
      "faultOnly": false,
-     "from": "engine-unloaded",
+     "from": "engine-ready",
      "guard": null,
-     "id": "engine-module-load",
+     "id": "engine-load",
      "on": "engine-load-requested",
-     "to": "engine-settled"
+     "to": "engine-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "runs",
+       "to": "runs + 1"
+      },
+      {
+       "emit": "engine-run-finished",
+       "payload": {
+        "steps": 12
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "engine-ready",
+     "guard": "built",
+     "id": "engine-run",
+     "on": "engine-run-called",
+     "to": "engine-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "engine-run-failed"
+      }
+     ],
+     "faultOnly": false,
+     "from": "engine-ready",
+     "guard": "!built",
+     "id": "engine-refuse",
+     "on": "engine-run-called",
+     "to": "engine-ready"
     }
    ],
    "variables": [
@@ -136,6 +168,10 @@
     {
      "initial": false,
      "name": "loaded"
+    },
+    {
+     "initial": 0,
+     "name": "runs"
     }
    ]
   },
@@ -749,6 +785,20 @@
      "guard": "event.file == 'layout'",
      "id": "session-layout-saved",
      "on": "save-succeeded",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
+       "set": "saveState",
+       "to": "'saved'"
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-saving",
+     "guard": null,
+     "id": "session-swallow-conflict",
+     "on": "save-conflicted",
      "to": "session-open"
     },
     {
@@ -2790,6 +2840,24 @@
      "guard": null,
      "id": "history-reload",
      "on": "reload-requested",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'spec'",
+        "origin": "'ui'",
+        "text": "'h2'"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "history-ready",
+     "guard": null,
+     "id": "history-commit-on-rejection",
+     "on": "transaction-rejected",
      "to": "history-ready"
     }
    ],

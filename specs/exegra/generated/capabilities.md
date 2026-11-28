@@ -23,12 +23,12 @@ its status.
 |---|---|
 | Components | 116 |
 | Relationships | 354 |
-| Behaviors | 43 |
+| Behaviors | 42 |
 | Scenarios | 36 |
-| Claims | 462 |
+| Claims | 463 |
 | Claims shown established | 5 |
 | Claims inconclusive | 20 |
 | Claims not-evaluated | 41 |
 | Claims proved | 123 |
 | Claims supported | 221 |
-| Claims verified | 57 |
+| Claims verified | 58 |

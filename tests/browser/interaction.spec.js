@@ -72,14 +72,18 @@ test('stepping a simulation sends a labelled marker along the edge from sender t
   await page.waitForFunction(() => /** @type {any} */ (window).__exegra.view.getStats().nodes >= 60, null, { timeout: 30_000 });
   await page.waitForTimeout(600);
 
-  // Step 0: the edit request comes in from outside.
+  // Steps 0-4: the session opens the project (read, opened, watch) before the edit arrives (WG-5733).
+  for (let i = 0; i <= 4; i++) await ex(page, `session.simStep();`);
+  await page.waitForTimeout(400);
+
+  // Step 5: the edit request comes in from outside.
   await ex(page, `session.simStep();`);
   const first = /** @type {any[]} */ (await ex(page, `return view.getFlows();`));
   expect(first.map((f) => [f.kind, f.to])).toEqual([['enter', 'composition-root']]);
   await expect(page.locator('.scene-flow-label--enter')).toHaveCount(1);
   await expect(page.getByTestId('sim-flow')).toHaveText(/outside \(scenario\) → Composition root/);
 
-  // Step 1: the operation travels along the declared edge to the transaction system, and moves.
+  // Step 6: the operation travels along the declared edge to the transaction system, and moves.
   await page.waitForTimeout(1600);
   await ex(page, `session.simStep();`);
   const a = /** @type {any[]} */ (await ex(page, `return view.getFlows();`));
@@ -95,8 +99,8 @@ test('stepping a simulation sends a labelled marker along the edge from sender t
   await expect(page.getByTestId('sim-flow')).toHaveText(/Composition root → Transaction system$/);
   await page.screenshot({ path: path.join(SHOTS, 'test-sim-flow-edge.png') });
 
-  // Step 9: the save goes from the session to the persistence client, along the relationship that connects them.
-  for (let i = 2; i <= 9; i++) await ex(page, `session.simStep();`);
+  // Step 16: the save goes from the session to the persistence client, along the relationship that connects them.
+  for (let i = 7; i <= 16; i++) await ex(page, `session.simStep();`);
   const save = /** @type {any[]} */ (await ex(page, `return view.getFlows().filter((f) => f.event === 'Write intended');`));
   expect(save.map((f) => [f.kind, f.from, f.to])).toEqual([['edge', 'session', 'persistence-client']]);
   await expect(page.locator('.scene-flow-label--edge')).toHaveText('Write intended');

@@ -446,6 +446,40 @@
         "ok": true,
         "requestId": "event.requestId"
        }
+      },
+      {
+       "after": 1,
+       "emit": "file-change-notice-sent",
+       "payload": {
+        "file": "event.file",
+        "hash": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "write-endpoint-ready",
+     "guard": "event.file == 'spec' && event.baseHash == diskHash && watching",
+     "id": "write-endpoint-accept-watched",
+     "on": "write-file-request",
+     "to": "write-endpoint-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskHash",
+       "to": "event.text"
+      },
+      {
+       "set": "writes",
+       "to": "writes + 1"
+      },
+      {
+       "emit": "write-file-ok",
+       "payload": {
+        "hash": "event.text",
+        "ok": true,
+        "requestId": "event.requestId"
+       }
       }
      ],
      "faultOnly": false,
@@ -494,6 +528,40 @@
         "ok": true,
         "requestId": "event.requestId"
        }
+      },
+      {
+       "after": 1,
+       "emit": "file-change-notice-sent",
+       "payload": {
+        "file": "event.file",
+        "hash": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "write-endpoint-ready",
+     "guard": "event.file == 'layout' && event.baseHash == diskLayout && watching",
+     "id": "write-endpoint-accept-layout-watched",
+     "on": "write-file-request",
+     "to": "write-endpoint-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskLayout",
+       "to": "event.text"
+      },
+      {
+       "set": "writes",
+       "to": "writes + 1"
+      },
+      {
+       "emit": "write-file-ok",
+       "payload": {
+        "hash": "event.text",
+        "ok": true,
+        "requestId": "event.requestId"
+       }
       }
      ],
      "faultOnly": false,
@@ -501,6 +569,39 @@
      "guard": "event.file == 'layout' && event.baseHash == diskLayout",
      "id": "write-endpoint-accept-layout",
      "on": "write-file-request",
+     "to": "write-endpoint-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "read-project-ok",
+       "payload": {
+        "layout": "diskLayout",
+        "recorded": "'r1'",
+        "requestId": "event.requestId",
+        "spec": "diskHash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "write-endpoint-ready",
+     "guard": null,
+     "id": "write-endpoint-read",
+     "on": "read-project-request",
+     "to": "write-endpoint-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "watching",
+       "to": "true"
+      }
+     ],
+     "faultOnly": false,
+     "from": "write-endpoint-ready",
+     "guard": null,
+     "id": "write-endpoint-watch",
+     "on": "watch-project-request",
      "to": "write-endpoint-ready"
     }
    ],
@@ -520,6 +621,10 @@
     {
      "initial": 0,
      "name": "conflicts"
+    },
+    {
+     "initial": false,
+     "name": "watching"
     }
    ]
   }

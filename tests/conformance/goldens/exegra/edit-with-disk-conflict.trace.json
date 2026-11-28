@@ -9,6 +9,8 @@
    "inspector-flow": 0,
    "interaction-flow": 0,
    "parser-flow": 0,
+   "project-history-flow": 0,
+   "project-session-flow": 0,
    "projection-flow": 0,
    "renderer-flow": 0,
    "session-flow": 0,
@@ -37,6 +39,40 @@
      "runs": 1
     }
    },
+   "project-history-flow": {
+    "state": "history-ready",
+    "vars": {
+     "layoutHash": "L1",
+     "redoDepth": 0,
+     "redoHash": "none",
+     "revision": 2,
+     "specHash": "h2",
+     "undoDepth": 1,
+     "undoHash": "h1"
+    }
+   },
+   "project-session-flow": {
+    "state": "session-conflict",
+    "vars": {
+     "baseHash": "h1",
+     "conflictHash": "hx",
+     "errorsLogged": 0,
+     "externalReloads": 0,
+     "layoutBase": "L1",
+     "layoutHash": "L1",
+     "ownNotices": 0,
+     "pendingAgain": false,
+     "pendingName": "exegra",
+     "persistent": true,
+     "projectName": "exegra",
+     "projectsListed": 0,
+     "readPurpose": "open",
+     "recordedVersion": "r1",
+     "reqSeq": 2,
+     "saveState": "conflict",
+     "textHash": "h2"
+    }
+   },
    "projection-flow": {
     "state": "projection-ready",
     "vars": {
@@ -50,12 +86,9 @@
     }
    },
    "session-flow": {
-    "state": "session-conflicted",
+    "state": "session-in-sync",
     "vars": {
-     "baseHash": "h1",
-     "rejectionsLogged": 0,
-     "saveState": "conflict",
-     "textHash": "h2"
+     "rejectionsLogged": 0
     }
    },
    "source-editor-flow": {
@@ -84,7 +117,8 @@
     "vars": {
      "conflict": true,
      "diskLayout": "L1",
-     "diskSpec": "hx"
+     "diskSpec": "hx",
+     "watching": true
     }
    }
   },
@@ -93,7 +127,7 @@
   "resources": {},
   "routeCounters": {},
   "streams": {},
-  "time": 1,
+  "time": 4,
   "timers": {},
   "workloads": {}
  },
@@ -104,6 +138,8 @@
    "inspector-flow": 0,
    "interaction-flow": 0,
    "parser-flow": 0,
+   "project-history-flow": 0,
+   "project-session-flow": 0,
    "projection-flow": 0,
    "renderer-flow": 0,
    "session-flow": 0,
@@ -132,6 +168,40 @@
      "runs": 0
     }
    },
+   "project-history-flow": {
+    "state": "history-ready",
+    "vars": {
+     "layoutHash": "none",
+     "redoDepth": 0,
+     "redoHash": "none",
+     "revision": 1,
+     "specHash": "none",
+     "undoDepth": 0,
+     "undoHash": "none"
+    }
+   },
+   "project-session-flow": {
+    "state": "session-closed",
+    "vars": {
+     "baseHash": "none",
+     "conflictHash": "none",
+     "errorsLogged": 0,
+     "externalReloads": 0,
+     "layoutBase": "none",
+     "layoutHash": "none",
+     "ownNotices": 0,
+     "pendingAgain": false,
+     "pendingName": "none",
+     "persistent": true,
+     "projectName": "none",
+     "projectsListed": 0,
+     "readPurpose": "none",
+     "recordedVersion": "none",
+     "reqSeq": 0,
+     "saveState": "none",
+     "textHash": "none"
+    }
+   },
    "projection-flow": {
     "state": "projection-ready",
     "vars": {
@@ -147,10 +217,7 @@
    "session-flow": {
     "state": "session-in-sync",
     "vars": {
-     "baseHash": "h1",
-     "rejectionsLogged": 0,
-     "saveState": "saved",
-     "textHash": "h1"
+     "rejectionsLogged": 0
     }
    },
    "source-editor-flow": {
@@ -179,16 +246,17 @@
     "vars": {
      "conflict": false,
      "diskLayout": "L1",
-     "diskSpec": "h1"
+     "diskSpec": "h1",
+     "watching": false
     }
    }
   },
   "meters": {},
   "pending": [
    {
-    "event": "edit-requested",
+    "event": "project-open-requested",
     "payload": {
-     "text": "h2"
+     "name": "exegra"
     },
     "scheduledAt": 0,
     "seq": 0,
@@ -197,6 +265,19 @@
      "step": 0
     },
     "time": 0
+   },
+   {
+    "event": "edit-requested",
+    "payload": {
+     "text": "h2"
+    },
+    "scheduledAt": 3,
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    },
+    "time": 3
    }
   ],
   "resources": {},
@@ -219,6 +300,8 @@
      "inspector-flow": 0,
      "interaction-flow": 0,
      "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
      "projection-flow": 0,
      "renderer-flow": 0,
      "session-flow": 0,
@@ -236,7 +319,7 @@
       }
      },
      "interaction-flow": {
-      "state": "interaction-awaiting",
+      "state": "interaction-idle",
       "vars": {
        "refusalShown": false
       }
@@ -245,6 +328,40 @@
       "state": "parser-ready",
       "vars": {
        "runs": 0
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-opening",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "none",
+       "reqSeq": 1,
+       "saveState": "none",
+       "textHash": "none"
       }
      },
      "projection-flow": {
@@ -262,10 +379,7 @@
      "session-flow": {
       "state": "session-in-sync",
       "vars": {
-       "baseHash": "h1",
-       "rejectionsLogged": 0,
-       "saveState": "saved",
-       "textHash": "h1"
+       "rejectionsLogged": 0
       }
      },
      "source-editor-flow": {
@@ -294,30 +408,46 @@
       "vars": {
        "conflict": false,
        "diskLayout": "L1",
-       "diskSpec": "h1"
+       "diskSpec": "h1",
+       "watching": false
       }
      }
     },
     "meters": {},
     "pending": [
      {
-      "event": "operation-submitted",
+      "event": "read-intent",
       "from": {
-       "behavior": "interaction-flow",
+       "behavior": "project-session-flow",
        "incarnation": 0,
        "instance": 0
       },
       "payload": {
-       "text": "h2"
+       "name": "exegra",
+       "purpose": "open",
+       "requestId": 1
       },
       "scheduledAt": 0,
-      "seq": 1,
+      "seq": 2,
       "source": {
-       "behavior": "interaction-flow",
+       "behavior": "project-session-flow",
        "kind": "transition",
-       "transition": "interaction-submit"
+       "transition": "session-open-read"
       },
       "time": 0
+     },
+     {
+      "event": "edit-requested",
+      "payload": {
+       "text": "h2"
+      },
+      "scheduledAt": 3,
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 3
      }
     ],
     "resources": {},
@@ -329,9 +459,9 @@
    },
    "draws": [],
    "event": {
-    "id": "edit-requested",
+    "id": "project-open-requested",
     "payload": {
-     "text": "h2"
+     "name": "exegra"
     },
     "scheduledAt": 0,
     "seq": 0,
@@ -343,26 +473,50 @@
    "faults": [],
    "fired": [
     {
-     "behavior": "interaction-flow",
+     "behavior": "project-session-flow",
      "emitted": [
       {
-       "event": "operation-submitted",
+       "event": "read-intent",
        "payload": {
-        "text": "h2"
+        "name": "exegra",
+        "purpose": "open",
+        "requestId": 1
        },
-       "seq": 1,
+       "seq": 2,
        "time": 0
       }
      ],
-     "from": "interaction-idle",
-     "guard": null,
+     "from": "session-closed",
+     "guard": "persistent",
      "instance": 0,
-     "sets": [],
-     "to": "interaction-awaiting",
-     "transition": "interaction-submit"
+     "sets": [
+      {
+       "after": "exegra",
+       "before": "none",
+       "variable": "pendingName"
+      },
+      {
+       "after": "open",
+       "before": "none",
+       "variable": "readPurpose"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "reqSeq"
+      }
+     ],
+     "to": "session-opening",
+     "transition": "session-open-read"
     }
    ],
    "ignored": [
+    {
+     "behavior": "interaction-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
     {
      "behavior": "source-editor-flow",
      "considered": [],
@@ -416,6 +570,12 @@
      "considered": [],
      "instance": 0,
      "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
     }
    ],
    "index": 0,
@@ -423,10 +583,10 @@
    "links": [],
    "resources": [],
    "responsible": [
-    "edit-requested",
-    "interaction-submit",
-    "interaction-flow",
-    "composition-root"
+    "project-open-requested",
+    "session-open-read",
+    "project-session-flow",
+    "session"
    ],
    "time": 0
   },
@@ -438,6 +598,1229 @@
      "inspector-flow": 0,
      "interaction-flow": 0,
      "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "projection-flow": 0,
+     "renderer-flow": 0,
+     "session-flow": 0,
+     "source-editor-flow": 0,
+     "transaction-flow": 0,
+     "validator-flow": 0,
+     "workspace-flow": 0
+    },
+    "links": {},
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-idle",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 0
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-opening",
+      "vars": {
+       "baseHash": "none",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "none",
+       "layoutHash": "none",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "none",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "none",
+       "reqSeq": 1,
+       "saveState": "none",
+       "textHash": "none"
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "session-flow": {
+      "state": "session-in-sync",
+      "vars": {
+       "rejectionsLogged": 0
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-idle",
+      "vars": {
+       "pendingText": "h1",
+       "rejected": false,
+       "revision": 1,
+       "textHash": "h1"
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "none"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-clean",
+      "vars": {
+       "conflict": false,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "watching": false
+      }
+     }
+    },
+    "meters": {},
+    "pending": [
+     {
+      "event": "project-files-read",
+      "from": {
+       "behavior": "workspace-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
+      "payload": {
+       "layoutHash": "L1",
+       "recorded": "r1",
+       "requestId": 1,
+       "specHash": "h1"
+      },
+      "scheduledAt": 0,
+      "seq": 3,
+      "source": {
+       "behavior": "workspace-flow",
+       "kind": "transition",
+       "transition": "workspace-read"
+      },
+      "time": 0
+     },
+     {
+      "event": "edit-requested",
+      "payload": {
+       "text": "h2"
+      },
+      "scheduledAt": 3,
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 3
+     }
+    ],
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
+   },
+   "draws": [],
+   "event": {
+    "from": {
+     "behavior": "project-session-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
+    "id": "read-intent",
+    "payload": {
+     "name": "exegra",
+     "purpose": "open",
+     "requestId": 1
+    },
+    "scheduledAt": 0,
+    "seq": 2,
+    "source": {
+     "behavior": "project-session-flow",
+     "kind": "transition",
+     "transition": "session-open-read"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "workspace-flow",
+     "emitted": [
+      {
+       "event": "project-files-read",
+       "payload": {
+        "layoutHash": "L1",
+        "recorded": "r1",
+        "requestId": 1,
+        "specHash": "h1"
+       },
+       "seq": 3,
+       "time": 0
+      }
+     ],
+     "from": "workspace-clean",
+     "guard": null,
+     "instance": 0,
+     "sets": [],
+     "to": "workspace-clean",
+     "transition": "workspace-read"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "transaction-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    }
+   ],
+   "index": 1,
+   "kind": "deliver",
+   "links": [],
+   "resources": [],
+   "responsible": [
+    "read-intent",
+    "workspace-read",
+    "workspace-flow",
+    "persistence-client"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "inspector-flow": 0,
+     "interaction-flow": 0,
+     "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "projection-flow": 0,
+     "renderer-flow": 0,
+     "session-flow": 0,
+     "source-editor-flow": 0,
+     "transaction-flow": 0,
+     "validator-flow": 0,
+     "workspace-flow": 0
+    },
+    "links": {},
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-idle",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 0
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "none",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "none",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 1,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "session-flow": {
+      "state": "session-in-sync",
+      "vars": {
+       "rejectionsLogged": 0
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-idle",
+      "vars": {
+       "pendingText": "h1",
+       "rejected": false,
+       "revision": 1,
+       "textHash": "h1"
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "none"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-clean",
+      "vars": {
+       "conflict": false,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "watching": false
+      }
+     }
+    },
+    "meters": {},
+    "pending": [
+     {
+      "event": "project-opened",
+      "from": {
+       "behavior": "project-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
+      "payload": {
+       "layoutHash": "L1",
+       "name": "exegra",
+       "specHash": "h1"
+      },
+      "scheduledAt": 0,
+      "seq": 4,
+      "source": {
+       "behavior": "project-session-flow",
+       "kind": "transition",
+       "transition": "session-opened"
+      },
+      "time": 0
+     },
+     {
+      "event": "watch-intent",
+      "from": {
+       "behavior": "project-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
+      "payload": {
+       "name": "exegra"
+      },
+      "scheduledAt": 0,
+      "seq": 5,
+      "source": {
+       "behavior": "project-session-flow",
+       "kind": "transition",
+       "transition": "session-opened"
+      },
+      "time": 0
+     },
+     {
+      "event": "edit-requested",
+      "payload": {
+       "text": "h2"
+      },
+      "scheduledAt": 3,
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 3
+     }
+    ],
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
+   },
+   "draws": [],
+   "event": {
+    "from": {
+     "behavior": "workspace-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
+    "id": "project-files-read",
+    "payload": {
+     "layoutHash": "L1",
+     "recorded": "r1",
+     "requestId": 1,
+     "specHash": "h1"
+    },
+    "scheduledAt": 0,
+    "seq": 3,
+    "source": {
+     "behavior": "workspace-flow",
+     "kind": "transition",
+     "transition": "workspace-read"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "project-session-flow",
+     "emitted": [
+      {
+       "event": "project-opened",
+       "payload": {
+        "layoutHash": "L1",
+        "name": "exegra",
+        "specHash": "h1"
+       },
+       "seq": 4,
+       "time": 0
+      },
+      {
+       "event": "watch-intent",
+       "payload": {
+        "name": "exegra"
+       },
+       "seq": 5,
+       "time": 0
+      }
+     ],
+     "from": "session-opening",
+     "guard": null,
+     "instance": 0,
+     "sets": [
+      {
+       "after": "exegra",
+       "before": "none",
+       "variable": "projectName"
+      },
+      {
+       "after": "h1",
+       "before": "none",
+       "variable": "baseHash"
+      },
+      {
+       "after": "h1",
+       "before": "none",
+       "variable": "textHash"
+      },
+      {
+       "after": "L1",
+       "before": "none",
+       "variable": "layoutBase"
+      },
+      {
+       "after": "L1",
+       "before": "none",
+       "variable": "layoutHash"
+      },
+      {
+       "after": "r1",
+       "before": "none",
+       "variable": "recordedVersion"
+      },
+      {
+       "after": "saved",
+       "before": "none",
+       "variable": "saveState"
+      },
+      {
+       "after": false,
+       "before": false,
+       "variable": "pendingAgain"
+      },
+      {
+       "after": "none",
+       "before": "none",
+       "variable": "conflictHash"
+      }
+     ],
+     "to": "session-open",
+     "transition": "session-opened"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "transaction-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    }
+   ],
+   "index": 2,
+   "kind": "deliver",
+   "links": [],
+   "resources": [],
+   "responsible": [
+    "project-files-read",
+    "session-opened",
+    "project-session-flow",
+    "session"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "inspector-flow": 0,
+     "interaction-flow": 0,
+     "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "projection-flow": 0,
+     "renderer-flow": 0,
+     "session-flow": 0,
+     "source-editor-flow": 0,
+     "transaction-flow": 0,
+     "validator-flow": 0,
+     "workspace-flow": 0
+    },
+    "links": {},
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-idle",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 0
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 1,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "session-flow": {
+      "state": "session-in-sync",
+      "vars": {
+       "rejectionsLogged": 0
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-idle",
+      "vars": {
+       "pendingText": "h1",
+       "rejected": false,
+       "revision": 1,
+       "textHash": "h1"
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "none"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-clean",
+      "vars": {
+       "conflict": false,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "watching": false
+      }
+     }
+    },
+    "meters": {},
+    "pending": [
+     {
+      "event": "watch-intent",
+      "from": {
+       "behavior": "project-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
+      "payload": {
+       "name": "exegra"
+      },
+      "scheduledAt": 0,
+      "seq": 5,
+      "source": {
+       "behavior": "project-session-flow",
+       "kind": "transition",
+       "transition": "session-opened"
+      },
+      "time": 0
+     },
+     {
+      "event": "edit-requested",
+      "payload": {
+       "text": "h2"
+      },
+      "scheduledAt": 3,
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 3
+     }
+    ],
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
+   },
+   "draws": [],
+   "event": {
+    "from": {
+     "behavior": "project-session-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
+    "id": "project-opened",
+    "payload": {
+     "layoutHash": "L1",
+     "name": "exegra",
+     "specHash": "h1"
+    },
+    "scheduledAt": 0,
+    "seq": 4,
+    "source": {
+     "behavior": "project-session-flow",
+     "kind": "transition",
+     "transition": "session-opened"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "project-history-flow",
+     "emitted": [],
+     "from": "history-ready",
+     "guard": null,
+     "instance": 0,
+     "sets": [
+      {
+       "after": "h1",
+       "before": "none",
+       "variable": "specHash"
+      },
+      {
+       "after": "L1",
+       "before": "none",
+       "variable": "layoutHash"
+      },
+      {
+       "after": 0,
+       "before": 0,
+       "variable": "undoDepth"
+      },
+      {
+       "after": 0,
+       "before": 0,
+       "variable": "redoDepth"
+      },
+      {
+       "after": 1,
+       "before": 1,
+       "variable": "revision"
+      }
+     ],
+     "to": "history-ready",
+     "transition": "history-open"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "transaction-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    }
+   ],
+   "index": 3,
+   "kind": "deliver",
+   "links": [],
+   "resources": [],
+   "responsible": [
+    "project-opened",
+    "history-open",
+    "project-history-flow",
+    "transactions"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "inspector-flow": 0,
+     "interaction-flow": 0,
+     "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "projection-flow": 0,
+     "renderer-flow": 0,
+     "session-flow": 0,
+     "source-editor-flow": 0,
+     "transaction-flow": 0,
+     "validator-flow": 0,
+     "workspace-flow": 0
+    },
+    "links": {},
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-idle",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 0
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 1,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "session-flow": {
+      "state": "session-in-sync",
+      "vars": {
+       "rejectionsLogged": 0
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-idle",
+      "vars": {
+       "pendingText": "h1",
+       "rejected": false,
+       "revision": 1,
+       "textHash": "h1"
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "none"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-clean",
+      "vars": {
+       "conflict": false,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "watching": true
+      }
+     }
+    },
+    "meters": {},
+    "pending": [
+     {
+      "event": "edit-requested",
+      "payload": {
+       "text": "h2"
+      },
+      "scheduledAt": 3,
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 3
+     }
+    ],
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
+   },
+   "draws": [],
+   "event": {
+    "from": {
+     "behavior": "project-session-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
+    "id": "watch-intent",
+    "payload": {
+     "name": "exegra"
+    },
+    "scheduledAt": 0,
+    "seq": 5,
+    "source": {
+     "behavior": "project-session-flow",
+     "kind": "transition",
+     "transition": "session-opened"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "workspace-flow",
+     "emitted": [],
+     "from": "workspace-clean",
+     "guard": null,
+     "instance": 0,
+     "sets": [
+      {
+       "after": true,
+       "before": false,
+       "variable": "watching"
+      }
+     ],
+     "to": "workspace-clean",
+     "transition": "workspace-watch"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "transaction-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    }
+   ],
+   "index": 4,
+   "kind": "deliver",
+   "links": [],
+   "resources": [],
+   "responsible": [
+    "watch-intent",
+    "workspace-watch",
+    "workspace-flow",
+    "persistence-client"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "inspector-flow": 0,
+     "interaction-flow": 0,
+     "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
      "projection-flow": 0,
      "renderer-flow": 0,
      "session-flow": 0,
@@ -466,6 +1849,40 @@
        "runs": 0
       }
      },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 1,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
      "projection-flow": {
       "state": "projection-ready",
       "vars": {
@@ -481,10 +1898,272 @@
      "session-flow": {
       "state": "session-in-sync",
       "vars": {
+       "rejectionsLogged": 0
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-idle",
+      "vars": {
+       "pendingText": "h1",
+       "rejected": false,
+       "revision": 1,
+       "textHash": "h1"
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "none"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-clean",
+      "vars": {
+       "conflict": false,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "watching": true
+      }
+     }
+    },
+    "meters": {},
+    "pending": [
+     {
+      "event": "operation-submitted",
+      "from": {
+       "behavior": "interaction-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
+      "payload": {
+       "text": "h2"
+      },
+      "scheduledAt": 3,
+      "seq": 6,
+      "source": {
+       "behavior": "interaction-flow",
+       "kind": "transition",
+       "transition": "interaction-submit"
+      },
+      "time": 3
+     }
+    ],
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 3,
+    "timers": {},
+    "workloads": {}
+   },
+   "draws": [],
+   "event": {
+    "id": "edit-requested",
+    "payload": {
+     "text": "h2"
+    },
+    "scheduledAt": 3,
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "interaction-flow",
+     "emitted": [
+      {
+       "event": "operation-submitted",
+       "payload": {
+        "text": "h2"
+       },
+       "seq": 6,
+       "time": 3
+      }
+     ],
+     "from": "interaction-idle",
+     "guard": null,
+     "instance": 0,
+     "sets": [],
+     "to": "interaction-awaiting",
+     "transition": "interaction-submit"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "transaction-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    }
+   ],
+   "index": 5,
+   "kind": "deliver",
+   "links": [],
+   "resources": [],
+   "responsible": [
+    "edit-requested",
+    "interaction-submit",
+    "interaction-flow",
+    "composition-root"
+   ],
+   "time": 3
+  },
+  {
+   "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "inspector-flow": 0,
+     "interaction-flow": 0,
+     "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "projection-flow": 0,
+     "renderer-flow": 0,
+     "session-flow": 0,
+     "source-editor-flow": 0,
+     "transaction-flow": 0,
+     "validator-flow": 0,
+     "workspace-flow": 0
+    },
+    "links": {},
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-awaiting",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 0
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
        "baseHash": "h1",
-       "rejectionsLogged": 0,
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 1,
        "saveState": "saved",
        "textHash": "h1"
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 1
+      }
+     },
+     "session-flow": {
+      "state": "session-in-sync",
+      "vars": {
+       "rejectionsLogged": 0
       }
      },
      "source-editor-flow": {
@@ -513,7 +2192,8 @@
       "vars": {
        "conflict": false,
        "diskLayout": "L1",
-       "diskSpec": "h1"
+       "diskSpec": "h1",
+       "watching": true
       }
      }
     },
@@ -527,20 +2207,20 @@
        "instance": 0
       },
       "payload": {},
-      "scheduledAt": 0,
-      "seq": 2,
+      "scheduledAt": 3,
+      "seq": 7,
       "source": {
        "behavior": "transaction-flow",
        "kind": "transition",
        "transition": "tx-begin"
       },
-      "time": 0
+      "time": 3
      }
     ],
     "resources": {},
     "routeCounters": {},
     "streams": {},
-    "time": 0,
+    "time": 3,
     "timers": {},
     "workloads": {}
    },
@@ -555,8 +2235,8 @@
     "payload": {
      "text": "h2"
     },
-    "scheduledAt": 0,
-    "seq": 1,
+    "scheduledAt": 3,
+    "seq": 6,
     "source": {
      "behavior": "interaction-flow",
      "kind": "transition",
@@ -571,8 +2251,8 @@
       {
        "event": "text-edits-computed",
        "payload": {},
-       "seq": 2,
-       "time": 0
+       "seq": 7,
+       "time": 3
       }
      ],
      "from": "tx-idle",
@@ -621,6 +2301,12 @@
      "reason": "no-transition"
     },
     {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
      "behavior": "projection-flow",
      "considered": [],
      "instance": 0,
@@ -643,9 +2329,15 @@
      "considered": [],
      "instance": 0,
      "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
     }
    ],
-   "index": 1,
+   "index": 6,
    "kind": "deliver",
    "links": [],
    "resources": [],
@@ -655,7 +2347,7 @@
     "transaction-flow",
     "transactions"
    ],
-   "time": 0
+   "time": 3
   },
   {
    "config": {
@@ -665,6 +2357,8 @@
      "inspector-flow": 0,
      "interaction-flow": 0,
      "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
      "projection-flow": 0,
      "renderer-flow": 0,
      "session-flow": 0,
@@ -693,6 +2387,40 @@
        "runs": 1
       }
      },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 1,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
      "projection-flow": {
       "state": "projection-ready",
       "vars": {
@@ -708,10 +2436,7 @@
      "session-flow": {
       "state": "session-in-sync",
       "vars": {
-       "baseHash": "h1",
-       "rejectionsLogged": 0,
-       "saveState": "saved",
-       "textHash": "h1"
+       "rejectionsLogged": 0
       }
      },
      "source-editor-flow": {
@@ -740,7 +2465,8 @@
       "vars": {
        "conflict": false,
        "diskLayout": "L1",
-       "diskSpec": "h1"
+       "diskSpec": "h1",
+       "watching": true
       }
      }
     },
@@ -754,20 +2480,20 @@
        "instance": 0
       },
       "payload": {},
-      "scheduledAt": 0,
-      "seq": 3,
+      "scheduledAt": 3,
+      "seq": 8,
       "source": {
        "behavior": "parser-flow",
        "kind": "transition",
        "transition": "parser-parse"
       },
-      "time": 0
+      "time": 3
      }
     ],
     "resources": {},
     "routeCounters": {},
     "streams": {},
-    "time": 0,
+    "time": 3,
     "timers": {},
     "workloads": {}
    },
@@ -780,8 +2506,8 @@
     },
     "id": "text-edits-computed",
     "payload": {},
-    "scheduledAt": 0,
-    "seq": 2,
+    "scheduledAt": 3,
+    "seq": 7,
     "source": {
      "behavior": "transaction-flow",
      "kind": "transition",
@@ -796,8 +2522,8 @@
       {
        "event": "model-parsed",
        "payload": {},
-       "seq": 3,
-       "time": 0
+       "seq": 8,
+       "time": 3
       }
      ],
      "from": "parser-ready",
@@ -846,6 +2572,12 @@
      "reason": "no-transition"
     },
     {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
      "behavior": "projection-flow",
      "considered": [],
      "instance": 0,
@@ -868,9 +2600,15 @@
      "considered": [],
      "instance": 0,
      "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
     }
    ],
-   "index": 2,
+   "index": 7,
    "kind": "deliver",
    "links": [],
    "resources": [],
@@ -880,7 +2618,7 @@
     "parser-flow",
     "parser"
    ],
-   "time": 0
+   "time": 3
   },
   {
    "config": {
@@ -890,6 +2628,8 @@
      "inspector-flow": 0,
      "interaction-flow": 0,
      "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
      "projection-flow": 0,
      "renderer-flow": 0,
      "session-flow": 0,
@@ -918,6 +2658,40 @@
        "runs": 1
       }
      },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 1,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
      "projection-flow": {
       "state": "projection-ready",
       "vars": {
@@ -933,10 +2707,7 @@
      "session-flow": {
       "state": "session-in-sync",
       "vars": {
-       "baseHash": "h1",
-       "rejectionsLogged": 0,
-       "saveState": "saved",
-       "textHash": "h1"
+       "rejectionsLogged": 0
       }
      },
      "source-editor-flow": {
@@ -965,7 +2736,8 @@
       "vars": {
        "conflict": false,
        "diskLayout": "L1",
-       "diskSpec": "h1"
+       "diskSpec": "h1",
+       "watching": true
       }
      }
     },
@@ -979,20 +2751,20 @@
        "instance": 0
       },
       "payload": {},
-      "scheduledAt": 0,
-      "seq": 4,
+      "scheduledAt": 3,
+      "seq": 9,
       "source": {
        "behavior": "validator-flow",
        "kind": "transition",
        "transition": "validator-accept"
       },
-      "time": 0
+      "time": 3
      }
     ],
     "resources": {},
     "routeCounters": {},
     "streams": {},
-    "time": 0,
+    "time": 3,
     "timers": {},
     "workloads": {}
    },
@@ -1005,8 +2777,8 @@
     },
     "id": "model-parsed",
     "payload": {},
-    "scheduledAt": 0,
-    "seq": 3,
+    "scheduledAt": 3,
+    "seq": 8,
     "source": {
      "behavior": "parser-flow",
      "kind": "transition",
@@ -1021,8 +2793,8 @@
       {
        "event": "validation-passed",
        "payload": {},
-       "seq": 4,
-       "time": 0
+       "seq": 9,
+       "time": 3
       }
      ],
      "from": "validator-ready",
@@ -1071,6 +2843,12 @@
      "reason": "no-transition"
     },
     {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
      "behavior": "projection-flow",
      "considered": [],
      "instance": 0,
@@ -1093,9 +2871,15 @@
      "considered": [],
      "instance": 0,
      "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
     }
    ],
-   "index": 3,
+   "index": 8,
    "kind": "deliver",
    "links": [],
    "resources": [],
@@ -1105,7 +2889,7 @@
     "validator-flow",
     "validator"
    ],
-   "time": 0
+   "time": 3
   },
   {
    "config": {
@@ -1115,6 +2899,8 @@
      "inspector-flow": 0,
      "interaction-flow": 0,
      "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
      "projection-flow": 0,
      "renderer-flow": 0,
      "session-flow": 0,
@@ -1143,6 +2929,40 @@
        "runs": 1
       }
      },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 1,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
      "projection-flow": {
       "state": "projection-ready",
       "vars": {
@@ -1158,10 +2978,7 @@
      "session-flow": {
       "state": "session-in-sync",
       "vars": {
-       "baseHash": "h1",
-       "rejectionsLogged": 0,
-       "saveState": "saved",
-       "textHash": "h1"
+       "rejectionsLogged": 0
       }
      },
      "source-editor-flow": {
@@ -1190,7 +3007,8 @@
       "vars": {
        "conflict": false,
        "diskLayout": "L1",
-       "diskSpec": "h1"
+       "diskSpec": "h1",
+       "watching": true
       }
      }
     },
@@ -1207,20 +3025,40 @@
        "revision": 2,
        "text": "h2"
       },
-      "scheduledAt": 0,
-      "seq": 5,
+      "scheduledAt": 3,
+      "seq": 10,
       "source": {
        "behavior": "transaction-flow",
        "kind": "transition",
        "transition": "tx-commit"
       },
-      "time": 0
+      "time": 3
+     },
+     {
+      "event": "edit-applied",
+      "from": {
+       "behavior": "transaction-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
+      "payload": {
+       "origin": "ui",
+       "specHash": "h2"
+      },
+      "scheduledAt": 4,
+      "seq": 11,
+      "source": {
+       "behavior": "transaction-flow",
+       "kind": "transition",
+       "transition": "tx-commit"
+      },
+      "time": 4
      }
     ],
     "resources": {},
     "routeCounters": {},
     "streams": {},
-    "time": 0,
+    "time": 3,
     "timers": {},
     "workloads": {}
    },
@@ -1233,8 +3071,8 @@
     },
     "id": "validation-passed",
     "payload": {},
-    "scheduledAt": 0,
-    "seq": 4,
+    "scheduledAt": 3,
+    "seq": 9,
     "source": {
      "behavior": "validator-flow",
      "kind": "transition",
@@ -1252,8 +3090,17 @@
         "revision": 2,
         "text": "h2"
        },
-       "seq": 5,
-       "time": 0
+       "seq": 10,
+       "time": 3
+      },
+      {
+       "event": "edit-applied",
+       "payload": {
+        "origin": "ui",
+        "specHash": "h2"
+       },
+       "seq": 11,
+       "time": 4
       }
      ],
      "from": "tx-validating",
@@ -1312,6 +3159,12 @@
      "reason": "no-transition"
     },
     {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
      "behavior": "projection-flow",
      "considered": [],
      "instance": 0,
@@ -1334,9 +3187,15 @@
      "considered": [],
      "instance": 0,
      "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
     }
    ],
-   "index": 4,
+   "index": 9,
    "kind": "deliver",
    "links": [],
    "resources": [],
@@ -1346,7 +3205,7 @@
     "transaction-flow",
     "transactions"
    ],
-   "time": 0
+   "time": 3
   },
   {
    "config": {
@@ -1356,6 +3215,8 @@
      "inspector-flow": 0,
      "interaction-flow": 0,
      "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
      "projection-flow": 0,
      "renderer-flow": 0,
      "session-flow": 0,
@@ -1384,6 +3245,40 @@
        "runs": 1
       }
      },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 1,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
      "projection-flow": {
       "state": "projection-ready",
       "vars": {
@@ -1399,10 +3294,7 @@
      "session-flow": {
       "state": "session-refreshing",
       "vars": {
-       "baseHash": "h1",
-       "rejectionsLogged": 0,
-       "saveState": "saved",
-       "textHash": "h2"
+       "rejectionsLogged": 0
       }
      },
      "source-editor-flow": {
@@ -1431,7 +3323,8 @@
       "vars": {
        "conflict": false,
        "diskLayout": "L1",
-       "diskSpec": "h1"
+       "diskSpec": "h1",
+       "watching": true
       }
      }
     },
@@ -1447,20 +3340,40 @@
       "payload": {
        "revision": 2
       },
-      "scheduledAt": 0,
-      "seq": 6,
+      "scheduledAt": 3,
+      "seq": 12,
       "source": {
        "behavior": "session-flow",
        "kind": "transition",
        "transition": "session-on-commit"
       },
-      "time": 0
+      "time": 3
+     },
+     {
+      "event": "edit-applied",
+      "from": {
+       "behavior": "transaction-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
+      "payload": {
+       "origin": "ui",
+       "specHash": "h2"
+      },
+      "scheduledAt": 4,
+      "seq": 11,
+      "source": {
+       "behavior": "transaction-flow",
+       "kind": "transition",
+       "transition": "tx-commit"
+      },
+      "time": 4
      }
     ],
     "resources": {},
     "routeCounters": {},
     "streams": {},
-    "time": 0,
+    "time": 3,
     "timers": {},
     "workloads": {}
    },
@@ -1476,8 +3389,8 @@
      "revision": 2,
      "text": "h2"
     },
-    "scheduledAt": 0,
-    "seq": 5,
+    "scheduledAt": 3,
+    "seq": 10,
     "source": {
      "behavior": "transaction-flow",
      "kind": "transition",
@@ -1504,20 +3417,14 @@
        "payload": {
         "revision": 2
        },
-       "seq": 6,
-       "time": 0
+       "seq": 12,
+       "time": 3
       }
      ],
      "from": "session-in-sync",
      "guard": null,
      "instance": 0,
-     "sets": [
-      {
-       "after": "h2",
-       "before": "h1",
-       "variable": "textHash"
-      }
-     ],
+     "sets": [],
      "to": "session-refreshing",
      "transition": "session-on-commit"
     }
@@ -1548,6 +3455,12 @@
      "reason": "no-transition"
     },
     {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
      "behavior": "projection-flow",
      "considered": [],
      "instance": 0,
@@ -1570,9 +3483,15 @@
      "considered": [],
      "instance": 0,
      "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
     }
    ],
-   "index": 5,
+   "index": 10,
    "kind": "deliver",
    "links": [],
    "resources": [],
@@ -1585,7 +3504,7 @@
     "session-flow",
     "session"
    ],
-   "time": 0
+   "time": 3
   },
   {
    "config": {
@@ -1595,6 +3514,8 @@
      "inspector-flow": 0,
      "interaction-flow": 0,
      "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
      "projection-flow": 0,
      "renderer-flow": 0,
      "session-flow": 0,
@@ -1623,6 +3544,40 @@
        "runs": 1
       }
      },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 1,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
      "projection-flow": {
       "state": "projection-ready",
       "vars": {
@@ -1638,10 +3593,7 @@
      "session-flow": {
       "state": "session-refreshing",
       "vars": {
-       "baseHash": "h1",
-       "rejectionsLogged": 0,
-       "saveState": "saved",
-       "textHash": "h2"
+       "rejectionsLogged": 0
       }
      },
      "source-editor-flow": {
@@ -1670,7 +3622,8 @@
       "vars": {
        "conflict": false,
        "diskLayout": "L1",
-       "diskSpec": "h1"
+       "diskSpec": "h1",
+       "watching": true
       }
      }
     },
@@ -1686,20 +3639,40 @@
       "payload": {
        "revision": 2
       },
-      "scheduledAt": 0,
-      "seq": 7,
+      "scheduledAt": 3,
+      "seq": 13,
       "source": {
        "behavior": "projection-flow",
        "kind": "transition",
        "transition": "projection-refresh"
       },
-      "time": 0
+      "time": 3
+     },
+     {
+      "event": "edit-applied",
+      "from": {
+       "behavior": "transaction-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
+      "payload": {
+       "origin": "ui",
+       "specHash": "h2"
+      },
+      "scheduledAt": 4,
+      "seq": 11,
+      "source": {
+       "behavior": "transaction-flow",
+       "kind": "transition",
+       "transition": "tx-commit"
+      },
+      "time": 4
      }
     ],
     "resources": {},
     "routeCounters": {},
     "streams": {},
-    "time": 0,
+    "time": 3,
     "timers": {},
     "workloads": {}
    },
@@ -1714,8 +3687,8 @@
     "payload": {
      "revision": 2
     },
-    "scheduledAt": 0,
-    "seq": 6,
+    "scheduledAt": 3,
+    "seq": 12,
     "source": {
      "behavior": "session-flow",
      "kind": "transition",
@@ -1732,8 +3705,8 @@
        "payload": {
         "revision": 2
        },
-       "seq": 7,
-       "time": 0
+       "seq": 13,
+       "time": 3
       }
      ],
      "from": "projection-ready",
@@ -1788,6 +3761,12 @@
      "reason": "no-transition"
     },
     {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
      "behavior": "renderer-flow",
      "considered": [],
      "instance": 0,
@@ -1804,9 +3783,15 @@
      "considered": [],
      "instance": 0,
      "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
     }
    ],
-   "index": 6,
+   "index": 11,
    "kind": "deliver",
    "links": [],
    "resources": [],
@@ -1816,7 +3801,7 @@
     "projection-flow",
     "projection-system"
    ],
-   "time": 0
+   "time": 3
   },
   {
    "config": {
@@ -1826,6 +3811,8 @@
      "inspector-flow": 0,
      "interaction-flow": 0,
      "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
      "projection-flow": 0,
      "renderer-flow": 0,
      "session-flow": 0,
@@ -1854,6 +3841,40 @@
        "runs": 1
       }
      },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 1,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
      "projection-flow": {
       "state": "projection-ready",
       "vars": {
@@ -1867,12 +3888,9 @@
       }
      },
      "session-flow": {
-      "state": "session-save-pending",
+      "state": "session-in-sync",
       "vars": {
-       "baseHash": "h1",
-       "rejectionsLogged": 0,
-       "saveState": "saving",
-       "textHash": "h2"
+       "rejectionsLogged": 0
       }
      },
      "source-editor-flow": {
@@ -1901,7 +3919,8 @@
       "vars": {
        "conflict": false,
        "diskLayout": "L1",
-       "diskSpec": "h1"
+       "diskSpec": "h1",
+       "watching": true
       }
      }
     },
@@ -1917,43 +3936,40 @@
       "payload": {
        "revision": 2
       },
-      "scheduledAt": 0,
-      "seq": 8,
+      "scheduledAt": 3,
+      "seq": 14,
       "source": {
        "behavior": "session-flow",
        "kind": "transition",
        "transition": "session-on-refreshed"
       },
-      "time": 0
+      "time": 3
      },
      {
-      "event": "write-intent",
+      "event": "edit-applied",
       "from": {
-       "behavior": "session-flow",
+       "behavior": "transaction-flow",
        "incarnation": 0,
        "instance": 0
       },
       "payload": {
-       "baseHash": "h1",
-       "file": "spec",
-       "name": "exegra",
-       "requestId": 2,
-       "text": "h2"
+       "origin": "ui",
+       "specHash": "h2"
       },
-      "scheduledAt": 1,
-      "seq": 9,
+      "scheduledAt": 4,
+      "seq": 11,
       "source": {
-       "behavior": "session-flow",
+       "behavior": "transaction-flow",
        "kind": "transition",
-       "transition": "session-on-refreshed"
+       "transition": "tx-commit"
       },
-      "time": 1
+      "time": 4
      }
     ],
     "resources": {},
     "routeCounters": {},
     "streams": {},
-    "time": 0,
+    "time": 3,
     "timers": {},
     "workloads": {}
    },
@@ -1968,8 +3984,8 @@
     "payload": {
      "revision": 2
     },
-    "scheduledAt": 0,
-    "seq": 7,
+    "scheduledAt": 3,
+    "seq": 13,
     "source": {
      "behavior": "projection-flow",
      "kind": "transition",
@@ -1986,33 +4002,15 @@
        "payload": {
         "revision": 2
        },
-       "seq": 8,
-       "time": 0
-      },
-      {
-       "event": "write-intent",
-       "payload": {
-        "baseHash": "h1",
-        "file": "spec",
-        "name": "exegra",
-        "requestId": 2,
-        "text": "h2"
-       },
-       "seq": 9,
-       "time": 1
+       "seq": 14,
+       "time": 3
       }
      ],
      "from": "session-refreshing",
      "guard": null,
      "instance": 0,
-     "sets": [
-      {
-       "after": "saving",
-       "before": "saved",
-       "variable": "saveState"
-      }
-     ],
-     "to": "session-save-pending",
+     "sets": [],
+     "to": "session-in-sync",
      "transition": "session-on-refreshed"
     },
     {
@@ -2064,6 +4062,12 @@
      "reason": "no-transition"
     },
     {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
      "behavior": "projection-flow",
      "considered": [],
      "instance": 0,
@@ -2080,9 +4084,15 @@
      "considered": [],
      "instance": 0,
      "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
     }
    ],
-   "index": 7,
+   "index": 12,
    "kind": "deliver",
    "links": [],
    "resources": [],
@@ -2095,7 +4105,7 @@
     "renderer-flow",
     "scene-renderer"
    ],
-   "time": 0
+   "time": 3
   },
   {
    "config": {
@@ -2105,6 +4115,8 @@
      "inspector-flow": 0,
      "interaction-flow": 0,
      "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
      "projection-flow": 0,
      "renderer-flow": 0,
      "session-flow": 0,
@@ -2133,6 +4145,40 @@
        "runs": 1
       }
      },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 1,
+       "specHash": "h1",
+       "undoDepth": 0,
+       "undoHash": "none"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 1,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
      "projection-flow": {
       "state": "projection-ready",
       "vars": {
@@ -2146,12 +4192,9 @@
       }
      },
      "session-flow": {
-      "state": "session-save-pending",
+      "state": "session-in-sync",
       "vars": {
-       "baseHash": "h1",
-       "rejectionsLogged": 0,
-       "saveState": "saving",
-       "textHash": "h2"
+       "rejectionsLogged": 0
       }
      },
      "source-editor-flow": {
@@ -2180,40 +4223,38 @@
       "vars": {
        "conflict": false,
        "diskLayout": "L1",
-       "diskSpec": "h1"
+       "diskSpec": "h1",
+       "watching": true
       }
      }
     },
     "meters": {},
     "pending": [
      {
-      "event": "write-intent",
+      "event": "edit-applied",
       "from": {
-       "behavior": "session-flow",
+       "behavior": "transaction-flow",
        "incarnation": 0,
        "instance": 0
       },
       "payload": {
-       "baseHash": "h1",
-       "file": "spec",
-       "name": "exegra",
-       "requestId": 2,
-       "text": "h2"
+       "origin": "ui",
+       "specHash": "h2"
       },
-      "scheduledAt": 1,
-      "seq": 9,
+      "scheduledAt": 4,
+      "seq": 11,
       "source": {
-       "behavior": "session-flow",
+       "behavior": "transaction-flow",
        "kind": "transition",
-       "transition": "session-on-refreshed"
+       "transition": "tx-commit"
       },
-      "time": 1
+      "time": 4
      }
     ],
     "resources": {},
     "routeCounters": {},
     "streams": {},
-    "time": 0,
+    "time": 3,
     "timers": {},
     "workloads": {}
    },
@@ -2228,8 +4269,8 @@
     "payload": {
      "revision": 2
     },
-    "scheduledAt": 0,
-    "seq": 8,
+    "scheduledAt": 3,
+    "seq": 14,
     "source": {
      "behavior": "session-flow",
      "kind": "transition",
@@ -2303,6 +4344,12 @@
      "reason": "no-transition"
     },
     {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
      "behavior": "projection-flow",
      "considered": [],
      "instance": 0,
@@ -2319,9 +4366,15 @@
      "considered": [],
      "instance": 0,
      "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
     }
    ],
-   "index": 8,
+   "index": 13,
    "kind": "deliver",
    "links": [],
    "resources": [],
@@ -2334,7 +4387,7 @@
     "inspector-flow",
     "inspector"
    ],
-   "time": 0
+   "time": 3
   },
   {
    "config": {
@@ -2344,6 +4397,8 @@
      "inspector-flow": 0,
      "interaction-flow": 0,
      "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
      "projection-flow": 0,
      "renderer-flow": 0,
      "session-flow": 0,
@@ -2372,6 +4427,40 @@
        "runs": 1
       }
      },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 2,
+       "specHash": "h2",
+       "undoDepth": 1,
+       "undoHash": "h1"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-open",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 1,
+       "saveState": "saved",
+       "textHash": "h1"
+      }
+     },
      "projection-flow": {
       "state": "projection-ready",
       "vars": {
@@ -2385,12 +4474,608 @@
       }
      },
      "session-flow": {
-      "state": "session-save-pending",
+      "state": "session-in-sync",
+      "vars": {
+       "rejectionsLogged": 0
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-idle",
+      "vars": {
+       "pendingText": "h2",
+       "rejected": false,
+       "revision": 2,
+       "textHash": "h2"
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "passed"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-clean",
+      "vars": {
+       "conflict": false,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "watching": true
+      }
+     }
+    },
+    "meters": {},
+    "pending": [
+     {
+      "event": "commit-notified",
+      "from": {
+       "behavior": "project-history-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
+      "payload": {
+       "file": "spec",
+       "origin": "ui",
+       "text": "h2"
+      },
+      "scheduledAt": 4,
+      "seq": 15,
+      "source": {
+       "behavior": "project-history-flow",
+       "kind": "transition",
+       "transition": "history-edit"
+      },
+      "time": 4
+     }
+    ],
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 4,
+    "timers": {},
+    "workloads": {}
+   },
+   "draws": [],
+   "event": {
+    "from": {
+     "behavior": "transaction-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
+    "id": "edit-applied",
+    "payload": {
+     "origin": "ui",
+     "specHash": "h2"
+    },
+    "scheduledAt": 4,
+    "seq": 11,
+    "source": {
+     "behavior": "transaction-flow",
+     "kind": "transition",
+     "transition": "tx-commit"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "project-history-flow",
+     "emitted": [
+      {
+       "event": "commit-notified",
+       "payload": {
+        "file": "spec",
+        "origin": "ui",
+        "text": "h2"
+       },
+       "seq": 15,
+       "time": 4
+      }
+     ],
+     "from": "history-ready",
+     "guard": null,
+     "instance": 0,
+     "sets": [
+      {
+       "after": "h1",
+       "before": "none",
+       "variable": "undoHash"
+      },
+      {
+       "after": "h2",
+       "before": "h1",
+       "variable": "specHash"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "undoDepth"
+      },
+      {
+       "after": 0,
+       "before": 0,
+       "variable": "redoDepth"
+      },
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "revision"
+      }
+     ],
+     "to": "history-ready",
+     "transition": "history-edit"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "transaction-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    }
+   ],
+   "index": 14,
+   "kind": "deliver",
+   "links": [],
+   "resources": [],
+   "responsible": [
+    "edit-applied",
+    "history-edit",
+    "project-history-flow",
+    "transactions"
+   ],
+   "time": 4
+  },
+  {
+   "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "inspector-flow": 0,
+     "interaction-flow": 0,
+     "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "projection-flow": 0,
+     "renderer-flow": 0,
+     "session-flow": 0,
+     "source-editor-flow": 0,
+     "transaction-flow": 0,
+     "validator-flow": 0,
+     "workspace-flow": 0
+    },
+    "links": {},
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-done",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 1
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 2,
+       "specHash": "h2",
+       "undoDepth": 1,
+       "undoHash": "h1"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-saving",
       "vars": {
        "baseHash": "h1",
-       "rejectionsLogged": 0,
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 2,
        "saveState": "saving",
        "textHash": "h2"
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "session-flow": {
+      "state": "session-in-sync",
+      "vars": {
+       "rejectionsLogged": 0
+      }
+     },
+     "source-editor-flow": {
+      "state": "source-in-sync",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "transaction-flow": {
+      "state": "tx-idle",
+      "vars": {
+       "pendingText": "h2",
+       "rejected": false,
+       "revision": 2,
+       "textHash": "h2"
+      }
+     },
+     "validator-flow": {
+      "state": "validator-ready",
+      "vars": {
+       "lastResult": "passed"
+      }
+     },
+     "workspace-flow": {
+      "state": "workspace-clean",
+      "vars": {
+       "conflict": false,
+       "diskLayout": "L1",
+       "diskSpec": "h1",
+       "watching": true
+      }
+     }
+    },
+    "meters": {},
+    "pending": [
+     {
+      "event": "write-intent",
+      "from": {
+       "behavior": "project-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
+      "payload": {
+       "baseHash": "h1",
+       "file": "spec",
+       "name": "exegra",
+       "requestId": 2,
+       "text": "h2"
+      },
+      "scheduledAt": 4,
+      "seq": 16,
+      "source": {
+       "behavior": "project-session-flow",
+       "kind": "transition",
+       "transition": "session-commit-spec"
+      },
+      "time": 4
+     }
+    ],
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 4,
+    "timers": {},
+    "workloads": {}
+   },
+   "draws": [],
+   "event": {
+    "from": {
+     "behavior": "project-history-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
+    "id": "commit-notified",
+    "payload": {
+     "file": "spec",
+     "origin": "ui",
+     "text": "h2"
+    },
+    "scheduledAt": 4,
+    "seq": 15,
+    "source": {
+     "behavior": "project-history-flow",
+     "kind": "transition",
+     "transition": "history-edit"
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "project-session-flow",
+     "emitted": [
+      {
+       "event": "write-intent",
+       "payload": {
+        "baseHash": "h1",
+        "file": "spec",
+        "name": "exegra",
+        "requestId": 2,
+        "text": "h2"
+       },
+       "seq": 16,
+       "time": 4
+      }
+     ],
+     "from": "session-open",
+     "guard": "event.file == 'spec'",
+     "instance": 0,
+     "sets": [
+      {
+       "after": "h2",
+       "before": "h1",
+       "variable": "textHash"
+      },
+      {
+       "after": "saving",
+       "before": "saved",
+       "variable": "saveState"
+      },
+      {
+       "after": 2,
+       "before": 1,
+       "variable": "reqSeq"
+      }
+     ],
+     "to": "session-saving",
+     "transition": "session-commit-spec"
+    }
+   ],
+   "ignored": [
+    {
+     "behavior": "interaction-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "source-editor-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "transaction-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "parser-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "validator-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "projection-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "renderer-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "inspector-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "workspace-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    }
+   ],
+   "index": 15,
+   "kind": "deliver",
+   "links": [],
+   "resources": [],
+   "responsible": [
+    "commit-notified",
+    "session-commit-spec",
+    "project-session-flow",
+    "session"
+   ],
+   "time": 4
+  },
+  {
+   "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "inspector-flow": 0,
+     "interaction-flow": 0,
+     "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "projection-flow": 0,
+     "renderer-flow": 0,
+     "session-flow": 0,
+     "source-editor-flow": 0,
+     "transaction-flow": 0,
+     "validator-flow": 0,
+     "workspace-flow": 0
+    },
+    "links": {},
+    "machines": {
+     "inspector-flow": {
+      "state": "inspector-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "interaction-flow": {
+      "state": "interaction-done",
+      "vars": {
+       "refusalShown": false
+      }
+     },
+     "parser-flow": {
+      "state": "parser-ready",
+      "vars": {
+       "runs": 1
+      }
+     },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 2,
+       "specHash": "h2",
+       "undoDepth": 1,
+       "undoHash": "h1"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-saving",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "none",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 2,
+       "saveState": "saving",
+       "textHash": "h2"
+      }
+     },
+     "projection-flow": {
+      "state": "projection-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "renderer-flow": {
+      "state": "renderer-ready",
+      "vars": {
+       "shownRevision": 2
+      }
+     },
+     "session-flow": {
+      "state": "session-in-sync",
+      "vars": {
+       "rejectionsLogged": 0
       }
      },
      "source-editor-flow": {
@@ -2419,7 +5104,8 @@
       "vars": {
        "conflict": true,
        "diskLayout": "L1",
-       "diskSpec": "hx"
+       "diskSpec": "hx",
+       "watching": true
       }
      }
     },
@@ -2437,27 +5123,27 @@
        "file": "spec",
        "requestId": 2
       },
-      "scheduledAt": 1,
-      "seq": 10,
+      "scheduledAt": 4,
+      "seq": 17,
       "source": {
        "behavior": "workspace-flow",
        "kind": "transition",
        "transition": "workspace-detect-conflict"
       },
-      "time": 1
+      "time": 4
      }
     ],
     "resources": {},
     "routeCounters": {},
     "streams": {},
-    "time": 1,
+    "time": 4,
     "timers": {},
     "workloads": {}
    },
    "draws": [],
    "event": {
     "from": {
-     "behavior": "session-flow",
+     "behavior": "project-session-flow",
      "incarnation": 0,
      "instance": 0
     },
@@ -2469,12 +5155,12 @@
      "requestId": 2,
      "text": "h2"
     },
-    "scheduledAt": 1,
-    "seq": 9,
+    "scheduledAt": 4,
+    "seq": 16,
     "source": {
-     "behavior": "session-flow",
+     "behavior": "project-session-flow",
      "kind": "transition",
-     "transition": "session-on-refreshed"
+     "transition": "session-commit-spec"
     }
    },
    "faults": [
@@ -2494,8 +5180,8 @@
         "file": "spec",
         "requestId": 2
        },
-       "seq": 10,
-       "time": 1
+       "seq": 17,
+       "time": 4
       }
      ],
      "from": "workspace-clean",
@@ -2555,6 +5241,12 @@
      "reason": "no-transition"
     },
     {
+     "behavior": "project-session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
      "behavior": "projection-flow",
      "considered": [],
      "instance": 0,
@@ -2571,9 +5263,15 @@
      "considered": [],
      "instance": 0,
      "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
     }
    ],
-   "index": 9,
+   "index": 16,
    "kind": "deliver",
    "links": [],
    "resources": [],
@@ -2584,7 +5282,7 @@
     "persistence-client",
     "disk-changed-externally"
    ],
-   "time": 1
+   "time": 4
   },
   {
    "config": {
@@ -2594,6 +5292,8 @@
      "inspector-flow": 0,
      "interaction-flow": 0,
      "parser-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
      "projection-flow": 0,
      "renderer-flow": 0,
      "session-flow": 0,
@@ -2622,6 +5322,40 @@
        "runs": 1
       }
      },
+     "project-history-flow": {
+      "state": "history-ready",
+      "vars": {
+       "layoutHash": "L1",
+       "redoDepth": 0,
+       "redoHash": "none",
+       "revision": 2,
+       "specHash": "h2",
+       "undoDepth": 1,
+       "undoHash": "h1"
+      }
+     },
+     "project-session-flow": {
+      "state": "session-conflict",
+      "vars": {
+       "baseHash": "h1",
+       "conflictHash": "hx",
+       "errorsLogged": 0,
+       "externalReloads": 0,
+       "layoutBase": "L1",
+       "layoutHash": "L1",
+       "ownNotices": 0,
+       "pendingAgain": false,
+       "pendingName": "exegra",
+       "persistent": true,
+       "projectName": "exegra",
+       "projectsListed": 0,
+       "readPurpose": "open",
+       "recordedVersion": "r1",
+       "reqSeq": 2,
+       "saveState": "conflict",
+       "textHash": "h2"
+      }
+     },
      "projection-flow": {
       "state": "projection-ready",
       "vars": {
@@ -2635,12 +5369,9 @@
       }
      },
      "session-flow": {
-      "state": "session-conflicted",
+      "state": "session-in-sync",
       "vars": {
-       "baseHash": "h1",
-       "rejectionsLogged": 0,
-       "saveState": "conflict",
-       "textHash": "h2"
+       "rejectionsLogged": 0
       }
      },
      "source-editor-flow": {
@@ -2669,7 +5400,8 @@
       "vars": {
        "conflict": true,
        "diskLayout": "L1",
-       "diskSpec": "hx"
+       "diskSpec": "hx",
+       "watching": true
       }
      }
     },
@@ -2678,7 +5410,7 @@
     "resources": {},
     "routeCounters": {},
     "streams": {},
-    "time": 1,
+    "time": 4,
     "timers": {},
     "workloads": {}
    },
@@ -2695,8 +5427,8 @@
      "file": "spec",
      "requestId": 2
     },
-    "scheduledAt": 1,
-    "seq": 10,
+    "scheduledAt": 4,
+    "seq": 17,
     "source": {
      "behavior": "workspace-flow",
      "kind": "transition",
@@ -2706,20 +5438,25 @@
    "faults": [],
    "fired": [
     {
-     "behavior": "session-flow",
+     "behavior": "project-session-flow",
      "emitted": [],
-     "from": "session-save-pending",
+     "from": "session-saving",
      "guard": null,
      "instance": 0,
      "sets": [
+      {
+       "after": "hx",
+       "before": "none",
+       "variable": "conflictHash"
+      },
       {
        "after": "conflict",
        "before": "saving",
        "variable": "saveState"
       }
      ],
-     "to": "session-conflicted",
-     "transition": "session-on-conflict"
+     "to": "session-conflict",
+     "transition": "session-save-conflict"
     }
    ],
    "ignored": [
@@ -2754,6 +5491,12 @@
      "reason": "no-transition"
     },
     {
+     "behavior": "session-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
+    },
+    {
      "behavior": "projection-flow",
      "considered": [],
      "instance": 0,
@@ -2776,22 +5519,28 @@
      "considered": [],
      "instance": 0,
      "reason": "no-transition"
+    },
+    {
+     "behavior": "project-history-flow",
+     "considered": [],
+     "instance": 0,
+     "reason": "no-transition"
     }
    ],
-   "index": 10,
+   "index": 17,
    "kind": "deliver",
    "links": [],
    "resources": [],
    "responsible": [
     "save-conflicted",
-    "session-on-conflict",
-    "session-flow",
+    "session-save-conflict",
+    "project-session-flow",
     "session"
    ],
-   "time": 1
+   "time": 4
   }
  ],
- "stepsTaken": 11,
+ "stepsTaken": 18,
  "timeUnit": "tick",
  "truncated": false,
  "version": 2

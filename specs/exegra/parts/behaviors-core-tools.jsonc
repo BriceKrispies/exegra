@@ -34,7 +34,12 @@
         { "id": "tx-validating", "name": "Candidate being parsed and validated" }
       ],
       "transitions": [
-        { "id": "tx-begin", "from": "tx-idle", "to": "tx-validating", "on": "operation-submitted", "effects": [
+        {
+          "id": "tx-begin",
+          "from": "tx-idle",
+          "to": "tx-validating",
+          "on": "operation-submitted",
+          "effects": [
             {
               "set": "pendingText",
               "to": "event.text"
@@ -42,7 +47,8 @@
             {
               "emit": "text-edits-computed"
             }
-          ] },
+          ]
+        },
         {
           "id": "tx-commit-unvalidated",
           "from": "tx-validating",
@@ -91,7 +97,13 @@
             }
           ]
         },
-        { "id": "tx-commit", "from": "tx-validating", "to": "tx-idle", "on": "validation-passed", "description": "Project.#commit: swap the texts, derive the snapshot, increment the revision, record history, notify subscribers.", "effects": [
+        {
+          "id": "tx-commit",
+          "from": "tx-validating",
+          "to": "tx-idle",
+          "on": "validation-passed",
+          "description": "Project.#commit: swap the texts, derive the snapshot, increment the revision, record history, notify subscribers. The commit is then notified to the project as edit-applied, one tick later, after the views were refreshed.",
+          "effects": [
             {
               "set": "revision",
               "to": "revision + 1"
@@ -110,9 +122,33 @@
                 "revision": "revision",
                 "text": "textHash"
               }
+            },
+            {
+              "emit": "edit-applied",
+              "after": 1,
+              "payload": {
+                "specHash": "textHash",
+                "origin": "'ui'"
+              }
             }
-          ] },
-        { "id": "tx-reject", "from": "tx-validating", "to": "tx-idle", "on": "validation-failed", "description": "The result would have validation errors: the texts, the model, the revision and the history stay as they were.", "effects": [{ "set": "rejected", "to": true }, { "emit": "transaction-rejected" }] }
+          ]
+        },
+        {
+          "id": "tx-reject",
+          "from": "tx-validating",
+          "to": "tx-idle",
+          "on": "validation-failed",
+          "description": "The result would have validation errors: the texts, the model, the revision and the history stay as they were.",
+          "effects": [
+            {
+              "set": "rejected",
+              "to": true
+            },
+            {
+              "emit": "transaction-rejected"
+            }
+          ]
+        }
       ]
     },
     {
@@ -484,6 +520,24 @@
               }
             }
           ]
+        },
+        {
+          "id": "history-commit-on-rejection",
+          "from": "history-ready",
+          "to": "history-ready",
+          "on": "transaction-rejected",
+          "faultOnly": true,
+          "description": "A defect the project must not have: a rejected transaction is notified as a commit.",
+          "effects": [
+            {
+              "emit": "commit-notified",
+              "payload": {
+                "origin": "'ui'",
+                "file": "'spec'",
+                "text": "'h2'"
+              }
+            }
+          ]
         }
       ]
     },
@@ -527,67 +581,6 @@
               "emit": "claims-evaluated",
               "payload": {
                 "modelHash": "event.modelHash"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "engine-module-flow",
-      "name": "Engine module: load the WebAssembly",
-      "subject": "simulation-engine",
-      "description": "initEngine of src/core/engine.js in a page: asynchronous; it fails when src/engine/pkg has not been built.",
-      "initial": "engine-unloaded",
-      "variables": [
-        {
-          "name": "built",
-          "type": "boolean",
-          "initial": true
-        },
-        {
-          "name": "loaded",
-          "type": "boolean",
-          "initial": false
-        }
-      ],
-      "states": [
-        {
-          "id": "engine-unloaded",
-          "name": "Not loaded"
-        },
-        {
-          "id": "engine-settled",
-          "name": "Loaded or failed"
-        }
-      ],
-      "transitions": [
-        {
-          "id": "engine-module-missing",
-          "from": "engine-unloaded",
-          "to": "engine-unloaded",
-          "on": "engine-not-built",
-          "effects": [
-            {
-              "set": "built",
-              "to": false
-            }
-          ]
-        },
-        {
-          "id": "engine-module-load",
-          "from": "engine-unloaded",
-          "to": "engine-settled",
-          "on": "engine-load-requested",
-          "effects": [
-            {
-              "set": "loaded",
-              "to": "built"
-            },
-            {
-              "emit": "engine-load-settled",
-              "payload": {
-                "ok": "built"
               }
             }
           ]
@@ -1430,77 +1423,6 @@
       ]
     },
     {
-      "id": "engine-call-flow",
-      "name": "Engine in process: run a scenario for the command line",
-      "subject": "simulation-engine",
-      "description": "runScenario of src/core/engine.js in Node: synchronous; it throws when src/engine/pkg has not been built.",
-      "initial": "engine-call-ready",
-      "variables": [
-        {
-          "name": "built",
-          "type": "boolean",
-          "initial": true
-        },
-        {
-          "name": "runs",
-          "type": "number",
-          "initial": 0
-        }
-      ],
-      "states": [
-        {
-          "id": "engine-call-ready",
-          "name": "Ready"
-        }
-      ],
-      "transitions": [
-        {
-          "id": "engine-call-missing",
-          "from": "engine-call-ready",
-          "to": "engine-call-ready",
-          "on": "engine-not-built",
-          "effects": [
-            {
-              "set": "built",
-              "to": false
-            }
-          ]
-        },
-        {
-          "id": "engine-call-run",
-          "from": "engine-call-ready",
-          "to": "engine-call-ready",
-          "on": "engine-run-called",
-          "guard": "built",
-          "effects": [
-            {
-              "set": "runs",
-              "to": "runs + 1"
-            },
-            {
-              "emit": "engine-run-finished",
-              "payload": {
-                "steps": 12
-              }
-            }
-          ]
-        },
-        {
-          "id": "engine-call-refuse",
-          "from": "engine-call-ready",
-          "to": "engine-call-ready",
-          "on": "engine-run-called",
-          "guard": "!built",
-          "description": "initEngine throws \"run npm run build:engine\".",
-          "effects": [
-            {
-              "emit": "engine-run-failed"
-            }
-          ]
-        }
-      ]
-    },
-    {
       "id": "prove-flow",
       "name": "exegra prove: explore in Lean, report only what Lean accepted",
       "subject": "proof-export",
@@ -2038,6 +1960,100 @@
             },
             {
               "emit": "differential-mismatch-saved"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "engine-flow",
+      "name": "Engine: load the WebAssembly, run a scenario",
+      "subject": "simulation-engine",
+      "description": "src/core/engine.js, the one engine module in both of its entries: initEngine in a page (asynchronous: engine-load-requested settles as engine-load-settled) and runScenario for the command line in Node (synchronous: engine-run-called finishes as engine-run-finished). Both need src/engine/pkg to have been built: one built flag, cleared by engine-not-built, makes the load settle with ok false and the run fail (initEngine throws \"run npm run build:engine\").",
+      "initial": "engine-ready",
+      "variables": [
+        {
+          "name": "built",
+          "type": "boolean",
+          "initial": true
+        },
+        {
+          "name": "loaded",
+          "type": "boolean",
+          "initial": false
+        },
+        {
+          "name": "runs",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "engine-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "engine-missing",
+          "from": "engine-ready",
+          "to": "engine-ready",
+          "on": "engine-not-built",
+          "effects": [
+            {
+              "set": "built",
+              "to": false
+            }
+          ]
+        },
+        {
+          "id": "engine-load",
+          "from": "engine-ready",
+          "to": "engine-ready",
+          "on": "engine-load-requested",
+          "effects": [
+            {
+              "set": "loaded",
+              "to": "built"
+            },
+            {
+              "emit": "engine-load-settled",
+              "payload": {
+                "ok": "built"
+              }
+            }
+          ]
+        },
+        {
+          "id": "engine-run",
+          "from": "engine-ready",
+          "to": "engine-ready",
+          "on": "engine-run-called",
+          "guard": "built",
+          "effects": [
+            {
+              "set": "runs",
+              "to": "runs + 1"
+            },
+            {
+              "emit": "engine-run-finished",
+              "payload": {
+                "steps": 12
+              }
+            }
+          ]
+        },
+        {
+          "id": "engine-refuse",
+          "from": "engine-ready",
+          "to": "engine-ready",
+          "on": "engine-run-called",
+          "guard": "!built",
+          "description": "initEngine throws \"run npm run build:engine\".",
+          "effects": [
+            {
+              "emit": "engine-run-failed"
             }
           ]
         }

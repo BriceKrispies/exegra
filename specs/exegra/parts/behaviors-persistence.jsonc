@@ -5,7 +5,7 @@
       "id": "workspace-flow",
       "name": "Persistence path: replace the file or report a conflict",
       "subject": "persistence-client",
-      "description": "The whole save path as the session sees it: the persistence client, the development-server plugin and the workspace service are one behaviour here, a declared abstraction of persistence-client-flow, dev-server-flow, workspace-disk-flow and workspace-watcher-flow (abstracts), whose write-file-* and ws-* hops are hidden. It takes the persistence client's interface: a write-intent with the text's hash and the base hash, answered by save-succeeded with the new hash or save-conflicted with the hash on disk. diskSpec and diskLayout are the hashes of the texts on disk, starting where the workspace service starts (h1, L1); conflict records that a write was refused because the file on disk differed from the base hash. The refinement check runs the members in its place and compares the boundary traces (claim persistence-abstraction-refined).",
+      "description": "The whole save path as the session sees it: the persistence client, the development-server plugin and the workspace service are one behaviour here, a declared abstraction of persistence-client-flow, dev-server-flow, workspace-disk-flow and workspace-watcher-flow (abstracts), whose write-file-* and ws-* hops are hidden. It takes the persistence client's interface: a write-intent with the text's hash and the base hash, answered by save-succeeded with the new hash or save-conflicted with the hash on disk; a read-intent is answered by project-files-read with the hashes on disk, and once a watch-intent subscribed, a write is followed one tick later by the notice external-change-received. diskSpec and diskLayout are the hashes of the texts on disk, starting where the workspace service starts (h1, L1); conflict records that a write was refused because the file on disk differed from the base hash. The refinement check runs the members in its place and compares the boundary traces (claim persistence-abstraction-refined).",
       "initial": "workspace-clean",
       "variables": [
         {
@@ -20,6 +20,11 @@
         },
         {
           "name": "conflict",
+          "type": "boolean",
+          "initial": false
+        },
+        {
+          "name": "watching",
           "type": "boolean",
           "initial": false
         }
@@ -54,7 +59,14 @@
             }
           ]
         },
-        { "id": "workspace-detect-conflict", "from": "workspace-clean", "to": "workspace-conflicted", "on": "write-intent", "faultOnly": true, "description": "The file's hash differs from the base hash: nothing is written and the current content is returned.", "effects": [
+        {
+          "id": "workspace-detect-conflict",
+          "from": "workspace-clean",
+          "to": "workspace-conflicted",
+          "on": "write-intent",
+          "faultOnly": true,
+          "description": "The file's hash differs from the base hash: nothing is written and the current content is returned.",
+          "effects": [
             {
               "set": "conflict",
               "to": true
@@ -71,7 +83,38 @@
                 "requestId": "event.requestId"
               }
             }
-          ] },
+          ]
+        },
+        {
+          "id": "workspace-write-watched",
+          "from": "workspace-clean",
+          "to": "workspace-clean",
+          "on": "write-intent",
+          "description": "The save path is watched (the session subscribed): the watcher reports the replaced file one tick after the write, as external-change-received.",
+          "effects": [
+            {
+              "set": "diskSpec",
+              "to": "event.text"
+            },
+            {
+              "emit": "save-succeeded",
+              "payload": {
+                "file": "event.file",
+                "hash": "event.text",
+                "requestId": "event.requestId"
+              }
+            },
+            {
+              "emit": "external-change-received",
+              "after": 1,
+              "payload": {
+                "file": "event.file",
+                "hash": "event.text"
+              }
+            }
+          ],
+          "guard": "event.file == 'spec' && event.baseHash == diskSpec && watching"
+        },
         {
           "id": "workspace-write",
           "from": "workspace-clean",
@@ -116,6 +159,36 @@
           ]
         },
         {
+          "id": "workspace-write-layout-watched",
+          "from": "workspace-clean",
+          "to": "workspace-clean",
+          "on": "write-intent",
+          "guard": "event.file == 'layout' && event.baseHash == diskLayout && watching",
+          "effects": [
+            {
+              "set": "diskLayout",
+              "to": "event.text"
+            },
+            {
+              "emit": "save-succeeded",
+              "payload": {
+                "file": "event.file",
+                "hash": "event.text",
+                "requestId": "event.requestId"
+              }
+            },
+            {
+              "emit": "external-change-received",
+              "after": 1,
+              "payload": {
+                "file": "event.file",
+                "hash": "event.text"
+              }
+            }
+          ],
+          "description": "The save path is watched (the session subscribed): the watcher reports the replaced file one tick after the write, as external-change-received."
+        },
+        {
           "id": "workspace-write-layout",
           "from": "workspace-clean",
           "to": "workspace-clean",
@@ -156,6 +229,37 @@
               }
             }
           ]
+        },
+        {
+          "id": "workspace-read",
+          "from": "workspace-clean",
+          "to": "workspace-clean",
+          "on": "read-intent",
+          "description": "The project's files as they are on disk, answered as project-files-read (recorded is the version of the recorded results).",
+          "effects": [
+            {
+              "emit": "project-files-read",
+              "payload": {
+                "specHash": "diskSpec",
+                "layoutHash": "diskLayout",
+                "recorded": "'r1'",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "workspace-watch",
+          "from": "workspace-clean",
+          "to": "workspace-clean",
+          "on": "watch-intent",
+          "description": "The session subscribes to changes of the project's files.",
+          "effects": [
+            {
+              "set": "watching",
+              "to": "true"
+            }
+          ]
         }
       ],
       "abstracts": {
@@ -191,6 +295,11 @@
           "name": "conflicts",
           "type": "number",
           "initial": 0
+        },
+        {
+          "name": "watching",
+          "type": "boolean",
+          "initial": false
         }
       ],
       "states": [
@@ -249,6 +358,40 @@
           ]
         },
         {
+          "id": "write-endpoint-accept-watched",
+          "from": "write-endpoint-ready",
+          "to": "write-endpoint-ready",
+          "on": "write-file-request",
+          "guard": "event.file == 'spec' && event.baseHash == diskHash && watching",
+          "effects": [
+            {
+              "set": "diskHash",
+              "to": "event.text"
+            },
+            {
+              "set": "writes",
+              "to": "writes + 1"
+            },
+            {
+              "emit": "write-file-ok",
+              "payload": {
+                "ok": true,
+                "hash": "event.text",
+                "requestId": "event.requestId"
+              }
+            },
+            {
+              "emit": "file-change-notice-sent",
+              "after": 1,
+              "payload": {
+                "file": "event.file",
+                "hash": "event.text"
+              }
+            }
+          ],
+          "description": "Watched: the watcher reports the replaced file one tick after the write."
+        },
+        {
           "id": "write-endpoint-accept",
           "from": "write-endpoint-ready",
           "to": "write-endpoint-ready",
@@ -295,6 +438,40 @@
           ]
         },
         {
+          "id": "write-endpoint-accept-layout-watched",
+          "from": "write-endpoint-ready",
+          "to": "write-endpoint-ready",
+          "on": "write-file-request",
+          "guard": "event.file == 'layout' && event.baseHash == diskLayout && watching",
+          "effects": [
+            {
+              "set": "diskLayout",
+              "to": "event.text"
+            },
+            {
+              "set": "writes",
+              "to": "writes + 1"
+            },
+            {
+              "emit": "write-file-ok",
+              "payload": {
+                "ok": true,
+                "hash": "event.text",
+                "requestId": "event.requestId"
+              }
+            },
+            {
+              "emit": "file-change-notice-sent",
+              "after": 1,
+              "payload": {
+                "file": "event.file",
+                "hash": "event.text"
+              }
+            }
+          ],
+          "description": "Watched: the watcher reports the replaced file one tick after the write."
+        },
+        {
           "id": "write-endpoint-accept-layout",
           "from": "write-endpoint-ready",
           "to": "write-endpoint-ready",
@@ -316,6 +493,36 @@
                 "hash": "event.text",
                 "requestId": "event.requestId"
               }
+            }
+          ]
+        },
+        {
+          "id": "write-endpoint-read",
+          "from": "write-endpoint-ready",
+          "to": "write-endpoint-ready",
+          "on": "read-project-request",
+          "description": "The files on disk, as read-project-ok.",
+          "effects": [
+            {
+              "emit": "read-project-ok",
+              "payload": {
+                "spec": "diskHash",
+                "layout": "diskLayout",
+                "recorded": "'r1'",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "write-endpoint-watch",
+          "from": "write-endpoint-ready",
+          "to": "write-endpoint-ready",
+          "on": "watch-project-request",
+          "effects": [
+            {
+              "set": "watching",
+              "to": "true"
             }
           ]
         }

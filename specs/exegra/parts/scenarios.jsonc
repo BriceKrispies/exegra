@@ -6,10 +6,31 @@
       "id": "visual-edit-flow",
       "name": "A valid visual edit",
       "description": "A valid edit made visually: it is submitted, validated and committed (revision 2), then the projection is refreshed and shown by the renderer, inspector and source editor, and only then the file is written, asynchronously one tick later. Real order: refresh at commit, write afterwards. Ends quiescent with every representation at revision 2 and the file persisted.",
-      "behaviors": ["interaction-flow", "source-editor-flow", "transaction-flow", "parser-flow", "validator-flow", "session-flow", "projection-flow", "renderer-flow", "inspector-flow", "workspace-flow"],
+      "behaviors": [
+        "interaction-flow",
+        "source-editor-flow",
+        "transaction-flow",
+        "parser-flow",
+        "validator-flow",
+        "session-flow",
+        "project-session-flow",
+        "projection-flow",
+        "renderer-flow",
+        "inspector-flow",
+        "workspace-flow",
+        "project-history-flow"
+      ],
       "steps": [
         {
           "at": 0,
+          "event": "project-open-requested",
+          "payload": {
+            "name": "exegra"
+          },
+          "note": "The session has the project open: the project the edits are made in."
+        },
+        {
+          "at": 3,
           "event": "edit-requested",
           "payload": {
             "text": "h2"
@@ -31,10 +52,31 @@
       "id": "source-edit-flow",
       "name": "A valid source edit",
       "description": "The same pipeline entered from the source editor as a ReplaceSource operation. The refresh and the asynchronous write follow the commit in the same order as for a visual edit.",
-      "behaviors": ["interaction-flow", "source-editor-flow", "transaction-flow", "parser-flow", "validator-flow", "session-flow", "projection-flow", "renderer-flow", "inspector-flow", "workspace-flow"],
+      "behaviors": [
+        "interaction-flow",
+        "source-editor-flow",
+        "transaction-flow",
+        "parser-flow",
+        "validator-flow",
+        "session-flow",
+        "project-session-flow",
+        "projection-flow",
+        "renderer-flow",
+        "inspector-flow",
+        "workspace-flow",
+        "project-history-flow"
+      ],
       "steps": [
         {
           "at": 0,
+          "event": "project-open-requested",
+          "payload": {
+            "name": "exegra"
+          },
+          "note": "The session has the project open: the project the edits are made in."
+        },
+        {
+          "at": 3,
           "event": "source-apply-requested",
           "payload": {
             "text": "h2"
@@ -56,11 +98,32 @@
       "id": "rejected-edit",
       "name": "An edit that fails validation",
       "description": "The operation fails validation: the transaction is rejected, nothing commits, nothing refreshes and nothing is written; the interaction layer shows the rejection.",
-      "behaviors": ["interaction-flow", "source-editor-flow", "transaction-flow", "parser-flow", "validator-flow", "session-flow", "projection-flow", "renderer-flow", "inspector-flow", "workspace-flow"],
+      "behaviors": [
+        "interaction-flow",
+        "source-editor-flow",
+        "transaction-flow",
+        "parser-flow",
+        "validator-flow",
+        "session-flow",
+        "project-session-flow",
+        "projection-flow",
+        "renderer-flow",
+        "inspector-flow",
+        "workspace-flow",
+        "project-history-flow"
+      ],
       "faults": ["validation-fails"],
       "steps": [
         {
           "at": 0,
+          "event": "project-open-requested",
+          "payload": {
+            "name": "exegra"
+          },
+          "note": "The session has the project open: the project the edits are made in."
+        },
+        {
+          "at": 3,
           "event": "edit-requested",
           "payload": {
             "text": "h2"
@@ -82,11 +145,32 @@
       "id": "edit-with-disk-conflict",
       "name": "A valid edit whose write conflicts with the disk",
       "description": "The edit commits and every view shows revision 2, but the file on disk changed since it was read: the write reports a conflict, the file is not overwritten and the session flags the conflict.",
-      "behaviors": ["interaction-flow", "source-editor-flow", "transaction-flow", "parser-flow", "validator-flow", "session-flow", "projection-flow", "renderer-flow", "inspector-flow", "workspace-flow"],
+      "behaviors": [
+        "interaction-flow",
+        "source-editor-flow",
+        "transaction-flow",
+        "parser-flow",
+        "validator-flow",
+        "session-flow",
+        "project-session-flow",
+        "projection-flow",
+        "renderer-flow",
+        "inspector-flow",
+        "workspace-flow",
+        "project-history-flow"
+      ],
       "faults": ["disk-changed-externally"],
       "steps": [
         {
           "at": 0,
+          "event": "project-open-requested",
+          "payload": {
+            "name": "exegra"
+          },
+          "note": "The session has the project open: the project the edits are made in."
+        },
+        {
+          "at": 3,
           "event": "edit-requested",
           "payload": {
             "text": "h2"
@@ -163,7 +247,7 @@
       "description": "main.js loads the engine, then the session lists the projects, opens exegra by reading its files (GET /__exegra/projects, GET /__exegra/project), takes their hashes as base hashes, evaluates the claims and subscribes to changes (GET /__exegra/events). Pipelines P25 and P10.",
       "behaviors": [
         "app-start-flow",
-        "engine-module-flow",
+        "engine-flow",
         "project-session-flow",
         "persistence-client-flow",
         "dev-server-flow",
@@ -192,7 +276,7 @@
       "description": "A production build (PERSISTENCE_AVAILABLE false) opens the shipped specification bundled in dist/ (copy shipped-specifications), reports the save state read-only, and an edit commits in memory without any write. Pipeline P26.",
       "behaviors": [
         "app-start-flow",
-        "engine-module-flow",
+        "engine-flow",
         "project-session-flow",
         "project-history-flow"
       ],
@@ -946,7 +1030,7 @@
       "behaviors": [
         "cli-process-flow",
         "workspace-disk-flow",
-        "engine-call-flow"
+        "engine-flow"
       ],
       "steps": [
         {
@@ -969,7 +1053,7 @@
       "behaviors": [
         "cli-process-flow",
         "workspace-disk-flow",
-        "engine-call-flow"
+        "engine-flow"
       ],
       "steps": [
         {
@@ -1124,7 +1208,7 @@
       "description": "The behaviors that the simulator panel's Live mode replays the running application's own recorded events through (src/core/replay.js, component self-model-replay). It has no input steps: its input is the stream of the traffic recorder, from page load on. Run as an ordinary scenario it does nothing.",
       "behaviors": [
         "app-start-flow",
-        "engine-module-flow",
+        "engine-flow",
         "project-session-flow",
         "persistence-client-flow",
         "dev-server-flow",

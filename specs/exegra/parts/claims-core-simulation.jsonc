@@ -919,6 +919,22 @@
       "evaluate": {
         "method": "external-evidence"
       }
+    },
+    {
+      "id": "alternatives-reconciled-everywhere",
+      "kind": "structural",
+      "statement": "No element of the self-specification has alternative machines: any two behaviours of one subject that consume a common event run together in a scenario or are related by a declared, checked abstraction.",
+      "rationale": "WG-5697 criterion 9, WG-5733. The session is the commit pipeline (session-flow) and the save (project-session-flow), run together in the edit scenarios; the engine module and the engine call are one behaviour (engine-flow).",
+      "subjects": [
+        "simulation-engine",
+        "session",
+        "persistence-client",
+        "dev-server-plugin",
+        "workspace-service"
+      ],
+      "evaluate": {
+        "method": "alternatives-reconciled"
+      }
     }
   ],
   "evidence": [

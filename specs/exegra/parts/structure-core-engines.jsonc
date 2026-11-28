@@ -114,8 +114,7 @@
       "unknowns": [
         "A refinement certificate covers the deterministic scheduler's run of each driving scenario, not every interleaving of the two systems: comparing every interleaving and fault mask needs a product of two explorations (WG-5734).",
         "The boundary traces are compared as sequences: when the members' hidden steps change the order of simultaneous boundary events of independent machines (real-write-recorded with write-endpoint-flow in place of the server side), the check reports a counterexample that a comparison up to the order of independent simultaneous events would accept (WG-5734).",
-        "Composition is the concatenation of the machine lists of one engine input; the theorem that it equals the composition of separately elaborated systems (Sys.compose), and that refinement is preserved by composition with a third system, belong to WG-5685.",
-        "session-flow and project-session-flow, and engine-module-flow and engine-call-flow, are still alternative machines of one element (gap.alternative-machines): reconciling them, and the session's two vocabularies of one commit path (transaction-committed against commit-notified), is WG-5733."
+        "Composition is the concatenation of the machine lists of one engine input; the theorem that it equals the composition of separately elaborated systems (Sys.compose), and that refinement is preserved by composition with a third system, belong to WG-5685."
       ]
     },
     {

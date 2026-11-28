@@ -2395,6 +2395,13 @@
       "kind": "enable-transition",
       "transition": "write-endpoint-accept-stale",
       "description": "The abstract write endpoint replaces the file whatever the base hash. A defect the abstraction must not have; the refinement check against the development-server plugin and the workspace service, which refuse the stale write, exposes it."
+    },
+    {
+      "id": "rejection-saves",
+      "name": "Rejection notified as a commit",
+      "kind": "enable-transition",
+      "transition": "history-commit-on-rejection",
+      "description": "The project notifies a commit after a rejected transaction, so the session writes. A defect the edit flow must not have."
     }
   ]
 }

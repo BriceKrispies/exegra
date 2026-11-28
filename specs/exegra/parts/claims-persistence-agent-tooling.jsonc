@@ -1063,7 +1063,7 @@
       "id": "persistence-alternatives-reconciled",
       "kind": "structural",
       "statement": "The persistence client, the development-server plugin and the workspace service each have one behaviour per level: no two of their behaviours share an event without running together or being related by a declared, checked abstraction.",
-      "rationale": "WG-5697 criterion 9. write-client-flow (a retrying client, which abstracted the session's overwrite) was removed; write-endpoint-flow and workspace-flow are declared abstractions whose refinement is checked (write-endpoint-abstraction-refined, persistence-abstraction-refined). session-flow and project-session-flow are still alternative machines of the session (refinement-checker unknowns).",
+      "rationale": "WG-5697 criterion 9. write-client-flow (a retrying client, which abstracted the session's overwrite) was removed; write-endpoint-flow and workspace-flow are declared abstractions whose refinement is checked (write-endpoint-abstraction-refined, persistence-abstraction-refined). The session's two machines now run together (session-flow the commit pipeline, project-session-flow the save), and the engine's two are one behaviour (engine-flow); every element is covered by alternatives-reconciled-everywhere.",
       "subjects": [
         "persistence-client",
         "dev-server-plugin",

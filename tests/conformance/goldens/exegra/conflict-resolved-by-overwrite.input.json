@@ -615,6 +615,20 @@
     {
      "effects": [
       {
+       "set": "saveState",
+       "to": "'saved'"
+      }
+     ],
+     "faultOnly": true,
+     "from": "session-saving",
+     "guard": null,
+     "id": "session-swallow-conflict",
+     "on": "save-conflicted",
+     "to": "session-open"
+    },
+    {
+     "effects": [
+      {
        "set": "conflictHash",
        "to": "event.currentHash"
       },
@@ -2651,6 +2665,24 @@
      "guard": null,
      "id": "history-reload",
      "on": "reload-requested",
+     "to": "history-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "commit-notified",
+       "payload": {
+        "file": "'spec'",
+        "origin": "'ui'",
+        "text": "'h2'"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "history-ready",
+     "guard": null,
+     "id": "history-commit-on-rejection",
+     "on": "transaction-rejected",
      "to": "history-ready"
     }
    ],

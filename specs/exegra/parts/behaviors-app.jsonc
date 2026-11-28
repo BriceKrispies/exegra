@@ -63,52 +63,28 @@
     },
     {
       "id": "session-flow",
-      "name": "Session: refresh on commit, then save asynchronously",
+      "name": "Session: refresh on commit and announce the model",
       "subject": "session",
-      "description": "onCommit re-evaluates claims, re-projects and re-lays-out the scene (the renderer receives it), then announces the model to the inspector and source editor, and starts the flush. The flush writes later and asynchronously, as persist.writeFile through the persistence client (write-intent, with the committed text's hash and the base hash it last read or wrote); the save state follows its result, and a successful write's hash becomes the new base hash.",
+      "description": "The commit pipeline of src/app/session.js: onCommit re-evaluates claims, re-projects and re-lays-out the scene (the renderer receives it), then announces the model to the inspector and source editor. Saving is not here: project-session-flow, the session from the files' point of view, owns the save (write-intent, the base hash, the save results), and the two run together in the edit scenarios.",
       "initial": "session-in-sync",
       "variables": [
-        {
-          "name": "saveState",
-          "type": "string",
-          "initial": "saved"
-        },
         {
           "name": "rejectionsLogged",
           "type": "number",
           "initial": 0
-        },
-        {
-          "name": "textHash",
-          "type": "string",
-          "initial": "h1"
-        },
-        {
-          "name": "baseHash",
-          "type": "string",
-          "initial": "h1"
         }
       ],
       "states": [
-        { "id": "session-in-sync", "name": "Saved and in sync" },
-        { "id": "session-refreshing", "name": "Refreshing the scene" },
-        { "id": "session-save-pending", "name": "Save in flight" },
-        { "id": "session-conflicted", "name": "Save conflict unresolved", "terminal": true }
+        {
+          "id": "session-in-sync",
+          "name": "In sync"
+        },
+        {
+          "id": "session-refreshing",
+          "name": "Refreshing the scene"
+        }
       ],
       "transitions": [
-        {
-          "id": "session-swallow-conflict",
-          "from": "session-save-pending",
-          "to": "session-in-sync",
-          "on": "save-conflicted",
-          "faultOnly": true,
-          "effects": [
-            {
-              "set": "saveState",
-              "to": "'saved'"
-            }
-          ]
-        },
         {
           "id": "session-refresh-on-rejection",
           "from": "session-in-sync",
@@ -124,53 +100,49 @@
             }
           ]
         },
-        { "id": "session-on-commit", "from": "session-in-sync", "to": "session-refreshing", "on": "transaction-committed", "effects": [
-            {
-              "set": "textHash",
-              "to": "event.text"
-            },
+        {
+          "id": "session-on-commit",
+          "from": "session-in-sync",
+          "to": "session-refreshing",
+          "on": "transaction-committed",
+          "effects": [
             {
               "emit": "refresh-requested",
               "payload": {
                 "revision": "event.revision"
               }
             }
-          ] },
-        { "id": "session-on-refreshed", "from": "session-refreshing", "to": "session-save-pending", "on": "projection-refreshed", "description": "The renderer already has the scene; now the model is published and the write is requested, one tick later.", "effects": [
-            {
-              "set": "saveState",
-              "to": "'saving'"
-            },
+          ],
+          "description": "onCommit re-evaluates the claims and re-projects; the write that follows is project-session-flow's."
+        },
+        {
+          "id": "session-on-refreshed",
+          "from": "session-refreshing",
+          "to": "session-in-sync",
+          "on": "projection-refreshed",
+          "description": "The renderer already has the scene; now the model is published to the inspector and the source editor.",
+          "effects": [
             {
               "emit": "model-published",
               "payload": {
                 "revision": "event.revision"
               }
-            },
-            {
-              "emit": "write-intent",
-              "after": 1,
-              "payload": {
-                "name": "'exegra'",
-                "file": "'spec'",
-                "text": "textHash",
-                "baseHash": "baseHash",
-                "requestId": "event.revision"
-              }
             }
-          ] },
-        { "id": "session-on-saved", "from": "session-save-pending", "to": "session-in-sync", "on": "save-succeeded", "effects": [
+          ]
+        },
+        {
+          "id": "session-on-rejection",
+          "from": "session-in-sync",
+          "to": "session-in-sync",
+          "on": "transaction-rejected",
+          "description": "The rejection is logged; no refresh and no write follow.",
+          "effects": [
             {
-              "set": "saveState",
-              "to": "'saved'"
-            },
-            {
-              "set": "baseHash",
-              "to": "event.hash"
+              "set": "rejectionsLogged",
+              "to": "rejectionsLogged + 1"
             }
-          ] },
-        { "id": "session-on-conflict", "from": "session-save-pending", "to": "session-conflicted", "on": "save-conflicted", "description": "Nothing was overwritten; the conflict waits for the user to reload from disk or overwrite disk.", "effects": [{ "set": "saveState", "to": "'conflict'" }] },
-        { "id": "session-on-rejection", "from": "session-in-sync", "to": "session-in-sync", "on": "transaction-rejected", "description": "The rejection is logged; no refresh and no write follow.", "effects": [{ "set": "rejectionsLogged", "to": "rejectionsLogged + 1" }] }
+          ]
+        }
       ]
     },
     {
@@ -904,6 +876,20 @@
               "set": "layoutBase",
               "to": "event.hash"
             },
+            {
+              "set": "saveState",
+              "to": "'saved'"
+            }
+          ]
+        },
+        {
+          "id": "session-swallow-conflict",
+          "from": "session-saving",
+          "to": "session-open",
+          "on": "save-conflicted",
+          "faultOnly": true,
+          "description": "A defect the session must not have: the conflict is reported as saved.",
+          "effects": [
             {
               "set": "saveState",
               "to": "'saved'"
