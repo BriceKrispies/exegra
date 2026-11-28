@@ -1173,7 +1173,7 @@
       "id": "ev-nav-level-claims-browser",
       "claim": "navigation-level-claims-at-cut",
       "kind": "test",
-      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to module elements with each step equal to the CLI",
+      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to an expanded subsystem with each step equal to the CLI",
       "description": "The shown result equals exegra evaluate --cut at every step."
     },
     {

@@ -133,7 +133,7 @@ async function checkStep(page, name, blockId) {
   return sem;
 }
 
-test('the self-specification is walked from the system in its environment down to module elements with each step equal to the CLI', async ({ page }) => {
+test('the self-specification is walked from the system in its environment down to an expanded subsystem with each step equal to the CLI', async ({ page }) => {
   test.setTimeout(180_000);
   await openArchitecture(page);
   const hash = await ex(page, 'return session.project.semanticHash;');
@@ -177,7 +177,23 @@ test('the self-specification is walked from the system in its environment down t
   expect(outside(persistence), 'expanding persistence leaves every other block as it was').toEqual(outside(before));
   await page.screenshot({ path: path.join(SHOTS, 'test-nav-persistence.png') });
 
-  // 4. One component expanded into its module elements.
+  // No step changed the model, a verdict or the semantic hash.
+  expect(await ex(page, 'return session.project.semanticHash;')).toBe(hash);
+  expect(await ex(page, 'return session.claimResults.map((r) => [r.claimId, r.status]);')).toEqual(verdicts);
+  expect(await ex(page, 'return session.project.canUndo;')).toBe(false);
+});
+
+// The deeper steps of the walk, outside the gate (@full): from persistence expanded, a component opened into its
+// module elements, then the semantic core expanded, each step equal to the CLI.
+test('a component opens into its module elements and the semantic core expands with each step equal to the CLI', { tag: '@full' }, async ({ page }) => {
+  test.setTimeout(180_000);
+  await openArchitecture(page);
+  const hash = await ex(page, 'return session.project.semanticHash;');
+  const verdicts = await ex(page, 'return session.claimResults.map((r) => [r.claimId, r.status]);');
+  await page.getByTestId('cut-select').selectOption('persistence-expanded');
+  await page.waitForFunction(() => /** @type {any} */ (window).__exegra.session.scene.abstraction?.cut === 'persistence-expanded');
+
+  // 1. One component expanded into its module elements.
   await ex(page, `session.select('workspace-service');`);
   await page.getByTestId('block-expand').click();
   await page.waitForFunction(() => /** @type {any} */ (window).__exegra.session.scene.nodes.some((n) => n.elementKind === 'module'));
@@ -186,7 +202,7 @@ test('the self-specification is walked from the system in its environment down t
   expect(modules.blocks.filter((/** @type {string} */ b) => b.startsWith('module:'))).toEqual(declared);
   await page.screenshot({ path: path.join(SHOTS, 'test-nav-modules.png') });
 
-  // 5. The semantic core expanded with persistence collapsed.
+  // 2. The semantic core expanded with persistence collapsed.
   await page.getByTestId('cut-select').selectOption('semantic-core-expanded');
   await page.waitForFunction(() => /** @type {any} */ (window).__exegra.session.scene.abstraction?.cut === 'semantic-core-expanded');
   await checkStep(page, 'semantic core expanded', 'claim-evaluator');

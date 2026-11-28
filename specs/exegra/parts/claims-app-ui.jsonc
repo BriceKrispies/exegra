@@ -1367,7 +1367,7 @@
       "id": "ev-nav-walk-browser",
       "claim": "navigation-scene-is-derived-model",
       "kind": "test",
-      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to module elements with each step equal to the CLI",
+      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to an expanded subsystem with each step equal to the CLI",
       "description": "The walk in the running application, each step compared with exegra derive."
     },
     {
@@ -1395,7 +1395,7 @@
       "id": "ev-nav-one-block-browser",
       "claim": "navigation-one-block-changes-alone",
       "kind": "test",
-      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to module elements with each step equal to the CLI",
+      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to an expanded subsystem with each step equal to the CLI",
       "description": "Expanding persistence in the application leaves every other node as it was."
     },
     {
@@ -1409,7 +1409,7 @@
       "id": "ev-nav-inspect-browser",
       "claim": "navigation-facts-are-inspectable",
       "kind": "test",
-      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to module elements with each step equal to the CLI",
+      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to an expanded subsystem with each step equal to the CLI",
       "description": "Witness lists and block panels checked against exegra derive at every step."
     },
     {
@@ -1465,7 +1465,7 @@
       "id": "ev-nav-no-semantics-browser",
       "claim": "presentation-holds-no-abstraction",
       "kind": "test",
-      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to module elements with each step equal to the CLI",
+      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to an expanded subsystem with each step equal to the CLI",
       "description": "The walk ends with the hash and every verdict unchanged and nothing to undo."
     },
     {
@@ -1523,6 +1523,13 @@
       "kind": "test",
       "ref": "tests/core/replay.test.js#the replay-blind stream yields three divergences",
       "description": "The replay-blind stream of the 2026-11-26 assessment: write-intent without text, a base hash the model never had, and save-requested after close are three divergences."
+    },
+    {
+      "id": "ev-nav-walk-modules-browser",
+      "claim": "navigation-scene-is-derived-model",
+      "kind": "test",
+      "ref": "tests/browser/navigation.spec.js#a component opens into its module elements and the semantic core expands with each step equal to the CLI",
+      "description": "The deeper steps of the walk in the running application, outside the browser gate: a component opened into its module elements and the semantic core expanded, each compared with exegra derive."
     }
   ]
 }
