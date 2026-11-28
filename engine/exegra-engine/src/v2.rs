@@ -5528,21 +5528,26 @@ fn initial_instants(i: &Input, c: &mut Conf, seq: &mut u64) -> Vec<Draw> {
 
 /// Run a version-2 input: the refusal message, or the trace as JSON text.
 /// Whether an input is in the integer fragment of the behaviour calculus (formal/Exegra/Elab.lean,
-/// `preCheck`): no links, workloads, routes, measured outputs or keyed instances (`sample` effects,
-/// resources and resource faults are in it since WG-5683). Such an input runs with snapshot reads
-/// and checked integer arithmetic, as the calculus runs it; any other input runs as before.
+/// `preCheck`): no links, workloads, or scenario steps addressed to an instance of
+/// a keyed behaviour (`sample` effects, resources, resource faults, routes and keyed instances are
+/// in it since WG-5683). Such an input runs with snapshot reads and checked integer arithmetic, as
+/// the calculus runs it; any other input runs as before.
 fn in_fragment(i: &Input) -> bool {
+    let keyed = |id: &str| {
+        i.behaviors
+            .iter()
+            .any(|b| b.id == id && matches!(b.instances, Instances::Keyed { .. }))
+    };
     i.links.is_empty()
         && i.workloads.is_empty()
-        && i.routes.is_empty()
-        && !i.measures()
+        && i.scenario.steps.iter().all(|st| match &st.target {
+            Some((bn, _)) => !keyed(bn),
+            None => true,
+        })
         && i.behaviors.iter().all(|b| {
-            !matches!(b.instances, Instances::Keyed { .. })
-                && b.transitions.iter().all(|t| {
-                    t.effects.iter().all(|e| {
-                        !matches!(e, Effect::Send { .. })
-                    })
-                })
+            b.transitions
+                .iter()
+                .all(|t| t.effects.iter().all(|e| !matches!(e, Effect::Send { .. })))
         })
 }
 

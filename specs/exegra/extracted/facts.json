@@ -705,7 +705,7 @@
   {
    "path": "engine/exegra-engine/src/v2.rs",
    "language": "rust",
-   "digest": "sha256:cd35241563cc46605ec6c5956e724a003f2082fe1f3bbdcab1cbe1fe1c632aa6",
+   "digest": "sha256:e24b4431670fd98f324f3b3b1325f3e7a78b4d4b2505118a49dc5a30fb509f95",
    "imports": [
     {
      "spec": "std::cell::RefCell",
@@ -1346,7 +1346,7 @@
   {
    "path": "formal/Exegra/Core/Behav.lean",
    "language": "lean",
-   "digest": "sha256:10d25011ea644ede53265e3284b8b177be2535893a82ff78b8263cd593fdf3ed",
+   "digest": "sha256:4d09a1a0cec018a01dd0057ce6e03820082fa531bfacc9cd4cb186e90376e163",
    "imports": [
     {
      "spec": "Exegra.Core.LTS",
@@ -1378,7 +1378,7 @@
   {
    "path": "formal/Exegra/Core/BehavExamples.lean",
    "language": "lean",
-   "digest": "sha256:3ca484aa1e41dfb1d31420368717798f59aeb955ae30788a2c0e7793d575a0ca",
+   "digest": "sha256:700adaf20a8ddf48ea3bb97cca99014c2899bdb410260f8fed744362b707a727",
    "imports": [
     {
      "spec": "Exegra.Core.BehavExec",
@@ -1391,7 +1391,7 @@
   {
    "path": "formal/Exegra/Core/BehavExec.lean",
    "language": "lean",
-   "digest": "sha256:d7ea3670789d2acf172938b3cde79d987d48262d9cc6d2671162f210f05c495e",
+   "digest": "sha256:aa1cfc73c145b098bad2c97ff506fc12c44bf025f8fcec394f97f964cf328e46",
    "imports": [
     {
      "spec": "Exegra.Core.Behav",
@@ -1441,7 +1441,7 @@
   {
    "path": "formal/Exegra/Core/BehavRename.lean",
    "language": "lean",
-   "digest": "sha256:fa0e278426ff40be089995694d7de4f2429038f821861f582485124502006969",
+   "digest": "sha256:085f65a03606619db9948562027bc736dd4e21550435f21cc187c4187a550366",
    "imports": [
     {
      "spec": "Exegra.Core.Behav",
@@ -1454,7 +1454,7 @@
   {
    "path": "formal/Exegra/Core/BehavRes.lean",
    "language": "lean",
-   "digest": "sha256:3b07cb208e7fab1969cb4410612659b483571ce2f99b9ddd6a14bbcd69086fff",
+   "digest": "sha256:566372df68d4e455b67d355c083aee423aa5e750df9890953e13be891273a542",
    "imports": [
     {
      "spec": "Exegra.Core.Behav",
@@ -1576,7 +1576,7 @@
   {
    "path": "formal/Exegra/Elab.lean",
    "language": "lean",
-   "digest": "sha256:726b948e7164149e76d8fb5db426e0f7f45033a20d86ff647fe3c5abe28ae267",
+   "digest": "sha256:03c1ac7337efaaae17536869eb1f0edf1ca58cd040d49f371228df8d5c11f4e2",
    "imports": [
     {
      "spec": "Exegra.Format2",
@@ -1651,7 +1651,7 @@
   {
    "path": "formal/Exegra/Format2B.lean",
    "language": "lean",
-   "digest": "sha256:4e38111d29e5f7f7d44b1f8f234d9c5eafe8c6bfe97ee95953232ed0ad1b33ea",
+   "digest": "sha256:08bc19d719b6853ff459572d5943d7b4c00e7c71e961efcf9c05a4aa5f499c39",
    "imports": [
     {
      "spec": "Exegra.Elab",
@@ -1920,7 +1920,7 @@
   {
    "path": "formal/Exegra/Proofs/VisualEditFlow.lean",
    "language": "lean",
-   "digest": "sha256:705211b44d8db7f162d6d446a23a141cdd46319c6846a7c0756c0100798ccc63",
+   "digest": "sha256:b117e09823e97ce17b8055ebd8208f86358300ba326a49a98b09ffba0fdec104",
    "imports": [
     {
      "spec": "Exegra.ProveKernel",
@@ -1933,7 +1933,7 @@
   {
    "path": "formal/Exegra/ProveB.lean",
    "language": "lean",
-   "digest": "sha256:ab8a268b8c4b1f7e4e8ca43fcebcedc63d372fad955f4fca35958c25bca7e52b",
+   "digest": "sha256:a7755180122c8fc5cdce5ea1b158c6a2e6450eba3cab1bf256c28254f4af7891",
    "imports": [
     {
      "spec": "Exegra.Format2B",
@@ -1952,7 +1952,7 @@
   {
    "path": "formal/Exegra/ProveKernel.lean",
    "language": "lean",
-   "digest": "sha256:b4554ad5b99553f682509299f4371ae317d3905a8193e3609c8b5882ce38ca13",
+   "digest": "sha256:26b498abf5d688721c2894a6564a128fe91f396478d38dc8d8b05d23b62131f5",
    "imports": [
     {
      "spec": "Exegra.ProveLive",
@@ -1965,7 +1965,7 @@
   {
    "path": "formal/Exegra/ProveLive.lean",
    "language": "lean",
-   "digest": "sha256:68a33eca5c4335e5fccfe7f3dccf15bf5ee93fc99e75d10384bcd44304d7b037",
+   "digest": "sha256:de1d8df1deca9f98b5a162aa3db23e279b72dc86ffaa27850046d5fd6597c561",
    "imports": [
     {
      "spec": "Exegra.ProveB",

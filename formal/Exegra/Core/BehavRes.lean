@@ -278,17 +278,23 @@ theorem heldOk_invariant (sys : Sys) (hlow : sys.NoLowering)
     | run m c =>
       have hst' : Step sys m c l t := hst
       cases hst' with
-      | drop => exact hs
-      | delay => exact hs
+      | drop _ _ _ hro =>
+        have hw1 : WorldOk sys _ := (routeOf_frame hro).1.world.symm ▸ hs
+        exact hw1
+      | delay _ _ _ hro =>
+        have hw1 : WorldOk sys _ := (routeOf_frame hro).1.world.symm ▸ hs
+        exact hw1
       | delayTimeErr => exact hs
-      | @deliverOk ws ms bs w acts c2 c'' _ _ _ _ _ _ _ hset _ hfill hdup =>
+      | @deliverOk c1 e1 ws ms bs w acts c2 c'' _ _ _ hro _ _ _ _ hset _ hfill hdup =>
         simp only [State.cfg]
         rw [Dup.world hdup, (fill_frame hfill).2.2.2.2]
-        have := settle_worldOk sys ((c.popE l.entry).commit sys.sig.machines ms bs).time (opsOf sys.sig.machines bs) []
-          (w := ((c.popE l.entry).commit sys.sig.machines ms bs).world) hs
+        have hw1 : WorldOk sys c1.world := (routeOf_frame hro).1.world.symm ▸ hs
+        have := settle_worldOk sys ((c1.popE l.entry).commit sys.sig.machines ms bs).time (opsOf sys.sig.machines bs) []
+          (w := ((c1.popE l.entry).commit sys.sig.machines ms bs).world) hw1
         rw [hset] at this
         exact this
       | deliverErr => exact hs
+      | routeErr => exact hs
       | worldOk _ _ _ hws _ hfill =>
         simp only [State.cfg]
         rw [(fill_frame hfill).2.2.2.2]

@@ -176,6 +176,17 @@ inductive Err where
   /-- The combined `scale-demand` factor of resource `res`, in lowest terms, at or beyond `2^32`
   (format 2: "Value demand scale of … exceeds 2^32.", Format2.lean `effScale`). -/
   | scaleBound (res : Nat)
+  /-- Route `i` (an index of `Sys.routes`) is by a payload field the entry does not have (format 2:
+  "Route of … to … needs payload field …", Format2.lean `decideRoutes`). -/
+  | routeField (i : Nat)
+  /-- Route `i` would create an instance of a keyed behaviour that has all its instances (format
+  2: "Behavior … would exceed … instances."). -/
+  | routeFull (i : Nat)
+  /-- A behaviour with more than one instance read as one (format 2: "Reference … is ambiguous: …
+  has … instances.", Format2.lean `resolve`). -/
+  | ambiguous
+  /-- The key of a keyed instance read at a sort it is not of. -/
+  | keySort
   deriving DecidableEq, Repr
 
 /-- `v` is a value of sort `τ` (for an integer sort: within its range). -/
@@ -408,6 +419,30 @@ structure World where
   active : List Nat := []
   deriving DecidableEq, Repr, Hashable
 
+/-- How a route picks the instance of its behaviour an entry is delivered to (format 2's routes,
+Format2.lean `decideRoutes`). The instances are the live machines of the route's group, in group
+order (for a keyed behaviour, creation order). -/
+inductive RouteBy where
+  /-- By payload field `field` of a counted behaviour: instance `hash v % n` of the `n` instances,
+  for the field's value `v` (format 2 hashes the value's JSON text with FNV-1a). -/
+  | key (field : Nat) (hash : Val → Nat)
+  /-- By payload field `field` of a keyed behaviour: the instance whose key is the field's value,
+  created in the group's next free slot when there is none. -/
+  | keyed (field : Nat)
+  /-- Round robin: the instance the route's counter names, then the counter advances. -/
+  | roundRobin
+  /-- The instance with the fewest units held plus requests waiting on resource `res` (the first
+  such); without a resource, the first instance. -/
+  | leastBusy (res : Option Nat)
+  /-- Any instance: a draw of the step. -/
+  | random
+
+/-- A route of event `event` to the behaviour whose instances are the machines `group`. -/
+structure Route where
+  event : Nat
+  group : List Nat
+  by_ : RouteBy
+
 /-! ### Signatures, references, expressions -/
 
 /-- The machines of a system, their variables' sorts and their control-state names. -/
@@ -445,6 +480,19 @@ inductive Ref (S : Sig) (me : Fin S.machines) where
   | absent (τ : Ty)
   /-- A count of resource `r` (`RQuery`), in the start-of-step world. -/
   | res (r : Nat) (q : RQuery)
+  /-- The one live machine of `group` (the instances of a behaviour, each with the variable read,
+  or `none` for its control-state name), read as format 2 reads `b.x` and `b.state`
+  (Format2.lean `resolve`): with more than one live machine the error `ambiguous`, with none
+  `unknownRef`; at sort `τ`, which every member's variable must have. -/
+  | one (group : List ((m : Fin S.machines) × Option (Fin (S.vars m).length))) (τ : Ty)
+  /-- `true` when at most one machine of `group` is live, else the error `ambiguous`. Format 2
+  resolves every reference of an expression before it evaluates any, so an ambiguous `b.x` fails
+  the step even where `&&`, `||` or `=>` does not evaluate it; `Exegra.Elab` puts this check in
+  front of such a node. -/
+  | uniq (group : List ((m : Fin S.machines) × Option (Fin (S.vars m).length)))
+  /-- The key of the own machine (an instance of a keyed behaviour: format 2's `instance`), at
+  sort `τ`: a key of another sort is the error `keySort`, a machine without a key `unknownRef`. -/
+  | key (τ : Ty)
 
 inductive UOp where
   /-- Unary minus in an arithmetic sort. -/
@@ -473,6 +521,12 @@ inductive Expr (S : Sig) (me : Fin S.machines) where
 structure MState where
   ctrl : Nat
   vars : List Val
+  /-- Whether the machine is an instance: every machine is, except the slots of a keyed behaviour
+  that no route has created yet. A machine that is not live takes part in no step and is not
+  counted by `Ref.count` or `Ref.agg`. -/
+  live : Bool := true
+  /-- The key of a keyed instance. -/
+  key : Option Val := none
   deriving DecidableEq, Repr, Hashable
 
 /-- A pending delivery: its time, its event and its payload fields; the machine it is addressed
@@ -492,6 +546,10 @@ structure Entry where
   sender : Option Nat := none
   /-- An event delivery, or an entry of the world. -/
   kind : EKind := .event
+  /-- The routes decided when the entry was first delivered (`none`: not decided): per route that
+  picked an instance, the route's group and the machine it picked. A delayed or duplicated copy
+  keeps them. -/
+  routes : Option (List (List Nat × Nat)) := none
   deriving DecidableEq, Repr, Hashable
 
 /-- A configuration: the time, the machines, the pending entries and, per event, the number of
@@ -508,6 +566,9 @@ structure Cfg where
   attCap : Option Nat := none
   /-- The resources (WG-5683). -/
   world : World := {}
+  /-- The round-robin counter of each route (by index of `Sys.routes`), kept modulo the number of
+  the route's instances (format 2 keeps the count itself; only its residue picks an instance). -/
+  counters : List Nat := []
   deriving DecidableEq, Repr, Hashable
 
 /-- A state of the transition system: running, or failed with the configuration before the
@@ -545,6 +606,12 @@ def Ref.ty? {S : Sig} {me : Fin S.machines} : Ref S me → Option Ty
   | .time => some (.int 0 maxSafe)
   | .absent τ => some τ
   | .res _ _ => some Ty.num
+  | .one g τ =>
+    if g.all (fun p => match p.2 with
+      | some v => (S.vars p.1).get v == τ
+      | none => τ == .str) then some τ else none
+  | .uniq _ => some .bool
+  | .key τ => some τ
   | .count g _ => some (.int 0 g.length)
   | .agg op g =>
     if g.all (fun p => ((S.vars p.1).get p.2).isInt) && (op == .sum || !g.isEmpty) then some Ty.num
@@ -622,7 +689,7 @@ def countIn (S : Sig) (snap : List MState) (name : String) : List (Fin S.machine
       | .error e => .error e
       | .ok nm => match countIn S snap name g with
         | .error e => .error e
-        | .ok k => .ok (if nm = name then k + 1 else k)
+        | .ok k => .ok (if x.live ∧ nm = name then k + 1 else k)
 
 /-- The values of the variables `g` names in `snap`, every one a number; a value of another sort is
 `sort`. -/
@@ -636,8 +703,28 @@ def intsIn {S : Sig} (snap : List MState) : List ((m : Fin S.machines) × Fin (S
       | .ok v => match v.num? with
         | some _ => match intsIn snap g with
           | .error e => .error e
-          | .ok ns => .ok (v :: ns)
+          | .ok ns => .ok (if x.live then v :: ns else ns)
         | none => .error .sort
+
+/-- What `Ref.one` reads of machine state `x` of machine `m`: a variable, or the name of its
+control state. -/
+def oneAt (S : Sig) (m : Fin S.machines) (x : MState) : Option (Fin (S.vars m).length) → Except Err Val
+  | some v => at? x.vars v.val
+  | none => match at? (S.states m) x.ctrl with
+    | .ok nm => .ok (.str nm)
+    | .error e => .error e
+
+/-- What `Ref.one` reads of each live machine of `g` in `snap`. -/
+def oneIn (S : Sig) (snap : List MState) :
+    List ((m : Fin S.machines) × Option (Fin (S.vars m).length)) → Except Err (List Val)
+  | [] => .ok []
+  | p :: g => match at? snap p.1.val with
+    | .error e => .error e
+    | .ok x => match oneAt S p.1 x p.2 with
+      | .error e => .error e
+      | .ok v => match oneIn S snap g with
+        | .error e => .error e
+        | .ok vs => .ok (if x.live then v :: vs else vs)
 
 /-- The integers of a list of values, when every one is an integer. -/
 def allInts : List Val → Option (List Int)
@@ -651,22 +738,22 @@ def ratMax (a b : Rat) : Rat := if b > a then b else a
 /-- An aggregate of integers, checked in the range of untyped numbers. -/
 def AggOp.applyInt : AggOp → List Int → Except Err Val
   | .sum, ns => Val.check Ty.num (.int (ns.foldl (· + ·) 0))
-  | .min, [] => .error .sort
+  | .min, [] => .error .unknownRef
   | .min, n :: ns => Val.check Ty.num (.int (ns.foldl Min.min n))
-  | .max, [] => .error .sort
+  | .max, [] => .error .unknownRef
   | .max, n :: ns => Val.check Ty.num (.int (ns.foldl Max.max n))
 
 /-- An aggregate of rationals, checked in the range of untyped numbers. -/
 def AggOp.applyRat : AggOp → List Rat → Except Err Val
   | .sum, ns => Val.check Ty.num (Val.ofRat (ns.foldl (· + ·) 0))
-  | .min, [] => .error .sort
+  | .min, [] => .error .unknownRef
   | .min, n :: ns => Val.check Ty.num (Val.ofRat (ns.foldl ratMin n))
-  | .max, [] => .error .sort
+  | .max, [] => .error .unknownRef
   | .max, n :: ns => Val.check Ty.num (Val.ofRat (ns.foldl ratMax n))
 
 /-- An aggregate of numbers, checked in the range of untyped numbers: on integers in integer
-arithmetic, otherwise on rationals. The minimum or maximum of no value is `sort` (format 2 gives
-`null`, which has no numeric sort). -/
+arithmetic, otherwise on rationals. The minimum or maximum of no value is `unknownRef` (format 2
+gives `null`): a keyed behaviour may have no instance yet. -/
 def AggOp.apply (op : AggOp) (vs : List Val) : Except Err Val :=
   match allInts vs with
   | some ns => op.applyInt ns
@@ -697,6 +784,18 @@ outside its range) is the error `fieldSort`. -/
   | .absent _ => .error .unknownRef
   | .res r q => match cx.world.res[r]? with
     | some s => Val.check Ty.num (.int (q.read s))
+    | none => .error .unknownRef
+  | .one g _ => match oneIn S cx.snap g with
+    | .ok [] => .error .unknownRef
+    | .ok [v] => .ok v
+    | .ok (_ :: _ :: _) => .error .ambiguous
+    | .error e => .error e
+  | .uniq g => match oneIn S cx.snap g with
+    | .ok (_ :: _ :: _) => .error .ambiguous
+    | .ok _ => .ok (.bool true)
+    | .error e => .error e
+  | .key τ => match cx.own.key with
+    | some v => if v.fits τ then .ok v else .error .keySort
     | none => .error .unknownRef
 
 @[inline] def UOp.apply : UOp → Val → Except Err Val
@@ -936,6 +1035,8 @@ structure Sys where
   samples : List (Nat × Nat × Nat × Dist) := []
   /-- The resources, in declaration order (WG-5683). -/
   resources : List Res.ResourceDecl := []
+  /-- The routes, in format 2's decision order (WG-5683). -/
+  routes : List Route := []
 
 /-- The distributions of a system's sampled delays, in draw-slot order. -/
 def Sys.dists (sys : Sys) : List Dist := sys.samples.map (fun s => s.2.2.2)
@@ -1143,14 +1244,20 @@ def winnersOf (sys : Sys) (act : List (Nat × Fault)) (c : Cfg) (e : Entry) :
       | .error err => .error err
       | .ok ws => .ok (match w with | some w => w :: ws | none => ws)
 
-/-- The machines an entry is delivered to: its target, or every machine, in index order. -/
+/-- The machines an entry is delivered to, in index order: its target, or every machine, except
+that of the group of each route decided for it only the machine the route picked. -/
 def addressed (n : Nat) (e : Entry) : List (Fin n) :=
-  (finList n).filter (fun m => e.target.all (· == m.val))
+  (finList n).filter (fun m => e.target.all (· == m.val) &&
+    (e.routes.getD []).all (fun r => !(r.1.contains m.val) || r.2 == m.val))
 
-/-- The winners of a step, in machine-index order. -/
+/-- Machine `m` is live in `ms` (a machine outside the list counts as live, so that reading it is
+the error `shape`). -/
+def liveAt (ms : List MState) (m : Nat) : Bool := (ms[m]?.map (·.live)).getD true
+
+/-- The winners of a step, in machine-index order: of the addressed machines that are live. -/
 def winners (sys : Sys) (act : List (Nat × Fault)) (c : Cfg) (e : Entry) :
     Except Err (List (Winner sys)) :=
-  winnersOf sys act c e (addressed sys.sig.machines e)
+  winnersOf sys act c e ((addressed sys.sig.machines e).filter (fun m => liveAt c.machines m.val))
 
 /-- The entries machine `m` emitted, or none. -/
 def blockOf (m : Nat) : Emitted → List Entry
@@ -1616,6 +1723,146 @@ def duplicate (act : List (Nat × Fault)) (e : Entry) (att : Nat) : Except Err C
       | .error err => .error err
       | .ok cp => .ok (c'.enq cp)
 
+/-! ### Routes (WG-5683)
+
+When an event entry that has no target and whose routes are not decided yet is delivered, the
+routes of its event are decided first, in `Sys.routes` order, before the faults act on the attempt
+(format 2's `decideRoutes`, Format2.lean:1770-1830 and 2283-2291): each picks one instance of its
+behaviour, a keyed route creating the instance in the group's next free slot, a round-robin route
+advancing its counter, a random route taking one draw of the step (the first of its world draws).
+The entry then carries the routes, and a delayed or duplicated copy keeps them. -/
+
+/-- The instances of a group: its live machines, in group order. -/
+def instsOf (ms : List MState) (g : List Nat) : List Nat :=
+  g.filter (fun m => (ms[m]?.map (·.live)).getD false)
+
+/-- The units machine `m` holds plus its requests waiting, on resource state `s` (format 2's load
+of an instance for a least-busy route). -/
+def loadOf (m : Nat) (s : RSt) : Nat :=
+  Res.sumUnits (fun h => h.owner == m) s.holds + (s.waiting.filter (·.owner == m)).length
+
+/-- The first machine of least load (format 2 keeps the earlier one on a tie). -/
+def leastOf (ld : Nat → Nat) : List Nat → Option Nat → Option Nat
+  | [], acc => acc
+  | m :: ms, none => leastOf ld ms (some m)
+  | m :: ms, some u => leastOf ld ms (some (if ld m < ld u then m else u))
+
+/-- What a route decision reads and writes: the machines (liveness and keys) and the counters; it
+also reads the world. -/
+abbrev RSt' := List MState × List Nat
+
+/-- A route decision takes a draw: a random route whose behaviour has an instance. -/
+def routeDraws (r : Route) (st : RSt') : Bool :=
+  match r.by_ with
+  | .random => !(instsOf st.1 r.group).isEmpty
+  | _ => false
+
+/-- The decision of route `i` for entry `e` from machines and counters `st` (reading the world
+`w`) when it takes no draw: the machines and counters after it (a keyed instance created, a counter
+advanced) and the machine picked (`none`: the behaviour has no instance). -/
+def routeDet (i : Nat) (r : Route) (e : Entry) (w : World) (st : RSt') : Except Err (RSt' × Option Nat) :=
+  let ms := st.1
+  let cs := st.2
+  let insts := instsOf ms r.group
+  match r.by_ with
+  | .keyed f =>
+    match lookupField f e.payload with
+    | none => .error (.routeField i)
+    | some v =>
+      match insts.find? (fun m => (ms[m]?.bind (·.key)) == some v) with
+      | some m => .ok (st, some m)
+      | none =>
+        match r.group.findSome? (fun m => match ms[m]? with
+            | some x => if x.live then none else some (m, x)
+            | none => none) with
+        | none => .error (.routeFull i)
+        | some (m, x) => .ok ((ms.set m { x with live := true, key := some v }, cs), some m)
+  | .key f h =>
+    match lookupField f e.payload with
+    | none => .error (.routeField i)
+    | some v => .ok (st, insts[h v % insts.length]?)
+  | .roundRobin =>
+    match insts with
+    | [] => .ok (st, none)
+    | _ =>
+      let n := cs.getD i 0
+      .ok ((ms, setAt cs i ((n + 1) % insts.length)), insts[n % insts.length]?)
+  | .leastBusy res =>
+    let ld := fun m => match res.bind (fun ri => w.res[ri]?) with
+      | some s => loadOf m s
+      | none => 0
+    .ok (st, leastOf ld insts none)
+  | .random => .ok (st, none)
+
+/-- The decision of route `i` for entry `e`, with the step's draws left `ds`: the machines and
+counters after it, the machine picked and the draws left. A random route whose behaviour has
+instances takes the next draw, the position of the instance; `none`: no draw left, or one past the
+instances. -/
+def routeOne (i : Nat) (r : Route) (e : Entry) (w : World) (st : RSt') (ds : List Nat) :
+    Option (Except Err (RSt' × Option Nat × List Nat)) :=
+  if routeDraws r st then
+    match ds with
+    | d :: rest =>
+      if d < (instsOf st.1 r.group).length then some (.ok (st, (instsOf st.1 r.group)[d]?, rest)) else none
+    | [] => none
+  else some ((routeDet i r e w st).map (fun x => (x.1, x.2, ds)))
+
+/-- The decisions of the routes `rs` (with their indices), in order, stopping at the first that
+fails (with the draws left then). -/
+def routesFrom (e : Entry) (w : World) : List (Nat × Route) → RSt' → List (List Nat × Nat) → List Nat →
+    Option (Except (Err × List Nat) (RSt' × List (List Nat × Nat) × List Nat))
+  | [], st, acc, ds => some (.ok (st, acc, ds))
+  | (i, r) :: rest, st, acc, ds =>
+    match routeOne i r e w st ds with
+    | none => none
+    | some (.error err) => some (.error (err, ds))
+    | some (.ok (st', pick, ds')) => routesFrom e w rest st' (acc ++ (pick.map (fun m => (r.group, m))).toList) ds'
+
+/-- The routes of event `ev`, with their indices, in order. -/
+def Sys.routesOf (sys : Sys) (ev : Nat) : List (Nat × Route) :=
+  ((List.range sys.routes.length).zip sys.routes).filter (fun p => p.2.event == ev)
+
+/-- An entry whose routes are decided when it is delivered: an event entry with no target, its
+routes not decided yet, and its event has routes. -/
+def Sys.toRoute (sys : Sys) (e : Entry) : Bool :=
+  e.kind == .event && e.routes.isNone && e.target.isNone && !(sys.routesOf e.event).isEmpty
+
+/-- Deciding the routes of entry `e` delivered from `c` with world draws `ds`: the configuration
+after the decisions, the entry with its routes, and the draws left; `c`, `e` and `ds` themselves
+when no route is decided. -/
+def routeOf (sys : Sys) (c : Cfg) (e : Entry) (ds : List Nat) :
+    Option (Except (Err × List Nat) (Cfg × Entry × List Nat)) :=
+  if sys.toRoute e then
+    match routesFrom e c.world (sys.routesOf e.event) (c.machines, c.counters) [] ds with
+    | none => none
+    | some (.error x) => some (.error x)
+    | some (.ok (st, rs, rest)) =>
+      some (.ok ({ c with machines := st.1, counters := st.2 }, { e with routes := some rs }, rest))
+  else some (.ok (c, e, ds))
+
+/-- The draw site of random route `i` (a site no transition has, so that the run's book can name
+its stream, format 2's `route:{event}:{behavior}`). -/
+def routeSite (i : Nat) : Nat × Nat × Nat := (i, 0, 4294967296)
+
+/-- The draws the decisions of routes `rs` take: one per random route whose behaviour has an
+instance, each one of the instances' positions, up to the first decision that fails. -/
+def routeHolesFrom (e : Entry) (w : World) : List (Nat × Route) → RSt' → List ((Nat × Nat × Nat) × Dist)
+  | [], _ => []
+  | (i, r) :: rest, st =>
+    if routeDraws r st then
+      (routeSite i, Dist.choice (List.range (instsOf st.1 r.group).length)) :: routeHolesFrom e w rest st
+    else match routeDet i r e w st with
+      | .ok (st', _) => routeHolesFrom e w rest st'
+      | .error _ => []
+
+/-- The draws deciding the routes of entry `e` delivered from `c` takes: the first draws of the
+step's world draws. -/
+def routeHoles (sys : Sys) (c : Cfg) (e : Entry) : List ((Nat × Nat × Nat) × Dist) :=
+  if sys.toRoute e then routeHolesFrom e c.world (sys.routesOf e.event) (c.machines, c.counters) else []
+
+/-- The number of draws deciding the routes of `e` from `c` takes. -/
+def Sys.nR (sys : Sys) (c : Cfg) (e : Entry) : Nat := (routeHoles sys c e).length
+
 /-- The delivery of an event entry `e` taken from index `k` of `c`, under the active faults `act`,
 with phase 2 given by `p2` and world draws `wds`. The attempt count of its event is advanced; an
 active `drop`/`lose` fault acting on the attempt drops it; otherwise the first active
@@ -1654,7 +1901,11 @@ def deliverWith (sys : Sys)
   | some e =>
     if c.pending.all (fun x => decide (e.time ≤ x.time)) && sys.stopAt.all (fun s => decide (e.time ≤ s)) then
       match e.kind with
-      | .event => deliverEvent sys p2 (sys.active mask) c k e wds
+      | .event => match routeOf sys c e (wds.take (sys.nR c e)) with
+        | none => none
+        | some (.error (err, rest)) => if rest = [] ∧ wds.drop (sys.nR c e) = [] then some (.error err) else none
+        | some (.ok (c1, e1, rest)) =>
+          if rest = [] then deliverEvent sys p2 (sys.active mask) c1 k e1 (wds.drop (sys.nR c e)) else none
       | _ => worldFill sys c e wds
     else none
 
@@ -1833,39 +2084,49 @@ effect evaluation, winner selection, the commit and settling are the functions `
 so `deliver_iff_step` checks the scheduling, faults, draws and queue handling against a second
 statement, not the evaluation. -/
 inductive Step (sys : Sys) (mask : List Bool) (c : Cfg) : Label → State → Prop
-  | drop {l : Label} : DrawsOk sys l.draws → Ready sys c l.entry → l.entry.kind = .event → l.wdraws = [] →
-      dropHit (sys.active mask) l.entry (c.attemptsOf l.entry.event + 1) →
-      Step sys mask c l (.run mask (c.popE l.entry))
-  | delay {l : Label} {i : Nat} {f : Fault} {cp : Entry} : DrawsOk sys l.draws → Ready sys c l.entry →
-      l.entry.kind = .event → l.wdraws = [] →
-      ¬ dropHit (sys.active mask) l.entry (c.attemptsOf l.entry.event + 1) →
-      delayFault (sys.active mask) l.entry (c.attemptsOf l.entry.event + 1) = some (i, f) →
-      later l.entry i f.by_ = .ok cp →
-      Step sys mask c l (.run mask ((c.popE l.entry).enq cp))
-  | delayTimeErr {l : Label} {i : Nat} {f : Fault} {err : Err} : DrawsOk sys l.draws →
-      Ready sys c l.entry → l.entry.kind = .event → l.wdraws = [] →
-      ¬ dropHit (sys.active mask) l.entry (c.attemptsOf l.entry.event + 1) →
-      delayFault (sys.active mask) l.entry (c.attemptsOf l.entry.event + 1) = some (i, f) →
-      later l.entry i f.by_ = .error err →
+  | drop {l : Label} {c1 : Cfg} {e1 : Entry} : DrawsOk sys l.draws → Ready sys c l.entry →
+      l.entry.kind = .event → routeOf sys c l.entry (l.wdraws.take (sys.nR c l.entry)) = some (.ok (c1, e1, [])) → l.wdraws.drop (sys.nR c l.entry) = [] →
+      dropHit (sys.active mask) e1 (c1.attemptsOf e1.event + 1) →
+      Step sys mask c l (.run mask (c1.popE l.entry))
+  | delay {l : Label} {c1 : Cfg} {e1 : Entry} {i : Nat} {f : Fault} {cp : Entry} :
+      DrawsOk sys l.draws → Ready sys c l.entry →
+      l.entry.kind = .event → routeOf sys c l.entry (l.wdraws.take (sys.nR c l.entry)) = some (.ok (c1, e1, [])) → l.wdraws.drop (sys.nR c l.entry) = [] →
+      ¬ dropHit (sys.active mask) e1 (c1.attemptsOf e1.event + 1) →
+      delayFault (sys.active mask) e1 (c1.attemptsOf e1.event + 1) = some (i, f) →
+      later e1 i f.by_ = .ok cp →
+      Step sys mask c l (.run mask ((c1.popE l.entry).enq cp))
+  | delayTimeErr {l : Label} {c1 : Cfg} {e1 : Entry} {i : Nat} {f : Fault} {err : Err} :
+      DrawsOk sys l.draws → Ready sys c l.entry →
+      l.entry.kind = .event → routeOf sys c l.entry (l.wdraws.take (sys.nR c l.entry)) = some (.ok (c1, e1, [])) → l.wdraws.drop (sys.nR c l.entry) = [] →
+      ¬ dropHit (sys.active mask) e1 (c1.attemptsOf e1.event + 1) →
+      delayFault (sys.active mask) e1 (c1.attemptsOf e1.event + 1) = some (i, f) →
+      later e1 i f.by_ = .error err →
       Step sys mask c l (.err mask c)
-  | deliverOk {l : Label} {ws : List (Winner (sys.resolve l.draws))} {ms : List MState}
-      {bs : Emitted} {w : World} {acts : List Act} {c2 c'' : Cfg} : DrawsOk sys l.draws →
+  | deliverOk {l : Label} {c1 : Cfg} {e1 : Entry} {ws : List (Winner (sys.resolve l.draws))}
+      {ms : List MState} {bs : Emitted} {w : World} {acts : List Act} {c2 c'' : Cfg} : DrawsOk sys l.draws →
       Ready sys c l.entry → l.entry.kind = .event →
-      ¬ dropHit (sys.active mask) l.entry (c.attemptsOf l.entry.event + 1) →
-      delayFault (sys.active mask) l.entry (c.attemptsOf l.entry.event + 1) = none →
-      winners (sys.resolve l.draws) (sys.active mask) (c.popE l.entry) l.entry = .ok ws →
-      phase2 (sys.resolve l.draws) (c.popE l.entry) l.entry ws c.machines = .ok (ms, bs) →
-      settle sys ((c.popE l.entry).commit sys.sig.machines ms bs).time (opsOf sys.sig.machines bs) []
-        ((c.popE l.entry).commit sys.sig.machines ms bs).world = (w, acts) →
-      DrawsFit l.wdraws (holesOf acts) →
-      fill { (c.popE l.entry).commit sys.sig.machines ms bs with world := w } acts l.wdraws = .ok c2 →
-      Dup (sys.active mask) l.entry (c.attemptsOf l.entry.event + 1) c2 c'' →
+      routeOf sys c l.entry (l.wdraws.take (sys.nR c l.entry)) = some (.ok (c1, e1, [])) →
+      ¬ dropHit (sys.active mask) e1 (c1.attemptsOf e1.event + 1) →
+      delayFault (sys.active mask) e1 (c1.attemptsOf e1.event + 1) = none →
+      winners (sys.resolve l.draws) (sys.active mask) (c1.popE l.entry) e1 = .ok ws →
+      phase2 (sys.resolve l.draws) (c1.popE l.entry) e1 ws c1.machines = .ok (ms, bs) →
+      settle sys ((c1.popE l.entry).commit sys.sig.machines ms bs).time (opsOf sys.sig.machines bs) []
+        ((c1.popE l.entry).commit sys.sig.machines ms bs).world = (w, acts) →
+      DrawsFit (l.wdraws.drop (sys.nR c l.entry)) (holesOf acts) →
+      fill { (c1.popE l.entry).commit sys.sig.machines ms bs with world := w } acts (l.wdraws.drop (sys.nR c l.entry)) = .ok c2 →
+      Dup (sys.active mask) e1 (c1.attemptsOf e1.event + 1) c2 c'' →
       Step sys mask c l (.run mask c'')
-  | deliverErr {l : Label} : DrawsOk sys l.draws → Ready sys c l.entry → l.entry.kind = .event →
-      ¬ dropHit (sys.active mask) l.entry (c.attemptsOf l.entry.event + 1) →
-      delayFault (sys.active mask) l.entry (c.attemptsOf l.entry.event + 1) = none →
-      Fails (sys.resolve l.draws) (sys.active mask) (c.popE l.entry) l.entry
-        (c.attemptsOf l.entry.event + 1) l.wdraws →
+  | deliverErr {l : Label} {c1 : Cfg} {e1 : Entry} : DrawsOk sys l.draws →
+      Ready sys c l.entry → l.entry.kind = .event →
+      routeOf sys c l.entry (l.wdraws.take (sys.nR c l.entry)) = some (.ok (c1, e1, [])) →
+      ¬ dropHit (sys.active mask) e1 (c1.attemptsOf e1.event + 1) →
+      delayFault (sys.active mask) e1 (c1.attemptsOf e1.event + 1) = none →
+      Fails (sys.resolve l.draws) (sys.active mask) (c1.popE l.entry) e1
+        (c1.attemptsOf e1.event + 1) (l.wdraws.drop (sys.nR c l.entry)) →
+      Step sys mask c l (.err mask c)
+  | routeErr {l : Label} {err : Err} : DrawsOk sys l.draws → Ready sys c l.entry → l.entry.kind = .event →
+      routeOf sys c l.entry (l.wdraws.take (sys.nR c l.entry)) = some (.error (err, [])) →
+      l.wdraws.drop (sys.nR c l.entry) = [] →
       Step sys mask c l (.err mask c)
   | worldOk {l : Label} {w : World} {acts : List Act} {c2 : Cfg} : DrawsOk sys l.draws →
       Ready sys c l.entry → l.entry.kind ≠ .event →
@@ -1971,6 +2232,376 @@ theorem Cfg.pop_eq_popE {c : Cfg} {e : Entry} {k : Nat} (h : c.pending.idxOf? e 
     c.pop k e = c.popE e := by
   simp only [Cfg.pop, Cfg.popE, (idxOf?_facts h).2]
 
+/-! ### What deciding routes changes -/
+
+/-- The control state and variables of a machine (what a route decision leaves as it is). -/
+def MState.core (x : MState) : Nat × List Val := (x.ctrl, x.vars)
+
+/-- `c1` is `c` with only machines made live (keeping their control states and variables) and
+counters changed: what a route decision does. -/
+def Cfg.Frame (c c1 : Cfg) : Prop :=
+  c1 = { c with machines := c1.machines, counters := c1.counters } ∧
+    c1.machines.map MState.core = c.machines.map MState.core
+
+theorem Cfg.Frame.refl (c : Cfg) : c.Frame c := ⟨rfl, rfl⟩
+
+theorem Cfg.Frame.trans {c c1 c2 : Cfg} (h1 : c.Frame c1) (h2 : c1.Frame c2) : c.Frame c2 := by
+  refine ⟨?_, h2.2.trans h1.2⟩
+  rw [h2.1, h1.1]
+
+theorem Cfg.Frame.pending {c c1 : Cfg} (h : c.Frame c1) : c1.pending = c.pending := by
+  rw [h.1]
+theorem Cfg.Frame.time {c c1 : Cfg} (h : c.Frame c1) : c1.time = c.time := by
+  rw [h.1]
+theorem Cfg.Frame.attempts {c c1 : Cfg} (h : c.Frame c1) : c1.attempts = c.attempts := by
+  rw [h.1]
+theorem Cfg.Frame.attCap {c c1 : Cfg} (h : c.Frame c1) : c1.attCap = c.attCap := by
+  rw [h.1]
+theorem Cfg.Frame.world {c c1 : Cfg} (h : c.Frame c1) : c1.world = c.world := by
+  rw [h.1]
+theorem Cfg.Frame.length {c c1 : Cfg} (h : c.Frame c1) : c1.machines.length = c.machines.length := by
+  have := congrArg List.length h.2
+  simpa using this
+
+theorem routeDet_core {i : Nat} {r : Route} {e : Entry} {w : World} {st st' : RSt'} {p : Option Nat}
+    (h : routeDet i r e w st = .ok (st', p)) : st'.1.map MState.core = st.1.map MState.core := by
+  obtain ⟨ms, cs⟩ := st
+  unfold routeDet at h
+  dsimp only at h
+  cases hb : r.by_ with
+  | keyed f =>
+    rw [hb] at h; dsimp only at h
+    cases hv : lookupField f e.payload with
+    | none => rw [hv] at h; cases h
+    | some v =>
+      rw [hv] at h; dsimp only at h
+      cases hq : List.find? (fun m => (ms[m]?.bind fun x => x.key) == some v) (instsOf ms r.group) with
+      | some m => rw [hq] at h; cases h; rfl
+      | none =>
+        rw [hq] at h; dsimp only at h
+        cases hx : List.findSome? (fun m => match ms[m]? with
+            | some x => if x.live then none else some (m, x)
+            | none => none) r.group with
+        | none => rw [hx] at h; cases h
+        | some mx =>
+          obtain ⟨m, x⟩ := mx
+          rw [hx] at h
+          cases h
+          obtain ⟨w', _, hx'⟩ := List.exists_of_findSome?_eq_some hx
+          have hget : ms[m]? = some x := by
+            cases hq : ms[w']? with
+            | none => rw [hq] at hx'; cases hx'
+            | some y =>
+              rw [hq] at hx'; dsimp only at hx'
+              split at hx'
+              · cases hx'
+              · simp only [Option.some.injEq, Prod.mk.injEq] at hx'
+                obtain ⟨rfl, rfl⟩ := hx'; exact hq
+          obtain ⟨hlt, hx2⟩ := List.getElem?_eq_some_iff.mp hget
+          apply List.ext_getElem
+          · simp
+          · intro j h1 h2
+            simp only [List.getElem_map, List.getElem_set]
+            split
+            · rename_i hj; subst hj; simp [MState.core, hx2]
+            · rfl
+  | key f hh =>
+    rw [hb] at h; dsimp only at h
+    cases hv : lookupField f e.payload with
+    | none => rw [hv] at h; cases h
+    | some v => rw [hv] at h; cases h; rfl
+  | roundRobin =>
+    rw [hb] at h; dsimp only at h
+    split at h
+    · cases h; rfl
+    · cases h; rfl
+  | leastBusy res => rw [hb] at h; cases h; rfl
+  | random => rw [hb] at h; cases h; rfl
+
+theorem routeOne_core {i : Nat} {r : Route} {e : Entry} {w : World} {st st' : RSt'} {ds ds' : List Nat}
+    {p : Option Nat} (h : routeOne i r e w st ds = some (.ok (st', p, ds'))) :
+    st'.1.map MState.core = st.1.map MState.core := by
+  unfold routeOne at h
+  split at h
+  · split at h
+    · split at h
+      · cases h; rfl
+      · cases h
+    · cases h
+  · cases hd : routeDet i r e w st with
+    | error err => rw [hd] at h; cases h
+    | ok x =>
+      rw [hd] at h
+      simp only [Except.map, Option.some.injEq, Except.ok.injEq, Prod.mk.injEq] at h
+      obtain ⟨rfl, -, -⟩ := h
+      exact routeDet_core hd
+
+theorem routesFrom_core {e : Entry} {w : World} : ∀ {rs : List (Nat × Route)} {st st' : RSt'}
+    {acc acc' : List (List Nat × Nat)} {ds ds' : List Nat},
+    routesFrom e w rs st acc ds = some (.ok (st', acc', ds')) → st'.1.map MState.core = st.1.map MState.core
+  | [], st, st', acc, acc', ds, ds', h => by
+    simp only [routesFrom, Option.some.injEq, Except.ok.injEq, Prod.mk.injEq] at h
+    obtain ⟨rfl, -, -⟩ := h; rfl
+  | (i, r) :: rest, st, st', acc, acc', ds, ds', h => by
+    simp only [routesFrom] at h
+    split at h
+    · cases h
+    · cases h
+    · rename_i st1 p d1 h1
+      exact (routesFrom_core h).trans (routeOne_core h1)
+
+/-- **Deciding routes changes only liveness, keys and counters**, and gives the entry its routes. -/
+theorem routeOf_frame {sys : Sys} {c c1 : Cfg} {e e1 : Entry} {ds ds' : List Nat}
+    (h : routeOf sys c e ds = some (.ok (c1, e1, ds'))) : c.Frame c1 ∧ e1 = { e with routes := e1.routes } := by
+  unfold routeOf at h
+  split at h
+  · split at h
+    · cases h
+    · cases h
+    · rename_i st rs rest h2
+      simp only [Option.some.injEq, Except.ok.injEq, Prod.mk.injEq] at h
+      obtain ⟨rfl, rfl, rfl⟩ := h
+      exact ⟨⟨rfl, routesFrom_core h2⟩, rfl⟩
+  · simp only [Option.some.injEq, Except.ok.injEq, Prod.mk.injEq] at h
+    obtain ⟨rfl, rfl, rfl⟩ := h
+    exact ⟨Cfg.Frame.refl _, rfl⟩
+
+/-- Deciding routes reads only the machines, counters and world: from configurations that agree on
+these, it decides the same, changing nothing else. -/
+theorem routeOf_congr {sys : Sys} {c c' : Cfg} (e : Entry) (ds : List Nat) (hm : c.machines = c'.machines)
+    (hc : c.counters = c'.counters) (hw : c.world = c'.world) :
+    (routeOf sys c e ds = none ↔ routeOf sys c' e ds = none) ∧
+    (∀ x, routeOf sys c e ds = some (.error x) ↔ routeOf sys c' e ds = some (.error x)) ∧
+    (∀ c1 e1 r, routeOf sys c e ds = some (.ok (c1, e1, r)) →
+      ∃ c1', routeOf sys c' e ds = some (.ok (c1', e1, r)) ∧
+        c1' = { c' with machines := c1.machines, counters := c1.counters } ∧
+        c1 = { c with machines := c1.machines, counters := c1.counters }) := by
+  have hrf : routesFrom e c.world (sys.routesOf e.event) (c.machines, c.counters) [] ds =
+      routesFrom e c'.world (sys.routesOf e.event) (c'.machines, c'.counters) [] ds := by rw [hm, hc, hw]
+  unfold routeOf
+  rw [hrf]
+  split
+  · cases routesFrom e c'.world (sys.routesOf e.event) (c'.machines, c'.counters) [] ds with
+    | none => simp
+    | some r =>
+      cases r with
+      | error x => simp
+      | ok x =>
+        obtain ⟨st, rs, rest⟩ := x
+        refine ⟨by simp, by simp, ?_⟩
+        intro c1 e1 r h
+        simp only [Option.some.injEq, Except.ok.injEq, Prod.mk.injEq] at h
+        obtain ⟨rfl, rfl, rfl⟩ := h
+        exact ⟨_, rfl, rfl, rfl⟩
+  · refine ⟨by simp, by simp, ?_⟩
+    intro c1 e1 r h
+    simp only [Option.some.injEq, Except.ok.injEq, Prod.mk.injEq] at h
+    obtain ⟨rfl, rfl, rfl⟩ := h
+    refine ⟨_, rfl, ?_, rfl⟩
+    rw [hm, hc]
+/-! ### Route draws fit their program -/
+
+/-- The draws a route decision left. -/
+def RRes.rest : Except (Err × List Nat) (RSt' × List (List Nat × Nat) × List Nat) → List Nat
+  | .ok (_, _, r) => r
+  | .error (_, r) => r
+
+theorem drawsFit_cons {d : Nat} {ds : List Nat} {h : (Nat × Nat × Nat) × Dist}
+    {hs : List ((Nat × Nat × Nat) × Dist)} : DrawsFit (d :: ds) (h :: hs) ↔ d ∈ h.2.drawSupport ∧ DrawsFit ds hs := by
+  simp only [DrawsFit, List.length_cons, Nat.add_right_cancel_iff, List.zip_cons_cons, List.mem_cons,
+    forall_eq_or_imp]
+  constructor
+  · rintro ⟨hl, h1, h2⟩; exact ⟨h1, hl, h2⟩
+  · rintro ⟨h1, hl, h2⟩; exact ⟨hl, h1, h2⟩
+
+theorem mem_drawSupport_range {d n : Nat} (hn : 0 < n) : d ∈ (Dist.choice (List.range n)).drawSupport ↔ d < n := by
+  have : (Dist.choice (List.range n)).drawSupport = List.range n := by
+    unfold Dist.drawSupport Dist.support
+    cases n with
+    | zero => omega
+    | succ k => simp [List.range_succ]
+  rw [this, List.mem_range]
+
+theorem routeDraws_pos {r : Route} {st : RSt'} (h : routeDraws r st = true) : 0 < (instsOf st.1 r.group).length := by
+  unfold routeDraws at h
+  split at h
+  · cases hq : instsOf st.1 r.group with
+    | nil => rw [hq] at h; cases h
+    | cons _ _ => simp
+  · cases h
+
+/-- **Route draws fit their program**: a decision that used up its draws took one per hole, each a
+position of an instance. -/
+theorem routesFrom_fit {e : Entry} {w : World} : ∀ {rs : List (Nat × Route)} {st : RSt'}
+    {acc : List (List Nat × Nat)} {ds : List Nat} {x}, routesFrom e w rs st acc ds = some x → RRes.rest x = [] →
+      DrawsFit ds (routeHolesFrom e w rs st)
+  | [], st, acc, ds, x, h, hr => by
+    simp only [routesFrom, Option.some.injEq] at h
+    subst h
+    simp only [RRes.rest] at hr
+    subst hr
+    exact ⟨rfl, by simp⟩
+  | (i, r) :: rest, st, acc, ds, x, h, hr => by
+    simp only [routesFrom] at h
+    unfold routeHolesFrom
+    unfold routeOne at h
+    by_cases hd : routeDraws r st = true
+    · simp only [hd, if_true] at h ⊢
+      cases ds with
+      | nil => simp at h
+      | cons d ds =>
+        simp only [] at h
+        by_cases hlt : d < (instsOf st.1 r.group).length
+        · simp only [hlt, if_true] at h
+          exact drawsFit_cons.mpr ⟨(mem_drawSupport_range (routeDraws_pos hd)).mpr hlt, routesFrom_fit h hr⟩
+        · simp [hlt] at h
+    · simp only [hd, Bool.false_eq_true, if_false] at h ⊢
+      cases hq : routeDet i r e w st with
+      | error err =>
+        rw [hq] at h
+        simp only [Except.map, Option.some.injEq] at h
+        subst h
+        simp only [RRes.rest] at hr
+        subst hr
+        exact ⟨rfl, by simp⟩
+      | ok y =>
+        rw [hq] at h
+        simp only [Except.map] at h
+        exact routesFrom_fit h hr
+
+/-- **Route draws that fit their program decide**: the decision does not lack a draw and uses them
+all. -/
+theorem routesFrom_some {e : Entry} {w : World} : ∀ {rs : List (Nat × Route)} {st : RSt'}
+    {acc : List (List Nat × Nat)} {ds : List Nat}, DrawsFit ds (routeHolesFrom e w rs st) →
+      ∃ x, routesFrom e w rs st acc ds = some x ∧ RRes.rest x = []
+  | [], st, acc, ds, h => by
+    have : ds = [] := List.length_eq_zero_iff.mp (by simpa [routeHolesFrom] using h.1)
+    subst this
+    exact ⟨_, rfl, rfl⟩
+  | (i, r) :: rest, st, acc, ds, h => by
+    simp only [routesFrom]
+    unfold routeHolesFrom at h
+    unfold routeOne
+    by_cases hd : routeDraws r st = true
+    · simp only [hd, if_true] at h ⊢
+      cases ds with
+      | nil => exact absurd h.1 (by simp)
+      | cons d ds =>
+        obtain ⟨h1, h2⟩ := drawsFit_cons.mp h
+        have hlt := (mem_drawSupport_range (routeDraws_pos hd)).mp h1
+        simp only [hlt, if_true]
+        exact routesFrom_some h2
+    · simp only [hd, Bool.false_eq_true, if_false] at h ⊢
+      cases hq : routeDet i r e w st with
+      | error err =>
+        rw [hq] at h
+        have : ds = [] := List.length_eq_zero_iff.mp (by simpa using h.1)
+        subst this
+        exact ⟨_, rfl, rfl⟩
+      | ok y =>
+        rw [hq] at h
+        simp only [Except.map]
+        exact routesFrom_some h
+
+/-- A route decision from a configuration takes exactly the route draws: every decision that is
+not `none` and used its draws fits the program, and draws that fit it decide. -/
+theorem routeOf_fit {sys : Sys} {c : Cfg} {e : Entry} {ds : List Nat} :
+    ((∀ c1 e1, routeOf sys c e ds = some (.ok (c1, e1, [])) → DrawsFit ds (routeHoles sys c e)) ∧
+     (∀ err, routeOf sys c e ds = some (.error (err, [])) → DrawsFit ds (routeHoles sys c e))) ∧
+    (DrawsFit ds (routeHoles sys c e) →
+      (∃ c1 e1, routeOf sys c e ds = some (.ok (c1, e1, []))) ∨ ∃ err, routeOf sys c e ds = some (.error (err, []))) := by
+  unfold routeOf routeHoles
+  by_cases ht : sys.toRoute e = true
+  · simp only [ht, if_true]
+    refine ⟨⟨fun c1 e1 h => ?_, fun err h => ?_⟩, fun hf => ?_⟩
+    · split at h
+      · cases h
+      · cases h
+      · rename_i st rs rest h2
+        simp only [Option.some.injEq, Except.ok.injEq, Prod.mk.injEq] at h
+        exact routesFrom_fit h2 h.2.2
+    · split at h
+      · cases h
+      · rename_i y h2
+        simp only [Option.some.injEq, Except.error.injEq] at h
+        subst h
+        exact routesFrom_fit h2 rfl
+      · cases h
+    · obtain ⟨x, hx, hr⟩ := routesFrom_some (acc := []) hf
+      rw [hx]
+      cases x with
+      | ok y => obtain ⟨st, rs, rest⟩ := y; simp only [RRes.rest] at hr; subst hr; exact Or.inl ⟨_, _, rfl⟩
+      | error y => obtain ⟨err, rest⟩ := y; simp only [RRes.rest] at hr; subst hr; exact Or.inr ⟨_, rfl⟩
+  · simp only [ht, Bool.false_eq_true, if_false]
+    refine ⟨⟨fun c1 e1 h => ?_, fun err h => ?_⟩, fun hf => ?_⟩
+    · simp only [Option.some.injEq, Except.ok.injEq, Prod.mk.injEq] at h
+      obtain ⟨-, -, rfl⟩ := h; exact ⟨rfl, by simp⟩
+    · cases h
+    · have : ds = [] := List.length_eq_zero_iff.mp hf.1
+      subst this
+      exact Or.inl ⟨_, _, rfl⟩
+
+/-- A system without routes decides none. -/
+theorem routeOf_nil {sys : Sys} (h : sys.routes = []) (c : Cfg) (e : Entry) (ds : List Nat) :
+    routeOf sys c e ds = some (.ok (c, e, ds)) := by
+  have : sys.toRoute e = false := by
+    simp [Sys.toRoute, Sys.routesOf, h]
+  simp [routeOf, this]
+
+/-- An entry with a target is not routed. -/
+theorem routeOf_target {sys : Sys} {c : Cfg} {e : Entry} {ds : List Nat} (h : e.target.isSome) :
+    routeOf sys c e ds = some (.ok (c, e, ds)) := by
+  have : sys.toRoute e = false := by
+    cases ht : e.target with
+    | none => rw [ht] at h; cases h
+    | some _ => simp [Sys.toRoute, ht]
+  simp [routeOf, this]
+
+/-- An entry whose routes are decided is not routed again. -/
+theorem routeOf_routed {sys : Sys} {c : Cfg} {e : Entry} {ds : List Nat} (h : e.routes.isSome) :
+    routeOf sys c e ds = some (.ok (c, e, ds)) := by
+  have : sys.toRoute e = false := by
+    cases ht : e.routes with
+    | none => rw [ht] at h; cases h
+    | some _ => simp [Sys.toRoute, ht]
+  simp [routeOf, this]
+
+theorem routeOf_nil_eq {sys : Sys} (h : sys.routes = []) {c c1 : Cfg} {e e1 : Entry} {ds r : List Nat}
+    (hro : routeOf sys c e ds = some (.ok (c1, e1, r))) : c = c1 ∧ e = e1 ∧ ds = r := by
+  rw [routeOf_nil h] at hro
+  simp only [Option.some.injEq, Except.ok.injEq, Prod.mk.injEq] at hro
+  exact hro
+
+/-- A system without routes takes no route draws. -/
+theorem nR_nil {sys : Sys} (h : sys.routes = []) (c : Cfg) (e : Entry) : sys.nR c e = 0 := by
+  have : sys.toRoute e = false := by simp [Sys.toRoute, Sys.routesOf, h]
+  simp [Sys.nR, routeHoles, this]
+
+theorem routeOf_nil' {sys : Sys} (h : sys.routes = []) (c : Cfg) (e : Entry) (ds : List Nat) :
+    routeOf sys c e (ds.take (sys.nR c e)) = some (.ok (c, e, [])) := by
+  rw [nR_nil h, List.take_zero]; exact routeOf_nil h c e []
+
+@[simp] theorem resolve_routes (sys : Sys) (ds : List Nat) : (sys.resolve ds).routes = sys.routes := rfl
+
+theorem routeOf_resolve (sys : Sys) (ds : List Nat) : routeOf (sys.resolve ds) = routeOf sys := rfl
+
+theorem nR_resolve (sys : Sys) (ds : List Nat) : (sys.resolve ds).nR = sys.nR := rfl
+
+/-- The route draws read only the machines, counters and world. -/
+theorem routeHoles_congr {sys : Sys} {c c' : Cfg} {e : Entry} (hm : c.machines = c'.machines)
+    (hc : c.counters = c'.counters) (hw : c.world = c'.world) : routeHoles sys c e = routeHoles sys c' e := by
+  simp only [routeHoles, hm, hc, hw]
+
+theorem routeHoles_resolve (sys : Sys) (ds : List Nat) : routeHoles (sys.resolve ds) = routeHoles sys := rfl
+
+/-- Popping the delivered entry after deciding its routes. -/
+theorem Frame.pop_eq_popE {c c1 : Cfg} {e e1 : Entry} {k : Nat} (hf : c.Frame c1)
+    (he : e1 = { e with routes := e1.routes }) (hk : c.pending.idxOf? e = some k) :
+    c1.pop k e1 = c1.popE e := by
+  have h2 := (idxOf?_facts hk).2
+  rw [he]
+  simp only [Cfg.pop, Cfg.popE, hf.pending, h2, Cfg.bumpAttempts, Cfg.attemptsOf]
+
 /-- A ready entry is at some index. -/
 theorem Ready.idx {sys : Sys} {c : Cfg} {e : Entry} (h : Ready sys c e) :
     ∃ k, c.pending.idxOf? e = some k := by
@@ -1997,7 +2628,6 @@ theorem deliver_eq_step {sys : Sys} {mask : List Bool} {c : Cfg} {l : Label} {t 
       · cases h
       · rename_i k hk
         obtain ⟨hget, _⟩ := idxOf?_facts hk
-        have hpop := Cfg.pop_eq_popE hk
         unfold deliverAt deliverWith at h
         rw [hget] at h
         simp only [] at h
@@ -2007,76 +2637,95 @@ theorem deliver_eq_step {sys : Sys} {mask : List Bool} {c : Cfg} {l : Label} {t 
           have hready : Ready sys c l.entry := ⟨List.mem_of_getElem? hget, hc⟩
           split at h
           · rename_i hkind
-            unfold deliverEvent at h
-            simp only [hpop, resolve_active] at h
+            rw [routeOf_resolve, nR_resolve] at h
             split at h
-            · rename_i hdr
+            · cases h
+            · rename_i err rest hro
               split at h
-              · rename_i hw0
+              · rename_i hr0
+                obtain ⟨rfl, hw0⟩ := hr0
                 simp only [Option.map_some, Option.some.injEq] at h
                 subst h
-                exact Step.drop hd hready hkind hw0 hdr
+                exact Step.routeErr hd hready hkind hro hw0
               · cases h
-            · rename_i hdr
+            · rename_i c1 e1 wr hro
               split at h
-              · rename_i i f hf
+              rotate_left
+              · cases h
+              rename_i hr0
+              subst hr0
+              obtain ⟨hfr, he1⟩ := routeOf_frame hro
+              have hpop := Frame.pop_eq_popE hfr he1 hk
+              unfold deliverEvent at h
+              simp only [hpop, resolve_active] at h
+              split at h
+              · rename_i hdr
                 split at h
                 · rename_i hw0
                   simp only [Option.map_some, Option.some.injEq] at h
-                  split at h
-                  · rename_i err hl
-                    subst h
-                    exact Step.delayTimeErr hd hready hkind hw0 hdr hf hl
-                  · rename_i cp hl
-                    subst h
-                    exact Step.delay hd hready hkind hw0 hdr hf hl
+                  subst h
+                  exact Step.drop hd hready hkind hro hw0 hdr
                 · cases h
-              · rename_i hnone
+              · rename_i hdr
                 split at h
-                · rename_i err hw
+                · rename_i i f hf
                   split at h
                   · rename_i hw0
                     simp only [Option.map_some, Option.some.injEq] at h
-                    subst h
-                    exact Step.deliverErr hd hready hkind hdr hnone (Fails.winners hw0 hw)
+                    split at h
+                    · rename_i err hl
+                      subst h
+                      exact Step.delayTimeErr hd hready hkind hro hw0 hdr hf hl
+                    · rename_i cp hl
+                      subst h
+                      exact Step.delay hd hready hkind hro hw0 hdr hf hl
                   · cases h
-                · rename_i ws hw
+                · rename_i hnone
                   split at h
-                  · rename_i err hp
+                  · rename_i err hw
                     split at h
                     · rename_i hw0
                       simp only [Option.map_some, Option.some.injEq] at h
                       subst h
-                      exact Step.deliverErr hd hready hkind hdr hnone (Fails.phase2 hw0 hw hp)
+                      exact Step.deliverErr hd hready hkind hro hdr hnone (Fails.winners hw0 hw)
                     · cases h
-                  · rename_i ms bs hp
-                    unfold settleFill at h
+                  · rename_i ws hw
                     split at h
-                    · rename_i hfit
-                      simp only [Option.map_some, Option.some.injEq] at h
-                      unfold duplicate at h
+                    · rename_i err hp
                       split at h
-                      · rename_i err hfill
-                        simp only [outcome] at h
+                      · rename_i hw0
+                        simp only [Option.map_some, Option.some.injEq] at h
                         subst h
-                        exact Step.deliverErr hd hready hkind hdr hnone (Fails.settle hw hp rfl hfit hfill)
-                      · rename_i c2 hfill
+                        exact Step.deliverErr hd hready hkind hro hdr hnone (Fails.phase2 hw0 hw hp)
+                      · cases h
+                    · rename_i ms bs hp
+                      unfold settleFill at h
+                      split at h
+                      · rename_i hfit
+                        simp only [Option.map_some, Option.some.injEq] at h
+                        unfold duplicate at h
                         split at h
-                        · rename_i hdup
+                        · rename_i err hfill
                           simp only [outcome] at h
                           subst h
-                          exact Step.deliverOk hd hready hkind hdr hnone hw hp rfl hfit hfill (Dup.none hdup)
-                        · rename_i i f hdup
+                          exact Step.deliverErr hd hready hkind hro hdr hnone (Fails.settle hw hp rfl hfit hfill)
+                        · rename_i c2 hfill
                           split at h
-                          · rename_i err hl
+                          · rename_i hdup
                             simp only [outcome] at h
                             subst h
-                            exact Step.deliverErr hd hready hkind hdr hnone (Fails.dup hw hp rfl hfit hfill hdup hl)
-                          · rename_i cp hl
-                            simp only [outcome] at h
-                            subst h
-                            exact Step.deliverOk hd hready hkind hdr hnone hw hp rfl hfit hfill (Dup.some hdup hl)
-                    · cases h
+                            exact Step.deliverOk hd hready hkind hro hdr hnone hw hp rfl hfit hfill (Dup.none hdup)
+                          · rename_i i f hdup
+                            split at h
+                            · rename_i err hl
+                              simp only [outcome] at h
+                              subst h
+                              exact Step.deliverErr hd hready hkind hro hdr hnone (Fails.dup hw hp rfl hfit hfill hdup hl)
+                            · rename_i cp hl
+                              simp only [outcome] at h
+                              subst h
+                              exact Step.deliverOk hd hready hkind hro hdr hnone hw hp rfl hfit hfill (Dup.some hdup hl)
+                      · cases h
           · rename_i hne
             unfold worldFill at h
             split at h
@@ -2097,7 +2746,6 @@ theorem deliver_eq_step {sys : Sys} {mask : List Bool} {c : Cfg} {l : Label} {t 
     obtain ⟨hd, hready⟩ := Step.ready h
     obtain ⟨k, hk⟩ := hready.idx
     obtain ⟨hget, _⟩ := idxOf?_facts hk
-    have hpop := Cfg.pop_eq_popE hk
     have hc := (ready_iff (sys := sys) (c := c) (e := l.entry)).mpr hready.2
     unfold deliver
     rw [if_pos hd]
@@ -2106,17 +2754,21 @@ theorem deliver_eq_step {sys : Sys} {mask : List Bool} {c : Cfg} {l : Label} {t 
     rw [hget]
     simp only [resolve_active, resolve_stopAt, hc, if_true]
     cases h with
-    | drop _ _ hkind hw0 hdr =>
-      rw [hkind]; unfold deliverEvent; simp only [hpop, resolve_active]
+    | drop _ _ hkind hro hw0 hdr =>
+      have hpop := Frame.pop_eq_popE (routeOf_frame hro).1 (routeOf_frame hro).2 hk
+      rw [hkind]; simp only [routeOf_resolve, nR_resolve, hro, if_true]; unfold deliverEvent; simp only [hpop, resolve_active]
       unfold dropHit at hdr; rw [if_pos hdr, if_pos hw0]; rfl
-    | delay _ _ hkind hw0 hdr hf hl =>
-      rw [hkind]; unfold deliverEvent; simp only [hpop, resolve_active]
+    | delay _ _ hkind hro hw0 hdr hf hl =>
+      have hpop := Frame.pop_eq_popE (routeOf_frame hro).1 (routeOf_frame hro).2 hk
+      rw [hkind]; simp only [routeOf_resolve, nR_resolve, hro, if_true]; unfold deliverEvent; simp only [hpop, resolve_active]
       unfold dropHit at hdr; rw [if_neg hdr]; unfold delayFault at hf; rw [hf]; simp only [hw0, hl]; rfl
-    | delayTimeErr _ _ hkind hw0 hdr hf hl =>
-      rw [hkind]; unfold deliverEvent; simp only [hpop, resolve_active]
+    | delayTimeErr _ _ hkind hro hw0 hdr hf hl =>
+      have hpop := Frame.pop_eq_popE (routeOf_frame hro).1 (routeOf_frame hro).2 hk
+      rw [hkind]; simp only [routeOf_resolve, nR_resolve, hro, if_true]; unfold deliverEvent; simp only [hpop, resolve_active]
       unfold dropHit at hdr; rw [if_neg hdr]; unfold delayFault at hf; rw [hf]; simp only [hw0, hl]; rfl
-    | deliverOk _ _ hkind hdr hnone hw hp hs hfit hfill hdup =>
-      rw [hkind]; unfold deliverEvent; simp only [hpop, resolve_active]
+    | deliverOk _ _ hkind hro hdr hnone hw hp hs hfit hfill hdup =>
+      have hpop := Frame.pop_eq_popE (routeOf_frame hro).1 (routeOf_frame hro).2 hk
+      rw [hkind]; simp only [routeOf_resolve, nR_resolve, hro, if_true]; unfold deliverEvent; simp only [hpop, resolve_active]
       unfold dropHit at hdr; rw [if_neg hdr]; unfold delayFault at hnone; rw [hnone]; simp only [hw, hp]
       unfold settleFill
       simp only [settle_resolve, resolve_sig, hs]
@@ -2125,16 +2777,18 @@ theorem deliver_eq_step {sys : Sys} {mask : List Bool} {c : Cfg} {l : Label} {t 
       cases hdup with
       | none h0 => unfold dupFault at h0; simp only [duplicate, h0]; rfl
       | some h0 hl => unfold dupFault at h0; simp only [duplicate, h0, hl]; rfl
-    | deliverErr _ _ hkind hdr hnone hfail =>
-      rw [hkind]; unfold deliverEvent; simp only [hpop, resolve_active]
+    | deliverErr _ _ hkind hro hdr hnone hfail =>
+      have hpop := Frame.pop_eq_popE (routeOf_frame hro).1 (routeOf_frame hro).2 hk
+      rw [hkind]; simp only [routeOf_resolve, nR_resolve, hro, if_true]; unfold deliverEvent; simp only [hpop, resolve_active]
       unfold dropHit at hdr; rw [if_neg hdr]; unfold delayFault at hnone; rw [hnone]
+      have hm : ∀ x : Cfg, (x.popE l.entry).machines = x.machines := fun _ => rfl
       cases hfail with
       | winners hw0 hw => simp only [hw, hw0]; rfl
       | phase2 hw0 hw hp =>
-        replace hp : phase2 (sys.resolve l.draws) (c.popE l.entry) l.entry _ c.machines = _ := hp
+        rw [hm] at hp
         simp only [hw, hp, hw0]; rfl
       | settle hw hp hs hfit hfill =>
-        replace hp : phase2 (sys.resolve l.draws) (c.popE l.entry) l.entry _ c.machines = _ := hp
+        rw [hm] at hp
         simp only [settle_resolve, resolve_sig] at hs hfill
         simp only [hw, hp]
         unfold settleFill
@@ -2142,7 +2796,7 @@ theorem deliver_eq_step {sys : Sys} {mask : List Bool} {c : Cfg} {l : Label} {t 
         rw [if_pos hfit]
         simp only [hfill, Option.map_some, duplicate]; rfl
       | dup hw hp hs hfit hfill h0 hl =>
-        replace hp : phase2 (sys.resolve l.draws) (c.popE l.entry) l.entry _ c.machines = _ := hp
+        rw [hm] at hp
         simp only [settle_resolve, resolve_sig] at hs hfill
         simp only [hw, hp]
         unfold settleFill
@@ -2150,6 +2804,8 @@ theorem deliver_eq_step {sys : Sys} {mask : List Bool} {c : Cfg} {l : Label} {t 
         rw [if_pos hfit]
         unfold dupFault at h0
         simp only [hfill, Option.map_some, duplicate, h0, hl]; rfl
+    | routeErr _ _ hkind hro hw0 =>
+      rw [hkind]; simp only [routeOf_resolve, nR_resolve, hro, hw0, and_self, if_true]; rfl
     | worldOk _ _ hne hs hfit hfill =>
       split
       · rename_i heq; exact absurd heq hne
@@ -2438,7 +3094,7 @@ theorem winnersOf_sublist {sys : Sys} {act : List (Nat × Fault)} {c : Cfg} {e :
 apply to the winners every step computes. -/
 theorem winners_nodup {sys : Sys} {act : List (Nat × Fault)} {c : Cfg} {e : Entry}
     {ws : List (Winner sys)} (h : winners sys act c e = .ok ws) : (ws.map (·.mach)).Nodup :=
-  ((winnersOf_sublist _ ws h).trans List.filter_sublist).nodup (finList_nodup _)
+  ((winnersOf_sublist _ ws h).trans (List.filter_sublist.trans List.filter_sublist)).nodup (finList_nodup _)
 
 /-! ### The whole delivery does not depend on the order of the winners -/
 
@@ -2619,20 +3275,32 @@ theorem deliver_perm (sys : Sys) (σ : Cfg → Entry → List (Winner sys) → L
     simp only []
     split
     · split
-      · unfold deliverEvent
-        simp only []
-        by_cases hdr : ((sys.active mask).any fun p => p.snd.hits [FKind.drop, FKind.lose] e.event
-            (c.attemptsOf e.event + 1) e.time) = true
-        · rw [if_pos hdr, if_pos hdr]
-        · rw [if_neg hdr, if_neg hdr]
-          cases List.find? (fun p => p.snd.hits [FKind.delay, FKind.retry] e.event (c.attemptsOf e.event + 1) e.time &&
-              !e.done.contains p.fst) (sys.active mask) with
-          | some p => rfl
-          | none =>
+      · cases routeOf sys c e (wds.take (sys.nR c e)) with
+        | none => rfl
+        | some r =>
+          cases r with
+          | error x => rfl
+          | ok x =>
+            obtain ⟨c1, e1, wr⟩ := x
+            by_cases hwr : wr = []
+            rotate_left
+            · simp only [hwr, if_false]
+            subst hwr
+            simp only [if_true]
+            unfold deliverEvent
             simp only []
-            cases hw : winners sys (sys.active mask) (c.pop k e) e with
-            | error err => rfl
-            | ok ws => exact afterP2_perm (hσ _ _ ws).symm (winners_nodup hw) _ _ wds mask c
+            by_cases hdr : ((sys.active mask).any fun p => p.snd.hits [FKind.drop, FKind.lose] e1.event
+                (c1.attemptsOf e1.event + 1) e1.time) = true
+            · rw [if_pos hdr, if_pos hdr]
+            · rw [if_neg hdr, if_neg hdr]
+              cases List.find? (fun p => p.snd.hits [FKind.delay, FKind.retry] e1.event (c1.attemptsOf e1.event + 1) e1.time &&
+                  !e1.done.contains p.fst) (sys.active mask) with
+              | some p => rfl
+              | none =>
+                simp only []
+                cases hw : winners sys (sys.active mask) (c1.pop k e1) e1 with
+                | error err => rfl
+                | ok ws => exact afterP2_perm (hσ _ _ ws).symm (winners_nodup hw) _ _ _ mask c
       · rfl
     · rfl
 
@@ -2677,8 +3345,8 @@ theorem winners_target {sys : Sys} {act : List (Nat × Fault)} {c : Cfg} {e : En
     ∀ w ∈ ws, w.mach.val = i := by
   intro w hw
   have := winnersOf_mach _ h w hw
-  simp only [addressed, List.mem_filter, ht] at this
-  exact (by simpa using this.2 : i = _).symm
+  simp only [addressed, List.mem_filter, ht, Option.all_some, Bool.and_eq_true, beq_iff_eq] at this
+  exact this.1.2.1.symm
 
 theorem phase2_get {sys : Sys} {c : Cfg} {e : Entry} {j : Nat} :
     (ws : List (Winner sys)) → (ms : List MState) → {ms' : List MState} → {bs : Emitted} →
@@ -2704,10 +3372,18 @@ theorem target_only {sys : Sys} {m : List Bool} {c c' : Cfg} {l : Label} {i : Na
     (h : Step sys m c l (.run m c')) (ht : l.entry.target = some i) :
     ∀ j, j ≠ i → c'.machines[j]? = c.machines[j]? := by
   intro j hj
+  have hr0 := routeOf_target (sys := sys) (c := c) (e := l.entry) (ds := l.wdraws.take (sys.nR c l.entry))
+    (by simp [ht])
   cases h with
-  | drop => rfl
-  | delay => rfl
-  | deliverOk _ _ _ _ _ hw hp _ _ hfill hdup =>
+  | drop _ _ _ hro =>
+    rw [hr0] at hro; simp only [Option.some.injEq, Except.ok.injEq, Prod.mk.injEq] at hro
+    obtain ⟨rfl, -, -⟩ := hro; rfl
+  | delay _ _ _ hro =>
+    rw [hr0] at hro; simp only [Option.some.injEq, Except.ok.injEq, Prod.mk.injEq] at hro
+    obtain ⟨rfl, -, -⟩ := hro; rfl
+  | deliverOk _ _ _ hro _ _ hw hp _ _ hfill hdup =>
+    rw [hr0] at hro; simp only [Option.some.injEq, Except.ok.injEq, Prod.mk.injEq] at hro
+    obtain ⟨rfl, rfl, -⟩ := hro
     have hms := phase2_get _ _ hp (fun w hw' => by
       rw [winners_target hw ht w hw']; exact fun h => hj h.symm)
     have hc : ∀ cc : Cfg, ∀ cc', (Dup (sys.active m) l.entry (c.attemptsOf l.entry.event + 1) cc cc') →
@@ -2723,7 +3399,8 @@ theorem target_only {sys : Sys} {m : List Bool} {c c' : Cfg} {l : Label} {i : Na
 /-- Configurations equal up to a permutation of the pending list. -/
 def Cfg.Approx (c c' : Cfg) : Prop :=
   c.time = c'.time ∧ c.machines = c'.machines ∧
-    (c.attempts = c'.attempts ∧ c.attCap = c'.attCap ∧ c.world = c'.world) ∧ c.pending.Perm c'.pending
+    (c.attempts = c'.attempts ∧ c.attCap = c'.attCap ∧ c.world = c'.world ∧ c.counters = c'.counters) ∧
+    c.pending.Perm c'.pending
 
 /-- States equal up to a permutation of the pending list. -/
 def State.Approx : State → State → Prop
@@ -2731,7 +3408,7 @@ def State.Approx : State → State → Prop
   | .err m c, .err m' c' => m = m' ∧ c.Approx c'
   | _, _ => False
 
-theorem Cfg.Approx.refl (c : Cfg) : c.Approx c := ⟨rfl, rfl, ⟨rfl, rfl, rfl⟩, List.Perm.refl _⟩
+theorem Cfg.Approx.refl (c : Cfg) : c.Approx c := ⟨rfl, rfl, ⟨rfl, rfl, rfl, rfl⟩, List.Perm.refl _⟩
 
 theorem foldl_insertByTime_perm (l : List Entry) :
     ∀ p q : List Entry, p.Perm q → (l.foldl insertByTime p).Perm (l.foldl insertByTime q) := by
@@ -2753,7 +3430,7 @@ theorem Cfg.commit_approx {c c' : Cfg} (h : c.Approx c') (n : Nat) (ms : List MS
 theorem Cfg.popE_approx {c c' : Cfg} (h : c.Approx c') (e : Entry) : (c.popE e).Approx (c'.popE e) := by
   obtain ⟨h1, h2, h3, h4⟩ := h
   exact ⟨rfl, h2, ⟨show c.bumpAttempts e.event = c'.bumpAttempts e.event by
-    unfold Cfg.bumpAttempts Cfg.attemptsOf; rw [h3.1, h3.2.1], h3.2.1, h3.2.2⟩, h4.erase e⟩
+    unfold Cfg.bumpAttempts Cfg.attemptsOf; rw [h3.1, h3.2.1], h3.2.1, h3.2.2.1, h3.2.2.2⟩, h4.erase e⟩
 
 theorem ctxOf_congr {c1 c2 : Cfg} (e : Entry) (own : MState) (h1 : c1.machines = c2.machines)
     (h2 : c1.time = c2.time) (h3 : c1.world = c2.world) : ctxOf c1 e own = ctxOf c2 e own := by
@@ -2815,10 +3492,11 @@ theorem winnersOf_congr {sys : Sys} {act : List (Nat × Fault)} {c1 c2 : Cfg} (e
 theorem winners_congr {sys : Sys} {act : List (Nat × Fault)} {c1 c2 : Cfg} (e : Entry)
     (h1 : c1.machines = c2.machines) (h2 : c1.time = c2.time) (h3 : c1.world = c2.world) :
     winners sys act c1 e = winners sys act c2 e := by
-  simp only [winners, winnersOf_congr e h1 h2 h3]
+  simp only [winners, winnersOf_congr e h1 h2 h3, h1]
 
 theorem Cfg.Approx.symm {c c' : Cfg} (h : c.Approx c') : c'.Approx c :=
-  ⟨h.1.symm, h.2.1.symm, ⟨h.2.2.1.1.symm, h.2.2.1.2.1.symm, h.2.2.1.2.2.symm⟩, h.2.2.2.symm⟩
+  ⟨h.1.symm, h.2.1.symm, ⟨h.2.2.1.1.symm, h.2.2.1.2.1.symm, h.2.2.1.2.2.1.symm, h.2.2.1.2.2.2.symm⟩,
+    h.2.2.2.symm⟩
 
 theorem Dup.approx {act : List (Nat × Fault)} {e : Entry} {att : Nat} {c1 c1' c2 : Cfg}
     (h : c1.Approx c1') (hd : Dup act e att c1 c2) : ∃ c2', Dup act e att c1' c2' ∧ c2.Approx c2' := by
@@ -2828,7 +3506,7 @@ theorem Dup.approx {act : List (Nat × Fault)} {e : Entry} {att : Nat} {c1 c1' c
 
 theorem Cfg.withWorld_approx {c c' : Cfg} (h : c.Approx c') (w : World) :
     ({ c with world := w } : Cfg).Approx { c' with world := w } :=
-  ⟨h.1, h.2.1, ⟨h.2.2.1.1, h.2.2.1.2.1, rfl⟩, h.2.2.2⟩
+  ⟨h.1, h.2.1, ⟨h.2.2.1.1, h.2.2.1.2.1, rfl, h.2.2.1.2.2.2⟩, h.2.2.2⟩
 
 theorem Cfg.popW_approx {c c' : Cfg} (h : c.Approx c') (e : Entry) : (c.popW e).Approx (c'.popW e) :=
   ⟨rfl, h.2.1, h.2.2.1, h.2.2.2.erase e⟩
@@ -2876,48 +3554,82 @@ pending list have the same steps, with the same labels, up to a permutation of t
 the successors (the label names the entry, not its position). -/
 theorem pending_perm_bisim {sys : Sys} {m : List Bool} {c c' : Cfg} {l : Label} {t : State}
     (hp : c.pending.Perm c'.pending) (ht : c.time = c'.time) (hm : c.machines = c'.machines)
-    (ha : c.attempts = c'.attempts ∧ c.attCap = c'.attCap ∧ c.world = c'.world) (h : Step sys m c l t) :
+    (ha : c.attempts = c'.attempts ∧ c.attCap = c'.attCap ∧ c.world = c'.world ∧ c.counters = c'.counters)
+    (h : Step sys m c l t) :
     ∃ t', Step sys m c' l t' ∧ t'.Approx t := by
   have hca : c.Approx c' := ⟨ht, hm, ha, hp⟩
   have hca' : c'.Approx c := hca.symm
-  have hatt : c'.attemptsOf l.entry.event = c.attemptsOf l.entry.event := by
-    simp only [Cfg.attemptsOf, ha.1]
   have hrdy : ∀ {e}, Ready sys c e → Ready sys c' e := by
     intro e ⟨h1, h2, h3⟩
     exact ⟨hp.mem_iff.mp h1, fun x hx => h2 x (hp.mem_iff.mpr hx), h3⟩
-  have hpop := Cfg.popE_approx hca' l.entry
-  have hwin : ∀ (act : List (Nat × Fault)) (s : Sys),
-      winners s act (c'.popE l.entry) l.entry = winners s act (c.popE l.entry) l.entry := fun act s =>
-    winners_congr _ hpop.2.1 hpop.1 hpop.2.2.1.2.2
-  have hph : ∀ (s : Sys) (ws : List (Winner s)) (ms : List MState),
-      phase2 s (c'.popE l.entry) l.entry ws ms = phase2 s (c.popE l.entry) l.entry ws ms := fun s ws ms =>
-    phase2_congr _ hpop.2.1 hpop.1 hpop.2.2.1.2.2 ws ms
-  have hworld : c'.world = c.world := ha.2.2.symm
-  have e1 : ∀ ms bs, ((c'.popE l.entry).commit sys.sig.machines ms bs).world =
-      ((c.popE l.entry).commit sys.sig.machines ms bs).world := fun _ _ => hworld
+  -- a route decision from `c` is one from `c'`, up to the permutation
+  have hnR : sys.nR c' l.entry = sys.nR c l.entry := by
+    simp only [Sys.nR]; rw [routeHoles_congr hm ha.2.2.2 ha.2.2.1]
+  have hroute : ∀ {c1 e1 wr}, routeOf sys c l.entry (l.wdraws.take (sys.nR c l.entry)) = some (.ok (c1, e1, wr)) →
+      ∃ c1', routeOf sys c' l.entry (l.wdraws.take (sys.nR c' l.entry)) = some (.ok (c1', e1, wr)) ∧
+        c1.Approx c1' := by
+    intro c1 e1 wr h
+    rw [hnR]
+    obtain ⟨c1', h', e', -⟩ :=
+      (routeOf_congr (sys := sys) l.entry _ hm ha.2.2.2 ha.2.2.1).2.2 _ _ _ h
+    refine ⟨c1', h', ?_⟩
+    subst e'
+    have hf := (routeOf_frame h).1
+    exact ⟨hf.time.trans ht, rfl, ⟨hf.attempts.trans ha.1, hf.attCap.trans ha.2.1, hf.world.trans ha.2.2.1, rfl⟩,
+      by rw [hf.pending]; exact hp⟩
+  -- facts about configurations equal up to the permutation
+  have gen : ∀ {d d' : Cfg}, d.Approx d' → ∀ e : Entry,
+      d'.attemptsOf e.event = d.attemptsOf e.event ∧
+      (∀ act s, winners s act (d'.popE l.entry) e = winners s act (d.popE l.entry) e) ∧
+      (∀ s ws ms, phase2 s (d'.popE l.entry) e ws ms = phase2 s (d.popE l.entry) e ws ms) ∧
+      (∀ ms bs, ((d'.popE l.entry).commit sys.sig.machines ms bs).world =
+        ((d.popE l.entry).commit sys.sig.machines ms bs).world) := by
+    intro d d' hA e
+    have hpop := Cfg.popE_approx hA.symm l.entry
+    exact ⟨by simp only [Cfg.attemptsOf, hA.2.2.1.1],
+      fun act s => winners_congr _ hpop.2.1 hpop.1 hpop.2.2.1.2.2.1,
+      fun s ws ms => phase2_congr _ hpop.2.1 hpop.1 hpop.2.2.1.2.2.1 ws ms,
+      fun _ _ => hA.2.2.1.2.2.1.symm⟩
+  have hworld : c'.world = c.world := ha.2.2.1.symm
   cases h with
-  | drop hd hr hk hw0 hdr =>
-    refine ⟨_, Step.drop hd (hrdy hr) hk hw0 (by rwa [hatt]), ?_⟩
-    exact ⟨rfl, Cfg.popE_approx hca' _⟩
-  | delay hd hr hk hw0 hdr hf hl =>
-    refine ⟨_, Step.delay hd (hrdy hr) hk hw0 (by rwa [hatt]) (by rwa [hatt]) hl, ?_⟩
-    exact ⟨rfl, Cfg.enq_approx (Cfg.popE_approx hca' _) _⟩
-  | delayTimeErr hd hr hk hw0 hdr hf hl =>
-    exact ⟨_, Step.delayTimeErr hd (hrdy hr) hk hw0 (by rwa [hatt]) (by rwa [hatt]) hl, rfl, hca'⟩
-  | deliverOk hd hr hk hdr hnone hw hp2 hs hfit hfill hdup =>
-    have hpop0 := Cfg.popE_approx hca l.entry
+  | drop hd hr hk hro hw0 hdr =>
+    obtain ⟨c1', hro', hA⟩ := hroute hro
+    rw [← hnR] at hw0
+    obtain ⟨hatt, -⟩ := gen hA _
+    refine ⟨_, Step.drop hd (hrdy hr) hk hro' hw0 (by rwa [hatt]), ?_⟩
+    exact ⟨rfl, Cfg.popE_approx hA.symm _⟩
+  | delay hd hr hk hro hw0 hdr hf hl =>
+    obtain ⟨c1', hro', hA⟩ := hroute hro
+    rw [← hnR] at hw0
+    obtain ⟨hatt, -⟩ := gen hA _
+    refine ⟨_, Step.delay hd (hrdy hr) hk hro' hw0 (by rwa [hatt]) (by rwa [hatt]) hl, ?_⟩
+    exact ⟨rfl, Cfg.enq_approx (Cfg.popE_approx hA.symm _) _⟩
+  | delayTimeErr hd hr hk hro hw0 hdr hf hl =>
+    obtain ⟨c1', hro', hA⟩ := hroute hro
+    rw [← hnR] at hw0
+    obtain ⟨hatt, -⟩ := gen hA _
+    exact ⟨_, Step.delayTimeErr hd (hrdy hr) hk hro' hw0 (by rwa [hatt]) (by rwa [hatt]) hl, rfl, hca'⟩
+  | deliverOk hd hr hk hro hdr hnone hw hp2 hs hfit hfill hdup =>
+    obtain ⟨c1', hro', hA⟩ := hroute hro
+    rw [← hnR] at hfit hfill
+    obtain ⟨hatt, hwin, hph, e1⟩ := gen hA _
+    have hpop0 := Cfg.popE_approx hA l.entry
     obtain ⟨c2', hf2, hc2⟩ :=
       (fill_approx (Cfg.withWorld_approx (Cfg.commit_approx hpop0 sys.sig.machines _ _) _) _ _).1 _ hfill
     have hdup2 := hdup
     rw [← hatt] at hdup2
     obtain ⟨c3', hd3, hc3⟩ := Dup.approx hc2 hdup2
-    refine ⟨_, Step.deliverOk hd (hrdy hr) hk (by rwa [hatt]) (by rwa [hatt]) (by rw [hwin]; exact hw)
-      (by rw [hph, ← hm]; exact hp2) (by rw [e1]; exact hs) hfit hf2 hd3, rfl, hc3.symm⟩
-  | deliverErr hd hr hk hdr hnone hfail =>
-    refine ⟨_, Step.deliverErr hd (hrdy hr) hk (by rwa [hatt]) (by rwa [hatt]) ?_, rfl, hca'⟩
+    refine ⟨_, Step.deliverOk hd (hrdy hr) hk hro' (by rwa [hatt]) (by rwa [hatt]) (by rw [hwin]; exact hw)
+      (by rw [hph, ← hA.2.1]; exact hp2) (by rw [e1]; exact hs) hfit hf2 hd3, rfl, hc3.symm⟩
+  | deliverErr hd hr hk hro hdr hnone hfail =>
+    obtain ⟨c1', hro', hA⟩ := hroute hro
+    rw [← hnR] at hfail
+    obtain ⟨hatt, hwin, hph, e1⟩ := gen hA _
+    refine ⟨_, Step.deliverErr hd (hrdy hr) hk hro' (by rwa [hatt]) (by rwa [hatt]) ?_, rfl, hca'⟩
     rw [hatt]
-    have hmach : (c'.popE l.entry).machines = (c.popE l.entry).machines := hpop.2.1
-    have hpop0 := Cfg.popE_approx hca l.entry
+    have hpop := Cfg.popE_approx hA.symm l.entry
+    have hmach := hpop.2.1
+    have hpop0 := Cfg.popE_approx hA l.entry
     cases hfail with
     | winners hw0 hw => exact Fails.winners hw0 ((hwin _ _).trans hw)
     | phase2 hw0 hw hp2 =>
@@ -2934,6 +3646,10 @@ theorem pending_perm_bisim {sys : Sys} {m : List Bool} {c c' : Cfg} {l : Label} 
       exact Fails.dup ((hwin _ _).trans hw)
         ((hph _ _ _).trans ((congrArg (phase2 _ _ _ _) hmach).trans hp2))
         (by simp only [settle_resolve, resolve_sig] at hs ⊢; rw [e1]; exact hs) hfit hf2 h0 hl
+  | routeErr hd hr hk hro hw0 =>
+    have hro' := ((routeOf_congr (sys := sys) l.entry _ hm ha.2.2.2 ha.2.2.1).2.1 _).mp hro
+    rw [← hnR] at hro' hw0
+    exact ⟨_, Step.routeErr hd (hrdy hr) hk hro' hw0, rfl, hca'⟩
   | worldOk hd hr hk hs hfit hfill =>
     have hpw := Cfg.popW_approx hca l.entry
     obtain ⟨c2', hf2, hc2⟩ := (fill_approx (Cfg.withWorld_approx hpw _) _ _).1 _ hfill
@@ -3151,16 +3867,17 @@ later copy of `e` (a delay), or the commit of phase 2's result with the world se
 plus a later copy of `e` (a duplicate). For an entry of the world, it is the world's step. -/
 theorem deliver_ok_form {sys : Sys} {mask : List Bool} {c c' : Cfg} {k : Nat} {wds : List Nat}
     (h : deliverAt sys mask c k wds = some (.ok c')) :
-    ∃ e, c.pending[k]? = some e ∧ (∀ x ∈ c.pending, e.time ≤ x.time) ∧
-      ((c' = c.pop k e ∨
-       (∃ i b cp, later e i b = .ok cp ∧ c' = (c.pop k e).enq cp) ∨
-       ∃ ws ms bs c2, phase2 sys (c.pop k e) e ws c.machines = .ok (ms, bs) ∧
-         fill { (c.pop k e).commit sys.sig.machines ms bs with
-                world := (settle sys ((c.pop k e).commit sys.sig.machines ms bs).time (opsOf sys.sig.machines bs) []
-                  ((c.pop k e).commit sys.sig.machines ms bs).world).1 }
-           (settle sys ((c.pop k e).commit sys.sig.machines ms bs).time (opsOf sys.sig.machines bs) []
-             ((c.pop k e).commit sys.sig.machines ms bs).world).2 wds = .ok c2 ∧
-         (c' = c2 ∨ ∃ i b cp, later e i b = .ok cp ∧ c' = c2.enq cp)) ∨
+    ∃ e c1 e1 wr, c.pending[k]? = some e ∧ (∀ x ∈ c.pending, e.time ≤ x.time) ∧ c.Frame c1 ∧
+      e1 = { e with routes := e1.routes } ∧
+      ((c' = c1.pop k e1 ∨
+       (∃ i b cp, later e1 i b = .ok cp ∧ c' = (c1.pop k e1).enq cp) ∨
+       ∃ ws ms bs c2, phase2 sys (c1.pop k e1) e1 ws c1.machines = .ok (ms, bs) ∧
+         fill { (c1.pop k e1).commit sys.sig.machines ms bs with
+                world := (settle sys ((c1.pop k e1).commit sys.sig.machines ms bs).time (opsOf sys.sig.machines bs) []
+                  ((c1.pop k e1).commit sys.sig.machines ms bs).world).1 }
+           (settle sys ((c1.pop k e1).commit sys.sig.machines ms bs).time (opsOf sys.sig.machines bs) []
+             ((c1.pop k e1).commit sys.sig.machines ms bs).world).2 wr = .ok c2 ∧
+         (c' = c2 ∨ ∃ i b cp, later e1 i b = .ok cp ∧ c' = c2.enq cp)) ∨
        fill { c.popW e with world := (worldStep sys (c.popW e) e).1 } (worldStep sys (c.popW e) e).2 wds = .ok c') := by
   unfold deliverAt deliverWith at h
   split at h
@@ -3169,43 +3886,51 @@ theorem deliver_ok_form {sys : Sys} {mask : List Bool} {c c' : Cfg} {k : Nat} {w
     split at h
     · rename_i hc
       simp only [Bool.and_eq_true, List.all_eq_true, decide_eq_true_eq] at hc
-      refine ⟨e, he, hc.1, ?_⟩
       split at h
-      · unfold deliverEvent at h
-        simp only [] at h
-        refine Or.inl ?_
-        split at h
-        · split at h
-          · cases h; exact Or.inl rfl
+      · split at h
+        · cases h
+        · split at h <;> cases h
+        · rename_i c1 e1 wr hro
+          split at h
+          rotate_left
           · cases h
-        · split at h
+          obtain ⟨hfr, he1⟩ := routeOf_frame hro
+          refine ⟨e, c1, e1, wds.drop (sys.nR c e), he, hc.1, hfr, he1, ?_⟩
+          unfold deliverEvent at h
+          simp only [] at h
+          refine Or.inl ?_
+          split at h
           · split at h
-            · simp only [Option.some.injEq] at h
-              split at h
-              · cases h
-              · rename_i cp hcp; cases h; exact Or.inr (Or.inl ⟨_, _, cp, hcp, rfl⟩)
+            · cases h; exact Or.inl rfl
             · cases h
           · split at h
-            · split at h <;> cases h
-            · rename_i ws _
-              split at h
-              · split at h <;> cases h
-              · rename_i ms bs hp
-                unfold settleFill at h
+            · split at h
+              · simp only [Option.some.injEq] at h
                 split at h
-                · simp only [Option.map_some, Option.some.injEq] at h
-                  unfold duplicate at h
-                  split at h
-                  · cases h
-                  · rename_i c2 hfill
-                    refine Or.inr (Or.inr ⟨ws, ms, bs, c2, hp, hfill, ?_⟩)
-                    split at h
-                    · cases h; exact Or.inl rfl
-                    · split at h
-                      · cases h
-                      · rename_i cp hcp; cases h; exact Or.inr ⟨_, _, cp, hcp, rfl⟩
                 · cases h
-      · refine Or.inr ?_
+                · rename_i cp hcp; cases h; exact Or.inr (Or.inl ⟨_, _, cp, hcp, rfl⟩)
+              · cases h
+            · split at h
+              · split at h <;> cases h
+              · rename_i ws _
+                split at h
+                · split at h <;> cases h
+                · rename_i ms bs hp
+                  unfold settleFill at h
+                  split at h
+                  · simp only [Option.map_some, Option.some.injEq] at h
+                    unfold duplicate at h
+                    split at h
+                    · cases h
+                    · rename_i c2 hfill
+                      refine Or.inr (Or.inr ⟨ws, ms, bs, c2, hp, hfill, ?_⟩)
+                      split at h
+                      · cases h; exact Or.inl rfl
+                      · split at h
+                        · cases h
+                        · rename_i cp hcp; cases h; exact Or.inr ⟨_, _, cp, hcp, rfl⟩
+                  · cases h
+      · refine ⟨e, c, e, wds, he, hc.1, Cfg.Frame.refl c, rfl, Or.inr ?_⟩
         unfold worldFill at h
         split at h
         · simp only [Option.some.injEq] at h
@@ -3215,13 +3940,83 @@ theorem deliver_ok_form {sys : Sys} {mask : List Bool} {c c' : Cfg} {k : Nat} {w
         · cases h
     · cases h
 
+/-- An error of route decision: an entry without the field a route is keyed by, or a keyed
+behaviour that has all its instances. -/
+def Err.IsRoute (err : Err) : Prop := ∃ i, err = .routeField i ∨ err = .routeFull i
+
+theorem routeDet_err {i : Nat} {r : Route} {e : Entry} {w : World} {st : RSt'} {er : Err}
+    (h : routeDet i r e w st = .error er) : er.IsRoute := by
+  unfold routeDet at h
+  dsimp only at h
+  cases hb : r.by_ with
+  | keyed f =>
+    rw [hb] at h; dsimp only at h
+    cases hv : lookupField f e.payload with
+    | none => rw [hv] at h; cases h; exact ⟨i, Or.inl rfl⟩
+    | some v =>
+      rw [hv] at h; dsimp only at h
+      cases hq : List.find? (fun m => (st.1[m]?.bind fun x => x.key) == some v) (instsOf st.1 r.group) with
+      | some m => rw [hq] at h; cases h
+      | none =>
+        rw [hq] at h; dsimp only at h
+        cases hx : List.findSome? (fun m => match st.1[m]? with
+            | some x => if x.live then none else some (m, x)
+            | none => none) r.group with
+        | none => rw [hx] at h; cases h; exact ⟨i, Or.inr rfl⟩
+        | some mx => rw [hx] at h; cases h
+  | key f hh =>
+    rw [hb] at h; dsimp only at h
+    cases hv : lookupField f e.payload with
+    | none => rw [hv] at h; cases h; exact ⟨i, Or.inl rfl⟩
+    | some v => rw [hv] at h; cases h
+  | roundRobin => rw [hb] at h; dsimp only at h; split at h <;> cases h
+  | leastBusy res => rw [hb] at h; cases h
+  | random => rw [hb] at h; cases h
+
+theorem routesFrom_err {e : Entry} {w : World} : ∀ {rs : List (Nat × Route)} {st : RSt'}
+    {acc : List (List Nat × Nat)} {ds : List Nat} {x : Err × List Nat},
+    routesFrom e w rs st acc ds = some (.error x) → x.1.IsRoute
+  | [], st, acc, ds, x, h => by simp [routesFrom] at h
+  | (i, r) :: rest, st, acc, ds, x, h => by
+    simp only [routesFrom] at h
+    split at h
+    · cases h
+    · rename_i err h1
+      simp only [Option.some.injEq, Except.error.injEq] at h
+      subst h
+      unfold routeOne at h1
+      split at h1
+      · split at h1
+        · split at h1 <;> cases h1
+        · cases h1
+      · cases hd : routeDet i r e w st with
+        | ok y => rw [hd] at h1; cases h1
+        | error er =>
+          rw [hd] at h1
+          simp only [Except.map, Option.some.injEq, Except.error.injEq] at h1
+          subst h1
+          exact routeDet_err hd
+    · exact routesFrom_err h
+
+theorem routeOf_err {sys : Sys} {c : Cfg} {e : Entry} {ds : List Nat} {x : Err × List Nat}
+    (h : routeOf sys c e ds = some (.error x)) : x.1.IsRoute := by
+  unfold routeOf at h
+  split at h
+  · split at h
+    · cases h
+    · rename_i y hy; simp only [Option.some.injEq, Except.error.injEq] at h; subst h; exact routesFrom_err hy
+    · cases h
+  · cases h
+
 /-- **Where a failing delivery's error comes from**: an error of the world (a time or service time
-at or beyond `2^53`, a release of more units than held), phase 1 or phase 2. -/
+at or beyond `2^53`, a release of more units than held), a route decision, phase 1 or phase 2 (after
+the route decision, which changes only liveness, keys and counters). -/
 theorem deliver_error_form {sys : Sys} {mask : List Bool} {c : Cfg} {k : Nat} {wds : List Nat} {err : Err}
     (h : deliverAt sys mask c k wds = some (.error err)) :
     ∃ e, c.pending[k]? = some e ∧ (∀ x ∈ c.pending, e.time ≤ x.time) ∧
-      (err.IsWorld ∨ (∃ act, winners sys act (c.pop k e) e = .error err) ∨
-       ∃ ws, phase2 sys (c.pop k e) e ws c.machines = .error err) := by
+      (err.IsWorld ∨ err.IsRoute ∨ ∃ c1 e1, c.Frame c1 ∧ e1 = { e with routes := e1.routes } ∧
+       ((∃ act, winners sys act (c1.pop k e1) e1 = .error err) ∨
+        ∃ ws, phase2 sys (c1.pop k e1) e1 ws c1.machines = .error err)) := by
   unfold deliverAt deliverWith at h
   split at h
   · cases h
@@ -3230,50 +4025,63 @@ theorem deliver_error_form {sys : Sys} {mask : List Bool} {c : Cfg} {k : Nat} {w
     · rename_i hc
       simp only [Bool.and_eq_true, List.all_eq_true, decide_eq_true_eq] at hc
       refine ⟨e, he, hc.1, ?_⟩
-      have later_err : ∀ {i b : Nat} {er : Err}, later e i b = .error er → er.IsWorld := by
-        intro i b er hl
+      have later_err : ∀ {e : Entry} {i b : Nat} {er : Err}, later e i b = .error er → er.IsWorld := by
+        intro e i b er hl
         unfold later at hl
         split at hl
         · cases hl; exact Or.inl rfl
         · cases hl
       split at h
-      · unfold deliverEvent at h
-        simp only [] at h
-        split at h
-        · split at h <;> cases h
-        · split at h
+      · split at h
+        · cases h
+        · rename_i x rest hro
+          split at h
+          · simp only [Option.some.injEq, Except.error.injEq] at h
+            subst h
+            exact Or.inr (Or.inl (routeOf_err hro))
+          · cases h
+        · rename_i c1 e1 wr hro
+          split at h
+          rotate_left
+          · cases h
+          obtain ⟨hfr, he1⟩ := routeOf_frame hro
+          unfold deliverEvent at h
+          simp only [] at h
+          split at h
+          · split at h <;> cases h
           · split at h
-            · simp only [Option.some.injEq] at h
-              split at h
-              · rename_i er hl; cases h; exact Or.inl (later_err hl)
-              · cases h
-            · cases h
-          · split at h
-            · rename_i er hw
-              split at h
-              · cases h; exact Or.inr (Or.inl ⟨_, hw⟩)
-              · cases h
-            · rename_i ws _
-              split at h
-              · rename_i er hr
+            · split at h
+              · simp only [Option.some.injEq] at h
                 split at h
-                · cases h; exact Or.inr (Or.inr ⟨ws, hr⟩)
+                · rename_i er hl; cases h; exact Or.inl (later_err hl)
                 · cases h
-              · rename_i ms bs hp
-                unfold settleFill at h
+              · cases h
+            · split at h
+              · rename_i er hw
                 split at h
-                · simp only [Option.map_some, Option.some.injEq] at h
-                  unfold duplicate at h
+                · cases h; exact Or.inr (Or.inr ⟨c1, e1, hfr, he1, Or.inl ⟨_, hw⟩⟩)
+                · cases h
+              · rename_i ws _
+                split at h
+                · rename_i er hr
                   split at h
-                  · rename_i er hfill
-                    cases h
-                    exact Or.inl (fill_err hfill (settle_ok _ _ _ _ _))
-                  · split at h
-                    · cases h
+                  · cases h; exact Or.inr (Or.inr ⟨c1, e1, hfr, he1, Or.inr ⟨ws, hr⟩⟩)
+                  · cases h
+                · rename_i ms bs hp
+                  unfold settleFill at h
+                  split at h
+                  · simp only [Option.map_some, Option.some.injEq] at h
+                    unfold duplicate at h
+                    split at h
+                    · rename_i er hfill
+                      cases h
+                      exact Or.inl (fill_err hfill (settle_ok _ _ _ _ _))
                     · split at h
-                      · rename_i er hl; cases h; exact Or.inl (later_err hl)
                       · cases h
-                · cases h
+                      · split at h
+                        · rename_i er hl; cases h; exact Or.inl (later_err hl)
+                        · cases h
+                  · cases h
       · unfold worldFill at h
         split at h
         · simp only [Option.some.injEq] at h
@@ -3303,6 +4111,20 @@ def Cfg.Shaped (sys : Sys) (c : Cfg) : Prop := sys.sig.Shaped c.machines
 /-- The configuration of a state (the one before the failing step, for the error state) is
 shaped. -/
 def State.Shaped (sys : Sys) (s : State) : Prop := s.cfg.Shaped sys
+
+/-- Deciding routes keeps the shape. -/
+theorem Cfg.Frame.shaped {sys : Sys} {c c1 : Cfg} (hf : c.Frame c1) (hs : sys.sig.Shaped c.machines) :
+    sys.sig.Shaped c1.machines := by
+  refine ⟨hf.length.trans hs.1, fun m x hx => ?_⟩
+  have hl : m.val < c.machines.length := by rw [← hf.length]; exact (List.getElem?_eq_some_iff.mp hx).1
+  obtain ⟨y, hy⟩ : ∃ y, c.machines[m.val]? = some y := ⟨_, List.getElem?_eq_getElem hl⟩
+  have hc := congrArg (fun l => l[m.val]?) hf.2
+  simp only [List.getElem?_map, hx, hy, Option.map_some, Option.some.injEq, MState.core, Prod.mk.injEq] at hc
+  have := hs.2 m y hy
+  unfold Sig.MShaped at this ⊢
+  rw [hc.1, hc.2]; exact this
+
+
 
 theorem at?_of_lt {β : Type} {l : List β} {i : Nat} (h : i < l.length) : at? l i = .ok l[i] := by
   simp [at?, List.getElem?_eq_getElem h]
@@ -3455,14 +4277,15 @@ theorem phase2_shaped {sys : Sys} {c : Cfg} {e : Entry} :
 /-- A successful delivery keeps the configuration shaped. -/
 theorem deliver_shaped {sys : Sys} {mask : List Bool} {c c' : Cfg} {k : Nat} {wds : List Nat}
     (hs : c.Shaped sys) (h : deliverAt sys mask c k wds = some (.ok c')) : c'.Shaped sys := by
-  obtain ⟨e, _, _, hf⟩ := deliver_ok_form h
+  obtain ⟨e, c1, e1, wr, _, _, hfr, _, hf⟩ := deliver_ok_form h
+  have hs1 : c1.Shaped sys := hfr.shaped hs
   rcases hf with (rfl | ⟨_, _, _, _, rfl⟩ | ⟨ws, ms, bs, c2, hp, hfill, rfl | ⟨_, _, _, _, rfl⟩⟩) | hw
-  · exact hs
-  · exact hs
+  · exact hs1
+  · exact hs1
   · have := (fill_frame hfill).1
-    unfold Cfg.Shaped; rw [this]; exact phase2_shaped ws c.machines (ms, bs) hs hp
+    unfold Cfg.Shaped; rw [this]; exact phase2_shaped ws c1.machines (ms, bs) hs1 hp
   · have := (fill_frame hfill).1
-    unfold Cfg.Shaped; simp only [Cfg.enq]; rw [this]; exact phase2_shaped ws c.machines (ms, bs) hs hp
+    unfold Cfg.Shaped; simp only [Cfg.enq]; rw [this]; exact phase2_shaped ws c1.machines (ms, bs) hs1 hp
   · have := (fill_frame hw).1
     unfold Cfg.Shaped; rw [this]; exact hs
 
@@ -3600,6 +4423,27 @@ theorem intsIn_ne_shape {S : Sig} {snap : List MState} (hs : S.Shaped snap) :
       | error e => simp only []; intro h'; injection h' with h'; subst h'; exact ih h
       | ok ns => simp
 
+theorem oneIn_ne_shape {S : Sig} {snap : List MState} (hs : S.Shaped snap) :
+    (g : List ((m : Fin S.machines) × Option (Fin (S.vars m).length))) → oneIn S snap g ≠ .error .shape
+  | [] => by simp [oneIn]
+  | p :: g => by
+    obtain ⟨x, hx, hxs⟩ := hs.get p.1
+    have hl : p.1.val < snap.length := by rw [hs.1]; exact p.1.isLt
+    have hxe : snap[p.1.val] = x := by
+      rw [List.getElem?_eq_getElem hl] at hx; exact Option.some.inj hx
+    have ih := oneIn_ne_shape hs g
+    have hv : ∃ v, oneAt S p.1 x p.2 = .ok v := by
+      cases hp : p.2 with
+      | some v =>
+        have hv : v.val < x.vars.length := by rw [hxs.2.1]; exact v.isLt
+        exact ⟨x.vars[v.val], by simp only [oneAt, at?_of_lt hv]⟩
+      | none => exact ⟨.str ((S.states p.1)[x.ctrl]'hxs.1), by simp only [oneAt, at?_of_lt hxs.1]⟩
+    obtain ⟨v, hv⟩ := hv
+    simp only [oneIn, at?_of_lt hl, hxe, hv]
+    cases h : oneIn S snap g with
+    | error e => simp only []; intro h'; injection h' with h'; subst h'; exact ih h
+    | ok ns => simp
+
 theorem AggOp.apply_ne_shape (op : AggOp) (vs : List Val) : op.apply vs ≠ .error .shape := by
   unfold AggOp.apply
   split
@@ -3655,6 +4499,25 @@ theorem Ref.eval_ne_shape {S : Sig} {me : Fin S.machines} {cx : Ctx} (hcx : cx.S
     split
     · exact Val.check_ne_shape _ _
     · intro h; cases h
+  | .one g _ => by
+    have := oneIn_ne_shape hcx.1 g
+    simp only [Ref.eval]
+    split
+    · intro h; cases h
+    · intro h; cases h
+    · intro h; cases h
+    · rename_i e he; intro h; injection h with h; subst h; exact this he
+  | .uniq g => by
+    have := oneIn_ne_shape hcx.1 g
+    simp only [Ref.eval]
+    split
+    · intro h; cases h
+    · intro h; cases h
+    · rename_i e he; intro h; injection h with h; subst h; exact this he
+  | .key τ => by
+    simp only [Ref.eval]
+    repeat' split
+    all_goals intro h; cases h
 
 theorem Expr.eval_ne_shape {S : Sig} {me : Fin S.machines} {cx : Ctx} (hcx : cx.Shaped S me) :
     (x : Expr S me) → x.eval cx ≠ .error .shape
@@ -3821,10 +4684,12 @@ theorem deliver_ne_shape {sys : Sys} {mask : List Bool} {c : Cfg} (hs : c.Shaped
     (wds : List Nat) : deliverAt sys mask c k wds ≠ some (.error .shape) := by
   intro h
   obtain ⟨e, _, _, hf⟩ := deliver_error_form h
-  rcases hf with hf | ⟨act, hw⟩ | ⟨ws, hp⟩
+  rcases hf with hf | ⟨_, hr | hr⟩ | ⟨c1, e1, hfr, _, ⟨act, hw⟩ | ⟨ws, hp⟩⟩
   · exact hf.ne_shape rfl
-  · exact winners_ne_shape (c := c.pop k e) hs hw
-  · exact phase2_ne_shape (c := c.pop k e) hs ws c.machines hs hp
+  · cases hr
+  · cases hr
+  · exact winners_ne_shape (c := c1.pop k e1) (hfr.shaped hs) hw
+  · exact phase2_ne_shape (c := c1.pop k e1) (hfr.shaped hs) ws c1.machines (hfr.shaped hs) hp
 
 /-- The initial configuration under every mask has the machines of `sys.init`. -/
 theorem initCfg_machines (sys : Sys) (mask : List Bool) : (sys.initCfg mask).machines = sys.init.machines :=
@@ -3997,6 +4862,55 @@ theorem AggOp.apply_fits {op : AggOp} {vs : List Val} {v : Val} (h : op.apply vs
     cases op <;> cases ns <;> simp only [AggOp.applyRat] at h <;>
       first | exact Val.check_fits h | cases h
 
+theorem oneIn_fits {S : Sig} {snap : List MState} (hs : S.Shaped snap) {τ : Ty} :
+    (g : List ((m : Fin S.machines) × Option (Fin (S.vars m).length))) →
+    g.all (fun p => match p.2 with
+      | some v => (S.vars p.1).get v == τ
+      | none => τ == .str) = true →
+    {vs : List Val} → oneIn S snap g = .ok vs → ∀ v ∈ vs, v.fits τ = true
+  | [], _, vs, h => by
+    simp only [oneIn, Except.ok.injEq] at h; subst h; intro v hv; cases hv
+  | p :: g, hg, vs, h => by
+    simp only [List.all_cons, Bool.and_eq_true] at hg
+    obtain ⟨x, hx, hxs⟩ := hs.get p.1
+    have hl : p.1.val < snap.length := by rw [hs.1]; exact p.1.isLt
+    have hxe : snap[p.1.val] = x := by
+      rw [List.getElem?_eq_getElem hl] at hx; exact Option.some.inj hx
+    have hw : ∀ w, oneAt S p.1 x p.2 = .ok w → w.fits τ = true := by
+      intro w hw
+      have hg1 := hg.1
+      cases hp : p.2 with
+      | some i =>
+        rw [hp] at hw hg1
+        simp only [beq_iff_eq] at hg1
+        have hi : i.val < x.vars.length := by rw [hxs.2.1]; exact i.isLt
+        simp only [oneAt, at?_of_lt hi, Except.ok.injEq] at hw
+        subst hw
+        have := hxs.2.2 i.val hi i.isLt
+        rw [← List.get_eq_getElem (l := S.vars p.1) (i := i)] at this
+        rw [← hg1]; exact this
+      | none =>
+        rw [hp] at hw hg1
+        simp only [beq_iff_eq] at hg1
+        subst hg1
+        simp only [oneAt, at?_of_lt hxs.1, Except.ok.injEq] at hw
+        subst hw; rfl
+    simp only [oneIn, at?_of_lt hl, hxe] at h
+    split at h
+    · cases h
+    · rename_i w hw'
+      split at h
+      · cases h
+      · rename_i ws hws
+        simp only [Except.ok.injEq] at h
+        subst h
+        intro v hv
+        split at hv
+        · rcases List.mem_cons.mp hv with rfl | hv
+          · exact hw _ hw'
+          · exact oneIn_fits hs g hg.2 hws v hv
+        · exact oneIn_fits hs g hg.2 hws v hv
+
 theorem Ref.eval_fits {S : Sig} {me : Fin S.machines} {cx : Ctx} (hcx : cx.Typed S me)
     {τ : Ty} {v : Val} : (r : Ref S me) → r.ty? = some τ → r.eval cx = .ok v → v.fits τ = true
   | .own i, hty, h => by
@@ -4071,6 +4985,31 @@ theorem Ref.eval_fits {S : Sig} {me : Fin S.machines} {cx : Ctx} (hcx : cx.Typed
     simp only [Ref.eval] at h
     split at h
     · exact Val.check_fits h
+    · cases h
+  | .one g σ, hty, h => by
+    simp only [Ref.ty?] at hty
+    split at hty
+    · rename_i hg
+      cases hty
+      simp only [Ref.eval] at h
+      split at h
+      all_goals first
+        | (cases h; done)
+        | (rename_i w hw; cases h; exact oneIn_fits hcx.1 g hg hw _ (List.mem_singleton_self _))
+    · cases hty
+  | .uniq g, hty, h => by
+    simp only [Ref.ty?, Option.some.injEq] at hty
+    subst hty
+    simp only [Ref.eval] at h
+    split at h <;> first | (cases h; rfl) | cases h
+  | .key σ, hty, h => by
+    simp only [Ref.ty?, Option.some.injEq] at hty
+    subst hty
+    simp only [Ref.eval] at h
+    split at h
+    · split at h
+      · cases h; assumption
+      · cases h
     · cases h
 
 /-- **The static sort of an expression is sound for evaluation.** In a typed context, when
@@ -4340,14 +5279,18 @@ theorem fill_timeOK : {c c' : Cfg} → {acts : List Act} → {ds : List Nat} →
 /-- A successful delivery keeps the times in order and bounded. -/
 theorem deliver_timeOK {sys : Sys} {mask : List Bool} {c c' : Cfg} {k : Nat} {wds : List Nat} (ht : c.TimeOK)
     (h : deliverAt sys mask c k wds = some (.ok c')) : c'.TimeOK := by
-  obtain ⟨e, he, hmin, hf⟩ := deliver_ok_form h
-  have hek : e ∈ c.pending := List.mem_of_getElem? he
-  have hel : e.time < timeLimit := (ht.2 e hek).2
+  obtain ⟨e0, c1, e, wr, he, hmin, hfr, he1, hf⟩ := deliver_ok_form h
+  have hek : e0 ∈ c.pending := List.mem_of_getElem? he
+  have het : e.time = e0.time := by rw [he1]
+  have hel0 : e0.time < timeLimit := (ht.2 e0 hek).2
+  have hel : e.time < timeLimit := het ▸ hel0
   -- every entry left of the old queue is at `e.time` or later
-  have hold : ∀ x ∈ (c.pop k e).pending, e.time ≤ x.time ∧ x.time < timeLimit := by
+  have hold : ∀ x ∈ (c1.pop k e).pending, e.time ≤ x.time ∧ x.time < timeLimit := by
     intro x hx
-    have hx' : x ∈ c.pending := List.mem_of_mem_eraseIdx hx
-    exact ⟨hmin x hx', (ht.2 x hx').2⟩
+    have hx' : x ∈ c.pending := by
+      have : x ∈ c1.pending := List.mem_of_mem_eraseIdx hx
+      rwa [hfr.pending] at this
+    exact ⟨het ▸ hmin x hx', (ht.2 x hx').2⟩
   have henq : ∀ (d : Cfg) (cp : Entry), d.time = e.time →
       (∀ x ∈ d.pending, e.time ≤ x.time ∧ x.time < timeLimit) →
       e.time ≤ cp.time ∧ cp.time < timeLimit → (d.enq cp).TimeOK := by
@@ -4358,15 +5301,15 @@ theorem deliver_timeOK {sys : Sys} {mask : List Bool} {c c' : Cfg} {k : Nat} {wd
     rcases mem_insertByTime.mp hx with rfl | hx
     · exact hcp
     · exact hp x hx
-  have hcommit : ∀ ws ms bs, phase2 sys (c.pop k e) e ws c.machines = .ok (ms, bs) →
-      ∀ x ∈ ((c.pop k e).commit sys.sig.machines ms bs).pending, e.time ≤ x.time ∧ x.time < timeLimit := by
+  have hcommit : ∀ ws ms bs, phase2 sys (c1.pop k e) e ws c1.machines = .ok (ms, bs) →
+      ∀ x ∈ ((c1.pop k e).commit sys.sig.machines ms bs).pending, e.time ≤ x.time ∧ x.time < timeLimit := by
     intro ws ms bs hp x hx
     simp only [Cfg.commit] at hx
     rcases mem_foldl_insertByTime _ _ hx with hx | hx
     · exact hold x (List.mem_filter.mp hx).1
     · obtain ⟨hx, hk⟩ := List.mem_filter.mp hx
       obtain ⟨b, hb, hxb⟩ := inMachineOrder_mem hx
-      exact phase2_times ws c.machines (ms, bs) hp b hb x hxb (by simpa using hk)
+      exact phase2_times ws c1.machines (ms, bs) hp b hb x hxb (by simpa using hk)
   rcases hf with (rfl | ⟨i, b, cp, hcp, rfl⟩ | ⟨ws, ms, bs, c2, hp, hfill, rfl | ⟨i, b, cp, hcp, rfl⟩⟩) | hw
   · exact ⟨hel, hold⟩
   · exact henq _ cp rfl hold (later_ok hcp)
@@ -4375,7 +5318,7 @@ theorem deliver_timeOK {sys : Sys} {mask : List Bool} {c c' : Cfg} {k : Nat} {wd
     have hf2 := fill_frame hfill
     exact henq _ cp hf2.2.1 (fun x hx => ⟨by have := (h2.2 x hx).1; rw [hf2.2.1] at this; exact this, (h2.2 x hx).2⟩)
       (later_ok hcp)
-  · have hpw : (c.popW e).TimeOK := ⟨hel, fun x hx => by
+  · have hpw : (c.popW e0).TimeOK := ⟨hel0, fun x hx => by
       have hx' : x ∈ c.pending := List.mem_of_mem_erase hx
       exact ⟨hmin x hx', (ht.2 x hx').2⟩⟩
     exact fill_timeOK hw hpw (worldStep_ok _ _ _)
@@ -4436,10 +5379,10 @@ theorem fill_sorted : {c c' : Cfg} → {acts : List Act} → {ds : List Nat} →
 /-- A successful delivery keeps the queue sorted. -/
 theorem deliver_sorted {sys : Sys} {mask : List Bool} {c c' : Cfg} {k : Nat} {wds : List Nat} (hs : c.Sorted)
     (h : deliverAt sys mask c k wds = some (.ok c')) : c'.Sorted := by
-  obtain ⟨e, _, _, hf⟩ := deliver_ok_form h
-  have hp : (c.pop k e).pending.Pairwise (fun a b => a.time ≤ b.time) :=
-    hs.sublist (List.eraseIdx_sublist _ _)
-  have hc : ∀ ms bs, ((c.pop k e).commit sys.sig.machines ms bs).pending.Pairwise
+  obtain ⟨e0, c1, e, wr, _, _, hfr, _, hf⟩ := deliver_ok_form h
+  have hp : (c1.pop k e).pending.Pairwise (fun a b => a.time ≤ b.time) := by
+    simp only [Cfg.pop, hfr.pending]; exact hs.sublist (List.eraseIdx_sublist _ _)
+  have hc : ∀ ms bs, ((c1.pop k e).commit sys.sig.machines ms bs).pending.Pairwise
       (fun a b => a.time ≤ b.time) := fun ms bs =>
     foldl_insertByTime_sorted _ (hp.sublist List.filter_sublist)
   rcases hf with (rfl | ⟨i, b, cp, _, rfl⟩ | ⟨ws, ms, bs, c2, _, hfill, rfl | ⟨i, b, cp, _, rfl⟩⟩) | hw
@@ -4886,11 +5829,34 @@ theorem countIn_ne_sort {S : Sig} {snap : List MState} {name : String} :
         | error e => intro h; injection h with h; subst h; exact countIn_ne_sort g h3
         | ok k => intro h; cases h
 
+theorem oneIn_ne_sort {S : Sig} {snap : List MState} :
+    (g : List ((m : Fin S.machines) × Option (Fin (S.vars m).length))) → oneIn S snap g ≠ .error .sort
+  | [] => by simp [oneIn]
+  | p :: g => by
+    simp only [oneIn]
+    cases h1 : at? snap p.1.val with
+    | error e => intro h; injection h with h; subst h; exact at?_ne_sort h1
+    | ok x =>
+      simp only []
+      have h2 : oneAt S p.1 x p.2 ≠ .error .sort := by
+        unfold oneAt; split
+        · intro h; exact at?_ne_sort h
+        · split
+          · intro h; cases h
+          · rename_i e he; intro h; injection h with h; subst h; exact at?_ne_sort he
+      cases h3 : oneAt S p.1 x p.2 with
+      | error e => intro h; injection h with h; subst h; exact h2 h3
+      | ok v =>
+        simp only []
+        cases h4 : oneIn S snap g with
+        | error e => intro h; injection h with h; subst h; exact oneIn_ne_sort g h4
+        | ok vs => intro h; cases h
+
 theorem intsIn_ok {S : Sig} {snap : List MState} (hs : S.Shaped snap) :
     (g : List ((m : Fin S.machines) × Fin (S.vars m).length)) →
     g.all (fun p => ((S.vars p.1).get p.2).isInt) = true →
-      ∃ ns, intsIn snap g = .ok ns ∧ ns.length = g.length ∧ ∀ v ∈ ns, v.num?.isSome = true
-  | [], _ => ⟨[], rfl, rfl, fun _ h => by cases h⟩
+      ∃ ns, intsIn snap g = .ok ns ∧ ns.length ≤ g.length ∧ ∀ v ∈ ns, v.num?.isSome = true
+  | [], _ => ⟨[], rfl, Nat.le_refl _, fun _ h => by cases h⟩
   | p :: g, hg => by
     simp only [List.all_cons, Bool.and_eq_true] at hg
     obtain ⟨x, hx, hxs⟩ := hs.get p.1
@@ -4902,11 +5868,14 @@ theorem intsIn_ok {S : Sig} {snap : List MState} (hs : S.Shaped snap) :
     rw [← List.get_eq_getElem (l := S.vars p.1) (i := p.2)] at hfit
     obtain ⟨n, hn⟩ := Val.num_of_fits hfit hg.1
     obtain ⟨ns, hns, hlen, hnum⟩ := intsIn_ok hs g hg.2
-    refine ⟨x.vars[p.2.val] :: ns, ?_, by simp [hlen], ?_⟩
+    refine ⟨if x.live then x.vars[p.2.val] :: ns else ns, ?_, ?_, ?_⟩
     · simp only [intsIn, at?_of_lt hl, hxe, at?_of_lt hv, hn, hns]
+    · split <;> simp <;> omega
     · intro v hv'
-      rcases List.mem_cons.mp hv' with rfl | hv'
-      · rw [hn]; rfl
+      split at hv'
+      · rcases List.mem_cons.mp hv' with rfl | hv'
+        · rw [hn]; rfl
+        · exact hnum v hv'
       · exact hnum v hv'
 
 theorem Val.check_int_ne_sort (lo hi n : Int) : Val.check (.int lo hi) (.int n) ≠ .error .sort := by
@@ -4925,13 +5894,16 @@ theorem Ref.eval_ne_sort {S : Sig} {me : Fin S.machines} {cx : Ctx} (hcx : cx.Ty
     · rename_i hc
       simp only [Bool.and_eq_true, Bool.or_eq_true, beq_iff_eq, Bool.not_eq_true',
         List.isEmpty_eq_false_iff] at hc
-      obtain ⟨ns, hns, hlen, hnum⟩ := intsIn_ok hcx.1 g hc.1
+      obtain ⟨ns, hns, _, hnum⟩ := intsIn_ok hcx.1 g hc.1
       simp only [Ref.eval, hns]
-      have hne : op = .sum ∨ ns ≠ [] := by
-        rcases hc.2 with h | h
-        · exact Or.inl h
-        · right; intro h0; apply h; exact List.length_eq_zero_iff.mp (by simpa [h0] using hlen.symm)
-      exact AggOp.apply_ne_sort op ns hne hnum
+      by_cases h0 : op = .sum ∨ ns ≠ []
+      · exact AggOp.apply_ne_sort op ns h0 hnum
+      · simp only [not_or, ne_eq, Decidable.not_not] at h0
+        obtain ⟨hop, rfl⟩ := h0
+        cases op with
+        | sum => exact absurd rfl hop
+        | min => simp [AggOp.apply, allInts, AggOp.applyInt]
+        | max => simp [AggOp.apply, allInts, AggOp.applyInt]
     · cases hty
   | .own v, _, _ => by
     simp only [Ref.eval, at?]; split <;> intro h <;> cases h
@@ -4960,6 +5932,22 @@ theorem Ref.eval_ne_sort {S : Sig} {me : Fin S.machines} {cx : Ctx} (hcx : cx.Ty
     split
     · simp only [Val.check, Val.sameSort]; split <;> intro h <;> cases h
     · intro h; cases h
+  | .one g _, _, _ => by
+    simp only [Ref.eval]
+    split
+    all_goals first
+      | (intro h; cases h; done)
+      | (rename_i e he; intro h; injection h with h; subst h; exact oneIn_ne_sort g he)
+  | .uniq g, _, _ => by
+    simp only [Ref.eval]
+    split
+    all_goals first
+      | (intro h; cases h; done)
+      | (rename_i e he; intro h; injection h with h; subst h; exact oneIn_ne_sort g he)
+  | .key _, _, _ => by
+    simp only [Ref.eval]
+    repeat' split
+    all_goals intro h; cases h
 
 theorem ne_sort_of {α β : Type} {x : Except Err α} {err : Err} (hx : x ≠ .error .sort)
     (h : x = .error err) : (Except.error err : Except Err β) ≠ .error .sort := by
@@ -5255,11 +6243,18 @@ theorem deliver_ne_sort {sys : Sys} (hwf : sys.WF) {mask : List Bool} {c : Cfg} 
   intro h
   obtain ⟨e, he, _, hf⟩ := deliver_error_form h
   have hel : e.time < timeLimit := (ht.2 e (List.mem_of_getElem? he)).2
-  have hte : ((c.pop k e).time : Int) ≤ maxSafe := maxSafe_of_lt hel
-  rcases hf with hf | ⟨act, hw⟩ | ⟨ws, hp⟩
+  rcases hf with hf | ⟨_, hr | hr⟩ | ⟨c1, e1, hfr, he1, ⟨act, hw⟩ | ⟨ws, hp⟩⟩
   · exact hf.ne_sort rfl
-  · exact winnersOf_ne_sort (c := c.pop k e) (WF.transWT hwf) hs hte _ hw
-  · exact phase2_ne_sort (c := c.pop k e) (WF.transWT hwf) hs hte ws c.machines hs hp
+  · cases hr
+  · cases hr
+  · have hte : ((c1.pop k e1).time : Int) ≤ maxSafe := by
+      have : (c1.pop k e1).time = e.time := by rw [he1]; rfl
+      rw [this]; exact maxSafe_of_lt hel
+    exact winnersOf_ne_sort (c := c1.pop k e1) (WF.transWT hwf) (hfr.shaped hs) hte _ hw
+  · have hte : ((c1.pop k e1).time : Int) ≤ maxSafe := by
+      have : (c1.pop k e1).time = e.time := by rw [he1]; rfl
+      rw [this]; exact maxSafe_of_lt hel
+    exact phase2_ne_sort (c := c1.pop k e1) (WF.transWT hwf) (hfr.shaped hs) hte ws c1.machines (hfr.shaped hs) hp
 
 /-- **`sort` is unreachable in a well-formed system**: no step from a reachable configuration fails
 with `sort`. -/

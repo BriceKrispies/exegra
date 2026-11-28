@@ -161,16 +161,19 @@ def Book.bump (b : Book) (n : String) : Book :=
 /-- The machine and transition of each winner of the delivery of `e`, when `e` is delivered (not
 dropped or delayed) and phase 1 succeeds; otherwise none. The draws a step makes are those of the
 sampled delays of these transitions, as format 2 draws only for the effects that run. -/
-def Exec.fired (sys : Sys) (mask : List Bool) (c : Cfg) (e : Entry) : List (Nat × Nat) :=
-  let act := sys.active mask
-  let att := c.attemptsOf e.event + 1
+def Exec.fired (sys : Sys) (mask : List Bool) (c : Cfg) (e : Entry) (rv : List Nat) : List (Nat × Nat) :=
   if e.kind != .event then []
-  else if act.any (fun p => p.2.hits [.drop, .lose] e.event att e.time) then []
-  else match delayFault act e att with
-    | some _ => []
-    | none => match winners sys act (c.popE e) e with
-      | .ok ws => ws.map (fun w => (w.mach.val, w.idx.val))
-      | .error _ => []
+  else match routeOf sys c e rv with
+    | some (.ok (c1, e1, [])) =>
+      let act := sys.active mask
+      let att := c1.attemptsOf e1.event + 1
+      if act.any (fun p => p.2.hits [.drop, .lose] e1.event att e1.time) then []
+      else match delayFault act e1 att with
+        | some _ => []
+        | none => match winners sys act (c1.popE e) e1 with
+          | .ok ws => ws.map (fun w => (w.mach.val, w.idx.val))
+          | .error _ => []
+    | _ => []
 
 /-- One draw slot: the next draw of its stream when its transition fires and a seed is given;
 otherwise the first value of its support (format 2 takes a choice's first value without a seed),
@@ -192,9 +195,9 @@ def Exec.drawSlots (fired : List (Nat × Nat)) (b0 : Book) : Nat → List (Nat �
     let (vs, b2) := Exec.drawSlots fired b0 (k + 1) ss b1
     (v :: vs, b2)
 
-/-- The draws of the step delivering `e` from `c`, and the book after it. -/
-def Exec.drawsOf (sys : Sys) (mask : List Bool) (c : Cfg) (e : Entry) (b : Book) : List Nat × Book :=
-  Exec.drawSlots (Exec.fired sys mask c e) b 0 sys.samples b
+/-- The draws of the step delivering `e` from `c` with route draws `rv`, and the book after it. -/
+def Exec.drawsOf (sys : Sys) (mask : List Bool) (c : Cfg) (e : Entry) (rv : List Nat) (b : Book) : List Nat × Book :=
+  Exec.drawSlots (Exec.fired sys mask c e rv) b 0 sys.samples b
 
 theorem Dist.support_ne_nil {d : Dist} (hd : d.wf = true) : d.support ≠ [] := by
   cases d with
@@ -241,11 +244,11 @@ theorem drawSlots_ok (fired : List (Nat × Nat)) (b0 : Book) : (k : Nat) → (ss
       · exact Dist.headD_mem hs
     · exact ih.2 p hp
 
-theorem Exec.drawsOf_ok {sys : Sys} (hwf : sys.WF) (mask : List Bool) (c : Cfg) (e : Entry) (b : Book) :
-    DrawsOk sys (Exec.drawsOf sys mask c e b).1 := by
+theorem Exec.drawsOf_ok {sys : Sys} (hwf : sys.WF) (mask : List Bool) (c : Cfg) (e : Entry) (rv : List Nat)
+    (b : Book) : DrawsOk sys (Exec.drawsOf sys mask c e rv b).1 := by
   have hw : ∀ s ∈ sys.samples, s.2.2.2.wf = true := fun s hs =>
     WF.dists hwf _ (List.mem_map_of_mem hs)
-  have h := drawSlots_ok (Exec.fired sys mask c e) b 0 sys.samples b hw
+  have h := drawSlots_ok (Exec.fired sys mask c e rv) b 0 sys.samples b hw
   unfold Exec.drawsOf
   refine ⟨by rw [h.1]; simp [Sys.dists], ?_⟩
   simpa [Sys.dists] using h.2
@@ -255,92 +258,129 @@ theorem Exec.drawsOf_ok {sys : Sys} (hwf : sys.WF) (mask : List Bool) (c : Cfg) 
 /-- The draw program of delivering `e` from `c` in system `R` under `mask`: the holes of the step's
 settling, in order (none when the step does not settle). It follows `deliverEvent` and
 `worldFill`. -/
-def holesAt (R : Sys) (mask : List Bool) (c : Cfg) (e : Entry) : List ((Nat × Nat × Nat) × Dist) :=
+def holesAt (R : Sys) (mask : List Bool) (c : Cfg) (e : Entry) (rv : List Nat) : List ((Nat × Nat × Nat) × Dist) :=
   match e.kind with
   | .event =>
-    let act := R.active mask
-    let att := c.attemptsOf e.event + 1
-    if act.any (fun p => p.2.hits [.drop, .lose] e.event att e.time) then []
-    else match act.find? (fun p => p.2.hits [.delay, .retry] e.event att e.time && !(e.done.contains p.1)) with
-      | some _ => []
-      | none => match winners R act (c.popE e) e with
-        | .error _ => []
-        | .ok ws => match phase2 R (c.popE e) e ws c.machines with
+    match routeOf R c e rv with
+    | some (.ok (c1, e1, [])) =>
+      let act := R.active mask
+      let att := c1.attemptsOf e1.event + 1
+      if act.any (fun p => p.2.hits [.drop, .lose] e1.event att e1.time) then []
+      else match act.find? (fun p => p.2.hits [.delay, .retry] e1.event att e1.time && !(e1.done.contains p.1)) with
+        | some _ => []
+        | none => match winners R act (c1.popE e) e1 with
           | .error _ => []
-          | .ok (ms, bs) => holesOf (settle R ((c.popE e).commit R.sig.machines ms bs).time
-              (opsOf R.sig.machines bs) [] ((c.popE e).commit R.sig.machines ms bs).world).2
+          | .ok ws => match phase2 R (c1.popE e) e1 ws c1.machines with
+            | .error _ => []
+            | .ok (ms, bs) => holesOf (settle R ((c1.popE e).commit R.sig.machines ms bs).time
+                (opsOf R.sig.machines bs) [] ((c1.popE e).commit R.sig.machines ms bs).world).2
+    | _ => []
   | _ => holesOf (worldStep R (c.popW e) e).2
 
-/-- The draw program of the label with entry `e` and draws `ds`. -/
-def Exec.holes (sys : Sys) (mask : List Bool) (c : Cfg) (e : Entry) (ds : List Nat) :
+/-- The draw program of the label with entry `e`, draws `ds` and route draws `rv`, after the
+route draws. -/
+def Exec.holes (sys : Sys) (mask : List Bool) (c : Cfg) (e : Entry) (ds rv : List Nat) :
     List ((Nat × Nat × Nat) × Dist) :=
-  holesAt (sys.resolve ds) mask c e
+  holesAt (sys.resolve ds) mask c e rv
 
-/-- **A step's world draws fit its draw program.** -/
+/-- An entry of the world takes no route draws. -/
+theorem nR_world {sys : Sys} {c : Cfg} {e : Entry} (h : e.kind ≠ .event) : sys.nR c e = 0 := by
+  have : sys.toRoute e = false := by
+    simp only [Sys.toRoute, beq_false_of_ne h, Bool.false_and]
+  simp [Sys.nR, routeHoles, this]
+
+theorem routeHoles_world {sys : Sys} {c : Cfg} {e : Entry} (h : e.kind ≠ .event) : routeHoles sys c e = [] :=
+  List.length_eq_zero_iff.mp (nR_world h)
+
+/-- **A step's world draws fit its draw program**: first the route draws, then the draws of the
+step's settling. -/
 theorem Step.holes {sys : Sys} {mask : List Bool} {c : Cfg} {l : Label} {t : State}
-    (h : Step sys mask c l t) : DrawsFit l.wdraws (Exec.holes sys mask c l.entry l.draws) := by
+    (h : Step sys mask c l t) :
+    DrawsFit (l.wdraws.take (sys.nR c l.entry)) (routeHoles sys c l.entry) ∧
+    DrawsFit (l.wdraws.drop (sys.nR c l.entry))
+      (Exec.holes sys mask c l.entry l.draws (l.wdraws.take (sys.nR c l.entry))) := by
   unfold Exec.holes holesAt
   cases h with
-  | drop _ _ hk hw0 hdr =>
-    rw [hk]; unfold dropHit at hdr; simp only [resolve_active]; simp only [hdr, ↓reduceIte, hw0]; exact ⟨rfl, by simp⟩
-  | delay _ _ hk hw0 hdr hf _ =>
-    rw [hk]; unfold dropHit at hdr; unfold delayFault at hf; simp only [resolve_active]
+  | drop _ _ hk hro hw0 hdr =>
+    refine ⟨routeOf_fit.1.1 _ _ hro, ?_⟩
+    rw [hk]; simp only [routeOf_resolve, hro]
+    unfold dropHit at hdr; simp only [resolve_active]; simp only [hdr, ↓reduceIte, hw0]; exact ⟨rfl, by simp⟩
+  | delay _ _ hk hro hw0 hdr hf _ =>
+    refine ⟨routeOf_fit.1.1 _ _ hro, ?_⟩
+    rw [hk]; simp only [routeOf_resolve, hro]
+    unfold dropHit at hdr; unfold delayFault at hf; simp only [resolve_active]
     simp only [hdr, Bool.false_eq_true, ↓reduceIte, hf, hw0]; exact ⟨rfl, by simp⟩
-  | delayTimeErr _ _ hk hw0 hdr hf _ =>
-    rw [hk]; unfold dropHit at hdr; unfold delayFault at hf; simp only [resolve_active]
+  | delayTimeErr _ _ hk hro hw0 hdr hf _ =>
+    refine ⟨routeOf_fit.1.1 _ _ hro, ?_⟩
+    rw [hk]; simp only [routeOf_resolve, hro]
+    unfold dropHit at hdr; unfold delayFault at hf; simp only [resolve_active]
     simp only [hdr, Bool.false_eq_true, ↓reduceIte, hf, hw0]; exact ⟨rfl, by simp⟩
-  | deliverOk _ _ hk hdr hnone hw hp hs hfit _ _ =>
-    rw [hk]; unfold dropHit at hdr; unfold delayFault at hnone; simp only [resolve_active]
+  | deliverOk _ _ hk hro hdr hnone hw hp hs hfit _ _ =>
+    refine ⟨routeOf_fit.1.1 _ _ hro, ?_⟩
+    rw [hk]; simp only [routeOf_resolve, hro]
+    unfold dropHit at hdr; unfold delayFault at hnone; simp only [resolve_active]
     simp only [hdr, Bool.false_eq_true, ↓reduceIte, hnone]
     simp only [hw, hp, settle_resolve, resolve_sig, hs]
     exact hfit
-  | deliverErr _ _ hk hdr hnone hfail =>
-    rw [hk]; unfold dropHit at hdr; unfold delayFault at hnone; simp only [resolve_active]
+  | deliverErr _ _ hk hro hdr hnone hfail =>
+    refine ⟨routeOf_fit.1.1 _ _ hro, ?_⟩
+    rw [hk]; simp only [routeOf_resolve, hro]
+    unfold dropHit at hdr; unfold delayFault at hnone; simp only [resolve_active]
     simp only [hdr, Bool.false_eq_true, ↓reduceIte, hnone]
+    have hm : ∀ x : Cfg, (x.popE l.entry).machines = x.machines := fun _ => rfl
     cases hfail with
     | winners hw0 hw => simp only [hw, hw0]; exact ⟨rfl, by simp⟩
     | phase2 hw0 hw hp =>
-      replace hp : phase2 (sys.resolve l.draws) (c.popE l.entry) l.entry _ c.machines = _ := hp
+      rw [hm] at hp
       simp only [hw, hp, hw0]; exact ⟨rfl, by simp⟩
     | settle hw hp hs hfit _ =>
-      replace hp : phase2 (sys.resolve l.draws) (c.popE l.entry) l.entry _ c.machines = _ := hp
+      rw [hm] at hp
       simp only [settle_resolve, resolve_sig] at hs
       simp only [hw, hp, settle_resolve, resolve_sig, hs]; exact hfit
     | dup hw hp hs hfit _ _ _ =>
-      replace hp : phase2 (sys.resolve l.draws) (c.popE l.entry) l.entry _ c.machines = _ := hp
+      rw [hm] at hp
       simp only [settle_resolve, resolve_sig] at hs
       simp only [hw, hp, settle_resolve, resolve_sig, hs]; exact hfit
+  | routeErr _ _ hk hro hw0 =>
+    refine ⟨routeOf_fit.1.2 _ hro, ?_⟩
+    rw [hk]; simp only [routeOf_resolve, hro, hw0]; exact ⟨rfl, by simp⟩
   | worldOk _ _ hk hs hfit _ =>
+    rw [nR_world hk, routeHoles_world hk]
+    refine ⟨⟨by simp, by simp⟩, ?_⟩
     split
     · rename_i heq; exact absurd heq hk
-    · simp only [worldStep_resolve, hs]; exact hfit
+    · simp only [List.drop_zero, worldStep_resolve, hs]; exact hfit
   | worldErr _ _ hk hs hfit _ =>
+    rw [nR_world hk, routeHoles_world hk]
+    refine ⟨⟨by simp, by simp⟩, ?_⟩
     split
     · rename_i heq; exact absurd heq hk
-    · simp only [worldStep_resolve, hs]; exact hfit
+    · simp only [List.drop_zero, worldStep_resolve, hs]; exact hfit
 
-/-- A system without resources has no world draws. -/
-theorem holesAt_nil_res {R : Sys} (h : R.resources = []) (mask : List Bool) (c : Cfg) (e : Entry) :
-    holesAt R mask c e = [] := by
+/-- A system without resources or routes has no world draws. -/
+theorem holesAt_nil_res {R : Sys} (h : R.resources = []) (mask : List Bool) (c : Cfg) (e : Entry) (rv : List Nat) :
+    holesAt R mask c e rv = [] := by
   unfold holesAt
   split
-  · simp only []
-    split
-    · rfl
-    · split
+  · split
+    · simp only []
+      split
       · rfl
       · split
         · rfl
         · split
           · rfl
-          · rw [settle_nil_res h]; rfl
+          · split
+            · rfl
+            · rw [settle_nil_res h]; rfl
+    · rfl
   · rw [worldStep_nil_res h]; rfl
 
-/-- A step of a system without resources takes no world draws. -/
-theorem wdraws_nil_of_nores {sys : Sys} (h : sys.resources = []) {mask : List Bool} {c : Cfg} {l : Label}
-    {t : State} (hs : Step sys mask c l t) : l.wdraws = [] := by
-  have hf := Step.holes hs
-  rw [Exec.holes, holesAt_nil_res (R := sys.resolve l.draws) h] at hf
+/-- A step of a system without resources or routes takes no world draws. -/
+theorem wdraws_nil_of_nores {sys : Sys} (h : sys.resources = []) (hr : sys.routes = []) {mask : List Bool}
+    {c : Cfg} {l : Label} {t : State} (hs : Step sys mask c l t) : l.wdraws = [] := by
+  have hf := (Step.holes hs).2
+  rw [Exec.holes, holesAt_nil_res (R := sys.resolve l.draws) h, nR_nil hr, List.drop_zero] at hf
   exact List.length_eq_zero_iff.mp hf.1
 
 theorem Dist.support_nil_of_not_wf {d : Dist} (h : d.wf = false) : d.support = [] := by
@@ -427,13 +467,14 @@ inductive XResult where
   | committed (r : Rec) (s : State) (b : Book)
   | failed (r : Rec)
 
-/-- The label `Exec.step` delivers the entry `e` with: the draws of the sampled delays of the
-transitions that fire, then the world draws of the step's settling, each from its stream, as format
-2 draws them. -/
+/-- The label `Exec.step` delivers the entry `e` with: the route draws, the draws of the sampled
+delays of the transitions that fire, then the world draws of the step's settling, each from its
+stream, in format 2's order. -/
 def Exec.labelOf (sys : Sys) (mask : List Bool) (c : Cfg) (e : Entry) (b : Book) : Label × Book :=
-  let ds := Exec.drawsOf sys mask c e b
-  let ws := Exec.drawsW (Exec.holes sys mask c e ds.1) ds.2
-  (⟨e, ds.1, ws.1⟩, ws.2)
+  let rv := Exec.drawsW (routeHoles sys c e) b
+  let ds := Exec.drawsOf sys mask c e rv.1 rv.2
+  let ws := Exec.drawsW (Exec.holes sys mask c e ds.1 rv.1) ds.2
+  (⟨e, ds.1, rv.1 ++ ws.1⟩, ws.2)
 
 /-- The executable step: delivers the head of the queue, drawing for the sampled delays of the
 transitions that fire and for the step's settling, from their streams, as format 2 does. -/
@@ -487,10 +528,12 @@ theorem Exec.step_failed {sys : Sys} {s : State} {b : Book} {r : Rec} (_hwf : sy
       · cases h
 
 /-- On a sorted queue whose head is not after `stopAt`, the head can be delivered with world draws
-that fit its draw program. -/
+that fit its draw program (the route draws, then the draws of the settling). -/
 theorem deliverAt_head_some {sys : Sys} {mask : List Bool} {c : Cfg} {e : Entry} {rest : List Entry}
     {wds : List Nat} (hp : c.pending = e :: rest) (hs : c.Sorted)
-    (hstop : sys.stopAt.all (fun s => decide (e.time ≤ s)) = true) (hw : DrawsFit wds (holesAt sys mask c e)) :
+    (hstop : sys.stopAt.all (fun s => decide (e.time ≤ s)) = true)
+    (hr : DrawsFit (wds.take (sys.nR c e)) (routeHoles sys c e))
+    (hw : DrawsFit (wds.drop (sys.nR c e)) (holesAt sys mask c e (wds.take (sys.nR c e)))) :
     deliverAt sys mask c 0 wds ≠ none := by
   have hmin : c.pending.all (fun x => decide (e.time ≤ x.time)) = true := by
     simp only [List.all_eq_true, decide_eq_true_eq]
@@ -501,7 +544,6 @@ theorem deliverAt_head_some {sys : Sys} {mask : List Bool} {c : Cfg} {e : Entry}
     · exact Nat.le_refl _
     · exact (List.pairwise_cons.mp hs').1 x hx
   have hk : c.pending.idxOf? e = some 0 := by rw [hp]; simp [List.idxOf?_cons]
-  have hpop := Cfg.pop_eq_popE hk
   have nil_of : ∀ {ws : List Nat}, DrawsFit ws [] → ws = [] := fun h => List.length_eq_zero_iff.mp h.1
   unfold deliverAt deliverWith
   rw [hp]
@@ -513,53 +555,73 @@ theorem deliverAt_head_some {sys : Sys} {mask : List Bool} {c : Cfg} {e : Entry}
   · rename_i hkind
     rw [hkind] at hw
     simp only [] at hw
-    unfold deliverEvent
-    simp only [hpop]
-    by_cases hdr : ((sys.active mask).any fun p => p.snd.hits [FKind.drop, FKind.lose] e.event
-        (c.attemptsOf e.event + 1) e.time) = true
-    · simp only [hdr, ↓reduceIte] at hw ⊢; rw [if_pos (nil_of hw)]; simp
-    · simp only [hdr, Bool.false_eq_true, ↓reduceIte] at hw ⊢
-      cases hf : List.find? (fun p => p.snd.hits [FKind.delay, FKind.retry] e.event (c.attemptsOf e.event + 1) e.time &&
-          !e.done.contains p.fst) (sys.active mask) with
-      | some p =>
-        rw [hf] at hw; simp only [] at hw ⊢
-        rw [if_pos (nil_of hw)]; simp
-      | none =>
-        rw [hf] at hw; simp only [] at hw ⊢
-        cases hwin : winners sys (sys.active mask) (c.popE e) e with
-        | error err => rw [hwin] at hw; simp only [] at hw ⊢; rw [if_pos (nil_of hw)]; simp
-        | ok ws =>
-          rw [hwin] at hw; simp only [] at hw ⊢
-          cases hph : phase2 sys (c.popE e) e ws c.machines with
-          | error err => rw [hph] at hw; simp only [] at hw ⊢; rw [if_pos (nil_of hw)]; simp
-          | ok r =>
-            obtain ⟨ms, bs⟩ := r
-            rw [hph] at hw; simp only [] at hw ⊢
-            unfold settleFill
-            rw [if_pos hw]; simp
+    rcases routeOf_fit.2 hr with ⟨c1, e1, hro⟩ | ⟨err, hro⟩
+    · rw [hro] at hw ⊢
+      simp only [] at hw
+      simp only [if_true]
+      obtain ⟨hfr, he1⟩ := routeOf_frame hro
+      have hpop := Frame.pop_eq_popE hfr he1 hk
+      unfold deliverEvent
+      simp only [hpop]
+      by_cases hdr : ((sys.active mask).any fun p => p.snd.hits [FKind.drop, FKind.lose] e1.event
+          (c1.attemptsOf e1.event + 1) e1.time) = true
+      · simp only [hdr, ↓reduceIte] at hw ⊢; rw [if_pos (nil_of hw)]; simp
+      · simp only [hdr, Bool.false_eq_true, ↓reduceIte] at hw ⊢
+        cases hf : List.find? (fun p => p.snd.hits [FKind.delay, FKind.retry] e1.event (c1.attemptsOf e1.event + 1)
+            e1.time && !e1.done.contains p.fst) (sys.active mask) with
+        | some p =>
+          rw [hf] at hw; simp only [] at hw ⊢
+          rw [if_pos (nil_of hw)]; simp
+        | none =>
+          rw [hf] at hw; simp only [] at hw ⊢
+          cases hwin : winners sys (sys.active mask) (c1.popE e) e1 with
+          | error err => rw [hwin] at hw; simp only [] at hw ⊢; rw [if_pos (nil_of hw)]; simp
+          | ok ws =>
+            rw [hwin] at hw; simp only [] at hw ⊢
+            cases hph : phase2 sys (c1.popE e) e1 ws c1.machines with
+            | error err => rw [hph] at hw; simp only [] at hw ⊢; rw [if_pos (nil_of hw)]; simp
+            | ok r =>
+              obtain ⟨ms, bs⟩ := r
+              rw [hph] at hw; simp only [] at hw ⊢
+              unfold settleFill
+              rw [if_pos hw]; simp
+    · rw [hro] at hw ⊢
+      simp only [] at hw
+      simp only [nil_of hw, and_self, if_true]; simp
   · rename_i hkind
     split at hw
     · rename_i h'; exact absurd h' hkind
     · unfold worldFill
+      rw [nR_world hkind, List.drop_zero] at hw
       rw [if_pos hw]; simp
 
 /-- The head of a sorted queue is delivered with any draws in the supports and world draws that fit
 the step's draw program, unless `stopAt` forbids it. -/
 theorem deliver_head_some {sys : Sys} {mask : List Bool} {c : Cfg} {e : Entry} {rest : List Entry}
-    (ds : List Nat) (hd : DrawsOk sys ds) (wds : List Nat) (hw : DrawsFit wds (Exec.holes sys mask c e ds))
+    (ds : List Nat) (hd : DrawsOk sys ds) (wds : List Nat)
+    (hr : DrawsFit (wds.take (sys.nR c e)) (routeHoles sys c e))
+    (hw : DrawsFit (wds.drop (sys.nR c e)) (Exec.holes sys mask c e ds (wds.take (sys.nR c e))))
     (hp : c.pending = e :: rest) (hs : c.Sorted) (hstop : sys.stopAt.all (fun s => decide (e.time ≤ s)) = true) :
     deliver sys mask c ⟨e, ds, wds⟩ ≠ none := by
   unfold deliver
   simp only [hd, if_true]
   rw [hp]
   simp only [List.idxOf?_cons, BEq.rfl, if_true]
-  exact deliverAt_head_some (sys := sys.resolve ds) hp hs hstop hw
+  exact deliverAt_head_some (sys := sys.resolve ds) hp hs hstop hr hw
+
+theorem drawsW_length (hs : List ((Nat × Nat × Nat) × Dist)) (b : Book) : (Exec.drawsW hs b).1.length = hs.length :=
+  (Exec.drawsW_fit hs b).1
 
 theorem Exec.labelOf_ok {sys : Sys} (hwf : sys.WF) (mask : List Bool) (c : Cfg) (e : Entry) (b : Book) :
     DrawsOk sys (Exec.labelOf sys mask c e b).1.draws ∧
-      DrawsFit (Exec.labelOf sys mask c e b).1.wdraws
-        (Exec.holes sys mask c e (Exec.labelOf sys mask c e b).1.draws) :=
-  ⟨Exec.drawsOf_ok hwf mask c e b, Exec.drawsW_fit _ _⟩
+      DrawsFit ((Exec.labelOf sys mask c e b).1.wdraws.take (sys.nR c e)) (routeHoles sys c e) ∧
+      DrawsFit ((Exec.labelOf sys mask c e b).1.wdraws.drop (sys.nR c e))
+        (Exec.holes sys mask c e (Exec.labelOf sys mask c e b).1.draws
+          ((Exec.labelOf sys mask c e b).1.wdraws.take (sys.nR c e))) := by
+  have hl : (Exec.drawsW (routeHoles sys c e) b).1.length = sys.nR c e := drawsW_length _ _
+  simp only [Exec.labelOf]
+  rw [← hl, List.take_left, List.drop_left]
+  exact ⟨Exec.drawsOf_ok hwf mask c e _ _, Exec.drawsW_fit _ _, Exec.drawsW_fit _ _⟩
 
 theorem Exec.labelOf_entry (sys : Sys) (mask : List Bool) (c : Cfg) (e : Entry) (b : Book) :
     (Exec.labelOf sys mask c e b).1 = ⟨e, (Exec.labelOf sys mask c e b).1.draws,
@@ -581,7 +643,7 @@ theorem Exec.idle_deadlocked {sys : Sys} {s : State} {b : Book} (hwf : sys.WF) (
         · rename_i hnone
           obtain ⟨h1, h2⟩ := Exec.labelOf_ok hwf m c e b
           rw [Exec.labelOf_entry] at hnone
-          exact absurd hnone (deliver_head_some _ h1 _ h2 hp hs ‹_›)
+          exact absurd hnone (deliver_head_some _ h1 _ h2.1 h2.2 hp hs ‹_›)
       · cases h
 
 theorem Exec.stopped_deadlocked {sys : Sys} {s : State} {b : Book} (hs : s.cfg.Sorted)
@@ -623,7 +685,7 @@ theorem Exec.step_live {sys : Sys} {m : List Bool} {c : Cfg} {b : Book} (hwf : s
       · rename_i hnone
         obtain ⟨h1, h2⟩ := Exec.labelOf_ok hwf m c e b
         rw [Exec.labelOf_entry] at hnone
-        exact absurd hnone (deliver_head_some _ h1 _ h2 hp hs ‹_›)
+        exact absurd hnone (deliver_head_some _ h1 _ h2.1 h2.2 hp hs ‹_›)
     · cases h
 
 /-! ### Runs -/
@@ -777,33 +839,42 @@ theorem drawVectorsUpTo_eq (cap : Nat) (D : List Dist) (h : ∀ d ∈ D, d.suppo
 /-- The successors of a state with every support cut to its first `cap` values. -/
 def Exec.successorsUpTo (cap : Nat) (sys : Sys) : State → List (Label × State)
   | .run mask c => c.pending.flatMap (fun e => (drawVectorsUpTo cap sys.dists).flatMap (fun ds =>
-      (worldVectorsUpTo cap (Exec.holes sys mask c e ds)).filterMap
-        (fun wds => (deliver sys mask c ⟨e, ds, wds⟩).map (fun r => (⟨e, ds, wds⟩, outcome mask c r)))))
+      (worldVectorsUpTo cap (routeHoles sys c e)).flatMap (fun rv =>
+      (worldVectorsUpTo cap (Exec.holes sys mask c e ds rv)).filterMap
+        (fun wv => (deliver sys mask c ⟨e, ds, rv ++ wv⟩).map (fun r => (⟨e, ds, rv ++ wv⟩, outcome mask c r))))))
   | .err _ _ => []
 
-/-- The successors of a state: every label (delivered entry, draws and world draws). -/
+/-- The successors of a state: every label (delivered entry, draws, route draws and world draws). -/
 def Exec.successors (sys : Sys) : State → List (Label × State)
   | .run mask c => c.pending.flatMap (fun e => (drawVectors sys.dists).flatMap (fun ds =>
-      (worldVectors (Exec.holes sys mask c e ds)).filterMap
-        (fun wds => (deliver sys mask c ⟨e, ds, wds⟩).map (fun r => (⟨e, ds, wds⟩, outcome mask c r)))))
+      (worldVectors (routeHoles sys c e)).flatMap (fun rv =>
+      (worldVectors (Exec.holes sys mask c e ds rv)).filterMap
+        (fun wv => (deliver sys mask c ⟨e, ds, rv ++ wv⟩).map (fun r => (⟨e, ds, rv ++ wv⟩, outcome mask c r))))))
   | .err _ _ => []
+
+theorem worldVectorsUpTo_eq {cap : Nat} {hs : List ((Nat × Nat × Nat) × Dist)}
+    (h : ∀ p ∈ hs, p.2.drawSupport.length ≤ cap) : worldVectorsUpTo cap hs = worldVectors hs := by
+  unfold worldVectorsUpTo worldVectors
+  congr 1
+  apply List.map_congr_left
+  intro p hp
+  exact List.take_of_length_le (h p hp)
 
 /-- **When no support is cut, the capped successors are all of them.** -/
 theorem successorsUpTo_eq {cap : Nat} {sys : Sys} (s : State)
     (h : ∀ d ∈ sys.dists, d.support.length ≤ cap)
-    (hw : ∀ (mask : List Bool) (c : Cfg) (e : Entry) (ds : List Nat),
-      ∀ p ∈ Exec.holes sys mask c e ds, p.2.drawSupport.length ≤ cap) :
+    (hr : ∀ (c : Cfg) (e : Entry), ∀ p ∈ routeHoles sys c e, p.2.drawSupport.length ≤ cap)
+    (hw : ∀ (mask : List Bool) (c : Cfg) (e : Entry) (ds rv : List Nat),
+      ∀ p ∈ Exec.holes sys mask c e ds rv, p.2.drawSupport.length ≤ cap) :
     Exec.successorsUpTo cap sys s = Exec.successors sys s := by
   cases s with
   | err => rfl
   | run m c =>
     simp only [Exec.successorsUpTo, Exec.successors, drawVectorsUpTo_eq cap _ h]
-    congr 1; funext e; congr 1; funext ds; congr 1
-    unfold worldVectorsUpTo worldVectors
-    congr 1
-    apply List.map_congr_left
-    intro p hp
-    exact List.take_of_length_le (hw m c e ds p hp)
+    congr 1; funext e; congr 1; funext ds
+    rw [worldVectorsUpTo_eq (hr c e)]
+    congr 1; funext rv
+    rw [worldVectorsUpTo_eq (hw m c e ds rv)]
 
 theorem successors_complete {sys : Sys} {s t : State} {l : Label}
     (h : (Sys.lts sys).step s l t) : (l, t) ∈ Exec.successors sys s := by
@@ -814,12 +885,16 @@ theorem successors_complete {sys : Sys} {s t : State} {l : Label}
     obtain ⟨hd, hr⟩ := Step.ready h'
     have hfit := Step.holes h'
     have hdel := (deliver_eq_step (sys := sys) (mask := m) (c := c) (l := l) (t := t)).mpr h'
+    have hl : (⟨l.entry, l.draws, l.wdraws.take (sys.nR c l.entry) ++ l.wdraws.drop (sys.nR c l.entry)⟩ : Label) = l := by
+      rw [List.take_append_drop]
     simp only [Exec.successors, List.mem_flatMap, List.mem_filterMap]
-    refine ⟨l.entry, hr.1, l.draws, mem_drawVectors _ _ hd.1 hd.2, l.wdraws, mem_worldVectors hfit, ?_⟩
-    cases hl : deliver sys m c l with
-    | none => rw [hl] at hdel; cases hdel
+    refine ⟨l.entry, hr.1, l.draws, mem_drawVectors _ _ hd.1 hd.2, _, mem_worldVectors hfit.1, _,
+      mem_worldVectors hfit.2, ?_⟩
+    rw [hl]
+    cases hl' : deliver sys m c l with
+    | none => rw [hl'] at hdel; cases hdel
     | some r =>
-      rw [hl] at hdel
+      rw [hl'] at hdel
       simp only [Option.map_some, Option.some.injEq] at hdel ⊢
       rw [hdel]
 
@@ -829,8 +904,8 @@ theorem successors_sound {sys : Sys} {s t : State} {l : Label}
   | err m c => simp [Exec.successors] at h
   | run m c =>
     simp only [Exec.successors, List.mem_flatMap, List.mem_filterMap] at h
-    obtain ⟨e, _, ds, _, wds, _, hk⟩ := h
-    cases hd : deliver sys m c ⟨e, ds, wds⟩ with
+    obtain ⟨e, _, ds, _, rv, _, wv, _, hk⟩ := h
+    cases hd : deliver sys m c ⟨e, ds, rv ++ wv⟩ with
     | none => rw [hd] at hk; cases hk
     | some r =>
       rw [hd] at hk

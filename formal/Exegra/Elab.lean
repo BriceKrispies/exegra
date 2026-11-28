@@ -9,10 +9,12 @@ increment M2.4; the task's criteria 13 and 17).
 calculus system, or refuses it:
 
 * `outOfFragment what`: the input uses a construct the calculus does not cover (links, workloads,
-  keyed instances, routes, measured outputs, object or `null` values, option types, resource
-  faults). A `sample` effect (a variable set from a draw) is covered: an integer literal at a draw
-  site; so are resources, their `use`, `acquire` and `release` effects and the counts expressions
-  read (WG-5683). Such an input runs on the legacy interpreter, flagged in its trace, and no
+  option types, a scenario step addressed to an instance of a keyed behaviour).
+  A `sample` effect (a variable set from a draw) is covered: an integer literal at a draw site; so
+  are resources, their `use`, `acquire` and `release` effects, the counts expressions read,
+  resource faults, routes and keyed instances (WG-5683). Measured outputs are a function of the
+  trace (`metrics`): an input that measures runs on the calculus like any other. An input
+  outside the fragment runs on the legacy interpreter, flagged in its trace, and no
   theorem is about it.
 * `illTyped msg`: the input is not well-typed: an unknown event or variable, a guard that is not
   Boolean, an operator applied to the wrong sorts, a repeated behaviour id, an id declared both as
@@ -24,7 +26,13 @@ of untyped numbers.
 
 The layout: machines are the instances of the behaviours, behaviours in input order, the instances
 of a counted behaviour in index order (the order format 2's phase 1 visits them,
-Format2.lean:1290-1304). Guards and effect expressions are parsed once (`parseExpr`) and resolved
+Format2.lean:1290-1304); a keyed behaviour with at most `max` instances is `max` slot machines, not
+live until a route creates them, in creation order. `Sys.routes` holds the routes in format 2's
+decision order (`routeList`). A keyed behaviour's `b.x` and `b.state` are `Ref.one` (read when the
+step runs: ambiguous with more than one instance, absent with none), its `instance` is
+`Ref.key`, its `b.instances.count` the sum of `Ref.count` over its control states; a short-circuit
+node whose right operand reads a behaviour that may have several instances as one is preceded by
+`Ref.uniq`, since format 2 resolves every reference before evaluating (`guardUniq`). Guards and effect expressions are parsed once (`parseExpr`) and resolved
 to `Fin`-scoped references: own variables, `b.x`, `b.state`, `b.instances.count` (a literal),
 `b.count.s`, `b.sum.x`, `b.min.x`, `b.max.x`, `event.f`, `time`, `instance` (a literal). A
 reference to nothing (an unknown name, a behaviour with several instances read as one, an
@@ -119,9 +127,18 @@ def distOf : Dist → Core.Behav.Dist
 def instCount (b : BehaviorIn) : Nat :=
   match b.instances with
   | .count n => n
+  | .keyed _ max => max
   | _ => 1
 
-/-- The machines: (behaviour index, instance index), behaviours in order. -/
+/-- A keyed behaviour: its instances are created by routes, up to its maximum; it is laid out as
+that many slot machines, none live at the start. -/
+def isKeyed (b : BehaviorIn) : Bool :=
+  match b.instances with
+  | .keyed .. => true
+  | _ => false
+
+/-- The machines: (behaviour index, instance index), behaviours in order; a keyed behaviour has one
+slot per instance it may have. -/
 def layout (bs : List BehaviorIn) : List (Nat × Nat) :=
   (List.range bs.length).flatMap fun j => (List.range (instCount (bs.getD j default))).map fun k => (j, k)
 
@@ -229,6 +246,13 @@ def Ctx.fieldTy (cx : Ctx) (f : String) : Option Core.Behav.Ty :=
 
 def Ctx.tys (cx : Ctx) : TyEnv := tyLookup cx.b.types
 
+/-- The sort of the keys of keyed behaviour `b`: the sort of the payload field its first key route
+reads. -/
+def keyTy (i : Input) (b : BehaviorIn) : Option Core.Behav.Ty :=
+  i.routes.findSome? fun r =>
+    if r.behavior == b.id && r.rby == "key" then r.field.bind fun f => payloadFieldTy i 8 r.event f
+    else none
+
 /-- The arithmetic sort of a node: the declared integer type of its first typed operand
 (format 2's `staticTy`, Expr.lean:267-277), or untyped. -/
 def Ctx.aty (cx : Ctx) (a : Ast) : Core.Behav.ATy :=
@@ -244,7 +268,7 @@ def Ctx.hint (cx : Ctx) : Ast → Option Core.Behav.Ty
   | .lit (.bool _) => some .bool
   | .lit _ => some .lit
   | .ref ["time"] => some Core.Behav.Ty.num
-  | .ref ["instance"] => some Core.Behav.Ty.num
+  | .ref ["instance"] => if isKeyed cx.b then keyTy cx.input cx.b else some Core.Behav.Ty.num
   | .ref [x] => (cx.b.variables.find? (·.name == x)).bind fun v => (varTy cx.b v).toOption
   | .ref ["event", f] => cx.fieldTy f
   | .ref [_, "inUse"] | .ref [_, "waiting"] => some Core.Behav.Ty.num
@@ -278,7 +302,9 @@ def resolveRef (cx : Ctx) (want : Core.Behav.Ty) (path : List String) : E (Core.
   let behIdx (bn : String) : Option Nat := cx.behs.findIdx? (·.id == bn)
   match path with
   | ["time"] => .ok (.ref .time)
-  | ["instance"] => .ok (.val (.int cx.inst))
+  | ["instance"] =>
+    if isKeyed cx.b then .ok (.ref (.key ((keyTy cx.input cx.b).getD want)))
+    else .ok (.val (.int cx.inst))
   | ["event", f] => .ok (.ref (.field (strId f) ((cx.fieldTy f).getD want)))
   | [x] => match varIdx cx me cx.b x with
     | some v => .ok (.ref (.own v))
@@ -299,8 +325,16 @@ def resolveRef (cx : Ctx) (want : Core.Behav.Ty) (path : List String) : E (Core.
     | none => absent
   | [bn, "instances", "count"] =>
     match behIdx bn with
-    | some j => match (cx.behs.getD j default).instances with
+    | some j =>
+      let b' := cx.behs.getD j default
+      match b'.instances with
       | .count n => .ok (.val (.int n))
+      | .keyed _ max =>
+        -- the live slots: the instances in each control state, summed
+        let ms : List (Fin S.machines) :=
+          (List.range max).filterMap fun k => finOf S.machines (machineOf cx.behs j k)
+        let cs : List (Core.Behav.Expr S me) := (statesOf b').map fun st => .ref (.count ms st)
+        .ok (cs.tail.foldl (fun acc x => .bin (.arith .add .untyped) acc x) (cs.headD (.val (.int 0))))
       | _ => absent
     | none => absent
   | [bn, agg, x] =>
@@ -308,8 +342,12 @@ def resolveRef (cx : Ctx) (want : Core.Behav.Ty) (path : List String) : E (Core.
     | none => absent
     | some j =>
       let b' := cx.behs.getD j default
-      match b'.instances with
-      | .count n =>
+      let count? : Option Nat := match b'.instances with
+        | .count n => some n
+        | .keyed _ max => some max
+        | _ => none
+      match count? with
+      | some n =>
         let ms : List (Fin S.machines) :=
           (List.range n).filterMap fun k => finOf S.machines (machineOf cx.behs j k)
         if agg == "count" then .ok (.ref (.count ms x))
@@ -322,13 +360,26 @@ def resolveRef (cx : Ctx) (want : Core.Behav.Ty) (path : List String) : E (Core.
           | some op =>
             let g := ms.filterMap fun m => (varIdx cx m b' x).map fun v => (⟨m, v⟩ : (m : Fin S.machines) × Fin (S.vars m).length)
             if g.length = ms.length then .ok (.ref (.agg op g)) else absent
-      | _ => absent
+      | none => absent
   | [bn, x] =>
     match behIdx bn with
     | none => absent
     | some j =>
       let b' := cx.behs.getD j default
-      if instCount b' ≠ 1 then absent
+      if isKeyed b' then
+        -- the one live instance, read when the step runs (Format2.lean `resolve`)
+        let ms : List (Fin S.machines) :=
+          (List.range (instCount b')).filterMap fun k => finOf S.machines (machineOf cx.behs j k)
+        if x == "state" then
+          .ok (.ref (.one (ms.map fun m => (⟨m, none⟩ : (m : Fin S.machines) × Option (Fin (S.vars m).length))) .str))
+        else
+          let g := ms.filterMap fun m => (varIdx cx m b' x).map fun v =>
+            (⟨m, some v⟩ : (m : Fin S.machines) × Option (Fin (S.vars m).length))
+          let τ : Core.Behav.Ty := match g.head? with
+            | some ⟨m, some v⟩ => (S.vars m).get v
+            | _ => want
+          if g.length = ms.length then .ok (.ref (.one g τ)) else absent
+      else if instCount b' ≠ 1 then absent
       else match finOf S.machines (machineOf cx.behs j 0) with
         | none => absent
         | some m =>
@@ -337,6 +388,29 @@ def resolveRef (cx : Ctx) (want : Core.Behav.Ty) (path : List String) : E (Core.
             | some v => .ok (.ref (.other m v))
             | none => absent
   | _ => absent
+
+/-- The machines of each behaviour that a `b.x` or `b.state` reference of `a` reads and that may
+have more than one instance (a keyed behaviour, or one of several counted instances). Format 2
+resolves every reference of an expression before evaluating it, so such a reference fails the step
+with more than one instance even where `&&`, `||` or `=>` does not evaluate it (`evalIn`). -/
+def multiRefs (cx : Ctx) : Ast → List (List Nat)
+  | .ref [bn, x] =>
+    if bn == "event" || x == "inUse" || x == "waiting" then [] else
+    match cx.behs.findIdx? (·.id == bn) with
+    | some j =>
+      let b' := cx.behs.getD j default
+      if isKeyed b' || instCount b' > 1 then [(List.range (instCount b')).map (machineOf cx.behs j)] else []
+    | none => []
+  | .un _ a => multiRefs cx a
+  | .bin _ a b => multiRefs cx a ++ multiRefs cx b
+  | _ => []
+
+/-- A short-circuit node `node` whose right operand is `b`, preceded by the check that each
+behaviour `b` reads as one has at most one instance (`Ref.uniq`). -/
+def guardUniq (cx : Ctx) (b : Ast) (node : Core.Behav.Expr S me) : Core.Behav.Expr S me :=
+  (multiRefs cx b).foldl (fun acc g =>
+    .bin .and (.ref (.uniq (g.filterMap fun m => (finOf S.machines m).map fun m' =>
+      (⟨m', none⟩ : (m : Fin S.machines) × Option (Fin (S.vars m).length))))) acc) node
 
 /-- An expression, elaborated in machine `me`; `want` is the sort its context needs, used for
 payload fields and absent references only. -/
@@ -351,9 +425,9 @@ def elabExpr (cx : Ctx) : Core.Behav.Ty → Ast → E (Core.Behav.Expr S me)
   | _, .bin op a b =>
     let num := Core.Behav.Ty.num
     match op with
-    | .and => do pure (.bin .and (← elabExpr cx .bool a) (← elabExpr cx .bool b))
-    | .or => do pure (.bin .or (← elabExpr cx .bool a) (← elabExpr cx .bool b))
-    | .implies => do pure (.bin .imp (← elabExpr cx .bool a) (← elabExpr cx .bool b))
+    | .and => do pure (guardUniq me cx b (.bin .and (← elabExpr cx .bool a) (← elabExpr cx .bool b)))
+    | .or => do pure (guardUniq me cx b (.bin .or (← elabExpr cx .bool a) (← elabExpr cx .bool b)))
+    | .implies => do pure (guardUniq me cx b (.bin .imp (← elabExpr cx .bool a) (← elabExpr cx .bool b)))
     | .eq => do
       let wa := (cx.hint b).getD ((cx.hint a).getD num)
       let wb := (cx.hint a).getD wa
@@ -514,10 +588,11 @@ decisions on ids and variable names. -/
 def preCheck (i : Input) : E Unit := do
   unless i.links.isEmpty do throw (.outOfFragment "links")
   unless i.workloads.isEmpty do throw (.outOfFragment "workloads")
-  unless i.routes.isEmpty do throw (.outOfFragment "routes")
-  if i.measures then throw (.outOfFragment "measured outputs (metrics)")
-  for b in i.behaviors do
-    if let .keyed .. := b.instances then throw (.outOfFragment s!"keyed instances (behavior {b.id})")
+  -- a scenario step addressed to an instance of a keyed behaviour names a key, not a slot
+  for st in i.scenario.steps do
+    if let some (bn, _) := st.target then
+      if (i.behaviors.find? (·.id == bn)).any isKeyed then
+        throw (.outOfFragment s!"a scenario step addressed to an instance of keyed behavior {bn}")
   -- WG-4688, decision 1: a repeated behaviour id is refused.
   let ids := i.behaviors.map (·.id)
   for (b, k) in i.behaviors.zipIdx do
@@ -531,6 +606,35 @@ def preCheck (i : Input) : E Unit := do
     for v in b.variables do
       if v.name == "time" || v.name == "state" then
         throw (.illTyped s!"variable {b.id}.{v.name}: the names time and state are reserved")
+
+/-- The JSON text of a calculus value, as format 2 writes the value (a key route hashes it). -/
+def valJson : Core.Behav.Val → String
+  | .int n => Json.write (.num (n : Rat))
+  | .rat q => Json.write (.num q)
+  | .bool b => Json.write (.bool b)
+  | .str s => Json.write (.str s)
+  | .lit _ json => json
+
+/-- The routes, in format 2's decision order (`decideRoutes`): behaviour by behaviour in input
+order, for each the first route of each event (`Input.route?`), with the behaviour's index. -/
+def routeList (i : Input) : List (Nat × RouteIn) :=
+  (List.range i.behaviors.length).flatMap fun j =>
+    let b := i.behaviors.getD j default
+    (i.routes.zipIdx.filter fun (r, k) => r.behavior == b.id &&
+        !((i.routes.take k).any fun r' => r'.event == r.event && r'.behavior == r.behavior)).map
+      fun (r, _) => (j, r)
+
+/-- A route as a calculus route. -/
+def routeOfIn (i : Input) (j : Nat) (r : RouteIn) : Core.Behav.Route :=
+  let b := i.behaviors.getD j default
+  let by_ : Core.Behav.RouteBy := match r.rby with
+    | "key" =>
+      let f := strId (r.field.getD "")
+      if isKeyed b then .keyed f else .key f (fun v => (Random.fnv1a64 (valJson v)).toNat)
+    | "round-robin" => .roundRobin
+    | "least-busy" => .leastBusy (r.resource.bind fun x => i.resources.findIdx? (·.id == x))
+    | _ => .random
+  { event := evIdx i r.event, group := (List.range (instCount b)).map (machineOf i.behaviors j), by_ }
 
 /-- The calculus system of an input, before the well-formedness check. -/
 def build (i : Input) : E Core.Behav.Sys := do
@@ -547,7 +651,7 @@ def build (i : Input) : E Core.Behav.Sys := do
   let machines ← lay.mapM fun (j, _) => do
     let b := behs.getD j default
     let vs ← b.variables.mapM fun v => valOf v.initial s!"{b.id}.{v.name}"
-    pure ({ ctrl := stateIdx b b.initial, vars := vs } : Core.Behav.MState)
+    pure ({ ctrl := stateIdx b b.initial, vars := vs, live := !isKeyed b } : Core.Behav.MState)
   -- transitions and sampled delays, machine by machine
   let tsl ← (Core.Behav.finList n).mapM fun m => do
     let (j, k) := lay.getD m.val (0, 0)
@@ -602,7 +706,8 @@ def build (i : Input) : E Core.Behav.Sys := do
   let world : Core.Behav.World :=
     { res := i.resources.map fun d => { capacity := d.capacity, holds := [], waiting := [] }, nextReq := 0 }
   return { sig, trans, init := { time := 0, machines, pending, attCap := some attCap, world }, faults,
-           stopAt := i.scenario.stopAt, samples, resources := i.resources }
+           stopAt := i.scenario.stopAt, samples, resources := i.resources,
+           routes := (routeList i).map fun (j, r) => routeOfIn i j r }
 
 /-- **Elaboration**: the calculus system of a format-2 input, or why there is none. The last check
 is the decidable well-formedness of the calculus (`Sys.wf`). -/

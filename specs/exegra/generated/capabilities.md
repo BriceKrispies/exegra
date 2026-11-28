@@ -15,7 +15,7 @@ its status.
 | 6. Refinement | none | none |
 | 7. Implementation conformance | none | none |
 | 8. Simulation fidelity | none | none |
-| Change impact | none | `admit-refuses-theorem-weakening` (supported), `admit-takes-change-sets` (supported), `change-impact-remarks-dependents` (supported), `impact-changed-claim-remarked` (proved), `impact-direct-dependency-remarked` (proved), `impact-proof-only-not-weakened` (proved), `impact-statement-change-weakens` (proved), `verify-reruns-only-impacted-evidence` (supported) |
+| Change impact | none | `admit-refuses-theorem-weakening` (not-evaluated), `admit-takes-change-sets` (not-evaluated), `change-impact-remarks-dependents` (not-evaluated), `impact-changed-claim-remarked` (not-evaluated), `impact-direct-dependency-remarked` (not-evaluated), `impact-proof-only-not-weakened` (not-evaluated), `impact-statement-change-weakens` (not-evaluated), `verify-reruns-only-impacted-evidence` (not-evaluated) |
 
 ## Counts
 
@@ -26,9 +26,7 @@ its status.
 | Behaviors | 43 |
 | Scenarios | 36 |
 | Claims | 462 |
-| Claims shown established | 5 |
-| Claims inconclusive | 20 |
-| Claims not-evaluated | 41 |
-| Claims proved | 123 |
-| Claims supported | 221 |
+| Claims shown established | 0 |
+| Claims inconclusive | 18 |
+| Claims not-evaluated | 387 |
 | Claims verified | 57 |

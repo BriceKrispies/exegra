@@ -120,17 +120,27 @@ def ekindLean : Core.Behav.EKind → String
   | .waitTimeout res q => s!"(.waitTimeout {res} {q})"
   | .faultEdge f on => s!"(.faultEdge {f} {on})"
 
+def routesLean (rs : Option (List (List Nat × Nat))) : String :=
+  match rs with
+  | none => "none"
+  | some rs => s!"(some {listLean (fun (r : List Nat × Nat) => s!"({listLean toString r.1}, {r.2})") rs})"
+
 def entryLean (e : Core.Behav.Entry) : String :=
   s!"\{ time := {e.time}, event := {e.event}, payload := {fieldsLean e.payload}, " ++
   s!"target := {optLean e.target}, timer := {optLean e.timer}, done := {listLean toString e.done}, sender := {optLean e.sender}, " ++
-  s!"kind := {ekindLean e.kind} }"
+  s!"kind := {ekindLean e.kind}, routes := {routesLean e.routes} }"
+
+/-- A machine state as a Lean term: control state, variables, liveness and key. -/
+def mstateLean (m : Core.Behav.MState) : String :=
+  s!"\{ ctrl := {m.ctrl}, vars := {listLean valLean m.vars}, live := {m.live}, key := " ++
+  (match m.key with | none => "none" | some v => s!"(some {valLean v})") ++ " }"
 
 /-- A configuration as a Lean term: every field, the world included (a certificate that dropped the
 world or the entries' kinds would name states the calculus never reaches). -/
 def cfgLean (c : Core.Behav.Cfg) : String :=
-  s!"\{ time := {c.time}, machines := {listLean (fun (m : Core.Behav.MState) => s!"⟨{m.ctrl}, {listLean valLean m.vars}⟩") c.machines}, " ++
+  s!"\{ time := {c.time}, machines := {listLean mstateLean c.machines}, " ++
   s!"pending := {listLean entryLean c.pending}, attempts := {listLean toString c.attempts}, attCap := {optLean c.attCap}, " ++
-  s!"world := {worldLean c.world} }"
+  s!"world := {worldLean c.world}, counters := {listLean toString c.counters} }"
 
 /-- A calculus state as a Lean term of type `Core.Behav.State`. -/
 def stateLean : State → String

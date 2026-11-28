@@ -17,7 +17,9 @@ criteria 14 and 15).
 computes (`runB_reach`: all reachable in the calculus), and the run ends as `runB_terminates` says.
 Everything else in the trace is bookkeeping that no theorem is about, kept beside the calculus
 state as format 2 keeps it: sequence numbers, sources, senders and targets as addresses, timer ids,
-`scheduledAt`, delayed copies' `copyOf`, the streams' draw counts, the records of a step (fired
+`scheduledAt`, delayed copies' `copyOf`, the streams' draw counts, the routes an entry carries
+by behaviour id and instance, format 2's round-robin counters (the calculus keeps them modulo the
+instance count), the creation order of keyed instances, the records of a step (fired
 transitions with the values each `set` replaced, emitted entries, ignored behaviours with the
 transitions they considered, fault records, draws, responsibility). The records are computed by
 `stepRec`, which repeats the step with the calculus's own functions (winners, guard and effect
@@ -47,6 +49,8 @@ structure PMeta where
   copyOf : Option Nat := none
   /-- Format 2's kind of the entry (an event, or an entry of a resource). -/
   kind : EntryKind := .event
+  /-- The routes decided for the entry: behaviour id and instance (format 2's `Entry.routes`). -/
+  routes : Option (List (String × Value)) := none
   deriving Inhabited
 
 /-- What the encoding needs from the input: the behaviours, the machine layout, and the names the
@@ -58,6 +62,18 @@ structure Info where
   lay : List (Nat × Nat)
   fields : List String
   timers : List String
+  /-- The routes in `Sys.routes` order, with their behaviours' indices. -/
+  routes : List (Nat × RouteIn) := []
+  /-- The key of each machine in the configuration at hand (a keyed instance's). -/
+  keys : List (Option Core.Behav.Val) := []
+
+/-- A calculus value as a format-2 value. -/
+def toValue : Core.Behav.Val → Value
+  | .int n => .num (n : Rat)
+  | .rat q => .num q
+  | .bool b => .bool b
+  | .str s => .str s
+  | .lit _ json => (Json.parse json).toOption.getD .null
 
 def payloadKeys (v : Value) : List String :=
   match v with
@@ -74,28 +90,27 @@ def mkInfo (i : Input) : Info :=
   let timers := effs.flatMap fun e => match e with
     | .timer n .. | .cancel n => [n]
     | _ => []
-  { input := i, env := envOf i, behs := i.behaviors, lay := Elab.layout i.behaviors, fields, timers }
+  { input := i, env := envOf i, behs := i.behaviors, lay := Elab.layout i.behaviors, fields, timers,
+    routes := Elab.routeList i }
 
 namespace Info
 variable (I : Info)
 
 def beh (m : Nat) : BehaviorIn := I.behs.getD (I.lay.getD m (0, 0)).1 default
-def inst (m : Nat) : Value := .num (↑(I.lay.getD m (0, 0)).2 : Rat)
+/-- The instance of machine `m`: its index, or for a slot of a keyed behaviour its key. -/
+def inst (m : Nat) : Value :=
+  if Elab.isKeyed (I.beh m) then ((I.keys.getD m none).map toValue).getD .null
+  else .num (↑(I.lay.getD m (0, 0)).2 : Rat)
 def key (m : Nat) : String := machineKey (I.beh m) (I.inst m)
 def addr (m : Nat) : Addr := { behavior := (I.beh m).id, inst := I.inst m, incarnation := 0 }
 def event (id : Nat) : String := I.input.events.getD id ""
 def field (id : Nat) : String := (I.fields.find? (Elab.strId · == id)).getD ""
 def timerName (id : Nat) : String := (I.timers.find? (Elab.strId · == id)).getD ""
 
-end Info
+/-- The information with the keys of machine states `ms`. -/
+def withKeys (ms : List Core.Behav.MState) : Info := { I with keys := ms.map (·.key) }
 
-/-- A calculus value as a format-2 value. -/
-def toValue : Core.Behav.Val → Value
-  | .int n => .num (n : Rat)
-  | .rat q => .num q
-  | .bool b => .bool b
-  | .str s => .str s
-  | .lit _ json => (Json.parse json).toOption.getD .null
+end Info
 
 def payloadValue (I : Info) (pl : List (Nat × Core.Behav.Val)) : Value :=
   .obj 0 (pl.map fun (f, v) => (I.field f, toValue v))
@@ -105,7 +120,7 @@ def toEntry (I : Info) (e : CEntry) (mt : PMeta) : Entry :=
     event := (match mt.kind with | .event => I.event e.event | _ => ""),
     payload := (match mt.kind with | .event => payloadValue I e.payload | _ => .null),
     source := mt.src, kind := mt.kind, target := mt.target,
-    sender := mt.sender, routes := none, timer := mt.timer, copyOf := mt.copyOf }
+    sender := mt.sender, routes := mt.routes, timer := mt.timer, copyOf := mt.copyOf }
 
 /-- A machine state as a format-2 machine. -/
 def toMachine (I : Info) (m : Nat) (ms : Core.Behav.MState) : Machine :=
@@ -114,8 +129,15 @@ def toMachine (I : Info) (m : Nat) (ms : Core.Behav.MState) : Machine :=
     vars := (b.variables.zip ms.vars).foldl (fun vs (v, x) => objInsert vs v.name (toValue x)) [],
     types := b.types }
 
-def insts (I : Info) : List (String × List Value) :=
-  I.behs.map fun b => (b.id, (List.range (Elab.instCount b)).map fun (k : Nat) => Value.num (k : Rat))
+/-- The instances of each behaviour in machine states `ms`: a keyed behaviour's live slots, in
+creation order (slot order), by key. -/
+def insts (I : Info) (ms : List Core.Behav.MState) : List (String × List Value) :=
+  let I := I.withKeys ms
+  I.behs.zipIdx.map fun (b, j) =>
+    (b.id, if Elab.isKeyed b then
+        (((List.range (Elab.instCount b)).map (Elab.machineOf I.behs j)).filter
+          (fun m => (ms[m]?.map (·.live)).getD false)).map I.inst
+      else (List.range (Elab.instCount b)).map fun (k : Nat) => Value.num (k : Rat))
 
 /-! ### The queue with its bookkeeping -/
 
@@ -142,6 +164,21 @@ def errText : Core.Behav.Err → String
   | .release _ _ _ _ _ => "A release of more units than held."
   | .serviceBound _ => "Value service time exceeds 2^53."
   | .scaleBound _ => "Value demand scale exceeds 2^32."
+  | .routeField _ => "Route needs a payload field."
+  | .routeFull _ => "Behavior would exceed its instances."
+  | .ambiguous => "Ambiguous reference"
+  | .keySort => "Instance key of another sort"
+
+/-- The message of a failed route decision (format 2's `decideRoutes`): `ev` is the entry's
+event. -/
+def routeErrText (I : Info) (ev : String) : Core.Behav.Err → String
+  | .routeField i =>
+    let (j, r) := I.routes.getD i (0, default)
+    s!"Route of \"{ev}\" to \"{(I.behs.getD j default).id}\" needs payload field \"{r.field.getD ""}\"."
+  | .routeFull i =>
+    let b := I.behs.getD (I.routes.getD i (0, default)).1 default
+    s!"Behavior \"{b.id}\" would exceed {Elab.instCount b} instances."
+  | err => errText err
 
 /-! ### Settling, recorded -/
 
@@ -260,12 +297,18 @@ def actsRec (I : Info) (sys : Core.Behav.Sys) (now : Nat) : List Core.Behav.Act 
 
 /-- A calculus configuration with its bookkeeping, as a format-2 configuration (`rs` maps the
 calculus's request ids to format 2's). -/
-def toConf (I : Info) (c : Core.Behav.Cfg) (metas : List PMeta) (b : Book) (rs : List (Nat × Nat) := []) : Conf :=
+def toConf (I : Info) (c : Core.Behav.Cfg) (metas : List PMeta) (b : Book) (rs : List (Nat × Nat) := [])
+    (created : List Nat := []) (rcs : List (String × Nat) := []) : Conf :=
+  let I := I.withKeys c.machines
   { time := c.time,
-    machines := (c.machines.zipIdx).map fun (ms, m) => (I.key m, toMachine I m ms),
-    insts := insts I,
+    -- format 2's machines: the instances laid out at the start, then the keyed instances in
+    -- creation order
+    machines := ((c.machines.zipIdx).filterMap fun (ms, m) =>
+        if Elab.isKeyed (I.beh m) then none else some (I.key m, toMachine I m ms)) ++
+      created.filterMap fun m => (c.machines[m]?).map fun ms => (I.key m, toMachine I m ms),
+    insts := insts I c.machines,
     pending := (c.pending.zip metas).map fun (e, mt) => toEntry I e mt,
-    resources := resourcesOf I c.world rs, routeCounters := [], streams := b.counts,
+    resources := resourcesOf I c.world rs, routeCounters := rcs, streams := b.counts,
     -- format 2's `active`: the windowed resource faults acting, in fault order
     active := (I.env.faults.zipIdx).filterMap fun (f, k) =>
       if f.window.isSome && c.world.active.contains k then some f.id else none }
@@ -302,10 +345,17 @@ structure Out where
   book : Book
   resources : List ResRecord := []
   rs : List (Nat × Nat) := []
+  /-- The keyed instances created so far, in creation order, and format 2's route counters. -/
+  created : List Nat := []
+  rcs : List (String × Nat) := []
+  /-- The head as the step's record shows it (with its routes, when the step decided them). -/
+  head : Option Entry := none
 
 inductive SR where
   | ok (o : Out)
-  | fail (kind : Kind2) (msg : String)
+  /-- A failed step: its kind, its message, and the head as its record shows it (`none`: as
+  queued). -/
+  | fail (kind : Kind2) (msg : String) (head : Option Entry := none)
 
 /-- The state of the recording of one winner's effects. -/
 structure ESt where
@@ -439,22 +489,59 @@ def scanRec (I : Info) (sys : Core.Behav.Sys) (m : Fin sys.sig.machines) (c0 : C
           | .ok _ => .error (ti, .sort)
 
 /-- The machines a delivered entry addresses in behaviour `b` (format 2's `addressed`): `none`
-when it addresses another behaviour. -/
-def addressedM (I : Info) (mt0 : PMeta) (j : Nat) (b : BehaviorIn) : Option (List Nat) :=
-  let ms := (List.range (Elab.instCount b)).map (Elab.machineOf I.behs j)
+when it addresses another behaviour. The instances are the live machines of `b` in `ms0`; a route
+decided for the entry picks one of them. -/
+def addressedM (I : Info) (ms0 : List Core.Behav.MState) (mt0 : PMeta) (e : CEntry) (j : Nat)
+    (b : BehaviorIn) : Option (List Nat) :=
+  let all := (List.range (Elab.instCount b)).map (Elab.machineOf I.behs j)
+  let ms := all.filter fun m => (ms0[m]?.map (·.live)).getD false
   match mt0.target with
   | some a =>
     if a.behavior == b.id then
       some (ms.filter fun m => Json.write (I.inst m) == Json.write a.inst)
     else none
-  | none => some ms
+  | none =>
+    match (e.routes.getD []).find? (fun r => all.contains r.2) with
+    | some r => some [r.2]
+    | none => some ms
+
+/-- The route draws of delivering `e` from `c` (`Exec.drawsW` of `routeHoles`), with format 2's
+records of them (`drawNext` from `route:{event}:{behavior}`). -/
+def routeDrawsRec (sys : Core.Behav.Sys) (c : Core.Behav.Cfg) (e : CEntry) (b : Book) :
+    List Nat × Book × List Draw :=
+  (Core.Behav.routeHoles sys c e).foldl (fun (vs, bk, drs) h =>
+    let (v, bk') := Core.Behav.Exec.drawW h bk
+    let name := bk.siteName h.1
+    let drew := match h.2 with
+      | .fixed _ => false
+      | d => d.wf
+    let drs := match bk.seed with
+      | some seed => if drew then drs ++ [{ stream := name, index := bk.count name,
+                                            value := Random.draw seed name (bk.count name) }] else drs
+      | none => drs
+    (vs ++ [v], bk', drs)) ([], b, [])
+
+/-- Format 2's route counters after the routes of an entry of event `ev` are decided from machine
+states `ms`: each round-robin route whose behaviour has an instance counts one more. -/
+def bumpCounters (I : Info) (sys : Core.Behav.Sys) (ms : List Core.Behav.MState) (ev : Nat)
+    (rcs : List (String × Nat)) : List (String × Nat) :=
+  (sys.routesOf ev).foldl (fun rcs (i, r) =>
+    match r.by_ with
+    | .roundRobin =>
+      if (Core.Behav.instsOf ms r.group).isEmpty then rcs
+      else
+        let rin := (I.routes.getD i (0, default)).2
+        bump rcs s!"{rin.event}:{rin.behavior}"
+    | _ => rcs) rcs
 
 /-- **One step, recorded.** From configuration `c` (sorted, its head `e` with bookkeeping `mt0`),
 under `mask`, with book `b`: the records of the step and the queue after it, or the kind and the
 format-2 message of the failure. -/
 def stepRecWith (I : Info) (sys : Core.Behav.Sys) (mask : List Bool) (c : Core.Behav.Cfg) (metas : List PMeta)
     (seq taken : Nat) (b : Book) (dsOv : Option (List Nat)) (next : Option Core.Behav.Cfg := none)
-    (rs : List (Nat × Nat) := []) : SR :=
+    (rs : List (Nat × Nat) := []) (created : List Nat := []) (rcs : List (String × Nat) := [])
+    (rvOv : Option (List Nat) := none) : SR :=
+  let I := I.withKeys c.machines
   match c.pending, metas with
   | e :: _, mt0 :: mrest =>
     if e.kind != .event then
@@ -479,12 +566,27 @@ def stepRecWith (I : Info) (sys : Core.Behav.Sys) (mask : List Bool) (c : Core.B
       | .error msg => .fail kind2 msg
       | .ok ws => .ok { kind := kind2, pairs := ws.pairs, seq := ws.seq, book := ws.book, draws := ws.draws,
                         resources := ws.recs, rs := ws.rs, faults := frecs,
-                        responsible := responsibleOf I.input "" [] frecs }
+                        responsible := responsibleOf I.input "" [] frecs, created, rcs }
     else
     let ev := I.event e.event
     let time := e.time
     let act := sys.active mask
-    let att := c.attemptsOf e.event + 1
+    -- the routes, decided when the entry is first taken as head (Format2.lean:2283-2296)
+    let (rv, b, rdraws) := routeDrawsRec sys c e b
+    -- an exploration replays a label's own route draws
+    let rv := rvOv.getD rv
+    match Core.Behav.routeOf sys c e rv with
+    | none => .fail .deliver "internal: the route draws do not fit"
+    | some (.error (err, _)) => .fail .deliver (routeErrText I ev err)
+    | some (.ok (c1, e1, _)) =>
+    let I := I.withKeys c1.machines
+    let created := created ++ (List.range c1.machines.length).filter fun m =>
+      (c1.machines[m]?.map (·.live)).getD false && !((c.machines[m]?.map (·.live)).getD false)
+    let rcs := if sys.toRoute e then bumpCounters I sys c.machines e.event rcs else rcs
+    let mt0 : PMeta := if sys.toRoute e then
+        { mt0 with routes := some ((e1.routes.getD []).map fun r => ((I.beh r.2).id, I.inst r.2)) }
+      else mt0
+    let att := c1.attemptsOf e.event + 1
     let tail := (c.pending.tail.zip mrest)
     let headE := toEntry I e mt0
     let payloadV := headE.payload
@@ -493,45 +595,46 @@ def stepRecWith (I : Info) (sys : Core.Behav.Sys) (mask : List Bool) (c : Core.B
     if act.any (fun p => p.2.hits [.drop, .lose] e.event att e.time) then
       let recs := drops.map fun f => { fault := f.id, effect := dropEffect f }
       .ok { kind := .drop, faults := recs, responsible := responsibleOf I.input ev [] recs, pairs := tail,
-            seq, book := b, rs }
+            seq, book := b, rs, draws := rdraws, created, rcs, head := some headE }
     else
-    match Core.Behav.delayFault act e att with
+    match Core.Behav.delayFault act e1 att with
     | some (k, f) =>
       let fid := (I.env.faults[k]?.map (·.id)).getD ""
       let eff := (I.env.faults[k]?.map delayEffect).getD .delayed
-      match Core.Behav.later e k f.by_ with
-      | .error _ => .fail .delay "Value time exceeds 2^53."
+      match Core.Behav.later e1 k f.by_ with
+      | .error _ => .fail .delay "Value time exceeds 2^53." (some headE)
       | .ok cp =>
         let mt : PMeta := { mt0 with seq, copyOf := some (mt0.copyOf.getD mt0.seq) }
         let recs := [{ fault := fid, effect := eff }]
         .ok { kind := .delay, faults := recs, responsible := responsibleOf I.input ev [] recs,
-              pairs := insertP tail (cp, mt), seq := seq + 1, book := b, rs }
+              pairs := insertP tail (cp, mt), seq := seq + 1, book := b, rs, draws := rdraws, created, rcs,
+              head := some headE }
     | none =>
-      let ds := dsOv.getD (Core.Behav.Exec.drawsOf sys mask c e b).1
+      let ds := dsOv.getD (Core.Behav.Exec.drawsOf sys mask c e rv b).1
       let R := sys.resolve ds
-      let c0 := c.popE e
+      let c0 := c1.popE e
       -- phase 1, behaviour by behaviour in input order, instance by instance
       let ph1 : Except String (List (Nat × Nat × List FaultRecord) × List Ignored2 × List FaultRecord) :=
         I.behs.zipIdx.foldlM (fun (ws, igs, recs) (bh, j) =>
-          match addressedM I mt0 j bh with
+          match addressedM I c1.machines mt0 e1 j bh with
           | none => .ok (ws, igs, recs)
           | some [] => .ok (ws, igs ++ [{ base := { behavior := bh.id, reason := .noTransition, considered := [] },
                                           inst := none }], recs)
           | some ms => ms.foldlM (fun (ws, igs, recs) m =>
               if h : m < R.sig.machines then
-                let own := c0.machines.getD m ⟨0, []⟩
+                let own := c0.machines.getD m { ctrl := 0, vars := [] }
                 let state := (Elab.statesOf bh).getD own.ctrl ""
                 match scanRec I R ⟨m, h⟩ c0 e own state ev time bh.transitions.zipIdx [] false false [] with
                 | .error (ti, err) =>
                   let src := ((bh.transitions[ti]?).bind (·.guard)).toList
-                  .error (msgOf I (toConf I c metas b) (I.key m) (I.inst m) payloadV time src (errText err))
+                  .error (msgOf I (toConf I c1 metas b rs created rcs) (I.key m) (I.inst m) payloadV time src (errText err))
                 | .ok (some (ti, en), _, _, _, rs) => .ok (ws ++ [(m, ti, en)], igs, recs ++ rs ++ en)
                 | .ok (none, considered, dis, gf, rs) =>
                   let reason := if dis then IgnoredReason.disabled else if gf then .guardFalse else .noTransition
                   .ok (ws, igs ++ [{ base := { behavior := bh.id, reason, considered }, inst := some (I.inst m) }], recs ++ rs)
               else .ok (ws, igs, recs)) (ws, igs, recs)) ([], [], [])
       match ph1 with
-      | .error msg => .fail .deliver msg
+      | .error msg => .fail .deliver msg (some headE)
       | .ok (ws, ignored, recs) =>
         -- phase 2, winners in machine order, each from the start-of-step machine
         let ph2 : Except String (List Fired2 × List (Nat × Core.Behav.MState) × List (CEntry × PMeta) ×
@@ -541,12 +644,12 @@ def stepRecWith (I : Info) (sys : Core.Behav.Sys) (mask : List Bool) (c : Core.B
               let bh := I.beh m
               match (R.trans ⟨m, h⟩)[ti]?, bh.transitions[ti]? with
               | some tr, some t =>
-                let own := c0.machines.getD m ⟨0, []⟩
+                let own := c0.machines.getD m { ctrl := 0, vars := [] }
                 let fin := next.bind fun c' => (c'.machines[m]?).map (·.vars)
                 match effRec I sys (me := ⟨m, h⟩) b c0 e mt0 bh t ti fin 0 tr.effects t.effects
                     { own, seq, book := bk } with
                 | .error (j, err) =>
-                  let view := toConf I { c with machines := c.machines.set m own } metas b
+                  let view := toConf I { c1 with machines := c1.machines.set m own } metas b rs created rcs
                   .error (msgOf I view (I.key m) (I.inst m) payloadV time ((t.effects[j]?).map effSrcs |>.getD [])
                     (if err == .noRequester then s!"Effect replies to \"{ev}\", which has no requester." else errText err))
                 | .ok st =>
@@ -558,7 +661,7 @@ def stepRecWith (I : Info) (sys : Core.Behav.Sys) (mask : List Bool) (c : Core.B
               | _, _ => .error "internal: a winner without its transition"
             else .error "internal: a winner out of range") ([], [], [], seq, b, [], [])
         match ph2 with
-        | .error msg => .fail .deliver msg
+        | .error msg => .fail .deliver msg (some headE)
         | .ok (fired, _, outs, seq0, b0, drs0, ops) =>
           -- the commit: the pending entries of the timers the winners touched removed, then the
           -- emitted entries inserted by time in machine order
@@ -576,19 +679,19 @@ def stepRecWith (I : Info) (sys : Core.Behav.Sys) (mask : List Bool) (c : Core.B
           -- settling the step's operations (Format2.lean:2173-2187)
           match actsRec I sys time (Core.Behav.settle sys time ops [] c.world).2
               { pairs := pairs0, seq := seq0, book := b0, rs } with
-          | .error msg => .fail .deliver msg
+          | .error msg => .fail .deliver msg (some headE)
           | .ok wst =>
           let pairs := wst.pairs
           let seq' := wst.seq
           let base : Out := { kind := .deliver, fired, ignored, faults, responsible := responsibleOf I.input ev fired faults,
-                              draws := drs0 ++ wst.draws, pairs, seq := seq', book := wst.book,
-                              resources := wst.recs, rs := wst.rs }
+                              draws := rdraws ++ drs0 ++ wst.draws, pairs, seq := seq', book := wst.book,
+                              resources := wst.recs, rs := wst.rs, created, rcs, head := some headE }
           -- a duplicate after a committed delivery
-          match Core.Behav.dupFault act e att with
+          match Core.Behav.dupFault act e1 att with
           | none => .ok base
           | some (k, f) =>
-            match Core.Behav.later e k f.by_ with
-            | .error _ => .fail .deliver "Value time exceeds 2^53."
+            match Core.Behav.later e1 k f.by_ with
+            | .error _ => .fail .deliver "Value time exceeds 2^53." (some headE)
             | .ok cp =>
               let fid := (I.env.faults[k]?.map (·.id)).getD ""
               let mt : PMeta := { mt0 with seq := seq', copyOf := some (mt0.copyOf.getD mt0.seq) }
@@ -600,8 +703,9 @@ def stepRecWith (I : Info) (sys : Core.Behav.Sys) (mask : List Bool) (c : Core.B
 
 /-- One step recorded with the draws the scheduler makes. -/
 def stepRec (I : Info) (sys : Core.Behav.Sys) (mask : List Bool) (c : Core.Behav.Cfg) (metas : List PMeta)
-    (seq taken : Nat) (b : Book) (next : Option Core.Behav.Cfg := none) (rs : List (Nat × Nat) := []) : SR :=
-  stepRecWith I sys mask c metas seq taken b none next rs
+    (seq taken : Nat) (b : Book) (next : Option Core.Behav.Cfg := none) (rs : List (Nat × Nat) := [])
+    (created : List Nat := []) (rcs : List (String × Nat) := []) : SR :=
+  stepRecWith I sys mask c metas seq taken b none next rs created rcs
 
 /-! ### The run -/
 
@@ -655,6 +759,9 @@ structure RunB where
   outcome : Outcome2
   /-- Format 2's id (sequence number) of each calculus request. -/
   rs : List (Nat × Nat) := []
+  /-- The keyed instances created, in creation order, and format 2's route counters. -/
+  created : List Nat := []
+  rcs : List (String × Nat) := []
 
 def blankB (I : Info) (index : Nat) (head : Entry) (kind : Kind2) (config : Conf) : Step2 :=
   { index, time := head.time, kind, head, fired := [], ignored := [], faults := [], responsible := [],
@@ -669,29 +776,30 @@ def headOf (I : Info) (c : Core.Behav.Cfg) (metas : List PMeta) : Entry :=
 /-- The record of a failed step. -/
 def failRec (I : Info) (sys : Core.Behav.Sys) (mask : List Bool) (c : Core.Behav.Cfg) (r : RunB) : Step2 :=
   let taken := r.stepsRev.length
-  let head := headOf I c r.metas
-  let (kind, msg) := match stepRec I sys mask c r.metas r.seq taken r.book none r.rs with
-    | .fail k msg => (k, msg)
-    | .ok _ => (.deliver, "internal: the calculus step failed where its record did not")
-  { blankB I taken head kind (toConf I c r.metas r.book r.rs) with
+  let (kind, msg, h) := match stepRec I sys mask c r.metas r.seq taken r.book none r.rs r.created r.rcs with
+    | .fail k msg h => (k, msg, h)
+    | .ok _ => (.deliver, "internal: the calculus step failed where its record did not", none)
+  let head := h.getD (headOf I c r.metas)
+  { blankB I taken head kind (toConf I c r.metas r.book r.rs r.created r.rcs) with
       responsible := [head.event].filter (· != ""), error := some msg }
 
 /-- The record of a committed step and the run's bookkeeping after it, or the record of an internal
 error when the recorded step does not arrive at the configuration `Exec.step` committed. -/
 def commitRec (I : Info) (sys : Core.Behav.Sys) (mask : List Bool) (c : Core.Behav.Cfg) (r : RunB)
-    (s' : Core.Behav.State) : Except Step2 (Step2 × Book × List PMeta × Nat × List (Nat × Nat)) :=
+    (s' : Core.Behav.State) :
+    Except Step2 (Step2 × Book × List PMeta × Nat × List (Nat × Nat) × List Nat × List (String × Nat)) :=
   let taken := r.stepsRev.length
   let head := headOf I c r.metas
   let internal (msg : String) : Step2 :=
-    { blankB I taken head .deliver (toConf I c r.metas r.book r.rs) with error := some msg }
-  match stepRec I sys mask c r.metas r.seq taken r.book s'.cfg r.rs, s' with
+    { blankB I taken head .deliver (toConf I c r.metas r.book r.rs r.created r.rcs) with error := some msg }
+  match stepRec I sys mask c r.metas r.seq taken r.book s'.cfg r.rs r.created r.rcs, s' with
   | .ok o, .run _ c' =>
     if o.pairs.map (·.1) != c'.pending then .error (internal "internal: the recorded queue differs from the calculus step")
     else
       let metas := o.pairs.map (·.2)
-      .ok ({ blankB I taken head o.kind (toConf I c' metas o.book o.rs) with
+      .ok ({ blankB I taken (o.head.getD head) o.kind (toConf I c' metas o.book o.rs o.created o.rcs) with
               fired := o.fired, ignored := o.ignored, faults := o.faults, responsible := o.responsible,
-              draws := o.draws, resources := o.resources }, o.book, metas, o.seq, o.rs)
+              draws := o.draws, resources := o.resources }, o.book, metas, o.seq, o.rs, o.created, o.rcs)
   | _, _ => .error (internal "internal: the calculus step committed where its record failed")
 
 /-- One step of the run: `Exec.step` decides the next state; `stepRec` records it. -/
@@ -705,8 +813,8 @@ def advanceB (I : Info) (sys : Core.Behav.Sys) (bound : Nat) (r : RunB) : RunB :
     | .failed _ => { r with stepsRev := failRec I sys mask c r :: r.stepsRev, outcome := .error }
     | .committed _ s' _ =>
       match commitRec I sys mask c r s' with
-      | .ok (rec_, book, metas, seq, rs) =>
-        { state := s', book, metas, seq, rs, stepsRev := rec_ :: r.stepsRev,
+      | .ok (rec_, book, metas, seq, rs, created, rcs) =>
+        { state := s', book, metas, seq, rs, created, rcs, stepsRev := rec_ :: r.stepsRev,
           outcome := if s'.cfg.pending.isEmpty then .quiescent
             else if r.stepsRev.length + 1 ≥ bound then .stepLimit else .running }
       | .error rec_ => { r with stepsRev := rec_ :: r.stepsRev, outcome := .error }
@@ -780,12 +888,14 @@ def slotNames (I : Info) (sys : Core.Behav.Sys) : List String :=
 /-- The initial book of a format-2 run. -/
 def bookOf (I : Info) (sys : Core.Behav.Sys) : Book :=
   { seed := I.input.scenario.seed, names := slotNames I sys, counts := [],
-    sites := (List.range sys.sig.machines).flatMap fun m =>
+    sites := ((List.range sys.sig.machines).flatMap fun m =>
       let b := I.beh m
       b.transitions.zipIdx.flatMap fun (t, ti) =>
         (t.effects.zipIdx.filterMap fun (e, ei) => match e with
           | .request .use .. => some ((m, ti, ei), s!"demand:{b.id}:{t.id}:{ei}")
-          | _ => none) }
+          | _ => none)) ++
+      -- the random routes' streams (format 2's `route:{event}:{behavior}`)
+      I.routes.zipIdx.map fun ((_, r), i) => (Core.Behav.routeSite i, s!"route:{r.event}:{r.behavior}") }
 
 end Exegra.V2.B
 
@@ -808,7 +918,8 @@ def traceOfB (i : Input) (sys : Core.Behav.Sys) : Trace2 :=
     { state := s0, book := b0, metas, seq, stepsRev := [],
       outcome := if s0.cfg.pending.isEmpty then .quiescent else .running }
   { input := i, initialDraws := [], faults := (envOf i).faultIds, initial,
-    steps := r.stepsRev.reverse, outcome := r.outcome, final := toConf I r.state.cfg r.metas r.book r.rs }
+    steps := r.stepsRev.reverse, outcome := r.outcome,
+    final := toConf I r.state.cfg r.metas r.book r.rs r.created r.rcs }
 
 /-- The run of `traceOfB` stops within the step limit. -/
 theorem traceOfB_stops {i : Input} {sys : Core.Behav.Sys} (h1 : 1 ≤ i.scenario.stepLimit) :

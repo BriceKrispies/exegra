@@ -68,7 +68,7 @@ def copyFrom (m a : Fin 2) : Trans f4Sig m :=
 
 /-- Both machines at `0`, one entry of event `e` pending at time `0`. -/
 def f4Init : Cfg :=
-  { time := 0, machines := [⟨0, [.int 0]⟩, ⟨0, [.int 0]⟩],
+  { time := 0, machines := [{ ctrl := 0, vars := [.int 0] }, { ctrl := 0, vars := [.int 0] }],
     pending := [{ time := 0, event := 0, payload := [] }] }
 
 def ma : Fin 2 := ⟨0, by decide⟩
@@ -100,11 +100,11 @@ def yBA : State → Option Val := yOf 0
 /-- The configuration after the delivery in `f4AB`: `x = 1`, `y = 0`, nothing pending, one attempt
 of event `e`. -/
 def f4AB1 : Cfg :=
-  { time := 0, machines := [⟨0, [.int 1]⟩, ⟨0, [.int 0]⟩], pending := [], attempts := [1] }
+  { time := 0, machines := [{ ctrl := 0, vars := [.int 1] }, { ctrl := 0, vars := [.int 0] }], pending := [], attempts := [1] }
 
 /-- The configuration after the delivery in `f4BA`: `y = 0`, `x = 1`, nothing pending. -/
 def f4BA1 : Cfg :=
-  { time := 0, machines := [⟨0, [.int 0]⟩, ⟨0, [.int 1]⟩], pending := [], attempts := [1] }
+  { time := 0, machines := [{ ctrl := 0, vars := [.int 0] }, { ctrl := 0, vars := [.int 1] }], pending := [], attempts := [1] }
 
 theorem f4AB_deliver : (deliver f4AB [] f4Init (headLabel f4Init)).map (outcome [] f4Init) = some (.run [] f4AB1) := by
   decide
@@ -115,7 +115,7 @@ theorem f4BA_deliver : (deliver f4BA [] f4Init (headLabel f4Init)).map (outcome 
 /-- The two reachable states of a system with no faults and no sampled delays whose initial
 configuration has one pending entry, delivered to `c₁`, which has nothing pending. -/
 theorem two_state_inductive {sys : Sys} {c₁ : Cfg} (hf : sys.faults = []) (hsm : sys.samples = [])
-    (hres : sys.resources = []) (hlen : sys.init.pending.length = 1)
+    (hres : sys.resources = []) (hrt : sys.routes = []) (hlen : sys.init.pending.length = 1)
     (hd : (deliver sys [] sys.init (headLabel sys.init)).map (outcome [] sys.init) = some (.run [] c₁))
     (h₁ : c₁.pending = []) :
     (Sys.lts sys).Inductive (fun s => s = .run [] sys.init ∨ s = .run [] c₁) := by
@@ -135,7 +135,7 @@ theorem two_state_inductive {sys : Sys} {c₁ : Cfg} (hf : sys.faults = []) (hsm
         have hmem := hrdy.1
         rw [hx] at hmem
         have hxe : l.entry = x := List.mem_singleton.mp hmem
-        have hwd : l.wdraws = [] := wdraws_nil_of_nores hres hst'
+        have hwd : l.wdraws = [] := wdraws_nil_of_nores hres hrt hst'
         cases l
         simp only [headLabel, hx] at hdl hxe hwd ⊢
         rw [hxe, hdl, hwd]; rfl
@@ -146,13 +146,13 @@ theorem two_state_inductive {sys : Sys} {c₁ : Cfg} (hf : sys.faults = []) (hsm
 
 /-- **`[a, b]`: `b.y = 0` in every reachable state**, and no run fails. -/
 theorem f4_ab_safe : (Sys.lts f4AB).Invariant (fun s => yAB s = some (.int 0)) :=
-  safe_of_inductive (two_state_inductive (c₁ := f4AB1) rfl rfl rfl rfl f4AB_deliver rfl) (by
+  safe_of_inductive (two_state_inductive (c₁ := f4AB1) rfl rfl rfl rfl rfl f4AB_deliver rfl) (by
     intro s hs
     rcases hs with rfl | rfl <;> decide)
 
 /-- **`[b, a]`: `b.y = 0` in every reachable state**, and no run fails: the same verdict. -/
 theorem f4_ba_safe : (Sys.lts f4BA).Invariant (fun s => yBA s = some (.int 0)) :=
-  safe_of_inductive (two_state_inductive (c₁ := f4BA1) rfl rfl rfl rfl f4BA_deliver rfl) (by
+  safe_of_inductive (two_state_inductive (c₁ := f4BA1) rfl rfl rfl rfl rfl f4BA_deliver rfl) (by
     intro s hs
     rcases hs with rfl | rfl <;> decide)
 
@@ -177,8 +177,8 @@ def committedMachines : XResult → Option (List MState)
 /-- **The executable scheduler commits the same machines for both listings** (`a`'s `x = 1`,
 `b`'s `y = 0`, in each listing's machine order). -/
 theorem f4_exec_same_machines :
-    committedMachines (Exec.step f4AB (.run [] f4Init) {}) = some [⟨0, [.int 1]⟩, ⟨0, [.int 0]⟩] ∧
-      committedMachines (Exec.step f4BA (.run [] f4Init) {}) = some [⟨0, [.int 0]⟩, ⟨0, [.int 1]⟩] := by
+    committedMachines (Exec.step f4AB (.run [] f4Init) {}) = some [{ ctrl := 0, vars := [.int 1] }, { ctrl := 0, vars := [.int 0] }] ∧
+      committedMachines (Exec.step f4BA (.run [] f4Init) {}) = some [{ ctrl := 0, vars := [.int 0] }, { ctrl := 0, vars := [.int 1] }] := by
   decide
 
 /-- **The next-configuration rule gives two verdicts**: under `deliverNext` (the calculus's model
@@ -186,7 +186,7 @@ of today's rule, `phase2Next`) the same delivery leaves `b.y = 1` when `a` is li
 1 of `f4AB`) and `b.y = 0` when `b` is (machine 0 of `f4BA`). -/
 theorem f4_next_reads_differ :
     (deliverNext f4AB [] f4Init 0 []).map (outcome [] f4Init) =
-        some (.run [] { time := 0, machines := [⟨0, [.int 1]⟩, ⟨0, [.int 1]⟩], pending := [],
+        some (.run [] { time := 0, machines := [{ ctrl := 0, vars := [.int 1] }, { ctrl := 0, vars := [.int 1] }], pending := [],
                         attempts := [1] }) ∧
       (deliverNext f4BA [] f4Init 0 []).map (outcome [] f4Init) = some (.run [] f4BA1) := by
   decide
@@ -219,7 +219,7 @@ def watch (m : Fin 3) (ws : List (Fin 3)) : Trans aggSig m :=
       (.ref (.agg .sum (ws.map fun w => ⟨w, aVar w⟩))) (.ref (.count ws "busy")))] }
 
 def aggInit : Cfg :=
-  { time := 0, machines := [⟨0, [.int 0]⟩, ⟨0, [.int 0]⟩, ⟨0, [.int 0]⟩],
+  { time := 0, machines := [{ ctrl := 0, vars := [.int 0] }, { ctrl := 0, vars := [.int 0] }, { ctrl := 0, vars := [.int 0] }],
     pending := [{ time := 0, event := 0, payload := [] }] }
 
 /-- The workers listed first (machines 0 and 1), the monitor last (machine 2). -/
@@ -233,10 +233,10 @@ def aggFirst : Sys :=
     trans := fun m => if m.val = 0 then [watch m [⟨1, by decide⟩, ⟨2, by decide⟩]] else [work m] }
 
 def aggLast1 : Cfg :=
-  { time := 0, machines := [⟨1, [.int 1]⟩, ⟨1, [.int 1]⟩, ⟨0, [.int 0]⟩], pending := [], attempts := [1] }
+  { time := 0, machines := [{ ctrl := 1, vars := [.int 1] }, { ctrl := 1, vars := [.int 1] }, { ctrl := 0, vars := [.int 0] }], pending := [], attempts := [1] }
 
 def aggFirst1 : Cfg :=
-  { time := 0, machines := [⟨0, [.int 0]⟩, ⟨1, [.int 1]⟩, ⟨1, [.int 1]⟩], pending := [], attempts := [1] }
+  { time := 0, machines := [{ ctrl := 0, vars := [.int 0] }, { ctrl := 1, vars := [.int 1] }, { ctrl := 1, vars := [.int 1] }], pending := [], attempts := [1] }
 
 theorem agg_wf : aggLast.WF ∧ aggFirst.WF := ⟨by decide, by decide⟩
 
@@ -252,12 +252,12 @@ theorem aggFirst_deliver :
 `worker.sum.x + worker.count.busy` is `0` in every reachable state of both listings, although
 both workers fire in the same step. -/
 theorem agg_last_safe : (Sys.lts aggLast).Invariant (fun s => yOf 2 s = some (.int 0)) :=
-  safe_of_inductive (two_state_inductive (c₁ := aggLast1) rfl rfl rfl rfl aggLast_deliver rfl) (by
+  safe_of_inductive (two_state_inductive (c₁ := aggLast1) rfl rfl rfl rfl rfl aggLast_deliver rfl) (by
     intro s hs
     rcases hs with rfl | rfl <;> decide)
 
 theorem agg_first_safe : (Sys.lts aggFirst).Invariant (fun s => yOf 0 s = some (.int 0)) :=
-  safe_of_inductive (two_state_inductive (c₁ := aggFirst1) rfl rfl rfl rfl aggFirst_deliver rfl) (by
+  safe_of_inductive (two_state_inductive (c₁ := aggFirst1) rfl rfl rfl rfl rfl aggFirst_deliver rfl) (by
     intro s hs
     rcases hs with rfl | rfl <;> decide)
 
@@ -265,7 +265,7 @@ theorem agg_first_safe : (Sys.lts aggFirst).Invariant (fun s => yOf 0 s = some (
 as they fired, `2 + 2 = 4`, and the monitor listed first reads `0`: two verdicts. -/
 theorem agg_next_reads_differ :
     (deliverNext aggLast [] aggInit 0 []).map (outcome [] aggInit) =
-        some (.run [] { aggLast1 with machines := [⟨1, [.int 1]⟩, ⟨1, [.int 1]⟩, ⟨0, [.int 4]⟩] }) ∧
+        some (.run [] { aggLast1 with machines := [{ ctrl := 1, vars := [.int 1] }, { ctrl := 1, vars := [.int 1] }, { ctrl := 0, vars := [.int 4] }] }) ∧
       (deliverNext aggFirst [] aggInit 0 []).map (outcome [] aggInit) = some (.run [] aggFirst1) := by
   decide
 
@@ -286,13 +286,13 @@ def rTrans (m : Fin 2) : List (Trans rSig m) :=
 
 def rSys (ev : Nat) : Sys :=
   { sig := rSig, trans := rTrans,
-    init := { time := 0, machines := [⟨0, [.int 0]⟩, ⟨0, [.int 0]⟩], pending := [{ time := 0, event := ev, payload := [] }] } }
+    init := { time := 0, machines := [{ ctrl := 0, vars := [.int 0] }, { ctrl := 0, vars := [.int 0] }], pending := [{ time := 0, event := ev, payload := [] }] } }
 
 /-- **A reply reaches the requester**: the request carries its sender, the server's reply is
 targeted at it, and the client takes it. -/
 theorem reply_reaches_requester :
     ((Exec.run (rSys 0) 3 (.run [] (rSys 0).init) {}).states.getLast?).map (·.cfg) =
-      some { time := 0, machines := [⟨0, [.int 1]⟩, ⟨0, [.int 0]⟩], pending := [], attempts := [1, 1, 1] } := by
+      some { time := 0, machines := [{ ctrl := 0, vars := [.int 1] }, { ctrl := 0, vars := [.int 0] }], pending := [], attempts := [1, 1, 1] } := by
   decide
 
 /-- **A reply to an entry without a sender fails**: the run ends in the error state. -/
@@ -317,7 +317,7 @@ def divGuard (m : Fin 1) : Trans oneSig m :=
 
 def divSys : Sys :=
   { sig := oneSig, trans := fun m => [divGuard m],
-    init := { time := 0, machines := [⟨0, []⟩], pending := [{ time := 0, event := 0, payload := [] }] } }
+    init := { time := 0, machines := [{ ctrl := 0, vars := [] }], pending := [{ time := 0, event := 0, payload := [] }] } }
 
 theorem divSys_deliver :
     (deliver divSys [] divSys.init (headLabel divSys.init)).map (outcome [] divSys.init) = some (.err [] divSys.init) := by
@@ -365,7 +365,7 @@ def u8Guard : Expr u8Sig ⟨0, by decide⟩ :=
 /-- **Overflow is checked at the arithmetic node**: with `x = 200` the guard is the error
 `overflow` (format 2: "Integer overflow: "+" on u8 gives 300"), not `true`. -/
 theorem u8_overflow :
-    u8Guard.eval { snap := [⟨0, [.int 200]⟩], time := 0, own := ⟨0, [.int 200]⟩, payload := [] } =
+    u8Guard.eval { snap := [{ ctrl := 0, vars := [.int 200] }], time := 0, own := { ctrl := 0, vars := [.int 200] }, payload := [] } =
       .error .overflow := by
   rfl
 
@@ -380,13 +380,13 @@ def emitLater (m : Fin 1) : Trans oSig m :=
 
 def oSys : Sys :=
   { sig := oSig, trans := fun m => [emitLater m],
-    init := { time := 0, machines := [⟨0, []⟩],
+    init := { time := 0, machines := [{ ctrl := 0, vars := [] }],
               pending := [{ time := 0, event := 0, payload := [] }, { time := 10, event := 2, payload := [] }] } }
 
 /-- The entry emitted at time 5 is inserted before the pending entry at time 10. -/
 theorem emitted_inserted_by_time :
     (deliverAt oSys [] oSys.init 0 []).map (outcome [] oSys.init) =
-      some (.run [] { time := 0, machines := [⟨0, []⟩],
+      some (.run [] { time := 0, machines := [{ ctrl := 0, vars := [] }],
                       pending := [{ time := 5, event := 1, payload := [], sender := some 0 },
                                  { time := 10, event := 2, payload := [] }],
                       attempts := [1] }) := by
@@ -401,14 +401,14 @@ def emitOwn (m : Fin 2) : Trans emSig m :=
 
 def emSys : Sys :=
   { sig := emSig, trans := fun m => [emitOwn m],
-    init := { time := 0, machines := [⟨0, []⟩, ⟨0, []⟩], pending := [{ time := 0, event := 0, payload := [] }] } }
+    init := { time := 0, machines := [{ ctrl := 0, vars := [] }, { ctrl := 0, vars := [] }], pending := [{ time := 0, event := 0, payload := [] }] } }
 
 /-- **Emission order is irrelevant**: firing the two winners in reverse order gives the same
 successor, pending list included (review-M2.1, D1). -/
 theorem emission_order_irrelevant :
     (deliverWith emSys (fun c e ws ms => phase2 emSys c e ws.reverse ms) [] emSys.init 0 []).map
         (outcome [] emSys.init) =
-      some (.run [] { time := 0, machines := [⟨0, []⟩, ⟨0, []⟩],
+      some (.run [] { time := 0, machines := [{ ctrl := 0, vars := [] }, { ctrl := 0, vars := [] }],
                       pending := [{ time := 0, event := 1, payload := [], sender := some 0 },
                                  { time := 0, event := 2, payload := [], sender := some 1 }],
                       attempts := [1] }) := by
@@ -423,7 +423,7 @@ def onZero (effs : List (Effect oSig ⟨0, Nat.zero_lt_one⟩)) : Sys :=
     trans := fun m => match m with
       | ⟨0, _⟩ => [{ src := ⟨0, Nat.zero_lt_one⟩, dst := ⟨0, Nat.zero_lt_one⟩, event := 0,
                       guard := .val (.bool true), effects := effs }],
-    init := { time := 0, machines := [⟨0, []⟩],
+    init := { time := 0, machines := [{ ctrl := 0, vars := [] }],
               pending := [{ time := 0, event := 0, payload := [] },
                           { time := 10, event := 1, payload := [], target := some 0, timer := some 0 }] } }
 
@@ -455,7 +455,7 @@ def dropSys : Sys :=
                       guard := .val (.bool true),
                       effects := [.set ⟨0, Nat.zero_lt_one⟩
                         (.bin (.arith .add .untyped) (.ref (.own ⟨0, Nat.zero_lt_one⟩)) (.val (.int 1)))] }],
-    init := { time := 0, machines := [⟨0, [.int 0]⟩],
+    init := { time := 0, machines := [{ ctrl := 0, vars := [.int 0] }],
               pending := [{ time := 0, event := 0, payload := [] }, { time := 1, event := 0, payload := [] },
                           { time := 2, event := 0, payload := [] }] },
     faults := [{ kind := .drop, event := 0, occ := .exactly 2 }] }
@@ -467,13 +467,13 @@ def lastOf (l : List State) : Option State := l.getLast?
 activates it, three deliveries leave the counter at 2, with three attempts counted. -/
 theorem drop_second_delivery :
     (lastOf (Exec.run dropSys 3 (.run [true] (dropSys.initCfg [true])) {}).states).map (·.cfg) =
-      some { time := 2, machines := [⟨0, [.int 2]⟩], pending := [], attempts := [3] } := by
+      some { time := 2, machines := [{ ctrl := 0, vars := [.int 2] }], pending := [], attempts := [3] } := by
   decide
 
 /-- Under the other mask, the fault is off and the counter reaches 3. -/
 theorem drop_fault_optional :
     (lastOf (Exec.run dropSys 3 (.run [false] (dropSys.initCfg [false])) {}).states).map (·.cfg) =
-      some { time := 2, machines := [⟨0, [.int 3]⟩], pending := [], attempts := [3] } := by
+      some { time := 2, machines := [{ ctrl := 0, vars := [.int 3] }], pending := [], attempts := [3] } := by
   decide
 
 
@@ -490,21 +490,21 @@ def ctrT (L : Int) (m : Fin 1) : Trans ctrS m :=
 
 def ctrSys (L : Int) : Sys :=
   { sig := ctrS, trans := fun m => match m with | ⟨0, _⟩ => [ctrT L ⟨0, Nat.zero_lt_one⟩],
-    init := { time := 0, machines := [⟨0, [.int 0]⟩], pending := [{ time := 0, event := 0, payload := [] }] } }
+    init := { time := 0, machines := [{ ctrl := 0, vars := [.int 0] }], pending := [{ time := 0, event := 0, payload := [] }] } }
 
 
-theorem ctr_guard (L : Int) (n : Nat) (cx : Ctx) (hc : cx.own = ⟨0, [.int n]⟩) :
+theorem ctr_guard (L : Int) (n : Nat) (cx : Ctx) (hc : cx.own = { ctrl := 0, vars := [.int n] }) :
     Expr.eval cx (.bin .lt (.ref (.own ⟨0, Nat.zero_lt_one⟩)) (.val (.int L)) : Expr ctrS ⟨0, Nat.zero_lt_one⟩) = .ok (.bool (decide ((n : Int) < L))) := by
   obtain ⟨sn, tm, own, pl⟩ := cx
   simp only at hc
   subst hc
   rfl
 
-theorem ctr_scan (L : Int) (c : Cfg) (e : Entry) (n : Nat) (hm : c.machines = [⟨0, [.int n]⟩]) (he : e.event = 0) :
-    scan (ctrSys L) [] c e ⟨0, Nat.zero_lt_one⟩ ⟨0, [.int n]⟩ (finList ((ctrSys L).trans ⟨0, Nat.zero_lt_one⟩).length) =
+theorem ctr_scan (L : Int) (c : Cfg) (e : Entry) (n : Nat) (hm : c.machines = [{ ctrl := 0, vars := [.int n] }]) (he : e.event = 0) :
+    scan (ctrSys L) [] c e ⟨0, Nat.zero_lt_one⟩ { ctrl := 0, vars := [.int n] } (finList ((ctrSys L).trans ⟨0, Nat.zero_lt_one⟩).length) =
       .ok (if (n : Int) < L then some ⟨0, Nat.zero_lt_one⟩ else none) := by
-  show scan (ctrSys L) [] c e ⟨0, Nat.zero_lt_one⟩ ⟨0, [.int n]⟩ [⟨0, Nat.zero_lt_one⟩] = _
-  have hg := ctr_guard L n (ctxOf c e ⟨0, [.int n]⟩) rfl
+  show scan (ctrSys L) [] c e ⟨0, Nat.zero_lt_one⟩ { ctrl := 0, vars := [.int n] } [⟨0, Nat.zero_lt_one⟩] = _
+  have hg := ctr_guard L n (ctxOf c e { ctrl := 0, vars := [.int n] }) rfl
   simp only [scan]
   show (if _ then _ else _) = _
   have hsrc : ((ctrSys L).trans ⟨0, Nat.zero_lt_one⟩).get ⟨0, Nat.zero_lt_one⟩ = ctrT L ⟨0, Nat.zero_lt_one⟩ := rfl
@@ -513,18 +513,19 @@ theorem ctr_scan (L : Int) (c : Cfg) (e : Entry) (n : Nat) (hm : c.machines = [�
   erw [hg]
   by_cases h : (n : Int) < L <;> simp [h]
 
-theorem ctr_winners (L : Int) (c : Cfg) (e : Entry) (n : Nat) (hm : c.machines = [⟨0, [.int n]⟩]) (he : e.event = 0)
-    (ht : e.target = none) :
+theorem ctr_winners (L : Int) (c : Cfg) (e : Entry) (n : Nat) (hm : c.machines = [{ ctrl := 0, vars := [.int n] }]) (he : e.event = 0)
+    (ht : e.target = none) (hr : e.routes = none) :
     winners (ctrSys L) [] c e = .ok (if (n : Int) < L then [⟨⟨0, Nat.zero_lt_one⟩, ⟨0, Nat.zero_lt_one⟩⟩] else []) := by
-  unfold winners addressed
-  simp only [ht]
+  unfold winners addressed liveAt
+  simp only [ht, hr]
   have hf : finList (ctrSys L).sig.machines = [⟨0, Nat.zero_lt_one⟩] := rfl
   rw [hf]
-  simp only [List.filter, Option.all, winnersOf, choose, hm, at?, List.getElem?_cons_zero]
+  simp only [List.filter, Option.all, Option.getD, List.all_nil, Bool.and_self, hm, List.getElem?_cons_zero,
+    Option.map_some, winnersOf, choose, at?]
   rw [ctr_scan L c e n hm he]
   by_cases h : (n : Int) < L <;> simp [h]
 
-theorem ctr_rhs (n : Nat) (cx : Ctx) (hc : cx.own = ⟨0, [.int n]⟩) (hn : (n : Int) + 1 ≤ 9007199254740991) :
+theorem ctr_rhs (n : Nat) (cx : Ctx) (hc : cx.own = { ctrl := 0, vars := [.int n] }) (hn : (n : Int) + 1 ≤ 9007199254740991) :
     Expr.eval cx (.bin (.arith .add .untyped) (.ref (.own ⟨0, Nat.zero_lt_one⟩)) (.val (.int 1)) : Expr ctrS ⟨0, Nat.zero_lt_one⟩) = .ok (.int ((n : Int) + 1)) := by
   obtain ⟨sn, tm, own, pl⟩ := cx
   simp only at hc
@@ -538,11 +539,11 @@ theorem ctr_rhs (n : Nat) (cx : Ctx) (hc : cx.own = ⟨0, [.int n]⟩) (hn : (n 
   have h6 : (n : Int) + 1 ≤ maxSafe := by rw [hm0]; omega
   simp [Expr.eval, Ref.eval, at?, BOp.apply, arithVals, AOp.apply, checked, ATy.holds, ATy.lo, ATy.hi, h1, h2, h3, h4, h5, h6]
 
-theorem ctr_effects (L : Int) (c : Cfg) (e : Entry) (n : Nat) (hm : c.machines = [⟨0, [.int n]⟩])
+theorem ctr_effects (L : Int) (c : Cfg) (e : Entry) (n : Nat) (hm : c.machines = [{ ctrl := 0, vars := [.int n] }])
     (hn : (n : Int) + 1 ≤ 9007199254740991) (hT : c.time + 1 < timeLimit) :
-    runEffects c e (ctrT L ⟨0, Nat.zero_lt_one⟩).effects ⟨0, [.int n]⟩ =
-      .ok (⟨0, [.int ((n : Int) + 1)]⟩, ([{ time := c.time + 1, event := 0, payload := [], sender := some 0 }], [])) := by
-  have hr := ctr_rhs n (ctxOf c e ⟨0, [.int n]⟩) rfl hn
+    runEffects c e (ctrT L ⟨0, Nat.zero_lt_one⟩).effects { ctrl := 0, vars := [.int n] } =
+      .ok ({ ctrl := 0, vars := [.int ((n : Int) + 1)] }, ([{ time := c.time + 1, event := 0, payload := [], sender := some 0 }], [])) := by
+  have hr := ctr_rhs n (ctxOf c e { ctrl := 0, vars := [.int n] }) rfl hn
   have hm0 : maxSafe = 9007199254740991 := rfl
   have hfit : Val.check ((ctrS.vars (⟨0, Nat.zero_lt_one⟩ : Fin ctrS.machines)).get ⟨0, by decide⟩) (.int ((n : Int) + 1)) = .ok (.int ((n : Int) + 1)) := by
     show Val.check Ty.num _ = _
@@ -566,19 +567,19 @@ theorem ctr_effects (L : Int) (c : Cfg) (e : Entry) (n : Nat) (hm : c.machines =
       rfl
 
 
-theorem ctr_fireOne (L : Int) (c : Cfg) (e : Entry) (n : Nat) (hm : c.machines = [⟨0, [.int n]⟩])
+theorem ctr_fireOne (L : Int) (c : Cfg) (e : Entry) (n : Nat) (hm : c.machines = [{ ctrl := 0, vars := [.int n] }])
     (hn : (n : Int) + 1 ≤ 9007199254740991) (hT : c.time + 1 < timeLimit) :
-    fireOne (ctrSys L) c e ⟨⟨0, Nat.zero_lt_one⟩, ⟨0, Nat.zero_lt_one⟩⟩ ⟨0, [.int n]⟩ =
-      .ok (⟨0, [.int ((n : Int) + 1)]⟩, ([{ time := c.time + 1, event := 0, payload := [], sender := some 0 }], [])) := by
+    fireOne (ctrSys L) c e ⟨⟨0, Nat.zero_lt_one⟩, ⟨0, Nat.zero_lt_one⟩⟩ { ctrl := 0, vars := [.int n] } =
+      .ok ({ ctrl := 0, vars := [.int ((n : Int) + 1)] }, ([{ time := c.time + 1, event := 0, payload := [], sender := some 0 }], [])) := by
   have h := ctr_effects L c e n hm hn hT
   simp only [fireOne]
-  rw [show runEffects c e (((ctrSys L).trans ⟨0, Nat.zero_lt_one⟩).get ⟨0, Nat.zero_lt_one⟩).effects ⟨0, [.int n]⟩ = _ from h]
+  rw [show runEffects c e (((ctrSys L).trans ⟨0, Nat.zero_lt_one⟩).get ⟨0, Nat.zero_lt_one⟩).effects { ctrl := 0, vars := [.int n] } = _ from h]
   rfl
 
-theorem ctr_phase2 (L : Int) (c : Cfg) (e : Entry) (n : Nat) (hm : c.machines = [⟨0, [.int n]⟩])
+theorem ctr_phase2 (L : Int) (c : Cfg) (e : Entry) (n : Nat) (hm : c.machines = [{ ctrl := 0, vars := [.int n] }])
     (hn : (n : Int) + 1 ≤ 9007199254740991) (hT : c.time + 1 < timeLimit) :
-    phase2 (ctrSys L) c e [⟨⟨0, Nat.zero_lt_one⟩, ⟨0, Nat.zero_lt_one⟩⟩] [⟨0, [.int n]⟩] =
-      .ok ([⟨0, [.int ((n : Int) + 1)]⟩], [(0, ([{ time := c.time + 1, event := 0, payload := [], sender := some 0 }], []))]) := by
+    phase2 (ctrSys L) c e [⟨⟨0, Nat.zero_lt_one⟩, ⟨0, Nat.zero_lt_one⟩⟩] [{ ctrl := 0, vars := [.int n] }] =
+      .ok ([{ ctrl := 0, vars := [.int ((n : Int) + 1)] }], [(0, ([{ time := c.time + 1, event := 0, payload := [], sender := some 0 }], []))]) := by
   simp only [phase2, List.getElem?_cons_zero]
   rw [ctr_fireOne L c e n hm hn hT]
   rfl
@@ -588,14 +589,14 @@ def ctrVal (s : State) : Option Val := s.cfg.machines[0]?.bind (fun ms => ms.var
 def CtrI (L : Int) (s : State) : Prop :=
   ∃ (n t : Nat) (p : List Entry) (a : List Nat), (n : Int) ≤ L ∧ t ≤ n ∧
     (p = [] ∨ ∃ snd : Option Nat, p = [{ time := n, event := 0, payload := [], sender := snd }]) ∧
-    s = .run [] { time := t, machines := [⟨0, [.int n]⟩], pending := p, attempts := a }
+    s = .run [] { time := t, machines := [{ ctrl := 0, vars := [.int n] }], pending := p, attempts := a }
 
 theorem ctr_active (L : Int) : (ctrSys L).active [] = [] := rfl
 
 theorem ctr_step (L : Int) (hL : L < 9007199254740991) {s' : State} {l : Label} {n t : Nat}
     {p : List Entry} {a : List Nat} (hn : (n : Int) ≤ L) (ht : t ≤ n)
     (hp : p = [] ∨ ∃ snd : Option Nat, p = [{ time := n, event := 0, payload := [], sender := snd }])
-    (h : Step (ctrSys L) [] { time := t, machines := [⟨0, [.int n]⟩], pending := p, attempts := a } l s') :
+    (h : Step (ctrSys L) [] { time := t, machines := [{ ctrl := 0, vars := [.int n] }], pending := p, attempts := a } l s') :
     CtrI L s' := by
   obtain ⟨hd, hr⟩ := Step.ready h
   obtain ⟨snd, hent⟩ : ∃ snd : Option Nat, p = [{ time := n, event := 0, payload := [], sender := snd }] := by
@@ -607,25 +608,27 @@ theorem ctr_step (L : Int) (hL : L < 9007199254740991) {s' : State} {l : Label} 
   have hTL : timeLimit = 9007199254740992 := rfl
   have hmach : (ctrSys L).sig.machines = 1 := rfl
   cases h with
-  | drop _ _ _ _ hdr => rw [ctr_active] at hdr; simp [dropHit] at hdr
-  | delay _ _ _ _ _ hf => rw [ctr_active] at hf; simp [delayFault] at hf
-  | delayTimeErr _ _ _ _ _ hf => rw [ctr_active] at hf; simp [delayFault] at hf
+  | drop _ _ _ _ _ hdr => rw [ctr_active] at hdr; simp [dropHit] at hdr
+  | delay _ _ _ _ _ _ hf => rw [ctr_active] at hf; simp [delayFault] at hf
+  | delayTimeErr _ _ _ _ _ _ hf => rw [ctr_active] at hf; simp [delayFault] at hf
   | worldOk _ _ hk => exact absurd (by rw [hle]) hk
   | worldErr _ _ hk => exact absurd (by rw [hle]) hk
-  | deliverOk hd hr _ hdr hnone hw hp2 hs hfit hfill hdup =>
+  | routeErr _ _ _ hro => rw [routeOf_nil rfl] at hro; cases hro
+  | deliverOk hd hr _ hro hdr hnone hw hp2 hs hfit hfill hdup =>
+    obtain ⟨rfl, rfl, -⟩ := routeOf_nil_eq (sys := ctrSys L) rfl hro
     obtain ⟨-, rfl⟩ := nores_settle (sys := ctrSys L) rfl hs hfit hfill
     generalize hS : (ctrSys L).resolve l.draws = S at *
     have hS' := hS.symm.trans (resolve_nil (sys := ctrSys L) rfl l.draws)
     subst hS'
     rw [hle] at hw hp2 hdup
     rw [ctr_active] at hw hdup
-    rw [ctr_winners L _ _ n rfl rfl rfl] at hw
+    rw [ctr_winners L _ _ n rfl rfl rfl rfl] at hw
     have hn1 : (n : Int) + 1 ≤ 9007199254740991 := by omega
     have hT1 : n + 1 < timeLimit := by rw [hTL]; omega
     by_cases hlt : (n : Int) < L
     · rw [if_pos hlt] at hw
       cases hw
-      change phase2 (ctrSys L) _ _ _ [⟨0, [.int n]⟩] = _ at hp2
+      change phase2 (ctrSys L) _ _ _ [{ ctrl := 0, vars := [.int n] }] = _ at hp2
       rw [ctr_phase2 L _ _ n rfl hn1 hT1] at hp2
       cases hp2
       cases hdup with
@@ -640,7 +643,8 @@ theorem ctr_step (L : Int) (hL : L < 9007199254740991) {s' : State} {l : Label} 
       | none h0 =>
         exact ⟨n, n, [], setAt a 0 (a.getD 0 0 + 1), by omega, by omega, Or.inl rfl, by simp [Cfg.commit, Cfg.popE, Cfg.bumpAttempts, inMachineOrder, blockOf, isTimerOf, touchedOf, Cfg.attemptsOf, hmach, List.range_succ, insertByTime]⟩
       | some h0 hl => simp [dupFault] at h0
-  | deliverErr hd hr _ hdr hnone hfail =>
+  | deliverErr hd hr _ hro hdr hnone hfail =>
+    obtain ⟨rfl, rfl, -⟩ := routeOf_nil_eq (sys := ctrSys L) rfl hro
     generalize hS : (ctrSys L).resolve l.draws = S at *
     have hS' := hS.symm.trans (resolve_nil (sys := ctrSys L) rfl l.draws)
     subst hS'
@@ -648,14 +652,14 @@ theorem ctr_step (L : Int) (hL : L < 9007199254740991) {s' : State} {l : Label} 
     have hn1 : (n : Int) + 1 ≤ 9007199254740991 := by omega
     have hT1 : n + 1 < timeLimit := by rw [hTL]; omega
     cases hfail with
-    | winners _ hw => rw [ctr_winners L _ _ n rfl rfl rfl] at hw; cases hw
+    | winners _ hw => rw [ctr_winners L _ _ n rfl rfl rfl rfl] at hw; cases hw
     | settle _ _ hs _ hfill => exact (nores_settle_err (sys := ctrSys L) rfl hs hfill).elim
     | phase2 _ hw hp2 =>
-      rw [ctr_winners L _ _ n rfl rfl rfl] at hw
+      rw [ctr_winners L _ _ n rfl rfl rfl rfl] at hw
       by_cases hlt : (n : Int) < L
       · rw [if_pos hlt] at hw
         cases hw
-        change phase2 (ctrSys L) _ _ _ [⟨0, [.int n]⟩] = _ at hp2
+        change phase2 (ctrSys L) _ _ _ [{ ctrl := 0, vars := [.int n] }] = _ at hp2
         rw [ctr_phase2 L _ _ n rfl hn1 hT1] at hp2; cases hp2
       · rw [if_neg hlt] at hw
         cases hw
@@ -698,7 +702,7 @@ def chT (m : Fin 1) : List (Trans chS m) :=
 /-- The only randomness is a two-outcome `choice`: the delay of the second event. -/
 def chSys : Sys :=
   { sig := chS, trans := fun m => match m with | ⟨0, _⟩ => chT ⟨0, Nat.zero_lt_one⟩,
-    init := { time := 0, machines := [⟨0, [.int 0]⟩], pending := [{ time := 0, event := 0, payload := [] }] },
+    init := { time := 0, machines := [{ ctrl := 0, vars := [.int 0] }], pending := [{ time := 0, event := 0, payload := [] }] },
     samples := [(0, 0, 0, .choice [3, 5])] }
 
 def chX (s : State) : Option Val := s.cfg.machines[0]?.bind (fun ms => ms.vars[0]?)
@@ -715,9 +719,9 @@ example : chSys.WF := by decide
 
 example : (Exec.successors chSys (.run [] chSys.init)).length = 2 := by decide
 def chC1 (d : Nat) : Cfg :=
-  { time := 0, machines := [⟨0, [.int 0]⟩], pending := [{ time := d, event := 1, payload := [], sender := some 0 }], attempts := [1] }
+  { time := 0, machines := [{ ctrl := 0, vars := [.int 0] }], pending := [{ time := d, event := 1, payload := [], sender := some 0 }], attempts := [1] }
 def chC2 (d : Nat) : Cfg :=
-  { time := d, machines := [⟨0, [.int d]⟩], pending := [], attempts := [1, 1] }
+  { time := d, machines := [{ ctrl := 0, vars := [.int d] }], pending := [], attempts := [1, 1] }
 
 def chL : List State :=
   [.run [] chSys.init, .run [] (chC1 3), .run [] (chC1 5), .run [] (chC2 3), .run [] (chC2 5)]

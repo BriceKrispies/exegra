@@ -23,7 +23,7 @@ namespace Exegra.Core.Behav
 /-- A claim expression of machine `me` evaluated on a configuration: the snapshot is the
 configuration, the machine's own state is its own, and no entry is being delivered. -/
 def claimEval {S : Sig} {me : Fin S.machines} (c : Cfg) (e : Expr S me) : Except Err Val :=
-  e.eval { snap := c.machines, time := c.time, own := c.machines.getD me.val ⟨0, []⟩, payload := [] }
+  e.eval { snap := c.machines, time := c.time, own := c.machines.getD me.val { ctrl := 0, vars := [] }, payload := [] }
 
 /-- The claim expression is true in the state's configuration (an error or a non-Boolean is not). -/
 def claimTrue {S : Sig} {me : Fin S.machines} (e : Expr S me) (s : State) : Bool :=
@@ -94,6 +94,11 @@ def distLean0 : Core.Behav.Dist → String
   | .uniform lo hi => s!"(.uniform {lo} {hi})"
   | .table pts => s!"(.table {listLean (fun (p : Nat × Nat) => s!"({p.1}, {p.2})") pts})"
 
+/-- The group of a `Ref.one` or `Ref.uniq`. -/
+def oneLean {S : Core.Behav.Sig} (g : List ((m : Fin S.machines) × Option (Fin (S.vars m).length))) : String :=
+  listLean (fun (p : (m : Fin S.machines) × Option (Fin (S.vars m).length)) =>
+    s!"⟨{finLean p.1.val}, {match p.2 with | some v => s!"some {finLean v.val}" | none => "none"}⟩") g
+
 def refLean {S : Core.Behav.Sig} {me : Fin S.machines} : Core.Behav.Ref S me → String
   | .own v => s!"(.own {finLean v.val})"
   | .other m v => s!"(.other {finLean m.val} {finLean v.val})"
@@ -104,6 +109,9 @@ def refLean {S : Core.Behav.Sig} {me : Fin S.machines} : Core.Behav.Ref S me →
   | .agg op g => s!"(.agg {aggLean op} {listLean (fun (p : (m : Fin S.machines) × Fin (S.vars m).length) => s!"⟨{finLean p.1.val}, {finLean p.2.val}⟩") g})"
   | .absent τ => s!"(.absent {tyLean τ})"
   | .res r q => s!"(.res {r} {rqLean q})"
+  | .one g τ => s!"(.one {oneLean g} {tyLean τ})"
+  | .uniq g => s!"(.uniq {oneLean g})"
+  | .key τ => s!"(.key {tyLean τ})"
 
 def exprLean {S : Core.Behav.Sig} {me : Fin S.machines} : Core.Behav.Expr S me → String
   | .val v => s!"(.val {valLean v})"

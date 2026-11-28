@@ -218,7 +218,7 @@ Places where the engine's order of evaluation or of checks decides an observable
 
 `formal/Exegra/Elab.lean` maps a format-2 engine input into the typed behaviour calculus of `formal/Exegra/Core/Behav.lean` (`Elab.elab`, at the call boundary `engine.elab`, and `exegra-lean elab`). An input is accepted, or refused as one of two kinds:
 
-- `outOfFragment`: it uses resources, links, workloads, keyed instances, routes, measured outputs, option types or resource faults, which the calculus does not cover (a `sample` effect, a variable set from a draw, is covered: a draw site whose label draw is the value, WG-5683);
+- `outOfFragment`: it uses links, workloads, option types or a scenario step addressed to an instance of a keyed behaviour, which the calculus does not cover (a `sample` effect, a variable set from a draw, is covered: a draw site whose label draw is the value; so are resources, resource faults, routes and keyed instances, and measured outputs are computed from the trace, WG-5683);
 - `illTyped`: an unknown event or variable, a guard that is not Boolean, an operator on the wrong sorts (`text - 1`, `1 == '1'`), or one of the decisions below;
 
 Machines are the instances of the behaviours, behaviours in input order and the instances of a counted behaviour in index order, the order phase 1 visits them. Expressions are parsed once and resolved to scoped references; a reference to nothing (an unknown name, a behaviour with several instances read as one) evaluates to an error in the step that reads it, as in format 2. Objects, arrays and `null` are constants of their own sort, compared by structure. `elab_wf` proves that an accepted input elaborates to a well-formed system. On the goldens, every input is accepted except those listed in `tests/conformance/expected-refusals.json` (`tests/core/formal-elab.test.js`).
@@ -700,7 +700,7 @@ Why: it needs only 64-bit wrapping addition, multiplication, xor and shifts, whi
 
 ### Exploration and sampling
 
-**As built (WG-5681).** `exegra prove` explores the behaviour calculus ([Exhaustive exploration in Lean](#exhaustive-exploration-in-lean-exegra-prove)): it varies the delivery order among minimal-time entries, the whole-run fault mask and every outcome of each sampled delay up to a support of 1000 values (a larger support makes the result `incomplete`). A scenario that uses a construct outside the calculus (resources, links, workloads, keyed instances, routes) is reported not covered and is not explored. The decision below is the plan for those constructs.
+**As built (WG-5681).** `exegra prove` explores the behaviour calculus ([Exhaustive exploration in Lean](#exhaustive-exploration-in-lean-exegra-prove)): it varies the delivery order among minimal-time entries, the whole-run fault mask and every outcome of each sampled delay up to a support of 1000 values (a larger support makes the result `incomplete`). A scenario that uses a construct outside the calculus (links, workloads) is reported not covered and is not explored. The decision below is the plan for those constructs.
 
 **Decision: `exegra prove` explores every nondeterministic choice with the sampled draws fixed by a seed, enumerates `choice` values and `any` routes, and never enumerates probabilistic outcomes.** For a scenario with those constructs the successor relation gains:
 
