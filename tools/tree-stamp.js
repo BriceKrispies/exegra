@@ -16,6 +16,20 @@ import path from 'node:path';
 /** Ignored directories whose files the tests load (repo-relative, forward slashes). */
 export const STAMPED_GENERATED_DIRS = ['src/engine/lean', 'src/engine/pkg'];
 
+/** The content hash of a file already read in this process, by size and modification time (to the nanosecond). @type {Map<string, {key: string, digest: string}>} */
+const digests = new Map();
+
+/** The sha256 of a file's content, read again only when its size or modification time changed. @param {string} abs */
+function contentDigest(abs) {
+  const st = fs.statSync(abs, { bigint: true });
+  const key = `${st.size}:${st.mtimeNs}`;
+  const known = digests.get(abs);
+  if (known && known.key === key) return known.digest;
+  const digest = createHash('sha256').update(fs.readFileSync(abs)).digest('hex');
+  digests.set(abs, { key, digest });
+  return digest;
+}
+
 /** @param {string} p */
 const slash = (p) => p.replace(/\\/g, '/');
 
@@ -73,16 +87,16 @@ export function treeStamp(repoRoot, opts = {}) {
   all.update(`node ${process.version}\n`);
   for (const rel of stampedFiles(repoRoot)) {
     if (opts.exclude?.(rel)) continue;
-    let content;
-    if (opts.replace && Object.hasOwn(opts.replace, rel)) content = opts.replace[rel];
+    let digest;
+    if (opts.replace && Object.hasOwn(opts.replace, rel)) digest = createHash('sha256').update(opts.replace[rel]).digest('hex');
     else {
       try {
-        content = fs.readFileSync(path.join(repoRoot, rel));
+        digest = contentDigest(path.join(repoRoot, rel));
       } catch {
         continue;
       }
     }
-    all.update(`${rel}\0${createHash('sha256').update(content).digest('hex')}\n`);
+    all.update(`${rel}\0${digest}\n`);
   }
   return all.digest('hex');
 }
@@ -116,13 +130,13 @@ export function formalSourcesHash(repoRoot) {
   const all = createHash('sha256');
   for (const rel of stampedFiles(repoRoot)) {
     if (!rel.startsWith('formal/')) continue;
-    let content;
+    let digest;
     try {
-      content = fs.readFileSync(path.join(repoRoot, rel));
+      digest = contentDigest(path.join(repoRoot, rel));
     } catch {
       continue;
     }
-    all.update(`${rel}\0${createHash('sha256').update(content).digest('hex')}\n`);
+    all.update(`${rel}\0${digest}\n`);
   }
   return all.digest('hex');
 }

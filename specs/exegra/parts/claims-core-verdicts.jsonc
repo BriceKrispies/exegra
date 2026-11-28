@@ -774,7 +774,7 @@
       "id": "ev-own-claims-falsifiable",
       "claim": "own-behavioral-claims-falsifiable",
       "kind": "test",
-      "ref": "tests/core/claims.test.js#negatives: every behavioral claim of the exegra specification is verified with a violating negative",
+      "ref": "tests/proofs/claims-live.test.js#negatives: every behavioral claim of the exegra specification is verified with a violating negative",
       "description": "Loads specs/exegra/spec.jsonc and checks that every trace claim declares negatives and is verified."
     },
     {
@@ -1033,7 +1033,7 @@
       "id": "ev-machine-transition-coverage-4",
       "claim": "machine-transition-coverage",
       "kind": "test",
-      "ref": "tests/core/machine-coverage.test.js#under system.generation an unreachable transition is an error",
+      "ref": "tests/core/machine-coverage.test.js#the scenario covers what it delivers and the search covers the rest and reports the unreachable transition",
       "description": "With system.generation the finding is an error."
     },
     {
@@ -1180,7 +1180,7 @@
       "id": "ev-claims-evaluation-error-agrees",
       "claim": "trace-claims-share-prove-evaluator",
       "kind": "test",
-      "ref": "tests/core/claims.test.js#prove and the live view agree on an evaluation error",
+      "ref": "tests/proofs/claims-live.test.js#prove and the live view agree on an evaluation error",
       "description": "On tests/fixtures/liveness, the claim 1 / 0 == 0 is violated in the live view and has a counterexample in the initial configuration in exegra prove."
     },
     {

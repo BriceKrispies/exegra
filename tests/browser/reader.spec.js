@@ -29,7 +29,7 @@ async function open(page) {
 /** @param {import('@playwright/test').Page} page @param {string} id */
 const setView = (page, id) => page.evaluate((v) => /** @type {any} */ (window).__exegra.session.setView(v), id);
 
-test('reader view replaces the scene and its links select entities', async ({ page }) => {
+test('reader view replaces the scene and its links select entities', { tag: '@full' }, async ({ page }) => {
   await open(page);
   await setView(page, 'reader');
   const reader = page.locator('#reader-host');
@@ -52,7 +52,7 @@ test('reader view replaces the scene and its links select entities', async ({ pa
   await expect(page.locator('#scene-controls')).toBeVisible();
 });
 
-test('reader page follows an edit of the model', async ({ page }) => {
+test('reader page follows an edit of the model', { tag: '@full' }, async ({ page }) => {
   await open(page);
   await setView(page, 'reader');
   const reader = page.locator('#reader-host');

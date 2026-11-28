@@ -46515,7 +46515,7 @@
         "description": "exegra cut on a declared cut, an ad hoc cut of the runtime hierarchy, an invalid one, and the listing.",
         "id": "ev-ms-cut-command",
         "kind": "test",
-        "ref": "tests/core/multiscale.test.js#the cut command prints the blocks and the element-to-block map of a declared or an ad hoc cut"
+        "ref": "tests/core/multiscale.test.js#cut maps compose along the chain of cuts of the self-specification and incomparable cuts have no map"
       },
       "id": "ev-ms-cut-command",
       "kind": "evidence",
@@ -49558,7 +49558,7 @@
         "description": "Loads specs/exegra/spec.jsonc and checks that every trace claim declares negatives and is verified.",
         "id": "ev-own-claims-falsifiable",
         "kind": "test",
-        "ref": "tests/core/claims.test.js#negatives: every behavioral claim of the exegra specification is verified with a violating negative"
+        "ref": "tests/proofs/claims-live.test.js#negatives: every behavioral claim of the exegra specification is verified with a violating negative"
       },
       "id": "ev-own-claims-falsifiable",
       "kind": "evidence",
@@ -50187,7 +50187,7 @@
         "description": "With system.generation the finding is an error.",
         "id": "ev-machine-transition-coverage-4",
         "kind": "test",
-        "ref": "tests/core/machine-coverage.test.js#under system.generation an unreachable transition is an error"
+        "ref": "tests/core/machine-coverage.test.js#the scenario covers what it delivers and the search covers the rest and reports the unreachable transition"
       },
       "id": "ev-machine-transition-coverage-4",
       "kind": "evidence",
@@ -50544,7 +50544,7 @@
         "description": "On tests/fixtures/liveness, the claim 1 / 0 == 0 is violated in the live view and has a counterexample in the initial configuration in exegra prove.",
         "id": "ev-claims-evaluation-error-agrees",
         "kind": "test",
-        "ref": "tests/core/claims.test.js#prove and the live view agree on an evaluation error"
+        "ref": "tests/proofs/claims-live.test.js#prove and the live view agree on an evaluation error"
       },
       "id": "ev-claims-evaluation-error-agrees",
       "kind": "evidence",
@@ -50782,7 +50782,7 @@
         "description": "The Rust engine as WebAssembly, and as the native binary when it is built, reproduces every golden trace of the conformance suite.",
         "id": "ev-engines-agree",
         "kind": "test",
-        "ref": "tests/core/conformance.test.js"
+        "ref": "tests/proofs/conformance-rust.test.js"
       },
       "id": "ev-engines-agree",
       "kind": "evidence",
@@ -51037,7 +51037,7 @@
         "description": "Exploration decides that a burst-eligible client is never throttled after eligibility was set.",
         "id": "ev-pooled-quotas-5",
         "kind": "test",
-        "ref": "tests/core/pooled-quotas.test.js#exploration decides that a burst-eligible client is never throttled after eligibility was set"
+        "ref": "tests/proofs/pooled-quotas-explore.test.js#exploration decides that a burst-eligible client is never throttled after eligibility was set"
       },
       "id": "ev-pooled-quotas-5",
       "kind": "evidence",
@@ -51054,7 +51054,7 @@
         "description": "Exploration finds a counterexample when eligibility takes effect only from the next day.",
         "id": "ev-pooled-quotas-6",
         "kind": "test",
-        "ref": "tests/core/pooled-quotas.test.js#exploration finds a counterexample when eligibility takes effect only from the next day"
+        "ref": "tests/proofs/pooled-quotas-explore.test.js#exploration finds a counterexample when eligibility takes effect only from the next day"
       },
       "id": "ev-pooled-quotas-6",
       "kind": "evidence",
@@ -51071,7 +51071,7 @@
         "description": "Exploration finds a counterexample when the over-share window is four days instead of three.",
         "id": "ev-pooled-quotas-7",
         "kind": "test",
-        "ref": "tests/core/pooled-quotas.test.js#exploration finds a counterexample when the over-share window is four days instead of three"
+        "ref": "tests/proofs/pooled-quotas-explore.test.js#exploration finds a counterexample when the over-share window is four days instead of three"
       },
       "id": "ev-pooled-quotas-7",
       "kind": "evidence",
@@ -57337,7 +57337,7 @@
         "description": "The build's bundled specification (the resolved manifest) with the bundled fact file gives the semantic hash and the L1 interactions the command line gives, so the read-only application draws the same derived model.",
         "id": "ev-nav-production-bundle",
         "kind": "test",
-        "ref": "tests/core/spec-manifest.test.js#a production build bundles the self-specification resolved and the shipped application derives the CLI model from it"
+        "ref": "tests/proofs/spec-bundle.test.js"
       },
       "id": "ev-nav-production-bundle",
       "kind": "evidence",
@@ -58510,7 +58510,7 @@
         "description": "The five counter_le variants checked by Lean.",
         "id": "ev-theorem-weakening",
         "kind": "test",
-        "ref": "tests/core/change-impact.test.js#a weakened theorem is refused"
+        "ref": "tests/proofs/theorem-weakening.test.js#a weakened theorem is refused"
       },
       "id": "ev-theorem-weakening",
       "kind": "evidence",
@@ -58612,7 +58612,7 @@
         "description": "The workspace writes a transaction to the part files only, and refuses a stale base.",
         "id": "ev-self-spec-split-workspace",
         "kind": "test",
-        "ref": "tests/core/spec-split.test.js#the workspace writes an apply of the self-specification to part files and a stale base is refused"
+        "ref": "tests/core/spec-manifest.test.js#the workspace reads a manifest and writes an edit to the parts"
       },
       "id": "ev-self-spec-split-workspace",
       "kind": "evidence",
@@ -59080,7 +59080,7 @@
   ],
   "format": "exegra-manifest",
   "schemaVersion": "0.1",
-  "semanticHash": "009f9e93b56a1c",
+  "semanticHash": "0d70fdde61eef5",
   "system": {
     "id": "exegra",
     "illustrative": false,

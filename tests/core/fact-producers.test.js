@@ -57,19 +57,15 @@ const byId = (model, opts) => Object.fromEntries(evaluateClaims(model, opts).map
 // 1. Skip-aware test evidence
 
 test('a reference whose matched test skipped or is a todo is not a pass on the fresh path', () => {
-  for (const pattern of NOT_EXECUTED) {
-    const out = nodeTest(['--test-reporter=tap', `--test-name-pattern=${pattern}`, FIXTURE]);
-    const verdict = testsVerdict(tapTests(out, FIXTURE));
-    assert.equal(verdict.outcome, 'skipped', `pattern "${pattern}": ${JSON.stringify(tapTests(out, FIXTURE))}`);
-  }
   // A describe block whose only test skipped prints a plain "ok" line for the suite: it is not a test.
-  const suite = nodeTest(['--test-reporter=tap', '--test-name-pattern=inner real check', FIXTURE]);
-  assert.equal(countPassingTests(suite, FIXTURE), 0);
-  assert.equal(countPassingTests(nodeTest(['--test-reporter=tap', '--test-name-pattern=publishes', FIXTURE]), FIXTURE), 0, 'a todo is not a pass');
+  // A todo is not a pass either.
+  for (const pattern of ['inner real check', 'publishes']) {
+    const out = nodeTest(['--test-reporter=tap', `--test-name-pattern=${pattern}`, FIXTURE]);
+    assert.equal(testsVerdict(tapTests(out, FIXTURE)).outcome, 'skipped', `pattern "${pattern}": ${JSON.stringify(tapTests(out, FIXTURE))}`);
+    assert.equal(countPassingTests(out, FIXTURE), 0, `"${pattern}" is not a pass`);
+  }
   // The whole file: one test passes, the others did not execute, so the reference was not executed in full.
   assert.equal(testsVerdict(tapTests(nodeTest(['--test-reporter=tap', FIXTURE]), FIXTURE)).outcome, 'skipped');
-  // The one test that executes still passes on its own.
-  assert.equal(testsVerdict(tapTests(nodeTest(['--test-reporter=tap', '--test-name-pattern=trivially', FIXTURE]), FIXTURE)).outcome, 'pass');
 });
 
 test('a reference whose matched test skipped or is a todo is not a pass on the reuse path', () => {

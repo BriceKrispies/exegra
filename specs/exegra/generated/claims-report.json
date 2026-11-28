@@ -814,7 +814,7 @@
       "id": "semantic-hash-ignores-presentation",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 16325
@@ -871,7 +871,7 @@
       "id": "semantic-hash-ignores-key-order",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 16350
@@ -927,7 +927,7 @@
       "id": "semantic-hash-runs-definition",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 16374
@@ -1564,7 +1564,7 @@
       "id": "integrity-relations-least-model",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 16546
@@ -1603,7 +1603,7 @@
       "id": "integrity-relations-holds-by-reflection",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 16568
@@ -2192,7 +2192,7 @@
           "id": "ev-ms-cut-command",
           "kind": "test",
           "recorded": "pass",
-          "ref": "tests/core/multiscale.test.js#the cut command prints the blocks and the element-to-block map of a declared or an ad hoc cut",
+          "ref": "tests/core/multiscale.test.js#cut maps compose along the chain of cuts of the self-specification and incomparable cuts have no map",
           "supports": true
         }
       ],
@@ -3737,7 +3737,7 @@
       "id": "model-references-resolve",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 17214
@@ -3793,7 +3793,7 @@
       "id": "model-derivation-total",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 17238
@@ -5608,7 +5608,7 @@
       "id": "comp-compose-comm",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 17790
@@ -5645,7 +5645,7 @@
       "id": "comp-compose-assoc",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 17810
@@ -5682,7 +5682,7 @@
       "id": "comp-traces-compose",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 17830
@@ -5720,7 +5720,7 @@
       "id": "contract-ag-compose",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 17851
@@ -5758,7 +5758,7 @@
       "id": "contract-ag-circular-unsound",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 17872
@@ -5796,7 +5796,7 @@
       "id": "contract-discharge-sound",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 17893
@@ -5832,7 +5832,7 @@
       "id": "refine-traces",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 17912
@@ -5869,7 +5869,7 @@
       "id": "refine-safety",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 17932
@@ -5906,7 +5906,7 @@
       "id": "refine-liveness",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 17952
@@ -6880,7 +6880,7 @@
           "id": "ev-own-claims-falsifiable",
           "kind": "test",
           "recorded": "pass",
-          "ref": "tests/core/claims.test.js#negatives: every behavioral claim of the exegra specification is verified with a violating negative",
+          "ref": "tests/proofs/claims-live.test.js#negatives: every behavioral claim of the exegra specification is verified with a violating negative",
           "supports": true
         }
       ],
@@ -7735,7 +7735,7 @@
           "id": "ev-machine-transition-coverage-4",
           "kind": "test",
           "recorded": "pass",
-          "ref": "tests/core/machine-coverage.test.js#under system.generation an unreachable transition is an error",
+          "ref": "tests/core/machine-coverage.test.js#the scenario covers what it delivers and the search covers the rest and reports the unreachable transition",
           "supports": true
         },
         {
@@ -7929,7 +7929,7 @@
       "id": "verdict-status-partial-order",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 18465
@@ -7965,7 +7965,7 @@
       "id": "verdict-conjunction-meet",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 18484
@@ -8002,7 +8002,7 @@
       "id": "verdict-contradiction-lowers",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 18504
@@ -8039,7 +8039,7 @@
       "id": "verdict-staleness-never-raises",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 18524
@@ -8076,7 +8076,7 @@
       "id": "verdict-refuted-assumption-undecided",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 18544
@@ -8114,7 +8114,7 @@
       "id": "verdict-established-iff",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 18565
@@ -8151,7 +8151,7 @@
       "id": "verdict-strength-bounded-by-kind",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 18585
@@ -8189,7 +8189,7 @@
       "id": "verdict-regression-iff",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 18606
@@ -8226,7 +8226,7 @@
       "id": "impact-changed-claim-remarked",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 18626
@@ -8263,7 +8263,7 @@
       "id": "impact-direct-dependency-remarked",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 18647
@@ -8300,7 +8300,7 @@
       "id": "impact-proof-only-not-weakened",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 18668
@@ -8336,7 +8336,7 @@
       "id": "impact-statement-change-weakens",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 18688
@@ -8603,7 +8603,7 @@
           "id": "ev-claims-evaluation-error-agrees",
           "kind": "test",
           "recorded": "pass",
-          "ref": "tests/core/claims.test.js#prove and the live view agree on an evaluation error",
+          "ref": "tests/proofs/claims-live.test.js#prove and the live view agree on an evaluation error",
           "supports": true
         }
       ],
@@ -9279,7 +9279,7 @@
           "id": "ev-engines-agree",
           "kind": "test",
           "recorded": "pass",
-          "ref": "tests/core/conformance.test.js",
+          "ref": "tests/proofs/conformance-rust.test.js",
           "supports": true
         }
       ],
@@ -10657,7 +10657,7 @@
           "id": "ev-pooled-quotas-5",
           "kind": "test",
           "recorded": "pass",
-          "ref": "tests/core/pooled-quotas.test.js#exploration decides that a burst-eligible client is never throttled after eligibility was set",
+          "ref": "tests/proofs/pooled-quotas-explore.test.js#exploration decides that a burst-eligible client is never throttled after eligibility was set",
           "supports": true
         },
         {
@@ -10665,7 +10665,7 @@
           "id": "ev-pooled-quotas-6",
           "kind": "test",
           "recorded": "pass",
-          "ref": "tests/core/pooled-quotas.test.js#exploration finds a counterexample when eligibility takes effect only from the next day",
+          "ref": "tests/proofs/pooled-quotas-explore.test.js#exploration finds a counterexample when eligibility takes effect only from the next day",
           "supports": true
         },
         {
@@ -10673,7 +10673,7 @@
           "id": "ev-pooled-quotas-7",
           "kind": "test",
           "recorded": "pass",
-          "ref": "tests/core/pooled-quotas.test.js#exploration finds a counterexample when the over-share window is four days instead of three",
+          "ref": "tests/proofs/pooled-quotas-explore.test.js#exploration finds a counterexample when the over-share window is four days instead of three",
           "supports": true
         },
         {
@@ -11365,7 +11365,7 @@
       "id": "engine-run-terminates-proved",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 19865
@@ -11422,7 +11422,7 @@
       "id": "lean-engine-is-exegra-lean",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 19890
@@ -11460,7 +11460,7 @@
       "id": "lean-registry-names-unique",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 19916
@@ -11541,7 +11541,7 @@
       "id": "lts-safe-of-inductive",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 19951
@@ -11578,7 +11578,7 @@
       "id": "lts-bounded-is-not-unbounded",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 19971
@@ -11615,7 +11615,7 @@
       "id": "lts-vacuous-without-initial-state",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 19991
@@ -11652,7 +11652,7 @@
       "id": "lts-search-holds-is-invariant",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20011
@@ -11689,7 +11689,7 @@
       "id": "lts-counter-bounded-for-every-limit",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20031
@@ -11725,7 +11725,7 @@
       "id": "behav-phase2-order-independent",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20050
@@ -11761,7 +11761,7 @@
       "id": "behav-f4-ab-safe",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20069
@@ -11799,7 +11799,7 @@
       "id": "behav-f4-ba-safe",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20090
@@ -11837,7 +11837,7 @@
       "id": "behav-f4-next-reads-differ",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20111
@@ -11875,7 +11875,7 @@
       "id": "behav-failed-step-is-counterexample",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20132
@@ -11978,7 +11978,7 @@
       "id": "engine-run-refines-definition",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20169
@@ -12037,7 +12037,7 @@
       "id": "engine-call-computes-definition",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20196
@@ -12079,7 +12079,7 @@
       "id": "fast-json-writer-is-json-write",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20222
@@ -12136,7 +12136,7 @@
       "id": "semantic-hash-call-computes-definition",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20243
@@ -12174,7 +12174,7 @@
       "id": "behav-delivery-order-independent",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20269
@@ -12212,7 +12212,7 @@
       "id": "behav-winners-distinct",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20290
@@ -12248,7 +12248,7 @@
       "id": "behav-shape-invariant",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20309
@@ -12287,7 +12287,7 @@
       "id": "behav-shape-error-unreachable",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20331
@@ -12325,7 +12325,7 @@
       "id": "behav-static-sort-sound",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20352
@@ -12363,7 +12363,7 @@
       "id": "behav-integer-overflow-at-node",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20373
@@ -12400,7 +12400,7 @@
       "id": "behav-remainder-truncates",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20393
@@ -12436,7 +12436,7 @@
       "id": "behav-mask-constant",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20412
@@ -12473,7 +12473,7 @@
       "id": "behav-time-invariant",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20432
@@ -12511,7 +12511,7 @@
       "id": "behav-sorted-invariant",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20453
@@ -12548,7 +12548,7 @@
       "id": "behav-wf-no-sort-error",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20473
@@ -12586,7 +12586,7 @@
       "id": "behav-exec-step-sound",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20494
@@ -12623,7 +12623,7 @@
       "id": "behav-exec-step-failed",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20514
@@ -12660,7 +12660,7 @@
       "id": "behav-exec-idle-deadlocked",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20534
@@ -12698,7 +12698,7 @@
       "id": "behav-exec-stopped-deadlocked",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20555
@@ -12736,7 +12736,7 @@
       "id": "behav-run-states-reachable",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20576
@@ -12773,7 +12773,7 @@
       "id": "behav-successors-complete",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20596
@@ -12810,7 +12810,7 @@
       "id": "behav-successors-sound",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20616
@@ -12847,7 +12847,7 @@
       "id": "behav-search-holds-invariant",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20636
@@ -12886,7 +12886,7 @@
       "id": "behav-search-cex-refutes",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20658
@@ -12925,7 +12925,7 @@
       "id": "behav-timer-cancel",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20680
@@ -12962,7 +12962,7 @@
       "id": "behav-drop-occurrence",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20700
@@ -12999,7 +12999,7 @@
       "id": "behav-f4-exec-same-machines",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20720
@@ -13037,7 +13037,7 @@
       "id": "behav-deliver-iff-step",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20741
@@ -13073,7 +13073,7 @@
       "id": "behav-pending-perm-bisim",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20760
@@ -13109,7 +13109,7 @@
       "id": "behav-target-only",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20779
@@ -13145,7 +13145,7 @@
       "id": "behav-phase2-eq-par",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20798
@@ -13182,7 +13182,7 @@
       "id": "behav-sample-mem-support",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20818
@@ -13219,7 +13219,7 @@
       "id": "behav-successors-up-to-eq",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20838
@@ -13256,7 +13256,7 @@
       "id": "behav-ctr-le",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20858
@@ -13293,7 +13293,7 @@
       "id": "behav-choice-safe",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20878
@@ -13330,7 +13330,7 @@
       "id": "behav-choice-unsafe",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20898
@@ -13367,7 +13367,7 @@
       "id": "behav-phase2-perm-emitted",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20918
@@ -13403,7 +13403,7 @@
       "id": "behav-exec-covers",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20937
@@ -13440,7 +13440,7 @@
       "id": "behav-exec-sound",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20957
@@ -13477,7 +13477,7 @@
       "id": "behav-invariant-rename",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20977
@@ -13515,7 +13515,7 @@
       "id": "behav-elab-wf",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 20998
@@ -13552,7 +13552,7 @@
       "id": "behav-runb-reach",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21018
@@ -13590,7 +13590,7 @@
       "id": "behav-explore-holds-invariant",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21039
@@ -13627,7 +13627,7 @@
       "id": "behav-explore-cex-real",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21059
@@ -13664,7 +13664,7 @@
       "id": "behav-monitor-sound",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21079
@@ -13701,7 +13701,7 @@
       "id": "behav-agg-reads-snapshot",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21099
@@ -13738,7 +13738,7 @@
       "id": "behav-reply-reaches-requester",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21119
@@ -13775,7 +13775,7 @@
       "id": "behav-elab-check",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21139
@@ -13812,7 +13812,7 @@
       "id": "behav-tcheck-holds",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21159
@@ -13849,7 +13849,7 @@
       "id": "behav-tcheck-cex",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21179
@@ -13886,7 +13886,7 @@
       "id": "behav-verdict-holds",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21199
@@ -13923,7 +13923,7 @@
       "id": "search-list-equals-hashset",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21219
@@ -13960,7 +13960,7 @@
       "id": "behav-cex-refutes-kernel",
       "kind": "structural",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21239
@@ -13997,7 +13997,7 @@
       "id": "lts-k-induction-sound",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21259
@@ -14034,7 +14034,7 @@
       "id": "lts-k-induction-example-not-inductive",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21279
@@ -14071,7 +14071,7 @@
       "id": "lts-k-induction-example-2-inductive",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21299
@@ -14108,7 +14108,7 @@
       "id": "lts-k-induction-example-invariant",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21319
@@ -14145,7 +14145,7 @@
       "id": "lts-strong-fairness-implies-weak",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21339
@@ -14182,7 +14182,7 @@
       "id": "lts-lasso-refutes",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21359
@@ -14219,7 +14219,7 @@
       "id": "lts-lasso-refutes-gf",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21379
@@ -14256,7 +14256,7 @@
       "id": "lts-response-of-ranking",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21399
@@ -14293,7 +14293,7 @@
       "id": "lts-ranking-without-helpful-unsound",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21419
@@ -14330,7 +14330,7 @@
       "id": "lts-blinker-not-fg-on",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21439
@@ -14367,7 +14367,7 @@
       "id": "lts-blinker-gf-on",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21459
@@ -14404,7 +14404,7 @@
       "id": "calculus-check-lasso-sound",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21479
@@ -14441,7 +14441,7 @@
       "id": "calculus-lasso-search-sound",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21499
@@ -14478,7 +14478,7 @@
       "id": "calculus-check-ranking-sound",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21519
@@ -14515,7 +14515,7 @@
       "id": "calculus-rank-proves-sound",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21539
@@ -14552,7 +14552,7 @@
       "id": "calculus-quiescent-run-deadlocked",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21559
@@ -14589,7 +14589,7 @@
       "id": "prove-certificate-invariant",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21579
@@ -14626,7 +14626,7 @@
       "id": "prove-liveness-proved-meaning",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21599
@@ -14663,7 +14663,7 @@
       "id": "prove-liveness-violated-gf-meaning",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21619
@@ -14700,7 +14700,7 @@
       "id": "prove-liveness-violated-fg-meaning",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21639
@@ -14737,7 +14737,7 @@
       "id": "prove-kernel-certificate-invariant",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21659
@@ -15047,7 +15047,7 @@
       "id": "behav-grant-within-limits",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21778
@@ -15086,7 +15086,7 @@
       "id": "behav-held-ok-invariant",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21800
@@ -15119,7 +15119,7 @@
       "id": "hiding-keeps-boundary-traces",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21821
@@ -15152,7 +15152,7 @@
       "id": "hiding-composes",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21839
@@ -15184,7 +15184,7 @@
       "id": "boundary-refinement-preorder",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21856
@@ -15216,7 +15216,7 @@
       "id": "boundary-refinement-preserved-by-hiding",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21873
@@ -15248,7 +15248,7 @@
       "id": "boundary-comparison-exact",
       "kind": "invariant",
       "method": "lean-theorem",
-      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:08:00.498Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
+      "scope": "Checked by Lean 4.35.0 at 2026-11-28T12:39:19.229Z, as recorded: the theorem's proof re-checked by the kernel and its axioms collected. It establishes the statement about the Lean definitions it names. That the code which runs is those definitions rests on the trusted base: the Lean compiler and runtime, the WebAssembly toolchain and the JS glue (the claim's assumptions).",
       "source": {
         "column": 5,
         "line": 21890
@@ -21230,7 +21230,7 @@
           "id": "ev-nav-production-bundle",
           "kind": "test",
           "recorded": "pass",
-          "ref": "tests/core/spec-manifest.test.js#a production build bundles the self-specification resolved and the shipped application derives the CLI model from it",
+          "ref": "tests/proofs/spec-bundle.test.js",
           "supports": true
         }
       ],
@@ -23846,7 +23846,7 @@
           "id": "ev-theorem-weakening",
           "kind": "test",
           "recorded": "pass",
-          "ref": "tests/core/change-impact.test.js#a weakened theorem is refused",
+          "ref": "tests/proofs/theorem-weakening.test.js#a weakened theorem is refused",
           "supports": true
         }
       ],
@@ -23958,7 +23958,7 @@
           "id": "ev-self-spec-split-workspace",
           "kind": "test",
           "recorded": "pass",
-          "ref": "tests/core/spec-split.test.js#the workspace writes an apply of the self-specification to part files and a stale base is refused",
+          "ref": "tests/core/spec-manifest.test.js#the workspace reads a manifest and writes an edit to the parts",
           "supports": true
         },
         {
@@ -24542,7 +24542,7 @@
     }
   ],
   "format": "exegra-claims-report",
-  "semanticHash": "009f9e93b56a1c",
+  "semanticHash": "0d70fdde61eef5",
   "strength": {
     "check": {
       "data-model": 2,

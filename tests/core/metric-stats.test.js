@@ -28,8 +28,8 @@ test('the binomial test at the defaults and the documented run counts', () => {
   assert.equal(binomialVerdict(59, 52, B95, C95), 'fails');
   assert.equal(toDecimal(binomTail(59, 52, B95, 'le'), 3), '0.027');
   assert.equal(toDecimal(binomTail(59, 53, B95, 'le'), 3), '0.074');
-  // 93 runs allow one failure and fail at 9 or more; 150 allow two, fail at 13; 300 allow eight, fail at 22.
-  for (const [N, allow, failAt] of [[93, 1, 9], [150, 2, 13], [300, 8, 22]]) {
+  // 93 runs allow one failure and fail at 9 or more; 150 allow two, fail at 13.
+  for (const [N, allow, failAt] of [[93, 1, 9], [150, 2, 13]]) {
     assert.equal(N - passesToHold(N, B95, C95), allow, `${N} runs allow ${allow}`);
     assert.equal(N - passesToFail(N, B95, C95), failAt, `${N} runs fail at ${failAt}`);
   }

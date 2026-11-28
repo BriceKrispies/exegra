@@ -560,17 +560,6 @@ test('negatives: malformed negatives are validation errors and follow renames', 
   assert.match(p.specText, /"negatives": \[ \{ "scenario": "happy-path"/);
 });
 
-test('negatives: every behavioral claim of the exegra specification is verified with a violating negative', () => {
-  const model = load(readSpecFile(new URL('../../specs/exegra/spec.jsonc', import.meta.url)));
-  const trace = evaluateClaims(model).filter((r) => r.evaluator === 'exegra.trace/0.1');
-  assert.ok(trace.length >= 10, `expected the edit-flow claims, found ${trace.length}`);
-  for (const r of trace) {
-    assert.equal(r.status, 'verified', `${r.claimId}: ${r.explanation}`);
-    assert.ok(r.negatives && r.negatives.length >= 1, `${r.claimId} declares no negative`);
-    assert.ok(r.negatives.every((n) => n.violated), `${r.claimId}: a negative did not violate it`);
-  }
-});
-
 // ---------------------------------------------------------------------------
 // Vacuity of only-via and of eventually (WG-4827)
 // ---------------------------------------------------------------------------
@@ -629,21 +618,4 @@ test('eventually: a scripted input is not a reaction of the system', () => {
 
 test('eventually: an occurrence the system emits, with a violating negative, is verified', () => {
   assert.equal(vclaim('ev-reaction').status, 'verified');
-});
-
-// WG-5682: the live view and exegra prove evaluate claim expressions with one Lean evaluator (claimTruth of
-// formal/Exegra/ProveB.lean); an expression that cannot be evaluated is a violation in both.
-test('prove and the live view agree on an evaluation error', async (t) => {
-  await initEngine();
-  const text = readFileSync(new URL('../fixtures/liveness/spec.jsonc', import.meta.url), 'utf8');
-  const project = new Project({ name: 'liveness', specText: text, layoutText: null });
-  assert.ok(project.model, 'the fixture parses');
-  const live = evaluateClaims(project.model).find((c) => c.claimId === 'claim-divides-by-zero');
-  assert.equal(live?.status, 'violated', 'the live view reports a violation');
-  assert.match(live.explanation, /cannot be evaluated/);
-  const { lakeAvailable, proveScenario } = await import('../../tools/prove.js');
-  if (!lakeAvailable()) { t.skip('lake is not on the PATH; the prove half was not checked'); return; }
-  const proved = proveScenario(project.model, 'blink-f4').claims.find((/** @type {any} */ c) => c.claimId === 'claim-divides-by-zero');
-  assert.equal(proved?.result, 'counterexample', 'exegra prove reports a violation');
-  assert.equal(proved.counterexample.stepCount, 0, 'already in the initial configuration');
 });

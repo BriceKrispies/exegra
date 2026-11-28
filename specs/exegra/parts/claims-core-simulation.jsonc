@@ -934,7 +934,7 @@
       "id": "ev-engines-agree",
       "claim": "engines-agree-on-traces",
       "kind": "test",
-      "ref": "tests/core/conformance.test.js",
+      "ref": "tests/proofs/conformance-rust.test.js",
       "description": "The Rust engine as WebAssembly, and as the native binary when it is built, reproduces every golden trace of the conformance suite."
     },
     {
@@ -1039,21 +1039,21 @@
       "id": "ev-pooled-quotas-5",
       "claim": "pooled-quotas-executable",
       "kind": "test",
-      "ref": "tests/core/pooled-quotas.test.js#exploration decides that a burst-eligible client is never throttled after eligibility was set",
+      "ref": "tests/proofs/pooled-quotas-explore.test.js#exploration decides that a burst-eligible client is never throttled after eligibility was set",
       "description": "Exploration decides that a burst-eligible client is never throttled after eligibility was set."
     },
     {
       "id": "ev-pooled-quotas-6",
       "claim": "pooled-quotas-executable",
       "kind": "test",
-      "ref": "tests/core/pooled-quotas.test.js#exploration finds a counterexample when eligibility takes effect only from the next day",
+      "ref": "tests/proofs/pooled-quotas-explore.test.js#exploration finds a counterexample when eligibility takes effect only from the next day",
       "description": "Exploration finds a counterexample when eligibility takes effect only from the next day."
     },
     {
       "id": "ev-pooled-quotas-7",
       "claim": "pooled-quotas-executable",
       "kind": "test",
-      "ref": "tests/core/pooled-quotas.test.js#exploration finds a counterexample when the over-share window is four days instead of three",
+      "ref": "tests/proofs/pooled-quotas-explore.test.js#exploration finds a counterexample when the over-share window is four days instead of three",
       "description": "Exploration finds a counterexample when the over-share window is four days instead of three."
     },
     {

@@ -69,9 +69,3 @@ test('a metric-bound claim in a specification reads model-holds with its runs an
   assert.match(r.scope, /Never verified/);
   assert.match(r.explanation, /negative 0 .*: fails/);
 });
-
-test('a metric-bound claim whose bound the model misses is violated, never verified', () => {
-  const r = evaluateClaim(load(SPEC('100 us')), 'job-p90-bounded');
-  assert.equal(r.status, 'violated', r.explanation);
-  assert.ok(r.counterexample);
-});

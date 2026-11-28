@@ -212,7 +212,7 @@ async function searchAndPick(page, id) {
   await expect(page.getByTestId('search-input')).toBeHidden();
 }
 
-test('phone layout has no horizontal scroll and 44 px targets and the scene covers most of the screen', { tag: '@phone' }, async ({ page }) => {
+test('phone layout has no horizontal scroll and 44 px targets and the scene covers most of the screen', { tag: ['@phone', '@full'] }, async ({ page }) => {
   // This test is about the layout at rest, checked after every sheet change; with motion reduced the sheets
   // land at once instead of after their 300 ms transition (the touch test below keeps the motion on).
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -294,7 +294,7 @@ test('phone layout has no horizontal scroll and 44 px targets and the scene cove
   await expectTouchTargets(page, 'search');
 });
 
-test('every function is reachable by touch on a phone', { tag: '@phone' }, async ({ page }) => {
+test('every function is reachable by touch on a phone', { tag: ['@phone', '@full'] }, async ({ page }) => {
   test.setTimeout(240_000);
   await open(page, 'multiplayer');
 
@@ -504,7 +504,7 @@ test('every function is reachable by touch on a phone', { tag: '@phone' }, async
   await expectNoHorizontalScroll(page, 'after every function');
 });
 
-test('panels open beside the scene on a tablet and the desktop shows explorer scene and context panel side by side', { tag: '@tablet' }, async ({ page, browser }) => {
+test('panels open beside the scene on a tablet and the desktop shows explorer scene and context panel side by side', { tag: ['@tablet', '@full'] }, async ({ page, browser }) => {
   /** @param {{x: number, y: number, width: number, height: number}} a @param {{x: number, y: number, width: number, height: number}} b */
   const overlap = (a, b) => Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
 
@@ -547,7 +547,7 @@ test('panels open beside the scene on a tablet and the desktop shows explorer sc
   await desk.close();
 });
 
-test('the simulator shows the request log of contract events on a phone', { tag: '@phone' }, async ({ page }) => {
+test('the simulator shows the request log of contract events on a phone', { tag: ['@phone', '@full'] }, async ({ page }) => {
   await open(page, 'exegra');
   await page.getByTestId('tab-btn-simulation').tap();
   await page.getByTestId('sim-scenario').selectOption('write-with-stale-base-hash');
@@ -574,7 +574,7 @@ test('the simulator shows the request log of contract events on a phone', { tag:
   await page.screenshot({ path: path.join(SHOTS, 'test-phone-request-log.png') });
 });
 
-test('a phone walks the levels of the self-specification by touch and inspects a derived edge and a block', { tag: '@phone' }, async ({ page }) => {
+test('a phone walks the levels of the self-specification by touch and inspects a derived edge and a block', { tag: ['@phone', '@full'] }, async ({ page }) => {
   await open(page, 'exegra');
   await ex(page, `session.setView('architecture');`);
   // The level controls are in the app bar's tools: choose L0, the system in its environment.

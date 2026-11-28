@@ -7,12 +7,22 @@ import { defineConfig, devices } from '@playwright/test';
 // files. The default is derived from the repository root path (5200-5999); EXEGRA_TEST_PORT overrides it.
 const PORT = Number(process.env.EXEGRA_TEST_PORT) || 5200 + (createHash('sha256').update(path.resolve(import.meta.dirname)).digest().readUInt32BE(0) % 800);
 
+// The gate runs `npm run test:browser` (playwright test --grep-invert @full): the smoke journeys. That run has a wall-clock
+// budget, the cap on the whole run, which includes starting the Vite server (the cap counts from the start of the run, so
+// it is the server start plus the tests, not the tests alone). Measured: the three journeys of exegra.spec.js take 20 s
+// in all, about 14 s of tests and the rest the server start; the M4 walk adds its own time. A test tagged @full re-checks one claim of the
+// specification; `npm run test:browser:full`, `npm run verify` (each evidence reference runs its own tests) and the Check
+// workflow run it, outside the budget.
+const GATE = process.argv.includes('--grep-invert');
+const GATE_BUDGET_MS = 60_000;
+
 // Uses the locally installed Chrome so that no browser download is required.
 const chrome = { browserName: /** @type {const} */ ('chromium'), channel: 'chrome' };
 
 export default defineConfig({
   testDir: 'tests/browser',
   timeout: 60_000,
+  globalTimeout: GATE ? GATE_BUDGET_MS : 0,
   // Two workers by default (the cap for test jobs); EXEGRA_TEST_WORKERS overrides. Each worker slot has its own
   // scratch projects (tests/browser/scratch.js), so the tests do not share files.
   workers: Math.max(1, Number(process.env.EXEGRA_TEST_WORKERS) || 2),

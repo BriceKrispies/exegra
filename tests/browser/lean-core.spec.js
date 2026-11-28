@@ -21,7 +21,7 @@ test.afterEach(() => {
   expect(pageErrors, 'no uncaught errors in the page').toEqual([]);
 });
 
-test('the Lean core runs in the page and reproduces golden traces', async ({ page }) => {
+test('the Lean core runs in the page and reproduces golden traces', { tag: '@full' }, async ({ page }) => {
   await page.goto('/?project=exegra');
   await page.waitForFunction(() => {
     const x = /** @type {any} */ (window).__exegra;
@@ -54,7 +54,7 @@ test('the Lean core runs in the page and reproduces golden traces', async ({ pag
   test.info().annotations.push({ type: 'timing', description: `two goldens in ${out.ms.toFixed(1)} ms` });
 });
 
-test('the verified kernel derives the self-specification in the page', async ({ page }) => {
+test('the verified kernel derives the self-specification in the page', { tag: '@full' }, async ({ page }) => {
   await page.goto('/?project=exegra');
   await page.waitForFunction(() => {
     const x = /** @type {any} */ (window).__exegra;

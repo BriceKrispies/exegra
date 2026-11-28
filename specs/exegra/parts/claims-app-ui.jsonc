@@ -1500,7 +1500,7 @@
       "id": "ev-nav-production-bundle",
       "claim": "navigation-scene-is-derived-model",
       "kind": "test",
-      "ref": "tests/core/spec-manifest.test.js#a production build bundles the self-specification resolved and the shipped application derives the CLI model from it",
+      "ref": "tests/proofs/spec-bundle.test.js",
       "description": "The build's bundled specification (the resolved manifest) with the bundled fact file gives the semantic hash and the L1 interactions the command line gives, so the read-only application draws the same derived model."
     },
     {

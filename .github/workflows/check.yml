@@ -1,6 +1,6 @@
 # Checks a change on a development branch: the Lean proofs (lake build checks every theorem), the
 # WebAssembly engine, the Rust oracle, the type check, the unit tests, and Exegra's own specification
-# (validate and traceability). The unit tests have a 120 s budget (tools/run-unit-tests.js); the proof
+# (validate and traceability). The unit tests have a 35 s budget (tools/run-unit-tests.js); the proof
 # re-checks and long differentials run in their own step. It publishes nothing; .github/workflows/pages.yml publishes main.
 
 name: Check
@@ -102,7 +102,7 @@ jobs:
           tail -25 "$RUNNER_TEMP/unit-tests.log"
           exit $status
 
-      # The tests that re-check proofs and run long differentials (tests/proofs), kept out of the 120 s routine
+      # The tests that re-check proofs and run long differentials (tests/proofs), kept out of the 35 s routine
       # suite. This step and `exegra verify` below are where they are the record of what is proved.
       - name: Proof re-checks and differentials
         if: always()

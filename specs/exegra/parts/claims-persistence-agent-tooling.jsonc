@@ -1532,7 +1532,7 @@
       "id": "ev-theorem-weakening",
       "claim": "admit-refuses-theorem-weakening",
       "kind": "test",
-      "ref": "tests/core/change-impact.test.js#a weakened theorem is refused",
+      "ref": "tests/proofs/theorem-weakening.test.js#a weakened theorem is refused",
       "description": "The five counter_le variants checked by Lean."
     },
     {
@@ -1574,7 +1574,7 @@
       "id": "ev-self-spec-split-workspace",
       "claim": "self-specification-split-by-area",
       "kind": "test",
-      "ref": "tests/core/spec-split.test.js#the workspace writes an apply of the self-specification to part files and a stale base is refused",
+      "ref": "tests/core/spec-manifest.test.js#the workspace reads a manifest and writes an edit to the parts",
       "description": "The workspace writes a transaction to the part files only, and refuses a stale base."
     },
     {

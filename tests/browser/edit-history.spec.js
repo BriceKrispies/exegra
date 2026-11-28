@@ -10,7 +10,7 @@ const hash = (s) => createHash('sha256').update(s).digest('hex');
 const workspaceName = text => parse(text).components.find(c => c.id === 'workspace-service').name;
 
 for (const [winner, cross] of [[0,false],[1,false],[0,true]]) {
-  test(`two editing sessions from one hash with editor ${winner + 1} first and ${cross ? 'crossed' : 'normal'} replies`, async ({ browser, baseURL }, info) => {
+  test(`two editing sessions from one hash with editor ${winner + 1} first and ${cross ? 'crossed' : 'normal'} replies`, { tag: '@full' }, async ({ browser, baseURL }, info) => {
     test.setTimeout(120_000);
     resetScratch('exegra');
     const pages = await Promise.all([browser.newPage(), browser.newPage()]);

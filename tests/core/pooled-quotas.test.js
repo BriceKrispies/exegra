@@ -1,20 +1,18 @@
 // Pooled quotas (WG-5278; docs/model-and-format.md, Pooled quotas): limits shared by a reseller's client
 // tenants, with fair share, headroom, the over-share rule with its window and the exemption set by a
 // named role. The fixture tests/fixtures/pooled-quotas/harbourline.jsonc states Harbourline BR-12; the
-// pool runs as machines (Exegra.Lower.poolMachines, formal/Exegra/Lower/Input.lean), so its claims are decided by exhaustive exploration of the
-// scenario's injected usage and eligibility events with the verified explorer of the Lean semantics
-// (run here through the WebAssembly core), and a seeded wrong rule (eligibility effective only from the
-// next day, or a four-day window) makes the explorer return a counterexample. Each validation rule has a
-// mutation that breaks exactly it once.
+// pool runs as machines (Exegra.Lower.poolMachines, formal/Exegra/Lower/Input.lean), so its claims are decided by exhaustive
+// exploration of the scenario's injected usage and eligibility events with the verified explorer of the Lean semantics;
+// those explorations are in tests/proofs/pooled-quotas-explore.test.js (npm run test:proofs, npm run verify). Each
+// validation rule has a mutation that breaks exactly it once.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { parse } from 'jsonc-parser';
 import { analyzeSpec } from '../../src/core/analyze.js';
-import { call, initLean } from '../../src/core/lean.js';
+import { initLean } from '../../src/core/lean.js';
 import { runScenario } from '../../src/core/engine.js';
-import { proofPlan, exploreRequest } from '../../src/core/proof-export.js';
 import { poolMachineIds, POOL_VARIABLES } from '../../src/core/pool-rules.js';
 import { engineInput } from '../../src/core/engine.js';
 
@@ -40,17 +38,6 @@ function model(mutate = (/** @type {any} */ _d) => {}) {
 const errors = (/** @type {any} */ r) => r.diagnostics.filter((/** @type {any} */ d) => d.severity === 'error');
 const show = (/** @type {any} */ r) => r.diagnostics.map((/** @type {any} */ d) => `${d.severity} ${d.code} ${d.message}`).join('\n');
 const pool = (/** @type {any} */ d) => d.quotaPools[0];
-
-/** Explore a scenario's state-invariant claims: claim id -> the explorer's result. @param {any} m @param {string} scenarioId */
-function explore(m, scenarioId) {
-  const plan = proofPlan(m, scenarioId);
-  const r = call('engine.explore', JSON.parse(exploreRequest(plan)));
-  assert.ok(r.ok, /** @type {any} */ (r).error);
-  return new Map(/** @type {any} */ (r).value.results.map((/** @type {any} */ x) => [x.id, x]));
-}
-
-const BURST = 'burst-eligible-never-throttled-after-set';
-const THREE = 'three-days-over-throttles';
 
 test('quota pools are entities of the metamodel with a section of their own and scenarios list the pools they run', () => {
   assert.equal(metamodel.sections.quotaPools?.entity, 'quotaPool');
@@ -84,27 +71,6 @@ test('a client over its fair share is admitted while the pool has headroom and t
   assert.deepEqual([m1(after(36)).vars.refused, m1(after(36)).vars.usage], [1, 5], 'throttled to its fair share: 12 refused, 5 admitted');
   assert.equal(m1(after(40)).state, 'throttled', 'one day under is not enough');
   assert.deepEqual([m1(trace.final).state, m1(trace.final).vars.throttledOn], ['normal', -1], 'two days under release the throttle');
-});
-
-test('exploration decides that a burst-eligible client is never throttled after eligibility was set', () => {
-  const results = explore(model(), 'burst-exploration');
-  assert.equal(results.get(BURST)?.verdict, 'holds');
-  assert.equal(results.get(THREE)?.verdict, 'holds');
-  assert.ok(results.get(BURST).states > 100, 'every subset of the injected usage and eligibility events was explored');
-});
-
-test('exploration finds a counterexample when eligibility takes effect only from the next day', () => {
-  const results = explore(model((/** @type {any} */ d) => { pool(d).exemption.effective = 'next-window'; }), 'burst-exploration');
-  const r = results.get(BURST);
-  assert.equal(r?.verdict, 'counterexample');
-  assert.ok(r.faults.includes('m1-burst-day2'), 'eligibility set on the day the third over-share day ends');
-  assert.ok(['m1-runs-day0', 'm1-runs-day1', 'm1-runs-day2'].every((f) => r.faults.includes(f)));
-});
-
-test('exploration finds a counterexample when the over-share window is four days instead of three', () => {
-  const results = explore(model((/** @type {any} */ d) => { pool(d).overShare.consecutive = 4; }), 'burst-exploration');
-  assert.equal(results.get(THREE)?.verdict, 'counterexample');
-  assert.equal(results.get(BURST)?.verdict, 'holds');
 });
 
 test('a retroactive exemption lifts a throttle already in force and the default one does not', () => {

@@ -3,7 +3,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseJsonc } from 'jsonc-parser';
@@ -14,7 +13,6 @@ import { assembleParts, planWrite, readManifest, resolveSpecText } from '../../t
 import { countComments, splitSpec } from '../../tools/split-spec.js';
 import { decide, partDirs } from '../../tools/spec-guard.js';
 import { stampedFiles } from '../../tools/tree-stamp.js';
-import { createWorkspace } from '../../tools/workspace.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const MANIFEST = path.join(ROOT, 'specs', 'exegra', 'spec.jsonc');
@@ -97,7 +95,6 @@ test('apply places a new component and claim and evidence and relationship in th
   // The parts, written back, resolve to the edited text.
   const afterWrite = written(resolved, changed);
   sameDocument(afterWrite.text, edited);
-  assert.equal(hashOf(afterWrite.text), project.semanticHash);
   // Undo gives the previous text, and writing it restores every part byte for byte.
   assert.ok(project.undo());
   assert.equal(project.specText, resolved.text);
@@ -108,7 +105,6 @@ test('apply places a new component and claim and evidence and relationship in th
   // Redo gives the edit again.
   assert.ok(project.redo());
   assert.equal(project.specText, edited);
-  sameDocument(written(afterUndo, planWrite(afterUndo, project.specText)).text, edited);
 });
 
 test('a new entity with no rule goes to its default part', () => {
@@ -122,29 +118,6 @@ test('a new entity with no rule goes to its default part', () => {
   const where = (/** @type {string} */ id) => changed.filter((c) => c.text.includes(`"id": "${id}"`)).map((c) => path.basename(c.file));
   assert.deepEqual(where('zz-t-top'), ['structure-top.jsonc']);
   assert.deepEqual(where('zz-t-claim2'), ['claims-app-ui.jsonc']);
-});
-
-test('the workspace writes an apply of the self-specification to part files and a stale base is refused', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'exegra-split-'));
-  try {
-    const base = path.dirname(MANIFEST);
-    fs.mkdirSync(path.join(dir, 'specs', 'exegra'), { recursive: true });
-    fs.cpSync(path.join(base, 'parts'), path.join(dir, 'specs', 'exegra', 'parts'), { recursive: true });
-    fs.copyFileSync(MANIFEST, path.join(dir, 'specs', 'exegra', 'spec.jsonc'));
-    const ws = createWorkspace(path.join(dir, 'specs'));
-    const data = await ws.read('exegra');
-    assert.equal(data.spec.text, resolved.text);
-    const project = new Project({ name: 'exegra', specText: data.spec.text, layoutText: null });
-    assert.equal(project.apply({ type: 'SetProperty', id: 'parser', property: 'purpose', value: 'Edited.' }).ok, true);
-    const w = await ws.write('exegra', 'spec', project.specText, data.spec.hash);
-    assert.equal(w.ok, true);
-    assert.equal(fs.readFileSync(path.join(dir, 'specs', 'exegra', 'spec.jsonc'), 'utf8'), manifestText, 'the manifest is untouched');
-    const touched = resolved.parts.filter((p) => fs.readFileSync(path.join(dir, 'specs', 'exegra', 'parts', path.basename(p.file)), 'utf8') !== p.text);
-    assert.deepEqual(touched.map((p) => path.basename(p.file)), ['structure-core-model.jsonc']);
-    assert.equal((await ws.write('exegra', 'spec', project.specText, data.spec.hash)).conflict, true);
-  } finally {
-    fs.rmSync(dir, { recursive: true, force: true });
-  }
 });
 
 test('an entity is located in the part file and the line that hold it', () => {

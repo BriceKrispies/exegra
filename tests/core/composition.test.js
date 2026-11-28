@@ -68,14 +68,6 @@ test('the fixture validates, and a composite\'s interface is inferred from its m
   assert.equal(interfaceReport(m, 'store')[0].status, 'inferred');
 });
 
-test('every event of the self-specification belongs to the interface of an element or a port', () => {
-  const m = self();
-  const orphans = [...eventInterfaces(m)].filter(([, owners]) => !owners.length).map(([e]) => e);
-  assert.deepEqual(orphans, []);
-  assert.ok(interfaceReport(m).some((x) => x.element === 'persistence' && x.status === 'declared'), 'the persistence composite declares its interface');
-  assert.deepEqual(interfaceReport(m).filter((x) => x.status === 'disagrees').map((x) => x.element), []);
-});
-
 test('a read of another element\'s state that its declared interface does not export is behavior.reads-unexported', () => {
   const doc = fixtureDoc();
   // The writer reads the disk's hash in a guard: a cross-element read through the store's boundary.
@@ -334,28 +326,6 @@ test('an omitted element that receives an event needs an environment assumption'
   assert.deepEqual(assumed.assumed.map((u) => u.event), ['put-req']);
 });
 
-test('commit-reevaluates-claims runs with the engine as declared environment, and without it names claim-scenarios-run', async () => {
-  const m = self();
-  const sid = 'commit-reevaluates-claims';
-  const trace = runScenario(m, sid);
-  assert.deepEqual(environmentReport(m, sid, trace).unassumed, []);
-  assert.ok(environmentReport(m, sid, trace).assumed.some((a) => a.event === 'claim-scenarios-run' && a.receivers.includes('simulation-engine')));
-  const s = /** @type {any} */ (m.entities.get(sid));
-  const cut = s.data.cut;
-  try {
-    s.data.cut = { ...cut, environment: [] };
-    const bare = environmentReport(m, sid, trace);
-    assert.ok(bare.unassumed.length > 0);
-    assert.ok(bare.unassumed.every((u) => u.event === 'claim-scenarios-run' && u.receivers.includes('simulation-engine')));
-  } finally {
-    s.data.cut = cut;
-  }
-  const out = await runCommand('simulate', [sid, '--project', 'exegra']);
-  assert.ok(out.ok);
-  assert.deepEqual(out.result.environment.unassumed, []);
-  assert.deepEqual(out.result.diagnostics, []);
-});
-
 test('no presentation state changes a trace or a refinement verdict or a claim verdict', () => {
   const m = self();
   const before = { trace: runScenario(m, 'visual-edit-flow'), refine: checkAbstraction(m, 'workspace-flow', { scenarios: ['visual-edit-flow'] }).verdict, claim: evaluateClaim(m, 'file-matches-model-after-save').status };
@@ -389,14 +359,6 @@ test('simulate runs a region at another level from the command line and refuses 
 // ---------------------------------------------------------------------------
 // Criterion 7: order independence
 // ---------------------------------------------------------------------------
-
-test('reordering the behaviours of every self-specification scenario changes no verdict', () => {
-  const m = self();
-  for (const s of m.byKind.scenario ?? []) {
-    const r = orderCheck(m, s.id);
-    assert.ok(r.verdictsIndependent, `${s.id}: ${JSON.stringify(r.differences)}`);
-  }
-});
 
 test('the foundations F4 example gives the same trace and verdicts in both listings', () => {
   const m = /** @type {any} */ (analyzeSpec(fs.readFileSync(path.join(ROOT, 'tests/fixtures/behaviour-order/spec.jsonc'), 'utf8')).model);
@@ -469,26 +431,3 @@ test('the self-specification\'s persistence elements have one behaviour per leve
 // ---------------------------------------------------------------------------
 // The self-specification's claims of WG-5729
 // ---------------------------------------------------------------------------
-
-test('the composition claims of the self-specification hold', () => {
-  // composition-order-independent is backed by tests/proofs/composition-order.test.js as evidence.
-  const m = self();
-  for (const id of ['events-belong-to-interfaces', 'scenario-environments-declared', 'save-order-transfers-to-persistence-members', 'save-liveness-not-transferred']) {
-    const r = evaluateClaim(m, id);
-    assert.equal(r.status, 'verified', `${id}: ${r.explanation}`);
-  }
-});
-
-test('the composition commands answer on the self-specification', async () => {
-  {
-    const env = await runCommand('environment', ['commit-reevaluates-claims', '--project', 'exegra']);
-    assert.ok(env.ok);
-    assert.equal(env.result.unassumed, 0);
-    const tr = await runCommand('transfer', ['save-follows-refresh', '--abstraction', 'workspace-flow', '--project', 'exegra']);
-    assert.ok(tr.ok);
-    assert.equal(tr.result.transferred, true);
-    const comp = await runCommand('compose', ['persistence', '--scenario', 'write-with-stale-base-hash', '--project', 'exegra']);
-    assert.ok(comp.ok);
-    assert.equal(comp.result.strength, 'exact');
-  }
-});

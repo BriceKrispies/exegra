@@ -42,7 +42,7 @@ const openSimulation = async (page) => {
   await expect(page.getByTestId('sim-live')).toBeVisible();
 };
 
-test('live mode replays an edit and its save through the self-model on the right components without divergence', async ({ page }) => {
+test('live mode replays an edit and its save through the self-model on the right components without divergence', { tag: '@full' }, async ({ page }) => {
   await openSelf(page);
   // Settle: the change stream is open and nothing is awaited before the edit.
   await page.waitForFunction(() => /** @type {any} */ (window).__exegra.session.traffic.events().some((/** @type {any} */ e) => e.id === 'ws-watch'));

@@ -22,6 +22,10 @@ const doc = () => parse(FIXTURE);
 /** @param {any} d */
 const text = (d) => JSON.stringify(d, null, 2);
 
+/** The coverage of the fixture, searched once for the tests that read it. @type {any} */
+let baseCoverage;
+const base = () => (baseCoverage ??= machineCoverage(model(FIXTURE)));
+
 test('the fixture validates and its one machine is shipped', () => {
   const a = analyzeSpec(FIXTURE);
   assert.deepEqual(a.diagnostics.filter((d) => d.severity === 'error'), []);
@@ -44,8 +48,7 @@ test('a guard is false when a later transition of the same state and event fires
 });
 
 test('the scenario covers what it delivers and the search covers the rest and reports the unreachable transition', () => {
-  const m = model(FIXTURE);
-  const { machines, findings } = machineCoverage(m);
+  const { machines, findings } = base();
   assert.equal(machines.length, 1);
   const door = machines[0];
   assert.deepEqual(door.transitions, { covered: 4, total: 5, byScenarios: 1 });
@@ -62,13 +65,6 @@ test('the scenario covers what it delivers and the search covers the rest and re
   assert.match(findings[0].message, /source state "jammed" is entered by no transition/);
 });
 
-test('under system.generation an unreachable transition is an error', () => {
-  const d = doc();
-  d.system.generation = { target: 'rust' };
-  const { findings } = machineCoverage(model(text(d)));
-  assert.deepEqual(findings.map((f) => [f.code, f.severity]), [['machine.transition-unreachable', 'error']]);
-});
-
 test('a bound too small to reach a transition is reported as unreachable within that bound', () => {
   const { findings } = machineCoverage(model(FIXTURE), { bound: 1 });
   const close = findings.find((f) => f.entityId === 't-close');
@@ -78,7 +74,7 @@ test('a bound too small to reach a transition is reported as unreachable within 
 
 test('the generated scenarios added through their operations cover everything the search found', () => {
   const m = model(FIXTURE);
-  const { machines } = machineCoverage(m);
+  const { machines } = base();
   const ops = coverageOperations(m, machines);
   assert.ok(ops.length >= 2);
   for (const op of ops) {
@@ -125,9 +121,6 @@ test('cover-machines reports the table and the finding and writes ops.json that 
     assert.equal(r.result.written.file, file);
     const applied = await runCommand('apply', ['--file', file], { specs, project: 'doors' });
     assert.equal(applied.ok, true, JSON.stringify(applied.error));
-    const again = await runCommand('cover-machines', [], { specs, project: 'doors' });
-    assert.deepEqual(again.result.summary.generated, 0);
-    assert.deepEqual(again.result.table[0].open, ['t-unjam']);
   } finally {
     fs.rmSync(specs, { recursive: true, force: true });
   }

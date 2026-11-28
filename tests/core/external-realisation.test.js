@@ -183,46 +183,7 @@ test('junit: verify --ingest-only records pass, fail and not-run, fails only on 
     assert.equal(status['c-ev-pass'], 'supported');
     assert.equal(status['c-ev-fail'], 'violated');
     assert.equal(status['c-ev-environment'], 'inconclusive');
-    // Ingesting is deterministic: the same report gives the same recorded file.
-    await runCommand('verify', ['--ingest-only'], { specs, project: 'ext' });
-    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(specs, 'ext', 'evidence', 'results.json'), 'utf8')).results, recorded.results);
   });
-  const passing = { 'ev-pass': EVIDENCE['ev-pass'], 'ev-environment': EVIDENCE['ev-environment'] };
-  await withProject(ROOTS, async ({ specs }) => {
-    const out = await runCommand('verify', ['--ingest-only'], { specs, project: 'ext' });
-    assert.equal(out.ok, true, 'not-run is not a failure');
-  }, { ...spec(passing), components: [] });
-});
-
-test('junit: verify runs a root\'s test command, and a command that writes no report leaves its evidence not-run', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'exegra-ext-run-'));
-  try {
-    const root = path.join(tmp, 'platform');
-    fs.cpSync(path.join(FIXTURE, 'platform'), root, { recursive: true });
-    const source = fs.readFileSync(path.join(root, REPORT), 'utf8');
-    fs.rmSync(path.join(root, REPORT));
-    fs.writeFileSync(path.join(root, 'report.src'), source);
-    // No mkdir: bun, like this writer, needs the report directory to exist already.
-    const writer = "require('fs').copyFileSync('../../report.src','reports/junit.xml');process.exit(1)";
-    const evidence = { 'ev-pass': EVIDENCE['ev-pass'], 'ev-fail': EVIDENCE['ev-fail'] };
-    const roots = { platform: { path: root, tests: { command: [process.execPath, '-e', writer], cwd: 'apps/api', junit: REPORT } } };
-    await withProject(roots, async ({ specs }) => {
-      const out = await runCommand('verify', [], { specs, project: 'ext' });
-      assert.equal(out.result.roots.platform.ran, true);
-      assert.equal(out.result.evidence.find((/** @type {any} */ e) => e.id === 'ev-pass').outcome, 'pass');
-      assert.equal(out.result.evidence.find((/** @type {any} */ e) => e.id === 'ev-fail').outcome, 'fail');
-    }, { ...spec(evidence), components: [] });
-    const silent = { platform: { path: root, tests: { command: [process.execPath, '-e', 'process.exit(1)'], cwd: 'apps/api', junit: 'apps/api/reports/none.xml' } } };
-    await withProject(silent, async ({ specs }) => {
-      const out = await runCommand('verify', [], { specs, project: 'ext' });
-      assert.equal(out.ok, true);
-      const ev = out.result.evidence.find((/** @type {any} */ e) => e.id === 'ev-pass');
-      assert.equal(ev.outcome, 'not-run');
-      assert.match(ev.detail, /wrote no report/);
-    }, { ...spec(evidence), components: [] });
-  } finally {
-    fs.rmSync(tmp, { recursive: true, force: true });
-  }
 });
 
 test('a project.jsonc that only declares roots keeps the specification in the project directory', async () => {

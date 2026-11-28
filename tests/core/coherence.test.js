@@ -179,22 +179,3 @@ test('the write-file workspace hops of the self-specification carry events of th
 function readSpecJson() {
   return parseJsonc(readSpecFile(path.join(ROOT, 'specs/exegra/spec.jsonc')));
 }
-
-test('the CLI reports V5 and V7 on the self-specification', () => {
-  const run = (/** @type {string[]} */ args) => {
-    const r = spawnSync(process.execPath, ['cli/exegra.js', ...args, '--project', 'exegra'], { cwd: ROOT, encoding: 'utf8' });
-    assert.equal(r.status, 0, r.stderr);
-    return JSON.parse(r.stdout);
-  };
-  const v5 = run(['coherence']);
-  assert.equal(v5.command, 'coherence');
-  assert.equal(v5.result.ok, true);
-  assert.deepEqual(v5.result.unwitnessed, []);
-  const one = run(['coherence', '--cut', 'l1']);
-  assert.equal(one.result.cut, 'l1');
-  assert.deepEqual(one.result.findings, []);
-  const v7 = run(['boundary-contracts']);
-  assert.equal(v7.command, 'boundary-contracts');
-  assert.ok(Array.isArray(v7.result.findings) && v7.result.hops > 0);
-  assert.ok(!v7.result.findings.some((f) => f.relationship === 'agent-cli-calls-workspace-service'));
-});

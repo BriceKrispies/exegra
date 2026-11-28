@@ -1458,7 +1458,7 @@
       "id": "ev-ms-cut-command",
       "claim": "cut-maps-compose",
       "kind": "test",
-      "ref": "tests/core/multiscale.test.js#the cut command prints the blocks and the element-to-block map of a declared or an ad hoc cut",
+      "ref": "tests/core/multiscale.test.js#cut maps compose along the chain of cuts of the self-specification and incomparable cuts have no map",
       "description": "exegra cut on a declared cut, an ad hoc cut of the runtime hierarchy, an invalid one, and the listing."
     },
     {

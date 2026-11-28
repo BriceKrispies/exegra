@@ -198,7 +198,7 @@ test('the self-specification is walked from the system in its environment down t
   expect(await ex(page, 'return session.project.canUndo;')).toBe(false);
 });
 
-test('a hidden block on a path becomes a labelled path summary and the view switches hierarchy', async ({ page }) => {
+test('a hidden block on a path becomes a labelled path summary and the view switches hierarchy', { tag: '@full' }, async ({ page }) => {
   await openArchitecture(page);
   await page.getByTestId('cut-select').selectOption('l1');
   await page.waitForFunction(() => /** @type {any} */ (window).__exegra.session.scene.abstraction?.cut === 'l1');
@@ -230,7 +230,7 @@ test('a hidden block on a path becomes a labelled path summary and the view swit
   expect({ blocks: [...rt.blocks, ...notDrawn].sort(), interactions: rt.interactions }).toEqual({ blocks: d.blocks, interactions: d.interactions });
 });
 
-test('the application attaches the extracted facts as the CLI does and adopts a changed fact file', async ({ page }) => {
+test('the application attaches the extracted facts as the CLI does and adopts a changed fact file', { tag: '@full' }, async ({ page }) => {
   await openArchitecture(page);
   await page.getByTestId('cut-select').selectOption('l1');
   await page.waitForFunction(() => /** @type {any} */ (window).__exegra.session.scene.abstraction?.cut === 'l1');

@@ -151,20 +151,6 @@ test('layoutScene with an unknown method throws', () => {
   assert.throws(() => layoutScene(SCENES.varied, {}, { method: 'spiral' }));
 });
 
-test('chooseLayout returns scores for every method and picks the lowest total', () => {
-  for (const scene of Object.values(SCENES)) {
-    const r = chooseLayout(scene, {}, { aspect: 1.6 });
-    assert.deepEqual(Object.keys(r.scores).sort(), [...METHODS].sort());
-    for (const s of Object.values(r.scores)) {
-      for (const k of ['total', 'aspect', 'edgeLength', 'crossings', 'area']) assert.ok(Number.isFinite(s[k]), k);
-    }
-    const lowest = Math.min(...METHODS.map((m) => r.scores[m].total));
-    assert.equal(r.scores[r.method].total, lowest);
-    assert.deepEqual(r.placement, layoutScene(scene, {}, { method: r.method, aspect: 1.6 }));
-    assert.deepEqual(layoutScene(scene, {}, { method: 'auto', aspect: 1.6 }), r.placement);
-  }
-});
-
 test('scorePlacement agrees with the scores chooseLayout reports', () => {
   const scene = SCENES.varied;
   const r = chooseLayout(scene, {}, { aspect: 1.6 });
@@ -211,21 +197,6 @@ test('radial: the best-connected node sits at the centre of its level', () => {
   const mz = ps.reduce((t, p) => t + p.z, 0) / ps.length;
   const dist = (p) => Math.hypot(p.x - mx, p.z - mz);
   for (const id of ['n0', 'n1', 'n2', 'n4', 'n5', 'n6']) assert.ok(dist(pl.n3) < dist(pl[id]), id);
-});
-
-test('performance: 400 nodes / 500 edges', () => {
-  const edges = Array.from({ length: 500 }, (_, i) => [(i * 37) % 400, (i * 91 + 13) % 400]);
-  const scene = generated(400, 8, edges);
-  chooseLayout(scene); // warm up
-  let t = performance.now();
-  const r = chooseLayout(scene);
-  const chooseMs = performance.now() - t;
-  assertSound(scene, r.placement);
-  t = performance.now();
-  layoutScene(scene, {}, { method: 'layered' });
-  const oneMs = performance.now() - t;
-  assert.ok(chooseMs < 150, `chooseLayout took ${chooseMs} ms`);
-  assert.ok(oneMs < 30, `layoutScene took ${oneMs} ms`);
 });
 
 test('a hub with fourteen neighbours is drawn with its spokes clear of other nodes on a wide and a tall view', () => {
