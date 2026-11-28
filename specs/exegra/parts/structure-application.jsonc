@@ -99,6 +99,58 @@
           "src/app/disk-reload.js"
         ],
         "language": "js"
+      },
+      "interface": {
+        "inputs": [
+          "claims-evaluated",
+          "commit-notified",
+          "conflict-resolution-chosen",
+          "entity-selected",
+          "external-change-received",
+          "page-reloaded",
+          "preferences-loaded",
+          "project-files-read",
+          "project-open-requested",
+          "project-read-failed",
+          "projection-refreshed",
+          "projects-listed",
+          "save-conflicted",
+          "save-failed",
+          "save-succeeded",
+          "session-init-requested",
+          "sim-back-requested",
+          "sim-load-requested",
+          "sim-reset-requested",
+          "sim-run-failed",
+          "sim-run-to-end-requested",
+          "sim-seek-requested",
+          "sim-step-requested",
+          "sim-trace-ready",
+          "transaction-committed",
+          "transaction-rejected",
+          "view-switched"
+        ],
+        "outputs": [
+          "claims-evaluation-requested",
+          "engine-run-intent",
+          "list-intent",
+          "model-published",
+          "open-refused",
+          "preferences-read",
+          "preferences-written",
+          "project-opened",
+          "read-intent",
+          "refresh-requested",
+          "reload-requested",
+          "sim-step-shown",
+          "view-selected",
+          "watch-intent",
+          "write-intent"
+        ],
+        "observables": [
+          "project-session-flow.projectName",
+          "project-session-flow.textHash"
+        ]
       }
     },
     {

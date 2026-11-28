@@ -118,10 +118,10 @@ test('the request log renders contract events with binding and outcome', () => {
   assert.ok(own);
   const lines = requestLog(own, runScenario(own, 'write-with-stale-base-hash')).map((e) => e.text);
   assert.deepEqual(lines, [
-    '→ POST /__exegra/write {name: "exegra", file: "spec", text: "spec text of revision 2", baseHash: "h1"}',
-    '← refused conflict {current: "h2"}',
-    '→ POST /__exegra/write {name: "exegra", file: "spec", text: "spec text of revision 2", baseHash: "h2"}',
-    '← ok {ok: true, hash: "h3"}',
+    '→ POST /__exegra/write {name: "exegra", file: "spec", text: "9b2f1c0e", baseHash: "stale", requestId: 1}',
+    '← refused conflict {current: "h1", requestId: 1}',
+    '→ POST /__exegra/write {name: "exegra", file: "spec", text: "9b2f1c0e", baseHash: "h1", requestId: 2}',
+    '← ok {ok: true, hash: "9b2f1c0e", requestId: 2}',
   ]);
   assert.deepEqual(requestLog(own, runScenario(own, 'visual-edit-flow')), [], 'steps that are not contract events give no line');
 

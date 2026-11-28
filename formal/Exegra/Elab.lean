@@ -8,15 +8,19 @@ increment M2.4; the task's criteria 13 and 17).
 `Elab.elab : V2.Input → Except Refusal Core.Behav.Sys` turns a decoded version-2 input into a
 calculus system, or refuses it:
 
-* `outOfFragment what`: the input uses a construct the calculus does not cover (resources, links,
-  workloads, keyed instances, routes, measured outputs, `sample` effects, object or `null` values,
-  option types, resource faults). Such an input runs on the legacy interpreter, flagged in its
-  trace, and no theorem is about it.
+* `outOfFragment what`: the input uses a construct the calculus does not cover (links, workloads,
+  keyed instances, routes, measured outputs, object or `null` values, option types, resource
+  faults). A `sample` effect (a variable set from a draw) is covered: an integer literal at a draw
+  site; so are resources, their `use`, `acquire` and `release` effects and the counts expressions
+  read (WG-5683). Such an input runs on the legacy interpreter, flagged in its trace, and no
+  theorem is about it.
 * `illTyped msg`: the input is not well-typed: an unknown event or variable, a guard that is not
   Boolean, an operator applied to the wrong sorts, a repeated behaviour id, an id declared both as
   an event and as a behaviour, fault or scenario, a variable named `time` or `state` (the five
   behaviours of WG-4688, docs/simulation.md).
-* `notInteger path`: a number that is not an integer (in a literal, an initial value, a payload).
+Numbers are exact rationals (owner decision 2026-11-27, WG-5683): a literal, an initial value or a
+payload that is not an integer elaborates to the rational it is (`Core.Behav.Val.ofRat`), of the sort
+of untyped numbers.
 
 The layout: machines are the instances of the behaviours, behaviours in input order, the instances
 of a counted behaviour in index order (the order format 2's phase 1 visits them,
@@ -42,24 +46,20 @@ open Exegra
 inductive Refusal where
   | outOfFragment (what : String)
   | illTyped (msg : String)
-  | notInteger (path : String)
   deriving Repr, Inhabited
 
 def Refusal.kind : Refusal → String
   | .outOfFragment _ => "outOfFragment"
   | .illTyped _ => "illTyped"
-  | .notInteger _ => "notInteger"
 
 def Refusal.detail : Refusal → String
   | .outOfFragment w => w
   | .illTyped m => m
-  | .notInteger p => p
 
-/-- The message an input refused as ill-typed or non-integer is reported with. -/
+/-- The message an input refused as ill-typed is reported with. -/
 def Refusal.message : Refusal → String
   | .outOfFragment w => s!"The input uses {w}, which the behaviour calculus does not cover."
   | .illTyped m => s!"The input is ill-typed: {m}"
-  | .notInteger p => s!"The number at {p} is not an integer."
 
 abbrev E := Except Refusal
 
@@ -77,11 +77,11 @@ def intRange : IntKind → Int × Int
   | .i32 => (-2147483648, 2147483647)
   | .i64 => (-9007199254740991, 9007199254740991)
 
-/-- An integer from a JSON number. -/
-def intOf (x : Float) (path : String) : E Int :=
+/-- An integer from a JSON number (an instance index). -/
+def intOf (x : Rat) (path : String) : E Int :=
   match Num.safeInteger? x with
   | some n => .ok n
-  | none => .error (.notInteger path)
+  | none => .error (.illTyped s!"the number at {path} is not an integer")
 
 /-- A JSON constant with the members of every object sorted by key, so that structurally equal
 constants (format 2's `==`, `Value.eqv`) have equal texts. -/
@@ -94,7 +94,7 @@ partial def canon : Value → Value
 `null` by its canonical text. -/
 def valOf (v : Value) (path : String) : E Core.Behav.Val :=
   match v with
-  | .num x => (intOf x path).map .int
+  | .num x => .ok (Core.Behav.Val.ofRat x)
   | .str s => .ok (.str s)
   | .bool b => .ok (.bool b)
   | .undef => .error (.illTyped s!"{path} has no value")
@@ -200,7 +200,27 @@ def payloadFieldTy (i : Input) : Nat → String → String → Option Core.Behav
             | .ok (.bin _ _ _) | .ok (.un .not _) => some .bool
             | _ => none
           | v => sortOfValue v
-    fromSteps <|> fromFaults <|> fromEmits
+    -- the answers of requests: `resource`, `class`, `reason` are strings, `waited` and `served`
+    -- numbers, the request's own payload as an emit's (Format2.lean:1654-1665)
+    let fromAnswers := i.behaviors.findSome? fun b => b.transitions.findSome? fun t =>
+      t.effects.findSome? fun e => match e with
+        | .request _ _ _ _ _ thenEv refused pl =>
+          if thenEv == ev || refused == some ev then
+            if f == "resource" || f == "class" || f == "reason" then some .str
+            else if f == "waited" || f == "served" then some Core.Behav.Ty.num
+            else (pl.find? (·.1 == f)).bind fun (_, v) => match v with
+              | .str src => match parseExpr src with
+                | .ok (.ref ["event", g]) => payloadFieldTy i fuel t.on g
+                | .ok (.lit v) => sortOfValue v
+                | .ok (.ref [x]) => (b.variables.find? (·.name == x)).bind fun var => sortOfValue var.initial
+                | .ok (.bin .add _ _) | .ok (.bin .sub _ _) | .ok (.bin .mul _ _) | .ok (.bin .div _ _)
+                | .ok (.bin .rem _ _) | .ok (.un .neg _) => none
+                | .ok (.bin _ _ _) | .ok (.un .not _) => some .bool
+                | _ => none
+              | v => sortOfValue v
+          else none
+        | _ => none
+    fromSteps <|> fromFaults <|> fromEmits <|> fromAnswers
 
 def Ctx.fieldTy (cx : Ctx) (f : String) : Option Core.Behav.Ty :=
   match tyLookup cx.b.types ["event", f] with
@@ -227,6 +247,7 @@ def Ctx.hint (cx : Ctx) : Ast → Option Core.Behav.Ty
   | .ref ["instance"] => some Core.Behav.Ty.num
   | .ref [x] => (cx.b.variables.find? (·.name == x)).bind fun v => (varTy cx.b v).toOption
   | .ref ["event", f] => cx.fieldTy f
+  | .ref [_, "inUse"] | .ref [_, "waiting"] => some Core.Behav.Ty.num
   | .ref [bn, x] =>
     if x == "state" then (cx.input.behaviors.find? (·.id == bn)).map fun _ => .str
     else (cx.input.behaviors.find? (·.id == bn)).bind fun b' =>
@@ -261,6 +282,20 @@ def resolveRef (cx : Ctx) (want : Core.Behav.Ty) (path : List String) : E (Core.
   | ["event", f] => .ok (.ref (.field (strId f) ((cx.fieldTy f).getD want)))
   | [x] => match varIdx cx me cx.b x with
     | some v => .ok (.ref (.own v))
+    | none => absent
+  -- resources first, as format 2 resolves them (Format2.lean:1177-1192)
+  | [r, "inUse"] => match cx.input.resources.findIdx? (·.id == r) with
+    | some ri => .ok (.ref (.res ri .inUse))
+    | none => absent
+  | [r, "waiting"] => match cx.input.resources.findIdx? (·.id == r) with
+    | some ri => .ok (.ref (.res ri .waiting))
+    | none => absent
+  | [r, "inUse", c] | [r, "waiting", c] =>
+    match cx.input.resources.findIdx? (·.id == r) with
+    | some ri =>
+      match (cx.input.resources.getD ri default).classes.findIdx? (·.id == c) with
+      | some k => .ok (.ref (.res ri (if path[1]! == "inUse" then .inUseC k else .waitingC k)))
+      | none => absent
     | none => absent
   | [bn, "instances", "count"] =>
     match behIdx bn with
@@ -306,7 +341,7 @@ def resolveRef (cx : Ctx) (want : Core.Behav.Ty) (path : List String) : E (Core.
 /-- An expression, elaborated in machine `me`; `want` is the sort its context needs, used for
 payload fields and absent references only. -/
 def elabExpr (cx : Ctx) : Core.Behav.Ty → Ast → E (Core.Behav.Expr S me)
-  | _, .lit (.num x) => do pure (.val (.int (← intOf x "an expression literal")))
+  | _, .lit (.num x) => .ok (.val (Core.Behav.Val.ofRat x))
   | _, .lit (.str s) => .ok (.val (.str s))
   | _, .lit (.bool b) => .ok (.val (.bool b))
   | _, .lit v => (valOf v "an expression literal").map .val
@@ -368,8 +403,9 @@ def afterOf (d : Dist) : Nat × Option Core.Behav.Dist :=
   | .fixed v => (v, none)
   | d => (0, some (distOf d))
 
-/-- An effect of machine `me`, with the sampled delay it introduces, if any. -/
-def elabEffect (cx : Ctx) (what : String) : Effect → E (Core.Behav.Effect S me × Option Core.Behav.Dist)
+/-- An effect of machine `me` (effect `ei` of transition `ti`), with the sampled delay it
+introduces, if any. -/
+def elabEffect (cx : Ctx) (what : String) (ti ei : Nat) : Effect → E (Core.Behav.Effect S me × Option Core.Behav.Dist)
   | .set x to =>
     match varIdx cx me cx.b x with
     | none => .error (.illTyped s!"{what} sets {x}, which is not a variable of {cx.b.id}")
@@ -379,7 +415,14 @@ def elabEffect (cx : Ctx) (what : String) : Effect → E (Core.Behav.Effect S me
       | some val => do
         let rhs ← elabValue me cx ((S.vars me).get v) val s!"{what}.to"
         pure (.set v rhs, none)
-  | .sample _ _ => .error (.outOfFragment s!"sample effects ({what})")
+  | .sample x d =>
+    -- A variable set from a draw (WG-5683): an integer literal at a draw site, which the label's
+    -- draw replaces (`Sys.resolve`, `Effect.withAfter`); a fixed distribution is its value.
+    match varIdx cx me cx.b x with
+    | none => .error (.illTyped s!"{what} samples into {x}, which is not a variable of {cx.b.id}")
+    | some v => match d with
+      | .fixed n => .ok (.set v (.val (.int n)), none)
+      | d => .ok (.set v (.val (.int 0)), some (distOf d))
   | .emit ev after pl reply =>
     if !cx.input.isEvent ev then .error (.illTyped s!"{what} emits {ev}, which is not an event") else do
     let pl' ← elabPayload me cx pl what
@@ -391,7 +434,23 @@ def elabEffect (cx : Ctx) (what : String) : Effect → E (Core.Behav.Effect S me
     let (a, d) := afterOf after
     pure (.timer (strId name) a (evIdx cx.input ev) pl', d)
   | .cancel name => .ok (.cancel (strId name), none)
-  | .request .. | .release .. => .error (.outOfFragment s!"resources ({what})")
+  | .request kind res cls units demand thenEv refused pl =>
+    match cx.input.resources.findIdx? (·.id == res) with
+    | none => .error (.illTyped s!"{what} uses {res}, which is not a resource")
+    | some ri =>
+      match classIndex (cx.input.resources.getD ri default) cls with
+      | none => .error (.illTyped s!"{what} names no class of {res}")
+      | some ci => do
+        let pl' ← elabPayload me cx pl what
+        pure (.request ri ci units kind (evIdx cx.input thenEv) (refused.map (evIdx cx.input)) (distOf demand)
+          (ti, ei) pl', none)
+  | .release res cls units =>
+    match cx.input.resources.findIdx? (·.id == res) with
+    | none => .error (.illTyped s!"{what} releases {res}, which is not a resource")
+    | some ri =>
+      match classIndex (cx.input.resources.getD ri default) cls with
+      | none => .error (.illTyped s!"{what} names no class of {res}")
+      | some ci => .ok (.release ri ci units, none)
   | .send .. => .error (.outOfFragment s!"links ({what})")
   | .malformed => .error (.illTyped s!"{what} is malformed")
 
@@ -416,7 +475,7 @@ def elabTrans (S : Core.Behav.Sig) (me : Fin S.machines) (cx : Ctx) :
       | some g => elabSrc me cx .bool g s!"the guard of {what}"
     let mut effs : List (Core.Behav.Effect S me) := []
     for (e, ei) in t.effects.zipIdx do
-      let (eff, d) ← elabEffect me cx s!"effect {ei} of {what}" e
+      let (eff, d) ← elabEffect me cx s!"effect {ei} of {what}" ti ei e
       effs := effs ++ [eff]
       if let some d := d then ds := ds ++ [(ti, ei, d)]
     let tr : Core.Behav.Trans S me := { src, dst, event := evIdx cx.input t.on, guard, effects := effs, faultOnly := t.faultOnly }
@@ -436,6 +495,11 @@ def faultKind? : Option String → Option Core.Behav.FKind
   | some "enable-transition" => some .enable
   | some "disable-transition" => some .disable
   | some "inject-event" => some .inject
+  | some "set-capacity" => some .setCapacity
+  | some "set-class-limit" => some .setClassLimit
+  | some "collapse-classes" => some .collapse
+  | some "scale-demand" => some .scaleDemand
+  | some "replace-demand" => some .replaceDemand
   | _ => none
 
 def occOf : Occurrence → Core.Behav.Occ
@@ -448,15 +512,12 @@ def occOf : Occurrence → Core.Behav.Occ
 /-- The checks that precede the layout: constructs outside the calculus, and the WG-4688
 decisions on ids and variable names. -/
 def preCheck (i : Input) : E Unit := do
-  unless i.resources.isEmpty do throw (.outOfFragment "resources")
   unless i.links.isEmpty do throw (.outOfFragment "links")
   unless i.workloads.isEmpty do throw (.outOfFragment "workloads")
   unless i.routes.isEmpty do throw (.outOfFragment "routes")
   if i.measures then throw (.outOfFragment "measured outputs (metrics)")
   for b in i.behaviors do
     if let .keyed .. := b.instances then throw (.outOfFragment s!"keyed instances (behavior {b.id})")
-  for f in i.faults do
-    if f.isResourceKind then throw (.outOfFragment s!"resource faults (fault {f.id})")
   -- WG-4688, decision 1: a repeated behaviour id is refused.
   let ids := i.behaviors.map (·.id)
   for (b, k) in i.behaviors.zipIdx do
@@ -507,13 +568,20 @@ def build (i : Input) : E Core.Behav.Sys := do
   for fid in dedup i.scenario.faults do
     let some f := i.fault? fid | continue
     let some kind := faultKind? f.kind | throw (.outOfFragment s!"the fault kind of {f.id}")
+    -- a `replace-demand` names the transitions of one behaviour; other faults any behaviour's
+    let ofBeh (m : Nat) : Bool := kind != .replaceDemand || f.behavior == some (behOf m).id
     let targets := match f.transition with
       | none => []
-      | some tid => (List.range n).flatMap fun m =>
+      | some tid => ((List.range n).filter ofBeh).flatMap fun m =>
           ((behOf m).transitions.zipIdx.filter (·.1.id == tid)).map fun (_, ti) => (m, ti)
     let payload ← payloadOf f.payload s!"fault {f.id}.payload"
     let ev := evIdx i (f.event.getD "")
-    let fault : Core.Behav.Fault := Core.Behav.Fault.mk kind ev targets (occOf f.occurrence) f.delayBy f.window f.injectAt payload
+    let ri := (f.resource.bind fun r => i.resources.findIdx? (·.id == r)).getD i.resources.length
+    let cls := (f.cls.bind fun c => (i.resources.getD ri default).classes.findIdx? (·.id == c)).getD 0
+    let fault : Core.Behav.Fault :=
+      { kind, event := ev, targets, occ := occOf f.occurrence, by_ := f.delayBy, window := f.window,
+        at_ := f.injectAt, payload, res := ri, cls, capacity := f.capacity, limit := f.limit,
+        num := f.num, den := f.den, effect := f.effect, demand := distOf f.demand }
     faults := faults ++ [fault]
   -- the scenario's entries, inserted by time in step order
   let mut pending : List Core.Behav.Entry := []
@@ -528,8 +596,13 @@ def build (i : Input) : E Core.Behav.Sys := do
           pure (some (if k < 0 then n else machineOf behs j k.toNat))
         | _, _ => pure (some n)
     pending := Core.Behav.insertByTime pending { time := st.time, event := evIdx i st.event, payload := payload, target := target }
-  return { sig, trans, init := { time := 0, machines, pending }, faults, stopAt := i.scenario.stopAt,
-           samples }
+  -- attempts are told apart only up to the largest occurrence a fault names (`Cfg.attCap`)
+  let attCap := faults.foldl (fun k f => match f.occ with | .exactly m => max k m | _ => k) 0
+  -- the resources, each at its declared capacity (`Sys.initCfg` applies the untimed resource faults)
+  let world : Core.Behav.World :=
+    { res := i.resources.map fun d => { capacity := d.capacity, holds := [], waiting := [] }, nextReq := 0 }
+  return { sig, trans, init := { time := 0, machines, pending, attCap := some attCap, world }, faults,
+           stopAt := i.scenario.stopAt, samples, resources := i.resources }
 
 /-- **Elaboration**: the calculus system of a format-2 input, or why there is none. The last check
 is the decidable well-formedness of the calculus (`Sys.wf`). -/
@@ -569,8 +642,8 @@ refusal's kind, detail and message. -/
 def summary (i : Input) : String :=
   match «elab» i with
   | .ok sys => Json.write (.obj 0 [("accepted", .bool true),
-      ("machines", .num sys.sig.machines.toFloat), ("faults", .num sys.faults.length.toFloat),
-      ("samples", .num sys.samples.length.toFloat)])
+      ("machines", .num (↑sys.sig.machines : Rat)), ("faults", .num (↑sys.faults.length : Rat)),
+      ("samples", .num (↑sys.samples.length : Rat))])
   | .error r => Json.write (.obj 0 [("accepted", .bool false), ("kind", .str r.kind),
       ("detail", .str r.detail), ("message", .str r.message)])
 

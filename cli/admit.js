@@ -10,6 +10,10 @@ import { claimStrength, strengthCounts, VACUOUS_CHECKS } from '../src/core/claim
 import { isRegression, statusOf } from '../src/core/verdict.js';
 import { call } from '../src/core/lean.js';
 import { specChanges } from '../src/core/impact.js';
+import { analyzeLayers } from '../src/core/layers.js';
+import { NAMESPACE_SEPARATOR } from '../src/core/layer-values.js';
+import { exploreExecutions } from '../src/core/refinement-explore.js';
+import { parseExpr, exprRefs, evalExpr } from '../src/core/expr.js';
 
 /** @typedef {import('../src/core/types.js').Model} Model */
 /** @typedef {import('../src/core/types.js').Diagnostic} Diagnostic */
@@ -596,4 +600,100 @@ export function verifyRegressions(baseline, current, options = {}) {
   });
   const order = { 'verify.claim-removed': 0, 'verify.counterexample-changed': 1, 'verify.claim-regressed': 2 };
   return out.sort((x, y) => (order[/** @type {keyof typeof order} */ (x.code)] - order[/** @type {keyof typeof order} */ (y.code)]) || byText(x.id, y.id));
+}
+
+/**
+ * Admission of a product file into a layered specification (WG-5685, criterion 7; composition F6). Each product's
+ * state-invariant claims are checked over every execution of the scenario they list (its own scenario), and then
+ * over the composed scenario of the installation: the behaviors of every installed product's scenarios and of the
+ * candidate's, with all their steps, explored in every delivery order (src/core/refinement-explore.js). A claim
+ * that holds alone but fails composed refuses the installation, naming the composed scenario's behaviors and the
+ * values of the claim's references at the failing configuration. An exploration that is incomplete refuses it too:
+ * the composition is not shown to keep the claim.
+ * @param {string} baseText the platform specification
+ * @param {{file: string, text: string, platform: any}[]} installed the product layers already installed
+ * @param {{file: string, text: string, platform: any}} candidate the product layer to install
+ * @returns {{verdict: 'admitted'|'rejected', reasons: any[], own: any[], composed: {behaviors: string[], steps: number}|null}}
+ */
+export function admitProduct(baseText, installed, candidate) {
+  const after = analyzeLayers(baseText, [...installed, candidate]);
+  /** @type {any[]} */
+  const reasons = [];
+  const errors = after.diagnostics.filter((d) => d.severity === 'error');
+  if (!after.model || errors.length) {
+    reasons.push({ code: 'admit.product-invalid', message: `The specification with ${candidate.file} installed has ${errors.length} error(s): ${errors.slice(0, 3).map((d) => d.code).join(', ')}.` });
+    return { verdict: 'rejected', reasons, own: [], composed: null };
+  }
+  const model = after.model;
+  const products = after.layers.map((l) => l.product).filter((p) => typeof p === 'string');
+  const productOf = (/** @type {string} */ id) => products.find((p) => id.startsWith(`${p}${NAMESPACE_SEPARATOR}`)) ?? null;
+  const claims = (model.byKind.claim ?? []).filter((c) => productOf(c.id) && c.data.evaluate?.method === 'state-invariant' && typeof c.data.evaluate.expr === 'string');
+  const scenarioIds = [...new Set(claims.flatMap((c) => (Array.isArray(c.data.evaluate.scenarios) ? c.data.evaluate.scenarios : [])))].filter((id) => model.entities.get(id)?.kind === 'scenario');
+
+  /** @type {any[]} */
+  const own = [];
+  for (const c of claims) {
+    for (const sid of c.data.evaluate.scenarios ?? []) {
+      if (!scenarioIds.includes(sid)) continue;
+      const x = exploreInvariant(model, sid, c.data.evaluate.expr);
+      own.push({ claim: c.id, product: productOf(c.id), scenario: sid, status: x.status, ...(x.status === 'failure' ? { values: x.failure.values } : {}), ...(x.status === 'incomplete' ? { reason: x.reason } : {}) });
+    }
+  }
+
+  // The composed scenario: every behavior and every step of the products' scenarios, in time order.
+  const scenarios = scenarioIds.map((id) => /** @type {any} */ (model.entities.get(id)));
+  const behaviors = [...new Set(scenarios.flatMap((s) => (Array.isArray(s.data.behaviors) ? s.data.behaviors : [])))];
+  const steps = scenarios.flatMap((s) => (Array.isArray(s.data.steps) ? s.data.steps : [])).map((st, i) => ({ st, i })).sort((a, b) => (a.st.at - b.st.at) || (a.i - b.i)).map((x) => x.st);
+  const id = 'installation__composed';
+  const sc = { kind: 'scenario', id, data: { id, name: 'Composed installation', behaviors, steps }, owner: null, path: [], loc: { line: 1, column: 1, offset: 0, length: 0 } };
+  const composed = /** @type {any} */ ({ ...model, entities: new Map([...model.entities, [id, sc]]), byKind: { ...model.byKind, scenario: [...(model.byKind.scenario ?? []), sc] } });
+  for (const c of claims) {
+    const refs = exprBehaviors(c.data.evaluate.expr);
+    if (!refs.every((b) => behaviors.includes(b))) continue;
+    const x = exploreInvariant(composed, id, c.data.evaluate.expr);
+    if (x.status === 'failure') {
+      const values = Object.entries(x.failure.values).map(([k, v]) => `${k} = ${JSON.stringify(v)}`).join(', ');
+      reasons.push({
+        code: 'admit.product-composition-violated', id: c.id, product: productOf(c.id),
+        scenario: { id, behaviors }, counterexample: { values: x.failure.values, order: x.order, stepIndex: x.failure.stepIndex },
+        message: `Installing ${candidate.file} breaks claim "${c.id}" of product ${productOf(c.id)}: it holds on its own scenario, but in the composed scenario {${behaviors.join(', ')}} the execution delivering ${x.order.join(', ')} reaches ${values}, where \`${c.data.evaluate.expr}\` is false.`,
+      });
+    } else if (x.status === 'incomplete') {
+      reasons.push({ code: 'admit.product-composition-unexplored', id: c.id, product: productOf(c.id), scenario: { id, behaviors }, message: `Claim "${c.id}" was not shown to hold in the composed scenario {${behaviors.join(', ')}}: ${x.reason}` });
+    }
+  }
+  return { verdict: reasons.length ? 'rejected' : 'admitted', reasons, own, composed: { behaviors, steps: steps.length } };
+}
+
+/** The behaviors a claim expression reads (`<behavior>.<name>`). @param {string} src */
+function exprBehaviors(src) {
+  const p = parseExpr(src);
+  return p.ok ? [...new Set(exprRefs(p.ast).filter((r) => r.length === 2).map((r) => r[0]))] : [];
+}
+
+/**
+ * A state invariant over every configuration of every execution of a scenario.
+ * @param {Model} model @param {string} scenarioId @param {string} src
+ */
+function exploreInvariant(model, scenarioId, src) {
+  const p = parseExpr(src);
+  if (!p.ok) return /** @type {const} */ ({ status: 'incomplete', reason: `The expression does not parse: ${p.error.message}.`, states: 0, steps: 0 });
+  const refs = exprRefs(p.ast).filter((r) => r.length === 2);
+  /** @param {any} config @param {number} stepIndex */
+  const at = (config, stepIndex) => {
+    const resolve = (/** @type {string[]} */ r) => {
+      const m = config?.machines?.[r[0]];
+      if (r.length !== 2 || !m) return undefined;
+      return r[1] === 'state' ? m.state : m.vars?.[r[1]];
+    };
+    let v;
+    try { v = evalExpr(p.ast, resolve); } catch (e) { return { unsupported: `the expression cannot be evaluated: ${/** @type {Error} */ (e).message}` }; }
+    if (v === true) return null;
+    return { failure: { stepIndex, values: Object.fromEntries(refs.map((r) => [r.join('.'), resolve(r)])) } };
+  };
+  return exploreExecutions(model, scenarioId, (trace) => {
+    if (trace.steps.length === 1) { const r0 = at(trace.initial, -1); if (r0) return r0; }
+    const last = trace.steps[trace.steps.length - 1];
+    return at(last.config, last.index);
+  });
 }

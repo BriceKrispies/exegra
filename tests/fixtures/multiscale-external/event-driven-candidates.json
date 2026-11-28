@@ -1,0 +1,29 @@
+{
+  "note": "Candidates a person gives for event-driven.jsonc, regrouping its nine leaves. telemetry-by-role groups producers, topics and consumers; telemetry-processing-with-topics keeps each topic with the elements that publish to it or read it most; telemetry-no-dashboard-block leaves a typed hole and is not a partition; telemetry-gateway-apart separates the gateway from the filter it invokes under the untyped contract reading-feed.",
+  "scope": "telemetry-platform",
+  "grain": "leaves",
+  "candidates": [
+    { "id": "telemetry-by-role", "name": "Producers, topics, processing, consumers", "blocks": [
+      { "id": "producers", "name": "Producers", "members": ["sensor-gateway", "edge-filter"] },
+      { "id": "topics", "name": "Topics", "members": ["telemetry-topic", "alerts-topic"] },
+      { "id": "processing", "members": ["aggregator", "alert-rules"] },
+      { "id": "consumers", "name": "Consumers", "members": ["notifier", "dashboard", "archiver"] }
+    ] },
+    { "id": "telemetry-samples-and-alerts", "name": "The sample path and the alert path", "blocks": [
+      { "id": "sample-path", "name": "Sample path", "members": ["sensor-gateway", "edge-filter", "telemetry-topic", "archiver"] },
+      { "id": "alert-path", "name": "Alert path", "members": ["aggregator", "alert-rules", "alerts-topic", "notifier", "dashboard"] }
+    ] },
+    { "id": "telemetry-gateway-apart", "name": "Gateway apart from the filter", "blocks": [
+      { "id": "gateway", "members": ["sensor-gateway"] },
+      { "id": "rest-of-ingest", "members": ["edge-filter", "telemetry-topic", "alerts-topic"] },
+      { "id": "processing", "members": ["aggregator", "alert-rules"] },
+      { "id": "consumers", "members": ["notifier", "dashboard", "archiver"] }
+    ] },
+    { "id": "telemetry-uncovered", "name": "Nothing holds the archiver", "blocks": [
+      { "id": "producers", "members": ["sensor-gateway", "edge-filter"] },
+      { "id": "topics", "members": ["telemetry-topic", "alerts-topic"] },
+      { "id": "processing", "members": ["aggregator", "alert-rules"] },
+      { "id": "consumers", "members": ["notifier", "dashboard"] }
+    ] }
+  ]
+}

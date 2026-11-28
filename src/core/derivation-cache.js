@@ -268,15 +268,13 @@ function readEntry(file, key) {
   }
 }
 
-/** Write an entry through a temporary sibling and a rename. @param {string} dir @param {string} file @param {string} key @param {string} body */
-function writeEntry(dir, file, key, body) {
+/** Write a file of the cache directory through a temporary sibling and a rename. @param {string} dir @param {string} file @param {Buffer} data */
+function writeAtomic(dir, file, data) {
   const n = /** @type {NonNullable<ReturnType<typeof node>>} */ (node());
-  const bytes = Buffer.from(body, 'utf8');
-  const head = JSON.stringify({ format: FORMAT, key, bytes: bytes.length, sha256: n.crypto.createHash('sha256').update(bytes).digest('hex') });
   const tmp = `${file}.${nodeProcess?.pid}.${n.crypto.randomBytes(6).toString('hex')}.tmp`;
   try {
     n.fs.mkdirSync(dir, { recursive: true });
-    n.fs.writeFileSync(tmp, Buffer.concat([Buffer.from(`${head}\n`), bytes]));
+    n.fs.writeFileSync(tmp, data);
     n.fs.renameSync(tmp, file);
   } catch {
     try { n.fs.rmSync(tmp, { force: true }); } catch { /* nothing to clean */ }
@@ -285,10 +283,39 @@ function writeEntry(dir, file, key, body) {
   return true;
 }
 
-/** Delete the least recently used entries beyond the size bound, and temporary files left by a dead writer. @param {string} dir */
-function evict(dir) {
+/** Write an entry. @param {string} dir @param {string} file @param {string} key @param {string} body */
+function writeEntry(dir, file, key, body) {
+  const n = /** @type {NonNullable<ReturnType<typeof node>>} */ (node());
+  const bytes = Buffer.from(body, 'utf8');
+  const head = JSON.stringify({ format: FORMAT, key, bytes: bytes.length, sha256: n.crypto.createHash('sha256').update(bytes).digest('hex') });
+  return writeAtomic(dir, file, Buffer.concat([Buffer.from(`${head}
+`), bytes]));
+}
+
+const EVICT_STAMP = '.evicted';
+/** How soon after a scan of the directory (by any process) another one is due, unless this process wrote a good part of the bound since. */
+const EVICT_INTERVAL_MS = 30 * 1000;
+/** What this process stored since the directory was last scanned. */
+let storedSinceScan = 0;
+
+/**
+ * Delete the least recently used entries beyond the size bound, and temporary files left by a dead writer.
+ * Looking at every entry costs a stat each, so a store does not scan after every write (a derivation-heavy run
+ * stores hundreds of entries into a directory of thousands): the scan runs when none has run for
+ * EVICT_INTERVAL_MS (the mtime of the stamp file, shared by all processes) or when this process has stored an eighth
+ * of the bound since the last one. The bound is thus a soft one, exceeded by what is stored between two scans.
+ * @param {string} dir @param {number} stored the size of the entry just stored
+ */
+function evict(dir, stored) {
   const n = /** @type {NonNullable<ReturnType<typeof node>>} */ (node());
   const max = Number(nodeProcess?.env.EXEGRA_MODEL_CACHE_MAX_BYTES) > 0 ? Number(nodeProcess?.env.EXEGRA_MODEL_CACHE_MAX_BYTES) : DEFAULT_MAX_BYTES;
+  storedSinceScan += stored;
+  const stamp = n.path.join(dir, EVICT_STAMP);
+  try {
+    if (storedSinceScan < max / 8 && Date.now() - n.fs.statSync(stamp).mtimeMs < EVICT_INTERVAL_MS) return;
+  } catch { /* no stamp yet: scan */ }
+  storedSinceScan = 0;
+  writeAtomic(dir, stamp, Buffer.alloc(0)); // if it fails, the next store scans again
   try {
     const now = Date.now();
     /** @type {{file: string, size: number, time: number}[]} */
@@ -339,6 +366,6 @@ export function cachedStage(stage, inputs, compute, worth) {
   if (worth && !worth(value)) return value;
   let body;
   try { body = encode(value); } catch { return value; }
-  if (writeEntry(dir, file, key, body)) { note(stage, 'store'); evict(dir); }
+  if (writeEntry(dir, file, key, body)) { note(stage, 'store'); evict(dir, body.length); }
   return value;
 }

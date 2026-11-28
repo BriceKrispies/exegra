@@ -2,6 +2,7 @@ import Exegra.Api.Basic
 import Exegra.Api.Engine
 import Exegra.Api.Model
 import Exegra.Api.Verdict
+import Exegra.Api.Boundary
 
 /-!
 The one entry point of the Lean core for the JavaScript shell (`src/core/lean.js`): a JSON
@@ -19,7 +20,7 @@ a name.
 namespace Exegra.Api
 
 /-- The functions of the module ports, in lookup order. -/
-def modules : List Entry := Engine.entries ++ ModelPort.entries ++ VerdictPort.entries
+def modules : List Entry := Engine.entries ++ ModelPort.entries ++ VerdictPort.entries ++ BoundaryPort.entries
 
 def functionsDoc : String := "The registered functions, [{name, doc}], in lookup order."
 
@@ -77,6 +78,11 @@ scheduler (`V2.runB_terminates`, `V2.runB_reach`); an input outside the fragment
 interpreter, about which no theorem of the calculus says anything; a version-1 input is refused. -/
 theorem call_engine_run_spec (v : Value) : call "engine.run" v = runAnyValue v :=
   Impl.runAnyValue_eq v
+
+/-- The boundary refinement check at the call boundary is `Boundary.refineValue` (docs/composition.md). -/
+theorem call_engine_refineBoundary (v : Value) : call "engine.refineBoundary" v = Boundary.refineValue v := rfl
+
+theorem call_engine_boundary (v : Value) : call "engine.boundary" v = Boundary.boundaryValue v := rfl
 
 theorem call_engine_explore (v : Value) : call "engine.explore" v = V2.ProveB.exploreValue v := rfl
 

@@ -215,6 +215,14 @@ const locks = new Map();
  * @param {() => Promise<T>} fn
  * @returns {Promise<T>}
  */
+/** The writes of the specification or layout in progress, per project key. */
+const writing = new Map();
+
+/** Whether a write of a project's files is in progress. @param {string} key */
+function writeInProgress(key) {
+  return (writing.get(key) ?? 0) > 0;
+}
+
 function withProjectLock(key, fn) {
   const prev = locks.get(key) ?? Promise.resolve();
   const run = prev.then(fn);
@@ -574,7 +582,12 @@ export function createWorkspace(rootDir) {
       throw new WorkspaceError('input.invalid', 'baseHash must be a string or null.');
     }
     const target = file === 'spec' ? specFile(name) : resolve(name, WORKSPACE_FILES[file]);
-    return withProjectLock(projectKey(name), async () => {
+    // A write of a split specification replaces several files; the watcher holds its change notice until the
+    // write is over (watch, schedule), so a notice never reports a write half done or before the write's answer.
+    const key = projectKey(name);
+    writing.set(key, (writing.get(key) ?? 0) + 1);
+    const done = () => { const n = (writing.get(key) ?? 1) - 1; if (n > 0) writing.set(key, n); else writing.delete(key); };
+    return withProjectLock(key, async () => {
       const currentText = file === 'spec' ? await readSpecOptional(target) : await readOptional(target);
       const currentHash = currentText === null ? null : hashText(currentText);
       if (currentHash !== expected) {
@@ -608,7 +621,7 @@ export function createWorkspace(rootDir) {
         const message = err instanceof Error ? err.message : String(err);
         return { ok: true, hash, journal: { written: false, message: `The journal line was not written: ${message}` } };
       }
-    });
+    }).finally(done);
   }
 
   /**
@@ -865,6 +878,8 @@ export function createWorkspace(rootDir) {
         key,
         setTimeout(() => {
           timers.delete(key);
+          // A write of this project is still replacing its files: look again once it is over.
+          if (writeInProgress(projectKey(name))) { schedule(key, abs); return; }
           check(key, abs).catch((err) => console.error('[exegra] watch check failed', err));
         }, DEBOUNCE_MS),
       );

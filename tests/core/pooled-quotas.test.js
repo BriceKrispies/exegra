@@ -1,7 +1,7 @@
 // Pooled quotas (WG-5278; docs/model-and-format.md, Pooled quotas): limits shared by a reseller's client
 // tenants, with fair share, headroom, the over-share rule with its window and the exemption set by a
 // named role. The fixture tests/fixtures/pooled-quotas/harbourline.jsonc states Harbourline BR-12; the
-// pool runs as machines (src/core/pools.js), so its claims are decided by exhaustive exploration of the
+// pool runs as machines (Exegra.Lower.poolMachines, formal/Exegra/Lower/Input.lean), so its claims are decided by exhaustive exploration of the
 // scenario's injected usage and eligibility events with the verified explorer of the Lean semantics
 // (run here through the WebAssembly core), and a seeded wrong rule (eligibility effective only from the
 // next day, or a four-day window) makes the explorer return a counterexample. Each validation rule has a
@@ -15,8 +15,8 @@ import { analyzeSpec } from '../../src/core/analyze.js';
 import { call, initLean } from '../../src/core/lean.js';
 import { runScenario } from '../../src/core/engine.js';
 import { proofPlan, exploreRequest } from '../../src/core/proof-export.js';
-import { poolMachines, poolMachineIds, POOL_VARIABLES } from '../../src/core/pools.js';
-import { simulationInput } from '../../src/core/sim-input.js';
+import { poolMachineIds, POOL_VARIABLES } from '../../src/core/pool-rules.js';
+import { engineInput } from '../../src/core/engine.js';
 
 initLean();
 
@@ -69,10 +69,10 @@ test('the Harbourline fixture states BR-12 as a pool and validates with no error
 test('a pool runs as one machine per pooled limit and modelled member with the pool variables', () => {
   const m = model();
   assert.deepEqual(poolMachineIds(m.entities.get('reseller-pool')), ['reseller-pool-runs-m1', 'reseller-pool-runs-m2', 'reseller-pool-storage-m1', 'reseller-pool-storage-m2']);
-  const machines = poolMachines(m, 'reseller-pool');
+  const input = engineInput(m, 'burst-exploration');
+  const machines = input.behaviors;
   assert.deepEqual(machines.map((x) => [x.subject, x.initial, x.states.join(' '), x.variables.map((v) => v.name).join(' ')]), machines.map(() => ['limit-store', 'normal', 'normal throttled', POOL_VARIABLES.join(' ')]));
-  const input = simulationInput(m, 'burst-exploration');
-  assert.deepEqual(input.behaviors.map((b) => b.id), machines.map((x) => x.id), 'the scenario runs the pool machines');
+  assert.deepEqual(machines.map((b) => b.id), poolMachineIds(m.entities.get('reseller-pool')), 'the scenario runs the pool machines');
 });
 
 test('a client over its fair share is admitted while the pool has headroom and throttled after three days and released after two under', () => {

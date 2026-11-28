@@ -34,6 +34,26 @@ export const CLAIM_STATUSES = /** @type {const} */ ({
   'not-evaluated': { label: 'Not evaluated', tone: 'none' },
 });
 
+/** The conformance stages, weakest first, with what each establishes. */
+function CONFORMANCE_STAGES_DATA() {
+  return /** @type {[string, string][]} */ ([
+    ['structural', 'Structural conformance: the code has the parts the specification names (declared modules exist, every source file is claimed, realisation roots resolve). Rests on test evidence; at most checked on instances.'],
+    ['interface', 'Interface conformance: the code accepts and produces the shapes the specification declares (contracts, payload and record types, telemetry line formats). Rests on test evidence; at most checked on instances.'],
+    ['transition', 'Transition conformance: from each specified state, the code reacts to each event as the transition the specification declares (scenarios generated from the machines, run against the code). Rests on test evidence; at most checked on instances.'],
+    ['trace', 'Trace conformance: a run of the code, driven by a scenario, produces the specified behaviour (the trace of a claim checked against what the code did). Rests on test evidence; at most checked on instances.'],
+    ['runtime-monitor', 'Runtime-monitor conformance: a stream recorded from the running code replays through the specification without a divergence. Rests on test evidence; at most checked on instances.'],
+    ['verified-refinement', 'Verified refinement: a Lean theorem states that the implementation refines the specification. Proved, subject implementation, when the Lean gate accepts the theorem.'],
+  ]);
+}
+
+/** The conformance stages, weakest first. */
+export const CONFORMANCE_STAGES = CONFORMANCE_STAGES_DATA().map(([stage]) => stage);
+
+/** The stage a conformance method checks, or null. @param {string|null|undefined} method */
+export function conformanceStage(method) {
+  return typeof method === 'string' && method.startsWith('conformance-') && CONFORMANCE_STAGES.includes(method.slice(12)) ? method.slice(12) : null;
+}
+
 export const CLAIM_METHODS = {
   'no-relationship': {
     kinds: ['structural'],
@@ -117,6 +137,8 @@ export const CLAIM_METHODS = {
       scenarios: { type: 'ids:scenario', required: true },
       negatives: { type: 'negatives', doc: 'Runs that must violate the claim: [{scenario, faults}], one of the listed scenarios with extra faults. Verified needs at least one, and every one must violate the claim.' },
       expr: { type: 'expr', required: true },
+      theorem: { type: 'string', doc: 'A Lean theorem (in formal/, checked by lake build Exegra) stating the invariant for the calculus system of the scenario, as `exegra prove --module` writes it; when Lean accepts it with the standard axioms only, the claim reads proved.' },
+      about: { type: 'strings', doc: 'The Lean constants the statement of the theorem must mention (with `theorem`).' },
     },
   },
   precedes: {
@@ -148,6 +170,15 @@ export const CLAIM_METHODS = {
       occurs: { type: 'matcher', required: true },
     },
   },
+  liveness: {
+    kinds: ['temporal'],
+    doc: 'Over the infinite runs of each listed scenario in the behaviour calculus (a run that ends stutters in its last state), the state predicate `expr` holds infinitely often (`form` "GF") or from some point on forever (`form` "FG"), on every run that is weakly fair to the transitions the fairness assumptions the claim cites name. Decided only by `exegra prove` (a ranking proof, a lasso counterexample, incomplete or not supported); a trace check never decides it, so the claim stays not evaluated in the live view (docs/simulation.md, "Liveness").',
+    params: {
+      scenarios: { type: 'ids:scenario', required: true },
+      form: { type: 'string', required: true, doc: '"GF" (always eventually) or "FG" (eventually always).' },
+      expr: { type: 'expr', required: true },
+    },
+  },
   'metric-bound': {
     kinds: ['measured'],
     doc: 'A measured output of seeded format-2 runs (response time, outcomes, throughput, false positives, transitions, utilisation, queue length, waiting time) meets a bound (op and bound: exact binomial test over the runs) or agrees with an analytic value (approx: sign-test interval of the median). Model results only: model-holds, violated or inconclusive with N, k and the confidence; never verified or supported (docs/simulation.md, "Claims over metrics").',
@@ -173,6 +204,52 @@ export const CLAIM_METHODS = {
       behavior: { type: 'ids:behavior', required: true, doc: 'The implementation behavior (one id); it declares `refines` and `refinement`.' },
       scenarios: { type: 'ids:scenario', doc: 'The scenarios whose traces are checked. Default: every scenario that runs the behavior.' },
     },
+  },
+  'refines-composition': {
+    kinds: ['temporal'],
+    doc: 'The declared abstraction `behavior` (a behavior with `abstracts`) is refined by the composition of its members: in each listed scenario (default: every scenario that runs it, else every scenario that runs all its members) the run with the abstraction and the run with its members (with `finest`, members of member abstractions too) give the same boundary trace once the members\' internal events are hidden: the same events, kinds and payloads at times related by the time scale, the same outcome and the same final configuration of every machine outside the region. The runs are the Lean engine\'s and the comparison is decided in Lean (engine.refineBoundary). Violated with the first boundary counterexample; verified with a step correspondence and strength conservative; undecided when the strength is incomplete. Each negative (a listed scenario with extra faults, applied at whichever level has the transition) must break the refinement. A check of these runs, not of every interleaving (docs/composition.md).',
+    params: {
+      behavior: { type: 'ids:behavior', required: true, doc: 'The abstraction (one id).' },
+      scenarios: { type: 'ids:scenario', doc: 'The driving scenarios. Default: every scenario that runs the abstraction, else every one that runs all its members.' },
+      finest: { type: 'boolean', doc: 'Compare with the finest members (members of member abstractions expanded).' },
+      negatives: { type: 'negatives', doc: 'Runs that must break the refinement: [{scenario, faults}].' },
+    },
+  },
+  'environment-assumed': {
+    kinds: ['structural', 'temporal'],
+    doc: 'In the run of each listed scenario, every delivered event that no running machine reacts to and that an element the scenario omits would receive (an element with a behavior that consumes it, or whose declared interface lists it as an input) is covered by an environment assumption of the scenario\'s cut naming that element and event. Violated with the first unassumed delivery. Each negative ({scenario, without: [elements]}) drops the environment assumptions for those elements and must then report one (docs/composition.md, "Behavioural cuts").',
+    params: {
+      scenarios: { type: 'ids:scenario', required: true, doc: 'The scenarios checked.' },
+      negatives: { type: 'any', doc: '[{scenario, without: [element]}]: the scenario without those environment assumptions must report an unassumed delivery.' },
+    },
+  },
+  'order-independent': {
+    kinds: ['invariant', 'temporal'],
+    doc: 'Composition does not depend on the order in which a scenario lists its behaviors (invariant I2): each listed scenario (default: every scenario), and each negative run of the claims that list it, run with its behaviors reversed and in every rotation, gives every invariant and temporal claim that lists the scenario the same verdict as the scenario\'s own order. invariant_rename (formal/Exegra/Core/BehavRename.lean) proves the same of the calculus\'s relation; this checks the scheduler\'s runs (docs/composition.md, "Order independence").',
+    params: {
+      scenarios: { type: 'ids:scenario', doc: 'The scenarios checked. Default: every scenario.' },
+    },
+  },
+  transfers: {
+    kinds: ['temporal', 'invariant'],
+    doc: 'The preservation rules applied to `claim` and the declared abstraction `abstraction` give the outcome `expect` (transferred, the default, or not-transferred): a safety claim (never, precedes, state-invariant) over the abstraction\'s boundary alphabet that holds where the abstraction runs transfers down to its members when the refinement check certifies the abstraction; a liveness claim (eventually, liveness) never transfers without a declared fairness hypothesis; anything else is not transferred, with the reason (docs/composition.md, "Claim transfer").',
+    params: {
+      claim: { type: 'ids:claim', required: true, doc: 'The claim established at the abstraction\'s level.' },
+      abstraction: { type: 'ids:behavior', required: true, doc: 'The declared abstraction.' },
+      expect: { type: 'string', doc: 'transferred (default) or not-transferred.' },
+    },
+  },
+  'alternatives-reconciled': {
+    kinds: ['structural'],
+    doc: 'No element has alternative machines: two behaviors of one subject that consume a common event either run together in some scenario or are related by a declared abstraction (one a member, at any depth, of the other) or by refines. Violated with the pairs (docs/composition.md, "One behaviour per element per level").',
+    params: {
+      subjects: { type: 'ids:component', doc: 'The elements checked. Default: every element.' },
+    },
+  },
+  'interfaces-closed': {
+    kinds: ['structural'],
+    doc: 'Every event belongs to an interface (declared by an element or port, inferred from a behavior that consumes or emits it, or the element producedBy names), every cross-element state read crosses a declared interface that exports it, and every declared interface lists its members\' boundary events (docs/composition.md, "Interfaces"). Violated with the faults.',
+    params: {},
   },
   'lean-theorem': {
     kinds: ['structural', 'invariant', 'temporal', 'requirement'],
@@ -214,6 +291,16 @@ export const CLAIM_METHODS = {
     doc: 'The declared relationships agree with the facts extracted from the implementation (tools/extract.js, read as data with provenance extracted): inside the extraction surface no declared static dependency is redundant (the extracted fact carries the edge), unwitnessed, reversed or of another kind, and every extracted file belongs to a module element. An extracted dependency with no declared counterpart is not a discrepancy, since the extracted fact is the dependency. Static structure only: runtime wiring stays declared and is not compared. Violated with the discrepancies; decided by the model and the facts.',
     params: {},
   },
+  // Staged conformance of the implementation to the specification (WG-5685, criterion 11;
+  // docs/claims-and-evidence.md, "Conformance stages"). Each stage is a method whose result names its stage. The
+  // first five rest on executed test evidence and give at most checkedOnInstances; verified-refinement rests on a
+  // Lean theorem and gives proved, with subject implementation.
+  ...Object.fromEntries(CONFORMANCE_STAGES_DATA().map(([stage, doc]) => [`conformance-${stage}`, stage === 'verified-refinement'
+    ? { kinds: ['structural', 'invariant', 'temporal', 'requirement'], doc, params: {
+      theorem: { type: 'string', required: true, doc: 'The Lean theorem stating that the implementation refines its specification, e.g. one built on Exegra.Core.LTS.Simulates.' },
+      about: { type: 'strings', doc: 'Implementation constants (compiled definitions) the statement must mention.' },
+    } }
+    : { kinds: ['structural', 'invariant', 'temporal', 'requirement'], doc, params: {} }])),
   'external-evidence': {
     kinds: ['measured', 'structural', 'invariant', 'temporal'],
     doc: 'The model cannot establish this claim. Its status comes only from evidence entities and recorded results of executing them.',

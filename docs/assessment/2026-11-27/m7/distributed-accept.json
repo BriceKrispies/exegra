@@ -1,0 +1,215 @@
+{
+ "emptied": [
+  "fulfilment",
+  "infrastructure",
+  "storefront"
+ ],
+ "fixture": "distributed",
+ "accepted": "shop-by-tier",
+ "dryRunOperations": 7,
+ "operations": 7,
+ "semanticHash": {
+  "before": "01d1f2483a13d1",
+  "afterAccept": "00d484acbd2e34",
+  "afterUndo": "01d1f2483a13d1",
+  "afterRedo": "00d484acbd2e34",
+  "undoRestores": true,
+  "redoRestores": true
+ },
+ "validate": {
+  "errors": 0,
+  "warnings": 0
+ },
+ "cut": {
+  "id": "shop-by-tier-cut",
+  "blocks": 7,
+  "interactions": 2,
+  "connectors": 0,
+  "realisations": {
+   "maps": 3,
+   "ok": true
+  },
+  "diagnostics": []
+ },
+ "navigation": {
+  "hierarchy": "shop-by-tier",
+  "cuts": [
+   "shop-by-tier-top",
+   "shop-by-tier-cut"
+  ],
+  "blocksAtCut": [
+   "storefront",
+   "fulfilment",
+   "infrastructure",
+   "back-office",
+   "core-machines",
+   "edge-machines",
+   "presentation"
+  ]
+ },
+ "levelBoundClaims": {
+  "shop-by-tier-level-claim@shop-by-tier-cut": {
+   "status": "verified",
+   "expressible": true
+  },
+  "shop-by-tier-level-claim@shop-by-tier-top": {
+   "status": "inconclusive",
+   "expressible": false
+  }
+ },
+ "after": {
+  "lift-faults": {
+   "modes": 4,
+   "keys": [
+    "hierarchy",
+    "cut",
+    "modes",
+    "lifted",
+    "internal",
+    "unlifted"
+   ]
+  }
+ },
+ "operationList": [
+  {
+   "type": "CreateEntity",
+   "kind": "component",
+   "data": {
+    "id": "back-office",
+    "name": "Back office",
+    "category": "logical",
+    "parent": "shop",
+    "purpose": "A block of the accepted decomposition \"shop-by-tier\" of \"shop\": it groups inventory, orders."
+   }
+  },
+  {
+   "type": "CreateEntity",
+   "kind": "component",
+   "data": {
+    "id": "core-machines",
+    "name": "Core machines",
+    "category": "logical",
+    "parent": "shop",
+    "purpose": "A block of the accepted decomposition \"shop-by-tier\" of \"shop\": it groups app-host-a, app-host-b, db-host, zone-2."
+   }
+  },
+  {
+   "type": "CreateEntity",
+   "kind": "component",
+   "data": {
+    "id": "edge-machines",
+    "name": "Edge machines",
+    "category": "logical",
+    "parent": "shop",
+    "purpose": "A block of the accepted decomposition \"shop-by-tier\" of \"shop\": it groups edge-host, zone-1."
+   }
+  },
+  {
+   "type": "CreateEntity",
+   "kind": "component",
+   "data": {
+    "id": "presentation",
+    "name": "Presentation",
+    "category": "logical",
+    "parent": "shop",
+    "purpose": "A block of the accepted decomposition \"shop-by-tier\" of \"shop\": it groups cart, web-ui."
+   }
+  },
+  {
+   "type": "CreateEntity",
+   "kind": "hierarchy",
+   "data": {
+    "id": "shop-by-tier",
+    "name": "Shop by tier",
+    "description": "The candidate decomposition \"shop-by-tier\" of \"shop\", accepted: 4 blocks over the leaves of the scope (source: data). Every other element is placed as the logical hierarchy places it.",
+    "groups": [
+     {
+      "parent": "back-office",
+      "members": [
+       "inventory",
+       "orders"
+      ]
+     },
+     {
+      "parent": "core-machines",
+      "members": [
+       "app-host-a",
+       "app-host-b",
+       "db-host",
+       "zone-2"
+      ]
+     },
+     {
+      "parent": "edge-machines",
+      "members": [
+       "edge-host",
+       "zone-1"
+      ]
+     },
+     {
+      "parent": "presentation",
+      "members": [
+       "cart",
+       "web-ui"
+      ]
+     },
+     {
+      "parent": "shop",
+      "members": [
+       "back-office",
+       "core-machines",
+       "edge-machines",
+       "fulfilment",
+       "infrastructure",
+       "presentation",
+       "storefront"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "type": "CreateEntity",
+   "kind": "cut",
+   "data": {
+    "id": "shop-by-tier-top",
+    "name": "Shop by tier: scope as one block",
+    "hierarchy": "shop-by-tier",
+    "expand": []
+   }
+  },
+  {
+   "type": "CreateEntity",
+   "kind": "cut",
+   "data": {
+    "id": "shop-by-tier-cut",
+    "name": "Shop by tier: blocks",
+    "hierarchy": "shop-by-tier",
+    "expand": [
+     "shop"
+    ]
+   }
+  }
+ ],
+ "claimOperation": {
+  "type": "AddClaim",
+  "data": {
+   "id": "shop-by-tier-level-claim",
+   "kind": "structural",
+   "statement": "At the accepted cut the back office never invokes the presentation tier.",
+   "subjects": [
+    "back-office",
+    "presentation"
+   ],
+   "evaluate": {
+    "method": "no-relationship",
+    "cut": "shop-by-tier-cut",
+    "from": "back-office",
+    "to": "presentation",
+    "kinds": [
+     "invokes"
+    ]
+   }
+  }
+ }
+}

@@ -1,0 +1,53 @@
+{
+ "project": "copy of specs/exegra with the accepted candidate audit-second (docs/assessment/2026-11-27/m7/self-spec-accept.json is its transaction)",
+ "validate": {
+  "errors": 0,
+  "warnings": 0
+ },
+ "cut": {
+  "id": "audit-second-cut",
+  "blocks": 26,
+  "interactions": 149,
+  "diagnostics": []
+ },
+ "levelBoundClaim": {
+  "core-independent-of-ui@l1": {
+   "status": "verified",
+   "level": {
+    "hierarchy": "logical",
+    "cut": "l1"
+   },
+   "scope": "Checked the 72 derived interactions of cut \"l1\" (21 blocks, hierarchy logical) of kinds depends-on, imports, invokes, composes, notifies, exercises, subscribes, reads, writes, submits-edits, from 1 source block (106 components) to 18 target blocks (65 components), following multi-hop paths too, at this model revision. The relationships it reads are 325 declared, 567 extracted. Extracted relationships are static imports only: they say which files name which, never that the code runs that way.",
+   "explanation": "No path of derived interactions of kinds depends-on, imports, invokes, composes, notifies, exercises, subscribes, reads, writes, submits-edits leads from the 1 source block to the 18 target blocks at cut \"l1\". Absence transfers exactly: no chain of relationships leads from any of the 106 source components to any of the 65 target components."
+  },
+  "core-independent-of-ui@audit-second-top": {
+   "status": "verified",
+   "level": {
+    "hierarchy": "audit-second",
+    "cut": "audit-second-top"
+   },
+   "scope": "Checked the 72 derived interactions of cut \"audit-second-top\" (21 blocks, hierarchy audit-second) of kinds depends-on, imports, invokes, composes, notifies, exercises, subscribes, reads, writes, submits-edits, from 1 source block (106 components) to 18 target blocks (65 components), following multi-hop paths too, at this model revision. The relationships it reads are 325 declared, 567 extracted. Extracted relationships are static imports only: they say which files name which, never that the code runs that way.",
+   "explanation": "No path of derived interactions of kinds depends-on, imports, invokes, composes, notifies, exercises, subscribes, reads, writes, submits-edits leads from the 1 source block to the 18 target blocks at cut \"audit-second-top\". Absence transfers exactly: no chain of relationships leads from any of the 106 source components to any of the 65 target components."
+  },
+  "core-independent-of-ui@audit-second-cut": {
+   "status": "verified",
+   "level": {
+    "hierarchy": "audit-second",
+    "cut": "audit-second-cut"
+   },
+   "scope": "Checked the 135 derived interactions of cut \"audit-second-cut\" (26 blocks, hierarchy audit-second) of kinds depends-on, imports, invokes, composes, notifies, exercises, subscribes, reads, writes, submits-edits, from 6 source blocks (53 components) to 18 target blocks (65 components), following multi-hop paths too, at this model revision. The relationships it reads are 325 declared, 567 extracted. Extracted relationships are static imports only: they say which files name which, never that the code runs that way.",
+   "explanation": "No path of derived interactions of kinds depends-on, imports, invokes, composes, notifies, exercises, subscribes, reads, writes, submits-edits leads from the 6 source blocks to the 18 target blocks at cut \"audit-second-cut\". Absence transfers exactly: no chain of relationships leads from any of the 53 source components to any of the 65 target components."
+  }
+ },
+ "coherence": {
+  "ok": true,
+  "messages": 132,
+  "internal": 47,
+  "findings": 0
+ },
+ "traceability": {
+  "missing": 0,
+  "unclaimed": 0,
+  "multipleOwners": 0
+ }
+}

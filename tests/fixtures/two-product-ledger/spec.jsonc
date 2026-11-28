@@ -1,0 +1,24 @@
+// The two-product ledger (WG-5685, criterion 7; composition F6 of the 2026-11-26 assessment): the platform's
+// ledger counts the holds placed on it. Each product (products/badges.jsonc, products/promotions.jsonc) places one
+// hold when it awards, and claims, on its own scenario, that the ledger holds at most one. Each claim holds alone;
+// installed together, the composed scenario {ledger, badges__awarder, promotions__awarder} reaches held = 2.
+{
+  "exegra": "0.1",
+  "system": { "id": "ledger-platform", "name": "Ledger platform", "description": "A platform whose ledger products place holds on." },
+  "components": [
+    { "id": "ledger-service", "name": "Ledger service", "category": "logical", "purpose": "Keeps the ledger." }
+  ],
+  "events": [
+    { "id": "hold", "name": "Hold" }
+  ],
+  "behaviors": [
+    {
+      "id": "ledger", "name": "Ledger", "subject": "ledger-service", "initial": "ledger-open",
+      "variables": [{ "name": "held", "type": "number", "initial": 0 }],
+      "states": [{ "id": "ledger-open", "name": "Open" }],
+      "transitions": [
+        { "id": "ledger-hold", "from": "ledger-open", "to": "ledger-open", "on": "hold", "effects": [{ "set": "held", "to": "held + 1" }] }
+      ]
+    }
+  ]
+}

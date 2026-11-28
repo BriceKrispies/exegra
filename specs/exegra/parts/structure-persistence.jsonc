@@ -19,7 +19,45 @@
         "Be the only path by which the specification, layout, recorded results and generated artifacts of a project are read, written, exported, imported and watched.",
         "Hold a specification in its SQLite store with an exact round trip to the JSONC text (spec-store).",
         "Hold the project files themselves: the specification text, the presentation layout, the recorded results and the generated artifacts."
-      ]
+      ],
+      "interface": {
+        "inputs": [
+          "disk-edited-externally",
+          "export-intent",
+          "generated-intent",
+          "import-intent",
+          "list-intent",
+          "read-intent",
+          "two-session-write",
+          "watch-intent",
+          "write-intent",
+          "ws-read",
+          "ws-write",
+          "ws-write-recorded"
+        ],
+        "outputs": [
+          "bundle-received",
+          "export-refused-received",
+          "external-change-received",
+          "generated-saved",
+          "import-done",
+          "import-refused-received",
+          "project-files-read",
+          "project-read-failed",
+          "projects-listed",
+          "save-conflicted",
+          "save-failed",
+          "save-succeeded",
+          "write-file-conflict",
+          "write-file-ok",
+          "write-file-request",
+          "ws-read-done",
+          "ws-recorded-done",
+          "ws-write-conflict",
+          "ws-write-done"
+        ],
+        "observables": []
+      }
     },
     // ======== Persistence ==========================================================================
     {

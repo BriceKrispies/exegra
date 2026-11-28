@@ -52,8 +52,10 @@
    "session-flow": {
     "state": "session-conflicted",
     "vars": {
+     "baseHash": "h1",
      "rejectionsLogged": 0,
-     "saveState": "conflict"
+     "saveState": "conflict",
+     "textHash": "h2"
     }
    },
    "source-editor-flow": {
@@ -65,8 +67,10 @@
    "transaction-flow": {
     "state": "tx-idle",
     "vars": {
+     "pendingText": "h2",
      "rejected": false,
-     "revision": 2
+     "revision": 2,
+     "textHash": "h2"
     }
    },
    "validator-flow": {
@@ -79,7 +83,8 @@
     "state": "workspace-conflicted",
     "vars": {
      "conflict": true,
-     "persistedRevision": 1
+     "diskLayout": "L1",
+     "diskSpec": "hx"
     }
    }
   },
@@ -142,8 +147,10 @@
    "session-flow": {
     "state": "session-in-sync",
     "vars": {
+     "baseHash": "h1",
      "rejectionsLogged": 0,
-     "saveState": "saved"
+     "saveState": "saved",
+     "textHash": "h1"
     }
    },
    "source-editor-flow": {
@@ -155,8 +162,10 @@
    "transaction-flow": {
     "state": "tx-idle",
     "vars": {
+     "pendingText": "h1",
      "rejected": false,
-     "revision": 1
+     "revision": 1,
+     "textHash": "h1"
     }
    },
    "validator-flow": {
@@ -169,7 +178,8 @@
     "state": "workspace-clean",
     "vars": {
      "conflict": false,
-     "persistedRevision": 1
+     "diskLayout": "L1",
+     "diskSpec": "h1"
     }
    }
   },
@@ -177,7 +187,9 @@
   "pending": [
    {
     "event": "edit-requested",
-    "payload": {},
+    "payload": {
+     "text": "h2"
+    },
     "scheduledAt": 0,
     "seq": 0,
     "source": {
@@ -250,8 +262,10 @@
      "session-flow": {
       "state": "session-in-sync",
       "vars": {
+       "baseHash": "h1",
        "rejectionsLogged": 0,
-       "saveState": "saved"
+       "saveState": "saved",
+       "textHash": "h1"
       }
      },
      "source-editor-flow": {
@@ -263,8 +277,10 @@
      "transaction-flow": {
       "state": "tx-idle",
       "vars": {
+       "pendingText": "h1",
        "rejected": false,
-       "revision": 1
+       "revision": 1,
+       "textHash": "h1"
       }
      },
      "validator-flow": {
@@ -277,7 +293,8 @@
       "state": "workspace-clean",
       "vars": {
        "conflict": false,
-       "persistedRevision": 1
+       "diskLayout": "L1",
+       "diskSpec": "h1"
       }
      }
     },
@@ -290,7 +307,9 @@
        "incarnation": 0,
        "instance": 0
       },
-      "payload": {},
+      "payload": {
+       "text": "h2"
+      },
       "scheduledAt": 0,
       "seq": 1,
       "source": {
@@ -311,7 +330,9 @@
    "draws": [],
    "event": {
     "id": "edit-requested",
-    "payload": {},
+    "payload": {
+     "text": "h2"
+    },
     "scheduledAt": 0,
     "seq": 0,
     "source": {
@@ -326,7 +347,9 @@
      "emitted": [
       {
        "event": "operation-submitted",
-       "payload": {},
+       "payload": {
+        "text": "h2"
+       },
        "seq": 1,
        "time": 0
       }
@@ -458,8 +481,10 @@
      "session-flow": {
       "state": "session-in-sync",
       "vars": {
+       "baseHash": "h1",
        "rejectionsLogged": 0,
-       "saveState": "saved"
+       "saveState": "saved",
+       "textHash": "h1"
       }
      },
      "source-editor-flow": {
@@ -471,8 +496,10 @@
      "transaction-flow": {
       "state": "tx-validating",
       "vars": {
+       "pendingText": "h2",
        "rejected": false,
-       "revision": 1
+       "revision": 1,
+       "textHash": "h1"
       }
      },
      "validator-flow": {
@@ -485,7 +512,8 @@
       "state": "workspace-clean",
       "vars": {
        "conflict": false,
-       "persistedRevision": 1
+       "diskLayout": "L1",
+       "diskSpec": "h1"
       }
      }
     },
@@ -524,7 +552,9 @@
      "instance": 0
     },
     "id": "operation-submitted",
-    "payload": {},
+    "payload": {
+     "text": "h2"
+    },
     "scheduledAt": 0,
     "seq": 1,
     "source": {
@@ -548,7 +578,13 @@
      "from": "tx-idle",
      "guard": null,
      "instance": 0,
-     "sets": [],
+     "sets": [
+      {
+       "after": "h2",
+       "before": "h1",
+       "variable": "pendingText"
+      }
+     ],
      "to": "tx-validating",
      "transition": "tx-begin"
     }
@@ -672,8 +708,10 @@
      "session-flow": {
       "state": "session-in-sync",
       "vars": {
+       "baseHash": "h1",
        "rejectionsLogged": 0,
-       "saveState": "saved"
+       "saveState": "saved",
+       "textHash": "h1"
       }
      },
      "source-editor-flow": {
@@ -685,8 +723,10 @@
      "transaction-flow": {
       "state": "tx-validating",
       "vars": {
+       "pendingText": "h2",
        "rejected": false,
-       "revision": 1
+       "revision": 1,
+       "textHash": "h1"
       }
      },
      "validator-flow": {
@@ -699,7 +739,8 @@
       "state": "workspace-clean",
       "vars": {
        "conflict": false,
-       "persistedRevision": 1
+       "diskLayout": "L1",
+       "diskSpec": "h1"
       }
      }
     },
@@ -892,8 +933,10 @@
      "session-flow": {
       "state": "session-in-sync",
       "vars": {
+       "baseHash": "h1",
        "rejectionsLogged": 0,
-       "saveState": "saved"
+       "saveState": "saved",
+       "textHash": "h1"
       }
      },
      "source-editor-flow": {
@@ -905,8 +948,10 @@
      "transaction-flow": {
       "state": "tx-validating",
       "vars": {
+       "pendingText": "h2",
        "rejected": false,
-       "revision": 1
+       "revision": 1,
+       "textHash": "h1"
       }
      },
      "validator-flow": {
@@ -919,7 +964,8 @@
       "state": "workspace-clean",
       "vars": {
        "conflict": false,
-       "persistedRevision": 1
+       "diskLayout": "L1",
+       "diskSpec": "h1"
       }
      }
     },
@@ -1112,8 +1158,10 @@
      "session-flow": {
       "state": "session-in-sync",
       "vars": {
+       "baseHash": "h1",
        "rejectionsLogged": 0,
-       "saveState": "saved"
+       "saveState": "saved",
+       "textHash": "h1"
       }
      },
      "source-editor-flow": {
@@ -1125,8 +1173,10 @@
      "transaction-flow": {
       "state": "tx-idle",
       "vars": {
+       "pendingText": "h2",
        "rejected": false,
-       "revision": 2
+       "revision": 2,
+       "textHash": "h2"
       }
      },
      "validator-flow": {
@@ -1139,7 +1189,8 @@
       "state": "workspace-clean",
       "vars": {
        "conflict": false,
-       "persistedRevision": 1
+       "diskLayout": "L1",
+       "diskSpec": "h1"
       }
      }
     },
@@ -1153,7 +1204,8 @@
        "instance": 0
       },
       "payload": {
-       "revision": 2
+       "revision": 2,
+       "text": "h2"
       },
       "scheduledAt": 0,
       "seq": 5,
@@ -1197,7 +1249,8 @@
       {
        "event": "transaction-committed",
        "payload": {
-        "revision": 2
+        "revision": 2,
+        "text": "h2"
        },
        "seq": 5,
        "time": 0
@@ -1216,6 +1269,11 @@
        "after": false,
        "before": false,
        "variable": "rejected"
+      },
+      {
+       "after": "h2",
+       "before": "h1",
+       "variable": "textHash"
       }
      ],
      "to": "tx-idle",
@@ -1341,8 +1399,10 @@
      "session-flow": {
       "state": "session-refreshing",
       "vars": {
+       "baseHash": "h1",
        "rejectionsLogged": 0,
-       "saveState": "saved"
+       "saveState": "saved",
+       "textHash": "h2"
       }
      },
      "source-editor-flow": {
@@ -1354,8 +1414,10 @@
      "transaction-flow": {
       "state": "tx-idle",
       "vars": {
+       "pendingText": "h2",
        "rejected": false,
-       "revision": 2
+       "revision": 2,
+       "textHash": "h2"
       }
      },
      "validator-flow": {
@@ -1368,7 +1430,8 @@
       "state": "workspace-clean",
       "vars": {
        "conflict": false,
-       "persistedRevision": 1
+       "diskLayout": "L1",
+       "diskSpec": "h1"
       }
      }
     },
@@ -1410,7 +1473,8 @@
     },
     "id": "transaction-committed",
     "payload": {
-     "revision": 2
+     "revision": 2,
+     "text": "h2"
     },
     "scheduledAt": 0,
     "seq": 5,
@@ -1447,7 +1511,13 @@
      "from": "session-in-sync",
      "guard": null,
      "instance": 0,
-     "sets": [],
+     "sets": [
+      {
+       "after": "h2",
+       "before": "h1",
+       "variable": "textHash"
+      }
+     ],
      "to": "session-refreshing",
      "transition": "session-on-commit"
     }
@@ -1568,8 +1638,10 @@
      "session-flow": {
       "state": "session-refreshing",
       "vars": {
+       "baseHash": "h1",
        "rejectionsLogged": 0,
-       "saveState": "saved"
+       "saveState": "saved",
+       "textHash": "h2"
       }
      },
      "source-editor-flow": {
@@ -1581,8 +1653,10 @@
      "transaction-flow": {
       "state": "tx-idle",
       "vars": {
+       "pendingText": "h2",
        "rejected": false,
-       "revision": 2
+       "revision": 2,
+       "textHash": "h2"
       }
      },
      "validator-flow": {
@@ -1595,7 +1669,8 @@
       "state": "workspace-clean",
       "vars": {
        "conflict": false,
-       "persistedRevision": 1
+       "diskLayout": "L1",
+       "diskSpec": "h1"
       }
      }
     },
@@ -1794,8 +1869,10 @@
      "session-flow": {
       "state": "session-save-pending",
       "vars": {
+       "baseHash": "h1",
        "rejectionsLogged": 0,
-       "saveState": "saving"
+       "saveState": "saving",
+       "textHash": "h2"
       }
      },
      "source-editor-flow": {
@@ -1807,8 +1884,10 @@
      "transaction-flow": {
       "state": "tx-idle",
       "vars": {
+       "pendingText": "h2",
        "rejected": false,
-       "revision": 2
+       "revision": 2,
+       "textHash": "h2"
       }
      },
      "validator-flow": {
@@ -1821,7 +1900,8 @@
       "state": "workspace-clean",
       "vars": {
        "conflict": false,
-       "persistedRevision": 1
+       "diskLayout": "L1",
+       "diskSpec": "h1"
       }
      }
     },
@@ -1847,14 +1927,18 @@
       "time": 0
      },
      {
-      "event": "save-requested",
+      "event": "write-intent",
       "from": {
        "behavior": "session-flow",
        "incarnation": 0,
        "instance": 0
       },
       "payload": {
-       "revision": 2
+       "baseHash": "h1",
+       "file": "spec",
+       "name": "exegra",
+       "requestId": 2,
+       "text": "h2"
       },
       "scheduledAt": 1,
       "seq": 9,
@@ -1906,9 +1990,13 @@
        "time": 0
       },
       {
-       "event": "save-requested",
+       "event": "write-intent",
        "payload": {
-        "revision": 2
+        "baseHash": "h1",
+        "file": "spec",
+        "name": "exegra",
+        "requestId": 2,
+        "text": "h2"
        },
        "seq": 9,
        "time": 1
@@ -2060,8 +2148,10 @@
      "session-flow": {
       "state": "session-save-pending",
       "vars": {
+       "baseHash": "h1",
        "rejectionsLogged": 0,
-       "saveState": "saving"
+       "saveState": "saving",
+       "textHash": "h2"
       }
      },
      "source-editor-flow": {
@@ -2073,8 +2163,10 @@
      "transaction-flow": {
       "state": "tx-idle",
       "vars": {
+       "pendingText": "h2",
        "rejected": false,
-       "revision": 2
+       "revision": 2,
+       "textHash": "h2"
       }
      },
      "validator-flow": {
@@ -2087,21 +2179,26 @@
       "state": "workspace-clean",
       "vars": {
        "conflict": false,
-       "persistedRevision": 1
+       "diskLayout": "L1",
+       "diskSpec": "h1"
       }
      }
     },
     "meters": {},
     "pending": [
      {
-      "event": "save-requested",
+      "event": "write-intent",
       "from": {
        "behavior": "session-flow",
        "incarnation": 0,
        "instance": 0
       },
       "payload": {
-       "revision": 2
+       "baseHash": "h1",
+       "file": "spec",
+       "name": "exegra",
+       "requestId": 2,
+       "text": "h2"
       },
       "scheduledAt": 1,
       "seq": 9,
@@ -2290,8 +2387,10 @@
      "session-flow": {
       "state": "session-save-pending",
       "vars": {
+       "baseHash": "h1",
        "rejectionsLogged": 0,
-       "saveState": "saving"
+       "saveState": "saving",
+       "textHash": "h2"
       }
      },
      "source-editor-flow": {
@@ -2303,8 +2402,10 @@
      "transaction-flow": {
       "state": "tx-idle",
       "vars": {
+       "pendingText": "h2",
        "rejected": false,
-       "revision": 2
+       "revision": 2,
+       "textHash": "h2"
       }
      },
      "validator-flow": {
@@ -2317,7 +2418,8 @@
       "state": "workspace-conflicted",
       "vars": {
        "conflict": true,
-       "persistedRevision": 1
+       "diskLayout": "L1",
+       "diskSpec": "hx"
       }
      }
     },
@@ -2330,7 +2432,11 @@
        "incarnation": 0,
        "instance": 0
       },
-      "payload": {},
+      "payload": {
+       "currentHash": "hx",
+       "file": "spec",
+       "requestId": 2
+      },
       "scheduledAt": 1,
       "seq": 10,
       "source": {
@@ -2355,9 +2461,13 @@
      "incarnation": 0,
      "instance": 0
     },
-    "id": "save-requested",
+    "id": "write-intent",
     "payload": {
-     "revision": 2
+     "baseHash": "h1",
+     "file": "spec",
+     "name": "exegra",
+     "requestId": 2,
+     "text": "h2"
     },
     "scheduledAt": 1,
     "seq": 9,
@@ -2379,7 +2489,11 @@
      "emitted": [
       {
        "event": "save-conflicted",
-       "payload": {},
+       "payload": {
+        "currentHash": "hx",
+        "file": "spec",
+        "requestId": 2
+       },
        "seq": 10,
        "time": 1
       }
@@ -2392,6 +2506,11 @@
        "after": true,
        "before": false,
        "variable": "conflict"
+      },
+      {
+       "after": "hx",
+       "before": "h1",
+       "variable": "diskSpec"
       }
      ],
      "to": "workspace-conflicted",
@@ -2459,10 +2578,10 @@
    "links": [],
    "resources": [],
    "responsible": [
-    "save-requested",
+    "write-intent",
     "workspace-detect-conflict",
     "workspace-flow",
-    "workspace-service",
+    "persistence-client",
     "disk-changed-externally"
    ],
    "time": 1
@@ -2518,8 +2637,10 @@
      "session-flow": {
       "state": "session-conflicted",
       "vars": {
+       "baseHash": "h1",
        "rejectionsLogged": 0,
-       "saveState": "conflict"
+       "saveState": "conflict",
+       "textHash": "h2"
       }
      },
      "source-editor-flow": {
@@ -2531,8 +2652,10 @@
      "transaction-flow": {
       "state": "tx-idle",
       "vars": {
+       "pendingText": "h2",
        "rejected": false,
-       "revision": 2
+       "revision": 2,
+       "textHash": "h2"
       }
      },
      "validator-flow": {
@@ -2545,7 +2668,8 @@
       "state": "workspace-conflicted",
       "vars": {
        "conflict": true,
-       "persistedRevision": 1
+       "diskLayout": "L1",
+       "diskSpec": "hx"
       }
      }
     },
@@ -2566,7 +2690,11 @@
      "instance": 0
     },
     "id": "save-conflicted",
-    "payload": {},
+    "payload": {
+     "currentHash": "hx",
+     "file": "spec",
+     "requestId": 2
+    },
     "scheduledAt": 1,
     "seq": 10,
     "source": {

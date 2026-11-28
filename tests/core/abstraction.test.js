@@ -253,13 +253,16 @@ test('every declared port of the self-specification is matched or reported unmat
   const wf = contractPaths(model).find((c) => c.contract === 'write-file');
   assert.ok(wf);
   const pathHops = wf.paths.map((p) => p.hops.map((h) => h.relationship));
-  assert.deepEqual(pathHops, [['session-calls-persistence-client', 'persistence-client-calls-dev-server-plugin', 'dev-server-plugin-calls-workspace-service']]);
-  const hops = wf.paths[0].hops;
+  // Two paths: the browser's save path, and the agent CLI's in-process hop, which declares write-file since WG-5728.
+  assert.deepEqual(pathHops, [['agent-cli-calls-workspace-service'], ['session-calls-persistence-client', 'persistence-client-calls-dev-server-plugin', 'dev-server-plugin-calls-workspace-service']]);
+  assert.deepEqual(wf.paths[0].flagged, [], 'the agent CLI hop carries the ws-* events of the contract');
+  const save = wf.paths[1];
+  const hops = save.hops;
   assert.equal(hops[1].status, 'typed');
   assert.ok(hops[1].contractEvents.includes('write-file-request'));
-  assert.equal(hops[2].status, 'untyped', 'the in-process hop to the workspace service carries ws-* events of no contract');
-  assert.ok(hops[2].events.includes('ws-write'));
-  assert.ok(wf.paths[0].flagged.includes('dev-server-plugin-calls-workspace-service'));
+  assert.equal(hops[2].status, 'typed', 'the in-process hop to the workspace service carries ws-* events of the contract (WG-5728)');
+  assert.ok(hops[2].contractEvents.includes('ws-write') && hops[2].contractEvents.includes('ws-write-done'));
+  assert.deepEqual(save.flagged, ['session-calls-persistence-client'], 'only the session hop, whose events carry no contract, is left flagged');
 });
 
 /** Two components joined through ports. @param {any} fromPort @param {any} toPort @param {any} [relMore] */
@@ -444,18 +447,18 @@ test('structural scene edges equal derived edges for every view and collapse set
   }
 });
 
-test('flows classify the visual-edit-flow save hop identically collapsed and expanded', () => {
+test('flows follow the declared edge of the visual-edit-flow save hop collapsed and expanded', () => {
   const model = self();
   const trace = runScenario(model, 'visual-edit-flow');
   const flows = trace.steps.map((/** @type {any} */ s) => stepFlow(model, s));
-  const save = flows.findIndex((f) => f.event === 'save-requested' && f.to.some((r) => r.component === 'workspace-service'));
-  assert.ok(save >= 0, 'the scenario sends save-requested to the workspace service');
+  const save = flows.findIndex((f) => f.event === 'write-intent' && f.to.some((r) => r.component === 'persistence-client'));
+  assert.ok(save >= 0, 'the scenario sends write-intent to the persistence client, the entry of the save path (WG-5728, WG-5729)');
   assert.equal(flows[save].from, 'session');
   const expanded = project(model, 'architecture', { collapsed: new Set() });
   const collapsed = project(model, 'architecture', { collapsed: new Set(SUBSYSTEMS) });
-  const hop = (/** @type {any} */ scene, /** @type {number} */ i) => flowPaths(model, scene, flows[i]).find((p) => 'to' in p && (p.to === 'workspace-service' || p.to === 'persistence'));
-  assert.deepEqual(hop(expanded, save), { kind: 'undeclared', from: 'session', to: 'workspace-service' });
-  assert.deepEqual(hop(collapsed, save), { kind: 'undeclared', from: 'application', to: 'persistence' }, 'not borrowed from the application -> persistence edge another relationship witnesses');
+  const hop = (/** @type {any} */ scene, /** @type {number} */ i) => flowPaths(model, scene, flows[i]).find((p) => 'to' in p && (p.to === 'persistence-client' || p.to === 'persistence'));
+  assert.deepEqual(hop(expanded, save), { kind: 'edge', from: 'session', to: 'persistence-client', edgeId: 'session-calls-persistence-client', reverse: false });
+  assert.deepEqual(hop(collapsed, save), { kind: 'edge', from: 'application', to: 'persistence', edgeId: 'session-calls-persistence-client', reverse: false }, 'the same witness at both levels');
   // A hop a relationship between the two components witnesses follows the edge at both levels.
   const declared = flows.findIndex((f) => f.from === 'transactions' && f.to.some((r) => r.component === 'session'));
   assert.ok(declared >= 0);

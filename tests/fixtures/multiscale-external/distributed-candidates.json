@@ -1,0 +1,26 @@
+{
+  "note": "Candidates a person gives for distributed.jsonc, regrouping its leaves (four services, five hosts, two zones). shop-by-tier groups the services by what they do and the machines by role; shop-by-zone puts each zone with the hosts in it and the services apart; shop-services-and-machines is the two-hierarchy split in one: services together, machines together; shop-uncovered leaves the database host out.",
+  "scope": "shop",
+  "grain": "leaves",
+  "candidates": [
+    { "id": "shop-by-tier", "name": "Shop by tier", "blocks": [
+      { "id": "presentation", "name": "Presentation", "members": ["web-ui", "cart"] },
+      { "id": "back-office", "name": "Back office", "members": ["orders", "inventory"] },
+      { "id": "edge-machines", "name": "Edge machines", "members": ["edge-host", "zone-1"] },
+      { "id": "core-machines", "name": "Core machines", "members": ["app-host-a", "app-host-b", "db-host", "zone-2"] }
+    ] },
+    { "id": "shop-services-and-machines", "name": "Services and machines", "blocks": [
+      { "id": "services", "name": "Services", "members": ["web-ui", "cart", "orders", "inventory"] },
+      { "id": "machines", "name": "Machines", "members": ["edge-host", "app-host-a", "app-host-b", "db-host", "zone-1", "zone-2"] }
+    ] },
+    { "id": "shop-by-zone", "name": "Shop by zone", "blocks": [
+      { "id": "zone-one", "name": "Zone one", "members": ["zone-1", "edge-host", "app-host-a"] },
+      { "id": "zone-two", "name": "Zone two", "members": ["zone-2", "app-host-b", "db-host"] },
+      { "id": "services", "name": "Services", "members": ["web-ui", "cart", "orders", "inventory"] }
+    ] },
+    { "id": "shop-uncovered", "name": "The database host left out", "blocks": [
+      { "id": "services", "members": ["web-ui", "cart", "orders", "inventory"] },
+      { "id": "machines", "members": ["edge-host", "app-host-a", "app-host-b", "zone-1", "zone-2"] }
+    ] }
+  ]
+}

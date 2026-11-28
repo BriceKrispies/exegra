@@ -22,6 +22,8 @@ whole waiting list are within their bounds.
 
 namespace Exegra.Res
 
+variable {κ : Type}
+
 inductive Overflow where
   | refuse | drop | shedOldest
   deriving DecidableEq, Inhabited
@@ -81,59 +83,61 @@ def DemandFactor.at (f : DemandFactor) (o : Nat) : Nat × Nat :=
 
 inductive ReqKind where
   | use | acquire
-  deriving DecidableEq, Inhabited
+  deriving DecidableEq, Inhabited, Repr, Hashable
 
 /-- A waiting request; `α` is what the semantics needs to answer it. -/
-structure Req (α : Type) where
+structure Req (κ α : Type) where
   id : Nat
-  owner : String
+  owner : κ
   cls : Nat
   units : Nat
   since : Nat
   kind : ReqKind
   info : α
+  deriving DecidableEq, Repr, Hashable
 
-structure Hold where
-  owner : String
+structure Hold (κ : Type) where
+  owner : κ
   cls : Nat
   units : Nat
   /-- The `use` request these units serve; `none` for `acquire`. -/
   req : Option Nat
-  deriving Inhabited, BEq
+  deriving DecidableEq, Repr, Hashable
 
-structure RState (α : Type) where
+structure RState (κ α : Type) where
   capacity : Nat
-  holds : List Hold
-  waiting : List (Req α)
+  holds : List (Hold κ)
+  waiting : List (Req κ α)
+  deriving DecidableEq, Repr, Hashable
 
 /-! ## Sums -/
 
-def sumUnits (p : Hold → Bool) : List Hold → Nat
+def sumUnits (p : Hold κ → Bool) : List (Hold κ) → Nat
   | [] => 0
   | h :: hs => (if p h then h.units else 0) + sumUnits p hs
 
-theorem sumUnits_append (p : Hold → Bool) (xs ys : List Hold) :
+theorem sumUnits_append (p : Hold κ → Bool) (xs ys : List (Hold κ)) :
     sumUnits p (xs ++ ys) = sumUnits p xs + sumUnits p ys := by
   induction xs with
   | nil => simp [sumUnits]
   | cons x xs ih => simp [sumUnits, ih]; omega
 
-def heldC (hs : List Hold) (c : Nat) : Nat := sumUnits (fun h => h.cls == c) hs
-def heldAll (hs : List Hold) : Nat := sumUnits (fun _ => true) hs
-def heldBy (hs : List Hold) (owner : String) (c : Nat) : Nat :=
+def heldC (hs : List (Hold κ)) (c : Nat) : Nat := sumUnits (fun h => h.cls == c) hs
+def heldAll (hs : List (Hold κ)) : Nat := sumUnits (fun _ => true) hs
+def heldBy [BEq κ] (hs : List (Hold κ)) (owner : κ) (c : Nat) : Nat :=
   sumUnits (fun h => h.owner == owner && h.cls == c && h.req.isNone) hs
 
-def waitingC {α} (ws : List (Req α)) (c : Nat) : Nat := ws.countP (fun r => r.cls == c)
+def waitingC {κ α} (ws : List (Req κ α)) (c : Nat) : Nat := ws.countP (fun r => r.cls == c)
 
 /-! ## Eligibility and choice -/
 
 /-- Units other classes still have reserved and unused: `Σ_{k ≠ c} max(0, reserved(k) − held(k))`. -/
-def shortfall (d : ResourceDecl) (hs : List Hold) (c : Nat) : Nat :=
+def shortfall (d : ResourceDecl) (hs : List (Hold κ)) (c : Nat) : Nat :=
   ((List.range d.classes.length).filter (· != c)).foldl
     (fun acc k => acc + (d.reservedOf k - heldC hs k)) 0
 
 /-- A head fits: within its class limit and within the free units not reserved by other classes. -/
-def fits {α} (d : ResourceDecl) (s : RState α) (r : Req α) : Bool :=
+def fits {κ α} (d : ResourceDecl) (s : RState κ α) (r : Req κ α) : Bool :=
   (match d.limitOf r.cls with
    | none => true
    | some l => decide (heldC s.holds r.cls + r.units ≤ l)) &&
@@ -141,7 +145,7 @@ def fits {α} (d : ResourceDecl) (s : RState α) (r : Req α) : Bool :=
 
 /-- Is `a` served before `b`? Priority: higher priority, then older head, then lower seq; FIFO:
 older, then lower seq. -/
-def before {α} (d : ResourceDecl) (a b : Req α) : Bool :=
+def before {κ α} (d : ResourceDecl) (a b : Req κ α) : Bool :=
   let older := a.since < b.since || (a.since == b.since && a.id < b.id)
   if d.byPriority then
     let pa := d.priorityOf a.cls
@@ -150,14 +154,14 @@ def before {α} (d : ResourceDecl) (a b : Req α) : Bool :=
   else older
 
 /-- The next request to grant: the best eligible class head. -/
-def pickAmong {α} (d : ResourceDecl) (s : RState α) (heads : List (Req α)) : Option (Req α) :=
+def pickAmong {κ α} (d : ResourceDecl) (s : RState κ α) (heads : List (Req κ α)) : Option (Req κ α) :=
   (heads.filter (fits d s)).foldl (fun acc r =>
     match acc with
     | none => some r
     | some b => if before d r b then some r else some b) none
 
 /-- Strict FIFO: the oldest head, if it fits. -/
-def pickStrict {α} (d : ResourceDecl) (s : RState α) (heads : List (Req α)) : Option (Req α) :=
+def pickStrict {κ α} (d : ResourceDecl) (s : RState κ α) (heads : List (Req κ α)) : Option (Req κ α) :=
   match heads.foldl (fun acc r =>
       match acc with
       | none => some r
@@ -165,11 +169,11 @@ def pickStrict {α} (d : ResourceDecl) (s : RState α) (heads : List (Req α)) :
   | some r => if fits d s r then some r else none
   | none => none
 
-def pick {α} (d : ResourceDecl) (s : RState α) : Option (Req α) :=
+def pick {κ α} (d : ResourceDecl) (s : RState κ α) : Option (Req κ α) :=
   let heads := (List.range d.classes.length).filterMap fun c => s.waiting.find? (·.cls == c)
   if d.strict then pickStrict d s heads else pickAmong d s heads
 
-theorem pickStrict_fits {α} {d : ResourceDecl} {s : RState α} {heads : List (Req α)} {r : Req α}
+theorem pickStrict_fits {κ α} {d : ResourceDecl} {s : RState κ α} {heads : List (Req κ α)} {r : Req κ α}
     (h : pickStrict d s heads = some r) : fits d s r = true := by
   unfold pickStrict at h
   split at h
@@ -178,14 +182,14 @@ theorem pickStrict_fits {α} {d : ResourceDecl} {s : RState α} {heads : List (R
     · simp at h
   · simp at h
 
-theorem pick_fits {α} {d : ResourceDecl} {s : RState α} {r : Req α} (h : pick d s = some r) :
+theorem pick_fits {κ α} {d : ResourceDecl} {s : RState κ α} {r : Req κ α} (h : pick d s = some r) :
     fits d s r = true := by
   unfold pick at h
   split at h
   · exact pickStrict_fits h
   unfold pickAmong at h
   generalize (List.filterMap _ _) = heads at h
-  suffices ∀ (xs : List (Req α)) (acc : Option (Req α)),
+  suffices ∀ (xs : List (Req κ α)) (acc : Option (Req κ α)),
       (∀ b, acc = some b → fits d s b = true) → (∀ x ∈ xs, fits d s x = true) →
       ∀ r, xs.foldl (fun acc r => match acc with
         | none => some r
@@ -212,19 +216,19 @@ theorem pick_fits {α} {d : ResourceDecl} {s : RState α} {r : Req α} (h : pick
 
 /-- What settling did to a request, in order. `occupancy` is the units held after the grant plus
 the requests still waiting at that point. -/
-inductive Out (α : Type) where
-  | granted (r : Req α) (occupancy : Nat)
-  | refused (r : Req α) (shed : Bool)
-  | dropped (r : Req α)
+inductive Out (κ α : Type) where
+  | granted (r : Req κ α) (occupancy : Nat)
+  | refused (r : Req κ α) (shed : Bool)
+  | dropped (r : Req κ α)
 
-def grantOne {α} (s : RState α) (r : Req α) : RState α :=
+def grantOne {κ α} (s : RState κ α) (r : Req κ α) : RState κ α :=
   { s with
     waiting := s.waiting.filter (fun w => w.id != r.id),
     holds := s.holds ++ [{ owner := r.owner, cls := r.cls, units := r.units,
                            req := if r.kind == .use then some r.id else none }] }
 
 /-- Grant while some class head is eligible (at most one grant per waiting request). -/
-def grantLoop {α} (d : ResourceDecl) : Nat → RState α → List (Out α) → RState α × List (Out α)
+def grantLoop {κ α} (d : ResourceDecl) : Nat → RState κ α → List (Out κ α) → RState κ α × List (Out κ α)
   | 0, s, outs => (s, outs)
   | fuel + 1, s, outs =>
     match pick d s with
@@ -234,10 +238,10 @@ def grantLoop {α} (d : ResourceDecl) : Nat → RState α → List (Out α) → 
       grantLoop d fuel s' (outs ++ [.granted r (heldAll s'.holds + s'.waiting.length)])
 
 /-- The held-units invariant of a resource. -/
-def HeldOk {α} (d : ResourceDecl) (s : RState α) : Prop :=
+def HeldOk {κ α} (d : ResourceDecl) (s : RState κ α) : Prop :=
   heldAll s.holds ≤ s.capacity ∧ ∀ c l, d.limitOf c = some l → heldC s.holds c ≤ l
 
-theorem grantOne_ok {α} {d : ResourceDecl} {s : RState α} {r : Req α}
+theorem grantOne_ok {κ α} {d : ResourceDecl} {s : RState κ α} {r : Req κ α}
     (hs : HeldOk d s) (hf : fits d s r = true) : HeldOk d (grantOne s r) := by
   obtain ⟨hall, hcl⟩ := hs
   simp only [fits, Bool.and_eq_true, decide_eq_true_eq] at hf
@@ -259,8 +263,8 @@ theorem grantOne_ok {α} {d : ResourceDecl} {s : RState α} {r : Req α}
       simp [hc]
       omega
 
-theorem grantLoop_ok {α} (d : ResourceDecl) :
-    ∀ (fuel : Nat) (s : RState α) (outs : List (Out α)),
+theorem grantLoop_ok {κ α} (d : ResourceDecl) :
+    ∀ (fuel : Nat) (s : RState κ α) (outs : List (Out κ α)),
       HeldOk d s → HeldOk d (grantLoop d fuel s outs).1 := by
   intro fuel
   induction fuel with
@@ -276,7 +280,7 @@ theorem grantLoop_ok {α} (d : ResourceDecl) :
 /-! ## Releases -/
 
 /-- Release `n` acquired units of `(owner, class)`, oldest holdings first. -/
-def consume (owner : String) (c : Nat) : Nat → List Hold → List Hold
+def consume [BEq κ] (owner : κ) (c : Nat) : Nat → List (Hold κ) → List (Hold κ)
   | _, [] => []
   | n, h :: hs =>
     if h.owner == owner && h.cls == c && h.req.isNone then
@@ -284,9 +288,9 @@ def consume (owner : String) (c : Nat) : Nat → List Hold → List Hold
       (if h.units - t = 0 then [] else [{ h with units := h.units - t }]) ++ consume owner c (n - t) hs
     else h :: consume owner c n hs
 
-theorem sumUnits_consume (p : Hold → Bool) (hpu : ∀ h u, p { h with units := u } = p h)
-    (owner : String) (c : Nat) :
-    ∀ (n : Nat) (hs : List Hold), sumUnits p (consume owner c n hs) ≤ sumUnits p hs := by
+theorem sumUnits_consume (p : Hold κ → Bool) (hpu : ∀ h u, p { h with units := u } = p h)
+    [BEq κ] (owner : κ) (c : Nat) :
+    ∀ (n : Nat) (hs : List (Hold κ)), sumUnits p (consume owner c n hs) ≤ sumUnits p hs := by
   intro n hs
   induction hs generalizing n with
   | nil => simp [consume, sumUnits]
@@ -303,10 +307,10 @@ theorem sumUnits_consume (p : Hold → Bool) (hpu : ∀ h u, p { h with units :=
       omega
 
 /-- End the service of a `use` request: its units are released. -/
-def endService (rid : Nat) (hs : List Hold) : List Hold := hs.filter (fun h => h.req != some rid)
+def endService (rid : Nat) (hs : List (Hold κ)) : List (Hold κ) := hs.filter (fun h => h.req != some rid)
 
-theorem sumUnits_filter (p q : Hold → Bool) :
-    ∀ hs : List Hold, sumUnits p (hs.filter q) ≤ sumUnits p hs := by
+theorem sumUnits_filter (p q : Hold κ → Bool) :
+    ∀ hs : List (Hold κ), sumUnits p (hs.filter q) ≤ sumUnits p hs := by
   intro hs
   induction hs with
   | nil => simp [sumUnits]
@@ -314,7 +318,7 @@ theorem sumUnits_filter (p q : Hold → Bool) :
     simp only [List.filter]
     split <;> simp only [sumUnits] <;> omega
 
-theorem release_ok {α} {d : ResourceDecl} {s : RState α} (f : List Hold → List Hold)
+theorem release_ok {κ α} {d : ResourceDecl} {s : RState κ α} (f : List (Hold κ) → List (Hold κ))
     (hfall : heldAll (f s.holds) ≤ heldAll s.holds)
     (hfc : ∀ c, heldC (f s.holds) c ≤ heldC s.holds c) (h : HeldOk d s) :
     HeldOk d { s with holds := f s.holds } := by
@@ -322,13 +326,13 @@ theorem release_ok {α} {d : ResourceDecl} {s : RState α} (f : List Hold → Li
   exact ⟨Nat.le_trans hfall hall, fun c l hl => Nat.le_trans (hfc c) (hcl c l hl)⟩
 
 /-- Releasing acquired units keeps the held-units invariant. -/
-theorem consume_ok {α} {d : ResourceDecl} {s : RState α} (owner : String) (c n : Nat)
+theorem consume_ok {κ α} [BEq κ] {d : ResourceDecl} {s : RState κ α} (owner : κ) (c n : Nat)
     (h : HeldOk d s) : HeldOk d { s with holds := consume owner c n s.holds } :=
   release_ok _ (sumUnits_consume _ (fun _ _ => rfl) _ _ _ _)
     (fun _ => sumUnits_consume _ (fun _ _ => rfl) _ _ _ _) h
 
 /-- Ending a service keeps the held-units invariant. -/
-theorem endService_ok {α} {d : ResourceDecl} {s : RState α} (rid : Nat)
+theorem endService_ok {κ α} {d : ResourceDecl} {s : RState κ α} (rid : Nat)
     (h : HeldOk d s) : HeldOk d { s with holds := endService rid s.holds } :=
   release_ok _ (sumUnits_filter _ _ _) (fun _ => sumUnits_filter _ _ _) h
 
@@ -443,19 +447,19 @@ theorem enforce_mono {β} (count : List β → Nat) (bound : Nat)
         exact Nat.le_trans (ih _ _) (hq _ _ _ hc)
 
 /-- Choosing the request removed at a class bound. -/
-def chooseClass {α} (o : Overflow) (c : Nat) (ws : List (Req α)) : Option (Req α × List (Req α)) :=
+def chooseClass {κ α} (o : Overflow) (c : Nat) (ws : List (Req κ α)) : Option (Req κ α × List (Req κ α)) :=
   if o == .shedOldest then takeFirst (fun r => r.cls == c) ws else takeLast (fun r => r.cls == c) ws
 
 /-- The class shed first at the resource bound under `priority`: among classes with a waiting
 request, the lowest priority, first in declaration order on ties. -/
-def lowestClass {α} (d : ResourceDecl) (ws : List (Req α)) : Option Nat :=
+def lowestClass {κ α} (d : ResourceDecl) (ws : List (Req κ α)) : Option Nat :=
   ((List.range d.classes.length).filter (fun c => ws.any (·.cls == c))).foldl (fun acc c =>
     match acc with
     | none => some c
     | some b => if d.priorityOf c < d.priorityOf b then some c else some b) none
 
 /-- Choosing the request removed at the resource bound. -/
-def chooseAll {α} (d : ResourceDecl) (ws : List (Req α)) : Option (Req α × List (Req α)) :=
+def chooseAll {κ α} (d : ResourceDecl) (ws : List (Req κ α)) : Option (Req κ α × List (Req κ α)) :=
   if d.overflow == .shedOldest then
     if d.byPriority then
       match lowestClass d ws with
@@ -470,7 +474,7 @@ def chooseAll {α} (d : ResourceDecl) (ws : List (Req α)) : Option (Req α × L
 theorem countP_true {β} (xs : List β) : xs.countP (fun _ => true) = xs.length := by
   simp
 
-theorem chooseClass_some {α} (o : Overflow) (c : Nat) (ws : List (Req α)) r ys
+theorem chooseClass_some {κ α} (o : Overflow) (c : Nat) (ws : List (Req κ α)) r ys
     (h : chooseClass o c ws = some (r, ys)) :
     (r.cls == c) = true ∧ ∀ q, ys.countP q + (if q r then 1 else 0) = ws.countP q := by
   unfold chooseClass at h
@@ -478,7 +482,7 @@ theorem chooseClass_some {α} (o : Overflow) (c : Nat) (ws : List (Req α)) r ys
   · exact takeFirst_some _ _ _ _ h
   · exact takeLast_some _ _ _ _ h
 
-theorem chooseAll_some {α} (d : ResourceDecl) (ws : List (Req α)) r ys
+theorem chooseAll_some {κ α} (d : ResourceDecl) (ws : List (Req κ α)) r ys
     (h : chooseAll d ws = some (r, ys)) :
     ∀ q, ys.countP q + (if q r then 1 else 0) = ws.countP q := by
   unfold chooseAll at h
@@ -492,7 +496,7 @@ theorem chooseAll_some {α} (d : ResourceDecl) (ws : List (Req α)) r ys
     · exact (takeFirst_some _ _ _ _ h).2
   · exact (takeLast_some _ _ _ _ h).2
 
-theorem chooseAll_none {α} (d : ResourceDecl) (ws : List (Req α)) (h : chooseAll d ws = none) :
+theorem chooseAll_none {κ α} (d : ResourceDecl) (ws : List (Req κ α)) (h : chooseAll d ws = none) :
     ws.length = 0 := by
   rw [← countP_true]
   unfold chooseAll at h
@@ -508,7 +512,7 @@ theorem chooseAll_none {α} (d : ResourceDecl) (ws : List (Req α)) (h : chooseA
 
 /-- The bounds step on a waiting list: each class bound in declaration order, then the resource
 bound. Returns the remaining waiting list and the removed requests in order. -/
-def boundClasses {α} (d : ResourceDecl) : List Nat → List (Req α) → List (Req α) → List (Req α) × List (Req α)
+def boundClasses {κ α} (d : ResourceDecl) : List Nat → List (Req κ α) → List (Req κ α) → List (Req κ α) × List (Req κ α)
   | [], ws, removed => (ws, removed)
   | c :: cs, ws, removed =>
     match (d.classAt? c).bind (·.queueBound) with
@@ -517,17 +521,17 @@ def boundClasses {α} (d : ResourceDecl) : List Nat → List (Req α) → List (
       let (ws', rm) := enforce (fun ws => waitingC ws c) b (chooseClass d.overflow c) ws.length ws []
       boundClasses d cs ws' (removed ++ rm)
 
-def boundAll {α} (d : ResourceDecl) (ws : List (Req α)) : List (Req α) × List (Req α) :=
+def boundAll {κ α} (d : ResourceDecl) (ws : List (Req κ α)) : List (Req κ α) × List (Req κ α) :=
   match d.queueBound with
   | none => (ws, [])
   | some b => enforce List.length b (chooseAll d) ws.length ws []
 
-def bounds {α} (d : ResourceDecl) (ws : List (Req α)) : List (Req α) × List (Req α) :=
+def bounds {κ α} (d : ResourceDecl) (ws : List (Req κ α)) : List (Req κ α) × List (Req κ α) :=
   let (ws1, rm1) := boundClasses d (List.range d.classes.length) ws []
   let (ws2, rm2) := boundAll d ws1
   (ws2, rm1 ++ rm2)
 
-theorem enforce_class_bound {α} (o : Overflow) (c b : Nat) (ws : List (Req α)) :
+theorem enforce_class_bound {κ α} (o : Overflow) (c b : Nat) (ws : List (Req κ α)) :
     waitingC (enforce (fun ws => waitingC ws c) b (chooseClass o c) ws.length ws []).1 c ≤ b := by
   apply enforce_bound
   · intro xs h; unfold chooseClass at h; split at h
@@ -536,16 +540,16 @@ theorem enforce_class_bound {α} (o : Overflow) (c b : Nat) (ws : List (Req α))
   · intro xs r ys h
     obtain ⟨hp, hc⟩ := chooseClass_some o c xs r ys h
     have := hc (fun r => r.cls == c); simp [hp] at this; simp [waitingC]; omega
-  · simp only [waitingC]; have := List.countP_le_length (p := fun r : Req α => r.cls == c) (l := ws); omega
+  · simp only [waitingC]; have := List.countP_le_length (p := fun r : Req κ α => r.cls == c) (l := ws); omega
 
-theorem enforce_class_mono {α} (o : Overflow) (c b : Nat) (ws : List (Req α)) (q : Req α → Bool) :
+theorem enforce_class_mono {κ α} (o : Overflow) (c b : Nat) (ws : List (Req κ α)) (q : Req κ α → Bool) :
     (enforce (fun ws => waitingC ws c) b (chooseClass o c) ws.length ws []).1.countP q ≤ ws.countP q := by
   apply enforce_mono (q := fun xs => xs.countP q)
   intro xs r ys h
   have := (chooseClass_some o c xs r ys h).2 q
   omega
 
-theorem boundAll_mono {α} (d : ResourceDecl) (ws : List (Req α)) (q : Req α → Bool) :
+theorem boundAll_mono {κ α} (d : ResourceDecl) (ws : List (Req κ α)) (q : Req κ α → Bool) :
     (boundAll d ws).1.countP q ≤ ws.countP q := by
   unfold boundAll
   split
@@ -555,7 +559,7 @@ theorem boundAll_mono {α} (d : ResourceDecl) (ws : List (Req α)) (q : Req α �
     have := chooseAll_some d xs r ys h q
     omega
 
-theorem boundAll_bound {α} (d : ResourceDecl) (ws : List (Req α)) (b : Nat)
+theorem boundAll_bound {κ α} (d : ResourceDecl) (ws : List (Req κ α)) (b : Nat)
     (hb : d.queueBound = some b) : (boundAll d ws).1.length ≤ b := by
   unfold boundAll
   rw [hb]
@@ -567,8 +571,8 @@ theorem boundAll_bound {α} (d : ResourceDecl) (ws : List (Req α)) (b : Nat)
     simp at this; omega
   · omega
 
-theorem boundClasses_mono {α} (d : ResourceDecl) (q : Req α → Bool) :
-    ∀ (cs : List Nat) (ws removed : List (Req α)),
+theorem boundClasses_mono {κ α} (d : ResourceDecl) (q : Req κ α → Bool) :
+    ∀ (cs : List Nat) (ws removed : List (Req κ α)),
       (boundClasses d cs ws removed).1.countP q ≤ ws.countP q := by
   intro cs
   induction cs with
@@ -580,9 +584,9 @@ theorem boundClasses_mono {α} (d : ResourceDecl) (q : Req α → Bool) :
     · exact ih _ _
     · exact Nat.le_trans (ih _ _) (enforce_class_mono _ _ _ _ _)
 
-theorem boundClasses_bound {α} (d : ResourceDecl) (c b : Nat)
+theorem boundClasses_bound {κ α} (d : ResourceDecl) (c b : Nat)
     (hb : (d.classAt? c).bind (·.queueBound) = some b) :
-    ∀ (cs : List Nat) (ws removed : List (Req α)), c ∈ cs →
+    ∀ (cs : List Nat) (ws removed : List (Req κ α)), c ∈ cs →
       waitingC (boundClasses d cs ws removed).1 c ≤ b := by
   intro cs
   induction cs with
@@ -605,7 +609,7 @@ theorem boundClasses_bound {α} (d : ResourceDecl) (c b : Nat)
 
 /-- **Queue bounds.** After the bounds step every class with a `queueBound` has at most that many
 waiting requests, and the waiting list is within the resource's `queueBound`. -/
-theorem bounds_ok {α} (d : ResourceDecl) (ws : List (Req α)) :
+theorem bounds_ok {κ α} (d : ResourceDecl) (ws : List (Req κ α)) :
     (∀ c b, c < d.classes.length → (d.classAt? c).bind (·.queueBound) = some b →
       waitingC (bounds d ws).1 c ≤ b) ∧
     (∀ b, d.queueBound = some b → (bounds d ws).1.length ≤ b) := by

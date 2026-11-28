@@ -6,8 +6,10 @@
 // (formal/Exegra/Format2B.lean, traceOfB), one outside the calculus's fragment on the legacy format-2
 // interpreter (its trace says "semantics": "legacy"), and a version-1 input is refused (format 1 was
 // removed, WG-5681). That function is the implementation Exegra.Impl, proved equal to the definition
-// on every input (Exegra.Impl.runAnyValue_eq). It reads one engine input (sim-input.js, format
-// "exegra-sim-input") and returns one trace. Semantics: docs/module-contracts.md, section
+// on every input (Exegra.Impl.runAnyValue_eq). It reads one engine input (format "exegra-sim-input")
+// and returns one trace. The engine input of a scenario is derived in Lean too (engineInput, the
+// registered function "engine.input", Exegra.Lower.engineInput, WG-5683): the shell sends the model's
+// entities and the scenario, never an input it built itself. Semantics: docs/module-contracts.md, section
 // "Simulation"; formats: docs/simulation.md, "Engine input and trace format". The Rust engine
 // (engine/) is no longer run here: it stays as a differential oracle in the tests.
 //
@@ -15,11 +17,124 @@
 // nobody called initEngine(). In the browser (and in a Web Worker) initEngine() is asynchronous and
 // must be awaited before the first run.
 
-import { simulationInput } from './sim-input.js';
 import { callText, initLean, leanReady } from './lean.js';
 
 /** @typedef {import('./types.js').Model} Model */
-/** @typedef {import('./sim-input.js').SimulationInput} SimulationInput */
+/**
+ * @typedef {{id:string, from:string, to:string, on:string, guard:string|null, effects:any[], faultOnly:boolean}} InputTransition
+ * @typedef {{id:string, subject:string, initial:string, types?:Record<string, string>, variables:{name:string, initial:any}[], states:string[], transitions:InputTransition[]}} InputBehavior
+ * @typedef {{id:string, kind:string, event?:string, transition?:string, occurrence?:number, by?:number, at?:number, payload?:Record<string, any>}} InputFault
+ * @typedef {{format:'exegra-sim-input', version:2, time?:{unit:string, perSecond:number|null},
+ *   scenario:{id:string, steps:{at:number, event:string, payload:Record<string, any>}[], faults:string[], stepLimit:number},
+ *   behaviors:InputBehavior[], events:{id:string}[], faults:InputFault[], resources?:{id:string}[]}} SimulationInput
+ */
+
+/** The engine input format's name. */
+export const SIM_INPUT_FORMAT = 'exegra-sim-input';
+
+/** The entity kinds the lowering reads (Exegra.Lower.engineInput). */
+const LOWERED_KINDS = new Set(['scenario', 'behavior', 'transition', 'state', 'event', 'fault', 'workload', 'resource', 'link',
+  'requestClass', 'quotaPool', 'quota', 'type', 'system']);
+
+/**
+ * The model as the lowering of one scenario reads it: the entities of the kinds it reads, `{id, kind,
+ * owner, data}`, in the model's order (an entity added to `model.entities` alone counts too). Only the
+ * scenario itself, the behaviors it lists with their states and transitions, and the faults, workloads
+ * and quota pools it names (and the faults `faults` names) are sent of their kinds: the lowering reads no other
+ * entity of those kinds, and a name that is missing is refused with the same message as a name of the
+ * wrong kind. This keeps the request small: the Lean core parses it on every call.
+ * @param {Model} model @param {string} scenarioId @param {string[]} [faults]
+ */
+function loweringModel(model, scenarioId, faults) {
+  const sdata = /** @type {any} */ (model.entities.get(scenarioId)?.data) ?? {};
+  const named = (/** @type {any} */ v) => new Set(Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []);
+  const behaviors = named(sdata.behaviors);
+  /** @type {Record<string, Set<string>>} */
+  const wanted = { scenario: new Set([scenarioId]), behavior: behaviors, fault: new Set([...named(faults), ...named(sdata.faults)]), workload: named(sdata.workloads), quotaPool: named(sdata.pools) };
+  /** @type {{id:string, kind:string, owner:string|null, data:any}[]} */
+  const entities = [];
+  for (const e of model.entities.values()) {
+    if (!LOWERED_KINDS.has(e.kind)) continue;
+    if (e.kind in wanted && !wanted[e.kind].has(e.id)) continue;
+    if ((e.kind === 'state' || e.kind === 'transition') && !(e.owner !== null && behaviors.has(e.owner))) continue;
+    entities.push({ id: e.id, kind: e.kind, owner: e.owner, data: loweredData(e.kind, e.data) });
+  }
+  return { entities };
+}
+
+/** Top-level members of an entity the lowering never reads (prose). */
+const PROSE = new Set(['name', 'description', 'notes', 'rationale']);
+
+/**
+ * The part of an entity's data the lowering reads: the prose members are left out, an event keeps only
+ * its payload, a state nothing (its id is all that is read), and a behavior not its nested states and
+ * transitions (the lowering reads them as their own entities). Nested values are kept whole.
+ * @param {string} kind @param {any} data
+ */
+function loweredData(kind, data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return data;
+  if (kind === 'state') return {};
+  if (kind === 'event') return 'payload' in data ? { payload: data.payload } : {};
+  /** @type {Record<string, any>} */
+  const out = {};
+  for (const k of Object.keys(data)) {
+    if (PROSE.has(k)) continue;
+    if (kind === 'behavior' && (k === 'states' || k === 'transitions')) continue;
+    out[k] = data[k];
+  }
+  return out;
+}
+
+/** @param {Model} model @param {string} scenarioId @param {string[]} [faults] */
+function loweringArgs(model, scenarioId, faults) {
+  return JSON.stringify({ model: loweringModel(model, scenarioId, faults), scenario: scenarioId, ...(faults ? { faults } : {}) });
+}
+
+/**
+ * The engine inputs derived lately, by the text of their lowering request: a request is the whole of
+ * what the lowering reads, so an equal request has an equal answer, and claim evaluation, which derives
+ * the input of one scenario for many claims, asks the Lean core once. At most `LOWERED_CACHE_SIZE`
+ * entries, the least recently used dropped first.
+ * @type {Map<string, {ok: true, text: string} | {ok: false, error: string}>}
+ */
+const lowered = new Map();
+const LOWERED_CACHE_SIZE = 64;
+
+/**
+ * The engine input of a scenario as JSON text, or the lowering's refusal.
+ * @param {Model} model @param {string} scenarioId @param {string[]} [faults]
+ * @returns {{ok: true, text: string} | {ok: false, error: string}}
+ */
+function engineInputText(model, scenarioId, faults) {
+  const request = loweringArgs(model, scenarioId, faults);
+  const hit = lowered.get(request);
+  if (hit) {
+    lowered.delete(request);
+    lowered.set(request, hit);
+    return hit;
+  }
+  const r = callText('engine.input', request);
+  const answer = r.ok ? { ok: /** @type {true} */ (true), text: r.text } : { ok: /** @type {false} */ (false), error: r.error };
+  lowered.set(request, answer);
+  if (lowered.size > LOWERED_CACHE_SIZE) lowered.delete(/** @type {string} */ (lowered.keys().next().value));
+  return answer;
+}
+
+/**
+ * The engine input of one scenario run, derived in Lean (Exegra.Lower.engineInput). `faults`, when
+ * given, replaces the scenario's own fault list. Throws, with the lowering's message, for a scenario,
+ * behavior, event, fault, workload or quota pool that does not exist and for a malformed unit, rate or
+ * distribution, before any engine runs. Synchronous after initEngine().
+ * @param {Model} model
+ * @param {string} scenarioId
+ * @param {string[]} [faults]
+ * @returns {SimulationInput}
+ */
+export function engineInput(model, scenarioId, faults) {
+  const r = engineInputText(model, scenarioId, faults);
+  if (!r.ok) throw new Error(r.error);
+  return JSON.parse(r.text);
+}
 
 /**
  * @typedef {{seq:number, time:number, event:string, payload:Record<string, any>, source:any}} Pending
@@ -73,7 +188,7 @@ export function runEngine(input) {
 
 /**
  * Run a scenario of a model to completion. `opts.faults` replaces the scenario's own fault list.
- * Throws for a scenario, behavior, event or fault that does not exist (sim-input.js); a run that
+ * Throws for a scenario, behavior, event or fault that does not exist (engineInput); a run that
  * fails part-way is recorded in the trace with outcome "error".
  * @param {Model} model
  * @param {string} scenarioId
@@ -81,7 +196,9 @@ export function runEngine(input) {
  * @returns {Trace}
  */
 export function runScenario(model, scenarioId, opts) {
-  return runEngine(simulationInput(model, scenarioId, opts?.faults));
+  const r = engineInputText(model, scenarioId, opts?.faults);
+  if (!r.ok) throw new Error(r.error);
+  return JSON.parse(runEngineText(r.text));
 }
 
 /**

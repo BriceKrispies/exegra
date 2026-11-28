@@ -1,0 +1,23 @@
+// Badges: awards once, placing one hold on the platform ledger, and claims the ledger then holds at most one.
+{
+  "product": { "id": "badges", "name": "Badges", "imports": { "spec": "../spec.jsonc", "entities": ["ledger", "hold", "ledger-service"] } },
+  "events": [
+    { "id": "badges__award", "name": "Badges award" }
+  ],
+  "behaviors": [
+    {
+      "id": "badges__awarder", "name": "Badges awarder", "subject": "ledger-service", "initial": "badges__ready",
+      "states": [{ "id": "badges__ready", "name": "Ready" }, { "id": "badges__done", "name": "Done" }],
+      "transitions": [
+        { "id": "badges__award-once", "from": "badges__ready", "to": "badges__done", "on": "badges__award", "effects": [{ "emit": "hold" }] }
+      ]
+    }
+  ],
+  "scenarios": [
+    { "id": "badges__solo", "name": "Badges alone", "behaviors": ["ledger", "badges__awarder"], "steps": [{ "at": 0, "event": "badges__award" }] }
+  ],
+  "claims": [
+    { "id": "badges__one-hold", "kind": "invariant", "statement": "The ledger holds at most one hold.", "subjects": ["ledger-service"],
+      "evaluate": { "method": "state-invariant", "scenarios": ["badges__solo"], "expr": "ledger.held <= 1" } }
+  ]
+}

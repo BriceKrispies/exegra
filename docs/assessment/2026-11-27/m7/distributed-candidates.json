@@ -1,0 +1,4357 @@
+{
+ "fixture": "tests/fixtures/multiscale-external/distributed.jsonc",
+ "scope": "shop",
+ "grain": "leaves",
+ "purity": {
+  "hashBefore": "01d1f2483a13d1",
+  "hashAfter": "01d1f2483a13d1",
+  "factsUnchanged": true,
+  "repeatedIdentical": true
+ },
+ "skipped": [
+  {
+   "source": "connectors",
+   "reason": "no connector element among the leaves of \"shop\"."
+  },
+  {
+   "source": "contracts",
+   "reason": "no fact inside \"shop\" is typed by a contract."
+  },
+  {
+   "source": "cycles",
+   "reason": "no dependency cycle among the leaves of \"shop\"."
+  },
+  {
+   "source": "directory",
+   "reason": "the leaves of \"shop\" lie in one directory (or have no module paths)."
+  },
+  {
+   "source": "refinement",
+   "reason": "base \"shop-uncovered\" is not a valid partition: uncovered."
+  }
+ ],
+ "comparison": {
+  "candidates": [
+   "shop-by-tier",
+   "shop-services-and-machines",
+   "shop-by-zone",
+   "shop-uncovered",
+   "shop-by-tier~split-core-machines",
+   "shop-by-tier~split-edge-machines",
+   "shop-by-zone~split-zone-one",
+   "shop-by-zone~split-zone-two",
+   "shop-declared",
+   "shop-declared~split-infrastructure",
+   "shop-services-and-machines~split-machines"
+  ],
+  "rows": [
+   {
+    "id": "status",
+    "label": "Validity",
+    "values": {
+     "shop-by-tier": "valid",
+     "shop-services-and-machines": "valid",
+     "shop-by-zone": "valid",
+     "shop-uncovered": "invalid",
+     "shop-by-tier~split-core-machines": "valid",
+     "shop-by-tier~split-edge-machines": "valid",
+     "shop-by-zone~split-zone-one": "valid",
+     "shop-by-zone~split-zone-two": "valid",
+     "shop-declared": "valid",
+     "shop-declared~split-infrastructure": "valid",
+     "shop-services-and-machines~split-machines": "valid"
+    }
+   },
+   {
+    "id": "blocks",
+    "label": "Blocks",
+    "values": {
+     "shop-by-tier": 4,
+     "shop-services-and-machines": 2,
+     "shop-by-zone": 3,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 5,
+     "shop-by-tier~split-edge-machines": 5,
+     "shop-by-zone~split-zone-one": 4,
+     "shop-by-zone~split-zone-two": 4,
+     "shop-declared": 3,
+     "shop-declared~split-infrastructure": 5,
+     "shop-services-and-machines~split-machines": 4
+    }
+   },
+   {
+    "id": "largest-block",
+    "label": "Members of the largest block",
+    "values": {
+     "shop-by-tier": 4,
+     "shop-services-and-machines": 6,
+     "shop-by-zone": 4,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 3,
+     "shop-by-tier~split-edge-machines": 4,
+     "shop-by-zone~split-zone-one": 4,
+     "shop-by-zone~split-zone-two": 4,
+     "shop-declared": 6,
+     "shop-declared~split-infrastructure": 4,
+     "shop-services-and-machines~split-machines": 4
+    }
+   },
+   {
+    "id": "internal",
+    "label": "Facts internal to a block",
+    "values": {
+     "shop-by-tier": 4,
+     "shop-services-and-machines": 6,
+     "shop-by-zone": 5,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 4,
+     "shop-by-tier~split-edge-machines": 4,
+     "shop-by-zone~split-zone-one": 5,
+     "shop-by-zone~split-zone-two": 5,
+     "shop-declared": 5,
+     "shop-declared~split-infrastructure": 5,
+     "shop-services-and-machines~split-machines": 6
+    }
+   },
+   {
+    "id": "crossing",
+    "label": "Facts crossing blocks (boundary size)",
+    "values": {
+     "shop-by-tier": 2,
+     "shop-services-and-machines": 0,
+     "shop-by-zone": 1,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 2,
+     "shop-by-tier~split-edge-machines": 2,
+     "shop-by-zone~split-zone-one": 1,
+     "shop-by-zone~split-zone-two": 1,
+     "shop-declared": 1,
+     "shop-declared~split-infrastructure": 1,
+     "shop-services-and-machines~split-machines": 0
+    }
+   },
+   {
+    "id": "internal-dependency",
+    "label": "Dependency-class facts internal to a block",
+    "values": {
+     "shop-by-tier": 2,
+     "shop-services-and-machines": 3,
+     "shop-by-zone": 3,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 2,
+     "shop-by-tier~split-edge-machines": 2,
+     "shop-by-zone~split-zone-one": 3,
+     "shop-by-zone~split-zone-two": 3,
+     "shop-declared": 2,
+     "shop-declared~split-infrastructure": 2,
+     "shop-services-and-machines~split-machines": 3
+    }
+   },
+   {
+    "id": "crossing-dependency",
+    "label": "Dependency-class facts crossing blocks",
+    "values": {
+     "shop-by-tier": 1,
+     "shop-services-and-machines": 0,
+     "shop-by-zone": 0,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 1,
+     "shop-by-tier~split-edge-machines": 1,
+     "shop-by-zone~split-zone-one": 0,
+     "shop-by-zone~split-zone-two": 0,
+     "shop-declared": 1,
+     "shop-declared~split-infrastructure": 1,
+     "shop-services-and-machines~split-machines": 0
+    }
+   },
+   {
+    "id": "cohesion",
+    "label": "Cohesion (internal / (internal + crossing))",
+    "values": {
+     "shop-by-tier": 0.666667,
+     "shop-services-and-machines": 1,
+     "shop-by-zone": 0.833333,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 0.666667,
+     "shop-by-tier~split-edge-machines": 0.666667,
+     "shop-by-zone~split-zone-one": 0.833333,
+     "shop-by-zone~split-zone-two": 0.833333,
+     "shop-declared": 0.833333,
+     "shop-declared~split-infrastructure": 0.833333,
+     "shop-services-and-machines~split-machines": 1
+    }
+   },
+   {
+    "id": "coupled-pairs",
+    "label": "Ordered block pairs with a crossing fact",
+    "values": {
+     "shop-by-tier": 2,
+     "shop-services-and-machines": 0,
+     "shop-by-zone": 1,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 2,
+     "shop-by-tier~split-edge-machines": 2,
+     "shop-by-zone~split-zone-one": 1,
+     "shop-by-zone~split-zone-two": 1,
+     "shop-declared": 1,
+     "shop-declared~split-infrastructure": 1,
+     "shop-services-and-machines~split-machines": 0
+    }
+   },
+   {
+    "id": "cycles-static",
+    "label": "Cycles among blocks, static class",
+    "values": {
+     "shop-by-tier": 0,
+     "shop-services-and-machines": 0,
+     "shop-by-zone": 0,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 0,
+     "shop-by-tier~split-edge-machines": 0,
+     "shop-by-zone~split-zone-one": 0,
+     "shop-by-zone~split-zone-two": 0,
+     "shop-declared": 0,
+     "shop-declared~split-infrastructure": 0,
+     "shop-services-and-machines~split-machines": 0
+    }
+   },
+   {
+    "id": "cycles-runtime",
+    "label": "Cycles among blocks, runtime class",
+    "values": {
+     "shop-by-tier": 0,
+     "shop-services-and-machines": 0,
+     "shop-by-zone": 0,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 0,
+     "shop-by-tier~split-edge-machines": 0,
+     "shop-by-zone~split-zone-one": 0,
+     "shop-by-zone~split-zone-two": 0,
+     "shop-declared": 0,
+     "shop-declared~split-infrastructure": 0,
+     "shop-services-and-machines~split-machines": 0
+    }
+   },
+   {
+    "id": "cycles-dependency",
+    "label": "Cycles among blocks, static and runtime together",
+    "values": {
+     "shop-by-tier": 0,
+     "shop-services-and-machines": 0,
+     "shop-by-zone": 0,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 0,
+     "shop-by-tier~split-edge-machines": 0,
+     "shop-by-zone~split-zone-one": 0,
+     "shop-by-zone~split-zone-two": 0,
+     "shop-declared": 0,
+     "shop-declared~split-infrastructure": 0,
+     "shop-services-and-machines~split-machines": 0
+    }
+   },
+   {
+    "id": "back-edge-witnesses",
+    "label": "Facts on the back edges of dependency cycles",
+    "values": {
+     "shop-by-tier": 0,
+     "shop-services-and-machines": 0,
+     "shop-by-zone": 0,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 0,
+     "shop-by-tier~split-edge-machines": 0,
+     "shop-by-zone~split-zone-one": 0,
+     "shop-by-zone~split-zone-two": 0,
+     "shop-declared": 0,
+     "shop-declared~split-infrastructure": 0,
+     "shop-services-and-machines~split-machines": 0
+    }
+   },
+   {
+    "id": "interface-groups",
+    "label": "Interface groups over all blocks",
+    "values": {
+     "shop-by-tier": 4,
+     "shop-services-and-machines": 0,
+     "shop-by-zone": 2,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 4,
+     "shop-by-tier~split-edge-machines": 4,
+     "shop-by-zone~split-zone-one": 2,
+     "shop-by-zone~split-zone-two": 2,
+     "shop-declared": 2,
+     "shop-declared~split-infrastructure": 2,
+     "shop-services-and-machines~split-machines": 0
+    }
+   },
+   {
+    "id": "interface-largest",
+    "label": "Interface groups of the largest interface",
+    "values": {
+     "shop-by-tier": 1,
+     "shop-services-and-machines": 0,
+     "shop-by-zone": 1,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 1,
+     "shop-by-tier~split-edge-machines": 1,
+     "shop-by-zone~split-zone-one": 1,
+     "shop-by-zone~split-zone-two": 1,
+     "shop-declared": 1,
+     "shop-declared~split-infrastructure": 1,
+     "shop-services-and-machines~split-machines": 0
+    }
+   },
+   {
+    "id": "contract-coverage",
+    "label": "Crossing facts typed by a contract",
+    "values": {
+     "shop-by-tier": 0,
+     "shop-services-and-machines": null,
+     "shop-by-zone": 0,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 0,
+     "shop-by-tier~split-edge-machines": 0,
+     "shop-by-zone~split-zone-one": 0,
+     "shop-by-zone~split-zone-two": 0,
+     "shop-declared": 0,
+     "shop-declared~split-infrastructure": 0,
+     "shop-services-and-machines~split-machines": null
+    }
+   },
+   {
+    "id": "redundant-on-boundary",
+    "label": "Redundant declared facts on the boundary",
+    "values": {
+     "shop-by-tier": 0,
+     "shop-services-and-machines": 0,
+     "shop-by-zone": 0,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 0,
+     "shop-by-tier~split-edge-machines": 0,
+     "shop-by-zone~split-zone-one": 0,
+     "shop-by-zone~split-zone-two": 0,
+     "shop-declared": 0,
+     "shop-declared~split-infrastructure": 0,
+     "shop-services-and-machines~split-machines": 0
+    }
+   },
+   {
+    "id": "opaque-elements",
+    "label": "Opaque grain elements",
+    "values": {
+     "shop-by-tier": 6,
+     "shop-services-and-machines": 6,
+     "shop-by-zone": 6,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 6,
+     "shop-by-tier~split-edge-machines": 6,
+     "shop-by-zone~split-zone-one": 6,
+     "shop-by-zone~split-zone-two": 6,
+     "shop-declared": 6,
+     "shop-declared~split-infrastructure": 6,
+     "shop-services-and-machines~split-machines": 6
+    }
+   },
+   {
+    "id": "unknown-elements",
+    "label": "Grain elements of unknown knowledge",
+    "values": {
+     "shop-by-tier": 0,
+     "shop-services-and-machines": 0,
+     "shop-by-zone": 0,
+     "shop-uncovered": null,
+     "shop-by-tier~split-core-machines": 0,
+     "shop-by-tier~split-edge-machines": 0,
+     "shop-by-zone~split-zone-one": 0,
+     "shop-by-zone~split-zone-two": 0,
+     "shop-declared": 0,
+     "shop-declared~split-infrastructure": 0,
+     "shop-services-and-machines~split-machines": 0
+    }
+   }
+  ]
+ },
+ "candidates": [
+  {
+   "id": "shop-by-tier",
+   "name": "Shop by tier",
+   "source": "data",
+   "scope": "shop",
+   "grain": "leaves",
+   "from": null,
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "back-office",
+     "name": "Back office",
+     "members": [
+      "inventory",
+      "orders"
+     ],
+     "existing": false
+    },
+    {
+     "id": "core-machines",
+     "name": "Core machines",
+     "members": [
+      "app-host-a",
+      "app-host-b",
+      "db-host",
+      "zone-2"
+     ],
+     "existing": false
+    },
+    {
+     "id": "edge-machines",
+     "name": "Edge machines",
+     "members": [
+      "edge-host",
+      "zone-1"
+     ],
+     "existing": false
+    },
+    {
+     "id": "presentation",
+     "name": "Presentation",
+     "members": [
+      "cart",
+      "web-ui"
+     ],
+     "existing": false
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 4,
+     "grainElements": 10,
+     "singletons": 0,
+     "largest": 4,
+     "smallest": 2
+    },
+    "facts": {
+     "internal": {
+      "all": 4,
+      "static": 0,
+      "runtime": 2,
+      "none": 2,
+      "dependency": 2
+     },
+     "crossing": {
+      "all": 2,
+      "static": 0,
+      "runtime": 1,
+      "none": 1,
+      "dependency": 1
+     },
+     "external": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 2,
+     "external": 0
+    },
+    "cohesion": {
+     "overall": {
+      "n": 4,
+      "d": 6,
+      "value": 0.666667
+     },
+     "dependency": {
+      "n": 2,
+      "d": 3,
+      "value": 0.666667
+     },
+     "perBlock": [
+      {
+       "id": "back-office",
+       "n": 1,
+       "d": 2,
+       "value": 0.5
+      },
+      {
+       "id": "core-machines",
+       "n": 2,
+       "d": 3,
+       "value": 0.666667
+      },
+      {
+       "id": "edge-machines",
+       "n": 0,
+       "d": 1,
+       "value": 0
+      },
+      {
+       "id": "presentation",
+       "n": 1,
+       "d": 2,
+       "value": 0.5
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 2,
+     "density": {
+      "n": 2,
+      "d": 12,
+      "value": 0.166667
+     },
+     "perBlock": [
+      {
+       "id": "back-office",
+       "out": 0,
+       "in": 1
+      },
+      {
+       "id": "core-machines",
+       "out": 0,
+       "in": 1
+      },
+      {
+       "id": "edge-machines",
+       "out": 1,
+       "in": 0
+      },
+      {
+       "id": "presentation",
+       "out": 1,
+       "in": 0
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 4,
+     "largest": 1,
+     "perBlock": [
+      {
+       "id": "back-office",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "core-machines",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "edge-machines",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "presentation",
+       "groups": 1,
+       "witnesses": 1
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 2,
+      "value": 0
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 1,
+      "value": 0
+     },
+     "blockPairs": {
+      "total": 2,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 2
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 4,
+      "opaque": 6,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {
+      "declared": 2
+     },
+     "perBlock": [
+      {
+       "id": "back-office",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "core-machines",
+       "transparent": 0,
+       "opaque": 4,
+       "unknown": 0
+      },
+      {
+       "id": "edge-machines",
+       "transparent": 0,
+       "opaque": 2,
+       "unknown": 0
+      },
+      {
+       "id": "presentation",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [
+     {
+      "from": "edge-machines",
+      "to": "core-machines",
+      "witnesses": [
+       "link-edge-a"
+      ],
+      "kinds": {
+       "network-link": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "link-edge-a"
+      ]
+     },
+     {
+      "from": "presentation",
+      "to": "back-office",
+      "witnesses": [
+       "cart-places-order"
+      ],
+      "kinds": {
+       "invokes": 1
+      },
+      "classes": {
+       "runtime": 1
+      },
+      "uncoveredByContract": [
+       "cart-places-order"
+      ]
+     }
+    ],
+    "cycles": [],
+    "uncoveredContracts": [
+     {
+      "from": "edge-machines",
+      "to": "core-machines",
+      "facts": [
+       "link-edge-a"
+      ]
+     },
+     {
+      "from": "presentation",
+      "to": "back-office",
+      "facts": [
+       "cart-places-order"
+      ]
+     }
+    ],
+    "scopeBoundary": []
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  },
+  {
+   "id": "shop-services-and-machines",
+   "name": "Services and machines",
+   "source": "data",
+   "scope": "shop",
+   "grain": "leaves",
+   "from": null,
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "machines",
+     "name": "Machines",
+     "members": [
+      "app-host-a",
+      "app-host-b",
+      "db-host",
+      "edge-host",
+      "zone-1",
+      "zone-2"
+     ],
+     "existing": false
+    },
+    {
+     "id": "services",
+     "name": "Services",
+     "members": [
+      "cart",
+      "inventory",
+      "orders",
+      "web-ui"
+     ],
+     "existing": false
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 2,
+     "grainElements": 10,
+     "singletons": 0,
+     "largest": 6,
+     "smallest": 4
+    },
+    "facts": {
+     "internal": {
+      "all": 6,
+      "static": 0,
+      "runtime": 3,
+      "none": 3,
+      "dependency": 3
+     },
+     "crossing": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "external": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 0,
+     "external": 0
+    },
+    "cohesion": {
+     "overall": {
+      "n": 6,
+      "d": 6,
+      "value": 1
+     },
+     "dependency": {
+      "n": 3,
+      "d": 3,
+      "value": 1
+     },
+     "perBlock": [
+      {
+       "id": "machines",
+       "n": 3,
+       "d": 3,
+       "value": 1
+      },
+      {
+       "id": "services",
+       "n": 3,
+       "d": 3,
+       "value": 1
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 0,
+     "density": {
+      "n": 0,
+      "d": 2,
+      "value": 0
+     },
+     "perBlock": [
+      {
+       "id": "machines",
+       "out": 0,
+       "in": 0
+      },
+      {
+       "id": "services",
+       "out": 0,
+       "in": 0
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 0,
+     "largest": 0,
+     "perBlock": [
+      {
+       "id": "machines",
+       "groups": 0,
+       "witnesses": 0
+      },
+      {
+       "id": "services",
+       "groups": 0,
+       "witnesses": 0
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 0,
+      "value": null
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 0,
+      "value": null
+     },
+     "blockPairs": {
+      "total": 0,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 4,
+      "opaque": 6,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {},
+     "perBlock": [
+      {
+       "id": "machines",
+       "transparent": 0,
+       "opaque": 6,
+       "unknown": 0
+      },
+      {
+       "id": "services",
+       "transparent": 4,
+       "opaque": 0,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [],
+    "cycles": [],
+    "uncoveredContracts": [],
+    "scopeBoundary": []
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  },
+  {
+   "id": "shop-by-zone",
+   "name": "Shop by zone",
+   "source": "data",
+   "scope": "shop",
+   "grain": "leaves",
+   "from": null,
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "services",
+     "name": "Services",
+     "members": [
+      "cart",
+      "inventory",
+      "orders",
+      "web-ui"
+     ],
+     "existing": false
+    },
+    {
+     "id": "zone-one",
+     "name": "Zone one",
+     "members": [
+      "app-host-a",
+      "edge-host",
+      "zone-1"
+     ],
+     "existing": false
+    },
+    {
+     "id": "zone-two",
+     "name": "Zone two",
+     "members": [
+      "app-host-b",
+      "db-host",
+      "zone-2"
+     ],
+     "existing": false
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 3,
+     "grainElements": 10,
+     "singletons": 0,
+     "largest": 4,
+     "smallest": 3
+    },
+    "facts": {
+     "internal": {
+      "all": 5,
+      "static": 0,
+      "runtime": 3,
+      "none": 2,
+      "dependency": 3
+     },
+     "crossing": {
+      "all": 1,
+      "static": 0,
+      "runtime": 0,
+      "none": 1,
+      "dependency": 0
+     },
+     "external": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 1,
+     "external": 0
+    },
+    "cohesion": {
+     "overall": {
+      "n": 5,
+      "d": 6,
+      "value": 0.833333
+     },
+     "dependency": {
+      "n": 3,
+      "d": 3,
+      "value": 1
+     },
+     "perBlock": [
+      {
+       "id": "services",
+       "n": 3,
+       "d": 3,
+       "value": 1
+      },
+      {
+       "id": "zone-one",
+       "n": 1,
+       "d": 2,
+       "value": 0.5
+      },
+      {
+       "id": "zone-two",
+       "n": 1,
+       "d": 2,
+       "value": 0.5
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 1,
+     "density": {
+      "n": 1,
+      "d": 6,
+      "value": 0.166667
+     },
+     "perBlock": [
+      {
+       "id": "services",
+       "out": 0,
+       "in": 0
+      },
+      {
+       "id": "zone-one",
+       "out": 1,
+       "in": 0
+      },
+      {
+       "id": "zone-two",
+       "out": 0,
+       "in": 1
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 2,
+     "largest": 1,
+     "perBlock": [
+      {
+       "id": "services",
+       "groups": 0,
+       "witnesses": 0
+      },
+      {
+       "id": "zone-one",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "zone-two",
+       "groups": 1,
+       "witnesses": 1
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 1,
+      "value": 0
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 0,
+      "value": null
+     },
+     "blockPairs": {
+      "total": 1,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 1
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 4,
+      "opaque": 6,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {
+      "declared": 1
+     },
+     "perBlock": [
+      {
+       "id": "services",
+       "transparent": 4,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "zone-one",
+       "transparent": 0,
+       "opaque": 3,
+       "unknown": 0
+      },
+      {
+       "id": "zone-two",
+       "transparent": 0,
+       "opaque": 3,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [
+     {
+      "from": "zone-one",
+      "to": "zone-two",
+      "witnesses": [
+       "link-a-b"
+      ],
+      "kinds": {
+       "network-link": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "link-a-b"
+      ]
+     }
+    ],
+    "cycles": [],
+    "uncoveredContracts": [
+     {
+      "from": "zone-one",
+      "to": "zone-two",
+      "facts": [
+       "link-a-b"
+      ]
+     }
+    ],
+    "scopeBoundary": []
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  },
+  {
+   "id": "shop-uncovered",
+   "name": "The database host left out",
+   "source": "data",
+   "scope": "shop",
+   "grain": "leaves",
+   "from": null,
+   "note": null,
+   "status": "invalid",
+   "failedConditions": [
+    "V1"
+   ],
+   "notEvaluated": [],
+   "notApplicable": [],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "fail",
+     "failures": [
+      {
+       "code": "uncovered",
+       "message": "1 leaves of \"shop\" are in no block, so the blocks do not cover them: db-host.",
+       "witnesses": [
+        "db-host"
+       ]
+      }
+     ],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    }
+   ],
+   "blocks": [
+    {
+     "id": "machines",
+     "name": "machines",
+     "members": [
+      "app-host-a",
+      "app-host-b",
+      "edge-host",
+      "zone-1",
+      "zone-2"
+     ],
+     "existing": false
+    },
+    {
+     "id": "services",
+     "name": "services",
+     "members": [
+      "cart",
+      "inventory",
+      "orders",
+      "web-ui"
+     ],
+     "existing": false
+    }
+   ],
+   "placedByRest": [],
+   "measurements": null,
+   "evidence": null,
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate."
+   ]
+  },
+  {
+   "id": "shop-by-tier~split-core-machines",
+   "name": "Shop by tier, with core-machines split into its unconnected parts",
+   "source": "refinement",
+   "scope": "shop",
+   "grain": "leaves",
+   "from": {
+    "candidate": "shop-by-tier",
+    "op": {
+     "split": "core-machines",
+     "into": [
+      [
+       "app-host-a",
+       "app-host-b",
+       "db-host"
+      ],
+      [
+       "zone-2"
+      ]
+     ]
+    }
+   },
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "back-office",
+     "name": "back-office",
+     "members": [
+      "inventory",
+      "orders"
+     ],
+     "existing": false
+    },
+    {
+     "id": "core-machines-1",
+     "name": "core-machines-1",
+     "members": [
+      "app-host-a",
+      "app-host-b",
+      "db-host"
+     ],
+     "existing": false
+    },
+    {
+     "id": "edge-machines",
+     "name": "edge-machines",
+     "members": [
+      "edge-host",
+      "zone-1"
+     ],
+     "existing": false
+    },
+    {
+     "id": "presentation",
+     "name": "presentation",
+     "members": [
+      "cart",
+      "web-ui"
+     ],
+     "existing": false
+    },
+    {
+     "id": "zone-2",
+     "name": "zone-2",
+     "members": [
+      "zone-2"
+     ],
+     "existing": true
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 5,
+     "grainElements": 10,
+     "singletons": 1,
+     "largest": 3,
+     "smallest": 1
+    },
+    "facts": {
+     "internal": {
+      "all": 4,
+      "static": 0,
+      "runtime": 2,
+      "none": 2,
+      "dependency": 2
+     },
+     "crossing": {
+      "all": 2,
+      "static": 0,
+      "runtime": 1,
+      "none": 1,
+      "dependency": 1
+     },
+     "external": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 2,
+     "external": 0
+    },
+    "cohesion": {
+     "overall": {
+      "n": 4,
+      "d": 6,
+      "value": 0.666667
+     },
+     "dependency": {
+      "n": 2,
+      "d": 3,
+      "value": 0.666667
+     },
+     "perBlock": [
+      {
+       "id": "back-office",
+       "n": 1,
+       "d": 2,
+       "value": 0.5
+      },
+      {
+       "id": "core-machines-1",
+       "n": 2,
+       "d": 3,
+       "value": 0.666667
+      },
+      {
+       "id": "edge-machines",
+       "n": 0,
+       "d": 1,
+       "value": 0
+      },
+      {
+       "id": "presentation",
+       "n": 1,
+       "d": 2,
+       "value": 0.5
+      },
+      {
+       "id": "zone-2",
+       "n": 0,
+       "d": 0,
+       "value": null
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 2,
+     "density": {
+      "n": 2,
+      "d": 20,
+      "value": 0.1
+     },
+     "perBlock": [
+      {
+       "id": "back-office",
+       "out": 0,
+       "in": 1
+      },
+      {
+       "id": "core-machines-1",
+       "out": 0,
+       "in": 1
+      },
+      {
+       "id": "edge-machines",
+       "out": 1,
+       "in": 0
+      },
+      {
+       "id": "presentation",
+       "out": 1,
+       "in": 0
+      },
+      {
+       "id": "zone-2",
+       "out": 0,
+       "in": 0
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 4,
+     "largest": 1,
+     "perBlock": [
+      {
+       "id": "back-office",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "core-machines-1",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "edge-machines",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "presentation",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "zone-2",
+       "groups": 0,
+       "witnesses": 0
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 2,
+      "value": 0
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 1,
+      "value": 0
+     },
+     "blockPairs": {
+      "total": 2,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 2
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 4,
+      "opaque": 6,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {
+      "declared": 2
+     },
+     "perBlock": [
+      {
+       "id": "back-office",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "core-machines-1",
+       "transparent": 0,
+       "opaque": 3,
+       "unknown": 0
+      },
+      {
+       "id": "edge-machines",
+       "transparent": 0,
+       "opaque": 2,
+       "unknown": 0
+      },
+      {
+       "id": "presentation",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "zone-2",
+       "transparent": 0,
+       "opaque": 1,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [
+     {
+      "from": "edge-machines",
+      "to": "core-machines-1",
+      "witnesses": [
+       "link-edge-a"
+      ],
+      "kinds": {
+       "network-link": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "link-edge-a"
+      ]
+     },
+     {
+      "from": "presentation",
+      "to": "back-office",
+      "witnesses": [
+       "cart-places-order"
+      ],
+      "kinds": {
+       "invokes": 1
+      },
+      "classes": {
+       "runtime": 1
+      },
+      "uncoveredByContract": [
+       "cart-places-order"
+      ]
+     }
+    ],
+    "cycles": [],
+    "uncoveredContracts": [
+     {
+      "from": "edge-machines",
+      "to": "core-machines-1",
+      "facts": [
+       "link-edge-a"
+      ]
+     },
+     {
+      "from": "presentation",
+      "to": "back-office",
+      "facts": [
+       "cart-places-order"
+      ]
+     }
+    ],
+    "scopeBoundary": []
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  },
+  {
+   "id": "shop-by-tier~split-edge-machines",
+   "name": "Shop by tier, with edge-machines split into its unconnected parts",
+   "source": "refinement",
+   "scope": "shop",
+   "grain": "leaves",
+   "from": {
+    "candidate": "shop-by-tier",
+    "op": {
+     "split": "edge-machines",
+     "into": [
+      [
+       "edge-host"
+      ],
+      [
+       "zone-1"
+      ]
+     ]
+    }
+   },
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "back-office",
+     "name": "back-office",
+     "members": [
+      "inventory",
+      "orders"
+     ],
+     "existing": false
+    },
+    {
+     "id": "core-machines",
+     "name": "core-machines",
+     "members": [
+      "app-host-a",
+      "app-host-b",
+      "db-host",
+      "zone-2"
+     ],
+     "existing": false
+    },
+    {
+     "id": "edge-host",
+     "name": "edge-host",
+     "members": [
+      "edge-host"
+     ],
+     "existing": true
+    },
+    {
+     "id": "presentation",
+     "name": "presentation",
+     "members": [
+      "cart",
+      "web-ui"
+     ],
+     "existing": false
+    },
+    {
+     "id": "zone-1",
+     "name": "zone-1",
+     "members": [
+      "zone-1"
+     ],
+     "existing": true
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 5,
+     "grainElements": 10,
+     "singletons": 2,
+     "largest": 4,
+     "smallest": 1
+    },
+    "facts": {
+     "internal": {
+      "all": 4,
+      "static": 0,
+      "runtime": 2,
+      "none": 2,
+      "dependency": 2
+     },
+     "crossing": {
+      "all": 2,
+      "static": 0,
+      "runtime": 1,
+      "none": 1,
+      "dependency": 1
+     },
+     "external": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 2,
+     "external": 0
+    },
+    "cohesion": {
+     "overall": {
+      "n": 4,
+      "d": 6,
+      "value": 0.666667
+     },
+     "dependency": {
+      "n": 2,
+      "d": 3,
+      "value": 0.666667
+     },
+     "perBlock": [
+      {
+       "id": "back-office",
+       "n": 1,
+       "d": 2,
+       "value": 0.5
+      },
+      {
+       "id": "core-machines",
+       "n": 2,
+       "d": 3,
+       "value": 0.666667
+      },
+      {
+       "id": "edge-host",
+       "n": 0,
+       "d": 1,
+       "value": 0
+      },
+      {
+       "id": "presentation",
+       "n": 1,
+       "d": 2,
+       "value": 0.5
+      },
+      {
+       "id": "zone-1",
+       "n": 0,
+       "d": 0,
+       "value": null
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 2,
+     "density": {
+      "n": 2,
+      "d": 20,
+      "value": 0.1
+     },
+     "perBlock": [
+      {
+       "id": "back-office",
+       "out": 0,
+       "in": 1
+      },
+      {
+       "id": "core-machines",
+       "out": 0,
+       "in": 1
+      },
+      {
+       "id": "edge-host",
+       "out": 1,
+       "in": 0
+      },
+      {
+       "id": "presentation",
+       "out": 1,
+       "in": 0
+      },
+      {
+       "id": "zone-1",
+       "out": 0,
+       "in": 0
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 4,
+     "largest": 1,
+     "perBlock": [
+      {
+       "id": "back-office",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "core-machines",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "edge-host",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "presentation",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "zone-1",
+       "groups": 0,
+       "witnesses": 0
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 2,
+      "value": 0
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 1,
+      "value": 0
+     },
+     "blockPairs": {
+      "total": 2,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 2
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 4,
+      "opaque": 6,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {
+      "declared": 2
+     },
+     "perBlock": [
+      {
+       "id": "back-office",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "core-machines",
+       "transparent": 0,
+       "opaque": 4,
+       "unknown": 0
+      },
+      {
+       "id": "edge-host",
+       "transparent": 0,
+       "opaque": 1,
+       "unknown": 0
+      },
+      {
+       "id": "presentation",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "zone-1",
+       "transparent": 0,
+       "opaque": 1,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [
+     {
+      "from": "edge-host",
+      "to": "core-machines",
+      "witnesses": [
+       "link-edge-a"
+      ],
+      "kinds": {
+       "network-link": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "link-edge-a"
+      ]
+     },
+     {
+      "from": "presentation",
+      "to": "back-office",
+      "witnesses": [
+       "cart-places-order"
+      ],
+      "kinds": {
+       "invokes": 1
+      },
+      "classes": {
+       "runtime": 1
+      },
+      "uncoveredByContract": [
+       "cart-places-order"
+      ]
+     }
+    ],
+    "cycles": [],
+    "uncoveredContracts": [
+     {
+      "from": "edge-host",
+      "to": "core-machines",
+      "facts": [
+       "link-edge-a"
+      ]
+     },
+     {
+      "from": "presentation",
+      "to": "back-office",
+      "facts": [
+       "cart-places-order"
+      ]
+     }
+    ],
+    "scopeBoundary": []
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  },
+  {
+   "id": "shop-by-zone~split-zone-one",
+   "name": "Shop by zone, with zone-one split into its unconnected parts",
+   "source": "refinement",
+   "scope": "shop",
+   "grain": "leaves",
+   "from": {
+    "candidate": "shop-by-zone",
+    "op": {
+     "split": "zone-one",
+     "into": [
+      [
+       "app-host-a",
+       "edge-host"
+      ],
+      [
+       "zone-1"
+      ]
+     ]
+    }
+   },
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "services",
+     "name": "services",
+     "members": [
+      "cart",
+      "inventory",
+      "orders",
+      "web-ui"
+     ],
+     "existing": false
+    },
+    {
+     "id": "zone-1",
+     "name": "zone-1",
+     "members": [
+      "zone-1"
+     ],
+     "existing": true
+    },
+    {
+     "id": "zone-one-1",
+     "name": "zone-one-1",
+     "members": [
+      "app-host-a",
+      "edge-host"
+     ],
+     "existing": false
+    },
+    {
+     "id": "zone-two",
+     "name": "zone-two",
+     "members": [
+      "app-host-b",
+      "db-host",
+      "zone-2"
+     ],
+     "existing": false
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 4,
+     "grainElements": 10,
+     "singletons": 1,
+     "largest": 4,
+     "smallest": 1
+    },
+    "facts": {
+     "internal": {
+      "all": 5,
+      "static": 0,
+      "runtime": 3,
+      "none": 2,
+      "dependency": 3
+     },
+     "crossing": {
+      "all": 1,
+      "static": 0,
+      "runtime": 0,
+      "none": 1,
+      "dependency": 0
+     },
+     "external": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 1,
+     "external": 0
+    },
+    "cohesion": {
+     "overall": {
+      "n": 5,
+      "d": 6,
+      "value": 0.833333
+     },
+     "dependency": {
+      "n": 3,
+      "d": 3,
+      "value": 1
+     },
+     "perBlock": [
+      {
+       "id": "services",
+       "n": 3,
+       "d": 3,
+       "value": 1
+      },
+      {
+       "id": "zone-1",
+       "n": 0,
+       "d": 0,
+       "value": null
+      },
+      {
+       "id": "zone-one-1",
+       "n": 1,
+       "d": 2,
+       "value": 0.5
+      },
+      {
+       "id": "zone-two",
+       "n": 1,
+       "d": 2,
+       "value": 0.5
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 1,
+     "density": {
+      "n": 1,
+      "d": 12,
+      "value": 0.083333
+     },
+     "perBlock": [
+      {
+       "id": "services",
+       "out": 0,
+       "in": 0
+      },
+      {
+       "id": "zone-1",
+       "out": 0,
+       "in": 0
+      },
+      {
+       "id": "zone-one-1",
+       "out": 1,
+       "in": 0
+      },
+      {
+       "id": "zone-two",
+       "out": 0,
+       "in": 1
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 2,
+     "largest": 1,
+     "perBlock": [
+      {
+       "id": "services",
+       "groups": 0,
+       "witnesses": 0
+      },
+      {
+       "id": "zone-1",
+       "groups": 0,
+       "witnesses": 0
+      },
+      {
+       "id": "zone-one-1",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "zone-two",
+       "groups": 1,
+       "witnesses": 1
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 1,
+      "value": 0
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 0,
+      "value": null
+     },
+     "blockPairs": {
+      "total": 1,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 1
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 4,
+      "opaque": 6,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {
+      "declared": 1
+     },
+     "perBlock": [
+      {
+       "id": "services",
+       "transparent": 4,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "zone-1",
+       "transparent": 0,
+       "opaque": 1,
+       "unknown": 0
+      },
+      {
+       "id": "zone-one-1",
+       "transparent": 0,
+       "opaque": 2,
+       "unknown": 0
+      },
+      {
+       "id": "zone-two",
+       "transparent": 0,
+       "opaque": 3,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [
+     {
+      "from": "zone-one-1",
+      "to": "zone-two",
+      "witnesses": [
+       "link-a-b"
+      ],
+      "kinds": {
+       "network-link": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "link-a-b"
+      ]
+     }
+    ],
+    "cycles": [],
+    "uncoveredContracts": [
+     {
+      "from": "zone-one-1",
+      "to": "zone-two",
+      "facts": [
+       "link-a-b"
+      ]
+     }
+    ],
+    "scopeBoundary": []
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  },
+  {
+   "id": "shop-by-zone~split-zone-two",
+   "name": "Shop by zone, with zone-two split into its unconnected parts",
+   "source": "refinement",
+   "scope": "shop",
+   "grain": "leaves",
+   "from": {
+    "candidate": "shop-by-zone",
+    "op": {
+     "split": "zone-two",
+     "into": [
+      [
+       "app-host-b",
+       "db-host"
+      ],
+      [
+       "zone-2"
+      ]
+     ]
+    }
+   },
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "services",
+     "name": "services",
+     "members": [
+      "cart",
+      "inventory",
+      "orders",
+      "web-ui"
+     ],
+     "existing": false
+    },
+    {
+     "id": "zone-2",
+     "name": "zone-2",
+     "members": [
+      "zone-2"
+     ],
+     "existing": true
+    },
+    {
+     "id": "zone-one",
+     "name": "zone-one",
+     "members": [
+      "app-host-a",
+      "edge-host",
+      "zone-1"
+     ],
+     "existing": false
+    },
+    {
+     "id": "zone-two-1",
+     "name": "zone-two-1",
+     "members": [
+      "app-host-b",
+      "db-host"
+     ],
+     "existing": false
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 4,
+     "grainElements": 10,
+     "singletons": 1,
+     "largest": 4,
+     "smallest": 1
+    },
+    "facts": {
+     "internal": {
+      "all": 5,
+      "static": 0,
+      "runtime": 3,
+      "none": 2,
+      "dependency": 3
+     },
+     "crossing": {
+      "all": 1,
+      "static": 0,
+      "runtime": 0,
+      "none": 1,
+      "dependency": 0
+     },
+     "external": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 1,
+     "external": 0
+    },
+    "cohesion": {
+     "overall": {
+      "n": 5,
+      "d": 6,
+      "value": 0.833333
+     },
+     "dependency": {
+      "n": 3,
+      "d": 3,
+      "value": 1
+     },
+     "perBlock": [
+      {
+       "id": "services",
+       "n": 3,
+       "d": 3,
+       "value": 1
+      },
+      {
+       "id": "zone-2",
+       "n": 0,
+       "d": 0,
+       "value": null
+      },
+      {
+       "id": "zone-one",
+       "n": 1,
+       "d": 2,
+       "value": 0.5
+      },
+      {
+       "id": "zone-two-1",
+       "n": 1,
+       "d": 2,
+       "value": 0.5
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 1,
+     "density": {
+      "n": 1,
+      "d": 12,
+      "value": 0.083333
+     },
+     "perBlock": [
+      {
+       "id": "services",
+       "out": 0,
+       "in": 0
+      },
+      {
+       "id": "zone-2",
+       "out": 0,
+       "in": 0
+      },
+      {
+       "id": "zone-one",
+       "out": 1,
+       "in": 0
+      },
+      {
+       "id": "zone-two-1",
+       "out": 0,
+       "in": 1
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 2,
+     "largest": 1,
+     "perBlock": [
+      {
+       "id": "services",
+       "groups": 0,
+       "witnesses": 0
+      },
+      {
+       "id": "zone-2",
+       "groups": 0,
+       "witnesses": 0
+      },
+      {
+       "id": "zone-one",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "zone-two-1",
+       "groups": 1,
+       "witnesses": 1
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 1,
+      "value": 0
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 0,
+      "value": null
+     },
+     "blockPairs": {
+      "total": 1,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 1
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 4,
+      "opaque": 6,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {
+      "declared": 1
+     },
+     "perBlock": [
+      {
+       "id": "services",
+       "transparent": 4,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "zone-2",
+       "transparent": 0,
+       "opaque": 1,
+       "unknown": 0
+      },
+      {
+       "id": "zone-one",
+       "transparent": 0,
+       "opaque": 3,
+       "unknown": 0
+      },
+      {
+       "id": "zone-two-1",
+       "transparent": 0,
+       "opaque": 2,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [
+     {
+      "from": "zone-one",
+      "to": "zone-two-1",
+      "witnesses": [
+       "link-a-b"
+      ],
+      "kinds": {
+       "network-link": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "link-a-b"
+      ]
+     }
+    ],
+    "cycles": [],
+    "uncoveredContracts": [
+     {
+      "from": "zone-one",
+      "to": "zone-two-1",
+      "facts": [
+       "link-a-b"
+      ]
+     }
+    ],
+    "scopeBoundary": []
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  },
+  {
+   "id": "shop-declared",
+   "name": "The declared hierarchy of shop",
+   "source": "declared",
+   "scope": "shop",
+   "grain": "leaves",
+   "from": null,
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "fulfilment",
+     "name": "fulfilment",
+     "members": [
+      "inventory",
+      "orders"
+     ],
+     "existing": true
+    },
+    {
+     "id": "infrastructure",
+     "name": "infrastructure",
+     "members": [
+      "app-host-a",
+      "app-host-b",
+      "db-host",
+      "edge-host",
+      "zone-1",
+      "zone-2"
+     ],
+     "existing": true
+    },
+    {
+     "id": "storefront",
+     "name": "storefront",
+     "members": [
+      "cart",
+      "web-ui"
+     ],
+     "existing": true
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 3,
+     "grainElements": 10,
+     "singletons": 0,
+     "largest": 6,
+     "smallest": 2
+    },
+    "facts": {
+     "internal": {
+      "all": 5,
+      "static": 0,
+      "runtime": 2,
+      "none": 3,
+      "dependency": 2
+     },
+     "crossing": {
+      "all": 1,
+      "static": 0,
+      "runtime": 1,
+      "none": 0,
+      "dependency": 1
+     },
+     "external": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 1,
+     "external": 0
+    },
+    "cohesion": {
+     "overall": {
+      "n": 5,
+      "d": 6,
+      "value": 0.833333
+     },
+     "dependency": {
+      "n": 2,
+      "d": 3,
+      "value": 0.666667
+     },
+     "perBlock": [
+      {
+       "id": "fulfilment",
+       "n": 1,
+       "d": 2,
+       "value": 0.5
+      },
+      {
+       "id": "infrastructure",
+       "n": 3,
+       "d": 3,
+       "value": 1
+      },
+      {
+       "id": "storefront",
+       "n": 1,
+       "d": 2,
+       "value": 0.5
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 1,
+     "density": {
+      "n": 1,
+      "d": 6,
+      "value": 0.166667
+     },
+     "perBlock": [
+      {
+       "id": "fulfilment",
+       "out": 0,
+       "in": 1
+      },
+      {
+       "id": "infrastructure",
+       "out": 0,
+       "in": 0
+      },
+      {
+       "id": "storefront",
+       "out": 1,
+       "in": 0
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 2,
+     "largest": 1,
+     "perBlock": [
+      {
+       "id": "fulfilment",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "infrastructure",
+       "groups": 0,
+       "witnesses": 0
+      },
+      {
+       "id": "storefront",
+       "groups": 1,
+       "witnesses": 1
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 1,
+      "value": 0
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 1,
+      "value": 0
+     },
+     "blockPairs": {
+      "total": 1,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 1
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 4,
+      "opaque": 6,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {
+      "declared": 1
+     },
+     "perBlock": [
+      {
+       "id": "fulfilment",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "infrastructure",
+       "transparent": 0,
+       "opaque": 6,
+       "unknown": 0
+      },
+      {
+       "id": "storefront",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [
+     {
+      "from": "storefront",
+      "to": "fulfilment",
+      "witnesses": [
+       "cart-places-order"
+      ],
+      "kinds": {
+       "invokes": 1
+      },
+      "classes": {
+       "runtime": 1
+      },
+      "uncoveredByContract": [
+       "cart-places-order"
+      ]
+     }
+    ],
+    "cycles": [],
+    "uncoveredContracts": [
+     {
+      "from": "storefront",
+      "to": "fulfilment",
+      "facts": [
+       "cart-places-order"
+      ]
+     }
+    ],
+    "scopeBoundary": []
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  },
+  {
+   "id": "shop-declared~split-infrastructure",
+   "name": "The declared hierarchy of shop, with infrastructure split into its unconnected parts",
+   "source": "refinement",
+   "scope": "shop",
+   "grain": "leaves",
+   "from": {
+    "candidate": "shop-declared",
+    "op": {
+     "split": "infrastructure",
+     "into": [
+      [
+       "app-host-a",
+       "app-host-b",
+       "db-host",
+       "edge-host"
+      ],
+      [
+       "zone-1"
+      ],
+      [
+       "zone-2"
+      ]
+     ]
+    }
+   },
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "fulfilment",
+     "name": "fulfilment",
+     "members": [
+      "inventory",
+      "orders"
+     ],
+     "existing": true
+    },
+    {
+     "id": "infrastructure-1",
+     "name": "infrastructure-1",
+     "members": [
+      "app-host-a",
+      "app-host-b",
+      "db-host",
+      "edge-host"
+     ],
+     "existing": false
+    },
+    {
+     "id": "infrastructure-2",
+     "name": "infrastructure-2",
+     "members": [
+      "zone-1"
+     ],
+     "existing": false
+    },
+    {
+     "id": "infrastructure-3",
+     "name": "infrastructure-3",
+     "members": [
+      "zone-2"
+     ],
+     "existing": false
+    },
+    {
+     "id": "storefront",
+     "name": "storefront",
+     "members": [
+      "cart",
+      "web-ui"
+     ],
+     "existing": true
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 5,
+     "grainElements": 10,
+     "singletons": 2,
+     "largest": 4,
+     "smallest": 1
+    },
+    "facts": {
+     "internal": {
+      "all": 5,
+      "static": 0,
+      "runtime": 2,
+      "none": 3,
+      "dependency": 2
+     },
+     "crossing": {
+      "all": 1,
+      "static": 0,
+      "runtime": 1,
+      "none": 0,
+      "dependency": 1
+     },
+     "external": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 1,
+     "external": 0
+    },
+    "cohesion": {
+     "overall": {
+      "n": 5,
+      "d": 6,
+      "value": 0.833333
+     },
+     "dependency": {
+      "n": 2,
+      "d": 3,
+      "value": 0.666667
+     },
+     "perBlock": [
+      {
+       "id": "fulfilment",
+       "n": 1,
+       "d": 2,
+       "value": 0.5
+      },
+      {
+       "id": "infrastructure-1",
+       "n": 3,
+       "d": 3,
+       "value": 1
+      },
+      {
+       "id": "infrastructure-2",
+       "n": 0,
+       "d": 0,
+       "value": null
+      },
+      {
+       "id": "infrastructure-3",
+       "n": 0,
+       "d": 0,
+       "value": null
+      },
+      {
+       "id": "storefront",
+       "n": 1,
+       "d": 2,
+       "value": 0.5
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 1,
+     "density": {
+      "n": 1,
+      "d": 20,
+      "value": 0.05
+     },
+     "perBlock": [
+      {
+       "id": "fulfilment",
+       "out": 0,
+       "in": 1
+      },
+      {
+       "id": "infrastructure-1",
+       "out": 0,
+       "in": 0
+      },
+      {
+       "id": "infrastructure-2",
+       "out": 0,
+       "in": 0
+      },
+      {
+       "id": "infrastructure-3",
+       "out": 0,
+       "in": 0
+      },
+      {
+       "id": "storefront",
+       "out": 1,
+       "in": 0
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 2,
+     "largest": 1,
+     "perBlock": [
+      {
+       "id": "fulfilment",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "infrastructure-1",
+       "groups": 0,
+       "witnesses": 0
+      },
+      {
+       "id": "infrastructure-2",
+       "groups": 0,
+       "witnesses": 0
+      },
+      {
+       "id": "infrastructure-3",
+       "groups": 0,
+       "witnesses": 0
+      },
+      {
+       "id": "storefront",
+       "groups": 1,
+       "witnesses": 1
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 1,
+      "value": 0
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 1,
+      "value": 0
+     },
+     "blockPairs": {
+      "total": 1,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 1
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 4,
+      "opaque": 6,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {
+      "declared": 1
+     },
+     "perBlock": [
+      {
+       "id": "fulfilment",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "infrastructure-1",
+       "transparent": 0,
+       "opaque": 4,
+       "unknown": 0
+      },
+      {
+       "id": "infrastructure-2",
+       "transparent": 0,
+       "opaque": 1,
+       "unknown": 0
+      },
+      {
+       "id": "infrastructure-3",
+       "transparent": 0,
+       "opaque": 1,
+       "unknown": 0
+      },
+      {
+       "id": "storefront",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [
+     {
+      "from": "storefront",
+      "to": "fulfilment",
+      "witnesses": [
+       "cart-places-order"
+      ],
+      "kinds": {
+       "invokes": 1
+      },
+      "classes": {
+       "runtime": 1
+      },
+      "uncoveredByContract": [
+       "cart-places-order"
+      ]
+     }
+    ],
+    "cycles": [],
+    "uncoveredContracts": [
+     {
+      "from": "storefront",
+      "to": "fulfilment",
+      "facts": [
+       "cart-places-order"
+      ]
+     }
+    ],
+    "scopeBoundary": []
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  },
+  {
+   "id": "shop-services-and-machines~split-machines",
+   "name": "Services and machines, with machines split into its unconnected parts",
+   "source": "refinement",
+   "scope": "shop",
+   "grain": "leaves",
+   "from": {
+    "candidate": "shop-services-and-machines",
+    "op": {
+     "split": "machines",
+     "into": [
+      [
+       "app-host-a",
+       "app-host-b",
+       "db-host",
+       "edge-host"
+      ],
+      [
+       "zone-1"
+      ],
+      [
+       "zone-2"
+      ]
+     ]
+    }
+   },
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "machines-1",
+     "name": "machines-1",
+     "members": [
+      "app-host-a",
+      "app-host-b",
+      "db-host",
+      "edge-host"
+     ],
+     "existing": false
+    },
+    {
+     "id": "services",
+     "name": "services",
+     "members": [
+      "cart",
+      "inventory",
+      "orders",
+      "web-ui"
+     ],
+     "existing": false
+    },
+    {
+     "id": "zone-1",
+     "name": "zone-1",
+     "members": [
+      "zone-1"
+     ],
+     "existing": true
+    },
+    {
+     "id": "zone-2",
+     "name": "zone-2",
+     "members": [
+      "zone-2"
+     ],
+     "existing": true
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 4,
+     "grainElements": 10,
+     "singletons": 2,
+     "largest": 4,
+     "smallest": 1
+    },
+    "facts": {
+     "internal": {
+      "all": 6,
+      "static": 0,
+      "runtime": 3,
+      "none": 3,
+      "dependency": 3
+     },
+     "crossing": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "external": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 0,
+     "external": 0
+    },
+    "cohesion": {
+     "overall": {
+      "n": 6,
+      "d": 6,
+      "value": 1
+     },
+     "dependency": {
+      "n": 3,
+      "d": 3,
+      "value": 1
+     },
+     "perBlock": [
+      {
+       "id": "machines-1",
+       "n": 3,
+       "d": 3,
+       "value": 1
+      },
+      {
+       "id": "services",
+       "n": 3,
+       "d": 3,
+       "value": 1
+      },
+      {
+       "id": "zone-1",
+       "n": 0,
+       "d": 0,
+       "value": null
+      },
+      {
+       "id": "zone-2",
+       "n": 0,
+       "d": 0,
+       "value": null
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 0,
+     "density": {
+      "n": 0,
+      "d": 12,
+      "value": 0
+     },
+     "perBlock": [
+      {
+       "id": "machines-1",
+       "out": 0,
+       "in": 0
+      },
+      {
+       "id": "services",
+       "out": 0,
+       "in": 0
+      },
+      {
+       "id": "zone-1",
+       "out": 0,
+       "in": 0
+      },
+      {
+       "id": "zone-2",
+       "out": 0,
+       "in": 0
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 0,
+     "largest": 0,
+     "perBlock": [
+      {
+       "id": "machines-1",
+       "groups": 0,
+       "witnesses": 0
+      },
+      {
+       "id": "services",
+       "groups": 0,
+       "witnesses": 0
+      },
+      {
+       "id": "zone-1",
+       "groups": 0,
+       "witnesses": 0
+      },
+      {
+       "id": "zone-2",
+       "groups": 0,
+       "witnesses": 0
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 0,
+      "value": null
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 0,
+      "value": null
+     },
+     "blockPairs": {
+      "total": 0,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 0
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 4,
+      "opaque": 6,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {},
+     "perBlock": [
+      {
+       "id": "machines-1",
+       "transparent": 0,
+       "opaque": 4,
+       "unknown": 0
+      },
+      {
+       "id": "services",
+       "transparent": 4,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "zone-1",
+       "transparent": 0,
+       "opaque": 1,
+       "unknown": 0
+      },
+      {
+       "id": "zone-2",
+       "transparent": 0,
+       "opaque": 1,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [],
+    "cycles": [],
+    "uncoveredContracts": [],
+    "scopeBoundary": []
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  }
+ ],
+ "note": "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate."
+}

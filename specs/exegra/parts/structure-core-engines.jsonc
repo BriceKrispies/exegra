@@ -43,6 +43,30 @@
           "trusted-js-shell"
         ],
         "language": "js"
+      },
+      "interface": {
+        "inputs": [
+          "claim-scenarios-run",
+          "engine-diverges",
+          "engine-load-requested",
+          "engine-not-built",
+          "engine-run-called",
+          "engine-run-intent",
+          "engine-run-refused",
+          "golden-replayed",
+          "worker-load-failed"
+        ],
+        "outputs": [
+          "engine-load-settled",
+          "engine-run-failed",
+          "engine-run-finished",
+          "golden-compared",
+          "sim-run-failed",
+          "sim-trace-ready"
+        ],
+        "observables": [
+          "engine-under-test-flow.agrees"
+        ]
       }
     },
     {
@@ -69,17 +93,30 @@
       "parent": "semantic-core",
       "category": "logical",
       "runsIn": "both",
-      "purpose": "Checks that a component's abstract behavior and the behaviors of its children agree at its boundary, so a simulation can go deeper region by region without drifting from the shallower model.",
+      "purpose": "Behavioural composition along the hierarchy (docs/composition.md): the event interfaces of elements and ports, declared and inferred; a composite's derived behaviour as its members composed on the engine with their internal events hidden; declared abstractions of member sets checked against the composition of their members by comparing boundary traces; scenarios' behavioural cuts and environment assumptions; order independence of composition; claim transfer by preservation rules; and same-subject alternative machines.",
       "responsibilities": [
-        "Run the refined behaviors, project their trace onto the component's boundary and check that the abstract behavior allows it",
-        "Report the first diverging boundary event as a violated claim",
-        "Choose per component whether a run uses the abstract behavior or its children, following the collapse state of the view"
+        "Read every element's interface off its members' behaviours (inputs, outputs, internal events, observables read from outside), compare it with a declared interface, and report a cross-element state read that a declared interface does not export (behavior.reads-unexported) and an event that belongs to no interface (event.no-interface)",
+        "Derive a composite's behaviour in a scenario as the scenario's machines inside it, composed with the rest in one engine input, with the events internal to it hidden; the boundary trace is a projection computed in Lean (engine.boundary)",
+        "Check a declared abstraction (behavior.abstracts, member sets of any elements, at several levels) by running each driving scenario with the region at the abstraction and at its members and comparing the boundary traces in Lean (engine.refineBoundary): a step correspondence (certificate) or the first boundary counterexample, with strength exact, conservative or incomplete",
+        "Run a region at the level a scenario's cut declares, or at another level given on the command line (simulate --level), never at a level a view chooses; report every delivered event an omitted element would receive that no environment assumption covers (scenario.environment-unassumed)",
+        "Run each scenario with its behaviours in other orders and compare the verdicts of its claims (order independence, invariant I2)",
+        "Decide whether a claim moves between levels by the preservation rules: safety over the boundary down a certified refinement, liveness never without a fairness hypothesis, anything else not transferred with the reason",
+        "Report same-subject alternative machines, two behaviours of one element at one level that share an event, never run together and are related by no abstraction (gap.alternative-machines)"
       ],
       "implementation": {
-        "status": "not-implemented",
-        "modules": [],
-        "notes": "Planned: WG-4666. Not built yet; its claims stay not evaluated until recorded evidence supports them."
-      }
+        "status": "manual",
+        "modules": [
+          "src/core/composition.js"
+        ],
+        "language": "js",
+        "notes": "Built by WG-5729 (multiscale M6, WG-5697); supersedes the plan of WG-4666, whose depth goal it keeps while the level comes from declared behavioural cuts instead of the view's collapse state. It runs no behaviour itself: compositions are engine inputs, hiding and the comparison of runs are formal/Exegra/Boundary.lean at the call boundary."
+      },
+      "unknowns": [
+        "A refinement certificate covers the deterministic scheduler's run of each driving scenario, not every interleaving of the two systems: comparing every interleaving and fault mask needs a product of two explorations (WG-5734).",
+        "The boundary traces are compared as sequences: when the members' hidden steps change the order of simultaneous boundary events of independent machines (real-write-recorded with write-endpoint-flow in place of the server side), the check reports a counterexample that a comparison up to the order of independent simultaneous events would accept (WG-5734).",
+        "Composition is the concatenation of the machine lists of one engine input; the theorem that it equals the composition of separately elaborated systems (Sys.compose), and that refinement is preserved by composition with a third system, belong to WG-5685.",
+        "session-flow and project-session-flow, and engine-module-flow and engine-call-flow, are still alternative machines of one element (gap.alternative-machines): reconciling them, and the session's two vocabularies of one commit path (transaction-committed against commit-notified), is WG-5733."
+      ]
     },
     {
       "id": "chaos-aspect",
@@ -142,25 +179,29 @@
       "runsIn": "both",
       "purpose": "What a simulation engine is judged by: the engine input Exegra derives from the validated model for one scenario and fault set, and the trace format the engine must produce. A golden conformance suite holds an input and a reference trace for every shipped scenario.",
       "responsibilities": [
-        "Derive the engine input from the model: the scenario, its behaviors with variables, states and transitions, the events and the faults, with expressions as strings, so an engine needs no knowledge of JSONC, the meta-model or validation",
+        "Derive the engine input from the model in Lean (formal/Exegra/Lower/Input.lean, Exegra.Lower.engineInput, WG-5683), called through src/core/engine.js (engineInput) with the entities the lowering reads: the scenario, its behaviors with variables, states and transitions, the events and the faults, with expressions as strings, so an engine needs no knowledge of JSONC, the meta-model or validation",
         "Define the trace format field by field, with a format version",
         "Run any engine against the golden suite, in-process or as a command reading an input on stdin and writing a trace on stdout, and report the first differing step and field",
-        "Give an implementation-level behavior the declared types of the references its expressions read (behaviorTypes: time as i64, each variable repr, each received payload field, lowered so a timestamp is i64, a duration u64, a declared id or scalar its representation, an option or optional field option), and name the time unit of a machine (machineTimeUnit)",
-        "Derive the machines a quota pool runs as (src/core/pools.js, WG-5278): one per pooled limit and modelled member, <pool>-<limit>-m<k>, with subject the pool's holder, states normal and throttled and the pool variables; usage is admitted on headroom, or within the fair share when throttled; a window end throttles a member over its share for the stated consecutive windows unless its exemption applies from that window, releases after the stated windows under, resets a rate and advances the window; an exemption is recorded the first time it is set, and lifts a throttle only when retroactive. simulationInput adds the machines of the pools a scenario lists after its behaviors, and the trace check and the proof plan count them among the scenario's machines"
+        "Give an implementation-level behavior the declared types of the references its expressions read (Exegra.Lower.behaviorTypes: time as i64, each variable repr, each received payload field, lowered so a timestamp is i64, a duration u64, a declared id or scalar its representation, an option or optional field option), and name the time unit of a machine (machineTimeUnit, src/core/time-units.js, which also holds the durations and units validation and the claim methods read)",
+        "Derive the machines a quota pool runs as (Exegra.Lower.poolMachines in formal/Exegra/Lower/Input.lean, WG-5278, WG-5683): one per pooled limit and modelled member, <pool>-<limit>-m<k>, with subject the pool's holder, states normal and throttled and the pool variables; usage is admitted on headroom, or within the fair share when throttled; a window end throttles a member over its share for the stated consecutive windows unless its exemption applies from that window, releases after the stated windows under, resets a rate and advances the window; an exemption is recorded the first time it is set, and lifts a throttle only when retroactive. the lowering adds the machines of the pools a scenario lists after its behaviors, and the trace check and the proof plan count them among the scenario's machines",
+        "Lower a scenario to a system of the behaviour calculus (Exegra.Lower.lower in formal/Exegra/Lower.lean: its engine input, the format-2 decoder and the elaborator), refusing with the elaborator's reason a scenario the calculus does not take; at the call boundary engine.input gives a scenario's engine input and engine.runScenario its trace, from the model's entities"
       ],
       "implementation": {
         "status": "manual",
         "modules": [
-          "src/core/sim-input.js",
+          "formal/Exegra/Lower.lean",
+          "formal/Exegra/Lower/Input.lean",
+          "src/core/time-units.js",
           "tests/conformance/",
-          "src/core/pools.js"
+          "tests/fixtures/lowering/"
         ],
-        "notes": "tests/conformance/ holds the fixture specification, the committed goldens and the README that lists what the fixture covers.",
-        "language": "js"
+        "notes": "tests/conformance/ holds the fixture specification, the committed goldens and the README that lists what the fixture covers. tests/fixtures/lowering/ holds the engine inputs and distribution tables the JavaScript lowering (src/core/sim-input.js, pools.js, distributions.js, deleted by WG-5683) derived, which the Lean lowering reproduces (tests/core/lower.test.js), and timed.jsonc, which exercises every branch of the timed lowering. The shell sends the lowering only what it reads of the scenario (its own behaviors with their states and transitions, the faults, workloads and pools it names, every event with its payload alone, prose left out) and keeps the 64 latest answers by request text; measured on specs/exegra (WG-5683): a claims run makes 73 distinct lowering calls, about 46 KB and 7 ms each in the WebAssembly core, where the first version sent about 118 KB and took about 40 ms.",
+        "language": "mixed"
       },
       "unknowns": [
-        "Engine input and trace format 2 (contracts engine-input-v2 and trace-v2) are derived by simulationInput whenever a specification uses a format-2 construct (needsFormat2, simulationInputV2 in src/core/sim-input.js) and run by the engine's version-2 semantics (engine/exegra-engine/src/lib.rs dispatches on the version). Not yet: format-2 goldens (tests/conformance/goldens holds version 1 only), and the WG-4741 items: crash-instance, meters and the cost metric in the engine, and calibration, sensitivity, the operating envelope and revision binding of metric claims. A specification that uses no format-2 construct still derives version 1, unchanged.",
-        "The machines a quota pool runs as are derived, not entities: renaming a pool does not rewrite claim expressions that name them, and the simulator panel and inspector list only declared behaviors (WG-5281)."
+        "Engine input and trace format 2 (contracts engine-input-v2 and trace-v2) are derived by the Lean lowering (Exegra.Lower.engineInput) whenever a specification uses a format-2 construct and run by the engine's version-2 semantics (engine/exegra-engine/src/lib.rs dispatches on the version). Not yet: format-2 goldens (tests/conformance/goldens holds version 1 only), and the WG-4741 items: crash-instance, meters and the cost metric in the engine, and calibration, sensitivity, the operating envelope and revision binding of metric claims. A specification that uses no format-2 construct still derives version 1, unchanged.",
+        "The machines a quota pool runs as are derived, not entities: renaming a pool does not rewrite claim expressions that name them, and the simulator panel and inspector list only declared behaviors (WG-5281).",
+        "Exegra.Lower.lower gives a system of the behaviour calculus only for a scenario the elaborator takes (resources and resource faults included since WG-5683); a scenario with links, workloads, keyed instances, routes or measured outputs is LowerError.refused, so engine.run and engine.runScenario still run the lowered engine input through the version-2 dispatch (the legacy interpreter outside the fragment) rather than Exec.runTrace of the lowered system, there is no engine_entry_eq, and the conditions the lowering relies on are not a decidable WellFormed in Lean with lower_ok and per-condition validate codes (WG-5683, criteria 5 to 7)."
       ],
       "tags": [
         "verdict-kernel"
@@ -204,23 +245,34 @@
         "Prove that holds, returned only on an empty frontier, means the invariant holds in every reachable state of the calculus with no bound (explore_holds_invariant), and that a counterexample replays through the successor function to a state where the property fails (explore_cex_real), with only Lean's standard axioms",
         "Report \"verified by Lean for all N configurations\" distinctly from trace-level checks",
         "Define the temporal forms never, precedes, eventually and response within a time bound over finite runs of the calculus (BehavCheck.lean: FinSat, monitor), and check them with the generic breadth-first search over the product of the calculus with a monitor (ProveB.lean: tsysB, tcheckB)",
-        "Prove the monitor agrees with the definition of each form on every finite run (monitor_sound), that a holds of the temporal check covers every reachable product node (tcheckB_holds) and that a counterexample is a real path of the product to a violating node (tcheckB_cex); paths cut off by the bound or the state budget are reported incomplete, never holds"
+        "Prove the monitor agrees with the definition of each form on every finite run (monitor_sound), that a holds of the temporal check covers every reachable product node (tcheckB_holds) and that a counterexample is a real path of the product to a violating node (tcheckB_cex); paths cut off by the bound or the state budget are reported incomplete, never holds",
+        "Report why a search is incomplete (Gen.Reason): the bound, when a run hit it, or the state cap, when a run was truncated; classify scheduler runs as quiescent (their last state is deadlocked, run_quiescent_deadlocked), bound-hit or truncated",
+        "Keep the calculus state space finite where the scenario's is: attempt counts stop at the largest occurrence a fault names (Cfg.attCap), so a run can return to a state",
+        "Search the reachable states of Exec.gen for a weakly fair lasso refuting a GF or FG claim, returned only when checkLasso accepts it (lassoSearch_sound gives the hypotheses of lasso_refutes), and for a ranking proving a GF claim under weak fairness, accepted only by checkRanking (rankProves_sound, from response_of_ranking)"
       ],
       "unknowns": [
         "The engine input (format version 1) carries no bound of a scenario's fault model, so every subset of the scenario's faults is explored; the concurrency bounds of fault models are not applied yet.",
         "A fault acts for the whole run or not at all: a fault without an occurrence cannot act on some deliveries of its event and not on others.",
         "Breadth-first order makes a counterexample one of the fewest steps, but that is not proved.",
         "The Rust explorer for large state spaces is not built yet (planned: WG-4650); it will be checked differentially against this one.",
-        "Evaluation errors and failed steps end a path without being reported as such: a configuration whose invariant cannot be evaluated counts as a violation, and a failed step has no successor.",
         "Format 2 inputs are not explored yet (planned: WG-4664, WG-4715). The specified relation adds internal entries to the simultaneous-order choice, the new fault kinds to the mask, and one successor per choice value and per instance of an any route; sampled draws are fixed by a seed named first in the result, and a result is shown as verified only when the scenario has no sampled site. Scenarios with workloads need a short horizon and maxArrivals, and keyed populations of thousands of clients are beyond reach. When a timed fault acts is not explored (WG-4704).",
         "Temporal claims are checked without the claim's negatives and without the trace check's vacuity rules (a never whose matcher cannot occur in the scenario holds here without a note).",
-        "A violating prefix of a never or precedes claim is reported as the counterexample, not extended to a complete run; any extension violates it too, but that is not a theorem."
+        "A violating prefix of a never or precedes claim is reported as the counterexample, not extended to a complete run; any extension violates it too, but that is not a theorem.",
+        "A configuration whose invariant cannot be evaluated counts as a violation, and a failed step leads to the error state, which has no successor and violates every invariant.",
+        "Strong fairness is not checked: a liveness claim citing a fairness assumption of kind strong is reported not supported.",
+        "FG liveness claims are decided only by refutation (a weakly fair lasso); no proof rule for FG is implemented, so an FG claim with no lasso is reported not supported.",
+        "The ranking search assigns ranks backwards from the states that satisfy the property; when a step other than the helpful one raises the rank, checkRanking fails and a GF claim that holds is reported not supported.",
+        "Liveness is checked over every run, Zeno runs included. On a finite state space every cycle keeps the time, so every lasso with a step of the relation is a Zeno run and is reported as one; liveness over non-Zeno runs only (NonZeno) is not checked, and a scenario whose time grows without bound has infinitely many states, so its liveness claims are incomplete.",
+        "Fairness is per label: with sampled delays every (entry, draws) label is its own action, a stronger assumption than fairness per entry; without sampled delays a label is its entry.",
+        "The attempt cap (Cfg.attCap) is argued, not proved, to give the same fault matches as format 2's unbounded attempt counts: no theorem relates the two.",
+        "exegra prove does not search for k-inductive strengthenings; kInduction_sound is used only in hand-written proofs."
       ],
       "implementation": {
         "status": "manual",
         "modules": [
           "formal/Exegra/Core/BehavCheck.lean",
-          "formal/Exegra/Search.lean"
+          "formal/Exegra/Search.lean",
+          "formal/Exegra/Core/BehavLive.lean"
         ],
         "notes": "formal/Exegra/Core/BehavCheck.lean: exploreB over the calculus scheduler's successor function, explore_holds_invariant and explore_cex_real, runs (IsRun), the temporal forms (TForm, FinSat), the monitor and monitor_sound. formal/Exegra/Search.lean: the generic breadth-first search over a node type with search_sound and search_counterexample_real. formal/Exegra/ProveB.lean: the claim invariants of a format-2 input over the calculus state (claimInvB), the product with a monitor (tsysB), tcheckB, tcheckB_holds, tcheckB_cex, the verdicts a generated proof file states (verdictOf, verdictOf_holds, tverdictOf) and the exegra-lean explore and temporal protocols. Axioms pinned with #guard_msgs. Format 1, and with it Explore.lean and Temporal.lean, was removed (WG-5681).",
         "language": "lean"
@@ -280,7 +332,9 @@
         "Evaluate a run to a trace in the documented format",
         "Prove determinism of the step function, at most one fired transition per behavior per step, and termination under the step limit",
         "Serve as the reference for differential checking of the Rust engine on goldens and generated inputs",
-        "Run, as the engine of the application (engine.run and exegra-lean), the implementation Exegra.Impl (formal/Exegra/Impl/): expressions parsed at most once per run, arithmetic evaluated on unboxed floats, a step counter instead of measuring the list of steps, and an in-place JSON writer; Exegra.Impl.runAnyValue_eq proves it equal to the definition Exegra.runAnyValue on every input, so the theorems about the definition hold of what runs"
+        "Run, as the engine of the application (engine.run and exegra-lean), the implementation Exegra.Impl (formal/Exegra/Impl/): expressions parsed at most once per run, arithmetic evaluated on exact rationals, a step counter instead of measuring the list of steps, and an in-place JSON writer; Exegra.Impl.runAnyValue_eq proves it equal to the definition Exegra.runAnyValue on every input, so the theorems about the definition hold of what runs",
+        "Hold every number as an exact rational (Value.num carries a Rat; owner decision 2026-11-27, WG-5683): a JSON number and an expression literal are the exact value of their decimal text (Num.ofDecimal), arithmetic is exact, and a number is written as JavaScript writes the double nearest to it, the nearest double and its shortest digits computed in integer arithmetic (Num.jsNumberToString); no Float is used in formal/Exegra",
+        "Parse JSON text by reading its UTF-8 bytes by index (Json.parse), accepting and refusing exactly what the character parser it replaced accepts and refuses (Json.charParse, kept; #guard sameParse over a set of texts), with objects built member by member as objInsert builds them"
       ],
       "implementation": {
         "status": "manual",
@@ -298,9 +352,10 @@
           "formal/Exegra/Trace.lean",
           "formal/Exegra/Value.lean",
           "formal/Exegra/Format2B.lean",
-          "tools/gen-engine-inputs.js"
+          "tools/gen-engine-inputs.js",
+          "formal/Exegra/Boundary.lean"
         ],
-        "notes": "A Lake project (Lean 4, toolchain pinned in formal/lean-toolchain, standard library only). Exegra/Core/ is the behaviour calculus and its scheduler (Behav, BehavExec, BehavRename, BehavCheck); Exegra/Elab.lean elaborates a format-2 input into it; Exegra/Format2.lean is the legacy format-2 interpreter for inputs outside the fragment; Exegra/Format2B.lean dispatches (V2.runInput: traceOfB for elaborated inputs, the legacy traceOf otherwise, marked \"semantics\": \"legacy\") and is the entry point Exegra.runAnyValue, which refuses version 1; Value, Json, Number, Expr, Input and Trace are the shared parts. Main is the exegra-lean executable (engine input JSON on stdin, trace JSON on stdout; --legacy runs the legacy interpreter, for the differential check). npm run build:formal runs lake build in formal/; formal/.lake/ is build output, ignored by git and outside the traceability surface. tools/differential.js compares the native Rust engine with exegra-lean on the goldens and on seeded inputs from tools/gen-engine-inputs.js, and with --calculus the calculus path with the legacy interpreter. Exegra/Impl/ is what the application runs: Impl/Json.lean (the in-place writer, write'_eq), Impl/Semantics.lean (the definition with that writer) and Impl/Refinement.lean (runAnyValue_eq and runAny_eq, axioms pinned with #guard_msgs). Format 1 (Semantics, Properties, Lift, Explore, Prove, Temporal, Impl/Expr) was removed (WG-5681).",
+        "notes": "A Lake project (Lean 4, toolchain pinned in formal/lean-toolchain, standard library only). Exegra/Core/ is the behaviour calculus and its scheduler (Behav, BehavExec, BehavRename, BehavCheck); Exegra/Elab.lean elaborates a format-2 input into it; Exegra/Format2.lean is the legacy format-2 interpreter for inputs outside the fragment; Exegra/Format2B.lean dispatches (V2.runInput: traceOfB for elaborated inputs, the legacy traceOf otherwise, marked \"semantics\": \"legacy\") and is the entry point Exegra.runAnyValue, which refuses version 1; Value, Json, Number, Expr, Input and Trace are the shared parts. Main is the exegra-lean executable (engine input JSON on stdin, trace JSON on stdout; --legacy runs the legacy interpreter, for the differential check). npm run build:formal runs lake build in formal/; formal/.lake/ is build output, ignored by git and outside the traceability surface. tools/differential.js compares the native Rust engine with exegra-lean on the goldens and on seeded inputs from tools/gen-engine-inputs.js, and with --calculus the calculus path with the legacy interpreter. Exegra/Impl/ is what the application runs: Impl/Json.lean (the in-place writer, write'_eq), Impl/Semantics.lean (the definition with that writer) and Impl/Refinement.lean (runAnyValue_eq and runAny_eq, axioms pinned with #guard_msgs). Format 1 (Semantics, Properties, Lift, Explore, Prove, Temporal, Impl/Expr) was removed (WG-5681). Boundary.lean (WG-5729): hiding and projection of traces (hide, onto, onto_hide_disjoint for I1, hide_hide, hide_comm, hide_append), the exact comparison of two boundary traces (zipCheck_none_iff), refinement on boundary traces as a preorder preserved by hiding (Agrees.refl, Agrees.trans, Agrees.hide_more), and the executable engine.boundary and engine.refineBoundary that formal/Exegra/Api/Boundary.lean registers.",
         "trusts": [
           "trusted-lean-kernel",
           "trusted-lean-compiler-runtime",
@@ -331,22 +386,24 @@
         "Distinguish bounded from unbounded results: an invariant is a bounded invariant at every depth (invariant_iff_all_bounds) and no single depth suffices (Exegra.Core.Examples.bounded_not_unbounded)",
         "Carry results of the generic search to transition systems: a holds result is an unbounded invariant of every system the search covers (invariant_of_search) and a counterexample refutes the invariant of every system it is sound for (not_invariant_of_search)",
         "Give the guarded-command calculus a semantics in which out-of-range variables cannot be written, updates read the state before the step (Cmd.exec_get) and steps are labelled by command",
-        "Give Exegra's behaviours (machines with control states and typed variables, events with payloads, guards, effects that set the machine's own variables, emit events and set or cancel the machine's own timers, and the scenario's event and transition faults) a typed calculus over Int, Bool and String whose semantics is a transition system (Exegra.Core.Behav.Sys.lts): references scoped by Fin, so a missing variable or machine cannot be written; integer arithmetic as format 2 computes it, each arithmetic node checked against the declared integer type format 2's staticTy gives it, % truncated and typed / truncating; faults all-or-nothing per fault through a mask chosen in the initial state and kept (mask_const), with drop, lose, delay, retry, duplicate, enable, disable and inject faults, occurrences counted per event and windows; times at or beyond 2^53 as the error timeBound and no delivery after stopAt; division by zero, inexact untyped division, out-of-range operands and results and reads past the end of a state as errors, never default values or other values; a failing delivery leads to an explicit error state with no successor (err_deadlocked), and every system has an initial state (lts_nonVacuous)",
+        "Give Exegra's behaviours (machines with control states and typed variables, events with payloads, guards, effects that set the machine's own variables (to an expression, or to a draw: a sample effect is a draw site whose label draw is the value, WG-5683), emit events and set or cancel the machine's own timers, and the scenario's event and transition faults) a typed calculus over integers, exact rationals (an untyped number that is not an integer, Val.rat, WG-5683), Booleans and strings whose semantics is a transition system (Exegra.Core.Behav.Sys.lts): references scoped by Fin, so a missing variable or machine cannot be written; exact arithmetic, untyped arithmetic on rationals (0.1 + 0.2 == 0.3, 7 / 2 is 3.5), each arithmetic node checked against the declared integer type format 2's staticTy gives it, % truncated and typed / truncating; faults all-or-nothing per fault through a mask chosen in the initial state and kept (mask_const), with drop, lose, delay, retry, duplicate, enable, disable and inject faults, occurrences counted per event and windows; times at or beyond 2^53 as the error timeBound and no delivery after stopAt; division by zero, out-of-range operands (a non-integer operand of a typed node among them) and results and reads past the end of a state as errors, never default values or other values; a failing delivery leads to an explicit error state with no successor (err_deadlocked), and every system has an initial state (lts_nonVacuous)",
         "Prove that under snapshot reads a delivery does not depend on the order in which its winners fire: the machines after phase 2 (Exegra.Core.Behav.phase2_perm), the emitted blocks up to permutation (phase2_perm_emitted), the winners of every step on distinct machines (winners_nodup), and the whole successor configuration, pending list included, equal in every order (deliver_perm), emitted entries being inserted by time in machine-index order as format 2's insertE inserts them; and show on the [a, b] / [b, a] example that snapshot reads give one verdict (f4_ab_safe, f4_ba_safe) where the calculus's model of today's next-configuration reads gives two (f4_next_reads_differ)",
         "Prove that the shape of a configuration (one state per machine, a control state of the machine, one value of the declared sort per variable) is invariant from a shaped initial configuration (Exegra.Core.Behav.shaped_invariant) and that no step from a reachable configuration then fails with shape (shape_unreachable), and that the static sort of an expression is sound for evaluation (Expr.eval_fits)",
         "Define a decidable well-formedness of systems (Exegra.Core.Behav.Sys.WF) and prove that no step of a well-formed system fails with sort from a reachable state (sort_unreachable), that times stay in order and below 2^53 (time_invariant) and that the queue stays sorted by time (sorted_invariant)",
         "Give the calculus an executable scheduler (Exegra.Core.Behav.Exec.step, Exec.run) computed with the executable delivery, which deliver_iff_step proves equal to the declarative relation Step, and prove it is one scheduler of the relation: every committed step is a step of Sys.lts labelled by the delivered entry and its draws (Exec.step_sound), a failed step leads to the error state (Exec.step_failed), it stops only where the relation has no step on a sorted queue (Exec.idle_deadlocked, Exec.stopped_deadlocked) and every state of a run is reachable (run_reach); and give it a successor function equal to the relation's steps (successors_complete, successors_sound), whose search system covers and is sound for the relation (Exec.covers, Exec.sound), so Gen.search results are theorems about the calculus (Exec.holds_invariant, Exec.cex_refutes)",
         "Cover counted instances, targets and replies (machines are instances; aggregates count, sum, min and max over instances read from the start-of-step snapshot; entries carry their sender and a reply addresses it), and prove that the verdict of a safety property does not depend on the order in which machines are listed (Exegra.Core.Behav.invariant_rename)",
-        "Elaborate format-2 engine input into the calculus (Exegra.V2.Elab.elab), refusing inputs outside the fragment, ill-typed or with non-integer numbers, with every accepted input well-formed (elab_wf) and every state of its calculus run reachable (Exegra.V2.runB_reach); explore the calculus with unbounded holds results and real counterexamples (explore_holds_invariant, explore_cex_real) and monitor finite runs for eventually, never, precedes and bounded response (monitor_sound)"
+        "Elaborate format-2 engine input into the calculus (Exegra.V2.Elab.elab), refusing inputs outside the fragment or ill-typed (a decimal number elaborates to the exact rational it is), with every accepted input well-formed (elab_wf) and every state of its calculus run reachable (Exegra.V2.runB_reach); explore the calculus with unbounded holds results and real counterexamples (explore_holds_invariant, explore_cex_real) and monitor finite runs for eventually, never, precedes and bounded response (monitor_sound)"
       ],
       "unknowns": [
         "The guarded-command calculus (Calculus.lean) is single-sorted (Int) with no events, timers, faults or time.",
-        "The behaviour calculus (Behav.lean, BehavExec.lean, BehavRename.lean, BehavCheck.lean) does not cover resources, links, workloads, keyed instances or routes, sample effects (a variable set from a draw; only delays are drawn), option types, measured outputs or resource faults. Elab.elab refuses inputs that use them as outOfFragment; they keep running on the legacy format-2 interpreter (Exegra.V2.traceOf), which computes with Float, their trace says \"semantics\": \"legacy\", and no theorem is about them (milestone M2b).",
+        "The behaviour calculus (Behav.lean, BehavExec.lean, BehavRename.lean, BehavCheck.lean, BehavRes.lean) covers resources and resource faults (WG-5683: a world of holdings, waiting lists and acting resource faults, use/acquire/release as phase-2 operations settled after phase 2 in machine order under the resource as the acting faults leave it, service-done, wait-timeout and fault-edge entries, world draws checked against the settling's holes), but not links, workloads, keyed instances or routes, option types or measured outputs. Elab.elab refuses inputs that use them as outOfFragment; they keep running on the legacy format-2 interpreter (Exegra.V2.traceOf), which computes on exact rationals, their trace says \"semantics\": \"legacy\", and no theorem is about them (WG-5683, criteria 1 to 3: the calculus is to cover them, outOfFragment and the legacy V2.step and traceOf are then deleted).",
         "The calculus explorer's temporal check reads the format-2 encoding of each step (ProveB.lean, Occ) to match occurrences; that encoding is shared with traceOfB but no theorem relates a matched occurrence to the calculus label of the step.",
-        "Some format-2 values are errors in the calculus: untyped arithmetic with an operand or result outside 2^53 - 1 and untyped / with a remainder, == and != across sorts (refused as ill-typed), mixed string and number +, and a payload field read at a sort it does not fit; > and >= are encoded as swapped < and <= (which error is reported can change), and the error reported can depend on the order of the winners. The legacy interpreter and the Rust oracle report the same errors for elaborated inputs (differential.js --calculus).",
+        "Some format-2 values are errors in the calculus: untyped arithmetic with an operand or result outside 2^53 - 1, == and != across sorts (refused as ill-typed), mixed string and number +, and a payload field read at a sort it does not fit; > and >= are encoded as swapped < and <= (which error is reported can change), and the error reported can depend on the order of the winners. The legacy interpreter reports the same errors for elaborated inputs (differential.js --calculus); the Rust oracle computes untyped numbers as doubles and differs on non-integer arithmetic (tests/conformance/expected-differences.json).",
         "Faults are chosen all-or-nothing per fault (one mask per run), not per occurrence. There are no traces, observations, fairness or composition yet (milestones M5 and M6), and no k-induction (M4).",
         "The calculus explorer that exegra prove runs uses Gen.search, whose visited set hashes with an opaque hash, so a generated proof file discharges its verdict with native_decide and trusts the compiler. The list-based Gen.searchL returns the same result (search_eq_searchL) and reduces in the kernel (Exec.cex_refutesL, Exec.holds_invariantL), but its membership test is linear in the visited states, so generated proof files do not use it.",
-        "Semantic completeness (invariant_iff_exists_inductive) is over arbitrary predicates; inductive invariants expressible in the calculus's expressions need not exist."
+        "Semantic completeness (invariant_iff_exists_inductive) is over arbitrary predicates; inductive invariants expressible in the calculus's expressions need not exist.",
+        "invariant_rename is stated for systems without resources (hres : sys.resources = []): renaming does not yet carry the owners of resource holdings, waiting requests and service-done entries (WG-5683).",
+        "A calculus request id comes from a counter in the world (World.nextReq), so the state space of a system with resources is infinite unless the run is bounded; closed-set certificates (exegra prove --module) do not close for such systems (WG-5683)."
       ],
       "implementation": {
         "status": "manual",
@@ -355,13 +412,15 @@
           "formal/Exegra/Core/BehavExamples.lean",
           "formal/Exegra/Core/BehavExec.lean",
           "formal/Exegra/Core/BehavRename.lean",
+          "formal/Exegra/Core/BehavRes.lean",
           "formal/Exegra/Core/Calculus.lean",
           "formal/Exegra/Core/Examples.lean",
           "formal/Exegra/Core/LTS.lean",
+          "formal/Exegra/Core/Live.lean",
           "formal/Exegra/Core/Search.lean",
           "formal/Exegra/Elab.lean"
         ],
-        "notes": "formal/Exegra/Core/LTS.lean (the theory), Calculus.lean (the guarded-command calculus), Search.lean (the bridge from Exegra.Gen.search), Examples.lean (positive and adversarial examples: counter_le, ne_neg_one_not_inductive, ne_neg_one_invariant, bounded_not_unbounded, vacuous_false, mod3_in_range), Behav.lean (the behaviour calculus of M2.1 and M2.2: typed values, arithmetic sorts and expressions, transitions, timers, faults, Sys.lts, Sys.WF, phase2_perm, phase2_perm_emitted, winners_nodup, deliver_perm, mask_const, deliver_ok_form, deliver_error_form, shaped_invariant, shape_unreachable, time_invariant, sorted_invariant, Expr.eval_fits, Expr.eval_ne_sort, sort_unreachable), BehavExec.lean (the scheduler of M2.3: Exec.step, Exec.run, Exec.successors, Exec.enum, Exec.gen, Exec.step_sound, Exec.step_failed, Exec.idle_deadlocked, Exec.stopped_deadlocked, Exec.step_live, run_reach, successors_complete, successors_sound, Exec.covers, Exec.sound, Exec.holds_invariant, Exec.cex_refutes), BehavRename.lean (machine renaming: invariant_rename, step_rename, step_unrename), BehavCheck.lean (exploreB, explore_holds_invariant, explore_cex_real, TForm, FinSat, monitor, monitor_sound), BehavExamples.lean (agg_last_safe, agg_first_safe, agg_next_reads_differ, reply_reaches_requester, reply_without_sender_fails, ctr_le, choice_safe, f4_ab_safe, f4_ba_safe, f4_ab_safe_closed, f4_wf, f4_exec_same_machines, f4_next_reads_differ, f4_nonVacuous, f4Init_shaped, f4_ab_no_shape, divZero_counterexample, mod_truncates, typed_div_truncates, untyped_div_inexact, u8_overflow, emitted_inserted_by_time, emission_order_irrelevant, timer_then_cancel, timer_reset, drop_second_delivery, drop_fault_optional); axioms pinned with #guard_msgs. The files sit inside formal/, which formal-semantics also declares. Checked by lake build in .github/workflows/check.yml. formal/Exegra/Elab.lean (Elab.elab, elab_wf, runB_reach) elaborates format-2 input into the calculus.",
+        "notes": "formal/Exegra/Core/LTS.lean (the theory), Calculus.lean (the guarded-command calculus), Search.lean (the bridge from Exegra.Gen.search), Examples.lean (positive and adversarial examples: counter_le, ne_neg_one_not_inductive, ne_neg_one_invariant, bounded_not_unbounded, vacuous_false, mod3_in_range), Behav.lean (the behaviour calculus of M2.1 and M2.2: typed values, arithmetic sorts and expressions, transitions, timers, faults, Sys.lts, Sys.WF, phase2_perm, phase2_perm_emitted, winners_nodup, deliver_perm, mask_const, deliver_ok_form, deliver_error_form, shaped_invariant, shape_unreachable, time_invariant, sorted_invariant, Expr.eval_fits, Expr.eval_ne_sort, sort_unreachable), BehavExec.lean (the scheduler of M2.3: Exec.step, Exec.run, Exec.successors, Exec.enum, Exec.gen, Exec.step_sound, Exec.step_failed, Exec.idle_deadlocked, Exec.stopped_deadlocked, Exec.step_live, run_reach, successors_complete, successors_sound, Exec.covers, Exec.sound, Exec.holds_invariant, Exec.cex_refutes), BehavRename.lean (machine renaming: invariant_rename, step_rename, step_unrename), BehavCheck.lean (exploreB, explore_holds_invariant, explore_cex_real, TForm, FinSat, monitor, monitor_sound), BehavExamples.lean (agg_last_safe, agg_first_safe, agg_next_reads_differ, reply_reaches_requester, reply_without_sender_fails, ctr_le, choice_safe, f4_ab_safe, f4_ba_safe, f4_ab_safe_closed, f4_wf, f4_exec_same_machines, f4_next_reads_differ, f4_nonVacuous, f4Init_shaped, f4_ab_no_shape, divZero_counterexample, mod_truncates, typed_div_truncates, untyped division and 0.1 + 0.2 == 0.3 on rationals (#guard), u8_overflow, emitted_inserted_by_time, emission_order_irrelevant, timer_then_cancel, timer_reset, drop_second_delivery, drop_fault_optional); axioms pinned with #guard_msgs. The files sit inside formal/, which formal-semantics also declares. Checked by lake build in .github/workflows/check.yml. formal/Exegra/Elab.lean (Elab.elab, elab_wf, runB_reach) elaborates format-2 input into the calculus.",
         "trusts": [
           "trusted-lean-kernel"
         ],
@@ -383,12 +442,14 @@
         "Write formal/generated/<scenario>.lean: the engine input text, its decoded Lean term checked against it (input_decodes), and per claim a theorem explore env (claimInv expr) bound maxStates = result, discharged by native_decide",
         "Check the file with Lake, loading the modules' compiled code, and report per claim the method lean-exhaustive, the bound, N, the theorem, the file, the axioms and what is trusted",
         "Render a counterexample as simulate shows a run: the step list with the delivery choices, the active faults, and the request-log lines of contract events",
-        "For a temporal claim write the theorem tverdict form env bound maxStates = result (from the exegra-lean temporal protocol), whose meaning is tverdict_sound and tverdict_real, and render a violating run with the reason in the trace check's words"
+        "For a temporal claim write the theorem tverdict form env bound maxStates = result (from the exegra-lean temporal protocol), whose meaning is tverdict_sound and tverdict_real, and render a violating run with the reason in the trace check's words",
+        "For every invariant that holds, write the states the explorer visited (one per line, exegra-lean certificate) and the theorems checkClosed (Exec.enum sys) visited p = true and, by checkClosed_sound, the invariant; Lean refuses the file when a state is missing",
+        "Decide liveness claims (method liveness: GF or FG of a state expression) under the weak fairness of the transitions their fairness assumptions name (exegra-lean liveness): proved with the ranking theorem stated, violated with the lasso and its meaning stated (flagged as a Zeno lasso when its cycle keeps the time), incomplete or not supported; never from finite runs",
+        "With --module, write formal/Exegra/Proofs/<Scenario>.lean (exegra-lean module): the scenario's calculus system written out as a Lean term, each claim expression elaborated in the calculus, and the invariant of each state-invariant claim that holds proved by a closed-set certificate checked by decide, with the standard axioms only"
       ],
       "unknowns": [
-        "Results are established by native_decide, so each theorem depends on an auxiliary axiom that trusts the Lean compiler and runtime. Kernel reduction (decide) is not feasible: the expression language's number literals go through Float.scaleB and the visited set hashes strings with String.hash, both opaque to the kernel.",
-        "The unbounded proof of an invariant (by induction over the step relation, with the explorer supplying counterexamples to induction) is not built yet (planned: WG-4686).",
-        "Claim results are reported by exegra prove only; evaluate and verify do not show them yet.",
+        "Results are established by native_decide, so each theorem of a generated proof file depends on an auxiliary axiom that trusts the Lean compiler and runtime. Only the modules exegra prove --module writes are checked by the kernel alone (decide), and only for state-invariant claims that hold; that the system such a module writes out is the elaboration of the scenario rests on the generator (Exegra.V2.ProveKernel.kernelModule), not on a theorem.",
+        "Claim results are reported by exegra prove only; evaluate and verify do not show them, except that a state-invariant claim naming the theorem of a committed module (evaluate.theorem) reads proved when Lean accepts it.",
         "Negatives of a claim are not explored in Lean: prove checks that a claim holds on every configuration of its scenarios, not that its negatives violate it (WG-4711)."
       ],
       "implementation": {
@@ -396,7 +457,10 @@
         "modules": [
           "src/core/proof-export.js",
           "tools/prove.js",
-          "formal/Exegra/ProveB.lean"
+          "formal/Exegra/ProveB.lean",
+          "formal/Exegra/ProveLive.lean",
+          "formal/Exegra/ProveKernel.lean",
+          "formal/Exegra/Proofs/VisualEditFlow.lean"
         ],
         "notes": "src/core/proof-export.js (pure) builds the exploration request, the Lean proof file and the per-claim results; tools/prove.js runs lake build, the exegra-lean explore and temporal protocols and lake env lean on the generated file (formal/generated/, ignored by git), with the modules' shared libraries (precompileModules) loaded; formal/Exegra/ProveB.lean holds prepare (the input elaborated into the calculus; an input outside the fragment is reported as not covered), claimInvB, the verdicts and the protocols. The generated file states each verdict as verdictOf or tverdictOf applied to the input text. The command is exegra prove (cli/commands.js).",
         "language": "mixed"
@@ -449,20 +513,22 @@
         "Run closed populations (issue with a workload-wide request counter, wait for the matching reply, think; a timeout ends the request with outcome timeout and a late reply is ignored) and population workloads whose clients are keyed instances of a behavior created at the start of the run",
         "Send emits over links: FIFO transfer with time ceil(size * perSecond / bandwidth), then at link-done the latency draw, the delivery entry and the next transfer; ordered links deliver in send order; fan-out keeps one bounded queue per receiver at the link's full bandwidth and drops its oldest waiting message, never the one in transfer",
         "Set, replace and cancel named timers by their stable id, so that a delayed timer is still cancelled",
-        "Lower specification-level rates, durations and distributions to integers and tables on unbounded BigInt: the exponential and normal quantile tables defined by integer algorithms (exp and ln in 96-bit fixed point, a 192-bit fixed-point normal CDF with bisection), equal to the correctly rounded values and pinned by the SHA-256 a23cd2a9566c106701375d5cf75ef982b8db6f3e52c199c47e6239649c840950 of their canonical text; log-normal sigma at most 8; a lowered value of 2^53 base units or more is a lowering error"
+        "Lower specification-level rates, durations and distributions to integers and tables in integer arithmetic in Lean (formal/Exegra/Lower/Dist.lean and Families.lean, WG-5683): the exponential and normal quantile tables defined by integer algorithms (exp and ln in 96-bit fixed point, a 192-bit fixed-point normal CDF with bisection), equal to the correctly rounded values and pinned by the SHA-256 a23cd2a9566c106701375d5cf75ef982b8db6f3e52c199c47e6239649c840950 of their canonical text, which formal/Exegra/Lower/Pinned.lean holds and checks against the algorithms at every grid point when the Lean core is built; log-normal sigma at most 8; a lowered value of 2^53 base units or more is a lowering error"
       ],
       "unknowns": [
-        "Built (WG-4715, WG-4729): open, closed and population workloads, address groups, links (bandwidth, ordering, queue bounds, fan-out, latency) and timers in both engines, derived from a specification's workloads and links by simulationInput (src/core/sim-input.js).",
+        "Built (WG-4715, WG-4729): open, closed and population workloads, address groups, links (bandwidth, ordering, queue bounds, fan-out, latency) and timers in both engines, derived from a specification's workloads and links by the Lean lowering (Exegra.Lower.engineInput, WG-5683).",
         "Packet-level networking and packet-rate floods are not represented: a link is a FIFO byte pipe with a latency distribution, one step per message (aggregated mode planned: WG-4718).",
         "Matchmaking gather is writable only as a hand-written behavior (primitive planned: WG-4721)."
       ],
       "implementation": {
         "status": "manual",
         "modules": [
-          "src/core/distributions.js",
-          "formal/Exegra/Workload.lean"
+          "formal/Exegra/Lower/Dist.lean",
+          "formal/Exegra/Workload.lean",
+          "formal/Exegra/Lower/Pinned.lean",
+          "formal/Exegra/Lower/Families.lean"
         ],
-        "notes": "WG-4715, in progress. Built: the integer lowering of distributions (src/core/distributions.js; every reference output of docs/simulation.md and the pinned SHA-256 reproduced, tests/core/distributions.test.js); open workloads (constant and Poisson by inversion of the integrated rate with exact integer square roots, phases, ramps, repetition, batches, clients picked uniformly or round-robin, payload literals, samples, weighted choices and counters, maxArrivals, the first-entry rule with a per-workload count of created instants) defined in formal/Exegra/Workload.lean and Format2.lean, ported to the Rust engine (workload.rs, v2.rs) and checked differentially on generated workload inputs (tools/gen-engine-inputs.js, tools/differential.js). Proved: an instant is always before the horizon (nextTime_lt_horizon) and a workload never creates more arrival entries than maxArrivals (makeInstant_arrivals_le).",
+        "notes": "WG-4715, in progress. Built: the integer lowering of distributions (formal/Exegra/Lower/Dist.lean, formerly src/core/distributions.js; every reference output of docs/simulation.md and the pinned SHA-256 reproduced, tests/core/distributions.test.js); open workloads (constant and Poisson by inversion of the integrated rate with exact integer square roots, phases, ramps, repetition, batches, clients picked uniformly or round-robin, payload literals, samples, weighted choices and counters, maxArrivals, the first-entry rule with a per-workload count of created instants) defined in formal/Exegra/Workload.lean and Format2.lean, ported to the Rust engine (workload.rs, v2.rs) and checked differentially on generated workload inputs (tools/gen-engine-inputs.js, tools/differential.js). Proved: an instant is always before the horizon (nextTime_lt_horizon) and a workload never creates more arrival entries than maxArrivals (makeInstant_arrivals_le).",
         "language": "mixed"
       },
       "tags": [
@@ -527,6 +593,7 @@
         "modules": [
           "formal/Exegra/Api/Basic.lean",
           "formal/Exegra/Api/Engine.lean",
+          "formal/Exegra/Api/Boundary.lean",
           "formal/wasm/",
           "src/core/lean.js",
           "tools/build-formal-wasm.js"
@@ -645,7 +712,7 @@
       "kind": "invokes",
       "from": "refinement-checker",
       "to": "simulation-engine",
-      "description": "Runs the abstract and the refined behaviors of a component (planned, WG-4666)."
+      "description": "Runs each scenario of a refinement check, a derived composite or an order-independence check through the engine, and asks the Lean core to project and compare the traces (engine.boundary, engine.refineBoundary)."
     },
     {
       "id": "exhaustive-explorer-calls-simulation-engine",
@@ -816,7 +883,7 @@
       "kind": "invokes",
       "from": "simulation-engine",
       "to": "simulation-contract",
-      "description": "Takes the engine input that simulation-contract derives (sim-input.js) and checks the input before it runs."
+      "description": "Takes the engine input that simulation-contract derives (the Lean lowering (Exegra.Lower.engineInput)) and checks the input before it runs."
     },
     {
       "id": "generation-readiness-calls-data-model",
@@ -852,6 +919,13 @@
       "from": "lean-call-boundary",
       "to": "claim-verdict",
       "description": "Dispatches claims.status, verdict.isRegression, facts.decode, impact.claims and theorem.weakening to Exegra.Verdict and Exegra.Impact."
+    },
+    {
+      "id": "proof-export-calls-formal-semantics",
+      "kind": "invokes",
+      "from": "proof-export",
+      "to": "formal-semantics",
+      "description": "tools/prove.js runs lake and exegra-lean on the generated proof file: the prove command calls the Lean toolchain it reports from."
     }
   ]
 }

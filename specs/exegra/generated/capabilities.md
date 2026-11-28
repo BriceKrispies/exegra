@@ -21,14 +21,14 @@ its status.
 
 | What | Count |
 |---|---|
-| Components | 114 |
-| Relationships | 348 |
-| Behaviors | 44 |
+| Components | 116 |
+| Relationships | 354 |
+| Behaviors | 43 |
 | Scenarios | 36 |
-| Claims | 390 |
-| Claims shown established | 0 |
+| Claims | 462 |
+| Claims shown established | 5 |
 | Claims inconclusive | 20 |
-| Claims not-evaluated | 43 |
-| Claims proved | 85 |
-| Claims supported | 193 |
-| Claims verified | 49 |
+| Claims not-evaluated | 41 |
+| Claims proved | 123 |
+| Claims supported | 221 |
+| Claims verified | 57 |

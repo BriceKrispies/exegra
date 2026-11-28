@@ -134,7 +134,7 @@
           "visual-edit-flow",
           "source-edit-flow"
         ],
-        "expr": "workspace-flow.persistedRevision == transaction-flow.revision && session-flow.saveState == 'saved'",
+        "expr": "workspace-flow.diskSpec == transaction-flow.textHash && session-flow.saveState == 'saved'",
         "negatives": [
           {
             "scenario": "visual-edit-flow",
@@ -223,7 +223,7 @@
         "scenarios": [
           "rejected-edit"
         ],
-        "expr": "transaction-flow.revision == 1 && projection-flow.shownRevision == 1 && renderer-flow.shownRevision == 1 && inspector-flow.shownRevision == 1 && source-editor-flow.shownRevision == 1 && workspace-flow.persistedRevision == 1 && session-flow.saveState == 'saved'",
+        "expr": "transaction-flow.revision == 1 && projection-flow.shownRevision == 1 && renderer-flow.shownRevision == 1 && inspector-flow.shownRevision == 1 && source-editor-flow.shownRevision == 1 && workspace-flow.diskSpec == 'h1' && session-flow.saveState == 'saved'",
         "negatives": [
           {
             "scenario": "rejected-edit",
@@ -889,6 +889,353 @@
       "evaluate": {
         "method": "external-evidence"
       }
+    },
+    {
+      "id": "visual-edit-views-not-ahead-of-commit",
+      "kind": "invariant",
+      "statement": "In every reachable configuration of a valid visual edit, under every fault mask of the scenario and every order of simultaneous events, the projection never shows a revision later than the committed one, and the file holds either the text it started with or the committed text, never a text not yet committed.",
+      "subjects": [
+        "transactions",
+        "projection-system",
+        "visual-edit-flow"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code",
+        "views-derive-from-committed-model",
+        "trusted-lean-kernel"
+      ],
+      "rationale": "exegra prove visual-edit-flow reports holds on an empty frontier; exegra prove visual-edit-flow --module writes formal/Exegra/Proofs/VisualEditFlow.lean, the scenario's calculus system written out and the invariant proved by a closed-set certificate the kernel checks with decide, with the standard axioms only. WG-5682 criterion 5.",
+      "evaluate": {
+        "method": "state-invariant",
+        "scenarios": [
+          "visual-edit-flow"
+        ],
+        "negatives": [
+          {
+            "scenario": "visual-edit-flow",
+            "faults": [
+              "refresh-before-commit"
+            ],
+            "note": "A refresh of revision 2 delivered before the commit: the projection shows a revision not yet committed."
+          },
+          {
+            "scenario": "visual-edit-flow",
+            "faults": [
+              "save-before-refresh"
+            ],
+            "note": "A save of revision 2 delivered before the commit: the file holds a revision not yet committed."
+          }
+        ],
+        "expr": "projection-flow.shownRevision <= transaction-flow.revision && (workspace-flow.diskSpec == 'h1' || workspace-flow.diskSpec == transaction-flow.textHash)",
+        "theorem": "Exegra.Proofs.VisualEditFlow.visual_edit_views_not_ahead_of_commit",
+        "about": [
+          "Exegra.Proofs.VisualEditFlow.visualEditFlowSys",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "comp-compose-comm",
+      "kind": "invariant",
+      "statement": "Parallel composition of components is commutative up to isomorphism: compose A B and compose B A are related by a bijection on states that maps initial states to initial states and steps to steps with the same label, both ways.",
+      "subjects": [
+        "lts-composition"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Compose.lean. WG-5685.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Comp.compose_comm",
+        "about": [
+          "Exegra.Core.Comp.Iso",
+          "Exegra.Core.Comp.compose"
+        ]
+      }
+    },
+    {
+      "id": "comp-compose-assoc",
+      "kind": "invariant",
+      "statement": "Parallel composition of components is associative up to isomorphism: compose (compose A B) C and compose A (compose B C) are isomorphic.",
+      "subjects": [
+        "lts-composition"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Compose.lean. WG-5685.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Comp.compose_assoc",
+        "about": [
+          "Exegra.Core.Comp.Iso",
+          "Exegra.Core.Comp.compose"
+        ]
+      }
+    },
+    {
+      "id": "comp-traces-compose",
+      "kind": "invariant",
+      "statement": "A sequence is a trace of compose A B exactly when its labels lie in the union of the two alphabets and its restrictions to each alphabet are traces of the corresponding side.",
+      "subjects": [
+        "lts-composition"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Compose.lean. WG-5685.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Comp.traces_compose",
+        "about": [
+          "Exegra.Core.Comp.Traces",
+          "Exegra.Core.Comp.compose",
+          "Exegra.Core.restrict"
+        ]
+      }
+    },
+    {
+      "id": "contract-ag-compose",
+      "kind": "invariant",
+      "statement": "For prefix-closed assumptions and guarantees, if M1 satisfies (A1, G1), M2 satisfies (A2, G2), each guarantee implies the other side's assumption under A, and each assumption is implied by the other guarantee on every strict prefix (non-circularity), then compose M1 M2 satisfies (A, G1 ∩ G2).",
+      "subjects": [
+        "lts-composition"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Contract.lean. WG-5685.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Comp.ag_compose",
+        "about": [
+          "Exegra.Core.Comp.Sat",
+          "Exegra.Core.Comp.NonCircular",
+          "Exegra.Core.Comp.compose"
+        ]
+      }
+    },
+    {
+      "id": "contract-ag-circular-unsound",
+      "kind": "invariant",
+      "statement": "Without the non-circularity condition circular assume-guarantee reasoning is unsound: two components satisfy every other hypothesis of ag_compose while their composition does not satisfy the derived contract.",
+      "subjects": [
+        "lts-composition"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Contract.lean. WG-5685.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Comp.ag_circular_unsound",
+        "about": [
+          "Exegra.Core.Comp.Sat",
+          "Exegra.Core.Comp.NonCircular",
+          "Exegra.Core.Comp.compose"
+        ]
+      }
+    },
+    {
+      "id": "contract-discharge-sound",
+      "kind": "invariant",
+      "statement": "If the discharge graph of assumptions is acyclic, every assumption is implied by the guarantee of the claim that discharges it, and every guarantee holds under its assumptions, then every guarantee holds.",
+      "subjects": [
+        "lts-composition"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Contract.lean. WG-5685.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.discharge_sound",
+        "about": [
+          "Exegra.Core.DischargeGraph.Acyclic"
+        ]
+      }
+    },
+    {
+      "id": "refine-traces",
+      "kind": "invariant",
+      "statement": "A stuttering simulation of spec by impl through abs makes every observable finite trace of impl an observable trace of spec.",
+      "subjects": [
+        "lts-composition"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Refine.lean. WG-5685.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.refines_traces",
+        "about": [
+          "Exegra.Core.LTS.Simulates",
+          "Exegra.Core.LTS.ObsTraces"
+        ]
+      }
+    },
+    {
+      "id": "refine-safety",
+      "kind": "invariant",
+      "statement": "A stuttering simulation of spec by impl through abs makes every invariant P of spec, read through abs, an invariant of impl.",
+      "subjects": [
+        "lts-composition"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Refine.lean. WG-5685.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.refines_safety",
+        "about": [
+          "Exegra.Core.LTS.Simulates",
+          "Exegra.Core.LTS.Invariant"
+        ]
+      }
+    },
+    {
+      "id": "refine-liveness",
+      "kind": "invariant",
+      "statement": "Given a stuttering simulation, no infinite stuttering of weakly fair implementation runs and a mapping of fair actions, a property of the weakly fair runs of spec holds of the abstraction, stutters removed, of every weakly fair run of impl.",
+      "subjects": [
+        "lts-composition"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Refine.lean. WG-5685.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.refines_liveness",
+        "about": [
+          "Exegra.Core.LTS.Simulates",
+          "Exegra.Core.LTS.NoInfiniteStutter",
+          "Exegra.Core.LTS.MapsFair",
+          "Exegra.Core.LTS.Run.map",
+          "Exegra.Core.LTS.Run.WeakFair"
+        ]
+      }
+    },
+    {
+      "id": "message-interactions-witnessed",
+      "kind": "invariant",
+      "statement": "Every cross-element message of the behaviors (an event emitted by a behavior of one element and consumed by a behavior of another) is witnessed at the base by a relationship of message class between the same two elements, and at every declared cut where its ends lie in different blocks by a derived interaction made by such a relationship, never by a different witness (V5, I5). A coarse edge over a different witness is reported, and the self-specification reports none.",
+      "subjects": [
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "boundary-contracts-typed",
+      "kind": "invariant",
+      "statement": "A relationship that declares a contract has the events that cross it typed by that contract (V7): the write-file contract types the events of the in-process workspace hops (ws-write, ws-write-done, ws-write-error), and a hop whose events carry no contract is reported by the boundary-contracts command.",
+      "subjects": [
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "function-composition-along-hierarchy",
+      "kind": "invariant",
+      "statement": "A function attached to an element composes along the hierarchy: a function attached to a composite element that declares a composition has a signature equal to the composition of its stages' signatures (the first stage's parameters, the last stage's returns, a chain of single parameters, one shared error union), through every level; any difference is a function.composition-* diagnostic at the composite, and the compiler fixture validates while its mismatched variant is diagnosed.",
+      "subjects": [
+        "semantic-abstraction",
+        "validator"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "fault-lifting-through-realisation",
+      "kind": "invariant",
+      "statement": "A failure mode located at an element or an interaction lifts to the logical interactions it fails, directly and through realisation maps (a hop of a path, or an element of the realisation's hierarchy that a hop runs through), and with a cut to the derived interactions and the block-internal failures; without a realisation map a deployment-level fault lifts to no logical interaction; the result does not depend on declaration order. The lift-faults command reports it.",
+      "subjects": [
+        "semantic-abstraction",
+        "agent-cli"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "decomposition-evaluation-pure",
+      "kind": "invariant",
+      "statement": "Evaluating any number of candidate decompositions, and generating candidates, changes no relationship, entity or the semantic hash of the model: a candidate is a hierarchy over the same elements and a measurement never changes a fact (M7 I1).",
+      "rationale": "Decided by the tests: the model, its base facts and its hash are compared before and after, and no report holds a score, a rank or a recommendation.",
+      "subjects": [
+        "decomposition-evaluator"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "decomposition-invalid-diagnosed",
+      "kind": "invariant",
+      "statement": "A candidate decomposition that is not a laminar covering partition of its scope (an element in two blocks, an element in none, an unknown or misplaced member, a colliding block id) is rejected with its failing condition and witnesses and is not measured; a candidate is reported valid only when every registered condition V1 to V7 holds (M7 I2).",
+      "rationale": "Decided by the tests over a small system and over semantic-core. The registry VALIDITY_CONDITIONS is the one place the conditions plug in; a registry without V5 to V7 reports them as not evaluated and never calls a candidate valid.",
+      "subjects": [
+        "decomposition-evaluator"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "decomposition-measurements-deterministic",
+      "kind": "invariant",
+      "statement": "The measurements of a valid candidate (boundary size, cohesion, coupling, cycles by class with back edges, interface size, contract coverage, redundancy, knowledge and provenance mix) and the evidence of its boundaries are deterministic functions of the fact base and the candidate: repeated runs and any order of blocks and members give byte-identical reports, and on the facts the audit used the audit's section 5.3 figures are reproduced (53 crossing relationships, the four-block cycle, the named back edges) (M7 I3).",
+      "rationale": "Decided by the tests, which recompute the audit groupings on the audit-time facts (tests/fixtures/decomposition/audit-semantic-core.json) and on today's specification.",
+      "subjects": [
+        "decomposition-evaluator"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "decomposition-behavioural-validity",
+      "kind": "invariant",
+      "statement": "A candidate decomposition whose blocks, read as the composites of a cut, carry a message that no relationship between the two elements witnesses (V5), a declared abstraction that does not refine its members (V6), or a contract on a boundary between two blocks that the events crossing it do not type (V7) is rejected with the failing condition and its witnesses; where no block declares abstract behaviour V6 is reported as not applicable, with the reason, and not as a pass; a hop between a block and the outside of the scope is the scope's boundary and no candidate's (M7 criterion 3).",
+      "rationale": "Decided by the tests: a negative fixture for each condition, the positive that clears it, and the not-applicable report.",
+      "subjects": [
+        "decomposition-evaluator"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "decomposition-acceptance-transaction",
+      "kind": "invariant",
+      "statement": "Accepting a valid candidate is one transaction of the project that records the components its blocks need, a named hierarchy and two cuts of it; undo reverses it as one step; a candidate that is not valid, or whose blocks cannot be recorded, is refused and changes nothing; the application navigates the recorded hierarchy at once and a level-bound structural claim evaluates at its cuts (M7 criterion 6, invariants I4 and I5).",
+      "rationale": "Decided by the tests: the transaction and its undo on a small system, the refusals, the module elements a hierarchy cannot move, and in the browser the scene at each cut against the command line, with the claim stated at l1 evaluated at the accepted cuts.",
+      "subjects": [
+        "decomposition-evaluator"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "decomposition-external-fixtures",
+      "kind": "invariant",
+      "statement": "Generate, evaluate and accept run on a compiler, a distributed application with realisation maps and an event-driven system with connectors, each with a recorded report of its candidates, their validity, measurements and the multiscale requirements the run exercised; the fact base and its hash are unchanged by evaluation (M7 criteria 4 and 7).",
+      "rationale": "Decided by the tests over tests/fixtures/multiscale-external and the reports under docs/assessment/2026-11-27/m7.",
+      "subjects": [
+        "decomposition-evaluator"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
     }
   ],
   "evidence": [
@@ -1474,6 +1821,258 @@
       "kind": "test",
       "ref": "tests/browser/edit-history.spec.js#two editing sessions",
       "description": "Two Exegra sessions submitting changes from the same hash see the replies predicted by the shared-base scenario, for either forced order, and a separate read of the file confirms the winning change."
+    },
+    {
+      "id": "ev-coherence-self",
+      "claim": "message-interactions-witnessed",
+      "kind": "test",
+      "ref": "tests/core/coherence.test.js#the self-specification has no unwitnessed message at the base or at any declared cut",
+      "description": "V5 over all 139 behaviour messages of the self-specification at the base, every hierarchy and every declared cut."
+    },
+    {
+      "id": "ev-coherence-negative",
+      "claim": "message-interactions-witnessed",
+      "kind": "test",
+      "ref": "tests/core/coherence.test.js#a coarse edge over a different witness is reported at the cut and not accepted",
+      "description": "A message with no relationship of its own between its ends is reported at the base and at a cut that draws a coarse edge over another pair of elements."
+    },
+    {
+      "id": "ev-boundary-contracts-self",
+      "claim": "boundary-contracts-typed",
+      "kind": "test",
+      "ref": "tests/core/coherence.test.js#the write-file workspace hops of the self-specification carry events of the contract",
+      "description": "The hop of the development-server plugin and the hop of the agent command to the workspace service are typed; removing the contract from the events reports them."
+    },
+    {
+      "id": "ev-boundary-contracts-negative",
+      "claim": "boundary-contracts-typed",
+      "kind": "test",
+      "ref": "tests/core/coherence.test.js#V7 reports a hop whose events are not typed by its declared contract",
+      "description": "A relationship declaring a contract over events of no contract is reported untyped; typing the events clears it."
+    },
+    {
+      "id": "ev-function-composition-compiler",
+      "kind": "test",
+      "ref": "tests/core/function-composition.test.js#the compiler fixture validates and composes its function entities along the hierarchy",
+      "claim": "function-composition-along-hierarchy",
+      "description": "The compiler fixture (pipeline, shared diagnostics, three levels of composition) validates, and the compose command derives each composite's signature from its stages."
+    },
+    {
+      "id": "ev-function-composition-mismatch",
+      "kind": "test",
+      "ref": "tests/core/function-composition.test.js#a composite whose declared signature differs from its members composition is diagnosed in the negative fixture",
+      "claim": "function-composition-along-hierarchy",
+      "description": "The compiler-mismatch fixture is refused with function.composition-returns and, one level up, function.composition-chain."
+    },
+    {
+      "id": "ev-function-composition-parts",
+      "kind": "test",
+      "ref": "tests/core/function-composition.test.js#each part of the signature is checked with a negative edit",
+      "claim": "function-composition-along-hierarchy",
+      "description": "Each rule of the signature, each with a negative edit of the compiler fixture."
+    },
+    {
+      "id": "ev-fault-lifting-deployment",
+      "kind": "test",
+      "ref": "tests/core/fault-lifting.test.js#a deployment-level failure mode lifts to the logical interactions it affects",
+      "claim": "fault-lifting-through-realisation",
+      "description": "On the distributed fixture a link partition, a host crash and a zone outage each fail exactly the logical interactions their realisation paths carry."
+    },
+    {
+      "id": "ev-fault-lifting-cuts",
+      "kind": "test",
+      "ref": "tests/core/fault-lifting.test.js#lifting with a cut gives the failures of the derived interactions and the internal failures of a block",
+      "claim": "fault-lifting-through-realisation",
+      "description": "Lifting at the subsystem and the service cuts names the same interactions; an ad hoc cut agrees with the declared one."
+    },
+    {
+      "id": "ev-fault-lifting-unrealised",
+      "kind": "test",
+      "ref": "tests/core/fault-lifting.test.js#without realisation maps a deployment fault does not lift to the logical interactions",
+      "claim": "fault-lifting-through-realisation",
+      "description": "Negative fixture: with the realisation maps removed the deployment faults reach no logical interaction."
+    },
+    {
+      "id": "ev-fault-lifting-order",
+      "kind": "test",
+      "ref": "tests/core/fault-lifting.test.js#the lifting does not depend on the order the specification declares things in",
+      "claim": "fault-lifting-through-realisation",
+      "description": "The result is equal for a specification with its declarations reversed."
+    },
+    {
+      "id": "ev-decomposition-measures",
+      "kind": "test",
+      "ref": "tests/core/decomposition.test.js#a valid candidate is measured by hand-checkable functions of the facts",
+      "claim": "decomposition-measurements-deterministic",
+      "description": "Every measurement of a small system checked by hand."
+    },
+    {
+      "id": "ev-decomposition-evidence",
+      "kind": "test",
+      "ref": "tests/core/decomposition.test.js#evidence names crossing witnesses and cycle back edges and uncovered contracts",
+      "claim": "decomposition-measurements-deterministic",
+      "description": "Boundary witnesses, back edges by class and uncovered interactions listed per boundary."
+    },
+    {
+      "id": "ev-decomposition-audit",
+      "kind": "test",
+      "ref": "tests/core/decomposition.test.js#the audit figures reproduce on the facts the audit used with 53 crossing and the four-block cycle and the named residual witnesses",
+      "claim": "decomposition-measurements-deterministic",
+      "description": "The audit section 5.3 figures on the audit-time facts."
+    },
+    {
+      "id": "ev-decomposition-audit-today",
+      "kind": "test",
+      "ref": "tests/core/decomposition.test.js#on the current specification the audit groupings are valid and keep the four-block cycle and name their witnesses",
+      "claim": "decomposition-measurements-deterministic",
+      "description": "The same groupings on the current specification, recounted independently."
+    },
+    {
+      "id": "ev-decomposition-determinism",
+      "kind": "test",
+      "ref": "tests/core/decomposition.test.js#repeated evaluation is byte-identical in any order of blocks and members",
+      "claim": "decomposition-measurements-deterministic",
+      "description": "Two runs and a shuffled candidate give the same text."
+    },
+    {
+      "id": "ev-decomposition-pure",
+      "kind": "test",
+      "ref": "tests/core/decomposition.test.js#evaluating and generating candidates leaves the model and its facts and its hash as they were",
+      "claim": "decomposition-evaluation-pure",
+      "description": "Model, facts and hash compared before and after."
+    },
+    {
+      "id": "ev-decomposition-no-verdict",
+      "kind": "test",
+      "ref": "tests/core/decomposition.test.js#no report ranks or scores or calls a candidate meaningful",
+      "claim": "decomposition-evaluation-pure",
+      "description": "No score, rank or meaning key; acceptance is described and not applied."
+    },
+    {
+      "id": "ev-decomposition-overlap",
+      "kind": "test",
+      "ref": "tests/core/decomposition.test.js#an overlapping candidate is rejected under V1 with the element and both blocks as witnesses",
+      "claim": "decomposition-invalid-diagnosed",
+      "description": "The overlapping negative."
+    },
+    {
+      "id": "ev-decomposition-noncovering",
+      "kind": "test",
+      "ref": "tests/core/decomposition.test.js#a non-covering candidate is rejected under V1 naming the elements no block holds",
+      "claim": "decomposition-invalid-diagnosed",
+      "description": "The non-covering negative."
+    },
+    {
+      "id": "ev-decomposition-codes",
+      "kind": "test",
+      "ref": "tests/core/decomposition.test.js#the other ways a candidate is not a partition each get their own code",
+      "claim": "decomposition-invalid-diagnosed",
+      "description": "Unknown, outside, below-grain, duplicate, colliding, empty and malformed candidates."
+    },
+    {
+      "id": "ev-decomposition-registry",
+      "kind": "test",
+      "ref": "tests/core/decomposition.test.js#a condition registered in the registry decides validity and removing it restores the report",
+      "claim": "decomposition-invalid-diagnosed",
+      "description": "A condition plugs into the registry and decides validity; a registry without the behavioural conditions reports them as not evaluated."
+    },
+    {
+      "id": "ev-decomposition-v3",
+      "kind": "test",
+      "ref": "tests/core/decomposition.test.js#V3 fails when a block that is an element declares a port its boundary does not realise",
+      "claim": "decomposition-invalid-diagnosed",
+      "description": "A V3 negative."
+    },
+    {
+      "id": "ev-decomposition-cli",
+      "kind": "test",
+      "ref": "tests/core/decomposition.test.js#decompose reports candidates and the failing condition of an invalid one and full evidence for one candidate",
+      "claim": "decomposition-invalid-diagnosed",
+      "description": "The command, including an invalid candidate given as data."
+    },
+    {
+      "id": "ev-decomposition-v5",
+      "kind": "test",
+      "ref": "tests/core/decomposition-behaviour.test.js#V5 rejects a candidate whose block pair carries a message only over a different witness",
+      "claim": "decomposition-behavioural-validity",
+      "description": "V5 negative fixture and its positive."
+    },
+    {
+      "id": "ev-decomposition-v7",
+      "kind": "test",
+      "ref": "tests/core/decomposition-behaviour.test.js#V7 rejects a candidate that puts an untyped contract on the boundary between two blocks with the hop and its events",
+      "claim": "decomposition-behavioural-validity",
+      "description": "V7 negative fixture and its positive."
+    },
+    {
+      "id": "ev-decomposition-v6",
+      "kind": "test",
+      "ref": "tests/core/decomposition-behaviour.test.js#V6 checks the abstraction a block declares: a certificate passes and a counterexample rejects with its scenario and events",
+      "claim": "decomposition-behavioural-validity",
+      "description": "V6 certificate and counterexample on the composition fixture."
+    },
+    {
+      "id": "ev-decomposition-v6-na",
+      "kind": "test",
+      "ref": "tests/core/decomposition-behaviour.test.js#V6 is not applicable where no block declares abstract behaviour and says why",
+      "claim": "decomposition-behavioural-validity",
+      "description": "V6 not applicable with its reason."
+    },
+    {
+      "id": "ev-decomposition-accept",
+      "kind": "test",
+      "ref": "tests/core/decomposition-behaviour.test.js#accepting a candidate records a named hierarchy and the components it needs in one undoable transaction",
+      "claim": "decomposition-acceptance-transaction",
+      "description": "Acceptance, undo and redo."
+    },
+    {
+      "id": "ev-decomposition-accept-refused",
+      "kind": "test",
+      "ref": "tests/core/decomposition-behaviour.test.js#a candidate that is not valid is not accepted and neither is one that cannot be recorded",
+      "claim": "decomposition-acceptance-transaction",
+      "description": "Refusals."
+    },
+    {
+      "id": "ev-decomposition-accept-modules",
+      "kind": "test",
+      "ref": "tests/core/decomposition-behaviour.test.js#a module element the candidate places in a block stays with its component and is listed with the elements it empties",
+      "claim": "decomposition-acceptance-transaction",
+      "description": "What a hierarchy cannot record is listed."
+    },
+    {
+      "id": "ev-decomposition-accept-browser",
+      "kind": "test",
+      "ref": "tests/browser/decomposition-navigation.spec.js#an accepted decomposition is navigated at once and its level-bound claim agrees with the command line",
+      "claim": "decomposition-acceptance-transaction",
+      "description": "Navigation of the accepted hierarchy on the self-specification."
+    },
+    {
+      "id": "ev-decomposition-fixture-compiler",
+      "kind": "test",
+      "ref": "tests/core/decomposition-behaviour.test.js#compiler: candidates and validity and measurements then acceptance with a level-bound claim and functional composition intact",
+      "claim": "decomposition-external-fixtures",
+      "description": "The compiler."
+    },
+    {
+      "id": "ev-decomposition-fixture-distributed",
+      "kind": "test",
+      "ref": "tests/core/decomposition-behaviour.test.js#distributed: candidates over services and machines then acceptance that keeps the realisation maps whole",
+      "claim": "decomposition-external-fixtures",
+      "description": "The distributed application."
+    },
+    {
+      "id": "ev-decomposition-fixture-events",
+      "kind": "test",
+      "ref": "tests/core/decomposition-behaviour.test.js#event-driven: connectors contract the paths and V5 to V7 decide candidates and the accepted cut keeps the contractions",
+      "claim": "decomposition-external-fixtures",
+      "description": "The event-driven system."
+    },
+    {
+      "id": "ev-decomposition-reports",
+      "kind": "test",
+      "ref": "tests/core/decomposition-behaviour.test.js#the recorded reports say what the runs said",
+      "claim": "decomposition-external-fixtures",
+      "description": "The reports under docs/assessment/2026-11-27/m7."
     }
   ]
 }

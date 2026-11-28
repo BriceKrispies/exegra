@@ -1,0 +1,442 @@
+{
+  "exegra": "0.1",
+  "system": {
+    "id": "compiler",
+    "name": "Compiler (mismatched composite signature)",
+    "description": "A multiscale fixture (WG-5730): a compiler pipeline with shared diagnostics, whose functions compose along its hierarchy."
+  },
+  "components": [
+    {
+      "id": "frontend",
+      "name": "Frontend",
+      "category": "computational",
+      "purpose": "Turns source text into a typed syntax tree.",
+      "implementation": {
+        "status": "manual"
+      },
+      "kind": "subsystem",
+      "parent": "compiler"
+    },
+    {
+      "id": "lexer",
+      "name": "Lexer",
+      "category": "computational",
+      "purpose": "Splits source text into tokens.",
+      "implementation": {
+        "status": "manual"
+      },
+      "parent": "frontend"
+    },
+    {
+      "id": "parser",
+      "name": "Parser",
+      "category": "computational",
+      "purpose": "Builds a syntax tree from tokens.",
+      "implementation": {
+        "status": "manual"
+      },
+      "parent": "frontend"
+    },
+    {
+      "id": "checker",
+      "name": "Type checker",
+      "category": "computational",
+      "purpose": "Types the syntax tree.",
+      "implementation": {
+        "status": "manual"
+      },
+      "parent": "frontend"
+    },
+    {
+      "id": "backend",
+      "name": "Backend",
+      "category": "computational",
+      "purpose": "Turns a typed tree into object code.",
+      "implementation": {
+        "status": "manual"
+      },
+      "kind": "subsystem",
+      "parent": "compiler"
+    },
+    {
+      "id": "optimiser",
+      "name": "Optimiser",
+      "category": "computational",
+      "purpose": "Lowers and optimises the typed tree.",
+      "implementation": {
+        "status": "manual"
+      },
+      "parent": "backend"
+    },
+    {
+      "id": "emitter",
+      "name": "Emitter",
+      "category": "computational",
+      "purpose": "Writes object code.",
+      "implementation": {
+        "status": "manual"
+      },
+      "parent": "backend"
+    },
+    {
+      "id": "diagnostics",
+      "name": "Diagnostics",
+      "category": "computational",
+      "purpose": "The one sink every stage reports to: shared diagnostics.",
+      "implementation": {
+        "status": "manual"
+      },
+      "parent": "compiler"
+    },
+    {
+      "id": "team-front",
+      "name": "Frontend team",
+      "category": "computational",
+      "purpose": "Owns the lexer, parser and checker.",
+      "implementation": {
+        "status": "manual"
+      },
+      "kind": "actor"
+    },
+    {
+      "id": "team-back",
+      "name": "Backend team",
+      "category": "computational",
+      "purpose": "Owns the optimiser and emitter.",
+      "implementation": {
+        "status": "manual"
+      },
+      "kind": "actor"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "lexer-feeds-parser",
+      "kind": "data-flow",
+      "from": "lexer",
+      "to": "parser",
+      "description": "Tokens."
+    },
+    {
+      "id": "parser-feeds-checker",
+      "kind": "data-flow",
+      "from": "parser",
+      "to": "checker",
+      "description": "The syntax tree."
+    },
+    {
+      "id": "checker-feeds-optimiser",
+      "kind": "data-flow",
+      "from": "checker",
+      "to": "optimiser",
+      "description": "The typed tree: the frontend to backend boundary."
+    },
+    {
+      "id": "optimiser-feeds-emitter",
+      "kind": "data-flow",
+      "from": "optimiser",
+      "to": "emitter",
+      "description": "The lowered program."
+    },
+    {
+      "id": "lexer-reports",
+      "kind": "invokes",
+      "from": "lexer",
+      "to": "diagnostics",
+      "description": "Reports a diagnostic."
+    },
+    {
+      "id": "parser-reports",
+      "kind": "invokes",
+      "from": "parser",
+      "to": "diagnostics",
+      "description": "Reports a diagnostic."
+    },
+    {
+      "id": "checker-reports",
+      "kind": "invokes",
+      "from": "checker",
+      "to": "diagnostics",
+      "description": "Reports a diagnostic."
+    },
+    {
+      "id": "backend-reports",
+      "kind": "invokes",
+      "from": "backend",
+      "to": "diagnostics",
+      "description": "The backend reports to the shared diagnostics."
+    }
+  ],
+  "hierarchies": [
+    {
+      "id": "ownership",
+      "name": "Ownership",
+      "groups": [
+        {
+          "parent": "team-front",
+          "members": [
+            "frontend"
+          ]
+        },
+        {
+          "parent": "team-back",
+          "members": [
+            "backend"
+          ]
+        }
+      ]
+    }
+  ],
+  "cuts": [
+    {
+      "id": "compiler-l0",
+      "name": "Compiler as one block",
+      "depth": 0
+    },
+    {
+      "id": "compiler-l1",
+      "name": "Frontend and backend",
+      "depth": 1
+    },
+    {
+      "id": "compiler-stages",
+      "name": "Every stage",
+      "finest": true
+    }
+  ],
+  "types": [
+    {
+      "id": "source-text",
+      "name": "source-text",
+      "kind": "struct",
+      "fields": [
+        {
+          "name": "n",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "id": "token-stream",
+      "name": "token-stream",
+      "kind": "struct",
+      "fields": [
+        {
+          "name": "n",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "id": "syntax-tree",
+      "name": "syntax-tree",
+      "kind": "struct",
+      "fields": [
+        {
+          "name": "n",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "id": "typed-tree",
+      "name": "typed-tree",
+      "kind": "struct",
+      "fields": [
+        {
+          "name": "n",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "id": "ir",
+      "name": "ir",
+      "kind": "struct",
+      "fields": [
+        {
+          "name": "n",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "id": "object-code",
+      "name": "object-code",
+      "kind": "struct",
+      "fields": [
+        {
+          "name": "n",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "id": "diagnostic",
+      "name": "Diagnostic",
+      "kind": "union",
+      "variants": [
+        {
+          "name": "LexError",
+          "fields": [
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ParseError",
+          "fields": [
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "TypeError",
+          "fields": [
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "id": "lex",
+      "element": "lexer",
+      "description": "lex: source-text to token-stream.",
+      "params": [
+        {
+          "name": "source",
+          "type": "source-text"
+        }
+      ],
+      "returns": "token-stream",
+      "errors": "diagnostic",
+      "body": "if source.n < 0 then fail(diagnostic.LexError{message: 'negative input'}) else token-stream{n: source.n + 1}"
+    },
+    {
+      "id": "parse",
+      "element": "parser",
+      "description": "parse: token-stream to syntax-tree.",
+      "params": [
+        {
+          "name": "tokens",
+          "type": "token-stream"
+        }
+      ],
+      "returns": "syntax-tree",
+      "errors": "diagnostic",
+      "body": "if tokens.n < 0 then fail(diagnostic.ParseError{message: 'no tokens'}) else syntax-tree{n: tokens.n + 1}"
+    },
+    {
+      "id": "check",
+      "element": "checker",
+      "description": "check: syntax-tree to typed-tree.",
+      "params": [
+        {
+          "name": "tree",
+          "type": "syntax-tree"
+        }
+      ],
+      "returns": "typed-tree",
+      "errors": "diagnostic",
+      "body": "if tree.n < 0 then fail(diagnostic.TypeError{message: 'ill-typed'}) else typed-tree{n: tree.n + 1}"
+    },
+    {
+      "id": "optimise",
+      "element": "optimiser",
+      "description": "optimise: typed-tree to ir.",
+      "params": [
+        {
+          "name": "typed",
+          "type": "typed-tree"
+        }
+      ],
+      "returns": "ir",
+      "errors": "diagnostic",
+      "body": "ir{n: typed.n + 1}"
+    },
+    {
+      "id": "emit",
+      "element": "emitter",
+      "description": "emit: ir to object-code.",
+      "params": [
+        {
+          "name": "program",
+          "type": "ir"
+        }
+      ],
+      "returns": "object-code",
+      "errors": "diagnostic",
+      "body": "object-code{n: program.n + 1}"
+    },
+    {
+      "id": "analyse",
+      "element": "frontend",
+      "description": "The frontend: lexing, parsing and checking, composed.",
+      "params": [
+        {
+          "name": "source",
+          "type": "source-text"
+        }
+      ],
+      "returns": "syntax-tree",
+      "errors": "diagnostic",
+      "body": "try call parse(try call lex(source))",
+      "composition": {
+        "stages": [
+          "lex",
+          "parse",
+          "check"
+        ]
+      }
+    },
+    {
+      "id": "generate",
+      "element": "backend",
+      "description": "The backend: optimising and emitting, composed.",
+      "params": [
+        {
+          "name": "typed",
+          "type": "typed-tree"
+        }
+      ],
+      "returns": "object-code",
+      "errors": "diagnostic",
+      "body": "try call emit(try call optimise(typed))",
+      "composition": {
+        "stages": [
+          "optimise",
+          "emit"
+        ]
+      }
+    },
+    {
+      "id": "compile",
+      "element": "compiler",
+      "description": "The whole compiler: frontend then backend.",
+      "params": [
+        {
+          "name": "source",
+          "type": "source-text"
+        }
+      ],
+      "returns": "object-code",
+      "errors": "diagnostic",
+      "body": "try call emit(try call optimise(try call check(try call analyse(source))))",
+      "composition": {
+        "stages": [
+          "analyse",
+          "generate"
+        ]
+      }
+    }
+  ]
+}

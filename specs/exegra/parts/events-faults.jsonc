@@ -6,20 +6,54 @@
       "id": "edit-requested",
       "name": "Edit requested",
       "description": "A gesture in the scene, inspector or a dialog asks for a change; it becomes a typed operation.",
-      "producedBy": "browser-user"
+      "producedBy": "browser-user",
+      "payload": [
+        {
+          "name": "text",
+          "type": "string"
+        }
+      ]
     },
-    { "id": "source-apply-requested", "name": "Source apply requested", "description": "The user applies the draft in the source editor; it becomes a ReplaceSource operation." },
-    { "id": "operation-submitted", "name": "Operation submitted", "description": "A typed operation reaches the transaction system through session.apply." },
+    {
+      "id": "source-apply-requested",
+      "name": "Source apply requested",
+      "description": "The user applies the draft in the source editor; it becomes a ReplaceSource operation.",
+      "payload": [
+        {
+          "name": "text",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "operation-submitted",
+      "name": "Operation submitted",
+      "description": "A typed operation reaches the transaction system through session.apply.",
+      "payload": [
+        {
+          "name": "text",
+          "type": "string"
+        }
+      ]
+    },
     { "id": "text-edits-computed", "name": "Text edits computed", "description": "Preconditions held and the operation's source-preserving text edits produced a candidate specification text." },
     { "id": "model-parsed", "name": "Candidate model parsed", "description": "The candidate text was parsed into a candidate model." },
     { "id": "validation-passed", "name": "Validation passed", "description": "The candidate model has no validation errors." },
     { "id": "validation-failed", "name": "Validation failed", "description": "The candidate has validation errors; the transaction is refused." },
-    { "id": "transaction-committed", "name": "Transaction committed", "description": "The revision increased and a new model snapshot exists; the commit listener of the session runs.", "payload": [{ "name": "revision", "type": "number" }] },
+    { "id": "transaction-committed", "name": "Transaction committed", "description": "The revision increased and a new model snapshot exists; the commit listener of the session runs.", "payload": [
+        {
+          "name": "revision",
+          "type": "number"
+        },
+        {
+          "name": "text",
+          "type": "string"
+        }
+      ] },
     { "id": "transaction-rejected", "name": "Transaction rejected", "description": "The transaction was refused; nothing changed." },
     { "id": "refresh-requested", "name": "Refresh requested", "description": "The session re-evaluates claims, re-projects and re-lays-out the scene for the committed revision.", "payload": [{ "name": "revision", "type": "number" }] },
     { "id": "projection-refreshed", "name": "Projection refreshed", "description": "The scene for the committed revision was derived and handed to the renderer.", "payload": [{ "name": "revision", "type": "number" }] },
     { "id": "model-published", "name": "Model published", "description": "The session announced the commit to the inspector and the source editor.", "payload": [{ "name": "revision", "type": "number" }] },
-    { "id": "save-requested", "name": "Save requested", "description": "The session's asynchronous flush sends the committed text with its base hash to the file service, after the commit.", "payload": [{ "name": "revision", "type": "number" }] },
     {
       "id": "save-succeeded",
       "name": "Save succeeded",
@@ -1189,7 +1223,9 @@
           "name": "requestId",
           "type": "number"
         }
-      ]
+      ],
+      "contract": "write-file",
+      "role": "request"
     },
     {
       "id": "ws-write-done",
@@ -1212,7 +1248,10 @@
           "name": "requestId",
           "type": "number"
         }
-      ]
+      ],
+      "contract": "write-file",
+      "role": "response",
+      "correlation": "requestId"
     },
     {
       "id": "ws-write-conflict",
@@ -1254,7 +1293,10 @@
           "name": "requestId",
           "type": "number"
         }
-      ]
+      ],
+      "contract": "write-file",
+      "role": "response",
+      "correlation": "requestId"
     },
     {
       "id": "disk-file-replaced",
@@ -2068,10 +2110,14 @@
       "id": "save-before-refresh",
       "name": "Write not caused by a refresh",
       "kind": "inject-event",
-      "event": "save-requested",
+      "event": "write-intent",
       "at": 0,
       "payload": {
-        "revision": 2
+        "name": "exegra",
+        "file": "spec",
+        "text": "h2",
+        "baseHash": "h1",
+        "requestId": 2
       },
       "description": "The file is written before the views were refreshed from the committed model. A defect the edit flow must not have."
     },
@@ -2080,7 +2126,7 @@
       "name": "Commit without validation",
       "kind": "enable-transition",
       "transition": "tx-commit-unvalidated",
-      "description": "The transaction commits as soon as the candidate is parsed, before the validator has passed it. A defect the edit flow must not have."
+      "description": "The transaction commits as soon as its text edits are computed, without waiting for the candidate to be parsed and validated. A defect the edit flow must not have. (It fired on model-parsed until WG-5729: the commit and the validator's validation-passed were then emitted in one step, and whether the negative run of commit-only-after-validation violated the claim depended on the order the scenario listed transaction-flow and validator-flow, which the order-independence check exposed.)"
     },
     {
       "id": "reject-partially-applied",
@@ -2342,6 +2388,13 @@
       "kind": "enable-transition",
       "transition": "shared-edit-accept-unchecked",
       "description": "The conditional write skips its base check, so the second write from the same initial revision commits too."
+    },
+    {
+      "id": "endpoint-ignores-base-hash",
+      "name": "Write endpoint ignores the base hash",
+      "kind": "enable-transition",
+      "transition": "write-endpoint-accept-stale",
+      "description": "The abstract write endpoint replaces the file whatever the base hash. A defect the abstraction must not have; the refinement check against the development-server plugin and the workspace service, which refuse the stale write, exposes it."
     }
   ]
 }

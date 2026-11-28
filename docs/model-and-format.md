@@ -54,6 +54,8 @@ A specification can be a platform file plus product files beside it (`src/core/l
 
 Exegra splices the product entities into the platform text at the end of their sections and validates the combined model; every location names its own file (`file` in the CLI's diagnostics and sources). The refusals are `layer.header-missing`, `layer.header-invalid`, `layer.section-invalid`, `layer.kind-not-allowed`, `layer.import-mismatch`, `layer.import-unknown`, `layer.import-missing`, `layer.reference-unknown`, `layer.redefines-entity`, `layer.cross-product-reference`, `layer.namespace-missing`, `layer.value-invalid` (a typed value that does not have the shape of its platform type), `layer.outside-catalogue` (a union variant the platform type lacks, such as a trigger event or an automation step outside the published catalogue), `layer.platform-power`, `layer.platform-references-product`, `layer.product-id-duplicate`, `layer.entity-id-invalid` and `layer.entity-id-missing`; each message says what to change. The typed sections are not spliced into the combined model. A product capability is entitled by installing the product, so only a role or grant that confers it is checked. `validate` reports the hash of the platform text alone as `semanticHash` (adding a product file changes neither it nor anything generated from the platform) and the combined model's hash as `layeredHash`. Transactions edit only the platform file; a product file is edited as a file.
 
+**Installing a product** (`admitProduct` in `cli/admit.js`, WG-5685). Products are checked together, not only one at a time: the state-invariant claims of every installed product and of the candidate are explored over every execution of their own scenarios and then over the composed scenario of the installation, which runs the behaviors and the steps of all those scenarios, every order of simultaneous entries included (`src/core/refinement-explore.js`). A claim that holds alone but fails composed refuses the installation with `admit.product-composition-violated`, naming the composed scenario's behaviors, the delivery order and the values the claim reads at the failing configuration; an exploration that is incomplete refuses it with `admit.product-composition-unexplored`. `tests/fixtures/two-product-ledger` is the example: badges and promotions each place one hold on the platform ledger and each keeps `ledger.held <= 1` alone; installed together, the composed scenario `{ledger, badges__awarder, promotions__awarder}` reaches `held = 2`.
+
 ## The specification format
 
 `spec.jsonc` is JSON with comments and trailing commas allowed (`jsonc-parser`). Comments and formatting are preserved by every operation. The top level is an object whose keys are the sections declared in `src/core/metamodel.json`:
@@ -608,6 +610,22 @@ A specification may state pure functions, so that the decision logic of the spec
 
 **Values in examples** are JSON: bool, number and string as themselves; the unit value as `null`; an enum value as its name; an id or scalar as its representation; a struct as an object of its fields (an absent optional or option field is null); `list<T>` an array; `option<T>` null or the value; `map<K, V>` an object (integer keys as decimal strings); a union in serde's external form whatever its wire encoding: a unit variant is its name (`"Unit"`), a newtype variant `{"Name": value}`, any other variant `{"Name": {fields}}`; `result<T, E>` is `{"Ok": t}` or `{"Err": e}`. A result compares structurally with what the function gives.
 
+### Functional composition
+
+A function is attached to an element of the hierarchy with `element` (a component or the system), and a function attached to a composite element may declare `composition: {stages: [function ids]}`: it is the composition of its members' functions, as a compiler's `compile` is its frontend's `analyse` then its backend's `generate`. Each stage is a function attached to a member of the element in the logical hierarchy (WG-5730; `src/core/function-composition.js`, the `compose-functions` command). The signature the composite declares must equal the composition of its stages': its parameters are the first stage's, name for name and type for type; it returns what the last stage returns; every later stage takes exactly one parameter, of the type the stage before it returns; the stages that declare `errors` share one union, and the composite declares it. A stage may itself be a composite, so the rule holds at every level. Types are compared as written, without white space. Nothing is run: the check reads signatures only.
+
+| Code | Meaning |
+|---|---|
+| `function.composition-element` | A function that declares a composition is attached to an element. |
+| `function.composition-stage` | Every stage is a function attached to a member of the composite's element, and there is at least one. |
+| `function.composition-cycle` | A composition does not reach its own function through its stages. |
+| `function.composition-arity` | A stage after the first takes one parameter. |
+| `function.composition-chain` | A stage takes the type the stage before it returns. |
+| `function.composition-params` | The composite declares the parameters of its first stage. |
+| `function.composition-returns` | The composite returns what its last stage returns. |
+| `function.composition-errors` | The stages share one error union and the composite declares it. |
+| `function.composition-missing` | Warning: a function attached to an element whose members carry functions declares no composition. |
+
 ### Example fixtures
 
 A tenant or a schema that a function takes is long, and every example of every function that takes one repeats it. A specification declares such a value once, in the section `exampleFixtures` (kind `exampleFixture`), and examples refer to it (WG-4963):
@@ -1037,7 +1055,7 @@ A `quota` limits one tenant (or principal, or source address). A **quota pool** 
 | `exemption` | Set for a member by holders of `setBy` (with `capability`, which that role must confer) through `event` (payload `member`); `effective` `same-window` applies it from the window it is set in, that window's end included, `next-window` from the next; `retroactive: true` lifts a throttle in force, and by default it never applies to windows already throttled. |
 | `modelMembers` | How many members the model runs, 1 to 4 (default 2); usage payloads name them `m1`, `m2`, ... |
 
-**Meaning.** A member's fair share is its contribution, and the pool's capacity is the sum of the contributions. Composing with quotas this way means a per-tenant quota keeps saying what one tenant is entitled to, and the pool says that the entitlements are shared. A scenario lists the pools it runs in `pools` (a scenario may run pools and no behavior). Each pool runs as one machine per pooled limit and modelled member, `<pool>-<limit>-m<k>`, with subject `heldBy`, states `normal` and `throttled`, and variables `usage`, `day` (the window index), `overDays`, `underDays`, `throttledOn` (the window the throttle in force began, -1 none), `burstSetOn` and `burstFrom` (the window the exemption was set in and the first it applies to, -1 none), `admitted` and `refused`. `poolMachines` in `src/core/pools.js` derives them; `simulationInput` adds them after the scenario's behaviors, so the engines, the trace check and `exegra prove` run them unchanged.
+**Meaning.** A member's fair share is its contribution, and the pool's capacity is the sum of the contributions. Composing with quotas this way means a per-tenant quota keeps saying what one tenant is entitled to, and the pool says that the entitlements are shared. A scenario lists the pools it runs in `pools` (a scenario may run pools and no behavior). Each pool runs as one machine per pooled limit and modelled member, `<pool>-<limit>-m<k>`, with subject `heldBy`, states `normal` and `throttled`, and variables `usage`, `day` (the window index), `overDays`, `underDays`, `throttledOn` (the window the throttle in force began, -1 none), `burstSetOn` and `burstFrom` (the window the exemption was set in and the first it applies to, -1 none), `admitted` and `refused`. `Exegra.Lower.poolMachines` (`formal/Exegra/Lower/Input.lean`) derives them; `engineInput` adds them after the scenario's behaviors, so the engines, the trace check and `exegra prove` run them unchanged.
 
 - **Usage** of member `m<k>`: admitted in `normal` when it lowers the amount or the pool's total use plus it is within capacity (headroom); in `throttled`, only within the fair share and the capacity (`fair-share`) or only when it lowers the amount (`refuse`). Otherwise refused, changing only `refused`.
 - **Window end**: the window ended over the share when `usage` exceeds it. In `normal`, a member whose over count reaches N is throttled, unless `burstFrom` is set and not after this window; in `throttled`, the throttle lifts when the under count reaches the release. A rate's usage resets and the window index advances.
@@ -1366,6 +1384,14 @@ A behavior's effect is `{ "set": "<variable>", "to": <literal or expression stri
   "faultOnly": true,
   "effects": [ { "set": "conflict", "to": true }, { "emit": "save-conflicted" } ] }
 ```
+
+### Interfaces, abstractions and behavioural cuts
+
+Three optional properties connect behaviour to the hierarchy ([composition.md](composition.md)):
+
+- `component.interface` and `port.interface`: `{inputs: [event], outputs: [event], observables: ["<behavior>.<variable>" | "<behavior>.state"]}`, the events at the element's boundary and the state behaviours outside may read. Without it the interface is inferred from the behaviours.
+- `behavior.abstracts`: `{members: [behavior], hide?: [event], timeScale?: number}`, a declared abstraction of a set of member behaviours, checked against their composition (claim method `refines-composition`). A behaviour may describe a composite.
+- `scenario.cut`: `{regions?: [{abstraction, level: "abstract" | "members"}], environment?: [{element, events: [event], assumption?, note?}]}`, the level each region runs at and what the scenario's environment stands for.
 
 ## The layout file
 

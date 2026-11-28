@@ -11,19 +11,18 @@
 //   on every path into the transition's state, or an earlier conjunct is a boolean variable that starts
 //   false and is set true only by transitions that also set the variable from `time`. Otherwise the
 //   variable can still hold its literal initial value, a time near the epoch.
-// - ready.delay-unit: the scenarios that run the machine agree on one time unit (sim-input.js,
+// - ready.delay-unit: the scenarios that run the machine agree on one time unit (time-units.js,
 //   machineTimeUnit); every fixed delay of an `emit ... after` or a timer, a bare number in that unit or a
 //   duration string, is a whole number of milliseconds, the unit of generated code's timers; and a machine
 //   that reads `time` runs in milliseconds, since generated code's `time` counts milliseconds.
 // - ready.number-bound: a number literal in an expression is at most 2^53 - 1; an initial value of an
 //   integer variable, and a scenario payload value of an integer payload field of an event the machine
-//   receives, is a whole number in its type's range (u64 and i64 limited to +-(2^53 - 1)). In every
-//   behaviour a scenario runs (simulatedNumberReadiness), every number is an integer: the behaviour
-//   calculus the engine runs computes on integers and refuses an input with a decimal (WG-5681).
+//   receives, is a whole number in its type's range (u64 and i64 limited to +-(2^53 - 1)). An untyped
+//   number may be any decimal: the engine computes on exact rationals (WG-5683).
 // Pure: no DOM, no I/O.
 
 import { parseExpr, exprRefs, INT_RANGES } from './expr.js';
-import { evalTypeOf, machineTimeUnit, durationIn, UNIT_NS } from './sim-input.js';
+import { evalTypeOf, machineTimeUnit, durationIn, UNIT_NS } from './time-units.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Entity} Entity */
@@ -293,57 +292,5 @@ export function scenarioIntegerReadiness(model, received, report) {
         }
       }
     });
-  }
-}
-
-/**
- * ready.number-bound for every simulated behaviour (WG-5681): a behaviour some scenario runs has no
- * number that is not an integer, in a literal of a guard or effect expression, a constant a `set` or a
- * payload writes, or a variable's initial value. The engine's behaviour calculus computes on integers
- * and refuses such an input (formal/Exegra/Elab.lean, `notInteger`); `validate` reports it first.
- * @param {Model} model @param {Report} report
- */
-export function simulatedNumberReadiness(model, report) {
-  const list = (/** @type {any} */ v) => (Array.isArray(v) ? v : []);
-  const simulated = new Set();
-  for (const s of model.byKind.scenario ?? []) for (const id of list(s.data.behaviors)) if (typeof id === 'string') simulated.add(id);
-  /** @param {unknown} x */
-  const decimal = (x) => typeof x === 'number' && !Number.isInteger(x);
-  /** @param {any} a @returns {number|undefined} */
-  const literalIn = (a) => {
-    if (!a) return undefined;
-    if (a.t === 'lit') return decimal(a.v) ? a.v : undefined;
-    if (a.t === 'un') return literalIn(a.a);
-    if (a.t === 'bin') return literalIn(a.a) ?? literalIn(a.b);
-    return undefined;
-  };
-  /** @param {unknown} src */
-  const inExpr = (src) => {
-    if (typeof src !== 'string') return undefined;
-    const p = parseExpr(src);
-    return p.ok ? literalIn(p.ast) : undefined;
-  };
-  /** @param {any} v @returns {number|undefined} */
-  const inValue = (v) => {
-    if (decimal(v)) return v;
-    if (typeof v === 'string') return inExpr(v);
-    if (Array.isArray(v)) { for (const x of v) { const d = inValue(x); if (d !== undefined) return d; } return undefined; }
-    if (v && typeof v === 'object') { for (const x of Object.values(v)) { const d = inValue(x); if (d !== undefined) return d; } }
-    return undefined;
-  };
-  for (const b of model.byKind.behavior ?? []) {
-    if (!simulated.has(b.id)) continue;
-    list(b.data.variables).forEach((/** @type {any} */ v, /** @type {number} */ i) => {
-      if (v && decimal(v.initial)) report('ready.number-bound', b, `The initial value ${v.initial} of variable "${v.name}" is not an integer; the engine computes on integers.`, ['variables', i, 'initial']);
-    });
-    for (const t of (model.byKind.transition ?? []).filter((x) => x.owner === b.id)) {
-      const g = inExpr(t.data.guard);
-      if (g !== undefined) report('ready.number-bound', t, `Guard "${t.data.guard}" has the number ${g}, which is not an integer; the engine computes on integers.`, ['guard']);
-      list(t.data.effects).forEach((/** @type {any} */ fx, /** @type {number} */ i) => {
-        if (!fx || typeof fx !== 'object') return;
-        const d = ('set' in fx ? inValue(fx.to) : undefined) ?? (fx.payload && typeof fx.payload === 'object' ? inValue(fx.payload) : undefined);
-        if (d !== undefined) report('ready.number-bound', t, `Effect ${i} has the number ${d}, which is not an integer; the engine computes on integers.`, ['effects', i]);
-      });
-    }
   }
 }

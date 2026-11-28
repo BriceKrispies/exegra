@@ -11,8 +11,8 @@ import { cutOfExpanded, toggleExpanded, expandedOfCut, declaredCutWithBlocks } f
 import { layoutScene, chooseLayout, LAYOUT_METHODS } from '../core/layout.js';
 import { evaluateClaims, evaluateClaim, checkTrace } from '../core/claims.js';
 import { applyConcordance } from '../core/concordance.js';
-import { createTraceCursor } from '../core/engine.js';
-import { simulationInput } from '../core/sim-input.js';
+import { createTraceCursor, engineInput } from '../core/engine.js';
+
 import { createEngineRunner } from './engine-runner.js';
 import { stepFlow, flowPaths, describeFlow } from '../core/flows.js';
 import { componentsFor, elementsOf, hierarchyOf, hierarchyIds, cutHierarchyId } from '../core/query.js';
@@ -947,14 +947,14 @@ export function createSession() {
     const token = ++simToken;
     const model = session.model;
     const scenario = scenarioId && model ? model.entities.get(scenarioId) : null;
-    /** @type {import('../core/sim-input.js').SimulationInput|null} */
+    /** @type {import('../core/engine.js').SimulationInput|null} */
     let input = null;
     if (!scenario || scenario.kind !== 'scenario' || !model) {
       session.sim = emptySim();
     } else {
       const active = (faults ?? scenario.data.faults ?? []).filter((/** @type {string} */ f) => model.entities.get(f)?.kind === 'fault');
       try {
-        input = simulationInput(model, scenario.id, active);
+        input = engineInput(model, scenario.id, active);
         session.sim = { ...emptySim(), scenarioId: scenario.id, faults: active, running: true };
         session.ui.focusScenario = scenario.id;
       } catch (e) {

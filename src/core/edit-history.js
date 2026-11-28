@@ -1,8 +1,7 @@
 // Compare observations of two overlapping writes with both orders of the specification's scenario.
 // The capture contains only observations. All expected outcomes and the winning value come from
 // running the model, with opaque values bound to the two concrete submissions by array position.
-import { simulationInput } from './sim-input.js';
-import { runEngine } from './engine.js';
+import { engineInput, runEngine } from './engine.js';
 
 const SCENARIO = 'two-session-edit-race';
 const MACHINE = 'shared-base-write-flow';
@@ -15,7 +14,7 @@ const sameRecord = (a, b) => a?.tenant === b.tenant && a?.record === b.record;
 
 /** @param {import('./types.js').Model} model @param {any[]} attempts */
 function predictedOrders(model, attempts) {
-  const input = simulationInput(model, SCENARIO);
+  const input = engineInput(model, SCENARIO);
   const steps = input.scenario.steps;
   if (steps.length !== 2 || steps[0].at !== steps[1].at ||
       steps.some((s) => s.event !== 'two-session-write' || !nonempty(s.payload.attempt) || !nonempty(s.payload.value)) ||

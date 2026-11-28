@@ -10,7 +10,7 @@
   //   foundations F6 model): the failing step is a counterexample.
   // - big-draw: a delay drawn from a uniform distribution over a million values, more than the
   //   explorer tries.
-  // - sampled: a variable set from a draw, a construct the calculus does not cover.
+  // - sampled: a variable set from a draw (covered by the calculus since WG-5683).
   "exegra": "0.1",
   "system": {
     "id": "behaviour-order-fixture",

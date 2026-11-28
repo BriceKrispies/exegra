@@ -1,6 +1,11 @@
+import { createHash } from 'node:crypto';
+import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = Number(process.env.EXEGRA_TEST_PORT) || 5199;
+// One dev server port per checkout: the webServer below reuses a server already listening on its port, so two
+// checkouts (worktrees) running Playwright at the same time on one port would test, and save into, each other's
+// files. The default is derived from the repository root path (5200-5999); EXEGRA_TEST_PORT overrides it.
+const PORT = Number(process.env.EXEGRA_TEST_PORT) || 5200 + (createHash('sha256').update(path.resolve(import.meta.dirname)).digest().readUInt32BE(0) % 800);
 
 // Uses the locally installed Chrome so that no browser download is required.
 const chrome = { browserName: /** @type {const} */ ('chromium'), channel: 'chrome' };

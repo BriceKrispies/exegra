@@ -9,23 +9,29 @@
 // Deterministic: no DOM, no clocks, no randomness.
 
 import { faultModelOf, faultModelScope, faultCoverage } from './fault-model.js';
-import { CLAIM_METHODS } from './claim-methods.js';
+import { CLAIM_METHODS, conformanceStage } from './claim-methods.js';
 import { own } from './own.js';
 import { DEPENDENCY_CLASSES, kindInfo } from './interactions.js';
 import { componentGraph, selectComponents, hierarchyIds, hierarchyOf, cutMap, elementsOf, selectorNames } from './query.js';
 import { deriveModel, blockAt, restrictInteraction, abstractionInvariants, ABSTRACTION_INVARIANTS } from './abstraction.js';
 import { parseExpr, evalExpr, exprRefs, ExprError } from './expr.js';
 import { semanticHash } from './hash.js';
-import { runScenario, runEngineText } from './engine.js';
+import { engineInput, runScenario, runEngineText } from './engine.js';
 import { evaluateMetricClaim, metricVerdictInput, quantileKey } from './metric-claims.js';
 import { decideStatuses } from './verdict.js';
 import { extractionOf, reconcile, claimBasis, STATIC_ONLY } from './extraction.js';
 import { stampsOf, testFact, documentFact, theoremFact, checkFact, assumptionFact } from './facts.js';
-import { simulationInput, durationIn } from './sim-input.js';
+import { durationIn } from './time-units.js';
+import { call as leanCall } from './lean.js';
 import { checkContractEvents } from './contract-trace.js';
 import { evaluateDataClaim } from './data-model.js';
 import { checkRefinementTrace, refinementOf } from './refinement.js';
-import { scenarioMachineIds } from './pools.js';
+import { exploreRefinement } from './refinement-explore.js';
+import { scenarioMachineIds } from './pool-rules.js';
+import {
+  checkAbstraction, describeCounterexample, abstractionOf, environmentReport, orderIndependence,
+  transferClaim, alternativeMachines, eventInterfaces, crossReads, interfaceReport,
+} from './composition.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Entity} Entity */
@@ -52,7 +58,7 @@ import { scenarioMachineIds } from './pools.js';
  *   evaluator: string, semanticHash: string, scope: string, explanation: string,
  *   assumptions: string[], involved: string[], counterexample?: Counterexample,
  *   evidence: EvidenceItem[], negatives?: NegativeRun[], modelledBy?: {claimId: string, status: string}[],
- *   freshness?: 'fresh'|'stale'|'unverifiable', diagnostics?: ClaimDiagnostic[],
+ *   freshness?: 'fresh'|'stale'|'unverifiable', diagnostics?: ClaimDiagnostic[], stage?: string,
  *   verdict?: import('./verdict.js').Status & {established: boolean}
  *   footprint?: import('./footprints.js').Footprint, level?: {hierarchy: string, cut: string}, basis?: {counts: Record<string, number>, basis: string, text: string}
  * }} ClaimResult
@@ -93,6 +99,11 @@ const TRACE = 'exegra.trace/0.1';
 const EVIDENCE = 'exegra.evidence/0.1';
 const METRIC = 'exegra.metric/0.1';
 const REFINEMENT = 'exegra.refinement/0.1';
+const COMPOSITION = 'exegra.composition/0.1';
+/** The claim methods of behavioural composition (src/core/composition.js, docs/composition.md). */
+const COMPOSITION_METHODS = ['refines-composition', 'environment-assumed', 'order-independent', 'transfers', 'alternatives-reconciled', 'interfaces-closed'];
+/** Those that run scenarios (their check is a trace check). */
+const COMPOSITION_RUN_METHODS = ['refines-composition', 'environment-assumed', 'order-independent', 'transfers'];
 const LEAN = 'lean.kernel';
 const TRACE_METHODS = ['state-invariant', 'precedes', 'eventually', 'never'];
 
@@ -336,6 +347,15 @@ function prepare(ctx, claim) {
     } catch (e) {
       r = { evaluator: METRIC, scope: 'The metric claim could not be completed.', explanation: `The evaluator failed: ${/** @type {Error} */ (e).message}`, selected: [], failed: true };
     }
+  } else if (method === 'liveness') {
+    r = { evaluator: 'none', scope: 'Nothing was checked here: a liveness claim is about infinite runs under fairness, which no finite trace decides.', explanation: 'Liveness claims are decided only by `exegra prove` (a ranking proof, a lasso counterexample, incomplete or not supported), so the claim stays not evaluated in the live view.', selected: [] };
+  } else if (conformanceStage(method)) {
+    // A conformance stage (WG-5685): verified-refinement is a Lean theorem, the other stages rest on test evidence.
+    const stage = conformanceStage(method);
+    family = stage === 'verified-refinement' ? 'lean' : 'evidence';
+    r = stage === 'verified-refinement'
+      ? { evaluator: LEAN, scope: '', explanation: '', selected: [], stage }
+      : { evaluator: `exegra.conformance/${stage}`, scope: `Conformance stage "${stage}": established only by the executed test evidence attached to the claim, at most on the instances it ran.`, explanation: '', selected: evidence.map((e) => e.id), stage };
   } else if (method === 'lean-theorem') {
     family = 'lean';
     r = { evaluator: LEAN, scope: '', explanation: '', selected: [] };
@@ -343,10 +363,11 @@ function prepare(ctx, claim) {
     family = 'model';
     try {
       r = method === 'refines' ? evaluateRefines(model, ev)
+        : COMPOSITION_METHODS.includes(method) ? { ...evaluateComposition(model, claim, ev), evaluator: COMPOSITION }
         : TRACE_METHODS.includes(method) ? evaluateTraceClaim(model, claim, ev) : { ...evaluateStructural(model, ev), evaluator: STRUCTURAL };
-      if (!TRACE_METHODS.includes(method) && method !== 'refines') { const basis = claimBasis(model, ev); if (basis) r.basis = basis; }
+      if (!TRACE_METHODS.includes(method) && method !== 'refines' && !COMPOSITION_METHODS.includes(method)) { const basis = claimBasis(model, ev); if (basis) r.basis = basis; }
     } catch (e) {
-      r = { outcome: 'undecided', evaluator: method === 'refines' ? REFINEMENT : TRACE_METHODS.includes(method) ? TRACE : STRUCTURAL, scope: `Method "${method}" could not be completed.`, explanation: `The evaluator failed: ${/** @type {Error} */ (e).message}`, selected: [] };
+      r = { outcome: 'undecided', evaluator: method === 'refines' ? REFINEMENT : COMPOSITION_METHODS.includes(method) ? COMPOSITION : TRACE_METHODS.includes(method) ? TRACE : STRUCTURAL, scope: `Method "${method}" could not be completed.`, explanation: `The evaluator failed: ${/** @type {Error} */ (e).message}`, selected: [] };
     }
   }
 
@@ -366,7 +387,15 @@ function prepare(ctx, claim) {
 
   if (family === 'model') {
     if (r.outcome === 'pass' || r.outcome === 'fail' || r.outcome === 'undecided') {
-      add(checkFact(claim.id, method === 'refines' || TRACE_METHODS.includes(/** @type {string} */ (method)) ? 'traceCheck' : 'modelCheck', r.outcome, hash), { role: 'check', id: claim.id });
+      add(checkFact(claim.id, method === 'refines' || COMPOSITION_RUN_METHODS.includes(/** @type {string} */ (method)) || TRACE_METHODS.includes(/** @type {string} */ (method)) ? 'traceCheck' : 'modelCheck', r.outcome, hash), { role: 'check', id: claim.id });
+    }
+    // A state invariant may name the Lean theorem that proves it for the scenario's calculus system (a module
+    // `exegra prove --module` writes): the recorded check of that theorem is a fact about the model.
+    if (method === 'state-invariant' && typeof ev.theorem === 'string' && ev.theorem) {
+      theorem = ev.theorem;
+      about = Array.isArray(ev.about) ? ev.about.filter((/** @type {any} */ a) => typeof a === 'string') : [];
+      const rec = recorded?.theorems && Object.hasOwn(recorded.theorems, theorem) ? recorded.theorems[theorem] : undefined;
+      if (rec) add({ ...theoremFact(claim.id, rec, about ?? [], stampsOf(rec.formalHash, stamps?.formal)), subject: 'model' }, { role: 'theorem', id: claim.id });
     }
   } else if (family === 'metric') {
     if (r.failed) {
@@ -496,6 +525,7 @@ function present(ctx, p, v) {
   }
   if (text.counterexample) result.counterexample = text.counterexample;
   if (p.r?.negatives) result.negatives = p.r.negatives;
+  if (p.r?.stage) result.stage = p.r.stage;
   const subjects = Array.isArray(claim.data.subjects) ? claim.data.subjects.filter((/** @type {any} */ s) => typeof s === 'string') : [];
   result.involved = unique([...subjects, ...(p.r?.selected ?? []), ...(result.counterexample?.entities ?? []), ...(result.counterexample?.path ?? [])]);
 
@@ -757,7 +787,7 @@ export function theoremRequests(model) {
   const by = new Map();
   for (const c of model.byKind.claim ?? []) {
     const ev = c.data.evaluate;
-    if (!ev || ev.method !== 'lean-theorem' || typeof ev.theorem !== 'string' || !ev.theorem) continue;
+    if (!ev || (ev.method !== 'lean-theorem' && ev.method !== 'state-invariant' && ev.method !== 'conformance-verified-refinement') || typeof ev.theorem !== 'string' || !ev.theorem) continue;
     const entry = by.get(ev.theorem) ?? { about: new Set() };
     for (const a of Array.isArray(ev.about) ? ev.about : []) if (typeof a === 'string') entry.about.add(a);
     if (typeof ev.supersedes === 'string' && ev.supersedes && !entry.supersedes) entry.supersedes = ev.supersedes;
@@ -788,7 +818,7 @@ function evaluateMetricBound(model, ev) {
     if (!((Array.isArray(d.workloads) && d.workloads.length) || d.seed !== undefined || d.horizon !== undefined)) {
       throw new Error(`Scenario "${sid}" is not a format-2 scenario: it declares no workloads, seed or horizon.`);
     }
-    const input = /** @type {any} */ (simulationInput(model, sid, [...own, ...extra]));
+    const input = /** @type {any} */ (engineInput(model, sid, [...own, ...extra]));
     const st = String(ev.metric?.statistic ?? '');
     if (/^p\d/.test(st)) {
       const qs = input.metrics?.quantiles ?? ['0.5', '0.9', '0.99'];
@@ -1387,12 +1417,18 @@ function selectAt(model, d, selector, name) {
     const b = blockAt(d.level, n);
     if (b !== null && b !== n) return { problem: `the "${name}" selector names "${n}", which is hidden inside block "${b}" at ${cutName(d)}` };
   }
-  const members = select(model, selector);
+  const held = membersOfBlocks(model, d);
+  const members = [...select(model, selector)];
+  // A block named by id stands for everything it holds at this cut. In the logical hierarchy that is what the selector
+  // picks anyway; in another hierarchy (an accepted decomposition's blocks, a placement) the block holds components the
+  // logical hierarchy does not nest in it.
+  const plain = typeof selector === 'string' ? [selector] : Array.isArray(selector) ? selector : [];
+  const asBlock = new Set(d.level.blocks);
+  for (const n of plain) if (typeof n === 'string' && asBlock.has(n)) members.push(...(held.get(n) ?? []));
   const set = new Set(members);
   /** @type {Set<string>} */
   const blocks = new Set();
   for (const c of members) { const b = blockAt(d.level, c); if (b !== null) blocks.add(b); }
-  const held = membersOfBlocks(model, d);
   for (const b of blocks) {
     const missing = (held.get(b) ?? []).filter((c) => !set.has(c));
     if (missing.length) return { problem: `the "${name}" selector picks only part of block "${b}" at ${cutName(d)} (${missing.slice(0, 3).map((c) => `"${c}"`).join(', ')}${missing.length > 3 ? ', ...' : ''} ${missing.length === 1 ? 'lies' : 'lie'} in it unselected)` };
@@ -1677,6 +1713,146 @@ function findCycle(g) {
 }
 
 // ---------------------------------------------------------------------------
+// Behavioural composition (docs/composition.md)
+// ---------------------------------------------------------------------------
+
+/** @param {any} v @returns {string[]} */
+const idList = (v) => (typeof v === 'string' ? [v] : Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []);
+
+/**
+ * The verdict of every applicable invariant and temporal claim on one trace (checkTrace), by claim id.
+ * @param {Model} model @param {any} trace @returns {Record<string, string>}
+ */
+function verdictsOn(model, trace) {
+  /** @type {Record<string, string>} */
+  const out = {};
+  for (const c of checkTrace(model, trace)) {
+    if (c.automatic) continue;
+    const v = c.pending ? 'undecided' : c.holds ? 'holds' : 'violated';
+    out[c.claimId] = out[c.claimId] === 'violated' || v === 'violated' ? 'violated' : out[c.claimId] === 'undecided' || v === 'undecided' ? 'undecided' : v;
+  }
+  return out;
+}
+
+/**
+ * A claim of behavioural composition: a declared abstraction refined by its members (refines-composition),
+ * the environment of scenarios stated (environment-assumed), the verdicts of scenarios independent of the order of
+ * their behaviours (order-independent), a claim transferred or refused by the preservation rules (transfers),
+ * no alternative machines left (alternatives-reconciled), every event in an interface and every cross-element read
+ * exported (interfaces-closed). The runs are the kernel's; hiding and the comparison of runs are decided in Lean.
+ * @param {Model} model @param {Entity} claim @param {any} ev @returns {any}
+ */
+function evaluateComposition(model, claim, ev) {
+  void claim;
+  switch (ev.method) {
+    case 'refines-composition': {
+      const id = idList(ev.behavior)[0];
+      if (!id || !abstractionOf(model, id)) return inconclusive('Nothing was checked: the claim names no declared abstraction.', `"behavior" must name one behavior that declares "abstracts"; ${id ? `"${id}" does not` : 'it names none'}.`, id ? [id] : []);
+      const scenarios = idList(ev.scenarios);
+      const r = checkAbstraction(model, id, { scenarios: scenarios.length ? scenarios : undefined, finest: ev.finest === true });
+      const selected = unique([id, ...r.members, ...r.runs.map((/** @type {any} */ x) => x.scenario)]);
+      const runs = r.runs.map((/** @type {any} */ x) => `${x.scenario} (${x.abstract.boundarySteps} boundary steps, ${x.stutters?.length ?? 0} hidden steps of the members)`).join(', ') || 'no scenario';
+      const scope = `Ran ${runs} with "${id}" in place of its members${ev.finest === true ? ' (expanded to the finest members)' : ''} and with its members, and compared the boundary traces in Lean (engine.refineBoundary): events, kinds, payloads, times under time scale ${r.timeScale}, outcomes and the final configuration of every machine outside the region. A check of these runs, not of every interleaving.`;
+      if (r.verdict === 'counterexample' && r.counterexample) {
+        const cx = r.counterexample;
+        return { outcome: 'fail', scope, selected, explanation: describeCounterexample(cx), counterexample: { summary: describeCounterexample(cx), entities: [id], scenario: cx.scenario, stepIndex: cx.concreteStep?.index ?? cx.abstractStep?.index }, strength: r.strength, refinement: r };
+      }
+      if (r.verdict !== 'certificate' || r.strength !== 'conservative') {
+        const why = r.notes.join(' ') || r.runs.filter((/** @type {any} */ x) => x.droppedFaults.length || x.opaque.length).map((/** @type {any} */ x) => `scenario "${x.scenario}" ${x.opaque.length ? `has no machine for ${x.opaque.join(', ')}` : `left out ${x.droppedFaults.join(', ')}`}`).join('; ');
+        return { ...inconclusive(scope, `The refinement is ${r.strength}: ${why}.`, selected), strength: r.strength, refinement: r };
+      }
+      // Negatives: runs under extra faults (applied at whichever level has the transition) that must break the refinement.
+      const negs = Array.isArray(ev.negatives) ? ev.negatives : [];
+      for (const n of negs) {
+        const own = model.entities.get(n?.scenario)?.data.faults ?? [];
+        const nr = checkAbstraction(model, id, { scenarios: [n.scenario], finest: ev.finest === true, faults: [...new Set([...own, ...idList(n.faults)])], perLevelFaults: true });
+        if (nr.verdict !== 'counterexample') return { ...inconclusive(scope, `The negative run of scenario "${n.scenario}" with faults ${idList(n.faults).join(', ')} did not break the refinement, so the check is not shown to be able to fail.`, selected), strength: r.strength };
+      }
+      return { outcome: 'pass', scope, selected, strength: r.strength, refinement: r, explanation: `Certificate: in ${plural(r.runs.length, 'run', 'runs')} every boundary step of "${id}" is realised by a step of its members (${r.runs.map((/** @type {any} */ x) => `${x.scenario}: ${x.correspondence.length} matched, ${x.stutters.length} stutters`).join('; ')}); strength conservative.${negs.length ? ` ${plural(negs.length, 'negative run breaks', 'negative runs break')} it.` : ''}` };
+    }
+    case 'environment-assumed': {
+      const ids = idList(ev.scenarios);
+      if (!ids.length) return inconclusive('Nothing was checked: the claim lists no scenario.', 'List the scenarios whose environment must be stated.');
+      /** @type {string[]} */
+      const found = [];
+      for (const sid of ids) {
+        const trace = runScenarioOnce(model, sid);
+        for (const u of environmentReport(model, sid, trace).unassumed) found.push(`scenario "${sid}" step ${u.step} delivers "${u.event}", which ${u.receivers.join(', ')} would receive, with no environment assumption`);
+      }
+      const scope = `Ran ${ids.join(', ')} and looked for delivered events that no running machine reacts to and that an omitted element would receive.`;
+      if (found.length) return { outcome: 'fail', scope, selected: ids, explanation: `${found.length} unassumed: ${found.slice(0, 5).join('; ')}.`, counterexample: { summary: found[0], entities: ids } };
+      for (const n of Array.isArray(ev.negatives) ? ev.negatives : []) {
+        const s = model.entities.get(n?.scenario);
+        if (!s) continue;
+        const without = idList(n.without);
+        const cut = s.data.cut && typeof s.data.cut === 'object' ? s.data.cut : {};
+        const stripped = { ...cut, environment: (Array.isArray(cut.environment) ? cut.environment : []).filter((/** @type {any} */ e) => !without.includes(e?.element)) };
+        const entities = new Map(model.entities);
+        entities.set(s.id, { ...s, data: { ...s.data, cut: stripped } });
+        const shadow = /** @type {Model} */ (Object.assign(Object.create(Object.getPrototypeOf(model)), model, { entities }));
+        const rep = environmentReport(shadow, s.id, runScenarioOnce(model, s.id));
+        if (!rep.unassumed.length) return inconclusive(scope, `Without its environment assumption for ${without.join(', ')}, scenario "${s.id}" reports nothing, so the check is not shown to be able to fail.`, ids);
+      }
+      return { outcome: 'pass', scope, selected: ids, explanation: 'Every event an omitted element would receive is covered by an environment assumption of its scenario.' };
+    }
+    case 'order-independent': {
+      const ids = idList(ev.scenarios).length ? idList(ev.scenarios) : (model.byKind.scenario ?? []).map((s) => s.id);
+      /** @type {any[]} */
+      const diffs = [];
+      let orders = 0, traceDiffs = 0;
+      for (const sid of ids) {
+        const own = model.entities.get(sid)?.data.faults ?? [];
+        const sets = (model.byKind.claim ?? []).flatMap((c) => (Array.isArray(c.data.evaluate?.negatives) ? c.data.evaluate.negatives : []).filter((/** @type {any} */ n) => n?.scenario === sid).map((/** @type {any} */ n) => [...new Set([...own, ...idList(n.faults)])]));
+        const r = orderIndependence(model, sid, (tr) => verdictsOn(model, tr), { faultSets: sets });
+        orders += r.orders;
+        traceDiffs += r.traceDifferences;
+        for (const d of r.differences) diffs.push({ scenario: sid, ...d });
+      }
+      const scope = `Ran ${plural(ids.length, 'scenario', 'scenarios')} and their claims' negative runs with the behaviours reversed and in every rotation (${orders} reordered runs), comparing the verdict of every invariant and temporal claim that lists them. invariant_rename proves the same of every interleaving in the calculus.`;
+      if (diffs.length) return { outcome: 'fail', scope, selected: ids, explanation: `A verdict changed with the order: scenario "${diffs[0].scenario}" listed as ${diffs[0].order.join(', ')} gives ${diffs[0].claims.map((/** @type {any} */ c) => `${c.claim} ${c.reordered} (was ${c.original})`).join(', ')}.`, counterexample: { summary: 'verdict depends on the order of behaviours', entities: [diffs[0].scenario, ...diffs[0].claims.map((/** @type {any} */ c) => c.claim)], scenario: diffs[0].scenario } };
+      return { outcome: 'pass', scope, selected: ids, explanation: `No verdict depends on the order; ${traceDiffs ? `${traceDiffs} reordered runs differ from the original trace only in ways no claim distinguishes` : 'every reordered run gives the same trace up to the order of behaviours'}.` };
+    }
+    case 'transfers': {
+      const cid = idList(ev.claim)[0];
+      const aid = idList(ev.abstraction)[0];
+      if (!cid || !aid || model.entities.get(cid)?.kind !== 'claim' || !abstractionOf(model, aid)) return inconclusive('Nothing was checked: the claim must name a claim ("claim") and a declared abstraction ("abstraction").', 'Both parameters are needed.');
+      const source = evaluateClaim(model, cid);
+      const r = transferClaim(model, cid, aid, { sourceStatus: source.status });
+      const expect = ev.expect === 'not-transferred' ? 'not-transferred' : 'transferred';
+      const got = r.transferred ? 'transferred' : 'not-transferred';
+      const scope = `Applied the preservation rules to claim "${cid}" (${source.status} at the level where "${aid}" runs) and the refinement of "${aid}" by its members.`;
+      const explanation = `${r.transferred ? `Transferred by ${r.rule}` : 'Not transferred'}: ${r.reason}`;
+      if (got !== expect) return { outcome: 'fail', scope, selected: [cid, aid], explanation: `Expected ${expect}. ${explanation}`, counterexample: { summary: explanation, entities: [cid, aid] }, transfer: r };
+      return { outcome: 'pass', scope, selected: [cid, aid], explanation, transfer: r };
+    }
+    case 'alternatives-reconciled': {
+      const subjects = idList(ev.subjects);
+      const pairs = alternativeMachines(model).filter((p) => !subjects.length || subjects.includes(p.subject));
+      const scope = `Checked every pair of behaviours of ${subjects.length ? subjects.join(', ') : 'each element'} that consume a common event.`;
+      if (pairs.length) return { outcome: 'fail', scope, selected: unique(pairs.flatMap((p) => [p.a, p.b])), explanation: `${plural(pairs.length, 'pair is', 'pairs are')} still alternative machines: ${pairs.map((p) => `${p.a} / ${p.b} (${p.subject}, both consume ${p.shared.join(', ')})`).join('; ')}.`, counterexample: { summary: `${pairs[0].a} and ${pairs[0].b} are alternative machines of ${pairs[0].subject}`, entities: [pairs[0].a, pairs[0].b] } };
+      return { outcome: 'pass', scope, selected: subjects, explanation: 'Every element has one behaviour per level: same-subject behaviours that share an event run together in some scenario or are related by a declared abstraction or a refinement.' };
+    }
+    case 'interfaces-closed': {
+      const orphans = [...eventInterfaces(model)].filter(([, o]) => !o.length).map(([e]) => e);
+      const reads = crossReads(model);
+      const unexported = reads.filter((x) => x.unexportedBy.length);
+      const undeclaredReads = reads.filter((x) => !x.crosses.length);
+      const disagree = interfaceReport(model).filter((x) => x.status === 'disagrees');
+      const scope = 'Checked every event against the declared and inferred interfaces of elements and ports, and every cross-element state read against the declared interfaces it crosses.';
+      const faults = [
+        ...orphans.map((e) => `event "${e}" belongs to no interface`),
+        ...unexported.map((x) => `"${x.reader}" reads "${x.observable}", which ${x.unexportedBy.join(', ')} does not export`),
+        ...undeclaredReads.map((x) => `"${x.reader}" reads "${x.observable}" of "${x.targetElement}", whose interface is not declared`),
+        ...disagree.map((x) => `the declared interface of "${x.element}" misses ${[...(x.missing?.inputs ?? []), ...(x.missing?.outputs ?? [])].join(', ')}`),
+      ];
+      if (faults.length) return { outcome: 'fail', scope, selected: [], explanation: `${faults.length} faults: ${faults.slice(0, 5).join('; ')}.`, counterexample: { summary: faults[0], entities: [] } };
+      return { outcome: 'pass', scope, selected: [], explanation: `Every one of the ${(model.byKind.event ?? []).length} events belongs to an interface, and each of the ${reads.length} cross-element state reads goes through an observable a declared interface exports.` };
+    }
+  }
+  throw new Error(`No composition evaluator for "${ev.method}".`);
+}
+
+// ---------------------------------------------------------------------------
 // Refinement (docs/claims-and-evidence.md, "Refinement")
 // ---------------------------------------------------------------------------
 
@@ -1715,6 +1891,8 @@ function evaluateRefines(model, ev) {
   /** @type {string[]} */
   const notes = [];
   let checked = 0, moving = 0;
+  /** @type {{id: string, states: number, steps: number}[]} */
+  const explored = [];
   for (const sc of scenarios) {
     if (!(Array.isArray(sc.data.behaviors) && sc.data.behaviors.includes(impl.id))) { reasons.push(`Scenario "${sc.id}" does not run "${impl.id}".`); continue; }
     /** @type {any} */
@@ -1735,18 +1913,34 @@ function evaluateRefines(model, ev) {
     }
     if (r.unsupported) { reasons.push(r.unsupported); continue; }
     const errStep = trace.steps.find((/** @type {any} */ s) => s.error);
-    if (trace.outcome === 'error') reasons.push(`Scenario "${sc.id}" ended in an error${errStep ? ` at step ${errStep.index}: ${errStep.error.message}` : ''}; every step before it refined the model, but the run did not complete.`);
-    else if (trace.outcome === 'step-limit') notes.push(`Scenario "${sc.id}" stopped at its step limit after ${trace.steps.length} steps, so later steps were not run.`);
+    if (trace.outcome === 'error') { reasons.push(`Scenario "${sc.id}" ended in an error${errStep ? ` at step ${errStep.index}: ${errStep.error.message}` : ''}; every step before it refined the model, but the run did not complete.`); continue; }
+    if (trace.outcome === 'step-limit') notes.push(`Scenario "${sc.id}" stopped at its step limit after ${trace.steps.length} steps, so later steps were not run.`);
+    // Every other execution of the scenario: each order of simultaneous entries (WG-5685 criterion 10, WG-4852).
+    const x = exploreRefinement(model, impl, sc.id);
+    if (x.status === 'failure') {
+      const f = x.failure;
+      const scope = `Checked ${what} over the executions of scenario "${sc.id}" that deliver simultaneous entries in every order, up to the first failing step; the engine's own trace of it refined the model.`;
+      return {
+        outcome: 'fail', evaluator: REFINEMENT, scope, selected: unique([...selected, ...f.entities]),
+        counterexample: { summary: f.summary, entities: f.entities, scenario: f.scenario, stepIndex: f.stepIndex, reason: f.reason, trace: f.trace, order: x.order, explored: true },
+        explanation: `${f.summary} (scenario "${f.scenario}", in the execution that delivers ${x.order.join(', ')}; the engine's order does not reach it).`,
+      };
+    }
+    if (x.status === 'incomplete') { reasons.push(`Scenario "${sc.id}": ${x.reason} The engine's trace refined the model, which is not enough to report the refinement verified.`); continue; }
+    explored.push({ id: sc.id, states: x.states, steps: x.steps });
   }
   const label = ran.map((t) => `${t.id} (${plural(t.steps, 'step', 'steps')})`).join(', ') || 'no scenario';
-  const scope = `Checked ${what} in the traces of scenarios ${label}, each run with its own faults. This is a check of these traces, not of all possible executions.${notes.length ? ` ${notes.join(' ')}` : ''}`;
+  const exploredLabel = explored.map((t) => `${t.id} (${plural(t.states, 'configuration', 'configurations')}, ${plural(t.steps, 'step', 'steps')})`).join(', ');
+  const scope = explored.length === ran.length && ran.length
+    ? `Checked ${what} in the traces of scenarios ${label}, and over every execution of their inputs that delivers simultaneous entries in another order: ${exploredLabel}. This covers the executions of these scenarios' inputs, not other inputs.${notes.length ? ` ${notes.join(' ')}` : ''}`
+    : `Checked ${what} in the traces of scenarios ${label}, each run with its own faults. This is a check of these traces, not of all possible executions.${notes.length ? ` ${notes.join(' ')}` : ''}`;
   if (reasons.length) return { outcome: 'undecided', evaluator: REFINEMENT, scope, selected, explanation: reasons.join(' ') };
   if (!moving) {
     return { outcome: 'undecided', evaluator: REFINEMENT, scope, selected, explanation: checked ? `Every one of the ${plural(checked, 'step', 'steps')} of "${impl.id}" is a stutter, so no step of the model was matched. It is not reported as verified.` : `"${impl.id}" fired no transition in any trace, so only initial configurations were compared. It is not reported as verified.` };
   }
   return {
     outcome: 'pass', evaluator: REFINEMENT, scope, selected,
-    explanation: `The initial configuration of "${impl.id}" maps to that of "${A.id}", and each of its ${plural(checked, 'step', 'steps')} (${moving} matched to a model transition, ${checked - moving} stutters) refined the model in ${plural(ran.length, 'trace', 'traces')}.${notes.length ? ` ${notes.join(' ')}` : ''} Other executions, inputs or orders of simultaneous events were not examined.`,
+    explanation: `The initial configuration of "${impl.id}" maps to that of "${A.id}", and each of its ${plural(checked, 'step', 'steps')} (${moving} matched to a model transition, ${checked - moving} stutters) refined the model in ${plural(ran.length, 'trace', 'traces')}, and every step of every order of simultaneous entries the explorer reached refined it too.${notes.length ? ` ${notes.join(' ')}` : ''} Other inputs were not examined.`,
   };
 }
 
@@ -1927,32 +2121,31 @@ function evalTraceProperty(model, ev, trace) {
   return { verdict: 'inconclusive', explanation: `Method "${ev.method}" is not a trace method.` };
 }
 
-/** @param {any} config */
-function configResolver(config) {
-  return (/** @type {string[]} */ path) => {
-    if (path.length === 1) return path[0] === 'time' ? config.time : undefined;
-    if (path.length !== 2) return undefined;
-    const m = config.machines?.[path[0]];
-    if (!m || !Object.hasOwn(config.machines, path[0])) return undefined;
-    if (path[1] === 'state') return m.state;
-    return m.vars && Object.hasOwn(m.vars, path[1]) ? m.vars[path[1]] : undefined;
-  };
+/**
+ * A Lean function of the claim checks (formal/Exegra/ProveB.lean), called through the Lean core.
+ * @param {string} fn @param {any} args
+ */
+function leanClaims(fn, args) {
+  const r = leanCall(fn, args);
+  if (!r.ok) throw new Error(`The Lean claim check ${fn} failed: ${r.error}`);
+  return r.value;
 }
 
 /**
- * Evaluate a parsed expression on a configuration.
- * @param {any} ast @param {any} config
- * @returns {{ok: true, value: boolean} | {ok: false, message: string}}
+ * Evaluate a claim expression on configurations with the evaluator `exegra prove` uses
+ * (claimTruth, through claims.exprOnConfigs): true or false, or why it is neither (a parse failure, an
+ * evaluation error such as a division by zero, a value that is not a Boolean). A claim counts each of
+ * these as a violation, as prove does.
+ * @param {string} src @param {any[]} configs
+ * @returns {({ok: true, value: boolean} | {ok: false, message: string})[]}
  */
-function evalBool(ast, config) {
-  try {
-    const v = evalExpr(ast, configResolver(config));
-    if (typeof v !== 'boolean') return { ok: false, message: `The expression evaluates to ${v === null ? 'null' : typeof v}, not a boolean.` };
-    return { ok: true, value: v };
-  } catch (e) {
-    if (e instanceof ExprError) return { ok: false, message: e.message };
-    throw e;
-  }
+function evalBools(src, configs) {
+  return leanClaims('claims.exprOnConfigs', { expr: src, configs }).map((/** @type {any} */ r) => (Object.hasOwn(r, 'value') ? { ok: true, value: r.value === true } : { ok: false, message: String(r.error) }));
+}
+
+/** The part of the steps of a trace an occurrence depends on: kind, event and fired transitions. @param {any} trace */
+function occSteps(trace) {
+  return trace.steps.map((/** @type {any} */ s) => ({ kind: s.kind, event: { id: s.event?.id }, fired: (Array.isArray(s.fired) ? s.fired : []).map((/** @type {any} */ f) => ({ transition: f.transition })) }));
 }
 
 /** @param {any} step */
@@ -1993,14 +2186,18 @@ function traceInvariant(ev, trace) {
   let antecedentTrue = false;
   // A consequent that names no state or variable is a constant: the implication cannot fail through it.
   const constantConsequent = implication && exprRefs(/** @type {any} */ (parsed.ast).b).length === 0;
-  for (const c of configs) {
-    const r = evalBool(parsed.ast, c.config);
-    if (!r.ok) return { verdict: 'inconclusive', explanation: `The expression could not be evaluated in ${c.text}: ${r.message}` };
+  const truths = evalBools(ev.expr, configs.map((c) => c.config));
+  const antSrc = implication ? antecedentText(ev.expr) : null;
+  const antecedents = antSrc ? evalBools(antSrc, configs.map((c) => c.config)) : [];
+  for (const [i, c] of configs.entries()) {
+    const r = truths[i];
+    // An expression that cannot be evaluated is a violation, as in exegra prove (the same Lean evaluator).
+    if (!r.ok) return { verdict: 'violated', stepIndex: c.index, entities: c.entities, explanation: `Invariant \`${ev.expr}\` cannot be evaluated in ${c.text}: ${r.message} An expression that cannot be evaluated violates the invariant, as in exegra prove.` };
     if (!r.value) return { verdict: 'violated', stepIndex: c.index, entities: c.entities, explanation: `Invariant \`${ev.expr}\` is false in ${c.text}: ${valuesText(parsed.ast, c.config)}.` };
     // The initial configuration does not count: an antecedent true only before any step exercised nothing.
     if (implication && c.index >= 0) {
-      const a = evalBool(/** @type {any} */ (parsed.ast).a, c.config);
-      if (a.ok && a.value) antecedentTrue = true;
+      const a = antecedents[i];
+      if (a && a.ok && a.value) antecedentTrue = true;
     }
   }
   // A trace without steps contributes nothing; an implication counts as exercised only once its antecedent was true
@@ -2015,14 +2212,13 @@ function traceInvariant(ev, trace) {
  * @param {any} trace @param {any} matcher
  */
 function occurrences(trace, matcher) {
+  // Matcher.hit of formal/Exegra/ProveB.lean, the matcher exegra prove uses.
+  const m = matcher.event !== undefined ? { event: matcher.event } : { transition: matcher.transition };
+  /** @type {boolean[]} */
+  const hits = leanClaims('claims.matcherHits', { matcher: m, steps: occSteps(trace) });
   /** @type {number[]} */
   const out = [];
-  trace.steps.forEach((/** @type {any} */ s, /** @type {number} */ i) => {
-    const hit = matcher.event !== undefined
-      ? s.kind === 'deliver' && s.event.id === matcher.event
-      : Array.isArray(s.fired) && s.fired.some((/** @type {any} */ f) => f.transition === matcher.transition);
-    if (hit) out.push(i);
-  });
+  hits.forEach((hit, i) => { if (hit) out.push(i); });
   return out;
 }
 
@@ -2116,11 +2312,12 @@ function tracePrecedes(ev, trace) {
   // scenario's own input, so an order the script itself dictates shows nothing about the system.
   /** @param {any} m @param {number} i */
   const bySystem = (m, i) => m.event === undefined || trace.steps[i].event?.source?.kind !== 'scenario';
-  for (const t of thens) {
-    if (!firsts.some((f) => f < t || (sameStepOk && f === t))) {
-      const step = trace.steps[t];
-      return { verdict: 'violated', stepIndex: step.index ?? t, entities: unique([...(step.responsible ?? []), matcherId(ev.first)]), exercised: true, explanation: `The ${matcherText(ev.then)} occurs in ${stepText(step)} with no earlier occurrence of the ${matcherText(ev.first)}.` };
-    }
+  // The monitor of the form (Form.step of formal/Exegra/ProveB.lean), as exegra prove runs it.
+  const mon = leanClaims('claims.formViolation', { form: { method: 'precedes', first: ev.first, then: ev.then }, steps: occSteps(trace) });
+  if (typeof mon.violatedAt === 'number') {
+    const t = mon.violatedAt;
+    const step = trace.steps[t];
+    return { verdict: 'violated', stepIndex: step.index ?? t, entities: unique([...(step.responsible ?? []), matcherId(ev.first)]), exercised: true, explanation: `The ${matcherText(ev.then)} occurs in ${stepText(step)} with no earlier occurrence of the ${matcherText(ev.first)}.` };
   }
   const witnessed = thens.some((t) => bySystem(ev.then, t) || firsts.some((f) => (f < t || (sameStepOk && f === t)) && bySystem(ev.first, f)));
   const vacuous = thens.length && !witnessed ? `every occurrence of the ${matcherText(ev.then)} and of the ${matcherText(ev.first)} is a delivery from the scenario script, so the order is the script's, not the system's` : undefined;
@@ -2185,8 +2382,8 @@ function traceEventually(ev, trace) {
   if (ev.expr !== undefined) {
     const parsed = parseExpr(ev.expr);
     if (!parsed.ok) return { verdict: 'inconclusive', explanation: `The expression does not parse: ${parsed.error.message}` };
-    const r = evalBool(parsed.ast, trace.final);
-    if (!r.ok) return { verdict: 'inconclusive', explanation: `The expression could not be evaluated in the final configuration: ${r.message}` };
+    const [r] = evalBools(ev.expr, [trace.final]);
+    if (!r.ok) return { verdict: 'violated', absence: true, entities: unique(exprRefs(parsed.ast).map((p) => p[0]).filter((n) => n !== 'time')), explanation: `\`${ev.expr}\` cannot be evaluated in the final configuration of the trace: ${r.message} An expression that cannot be evaluated is a violation, as in exegra prove.` };
     if (!r.value) return { verdict: 'violated', absence: true, entities: unique(exprRefs(parsed.ast).map((p) => p[0]).filter((n) => n !== 'time')), explanation: `\`${ev.expr}\` is false in the final configuration of the trace: ${valuesText(parsed.ast, trace.final)}.` };
     held.push(`\`${ev.expr}\` holds in the final configuration.`);
   }

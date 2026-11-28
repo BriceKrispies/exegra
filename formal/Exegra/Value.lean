@@ -4,7 +4,9 @@ import Exegra.Number
 Values of the simulation, with the semantics of the JavaScript values the reference engine
 held (`engine/exegra-engine/src/value.rs`).
 
-- Numbers are IEEE 754 doubles (`Float`).
+- Numbers are exact rationals (`Rat`, WG-5683): a JSON number is the exact value of its text
+  (`Num.ofDecimal`), and is written as JavaScript writes the double nearest to it
+  (`Num.jsNumberToString`).
 - Objects keep JavaScript's property order: canonical array-index keys first, ascending, then
   the other keys in insertion order. The order is observable: the entries of an `emit` payload
   are evaluated in it, so it decides which error a payload with two failing entries reports.
@@ -22,7 +24,7 @@ inductive Value where
   | undef
   | null
   | bool (b : Bool)
-  | num (x : Float)
+  | num (x : Rat)
   | str (s : String)
   | arr (id : Nat) (items : List Value)
   | obj (id : Nat) (fields : List (String × Value))
@@ -50,7 +52,7 @@ def asString? : Value → Option String
   | .str s => some s
   | _ => none
 
-def asNumber? : Value → Option Float
+def asNumber? : Value → Option Rat
   | .num x => some x
   | _ => none
 
@@ -142,8 +144,7 @@ end
 
 
 mutual
-/-- Equality of values (`==`), structural (WG-4902, `docs/semantics.md`): numbers by IEEE value
-(NaN differs from itself, 0 equals -0), strings and booleans by value, arrays element by element
+/-- Equality of values (`==`), structural (WG-4902, `docs/semantics.md`): numbers by value, strings and booleans by value, arrays element by element
 in order, objects by their keys and members in any order. No value equals `undef`, except
 `undef` itself, which never reaches a comparison (an unknown reference is an error first). -/
 def Value.eqv : Value → Value → Bool
@@ -181,13 +182,13 @@ def IntKind.name : IntKind → String
   | .u8 => "u8" | .u16 => "u16" | .u32 => "u32" | .u64 => "u64" | .i32 => "i32" | .i64 => "i64"
 
 /-- The least value. -/
-def IntKind.lo : IntKind → Float
+def IntKind.lo : IntKind → Rat
   | .u8 | .u16 | .u32 | .u64 => 0
   | .i32 => -2147483648
   | .i64 => -9007199254740991
 
 /-- The greatest value. -/
-def IntKind.hi : IntKind → Float
+def IntKind.hi : IntKind → Rat
   | .u8 => 255
   | .u16 => 65535
   | .u32 => 4294967295
@@ -200,7 +201,7 @@ input gives it per behavior (`types`), lowered by `src/core/sim-input.js`: a tim
 representation, an `option<T>` or an optional payload field `option`. -/
 inductive STy where
   /-- No declared type (a model-level variable, or a type evaluation does not depend on):
-  numbers are IEEE doubles. -/
+  numbers are exact rationals. -/
   | none
   /-- An integer type: arithmetic is checked integer arithmetic. -/
   | int (k : IntKind)

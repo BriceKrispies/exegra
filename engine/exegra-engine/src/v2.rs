@@ -5528,117 +5528,28 @@ fn initial_instants(i: &Input, c: &mut Conf, seq: &mut u64) -> Vec<Draw> {
 
 /// Run a version-2 input: the refusal message, or the trace as JSON text.
 /// Whether an input is in the integer fragment of the behaviour calculus (formal/Exegra/Elab.lean,
-/// `preCheck`): no resources, links, workloads, routes, measured outputs, keyed instances, `sample`
-/// effects or resource faults. Such an input runs with snapshot reads and checked integer
-/// arithmetic, as the calculus runs it; any other input runs as before.
+/// `preCheck`): no links, workloads, routes, measured outputs or keyed instances (`sample` effects,
+/// resources and resource faults are in it since WG-5683). Such an input runs with snapshot reads
+/// and checked integer arithmetic, as the calculus runs it; any other input runs as before.
 fn in_fragment(i: &Input) -> bool {
-    i.resources.is_empty()
-        && i.links.is_empty()
+    i.links.is_empty()
         && i.workloads.is_empty()
         && i.routes.is_empty()
         && !i.measures()
-        && i.faults.iter().all(|f| !f.is_resource_kind())
         && i.behaviors.iter().all(|b| {
             !matches!(b.instances, Instances::Keyed { .. })
                 && b.transitions.iter().all(|t| {
                     t.effects.iter().all(|e| {
-                        !matches!(
-                            e,
-                            Effect::Sample { .. }
-                                | Effect::Request { .. }
-                                | Effect::Release { .. }
-                                | Effect::Send { .. }
-                        )
+                        !matches!(e, Effect::Send { .. })
                     })
                 })
         })
-}
-
-/// A number that is not an integer, anywhere an input in the integer fragment gives one: an
-/// initial value, a `set` or payload constant, a literal in an expression, a scenario or fault
-/// payload. Returns where it is.
-fn non_integer(i: &Input) -> Option<String> {
-    fn in_value(v: &Value, path: &str) -> Option<String> {
-        match v {
-            Value::Number(x) if x.fract() != 0.0 || !x.is_finite() => Some(path.to_string()),
-            Value::Array(xs) => xs
-                .iter()
-                .enumerate()
-                .find_map(|(k, x)| in_value(x, &format!("{path}[{k}]"))),
-            Value::Object(o) => o
-                .iter()
-                .find_map(|(k, x)| in_value(x, &format!("{path}.{k}"))),
-            Value::String(src) => match parse_expr(src) {
-                Ok(ast) => in_ast(&ast).then(|| path.to_string()),
-                Err(_) => None,
-            },
-            _ => None,
-        }
-    }
-    fn in_ast(a: &Ast) -> bool {
-        match a {
-            Ast::Lit(Value::Number(x)) => x.fract() != 0.0,
-            Ast::Lit(_) | Ast::Ref { .. } => false,
-            Ast::Un { a, .. } => in_ast(a),
-            Ast::Bin { a, b, .. } => in_ast(a) || in_ast(b),
-        }
-    }
-    for b in &i.behaviors {
-        for (name, v) in &b.variables {
-            if let Value::Number(x) = v {
-                if x.fract() != 0.0 {
-                    return Some(format!("{}.{name}", b.id));
-                }
-            }
-        }
-        for t in &b.transitions {
-            let what = format!("{}.{}", b.id, t.id);
-            if let Some(g) = &t.guard {
-                if parse_expr(g).is_ok_and(|a| in_ast(&a)) {
-                    return Some(format!("{what}.guard"));
-                }
-            }
-            for (k, e) in t.effects.iter().enumerate() {
-                let found = match e {
-                    Effect::Set { to: Some(v), .. } => {
-                        in_value(v, &format!("{what}.effects[{k}].to"))
-                    }
-                    Effect::Emit { payload, .. } | Effect::Timer { payload, .. } => {
-                        payload.iter().find_map(|(f, v)| {
-                            in_value(v, &format!("{what}.effects[{k}].payload.{f}"))
-                        })
-                    }
-                    _ => None,
-                };
-                if found.is_some() {
-                    return found;
-                }
-            }
-        }
-    }
-    for (k, st) in i.scenario.steps.iter().enumerate() {
-        if let Value::Object(o) = &st.payload {
-            for (f, v) in o.iter() {
-                if let Value::Number(x) = v {
-                    if x.fract() != 0.0 {
-                        return Some(format!("scenario.steps[{k}].payload.{f}"));
-                    }
-                }
-            }
-        }
-    }
-    None
 }
 
 pub fn run(root: &JsObject) -> R<String> {
     let input = decode(root)?;
     validate(&input)?;
     let integer = in_fragment(&input);
-    if integer {
-        if let Some(path) = non_integer(&input) {
-            return Err(format!("The number at {path} is not an integer."));
-        }
-    }
     set_keep(true);
     let mut fault_ids: Vec<String> = Vec::new();
     for id in &input.scenario.faults {

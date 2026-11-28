@@ -19,24 +19,25 @@
 // Divergences (each reported under the claim real-runs-replay-through-self-model):
 //   unknown-event   the recorded event is not an event of the model;
 //   unpredicted     the event is one the model emits, but no pending prediction matches it;
-//   not-allowed     a predicted (internal) event arrived and no behavior that consumes it accepted it
-//                   in its current state;
-//   payload         a recorded payload value differs from the predicted one;
+//   not-allowed     an event some behavior consumes arrived (predicted, or from outside) and no behavior
+//                   accepted it in its current state;
+//   payload         a recorded payload value differs from the predicted one, or a predicted scalar field is
+//                   absent from the recording;
 //   missing         a prediction was not matched within `bound` recorded events (or by the end of a
 //                   closed stream);
 //   error           an expression of the model failed on the recorded payload.
-// Calibration: a variable whose declared initial value stands for the environment at the start of
-// the stream (a hash of a file on disk, a stored preference) and that no transition has written yet
-// takes the recorded value the first time a prediction that reads it is compared. That is reported on
-// the step, not as a divergence.
+// Calibration: a variable declared `environment: true`, whose initial value stands for the environment at
+// the start of the stream (a hash of a file on disk, a stored preference), and that no transition has
+// written yet takes the recorded value the first time a prediction that reads it is compared. That is
+// reported on the step, not as a divergence. Any other variable is never calibrated (WG-5685).
 //
 // Pure and deterministic: no clock (time is the recorded sequence number), no I/O.
 
-import { simulationInput } from './sim-input.js';
+import { engineInput } from './engine.js';
 import { evaluate, parseExpr } from './expr.js';
 
 /** @typedef {import('./types.js').Model} Model */
-/** @typedef {import('./sim-input.js').InputBehavior} InputBehavior */
+/** @typedef {import('./engine.js').InputBehavior} InputBehavior */
 
 export const REPLAY_CLAIM = 'real-runs-replay-through-self-model';
 export const REPLAY_SCENARIO = 'live-session';
@@ -53,6 +54,8 @@ export const DEFAULT_BOUND = 200;
 const copy = (v) => (v === undefined ? v : JSON.parse(JSON.stringify(v)));
 /** The declared types a behavior's expressions are evaluated with (its `types` in the engine input). @param {any} b */
 const typesOf = (b) => (/** @type {string[]} */ path) => (b.types && Object.hasOwn(b.types, path.join('.')) ? b.types[path.join('.')] : undefined);
+/** A delay of the engine input: a number, or a fixed distribution ({kind: 'fixed', value}); 0 when absent. @param {any} after */
+export const delayOf = (after) => (typeof after === 'number' ? after : after && typeof after === 'object' && after.kind === 'fixed' && typeof after.value === 'number' ? after.value : 0);
 /** @param {unknown} v */
 const scalar = (v) => v === null || typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean';
 
@@ -64,7 +67,7 @@ const scalar = (v) => v === null || typeof v === 'string' || typeof v === 'numbe
 export function createReplay(model, opts = {}) {
   const scenarioId = opts.scenarioId ?? REPLAY_SCENARIO;
   const bound = opts.bound ?? DEFAULT_BOUND;
-  const input = simulationInput(model, scenarioId, []);
+  const input = engineInput(model, scenarioId, []);
   /** @type {InputBehavior[]} */
   const behaviors = input.behaviors;
   const eventIds = new Set(input.events.map((e) => e.id));
@@ -93,8 +96,16 @@ export function createReplay(model, opts = {}) {
     machines[b.id] = { state: b.initial, vars: Object.fromEntries(b.variables.map((v) => [v.name, copy(v.initial)])) };
   }
   const initialMachines = copy(machines);
-  /** Variables still at their declared initial value: "<behavior>\u0000<name>". */
-  const uncalibrated = new Set(behaviors.flatMap((b) => b.variables.map((v) => `${b.id}\u0000${v.name}`)));
+  /**
+   * Variables that stand for the environment at the start of the stream and are still at their declared initial
+   * value: "<behavior>\u0000<name>". Only a variable declared `environment: true` is calibrated (WG-5685); any other
+   * value that differs from the prediction is a divergence.
+   */
+  const environment = (/** @type {string} */ bid, /** @type {string} */ name) => {
+    const vars = model.entities.get(bid)?.data?.variables;
+    return Array.isArray(vars) && vars.some((/** @type {any} */ v) => v && v.name === name && v.environment === true);
+  };
+  const uncalibrated = new Set(behaviors.flatMap((b) => b.variables.filter((v) => environment(b.id, v.name)).map((v) => `${b.id}\u0000${v.name}`)));
 
   /** @type {Prediction[]} */
   let pending = [];
@@ -191,7 +202,12 @@ export function createReplay(model, opts = {}) {
         source = { ...p.source };
         const skip = correlationOf(ev.id);
         for (const [k, want] of Object.entries(p.payload)) {
-          if (skip.includes(k) || p.literals.includes(k) || !(k in payload) || !scalar(want) || !scalar(payload[k]) || want === payload[k]) continue;
+          if (skip.includes(k) || p.literals.includes(k) || !scalar(want)) continue;
+          if (!(k in payload)) {
+            here.push(diverge({ kind: 'payload', stepIndex: index, seq: ev.seq, event: ev.id, field: k, behavior: p.source.behavior, transition: p.source.transition, explanation: `${ev.id} has no field ${k}, but transition ${p.source.transition} predicted ${k} = ${JSON.stringify(want)}.` }));
+            continue;
+          }
+          if (!scalar(payload[k]) || want === payload[k]) continue;
           const bind = p.bindings[k];
           const key = bind ? `${bind[0]}\u0000${bind[1]}` : null;
           if (key && uncalibrated.has(key)) {
@@ -264,7 +280,7 @@ export function createReplay(model, opts = {}) {
               const ref = typeof v === 'string' ? varRef(v, b.id) : null;
               if (ref) bindings[k] = ref;
             }
-            const pr = { seq: predictionSeq++, time: time + (fx.after ?? 0), event: fx.emit, payload: out, source: { kind: /** @type {'transition'} */ ('transition'), transition: t.id, behavior: b.id }, stepIndex: index, bindings, literals };
+            const pr = { seq: predictionSeq++, time: time + delayOf(fx.after), event: fx.emit, payload: out, source: { kind: /** @type {'transition'} */ ('transition'), transition: t.id, behavior: b.id }, stepIndex: index, bindings, literals };
             born.push(pr);
             emitted.push({ event: fx.emit, time: pr.time, seq: pr.seq, payload: copy(out) });
           }
@@ -275,7 +291,9 @@ export function createReplay(model, opts = {}) {
       machines = next;
       pending.push(...born);
 
-      if (internal && !fired.length && consumers.has(ev.id)) {
+      // An event some behavior consumes, recorded where no behavior accepts it, is refused by the model, whether a
+      // behavior emitted it or it came from outside (WG-5685).
+      if (!fired.length && consumers.has(ev.id)) {
         const states = [...consumers.get(ev.id)].map((bid) => `${bid} in ${machines[bid].state}`).join(', ');
         here.push(diverge({ kind: 'not-allowed', stepIndex: index, seq: ev.seq, event: ev.id, explanation: `${ev.id} happened, but the self-model does not allow it at this point: ${states} accepts it in no transition.` }));
       }

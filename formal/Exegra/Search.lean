@@ -15,8 +15,9 @@ a hash set, and checks `ok` on every node it discovers:
   (`search_sound`);
 * `counterexample p`: `p.root` is an initial node and replaying `p.picks` from it reaches a node
   where `ok` is false, in at most `bound` steps (`search_counterexample_real`);
-* `incomplete n`: the visited set reached `cap`, or the frontier was not empty after `bound`
-  layers. Nothing is claimed.
+* `incomplete reason n`: the visited set reached `cap` (`reason = .cap`: a run was truncated), or the
+  frontier was not empty after `bound` layers (`reason = .bound`: a run hit the bound). Nothing is
+  claimed.
 -/
 
 namespace Exegra.Gen
@@ -90,10 +91,21 @@ structure Path (N : Type) where
   root : N
   picks : List Nat
 
+/-- Why a search is incomplete: the frontier was not empty after `bound` layers (a run hit the
+bound), or the visited set reached the cap (a run was truncated). -/
+inductive Reason where
+  | bound
+  | cap
+  deriving DecidableEq, Repr
+
+def Reason.name : Reason → String
+  | .bound => "bound"
+  | .cap => "cap"
+
 inductive Result (N : Type) where
   | holds (states : Nat)
   | counterexample (path : Path N)
-  | incomplete (states : Nat)
+  | incomplete (reason : Reason) (states : Nat)
 
 /-- A frontier entry: a node, the initial node it came from and the picks, latest first. -/
 structure Item (N : Type) where
@@ -134,12 +146,12 @@ def layer (S : Sys N) (ok : N → Bool) (cap : Nat) :
 
 def bfs (S : Sys N) (ok : N → Bool) (cap : Nat) : Nat → List (Item N) → Visited N → Result N
   | _, [], V => .holds V.size
-  | 0, _ :: _, V => .incomplete V.size
+  | 0, _ :: _, V => .incomplete .bound V.size
   | d + 1, F@(_ :: _), V =>
     match layer S ok cap F V [] with
     | .ok V' F' => bfs S ok cap d F' V'
     | .cex p => .counterexample p
-    | .full n => .incomplete n
+    | .full n => .incomplete .cap n
 
 def initItem (r : N) : Item N := { n := r, root := r, picks := [] }
 
@@ -149,7 +161,7 @@ def search (S : Sys N) (ok : N → Bool) (bound cap : Nat) : Result N :=
   match addAll ok cap initItem initCex S.init ∅ [] with
   | .ok V F => bfs S ok cap bound F V
   | .cex p => .counterexample p
-  | .full n => .incomplete n
+  | .full n => .incomplete .cap n
 
 /-! ## Soundness -/
 
@@ -481,18 +493,18 @@ def layerL (S : Sys N) (ok : N → Bool) (cap : Nat) :
 
 def bfsL (S : Sys N) (ok : N → Bool) (cap : Nat) : Nat → List (Item N) → List N → Result N
   | _, [], V => .holds V.length
-  | 0, _ :: _, V => .incomplete V.length
+  | 0, _ :: _, V => .incomplete .bound V.length
   | d + 1, F@(_ :: _), V =>
     match layerL S ok cap F V [] with
     | .ok V' F' => bfsL S ok cap d F' V'
     | .cex p => .counterexample p
-    | .full n => .incomplete n
+    | .full n => .incomplete .cap n
 
 def searchL (S : Sys N) (ok : N → Bool) (bound cap : Nat) : Result N :=
   match addAllL ok cap initItem initCex S.init [] [] with
   | .ok V F => bfsL S ok cap bound F V
   | .cex p => .counterexample p
-  | .full n => .incomplete n
+  | .full n => .incomplete .cap n
 
 /-- A hash set and a list that hold the same nodes, the list without repeats. -/
 def Agree (V : Visited N) (L : List N) : Prop := (∀ x, V.contains x = L.contains x) ∧ V.size = L.length

@@ -123,6 +123,7 @@
       "label": "Component",
       "doc": "An element of the specified system or its environment: a system, subsystem, component, module, actor, store, connector or external element (docs/model-and-format.md, \"Elements, hierarchies, facets and cuts\"). Whether an element is composite is derived: it is composite when it has members in a hierarchy.",
       "properties": {
+        "interface": { "type": "object", "label": "Interface", "doc": "The events and observables of this element (or port) at its boundary (docs/composition.md, \"Interfaces\"): inputs it consumes from outside, outputs it emits to outside, and observables, the variables and control states of its behaviours (\"<behavior>.<variable>\" or \"<behavior>.state\") that behaviours outside may read. Optional: without it the interface is inferred from the behaviours and reported (exegra interfaces). Once declared, its members' boundary events must all be listed, and a read of state it does not export is behavior.reads-unexported.", "fields": { "inputs": { "type": "list", "items": { "type": "ref", "ref": ["event"] }, "label": "Inputs" }, "outputs": { "type": "list", "items": { "type": "ref", "ref": ["event"] }, "label": "Outputs" }, "observables": { "type": "list", "items": { "type": "string" }, "label": "Exported observables" } } },
         "id": { "type": "id", "required": true },
         "name": { "type": "string", "required": true, "label": "Name" },
         "kind": { "type": "ref", "ref": ["elementKind"], "literals": ["system", "subsystem", "component", "module", "actor", "store", "connector", "external"], "label": "Kind", "doc": "The element kind. Defaults to component. Built in: system, subsystem, component, module, actor (a person or external agent), store, connector, external; a specification adds its own in elementKinds. Any element may be the parent of others; composite is derived from having members." },
@@ -155,6 +156,7 @@
       "label": "Port",
       "doc": "An explicitly declared interaction surface of a component.",
       "properties": {
+        "interface": { "type": "object", "label": "Interface", "doc": "The events and observables of this element (or port) at its boundary (docs/composition.md, \"Interfaces\"): inputs it consumes from outside, outputs it emits to outside, and observables, the variables and control states of its behaviours (\"<behavior>.<variable>\" or \"<behavior>.state\") that behaviours outside may read. Optional: without it the interface is inferred from the behaviours and reported (exegra interfaces). Once declared, its members' boundary events must all be listed, and a read of state it does not export is behavior.reads-unexported.", "fields": { "inputs": { "type": "list", "items": { "type": "ref", "ref": ["event"] }, "label": "Inputs" }, "outputs": { "type": "list", "items": { "type": "ref", "ref": ["event"] }, "label": "Outputs" }, "observables": { "type": "list", "items": { "type": "string" }, "label": "Exported observables" } } },
         "id": { "type": "id", "required": true },
         "name": { "type": "string", "required": true, "label": "Name" },
         "direction": { "type": "enum", "values": ["provides", "requires"], "required": true, "label": "Direction" },
@@ -255,12 +257,13 @@
       "label": "Behavior",
       "doc": "A state machine describing how one component reacts to events.",
       "properties": {
+        "abstracts": { "type": "object", "label": "Abstraction of members", "doc": "This behaviour is a declared abstraction of a set of member behaviours, possibly of other elements and possibly abstractions themselves (multiple levels); docs/composition.md, \"Declared abstractions\". The refinement check (claim method refines-composition, exegra refine) runs the members in its place with their internal events hidden and compares the boundary traces. hide replaces the derived set of hidden events; timeScale is member time units per abstract tick (default 1).", "fields": { "members": { "type": "list", "items": { "type": "ref", "ref": ["behavior"] }, "required": true, "label": "Members" }, "hide": { "type": "list", "items": { "type": "ref", "ref": ["event"] }, "label": "Hidden events" }, "timeScale": { "type": "number", "label": "Time scale" } } },
         "id": { "type": "id", "required": true },
         "name": { "type": "string", "required": true, "label": "Name" },
         "subject": { "type": "ref", "ref": ["component"], "required": true, "label": "Subject component" },
         "description": { "type": "text", "label": "Description" },
         "initial": { "type": "ref", "ref": ["state"], "required": true, "label": "Initial state" },
-        "variables": { "type": "list", "label": "Variables", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "enum", "values": ["boolean", "number", "string"], "required": true }, "initial": { "type": "any", "required": true }, "repr": { "type": "string", "label": "Representation type", "doc": "Implementation level: a built-in representation type (src/core/builtin-types.js), a declared type, or list<T> / option<T>. Declarative; simulation ignores it." } } } },
+        "variables": { "type": "list", "label": "Variables", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "enum", "values": ["boolean", "number", "string"], "required": true }, "initial": { "type": "any", "required": true }, "repr": { "type": "string", "label": "Representation type", "doc": "Implementation level: a built-in representation type (src/core/builtin-types.js), a declared type, or list<T> / option<T>. Declarative; simulation ignores it." }, "environment": { "type": "boolean", "label": "Environment", "doc": "True when the initial value stands for the environment at the start of a recorded run (a hash of a file on disk, a stored preference): the replay of a recorded stream (src/core/replay.js) takes the recorded value the first time a prediction that reads it is compared, instead of reporting a divergence. Simulation ignores it." } } } },
         "states": { "type": "entities", "entity": "state", "label": "States", "required": true },
         "transitions": { "type": "entities", "entity": "transition", "label": "Transitions" },
         "instances": { "type": "map", "label": "Instances", "doc": "Format 2: {count} or {key, max}. Implementation level: {key, storedIn}, where storedIn is a record whose key field is `key` (declarative; the simulation input drops storedIn)." },
@@ -480,6 +483,7 @@
       "label": "Scenario",
       "doc": "A specified sequence of input events and active faults executed over a set of behaviors.",
       "properties": {
+        "cut": { "type": "object", "label": "Behavioural cut", "doc": "Declared data, never taken from a view (docs/composition.md, \"Behavioural cuts\"): regions, the level each declared abstraction runs at (abstract: the abstraction runs; members: its members run in its place), and environment, the assumptions standing for elements the scenario omits: each names the element, the events it would receive, and optionally the assumption that justifies leaving it out. A delivered event that an omitted element would receive and no environment assumption covers is reported (scenario.environment-unassumed).", "fields": { "regions": { "type": "list", "label": "Regions", "items": { "type": "object", "fields": { "abstraction": { "type": "ref", "ref": ["behavior"], "required": true, "label": "Abstraction" }, "level": { "type": "enum", "values": ["abstract", "members"], "required": true, "label": "Level" } } } }, "environment": { "type": "list", "label": "Environment assumptions", "items": { "type": "object", "fields": { "element": { "type": "ref", "ref": ["component"], "required": true, "label": "Element" }, "events": { "type": "list", "items": { "type": "ref", "ref": ["event"] }, "required": true, "label": "Events it would receive" }, "assumption": { "type": "ref", "ref": ["assumption"], "label": "Assumption" }, "note": { "type": "text", "label": "Note" } } } } } },
         "id": { "type": "id", "required": true },
         "name": { "type": "string", "required": true, "label": "Name" },
         "description": { "type": "text", "label": "Description" },
@@ -508,7 +512,11 @@
         "id": { "type": "id", "required": true },
         "statement": { "type": "text", "required": true, "label": "Statement" },
         "rationale": { "type": "text", "label": "Rationale" },
-        "illustrative": { "type": "boolean", "label": "Illustrative" }
+        "illustrative": { "type": "boolean", "label": "Illustrative" },
+        "fairness": {
+          "type": "object", "label": "Fairness", "doc": "A fairness assumption a liveness claim may cite: kind weak (a transition whose event stays deliverable from some point on is eventually taken) or strong, over the listed transitions. exegra prove reads weak fairness per entry: every entry that can fire one of the transitions is weakly fair; strong fairness is not supported yet.",
+          "fields": { "kind": { "type": "enum", "values": ["weak", "strong"], "label": "Kind" }, "transitions": { "type": "list", "items": { "type": "ref", "ref": ["transition"] }, "label": "Transitions" } }
+        }
       }
     },
     "type": {
@@ -589,6 +597,11 @@
       "properties": {
         "id": { "type": "id", "required": true },
         "description": { "type": "text", "label": "Description" },
+        "element": { "type": "ref", "ref": ["component", "system"], "label": "Element", "doc": "The element of the hierarchy this function is the function of (a stage of a pipeline, the pipeline itself). Functions attached to the members of a composite compose along the logical hierarchy (src/core/function-composition.js)." },
+        "composition": {
+          "type": "object", "label": "Composition", "doc": "Declares this function, attached to a composite element, as the composition of its members' functions: stages run in order, each stage a function attached to a member of the element. The declared signature must equal the composition: the parameters of the first stage, the returns of the last, each stage taking exactly one parameter of the type the stage before it returns, and one shared error union (function.composition-*).",
+          "fields": { "stages": { "type": "list", "items": { "type": "ref", "ref": ["function"] }, "required": true, "label": "Stages" } }
+        },
         "params": {
           "type": "list", "label": "Parameters", "doc": "Each {name, type}: a plain name and a type that resolves (or result<T, E>).",
           "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "string", "required": true }, "description": { "type": "text" } } }
@@ -1089,7 +1102,7 @@
         "faultModel": { "type": "ref", "ref": ["faultModel"], "label": "Fault model", "doc": "The fault model this claim is evaluated under. A result states it in its scope." },
         "realisation": { "type": "enum", "values": ["construction", "checked", "operational"], "label": "Realisation", "doc": "For a requirement. construction: generated code guarantees it, and some claim whose models names it checks that. checked: hand-written code, checked by tests. operational: measured on a running deployment." },
         "realisedBy": { "type": "list", "items": { "type": "ref", "ref": ["policy", "validation", "retention", "quota", "retry", "audit"] }, "label": "Realised by", "doc": "For a requirement: the cross-cutting constructs that realise it by construction. A construction requirement is satisfied by a claim whose models names it or by at least one construct here." },
-        "discharges": { "type": "list", "items": { "type": "ref", "ref": ["assumption"] }, "label": "Discharges", "doc": "The assumptions this claim establishes: a claim resting on one of them depends on this claim (the dependency graph of exegra impact)." },
+        "discharges": { "type": "list", "items": { "type": "ref", "ref": ["assumption"] }, "label": "Discharges", "doc": "The assumptions this claim establishes: a claim resting on one of them depends on this claim (the dependency graph of exegra impact). The discharge graph must have no cycle (assumption.discharge-cycle)." },
         "guaranteeClass": { "type": "enum", "values": ["well-formedness", "consistency", "safety", "liveness", "compositionality", "refinement", "conformance", "fidelity", "change-impact"], "label": "Guarantee class", "doc": "The class of guarantee the claim belongs to, by which the capability matrix (generated/capabilities.md) groups claims: 1 well-formedness, 2 consistency, 3 safety, 4 liveness, 5 compositionality, 6 refinement, 7 implementation conformance, 8 simulation fidelity, and change impact." },
         "evaluate": { "type": "evaluation", "required": true, "label": "Evaluation" }
       }

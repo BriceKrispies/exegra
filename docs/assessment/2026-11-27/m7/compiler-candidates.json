@@ -1,0 +1,4527 @@
+{
+ "fixture": "tests/fixtures/multiscale-external/compiler.jsonc",
+ "scope": "compiler",
+ "grain": "leaves",
+ "purity": {
+  "hashBefore": "10692eed6a0f94",
+  "hashAfter": "10692eed6a0f94",
+  "factsUnchanged": true,
+  "repeatedIdentical": true
+ },
+ "skipped": [
+  {
+   "source": "connectors",
+   "reason": "no connector element among the leaves of \"compiler\"."
+  },
+  {
+   "source": "contracts",
+   "reason": "no fact inside \"compiler\" is typed by a contract."
+  },
+  {
+   "source": "cycles",
+   "reason": "no dependency cycle among the leaves of \"compiler\"."
+  },
+  {
+   "source": "directory",
+   "reason": "the leaves of \"compiler\" lie in one directory (or have no module paths)."
+  },
+  {
+   "source": "refinement",
+   "reason": "\"compiler-front-and-back~move-checker-to-diagnostics\" places the elements as \"compiler-declared~move-checker-to-diagnostics\" does."
+  },
+  {
+   "source": "refinement",
+   "reason": "\"compiler-front-and-back~move-diagnostics-to-frontend\" places the elements as \"compiler-declared~move-diagnostics-to-frontend\" does."
+  },
+  {
+   "source": "refinement",
+   "reason": "\"compiler-front-and-back~move-lexer-to-diagnostics\" places the elements as \"compiler-declared~move-lexer-to-diagnostics\" does."
+  },
+  {
+   "source": "refinement",
+   "reason": "\"compiler-front-and-back~move-parser-to-diagnostics\" places the elements as \"compiler-declared~move-parser-to-diagnostics\" does."
+  },
+  {
+   "source": "refinement",
+   "reason": "\"compiler-syntax-first~move-checker-to-diagnostics\" places the elements as \"compiler-declared~move-checker-to-diagnostics\" does."
+  },
+  {
+   "source": "refinement",
+   "reason": "base \"compiler-overlap\" is not a valid partition: overlap."
+  }
+ ],
+ "comparison": {
+  "candidates": [
+   "compiler-pipeline-thirds",
+   "compiler-front-and-back",
+   "compiler-syntax-first",
+   "compiler-overlap",
+   "compiler-declared",
+   "compiler-declared~move-checker-to-diagnostics",
+   "compiler-declared~move-diagnostics-to-frontend",
+   "compiler-declared~move-lexer-to-diagnostics",
+   "compiler-declared~move-parser-to-diagnostics",
+   "compiler-pipeline-thirds~move-checker-to-diagnostics",
+   "compiler-pipeline-thirds~move-diagnostics-to-syntax",
+   "compiler-pipeline-thirds~move-lexer-to-diagnostics",
+   "compiler-pipeline-thirds~move-parser-to-diagnostics",
+   "compiler-syntax-first~move-diagnostics-to-syntax",
+   "compiler-syntax-first~move-lexer-to-diagnostics",
+   "compiler-syntax-first~move-parser-to-diagnostics"
+  ],
+  "rows": [
+   {
+    "id": "status",
+    "label": "Validity",
+    "values": {
+     "compiler-pipeline-thirds": "valid",
+     "compiler-front-and-back": "valid",
+     "compiler-syntax-first": "valid",
+     "compiler-overlap": "invalid",
+     "compiler-declared": "valid",
+     "compiler-declared~move-checker-to-diagnostics": "invalid",
+     "compiler-declared~move-diagnostics-to-frontend": "valid",
+     "compiler-declared~move-lexer-to-diagnostics": "invalid",
+     "compiler-declared~move-parser-to-diagnostics": "invalid",
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": "invalid",
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": "valid",
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": "invalid",
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": "invalid",
+     "compiler-syntax-first~move-diagnostics-to-syntax": "valid",
+     "compiler-syntax-first~move-lexer-to-diagnostics": "invalid",
+     "compiler-syntax-first~move-parser-to-diagnostics": "invalid"
+    }
+   },
+   {
+    "id": "blocks",
+    "label": "Blocks",
+    "values": {
+     "compiler-pipeline-thirds": 4,
+     "compiler-front-and-back": 3,
+     "compiler-syntax-first": 4,
+     "compiler-overlap": null,
+     "compiler-declared": 3,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 2,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 3,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 3,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "largest-block",
+    "label": "Members of the largest block",
+    "values": {
+     "compiler-pipeline-thirds": 2,
+     "compiler-front-and-back": 3,
+     "compiler-syntax-first": 2,
+     "compiler-overlap": null,
+     "compiler-declared": 3,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 4,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 3,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 3,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "internal",
+    "label": "Facts internal to a block",
+    "values": {
+     "compiler-pipeline-thirds": 2,
+     "compiler-front-and-back": 3,
+     "compiler-syntax-first": 2,
+     "compiler-overlap": null,
+     "compiler-declared": 3,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 6,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 4,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 4,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "crossing",
+    "label": "Facts crossing blocks (boundary size)",
+    "values": {
+     "compiler-pipeline-thirds": 5,
+     "compiler-front-and-back": 5,
+     "compiler-syntax-first": 6,
+     "compiler-overlap": null,
+     "compiler-declared": 5,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 2,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 3,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 4,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "internal-dependency",
+    "label": "Dependency-class facts internal to a block",
+    "values": {
+     "compiler-pipeline-thirds": 0,
+     "compiler-front-and-back": 0,
+     "compiler-syntax-first": 0,
+     "compiler-overlap": null,
+     "compiler-declared": 0,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 3,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 2,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 2,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "crossing-dependency",
+    "label": "Dependency-class facts crossing blocks",
+    "values": {
+     "compiler-pipeline-thirds": 3,
+     "compiler-front-and-back": 4,
+     "compiler-syntax-first": 4,
+     "compiler-overlap": null,
+     "compiler-declared": 4,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 1,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 1,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 2,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "cohesion",
+    "label": "Cohesion (internal / (internal + crossing))",
+    "values": {
+     "compiler-pipeline-thirds": 0.285714,
+     "compiler-front-and-back": 0.375,
+     "compiler-syntax-first": 0.25,
+     "compiler-overlap": null,
+     "compiler-declared": 0.375,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 0.75,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 0.571429,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 0.5,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "coupled-pairs",
+    "label": "Ordered block pairs with a crossing fact",
+    "values": {
+     "compiler-pipeline-thirds": 4,
+     "compiler-front-and-back": 3,
+     "compiler-syntax-first": 5,
+     "compiler-overlap": null,
+     "compiler-declared": 3,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 2,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 3,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 4,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "cycles-static",
+    "label": "Cycles among blocks, static class",
+    "values": {
+     "compiler-pipeline-thirds": 0,
+     "compiler-front-and-back": 0,
+     "compiler-syntax-first": 0,
+     "compiler-overlap": null,
+     "compiler-declared": 0,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 0,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 0,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 0,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "cycles-runtime",
+    "label": "Cycles among blocks, runtime class",
+    "values": {
+     "compiler-pipeline-thirds": 0,
+     "compiler-front-and-back": 0,
+     "compiler-syntax-first": 0,
+     "compiler-overlap": null,
+     "compiler-declared": 0,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 0,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 0,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 0,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "cycles-dependency",
+    "label": "Cycles among blocks, static and runtime together",
+    "values": {
+     "compiler-pipeline-thirds": 0,
+     "compiler-front-and-back": 0,
+     "compiler-syntax-first": 0,
+     "compiler-overlap": null,
+     "compiler-declared": 0,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 0,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 0,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 0,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "back-edge-witnesses",
+    "label": "Facts on the back edges of dependency cycles",
+    "values": {
+     "compiler-pipeline-thirds": 0,
+     "compiler-front-and-back": 0,
+     "compiler-syntax-first": 0,
+     "compiler-overlap": null,
+     "compiler-declared": 0,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 0,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 0,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 0,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "interface-groups",
+    "label": "Interface groups over all blocks",
+    "values": {
+     "compiler-pipeline-thirds": 7,
+     "compiler-front-and-back": 5,
+     "compiler-syntax-first": 8,
+     "compiler-overlap": null,
+     "compiler-declared": 5,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 4,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 6,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 7,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "interface-largest",
+    "label": "Interface groups of the largest interface",
+    "values": {
+     "compiler-pipeline-thirds": 3,
+     "compiler-front-and-back": 2,
+     "compiler-syntax-first": 3,
+     "compiler-overlap": null,
+     "compiler-declared": 2,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 2,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 3,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 3,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "contract-coverage",
+    "label": "Crossing facts typed by a contract",
+    "values": {
+     "compiler-pipeline-thirds": 0,
+     "compiler-front-and-back": 0,
+     "compiler-syntax-first": 0,
+     "compiler-overlap": null,
+     "compiler-declared": 0,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 0,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 0,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 0,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "redundant-on-boundary",
+    "label": "Redundant declared facts on the boundary",
+    "values": {
+     "compiler-pipeline-thirds": 0,
+     "compiler-front-and-back": 0,
+     "compiler-syntax-first": 0,
+     "compiler-overlap": null,
+     "compiler-declared": 0,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 0,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 0,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 0,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "opaque-elements",
+    "label": "Opaque grain elements",
+    "values": {
+     "compiler-pipeline-thirds": 0,
+     "compiler-front-and-back": 0,
+     "compiler-syntax-first": 0,
+     "compiler-overlap": null,
+     "compiler-declared": 0,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 0,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 0,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 0,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   },
+   {
+    "id": "unknown-elements",
+    "label": "Grain elements of unknown knowledge",
+    "values": {
+     "compiler-pipeline-thirds": 0,
+     "compiler-front-and-back": 0,
+     "compiler-syntax-first": 0,
+     "compiler-overlap": null,
+     "compiler-declared": 0,
+     "compiler-declared~move-checker-to-diagnostics": null,
+     "compiler-declared~move-diagnostics-to-frontend": 0,
+     "compiler-declared~move-lexer-to-diagnostics": null,
+     "compiler-declared~move-parser-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-checker-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-diagnostics-to-syntax": 0,
+     "compiler-pipeline-thirds~move-lexer-to-diagnostics": null,
+     "compiler-pipeline-thirds~move-parser-to-diagnostics": null,
+     "compiler-syntax-first~move-diagnostics-to-syntax": 0,
+     "compiler-syntax-first~move-lexer-to-diagnostics": null,
+     "compiler-syntax-first~move-parser-to-diagnostics": null
+    }
+   }
+  ]
+ },
+ "candidates": [
+  {
+   "id": "compiler-pipeline-thirds",
+   "name": "Compiler in three thirds",
+   "source": "data",
+   "scope": "compiler",
+   "grain": "leaves",
+   "from": null,
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "analysis-and-optimisation",
+     "name": "Analysis and optimisation",
+     "members": [
+      "checker",
+      "optimiser"
+     ],
+     "existing": false
+    },
+    {
+     "id": "diagnostics",
+     "name": "diagnostics",
+     "members": [
+      "diagnostics"
+     ],
+     "existing": true
+    },
+    {
+     "id": "emission",
+     "name": "Emission",
+     "members": [
+      "emitter"
+     ],
+     "existing": false
+    },
+    {
+     "id": "syntax",
+     "name": "Syntax",
+     "members": [
+      "lexer",
+      "parser"
+     ],
+     "existing": false
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 4,
+     "grainElements": 6,
+     "singletons": 2,
+     "largest": 2,
+     "smallest": 1
+    },
+    "facts": {
+     "internal": {
+      "all": 2,
+      "static": 0,
+      "runtime": 0,
+      "none": 2,
+      "dependency": 0
+     },
+     "crossing": {
+      "all": 5,
+      "static": 0,
+      "runtime": 3,
+      "none": 2,
+      "dependency": 3
+     },
+     "external": {
+      "all": 1,
+      "static": 0,
+      "runtime": 1,
+      "none": 0,
+      "dependency": 1
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 5,
+     "external": 1
+    },
+    "cohesion": {
+     "overall": {
+      "n": 2,
+      "d": 7,
+      "value": 0.285714
+     },
+     "dependency": {
+      "n": 0,
+      "d": 3,
+      "value": 0
+     },
+     "perBlock": [
+      {
+       "id": "analysis-and-optimisation",
+       "n": 1,
+       "d": 4,
+       "value": 0.25
+      },
+      {
+       "id": "diagnostics",
+       "n": 0,
+       "d": 3,
+       "value": 0
+      },
+      {
+       "id": "emission",
+       "n": 0,
+       "d": 1,
+       "value": 0
+      },
+      {
+       "id": "syntax",
+       "n": 1,
+       "d": 4,
+       "value": 0.25
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 4,
+     "density": {
+      "n": 4,
+      "d": 12,
+      "value": 0.333333
+     },
+     "perBlock": [
+      {
+       "id": "analysis-and-optimisation",
+       "out": 2,
+       "in": 1
+      },
+      {
+       "id": "diagnostics",
+       "out": 0,
+       "in": 3
+      },
+      {
+       "id": "emission",
+       "out": 0,
+       "in": 1
+      },
+      {
+       "id": "syntax",
+       "out": 3,
+       "in": 0
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 7,
+     "largest": 3,
+     "perBlock": [
+      {
+       "id": "analysis-and-optimisation",
+       "groups": 3,
+       "witnesses": 3
+      },
+      {
+       "id": "diagnostics",
+       "groups": 1,
+       "witnesses": 4
+      },
+      {
+       "id": "emission",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "syntax",
+       "groups": 2,
+       "witnesses": 3
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 5,
+      "value": 0
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 3,
+      "value": 0
+     },
+     "blockPairs": {
+      "total": 4,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 4
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 6,
+      "opaque": 0,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {
+      "declared": 5
+     },
+     "perBlock": [
+      {
+       "id": "analysis-and-optimisation",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "diagnostics",
+       "transparent": 1,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "emission",
+       "transparent": 1,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "syntax",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [
+     {
+      "from": "analysis-and-optimisation",
+      "to": "diagnostics",
+      "witnesses": [
+       "checker-reports"
+      ],
+      "kinds": {
+       "invokes": 1
+      },
+      "classes": {
+       "runtime": 1
+      },
+      "uncoveredByContract": [
+       "checker-reports"
+      ]
+     },
+     {
+      "from": "analysis-and-optimisation",
+      "to": "emission",
+      "witnesses": [
+       "optimiser-feeds-emitter"
+      ],
+      "kinds": {
+       "data-flow": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "optimiser-feeds-emitter"
+      ]
+     },
+     {
+      "from": "syntax",
+      "to": "analysis-and-optimisation",
+      "witnesses": [
+       "parser-feeds-checker"
+      ],
+      "kinds": {
+       "data-flow": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "parser-feeds-checker"
+      ]
+     },
+     {
+      "from": "syntax",
+      "to": "diagnostics",
+      "witnesses": [
+       "lexer-reports",
+       "parser-reports"
+      ],
+      "kinds": {
+       "invokes": 2
+      },
+      "classes": {
+       "runtime": 2
+      },
+      "uncoveredByContract": [
+       "lexer-reports",
+       "parser-reports"
+      ]
+     }
+    ],
+    "cycles": [],
+    "uncoveredContracts": [
+     {
+      "from": "analysis-and-optimisation",
+      "to": "diagnostics",
+      "facts": [
+       "checker-reports"
+      ]
+     },
+     {
+      "from": "analysis-and-optimisation",
+      "to": "emission",
+      "facts": [
+       "optimiser-feeds-emitter"
+      ]
+     },
+     {
+      "from": "syntax",
+      "to": "analysis-and-optimisation",
+      "facts": [
+       "parser-feeds-checker"
+      ]
+     },
+     {
+      "from": "syntax",
+      "to": "diagnostics",
+      "facts": [
+       "lexer-reports",
+       "parser-reports"
+      ]
+     }
+    ],
+    "scopeBoundary": [
+     {
+      "block": "diagnostics",
+      "facts": [
+       "backend-reports"
+      ]
+     }
+    ]
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  },
+  {
+   "id": "compiler-front-and-back",
+   "name": "Front and back, as declared",
+   "source": "data",
+   "scope": "compiler",
+   "grain": "leaves",
+   "from": null,
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "backend",
+     "name": "backend",
+     "members": [
+      "emitter",
+      "optimiser"
+     ],
+     "existing": true
+    },
+    {
+     "id": "diagnostics",
+     "name": "diagnostics",
+     "members": [
+      "diagnostics"
+     ],
+     "existing": true
+    },
+    {
+     "id": "frontend",
+     "name": "frontend",
+     "members": [
+      "checker",
+      "lexer",
+      "parser"
+     ],
+     "existing": true
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 3,
+     "grainElements": 6,
+     "singletons": 1,
+     "largest": 3,
+     "smallest": 1
+    },
+    "facts": {
+     "internal": {
+      "all": 3,
+      "static": 0,
+      "runtime": 0,
+      "none": 3,
+      "dependency": 0
+     },
+     "crossing": {
+      "all": 5,
+      "static": 0,
+      "runtime": 4,
+      "none": 1,
+      "dependency": 4
+     },
+     "external": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 5,
+     "external": 0
+    },
+    "cohesion": {
+     "overall": {
+      "n": 3,
+      "d": 8,
+      "value": 0.375
+     },
+     "dependency": {
+      "n": 0,
+      "d": 4,
+      "value": 0
+     },
+     "perBlock": [
+      {
+       "id": "backend",
+       "n": 1,
+       "d": 3,
+       "value": 0.333333
+      },
+      {
+       "id": "diagnostics",
+       "n": 0,
+       "d": 4,
+       "value": 0
+      },
+      {
+       "id": "frontend",
+       "n": 2,
+       "d": 6,
+       "value": 0.333333
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 3,
+     "density": {
+      "n": 3,
+      "d": 6,
+      "value": 0.5
+     },
+     "perBlock": [
+      {
+       "id": "backend",
+       "out": 1,
+       "in": 1
+      },
+      {
+       "id": "diagnostics",
+       "out": 0,
+       "in": 4
+      },
+      {
+       "id": "frontend",
+       "out": 4,
+       "in": 0
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 5,
+     "largest": 2,
+     "perBlock": [
+      {
+       "id": "backend",
+       "groups": 2,
+       "witnesses": 2
+      },
+      {
+       "id": "diagnostics",
+       "groups": 1,
+       "witnesses": 4
+      },
+      {
+       "id": "frontend",
+       "groups": 2,
+       "witnesses": 4
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 5,
+      "value": 0
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 4,
+      "value": 0
+     },
+     "blockPairs": {
+      "total": 3,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 3
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 6,
+      "opaque": 0,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {
+      "declared": 5
+     },
+     "perBlock": [
+      {
+       "id": "backend",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "diagnostics",
+       "transparent": 1,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "frontend",
+       "transparent": 3,
+       "opaque": 0,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [
+     {
+      "from": "backend",
+      "to": "diagnostics",
+      "witnesses": [
+       "backend-reports"
+      ],
+      "kinds": {
+       "invokes": 1
+      },
+      "classes": {
+       "runtime": 1
+      },
+      "uncoveredByContract": [
+       "backend-reports"
+      ]
+     },
+     {
+      "from": "frontend",
+      "to": "backend",
+      "witnesses": [
+       "checker-feeds-optimiser"
+      ],
+      "kinds": {
+       "data-flow": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "checker-feeds-optimiser"
+      ]
+     },
+     {
+      "from": "frontend",
+      "to": "diagnostics",
+      "witnesses": [
+       "checker-reports",
+       "lexer-reports",
+       "parser-reports"
+      ],
+      "kinds": {
+       "invokes": 3
+      },
+      "classes": {
+       "runtime": 3
+      },
+      "uncoveredByContract": [
+       "checker-reports",
+       "lexer-reports",
+       "parser-reports"
+      ]
+     }
+    ],
+    "cycles": [],
+    "uncoveredContracts": [
+     {
+      "from": "backend",
+      "to": "diagnostics",
+      "facts": [
+       "backend-reports"
+      ]
+     },
+     {
+      "from": "frontend",
+      "to": "backend",
+      "facts": [
+       "checker-feeds-optimiser"
+      ]
+     },
+     {
+      "from": "frontend",
+      "to": "diagnostics",
+      "facts": [
+       "checker-reports",
+       "lexer-reports",
+       "parser-reports"
+      ]
+     }
+    ],
+    "scopeBoundary": []
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  },
+  {
+   "id": "compiler-syntax-first",
+   "name": "Syntax split off",
+   "source": "data",
+   "scope": "compiler",
+   "grain": "leaves",
+   "from": null,
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "backend",
+     "name": "backend",
+     "members": [
+      "emitter",
+      "optimiser"
+     ],
+     "existing": true
+    },
+    {
+     "id": "checker",
+     "name": "checker",
+     "members": [
+      "checker"
+     ],
+     "existing": true
+    },
+    {
+     "id": "diagnostics",
+     "name": "diagnostics",
+     "members": [
+      "diagnostics"
+     ],
+     "existing": true
+    },
+    {
+     "id": "syntax",
+     "name": "Syntax",
+     "members": [
+      "lexer",
+      "parser"
+     ],
+     "existing": false
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 4,
+     "grainElements": 6,
+     "singletons": 2,
+     "largest": 2,
+     "smallest": 1
+    },
+    "facts": {
+     "internal": {
+      "all": 2,
+      "static": 0,
+      "runtime": 0,
+      "none": 2,
+      "dependency": 0
+     },
+     "crossing": {
+      "all": 6,
+      "static": 0,
+      "runtime": 4,
+      "none": 2,
+      "dependency": 4
+     },
+     "external": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 6,
+     "external": 0
+    },
+    "cohesion": {
+     "overall": {
+      "n": 2,
+      "d": 8,
+      "value": 0.25
+     },
+     "dependency": {
+      "n": 0,
+      "d": 4,
+      "value": 0
+     },
+     "perBlock": [
+      {
+       "id": "backend",
+       "n": 1,
+       "d": 3,
+       "value": 0.333333
+      },
+      {
+       "id": "checker",
+       "n": 0,
+       "d": 3,
+       "value": 0
+      },
+      {
+       "id": "diagnostics",
+       "n": 0,
+       "d": 4,
+       "value": 0
+      },
+      {
+       "id": "syntax",
+       "n": 1,
+       "d": 4,
+       "value": 0.25
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 5,
+     "density": {
+      "n": 5,
+      "d": 12,
+      "value": 0.416667
+     },
+     "perBlock": [
+      {
+       "id": "backend",
+       "out": 1,
+       "in": 1
+      },
+      {
+       "id": "checker",
+       "out": 2,
+       "in": 1
+      },
+      {
+       "id": "diagnostics",
+       "out": 0,
+       "in": 4
+      },
+      {
+       "id": "syntax",
+       "out": 3,
+       "in": 0
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 8,
+     "largest": 3,
+     "perBlock": [
+      {
+       "id": "backend",
+       "groups": 2,
+       "witnesses": 2
+      },
+      {
+       "id": "checker",
+       "groups": 3,
+       "witnesses": 3
+      },
+      {
+       "id": "diagnostics",
+       "groups": 1,
+       "witnesses": 4
+      },
+      {
+       "id": "syntax",
+       "groups": 2,
+       "witnesses": 3
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 6,
+      "value": 0
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 4,
+      "value": 0
+     },
+     "blockPairs": {
+      "total": 5,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 5
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 6,
+      "opaque": 0,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {
+      "declared": 6
+     },
+     "perBlock": [
+      {
+       "id": "backend",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "checker",
+       "transparent": 1,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "diagnostics",
+       "transparent": 1,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "syntax",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [
+     {
+      "from": "backend",
+      "to": "diagnostics",
+      "witnesses": [
+       "backend-reports"
+      ],
+      "kinds": {
+       "invokes": 1
+      },
+      "classes": {
+       "runtime": 1
+      },
+      "uncoveredByContract": [
+       "backend-reports"
+      ]
+     },
+     {
+      "from": "checker",
+      "to": "backend",
+      "witnesses": [
+       "checker-feeds-optimiser"
+      ],
+      "kinds": {
+       "data-flow": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "checker-feeds-optimiser"
+      ]
+     },
+     {
+      "from": "checker",
+      "to": "diagnostics",
+      "witnesses": [
+       "checker-reports"
+      ],
+      "kinds": {
+       "invokes": 1
+      },
+      "classes": {
+       "runtime": 1
+      },
+      "uncoveredByContract": [
+       "checker-reports"
+      ]
+     },
+     {
+      "from": "syntax",
+      "to": "checker",
+      "witnesses": [
+       "parser-feeds-checker"
+      ],
+      "kinds": {
+       "data-flow": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "parser-feeds-checker"
+      ]
+     },
+     {
+      "from": "syntax",
+      "to": "diagnostics",
+      "witnesses": [
+       "lexer-reports",
+       "parser-reports"
+      ],
+      "kinds": {
+       "invokes": 2
+      },
+      "classes": {
+       "runtime": 2
+      },
+      "uncoveredByContract": [
+       "lexer-reports",
+       "parser-reports"
+      ]
+     }
+    ],
+    "cycles": [],
+    "uncoveredContracts": [
+     {
+      "from": "backend",
+      "to": "diagnostics",
+      "facts": [
+       "backend-reports"
+      ]
+     },
+     {
+      "from": "checker",
+      "to": "backend",
+      "facts": [
+       "checker-feeds-optimiser"
+      ]
+     },
+     {
+      "from": "checker",
+      "to": "diagnostics",
+      "facts": [
+       "checker-reports"
+      ]
+     },
+     {
+      "from": "syntax",
+      "to": "checker",
+      "facts": [
+       "parser-feeds-checker"
+      ]
+     },
+     {
+      "from": "syntax",
+      "to": "diagnostics",
+      "facts": [
+       "lexer-reports",
+       "parser-reports"
+      ]
+     }
+    ],
+    "scopeBoundary": []
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  },
+  {
+   "id": "compiler-overlap",
+   "name": "Lexer in two blocks",
+   "source": "data",
+   "scope": "compiler",
+   "grain": "leaves",
+   "from": null,
+   "note": null,
+   "status": "invalid",
+   "failedConditions": [
+    "V1"
+   ],
+   "notEvaluated": [],
+   "notApplicable": [],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "fail",
+     "failures": [
+      {
+       "code": "overlap",
+       "message": "\"lexer\" is in 2 blocks (\"syntax\", \"analysis\"); a hierarchy places an element once, so the blocks are not laminar.",
+       "witnesses": [
+        "analysis",
+        "lexer",
+        "syntax"
+       ]
+      }
+     ],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    }
+   ],
+   "blocks": [
+    {
+     "id": "analysis",
+     "name": "analysis",
+     "members": [
+      "checker",
+      "lexer"
+     ],
+     "existing": false
+    },
+    {
+     "id": "backend",
+     "name": "backend",
+     "members": [
+      "emitter",
+      "optimiser"
+     ],
+     "existing": true
+    },
+    {
+     "id": "diagnostics",
+     "name": "diagnostics",
+     "members": [
+      "diagnostics"
+     ],
+     "existing": true
+    },
+    {
+     "id": "syntax",
+     "name": "syntax",
+     "members": [
+      "lexer",
+      "parser"
+     ],
+     "existing": false
+    }
+   ],
+   "placedByRest": [],
+   "measurements": null,
+   "evidence": null,
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate."
+   ]
+  },
+  {
+   "id": "compiler-declared",
+   "name": "The declared hierarchy of compiler",
+   "source": "declared",
+   "scope": "compiler",
+   "grain": "leaves",
+   "from": null,
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "backend",
+     "name": "backend",
+     "members": [
+      "emitter",
+      "optimiser"
+     ],
+     "existing": true
+    },
+    {
+     "id": "diagnostics",
+     "name": "diagnostics",
+     "members": [
+      "diagnostics"
+     ],
+     "existing": true
+    },
+    {
+     "id": "frontend",
+     "name": "frontend",
+     "members": [
+      "checker",
+      "lexer",
+      "parser"
+     ],
+     "existing": true
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 3,
+     "grainElements": 6,
+     "singletons": 1,
+     "largest": 3,
+     "smallest": 1
+    },
+    "facts": {
+     "internal": {
+      "all": 3,
+      "static": 0,
+      "runtime": 0,
+      "none": 3,
+      "dependency": 0
+     },
+     "crossing": {
+      "all": 5,
+      "static": 0,
+      "runtime": 4,
+      "none": 1,
+      "dependency": 4
+     },
+     "external": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 5,
+     "external": 0
+    },
+    "cohesion": {
+     "overall": {
+      "n": 3,
+      "d": 8,
+      "value": 0.375
+     },
+     "dependency": {
+      "n": 0,
+      "d": 4,
+      "value": 0
+     },
+     "perBlock": [
+      {
+       "id": "backend",
+       "n": 1,
+       "d": 3,
+       "value": 0.333333
+      },
+      {
+       "id": "diagnostics",
+       "n": 0,
+       "d": 4,
+       "value": 0
+      },
+      {
+       "id": "frontend",
+       "n": 2,
+       "d": 6,
+       "value": 0.333333
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 3,
+     "density": {
+      "n": 3,
+      "d": 6,
+      "value": 0.5
+     },
+     "perBlock": [
+      {
+       "id": "backend",
+       "out": 1,
+       "in": 1
+      },
+      {
+       "id": "diagnostics",
+       "out": 0,
+       "in": 4
+      },
+      {
+       "id": "frontend",
+       "out": 4,
+       "in": 0
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 5,
+     "largest": 2,
+     "perBlock": [
+      {
+       "id": "backend",
+       "groups": 2,
+       "witnesses": 2
+      },
+      {
+       "id": "diagnostics",
+       "groups": 1,
+       "witnesses": 4
+      },
+      {
+       "id": "frontend",
+       "groups": 2,
+       "witnesses": 4
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 5,
+      "value": 0
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 4,
+      "value": 0
+     },
+     "blockPairs": {
+      "total": 3,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 3
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 6,
+      "opaque": 0,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {
+      "declared": 5
+     },
+     "perBlock": [
+      {
+       "id": "backend",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "diagnostics",
+       "transparent": 1,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "frontend",
+       "transparent": 3,
+       "opaque": 0,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [
+     {
+      "from": "backend",
+      "to": "diagnostics",
+      "witnesses": [
+       "backend-reports"
+      ],
+      "kinds": {
+       "invokes": 1
+      },
+      "classes": {
+       "runtime": 1
+      },
+      "uncoveredByContract": [
+       "backend-reports"
+      ]
+     },
+     {
+      "from": "frontend",
+      "to": "backend",
+      "witnesses": [
+       "checker-feeds-optimiser"
+      ],
+      "kinds": {
+       "data-flow": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "checker-feeds-optimiser"
+      ]
+     },
+     {
+      "from": "frontend",
+      "to": "diagnostics",
+      "witnesses": [
+       "checker-reports",
+       "lexer-reports",
+       "parser-reports"
+      ],
+      "kinds": {
+       "invokes": 3
+      },
+      "classes": {
+       "runtime": 3
+      },
+      "uncoveredByContract": [
+       "checker-reports",
+       "lexer-reports",
+       "parser-reports"
+      ]
+     }
+    ],
+    "cycles": [],
+    "uncoveredContracts": [
+     {
+      "from": "backend",
+      "to": "diagnostics",
+      "facts": [
+       "backend-reports"
+      ]
+     },
+     {
+      "from": "frontend",
+      "to": "backend",
+      "facts": [
+       "checker-feeds-optimiser"
+      ]
+     },
+     {
+      "from": "frontend",
+      "to": "diagnostics",
+      "facts": [
+       "checker-reports",
+       "lexer-reports",
+       "parser-reports"
+      ]
+     }
+    ],
+    "scopeBoundary": []
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  },
+  {
+   "id": "compiler-declared~move-checker-to-diagnostics",
+   "name": "The declared hierarchy of compiler, with checker moved to diagnostics",
+   "source": "refinement",
+   "scope": "compiler",
+   "grain": "leaves",
+   "from": {
+    "candidate": "compiler-declared",
+    "op": {
+     "move": "checker",
+     "from": "frontend",
+     "to": "diagnostics"
+    }
+   },
+   "note": null,
+   "status": "invalid",
+   "failedConditions": [
+    "V1"
+   ],
+   "notEvaluated": [],
+   "notApplicable": [],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "fail",
+     "failures": [
+      {
+       "code": "block-id-collision",
+       "message": "Block \"diagnostics\" is named after a grain element it does not consist of alone.",
+       "witnesses": [
+        "diagnostics"
+       ]
+      }
+     ],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    }
+   ],
+   "blocks": [
+    {
+     "id": "backend",
+     "name": "backend",
+     "members": [
+      "emitter",
+      "optimiser"
+     ],
+     "existing": true
+    },
+    {
+     "id": "diagnostics",
+     "name": "diagnostics",
+     "members": [
+      "checker",
+      "diagnostics"
+     ],
+     "existing": true
+    },
+    {
+     "id": "frontend",
+     "name": "frontend",
+     "members": [
+      "lexer",
+      "parser"
+     ],
+     "existing": true
+    }
+   ],
+   "placedByRest": [],
+   "measurements": null,
+   "evidence": null,
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate."
+   ]
+  },
+  {
+   "id": "compiler-declared~move-diagnostics-to-frontend",
+   "name": "The declared hierarchy of compiler, with diagnostics moved to frontend",
+   "source": "refinement",
+   "scope": "compiler",
+   "grain": "leaves",
+   "from": {
+    "candidate": "compiler-declared",
+    "op": {
+     "move": "diagnostics",
+     "from": "diagnostics",
+     "to": "frontend"
+    }
+   },
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "backend",
+     "name": "backend",
+     "members": [
+      "emitter",
+      "optimiser"
+     ],
+     "existing": true
+    },
+    {
+     "id": "frontend",
+     "name": "frontend",
+     "members": [
+      "checker",
+      "diagnostics",
+      "lexer",
+      "parser"
+     ],
+     "existing": true
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 2,
+     "grainElements": 6,
+     "singletons": 0,
+     "largest": 4,
+     "smallest": 2
+    },
+    "facts": {
+     "internal": {
+      "all": 6,
+      "static": 0,
+      "runtime": 3,
+      "none": 3,
+      "dependency": 3
+     },
+     "crossing": {
+      "all": 2,
+      "static": 0,
+      "runtime": 1,
+      "none": 1,
+      "dependency": 1
+     },
+     "external": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 2,
+     "external": 0
+    },
+    "cohesion": {
+     "overall": {
+      "n": 6,
+      "d": 8,
+      "value": 0.75
+     },
+     "dependency": {
+      "n": 3,
+      "d": 4,
+      "value": 0.75
+     },
+     "perBlock": [
+      {
+       "id": "backend",
+       "n": 1,
+       "d": 3,
+       "value": 0.333333
+      },
+      {
+       "id": "frontend",
+       "n": 5,
+       "d": 7,
+       "value": 0.714286
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 2,
+     "density": {
+      "n": 2,
+      "d": 2,
+      "value": 1
+     },
+     "perBlock": [
+      {
+       "id": "backend",
+       "out": 1,
+       "in": 1
+      },
+      {
+       "id": "frontend",
+       "out": 1,
+       "in": 1
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 4,
+     "largest": 2,
+     "perBlock": [
+      {
+       "id": "backend",
+       "groups": 2,
+       "witnesses": 2
+      },
+      {
+       "id": "frontend",
+       "groups": 2,
+       "witnesses": 2
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 2,
+      "value": 0
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 1,
+      "value": 0
+     },
+     "blockPairs": {
+      "total": 2,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 2
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 6,
+      "opaque": 0,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {
+      "declared": 2
+     },
+     "perBlock": [
+      {
+       "id": "backend",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "frontend",
+       "transparent": 4,
+       "opaque": 0,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [
+     {
+      "from": "backend",
+      "to": "frontend",
+      "witnesses": [
+       "backend-reports"
+      ],
+      "kinds": {
+       "invokes": 1
+      },
+      "classes": {
+       "runtime": 1
+      },
+      "uncoveredByContract": [
+       "backend-reports"
+      ]
+     },
+     {
+      "from": "frontend",
+      "to": "backend",
+      "witnesses": [
+       "checker-feeds-optimiser"
+      ],
+      "kinds": {
+       "data-flow": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "checker-feeds-optimiser"
+      ]
+     }
+    ],
+    "cycles": [],
+    "uncoveredContracts": [
+     {
+      "from": "backend",
+      "to": "frontend",
+      "facts": [
+       "backend-reports"
+      ]
+     },
+     {
+      "from": "frontend",
+      "to": "backend",
+      "facts": [
+       "checker-feeds-optimiser"
+      ]
+     }
+    ],
+    "scopeBoundary": []
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  },
+  {
+   "id": "compiler-declared~move-lexer-to-diagnostics",
+   "name": "The declared hierarchy of compiler, with lexer moved to diagnostics",
+   "source": "refinement",
+   "scope": "compiler",
+   "grain": "leaves",
+   "from": {
+    "candidate": "compiler-declared",
+    "op": {
+     "move": "lexer",
+     "from": "frontend",
+     "to": "diagnostics"
+    }
+   },
+   "note": null,
+   "status": "invalid",
+   "failedConditions": [
+    "V1"
+   ],
+   "notEvaluated": [],
+   "notApplicable": [],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "fail",
+     "failures": [
+      {
+       "code": "block-id-collision",
+       "message": "Block \"diagnostics\" is named after a grain element it does not consist of alone.",
+       "witnesses": [
+        "diagnostics"
+       ]
+      }
+     ],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    }
+   ],
+   "blocks": [
+    {
+     "id": "backend",
+     "name": "backend",
+     "members": [
+      "emitter",
+      "optimiser"
+     ],
+     "existing": true
+    },
+    {
+     "id": "diagnostics",
+     "name": "diagnostics",
+     "members": [
+      "diagnostics",
+      "lexer"
+     ],
+     "existing": true
+    },
+    {
+     "id": "frontend",
+     "name": "frontend",
+     "members": [
+      "checker",
+      "parser"
+     ],
+     "existing": true
+    }
+   ],
+   "placedByRest": [],
+   "measurements": null,
+   "evidence": null,
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate."
+   ]
+  },
+  {
+   "id": "compiler-declared~move-parser-to-diagnostics",
+   "name": "The declared hierarchy of compiler, with parser moved to diagnostics",
+   "source": "refinement",
+   "scope": "compiler",
+   "grain": "leaves",
+   "from": {
+    "candidate": "compiler-declared",
+    "op": {
+     "move": "parser",
+     "from": "frontend",
+     "to": "diagnostics"
+    }
+   },
+   "note": null,
+   "status": "invalid",
+   "failedConditions": [
+    "V1"
+   ],
+   "notEvaluated": [],
+   "notApplicable": [],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "fail",
+     "failures": [
+      {
+       "code": "block-id-collision",
+       "message": "Block \"diagnostics\" is named after a grain element it does not consist of alone.",
+       "witnesses": [
+        "diagnostics"
+       ]
+      }
+     ],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    }
+   ],
+   "blocks": [
+    {
+     "id": "backend",
+     "name": "backend",
+     "members": [
+      "emitter",
+      "optimiser"
+     ],
+     "existing": true
+    },
+    {
+     "id": "diagnostics",
+     "name": "diagnostics",
+     "members": [
+      "diagnostics",
+      "parser"
+     ],
+     "existing": true
+    },
+    {
+     "id": "frontend",
+     "name": "frontend",
+     "members": [
+      "checker",
+      "lexer"
+     ],
+     "existing": true
+    }
+   ],
+   "placedByRest": [],
+   "measurements": null,
+   "evidence": null,
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate."
+   ]
+  },
+  {
+   "id": "compiler-pipeline-thirds~move-checker-to-diagnostics",
+   "name": "Compiler in three thirds, with checker moved to diagnostics",
+   "source": "refinement",
+   "scope": "compiler",
+   "grain": "leaves",
+   "from": {
+    "candidate": "compiler-pipeline-thirds",
+    "op": {
+     "move": "checker",
+     "from": "analysis-and-optimisation",
+     "to": "diagnostics"
+    }
+   },
+   "note": null,
+   "status": "invalid",
+   "failedConditions": [
+    "V1"
+   ],
+   "notEvaluated": [],
+   "notApplicable": [],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "fail",
+     "failures": [
+      {
+       "code": "block-id-collision",
+       "message": "Block \"diagnostics\" is named after a grain element it does not consist of alone.",
+       "witnesses": [
+        "diagnostics"
+       ]
+      }
+     ],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    }
+   ],
+   "blocks": [
+    {
+     "id": "analysis-and-optimisation",
+     "name": "analysis-and-optimisation",
+     "members": [
+      "optimiser"
+     ],
+     "existing": false
+    },
+    {
+     "id": "diagnostics",
+     "name": "diagnostics",
+     "members": [
+      "checker",
+      "diagnostics"
+     ],
+     "existing": true
+    },
+    {
+     "id": "emission",
+     "name": "emission",
+     "members": [
+      "emitter"
+     ],
+     "existing": false
+    },
+    {
+     "id": "syntax",
+     "name": "syntax",
+     "members": [
+      "lexer",
+      "parser"
+     ],
+     "existing": false
+    }
+   ],
+   "placedByRest": [],
+   "measurements": null,
+   "evidence": null,
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate."
+   ]
+  },
+  {
+   "id": "compiler-pipeline-thirds~move-diagnostics-to-syntax",
+   "name": "Compiler in three thirds, with diagnostics moved to syntax",
+   "source": "refinement",
+   "scope": "compiler",
+   "grain": "leaves",
+   "from": {
+    "candidate": "compiler-pipeline-thirds",
+    "op": {
+     "move": "diagnostics",
+     "from": "diagnostics",
+     "to": "syntax"
+    }
+   },
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "analysis-and-optimisation",
+     "name": "analysis-and-optimisation",
+     "members": [
+      "checker",
+      "optimiser"
+     ],
+     "existing": false
+    },
+    {
+     "id": "emission",
+     "name": "emission",
+     "members": [
+      "emitter"
+     ],
+     "existing": false
+    },
+    {
+     "id": "syntax",
+     "name": "syntax",
+     "members": [
+      "diagnostics",
+      "lexer",
+      "parser"
+     ],
+     "existing": false
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 3,
+     "grainElements": 6,
+     "singletons": 1,
+     "largest": 3,
+     "smallest": 1
+    },
+    "facts": {
+     "internal": {
+      "all": 4,
+      "static": 0,
+      "runtime": 2,
+      "none": 2,
+      "dependency": 2
+     },
+     "crossing": {
+      "all": 3,
+      "static": 0,
+      "runtime": 1,
+      "none": 2,
+      "dependency": 1
+     },
+     "external": {
+      "all": 1,
+      "static": 0,
+      "runtime": 1,
+      "none": 0,
+      "dependency": 1
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 3,
+     "external": 1
+    },
+    "cohesion": {
+     "overall": {
+      "n": 4,
+      "d": 7,
+      "value": 0.571429
+     },
+     "dependency": {
+      "n": 2,
+      "d": 3,
+      "value": 0.666667
+     },
+     "perBlock": [
+      {
+       "id": "analysis-and-optimisation",
+       "n": 1,
+       "d": 4,
+       "value": 0.25
+      },
+      {
+       "id": "emission",
+       "n": 0,
+       "d": 1,
+       "value": 0
+      },
+      {
+       "id": "syntax",
+       "n": 3,
+       "d": 5,
+       "value": 0.6
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 3,
+     "density": {
+      "n": 3,
+      "d": 6,
+      "value": 0.5
+     },
+     "perBlock": [
+      {
+       "id": "analysis-and-optimisation",
+       "out": 2,
+       "in": 1
+      },
+      {
+       "id": "emission",
+       "out": 0,
+       "in": 1
+      },
+      {
+       "id": "syntax",
+       "out": 1,
+       "in": 1
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 6,
+     "largest": 3,
+     "perBlock": [
+      {
+       "id": "analysis-and-optimisation",
+       "groups": 3,
+       "witnesses": 3
+      },
+      {
+       "id": "emission",
+       "groups": 1,
+       "witnesses": 1
+      },
+      {
+       "id": "syntax",
+       "groups": 2,
+       "witnesses": 3
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 3,
+      "value": 0
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 1,
+      "value": 0
+     },
+     "blockPairs": {
+      "total": 3,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 3
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 6,
+      "opaque": 0,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {
+      "declared": 3
+     },
+     "perBlock": [
+      {
+       "id": "analysis-and-optimisation",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "emission",
+       "transparent": 1,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "syntax",
+       "transparent": 3,
+       "opaque": 0,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [
+     {
+      "from": "analysis-and-optimisation",
+      "to": "emission",
+      "witnesses": [
+       "optimiser-feeds-emitter"
+      ],
+      "kinds": {
+       "data-flow": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "optimiser-feeds-emitter"
+      ]
+     },
+     {
+      "from": "analysis-and-optimisation",
+      "to": "syntax",
+      "witnesses": [
+       "checker-reports"
+      ],
+      "kinds": {
+       "invokes": 1
+      },
+      "classes": {
+       "runtime": 1
+      },
+      "uncoveredByContract": [
+       "checker-reports"
+      ]
+     },
+     {
+      "from": "syntax",
+      "to": "analysis-and-optimisation",
+      "witnesses": [
+       "parser-feeds-checker"
+      ],
+      "kinds": {
+       "data-flow": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "parser-feeds-checker"
+      ]
+     }
+    ],
+    "cycles": [],
+    "uncoveredContracts": [
+     {
+      "from": "analysis-and-optimisation",
+      "to": "emission",
+      "facts": [
+       "optimiser-feeds-emitter"
+      ]
+     },
+     {
+      "from": "analysis-and-optimisation",
+      "to": "syntax",
+      "facts": [
+       "checker-reports"
+      ]
+     },
+     {
+      "from": "syntax",
+      "to": "analysis-and-optimisation",
+      "facts": [
+       "parser-feeds-checker"
+      ]
+     }
+    ],
+    "scopeBoundary": [
+     {
+      "block": "syntax",
+      "facts": [
+       "backend-reports"
+      ]
+     }
+    ]
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  },
+  {
+   "id": "compiler-pipeline-thirds~move-lexer-to-diagnostics",
+   "name": "Compiler in three thirds, with lexer moved to diagnostics",
+   "source": "refinement",
+   "scope": "compiler",
+   "grain": "leaves",
+   "from": {
+    "candidate": "compiler-pipeline-thirds",
+    "op": {
+     "move": "lexer",
+     "from": "syntax",
+     "to": "diagnostics"
+    }
+   },
+   "note": null,
+   "status": "invalid",
+   "failedConditions": [
+    "V1"
+   ],
+   "notEvaluated": [],
+   "notApplicable": [],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "fail",
+     "failures": [
+      {
+       "code": "block-id-collision",
+       "message": "Block \"diagnostics\" is named after a grain element it does not consist of alone.",
+       "witnesses": [
+        "diagnostics"
+       ]
+      }
+     ],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    }
+   ],
+   "blocks": [
+    {
+     "id": "analysis-and-optimisation",
+     "name": "analysis-and-optimisation",
+     "members": [
+      "checker",
+      "optimiser"
+     ],
+     "existing": false
+    },
+    {
+     "id": "diagnostics",
+     "name": "diagnostics",
+     "members": [
+      "diagnostics",
+      "lexer"
+     ],
+     "existing": true
+    },
+    {
+     "id": "emission",
+     "name": "emission",
+     "members": [
+      "emitter"
+     ],
+     "existing": false
+    },
+    {
+     "id": "syntax",
+     "name": "syntax",
+     "members": [
+      "parser"
+     ],
+     "existing": false
+    }
+   ],
+   "placedByRest": [],
+   "measurements": null,
+   "evidence": null,
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate."
+   ]
+  },
+  {
+   "id": "compiler-pipeline-thirds~move-parser-to-diagnostics",
+   "name": "Compiler in three thirds, with parser moved to diagnostics",
+   "source": "refinement",
+   "scope": "compiler",
+   "grain": "leaves",
+   "from": {
+    "candidate": "compiler-pipeline-thirds",
+    "op": {
+     "move": "parser",
+     "from": "syntax",
+     "to": "diagnostics"
+    }
+   },
+   "note": null,
+   "status": "invalid",
+   "failedConditions": [
+    "V1"
+   ],
+   "notEvaluated": [],
+   "notApplicable": [],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "fail",
+     "failures": [
+      {
+       "code": "block-id-collision",
+       "message": "Block \"diagnostics\" is named after a grain element it does not consist of alone.",
+       "witnesses": [
+        "diagnostics"
+       ]
+      }
+     ],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    }
+   ],
+   "blocks": [
+    {
+     "id": "analysis-and-optimisation",
+     "name": "analysis-and-optimisation",
+     "members": [
+      "checker",
+      "optimiser"
+     ],
+     "existing": false
+    },
+    {
+     "id": "diagnostics",
+     "name": "diagnostics",
+     "members": [
+      "diagnostics",
+      "parser"
+     ],
+     "existing": true
+    },
+    {
+     "id": "emission",
+     "name": "emission",
+     "members": [
+      "emitter"
+     ],
+     "existing": false
+    },
+    {
+     "id": "syntax",
+     "name": "syntax",
+     "members": [
+      "lexer"
+     ],
+     "existing": false
+    }
+   ],
+   "placedByRest": [],
+   "measurements": null,
+   "evidence": null,
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate."
+   ]
+  },
+  {
+   "id": "compiler-syntax-first~move-diagnostics-to-syntax",
+   "name": "Syntax split off, with diagnostics moved to syntax",
+   "source": "refinement",
+   "scope": "compiler",
+   "grain": "leaves",
+   "from": {
+    "candidate": "compiler-syntax-first",
+    "op": {
+     "move": "diagnostics",
+     "from": "diagnostics",
+     "to": "syntax"
+    }
+   },
+   "note": null,
+   "status": "valid",
+   "failedConditions": [],
+   "notEvaluated": [],
+   "notApplicable": [
+    "V6"
+   ],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "pass",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "messages": 0,
+      "internal": 0,
+      "crossing": 0,
+      "unplaced": 0
+     }
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "not-applicable",
+     "reason": "No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour.",
+     "failures": [],
+     "detail": {
+      "checked": []
+     }
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "pass",
+     "failures": [],
+     "detail": {
+      "boundary": 0,
+      "typed": 0,
+      "untyped": 0,
+      "unmodelled": 0,
+      "outside": {
+       "hops": 0,
+       "untyped": []
+      }
+     }
+    }
+   ],
+   "blocks": [
+    {
+     "id": "backend",
+     "name": "backend",
+     "members": [
+      "emitter",
+      "optimiser"
+     ],
+     "existing": true
+    },
+    {
+     "id": "checker",
+     "name": "checker",
+     "members": [
+      "checker"
+     ],
+     "existing": true
+    },
+    {
+     "id": "syntax",
+     "name": "syntax",
+     "members": [
+      "diagnostics",
+      "lexer",
+      "parser"
+     ],
+     "existing": false
+    }
+   ],
+   "placedByRest": [],
+   "measurements": {
+    "blocks": {
+     "count": 3,
+     "grainElements": 6,
+     "singletons": 1,
+     "largest": 3,
+     "smallest": 1
+    },
+    "facts": {
+     "internal": {
+      "all": 4,
+      "static": 0,
+      "runtime": 2,
+      "none": 2,
+      "dependency": 2
+     },
+     "crossing": {
+      "all": 4,
+      "static": 0,
+      "runtime": 2,
+      "none": 2,
+      "dependency": 2
+     },
+     "external": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     },
+     "attachedAboveGrain": {
+      "all": 0,
+      "static": 0,
+      "runtime": 0,
+      "none": 0,
+      "dependency": 0
+     }
+    },
+    "boundarySize": {
+     "crossing": 4,
+     "external": 0
+    },
+    "cohesion": {
+     "overall": {
+      "n": 4,
+      "d": 8,
+      "value": 0.5
+     },
+     "dependency": {
+      "n": 2,
+      "d": 4,
+      "value": 0.5
+     },
+     "perBlock": [
+      {
+       "id": "backend",
+       "n": 1,
+       "d": 3,
+       "value": 0.333333
+      },
+      {
+       "id": "checker",
+       "n": 0,
+       "d": 3,
+       "value": 0
+      },
+      {
+       "id": "syntax",
+       "n": 3,
+       "d": 6,
+       "value": 0.5
+      }
+     ]
+    },
+    "coupling": {
+     "connectedBlockPairs": 4,
+     "density": {
+      "n": 4,
+      "d": 6,
+      "value": 0.666667
+     },
+     "perBlock": [
+      {
+       "id": "backend",
+       "out": 1,
+       "in": 1
+      },
+      {
+       "id": "checker",
+       "out": 2,
+       "in": 1
+      },
+      {
+       "id": "syntax",
+       "out": 1,
+       "in": 2
+      }
+     ]
+    },
+    "cycles": [
+     {
+      "class": "static",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "runtime",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     },
+     {
+      "class": "dependency",
+      "cyclic": false,
+      "components": 0,
+      "blocksInCycles": 0,
+      "backEdgeWitnesses": 0
+     }
+    ],
+    "interface": {
+     "groups": 7,
+     "largest": 3,
+     "perBlock": [
+      {
+       "id": "backend",
+       "groups": 2,
+       "witnesses": 2
+      },
+      {
+       "id": "checker",
+       "groups": 3,
+       "witnesses": 3
+      },
+      {
+       "id": "syntax",
+       "groups": 2,
+       "witnesses": 3
+      }
+     ]
+    },
+    "contractCoverage": {
+     "facts": {
+      "n": 0,
+      "d": 4,
+      "value": 0
+     },
+     "dependencyFacts": {
+      "n": 0,
+      "d": 2,
+      "value": 0
+     },
+     "blockPairs": {
+      "total": 4,
+      "covered": 0,
+      "partial": 0,
+      "uncovered": 4
+     }
+    },
+    "redundancy": {
+     "basis": "declared facts only",
+     "declaredDuplicatedByExtraction": [],
+     "declaredDuplicatedByDeclaration": [],
+     "onBoundary": 0
+    },
+    "knowledge": {
+     "elements": {
+      "transparent": 6,
+      "opaque": 0,
+      "unknown": 0
+     },
+     "boundaryFactProvenance": {
+      "declared": 4
+     },
+     "perBlock": [
+      {
+       "id": "backend",
+       "transparent": 2,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "checker",
+       "transparent": 1,
+       "opaque": 0,
+       "unknown": 0
+      },
+      {
+       "id": "syntax",
+       "transparent": 3,
+       "opaque": 0,
+       "unknown": 0
+      }
+     ]
+    }
+   },
+   "evidence": {
+    "boundaries": [
+     {
+      "from": "backend",
+      "to": "syntax",
+      "witnesses": [
+       "backend-reports"
+      ],
+      "kinds": {
+       "invokes": 1
+      },
+      "classes": {
+       "runtime": 1
+      },
+      "uncoveredByContract": [
+       "backend-reports"
+      ]
+     },
+     {
+      "from": "checker",
+      "to": "backend",
+      "witnesses": [
+       "checker-feeds-optimiser"
+      ],
+      "kinds": {
+       "data-flow": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "checker-feeds-optimiser"
+      ]
+     },
+     {
+      "from": "checker",
+      "to": "syntax",
+      "witnesses": [
+       "checker-reports"
+      ],
+      "kinds": {
+       "invokes": 1
+      },
+      "classes": {
+       "runtime": 1
+      },
+      "uncoveredByContract": [
+       "checker-reports"
+      ]
+     },
+     {
+      "from": "syntax",
+      "to": "checker",
+      "witnesses": [
+       "parser-feeds-checker"
+      ],
+      "kinds": {
+       "data-flow": 1
+      },
+      "classes": {
+       "none": 1
+      },
+      "uncoveredByContract": [
+       "parser-feeds-checker"
+      ]
+     }
+    ],
+    "cycles": [],
+    "uncoveredContracts": [
+     {
+      "from": "backend",
+      "to": "syntax",
+      "facts": [
+       "backend-reports"
+      ]
+     },
+     {
+      "from": "checker",
+      "to": "backend",
+      "facts": [
+       "checker-feeds-optimiser"
+      ]
+     },
+     {
+      "from": "checker",
+      "to": "syntax",
+      "facts": [
+       "checker-reports"
+      ]
+     },
+     {
+      "from": "syntax",
+      "to": "checker",
+      "facts": [
+       "parser-feeds-checker"
+      ]
+     }
+    ],
+    "scopeBoundary": []
+   },
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate.",
+    "V6 does not apply: No block declares abstract behaviour (a behavior with \"abstracts\" whose subject is the block), so there is no refinement to check. This is not a pass: the candidate is silent about behaviour."
+   ]
+  },
+  {
+   "id": "compiler-syntax-first~move-lexer-to-diagnostics",
+   "name": "Syntax split off, with lexer moved to diagnostics",
+   "source": "refinement",
+   "scope": "compiler",
+   "grain": "leaves",
+   "from": {
+    "candidate": "compiler-syntax-first",
+    "op": {
+     "move": "lexer",
+     "from": "syntax",
+     "to": "diagnostics"
+    }
+   },
+   "note": null,
+   "status": "invalid",
+   "failedConditions": [
+    "V1"
+   ],
+   "notEvaluated": [],
+   "notApplicable": [],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "fail",
+     "failures": [
+      {
+       "code": "block-id-collision",
+       "message": "Block \"diagnostics\" is named after a grain element it does not consist of alone.",
+       "witnesses": [
+        "diagnostics"
+       ]
+      }
+     ],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    }
+   ],
+   "blocks": [
+    {
+     "id": "backend",
+     "name": "backend",
+     "members": [
+      "emitter",
+      "optimiser"
+     ],
+     "existing": true
+    },
+    {
+     "id": "checker",
+     "name": "checker",
+     "members": [
+      "checker"
+     ],
+     "existing": true
+    },
+    {
+     "id": "diagnostics",
+     "name": "diagnostics",
+     "members": [
+      "diagnostics",
+      "lexer"
+     ],
+     "existing": true
+    },
+    {
+     "id": "syntax",
+     "name": "syntax",
+     "members": [
+      "parser"
+     ],
+     "existing": false
+    }
+   ],
+   "placedByRest": [],
+   "measurements": null,
+   "evidence": null,
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate."
+   ]
+  },
+  {
+   "id": "compiler-syntax-first~move-parser-to-diagnostics",
+   "name": "Syntax split off, with parser moved to diagnostics",
+   "source": "refinement",
+   "scope": "compiler",
+   "grain": "leaves",
+   "from": {
+    "candidate": "compiler-syntax-first",
+    "op": {
+     "move": "parser",
+     "from": "syntax",
+     "to": "diagnostics"
+    }
+   },
+   "note": null,
+   "status": "invalid",
+   "failedConditions": [
+    "V1"
+   ],
+   "notEvaluated": [],
+   "notApplicable": [],
+   "conditions": [
+    {
+     "id": "V1",
+     "title": "Well-formed partition: the blocks are a laminar hierarchy that places every element of the grain exactly once",
+     "status": "fail",
+     "failures": [
+      {
+       "code": "block-id-collision",
+       "message": "Block \"diagnostics\" is named after a grain element it does not consist of alone.",
+       "witnesses": [
+        "diagnostics"
+       ]
+      }
+     ],
+     "detail": null
+    },
+    {
+     "id": "V2",
+     "title": "Witnessed coarse facts: every lifted interaction has a non-empty witness set whose facts run between its blocks, and every fact is accounted for once",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V3",
+     "title": "Interface agreement: for every block with a declared interface, the declared and the derived interface agree",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V4",
+     "title": "Kind preservation: every lifted kind is a base kind or the declared coarsening of its witnesses' kinds",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V5",
+     "title": "Structure-behaviour coherence: every message that crosses between two blocks is witnessed structurally, by a relationship of message class between the two elements themselves",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V6",
+     "title": "Refinement: where a block declares abstract behaviour, the abstraction refines the composition of its members",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    },
+    {
+     "id": "V7",
+     "title": "Contract conformance: every boundary interaction that declares a contract has the events that cross it typed by that contract",
+     "status": "skipped",
+     "reason": "V1 did not pass.",
+     "failures": [],
+     "detail": null
+    }
+   ],
+   "blocks": [
+    {
+     "id": "backend",
+     "name": "backend",
+     "members": [
+      "emitter",
+      "optimiser"
+     ],
+     "existing": true
+    },
+    {
+     "id": "checker",
+     "name": "checker",
+     "members": [
+      "checker"
+     ],
+     "existing": true
+    },
+    {
+     "id": "diagnostics",
+     "name": "diagnostics",
+     "members": [
+      "diagnostics",
+      "parser"
+     ],
+     "existing": true
+    },
+    {
+     "id": "syntax",
+     "name": "syntax",
+     "members": [
+      "lexer"
+     ],
+     "existing": false
+    }
+   ],
+   "placedByRest": [],
+   "measurements": null,
+   "evidence": null,
+   "notes": [
+    "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate."
+   ]
+  }
+ ],
+ "note": "Measurements describe structure. Whether a decomposition is meaningful is a judgement they do not make, and no score here accepts, ranks or recommends a candidate."
+}

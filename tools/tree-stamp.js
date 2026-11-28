@@ -63,7 +63,9 @@ export function stampedFiles(repoRoot) {
  * The stamp of the tree at `repoRoot`: a sha256 over the sorted (path, content hash) pairs. A tracked file
  * deleted in the working tree is left out, as an absent file is.
  * @param {string} repoRoot
- * @param {{exclude?: (rel: string) => boolean}} [opts] exclude: files left out of the stamp
+ * @param {{exclude?: (rel: string) => boolean, replace?: Record<string, string|Buffer>}} [opts] exclude: files left out of the
+ *   stamp; replace: contents that stand in for files of the tree (repo-relative paths), the stamp a tree with
+ *   those edits would have, computed without writing them
  * @returns {string}
  */
 export function treeStamp(repoRoot, opts = {}) {
@@ -72,10 +74,13 @@ export function treeStamp(repoRoot, opts = {}) {
   for (const rel of stampedFiles(repoRoot)) {
     if (opts.exclude?.(rel)) continue;
     let content;
-    try {
-      content = fs.readFileSync(path.join(repoRoot, rel));
-    } catch {
-      continue;
+    if (opts.replace && Object.hasOwn(opts.replace, rel)) content = opts.replace[rel];
+    else {
+      try {
+        content = fs.readFileSync(path.join(repoRoot, rel));
+      } catch {
+        continue;
+      }
     }
     all.update(`${rel}\0${createHash('sha256').update(content).digest('hex')}\n`);
   }
@@ -95,10 +100,10 @@ export function isRecordFile(rel) {
 /**
  * The stamp recorded with each evidence result and Lean theorem check (exegra verify), and compared with the
  * current one when claims are evaluated from them: the tree stamp without the record files (isRecordFile).
- * @param {string} repoRoot
+ * @param {string} repoRoot @param {Record<string, string|Buffer>} [replace] contents standing in for files (treeStamp)
  */
-export function recordsStamp(repoRoot) {
-  return treeStamp(repoRoot, { exclude: isRecordFile });
+export function recordsStamp(repoRoot, replace) {
+  return treeStamp(repoRoot, { exclude: isRecordFile, ...(replace ? { replace } : {}) });
 }
 
 /**

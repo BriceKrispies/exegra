@@ -24,7 +24,8 @@ import { fileURLToPath } from 'node:url';
 import { Project } from '../../src/core/project.js';
 import { checkTrace } from '../../src/core/claims.js';
 import { runScenario } from '../../src/core/engine.js';
-import { lakeAvailable, proveScenario, FORMAL } from '../../tools/prove.js';
+import { spawnSync } from 'node:child_process';
+import { lakeAvailable, proveScenario, nativeLibOptions, FORMAL } from '../../tools/prove.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SPEC = path.join(HERE, '..', 'fixtures', 'race', 'spec.jsonc');
@@ -156,5 +157,108 @@ test('(e) a draw with more outcomes than the explorer tries makes the result inc
 
 test('an out-of-fragment scenario is not covered', (t) => {
   if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
-  assert.throws(() => proveScenario(orderModel(), 'sampled'), /not covered by the calculus/);
+  const text = fs.readFileSync(path.join(HERE, '..', 'fixtures', 'behaviour-order', 'linked.jsonc'), 'utf8');
+  const project = new Project({ name: 'behaviour-linked', specText: text, layoutText: null });
+  assert.ok(project.model, 'the fixture parses');
+  assert.throws(() => proveScenario(project.model, 'linked'), /not covered by the calculus/);
+});
+
+test('a variable set from a draw is explored over every outcome', (t) => {
+  if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
+  const c = claimOf(proveScenario(orderModel(), 'sampled'), 'sampler-small');
+  assert.equal(c?.result, 'holds');
+});
+
+// WG-5682: model checking on the behaviour calculus (tests/fixtures/liveness).
+const LIVE = path.join(HERE, '..', 'fixtures', 'liveness', 'spec.jsonc');
+
+function liveModel() {
+  const project = new Project({ name: 'liveness', specText: fs.readFileSync(LIVE, 'utf8'), layoutText: null });
+  assert.ok(project.model, 'the fixture parses');
+  return project.model;
+}
+
+test('eight independent clients explore exactly 256 states', (t) => {
+  if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
+  const out = proveScenario(liveModel(), 'eight-clients');
+  assert.deepEqual(out.faults, [], 'explored with no faults');
+  const c = claimOf(out, 'clients-in-their-states');
+  assert.equal(c?.result, 'holds');
+  assert.equal(c.states, 256, 'the reachable configurations are the 2^8 subsets of delivered entries');
+});
+
+test('a counter to 100 with an invariant at 50 and bound 20 is incomplete for its bound and never holds', (t) => {
+  if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
+  const c = claimOf(proveScenario(liveModel(), 'count-to-100', { bound: 20 }), 'counter-at-most-50');
+  assert.equal(c?.result, 'incomplete');
+  assert.equal(c.reason, 'bound');
+  assert.doesNotMatch(c.explanation, /for every reachable configuration/);
+});
+
+test('a holds result carries a closed-set certificate Lean accepts and Lean refuses it without one of its states', (t) => {
+  if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
+  // The F4 fixture of the foundations (machines a and b on one event, tests/fixtures/behaviour-order).
+  const c = claimOf(proveScenario(orderModel(), 'order-ab'), 'ab-b-stays-zero');
+  assert.equal(c?.result, 'holds');
+  assert.ok(c.certificate, 'the result names its certificate');
+  assert.match(c.certificate.theorem, /ab-b-stays-zero-invariant/);
+  const file = path.join(FORMAL, c.file.replace(/^formal\//, ''));
+  const text = fs.readFileSync(file, 'utf8');
+  assert.match(text, /theorem «ab-b-stays-zero-certificate» : checkClosed \(Core\.Behav\.Exec\.enum orderAbSys\) visited \(V2\.ProveLive\.invP inputText "b\.y == 0"\) = true/);
+  assert.match(text, /checkClosed_sound \(Core\.Behav\.Exec\.enum orderAbSys\) visited _ «ab-b-stays-zero-certificate»/);
+  // Remove the first state of `visited` (the initial state) and check the altered file.
+  const lines = text.split('\n');
+  const at = lines.indexOf('def visited : List Core.Behav.State := [');
+  assert.ok(at >= 0 && lines[at + 1].startsWith('  Core.Behav.State.'), 'one state per line');
+  assert.ok(lines[at + 2].startsWith('  Core.Behav.State.'), 'the certificate has more than one state');
+  lines.splice(at + 1, 1);
+  const altered = path.join(path.dirname(file), 'order-ab-altered.lean');
+  fs.writeFileSync(altered, lines.join('\n'), 'utf8');
+  try {
+    const check = spawnSync('lake', ['env', 'lean', ...nativeLibOptions(), path.relative(FORMAL, altered)], { cwd: FORMAL, encoding: 'utf8', windowsHide: true, maxBuffer: 1 << 28 });
+    assert.notEqual(check.status, 0, 'Lean refuses the certificate without one of its states');
+    assert.match(`${check.stdout}${check.stderr}`, /ab-b-stays-zero-certificate|native_decide/);
+  } finally {
+    fs.rmSync(altered, { force: true });
+  }
+});
+
+test('the F4 blinker: FG on is violated by a lasso and GF on holds under weak fairness of turn-on', (t) => {
+  if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
+  const out = proveScenario(liveModel(), 'blink-f4');
+  const fg = claimOf(out, 'blinker-fg-on');
+  assert.equal(fg?.result, 'violated');
+  assert.match(fg.verdictText, /^violated: lasso off → on → off/);
+  const gf = claimOf(out, 'blinker-gf-on');
+  assert.equal(gf?.result, 'proved');
+  assert.equal(gf.verdictText, 'holds under weak fairness of turn-on');
+  assert.deepEqual(gf.openAssumptions, ['turn-on-fair'], 'the fairness assumption is cited');
+});
+
+test('a zero-delay self-loop gives a Zeno lasso and its liveness claims are not proved', (t) => {
+  if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
+  const c = claimOf(proveScenario(liveModel(), 'zeno'), 'waiter-finishes-often');
+  assert.notEqual(c?.result, 'proved');
+  assert.equal(c.result, 'violated');
+  assert.equal(c.lasso.zeno, true, 'the lasso does not advance time');
+  assert.match(c.verdictText, /Zeno lasso/);
+});
+
+test('a pool acquire is explored to a verdict whose closed-set certificate, world included, Lean accepts', (t) => {
+  if (!lakeAvailable()) { t.skip(NO_LAKE); return; }
+  // WG-5683: the certificate's states carry the world (resource states, request ids, acting faults)
+  // and the entries' kinds; one that dropped them named states the calculus never reaches, and
+  // Lean refused it.
+  const text = fs.readFileSync(path.join(HERE, '..', 'fixtures', 'behaviour-order', 'pool-acquire.jsonc'), 'utf8');
+  const project = new Project({ name: 'behaviour-pool', specText: text, layoutText: null });
+  assert.ok(project.model, 'the fixture parses');
+  const out = proveScenario(project.model, 'pool-acquire', { module: true });
+  // The kernel-only module is not written: `decide` does not reduce settling in the kernel.
+  assert.equal(out.module?.written, false);
+  assert.match(out.module.note, /resources/);
+  const c = claimOf(out, 'pool-one-holder');
+  assert.equal(c?.result, 'holds');
+  assert.ok(c.certificate, 'the result names its certificate');
+  const file = path.join(FORMAL, c.file.replace(/^formal\//, ''));
+  assert.match(fs.readFileSync(file, 'utf8'), /world := \{ res := \[\{ capacity := 1, holds := \[\{ owner := /);
 });

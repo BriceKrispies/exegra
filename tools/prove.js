@@ -15,7 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { exploreRequest, temporalRequest, leanProofFile, parseAxioms, proofFileName, proofNamespace, proofPlan, proofResults } from '../src/core/proof-export.js';
+import { exploreRequest, temporalRequest, livenessRequest, certificateRequest, sysName, leanProofFile, parseAxioms, proofFileName, proofNamespace, proofPlan, proofResults } from '../src/core/proof-export.js';
 
 /** @typedef {import('../src/core/types.js').Model} Model */
 
@@ -43,7 +43,8 @@ export class ProveError extends Error {
 
 /** The modules a proof file needs, in import order. */
 const NATIVE_MODULES = ['Number', 'Value', 'Json', 'Expr', 'Input', 'Trace', 'Random', 'Resource', 'Workload', 'Format2',
-  'Search', 'Core_LTS', 'Core_Search', 'Core_Behav', 'Core_BehavExec', 'Core_BehavCheck', 'Elab', 'Format2B', 'ProveB'];
+  'Search', 'Core_LTS', 'Core_Live', 'Core_Search', 'Core_Behav', 'Core_BehavExec', 'Core_BehavCheck', 'Core_BehavLive', 'Elab', 'Format2B',
+  'ProveB', 'ProveLive'];
 
 /**
  * `--load-dynlib` options for the modules' shared libraries, or none when one is missing (Lean then
@@ -58,6 +59,39 @@ export function nativeLibOptions() {
   return libs.map((l) => `--load-dynlib=${path.join(dir, /** @type {string} */ (l))}`);
 }
 
+/** The module name of a scenario's kernel-checked proofs: Exegra.Proofs.<Scenario in Pascal case>. @param {string} scenarioId */
+export function kernelModuleName(scenarioId) {
+  const pascal = scenarioId.split(/[^A-Za-z0-9]+/).filter(Boolean).map((p) => p[0].toUpperCase() + p.slice(1)).join('');
+  return `Exegra.Proofs.${/^[A-Za-z]/.test(pascal) ? pascal : `S${pascal}`}`;
+}
+
+/**
+ * Write formal/Exegra/Proofs/<Scenario>.lean: the scenario's calculus system written out, and for each
+ * state-invariant claim that holds, its invariant proved by a closed-set certificate the kernel checks with
+ * `decide` (Exegra.V2.ProveKernel.kernelModule). The module is checked with `lake env lean`; import it from
+ * formal/Exegra.lean to have lake build check it.
+ * @param {ReturnType<typeof proofPlan>} plan @param {any[]} claims @param {(m: string) => void} log
+ */
+function writeKernelModule(plan, claims, log) {
+  const held = plan.claims.filter((c) => !c.temporal && !c.live && claims.find((r) => r.claimId === c.claimId)?.result === 'holds');
+  if (!held.length) return { written: false, note: 'No state-invariant claim of the scenario holds; no module was written.' };
+  // WG-5683: the kernel's `decide` does not reduce the settling of a world, so a module for a scenario
+  // with resources would be refused; its invariants keep the native closed-set certificate only.
+  if (plan.input?.resources?.length) return { written: false, note: 'The scenario uses resources, whose settling decide does not reduce in the kernel; no kernel-only module was written (the closed-set certificates checked by native_decide stand).' };
+  const name = kernelModuleName(plan.scenarioId);
+  const request = JSON.stringify({ input: plan.input, module: name, sysName: sysName(plan.scenarioId), claims: held.map((c) => ({ id: c.claimId, expr: c.expr })), bound: plan.bound, maxStates: plan.maxStates });
+  const run = spawnSync(LEAN_BIN, ['module'], { ...SPAWN, input: request });
+  if (run.status !== 0) throw new ProveError('prove.module-failed', `exegra-lean module failed: ${tail(`${run.stderr}${run.stdout}`, 10) || `exit status ${run.status}`}`);
+  const rel = path.join('Exegra', 'Proofs', `${name.split('.').pop()}.lean`);
+  fs.mkdirSync(path.join(FORMAL, 'Exegra', 'Proofs'), { recursive: true });
+  fs.writeFileSync(path.join(FORMAL, rel), JSON.parse(run.stdout).text, 'utf8');
+  log(`prove: checking formal/${rel.replace(/\\/g, '/')} (kernel only)`);
+  const check = spawnSync('lake', ['env', 'lean', rel], { ...SPAWN, cwd: FORMAL });
+  const output = `${check.stdout}${check.stderr}`;
+  if (check.status !== 0 || /:\d+:\d+: error/.test(output)) throw new ProveError('prove.check-failed', `Lean did not accept formal/${rel}:\n${tail(output, 30)}`);
+  return { written: true, file: `formal/${rel.replace(/\\/g, '/')}`, module: name, theorems: held.map((c) => `${name}.${c.claimId.replace(/-/g, '_')}`) };
+}
+
 /** @param {string} text @param {number} n */
 const tail = (text, n) => text.split(/\r?\n/).filter(Boolean).slice(-n).join('\n');
 
@@ -65,7 +99,7 @@ const tail = (text, n) => text.split(/\r?\n/).filter(Boolean).slice(-n).join('\n
  * Prove the state-invariant claims of one scenario.
  * @param {Model} model
  * @param {string} scenarioId
- * @param {{bound?: number, maxStates?: number, withSteps?: boolean, log?: (m: string) => void}} [opts]
+ * @param {{bound?: number, maxStates?: number, withSteps?: boolean, module?: boolean, log?: (m: string) => void}} [opts]
  */
 export function proveScenario(model, scenarioId, opts = {}) {
   const log = opts.log ?? (() => {});
@@ -92,15 +126,22 @@ export function proveScenario(model, scenarioId, opts = {}) {
   const exploreMs = Date.now() - t0;
   if (run.status !== 0) throw new ProveError('prove.explore-failed', `exegra-lean explore failed: ${tail(`${run.stderr}${run.stdout}`, 10) || `exit status ${run.status}`}`);
   const explored = JSON.parse(run.stdout);
-  if (plan.claims.some((c) => c.temporal)) {
-    const trun = spawnSync(LEAN_BIN, ['temporal'], { ...SPAWN, input: temporalRequest(plan) });
-    if (trun.status !== 0) throw new ProveError('prove.explore-failed', `exegra-lean temporal failed: ${tail(`${trun.stderr}${trun.stdout}`, 10) || `exit status ${trun.status}`}`);
-    const tex = JSON.parse(trun.stdout);
-    const byId = new Map([...explored.results.map((/** @type {any} */ r) => [r.id, r]), ...tex.results.map((/** @type {any} */ r) => [r.id, { ...r, temporal: true }])]);
-    explored.results = plan.claims.map((c) => byId.get(c.claimId));
-  } else {
-    const byId = new Map(explored.results.map((/** @type {any} */ r) => [r.id, r]));
-    explored.results = plan.claims.map((c) => byId.get(c.claimId));
+  /** @type {Map<string, any>} */
+  const byId = new Map(explored.results.map((/** @type {any} */ r) => [r.id, r]));
+  /** @param {string} cmd @param {string} request @param {Record<string, any>} mark */
+  const runMore = (cmd, request, mark) => {
+    const more = spawnSync(LEAN_BIN, [cmd], { ...SPAWN, input: request });
+    if (more.status !== 0) throw new ProveError('prove.explore-failed', `exegra-lean ${cmd} failed: ${tail(`${more.stderr}${more.stdout}`, 10) || `exit status ${more.status}`}`);
+    for (const r of JSON.parse(more.stdout).results) byId.set(r.id, { ...r, ...mark });
+  };
+  if (plan.claims.some((c) => c.temporal)) runMore('temporal', temporalRequest(plan), { temporal: true });
+  if (plan.claims.some((c) => c.live)) runMore('liveness', livenessRequest(plan), { live: true });
+  explored.results = plan.claims.map((c) => byId.get(c.claimId));
+  // The closed-set certificate of the invariants that hold: the states the explorer visited.
+  if (plan.claims.some((c, i) => !c.temporal && !c.live && explored.results[i]?.verdict === 'holds')) {
+    const cert = spawnSync(LEAN_BIN, ['certificate'], { ...SPAWN, input: certificateRequest(plan) });
+    if (cert.status !== 0) throw new ProveError('prove.explore-failed', `exegra-lean certificate failed: ${tail(`${cert.stderr}${cert.stdout}`, 10) || `exit status ${cert.status}`}`);
+    explored.certificate = JSON.parse(cert.stdout).states;
   }
 
   const rel = proofFileName(scenarioId);
@@ -125,9 +166,11 @@ export function proveScenario(model, scenarioId, opts = {}) {
     file: `formal/${rel}`,
     namespace: proofNamespace(scenarioId),
     withSteps: opts.withSteps,
+    certificate: explored.certificate ?? null,
   });
   /** @type {Record<string, any>} */
   const out = { ...base, exploreMs, checkMs, nativeCode: dynlibs.length > 0, claims };
+  if (opts.module) out.module = writeKernelModule(plan, claims, log);
   if (plan.boundCapped) out.note = `The requested bound was larger than the scenario's step limit; ${plan.bound} steps were explored, the most a run of this scenario takes.`;
   return out;
 }

@@ -1,0 +1,132 @@
+// Every branch of the lowering of a scenario to its engine input (WG-5683): resources with classes and a
+// demand factor, links with latency distributions and bandwidths, open, closed and population workloads
+// with phases, ramps, payload samples, clients and batches, quota pools, resource and retry faults, and
+// effects with demands, delays, timers, sizes and sampled targets; and scenarios whose lowering is refused
+// (a malformed duration, rate or distribution, a name that is not what the scenario says). The fixture is
+// lowered, not validated: some scenarios are malformed on purpose. tests/core/lower.test.js compares the
+// Lean lowering of every scenario here with the engine inputs the JavaScript lowering derived before it
+// was deleted (tests/fixtures/lowering/inputs.json).
+{
+  "exegra": "0.1",
+  "system": { "id": "lowering", "name": "Lowering", "generation": { "retry": { "first": "250 ms", "factor": 3, "max": "2 s" } } },
+  "components": [{ "id": "c-api", "name": "API", "category": "computational" }],
+  "types": [
+    { "id": "order-id", "name": "Order id", "kind": "id", "repr": "u32" },
+    { "id": "amount", "name": "Amount", "kind": "scalar", "repr": "shared<i64>" }
+  ],
+  "events": [
+    { "id": "req", "name": "Request", "payload": [{ "name": "order", "type": "order-id" }, { "name": "note", "type": "string", "optional": true }, { "name": "n", "type": "u8" }] },
+    { "id": "alt", "name": "Alt", "payload": [{ "name": "n", "type": "u16" }, { "name": "at", "type": "timestamp" }] },
+    { "id": "done", "name": "Done" },
+    { "id": "tick", "name": "Tick" },
+    { "id": "use", "name": "Use", "payload": [{ "name": "member", "type": "string" }, { "name": "amount", "type": "i64" }] },
+    { "id": "day-end", "name": "Day end" },
+    { "id": "burst", "name": "Burst", "payload": [{ "name": "member", "type": "string" }] }
+  ],
+  "behaviors": [
+    {
+      "id": "api", "name": "API", "subject": "c-api", "initial": "idle", "level": "implementation",
+      "variables": [{ "name": "count", "initial": 0, "repr": "u32" }, { "name": "total", "initial": 0, "repr": "amount" }, { "name": "wait", "initial": 0, "repr": "duration" }],
+      "states": [{ "id": "idle", "name": "Idle" }, { "id": "busy", "name": "Busy" }],
+      "transitions": [
+        { "id": "take", "from": "idle", "to": "busy", "on": "req", "guard": "count < 10",
+          "effects": [
+            { "set": "count", "to": "count + 1", "note": "dropped" },
+            { "use": "cpu", "class": "gold", "demand": { "lognormal": { "median": "2 ms", "p99": "8 ms" } }, "then": "done", "refused": "tick", "payload": { "order": "event.order" } },
+            { "acquire": "db", "units": 2, "demand": "500 us", "then": "done" },
+            { "emit": "done", "to": "outside", "after": { "uniform": { "lo": "1 ms", "hi": "3 ms" } }, "payload": {} },
+            { "timer": "t1", "after": { "expr": "wait", "simulate": "5 ms" }, "emit": "tick", "to": "api" },
+            { "emit": "done", "via": "net", "size": "1.5 kB" },
+            { "emit": "done", "via": "net2", "size": { "constant": "300 us" } },
+            { "emit": "alt", "to": { "sample": { "empirical": { "samples": ["1 ms", "2 ms", "3 ms"] } } } },
+            { "cancel": "t1", "description": "dropped" }
+          ] },
+        { "id": "alt-in", "from": "busy", "to": "busy", "on": "alt", "effects": [{ "release": "db", "units": 2 }, { "emit": "done", "after": { "empirical": { "quantiles": [["0", "1 ms"], ["0.5", "2 ms"], ["1", "9 ms"]] } } }] },
+        { "id": "finish", "from": "busy", "to": "idle", "on": "done", "faultOnly": true, "effects": [{ "emit": "tick", "after": { "constant": "2 ms" } }, { "emit": "tick", "after": { "exponential": { "mean": "1.25 ms" } } }, { "emit": "tick", "after": { "lognormal": { "median": "1 ms", "sigma": 0.5 } } }] }
+      ]
+    },
+    {
+      "id": "worker", "name": "Worker", "subject": "c-api", "initial": "w-idle", "instances": { "count": 3, "storedIn": "somewhere" },
+      "variables": [{ "name": "n", "initial": 0 }],
+      "states": [{ "id": "w-idle", "name": "Idle" }],
+      "transitions": [{ "id": "w-tick", "from": "w-idle", "to": "w-idle", "on": "tick", "effects": [{ "set": "n", "to": "n + 1" }] }]
+    },
+    {
+      "id": "simple", "name": "Simple", "subject": "c-api", "initial": "s0",
+      "variables": [{ "name": "x", "initial": 1 }],
+      "states": [{ "id": "s0", "name": "S0" }],
+      "transitions": [{ "id": "s-tick", "from": "s0", "to": "s0", "on": "tick", "effects": [{ "set": "x", "to": "x + 1" }, { "emit": "done", "to": "elsewhere", "after": 2 }] }]
+    }
+  ],
+  "resources": [
+    { "id": "cpu", "kind": "cpu", "capacity": 4, "discipline": "priority", "queueBound": 100, "overflow": "drop-oldest",
+      "demandFactor": { "usl": { "alpha": "0.05", "beta": [1, 1000] } },
+      "classes": [{ "id": "gold", "priority": 2, "reserved": 1, "limit": 3, "queueBound": 10, "maxWait": "20 ms" }, { "id": "bronze" }] },
+    { "id": "db", "kind": "pool", "capacity": 8, "demandFactor": { "linear": 1 } }
+  ],
+  "links": [
+    { "id": "net", "from": "c-api", "to": "c-api", "latency": { "lognormal": { "median": "1 ms", "p99": "4 ms" } }, "bandwidth": "100 Mbit/s", "queueBound": 50, "ordered": true },
+    { "id": "net2", "from": "c-api", "to": "c-api", "latency": "2 ms", "bandwidth": 1250000, "fanout": true },
+    { "id": "net3", "from": "c-api", "to": "c-api" }
+  ],
+  "workloads": [
+    { "id": "steady", "kind": "open", "event": "req", "rate": "250.5/s", "legitimate": true, "maxArrivals": 1000, "requestField": "order",
+      "payload": { "order": { "sample": { "uniform": { "lo": 1, "hi": 99 } } }, "n": 3, "note": "x" },
+      "clients": { "count": 20, "pick": "round-robin", "addresses": { "groupSize": { "uniform": { "lo": 1, "hi": 4 } } } }, "clientField": "client", "addressField": "addr" },
+    { "id": "phased", "kind": "open", "event": "req", "process": "constant", "repeat": "10 s", "batch": { "uniform": { "lo": 1, "hi": 3 } },
+      "phases": [{ "from": "0 s", "until": "2 s", "rate": "100/s" }, { "from": "2 s", "until": "4 s", "rate": { "from": "100/s", "to": "6000/min" } }] },
+    { "id": "users", "kind": "closed", "event": "req", "population": 5, "think": { "exponential": { "mean": "200 ms" } }, "start": "0 s", "timeout": "1 s", "reply": "done" },
+    { "id": "people", "kind": "population", "event": "req", "population": 3, "behavior": "worker", "start": { "event": "tick", "at": { "uniform": { "lo": "0 s", "hi": "1 s" } } } },
+    { "id": "people2", "kind": "population", "event": "req", "population": 2, "behavior": "worker", "start": { "event": "tick" } },
+    { "id": "bad-rate", "kind": "open", "event": "req", "rate": "fast" },
+    { "id": "bad-dist", "kind": "closed", "event": "req", "population": 1, "think": { "gamma": { "k": 2 } } }
+  ],
+  "requestClasses": [{ "id": "req-time", "start": { "event": "req", "workload": "steady" }, "key": "order", "ends": [{ "event": "done", "outcome": "ok" }] }, { "id": "bare", "start": { "event": "req" }, "key": "order" }],
+  "quotas": [{ "id": "daily", "name": "Daily", "scope": "tenant", "limit": 100, "window": "1 d", "event": "use", "heldBy": "c-api" }],
+  "quotaPools": [
+    { "id": "pool", "name": "Pool", "heldBy": "c-api", "window": "1 d", "windowEnd": "day-end", "modelMembers": 3,
+      "limits": [{ "name": "calls", "kind": "rate", "quota": "daily" }, { "name": "bytes", "kind": "level", "perMember": 2.5, "usage": "use" }],
+      "overShare": { "consecutive": 2 }, "throttle": { "release": 3, "to": "fair-share" },
+      "exemption": { "event": "burst", "setBy": "r", "capability": "c", "effective": "next-window", "retroactive": true } },
+    { "id": "pool2", "name": "Pool 2", "window": "1 d", "windowEnd": "day-end",
+      "limits": [{ "name": "calls", "kind": "rate", "perMember": 10, "usage": "use" }],
+      "overShare": { "consecutive": 1 }, "throttle": { "release": "never", "to": "refuse" }, "exemption": { "event": "burst" } }
+  ],
+  "faults": [
+    { "id": "retry", "name": "Retry", "kind": "retry-event", "event": "req", "attempts": 3 },
+    { "id": "dup", "name": "Dup", "kind": "duplicate-event", "event": "req", "occurrence": 2 },
+    { "id": "dup-later", "name": "Dup later", "kind": "duplicate-event", "event": "req", "by": "3 ms" },
+    { "id": "cap", "name": "Cap", "kind": "set-capacity", "resource": "cpu", "capacity": 1, "window": { "at": "1 s", "until": "2 s" } },
+    { "id": "lim", "name": "Lim", "kind": "set-class-limit", "resource": "cpu", "class": "gold", "limit": 1, "window": { "at": "500 ms" } },
+    { "id": "slow", "name": "Slow", "kind": "scale-demand", "resource": "cpu", "num": 10, "den": 1 },
+    { "id": "swap", "name": "Swap", "kind": "replace-demand", "behavior": "api", "effect": 1, "demand": { "exponential": { "mean": "1 ms" } } },
+    { "id": "late", "name": "Late", "kind": "delay-event", "event": "req", "by": "2 ms", "at": "1 ms" },
+    { "id": "inj", "name": "Inject", "kind": "inject-event", "event": "tick", "at": "5 ms", "payload": { "k": 1 } },
+    { "id": "lose", "name": "Lose", "kind": "lose-event", "event": "tick" }
+  ],
+  "scenarios": [
+    { "id": "everything", "name": "Everything", "behaviors": ["api", "worker"], "workloads": ["steady", "phased", "users", "people", "people2"],
+      "steps": [{ "at": "1 ms", "event": "req", "payload": { "order": 1, "n": 2 } }, { "at": 2000, "event": "tick" }],
+      "faults": ["retry", "dup", "dup-later", "cap", "lim", "slow", "swap", "late", "inj"],
+      "seed": 42, "timeUnit": "us", "warmup": "100 ms", "horizon": "5 s", "stopAt": "6 s", "maxSteps": 5000, "output": "metrics",
+      "routes": [{ "event": "req", "behavior": "worker", "by": "round-robin" }], "metrics": { "quantiles": ["0.5", "0.99"] } },
+    { "id": "ms-unit", "name": "Milliseconds", "behaviors": ["simple"], "timeUnit": "ms", "seed": "s1", "steps": [{ "at": "3 ms", "event": "tick" }] },
+    { "id": "ns-unit", "name": "Nanoseconds", "behaviors": ["simple"], "timeUnit": "ns", "horizon": null, "steps": [{ "at": "1.5 us", "event": "tick" }] },
+    { "id": "s-unit", "name": "Seconds", "behaviors": ["simple"], "timeUnit": "s", "faults": ["lose"], "steps": [{ "at": "2 min", "event": "tick" }] },
+    { "id": "ticks", "name": "Ticks", "behaviors": ["simple"], "timeUnit": "tick", "faults": ["dup"], "steps": [{ "at": 3, "event": "tick" }] },
+    { "id": "untimed", "name": "Untimed", "behaviors": ["simple"], "faults": ["late", "inj"], "steps": [{ "at": 3, "event": "tick", "payload": { "a": [1, 2] } }] },
+    { "id": "pooled", "name": "Pooled", "behaviors": ["simple"], "pools": ["pool", "pool2"], "steps": [{ "at": 1, "event": "use", "payload": { "member": "m1", "amount": 3 } }] },
+    { "id": "pooled-timed", "name": "Pooled timed", "behaviors": ["simple"], "pools": ["pool2"], "seed": 1, "steps": [] },
+    { "id": "bad-unit", "name": "Bad unit", "behaviors": ["simple"], "timeUnit": "fortnight", "seed": 1, "steps": [] },
+    { "id": "bad-step", "name": "Bad step", "behaviors": ["simple"], "seed": 1, "steps": [{ "at": "10ms", "event": "tick" }] },
+    { "id": "fraction", "name": "Fraction", "behaviors": ["simple"], "timeUnit": "ms", "seed": 1, "steps": [{ "at": "1.5 us", "event": "tick" }] },
+    { "id": "tick-duration", "name": "Tick duration", "behaviors": ["simple"], "timeUnit": "tick", "seed": 1, "steps": [{ "at": "1 s", "event": "tick" }] },
+    { "id": "rate-error", "name": "Rate error", "behaviors": ["simple"], "workloads": ["bad-rate"], "horizon": "1 s", "steps": [] },
+    { "id": "dist-error", "name": "Dist error", "behaviors": ["simple"], "workloads": ["bad-dist"], "steps": [] },
+    { "id": "no-workload", "name": "No workload", "behaviors": ["simple"], "workloads": ["simple"], "steps": [] },
+    { "id": "no-behavior", "name": "No behavior", "behaviors": ["tick"], "steps": [] },
+    { "id": "no-event", "name": "No event", "behaviors": ["simple"], "steps": [{ "at": 1, "event": "simple" }] },
+    { "id": "no-fault", "name": "No fault", "behaviors": ["simple"], "faults": ["tick"], "steps": [] },
+    { "id": "no-pool", "name": "No pool", "behaviors": ["simple"], "pools": ["daily"], "steps": [] }
+  ]
+}

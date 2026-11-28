@@ -76,6 +76,12 @@
           "optional": true
         },
         {
+          "name": "caller",
+          "type": "'http' | 'cli'",
+          "description": "Who called the write: the browser through POST /__exegra/write (http) or the apply command in process (cli). Only the in-process workspace hop carries it; the HTTP request does not.",
+          "optional": true
+        },
+        {
           "name": "requestId",
           "type": "number",
           "description": "Correlation id. Not on the wire today: the traffic recorder (planned, WG-4775 layer 2) assigns it per call in src/persist/client.js request() and stamps the response with the id of the request it answers.",
@@ -97,6 +103,18 @@
           "name": "failure",
           "type": "{ok: false, error, code}",
           "description": "Any other refusal or failure, with the error code (HTTP 400, 403, 404, 413 or 500)."
+        },
+        {
+          "name": "file",
+          "type": "'spec' | 'layout'",
+          "description": "Which project file the answer is about. Carried by the in-process workspace hop, not by the HTTP answer.",
+          "optional": true
+        },
+        {
+          "name": "caller",
+          "type": "'http' | 'cli'",
+          "description": "Who called the write; echoed by the in-process workspace hop.",
+          "optional": true
         },
         {
           "name": "correlation",
@@ -312,7 +330,7 @@
     {
       "id": "engine-input-v2",
       "name": "Engine input, format version 2",
-      "description": "Derived (WG-4664, WG-4715, WG-4729): simulationInput returns {format: \"exegra-sim-input\", version: 2} for a specification using resources, workloads, links, instances, timers or seeded randomness (needsFormat2 in src/core/sim-input.js), and the Rust engine runs it with its version-2 semantics (engine/exegra-engine/src/lib.rs, v2.rs). Every version-1 field keeps its meaning with times as integers of the base unit. Remaining (WG-4741): crash-instance, meters and the cost metric are not run, and there are no format-2 goldens. Normative definition: docs/simulation.md, \"Engine input and trace format version 2\".",
+      "description": "Derived (WG-4664, WG-4715, WG-4729): The engine input of a scenario (Exegra.Lower.engineInput, formerly simulationInput) is {format: \"exegra-sim-input\", version: 2} for a specification using resources, workloads, links, instances, timers or seeded randomness (needsTimedInput), and the Rust engine runs it with its version-2 semantics (engine/exegra-engine/src/lib.rs, v2.rs). Every version-1 field keeps its meaning with times as integers of the base unit. Remaining (WG-4741): crash-instance, meters and the cost metric are not run, and there are no format-2 goldens. Normative definition: docs/simulation.md, \"Engine input and trace format version 2\".",
       "inputs": [
         {
           "name": "version",

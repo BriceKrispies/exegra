@@ -797,6 +797,19 @@
       "evaluate": {
         "method": "external-evidence"
       }
+    },
+    {
+      "id": "discharge-cycle-refused",
+      "kind": "structural",
+      "statement": "Validation refuses a cycle in the discharge graph (an assumption depends on the claims that discharge it, a claim on the assumptions it cites) with the error assumption.discharge-cycle naming the nodes of the cycle, and accepts the graph once the cycle is broken; acyclicity is the hypothesis of discharge_sound.",
+      "subjects": [
+        "validator"
+      ],
+      "assumptions": [],
+      "rationale": "Negative fixture tests/fixtures/discharge-cycle (a → c1 → b → c2 → a) and its acyclic variant in tests/core/discharge.test.js. WG-5685 criterion 5.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
     }
   ],
   "evidence": [
@@ -1657,6 +1670,20 @@
       "kind": "test",
       "ref": "tests/core/codegen-readiness.test.js#the exegra and strata specifications that do not set the switch validate with no errors and no warnings",
       "description": "The exegra and strata specifications that do not set the switch validate with no errors and no warnings."
+    },
+    {
+      "id": "ev-discharge-cycle-refused",
+      "claim": "discharge-cycle-refused",
+      "kind": "test",
+      "ref": "tests/core/discharge.test.js#validation refuses a cycle in the discharge graph",
+      "description": "The fixture's cycle is one assumption.discharge-cycle error at a, naming a → c1 → b → c2 → a."
+    },
+    {
+      "id": "ev-discharge-acyclic-accepted",
+      "claim": "discharge-cycle-refused",
+      "kind": "test",
+      "ref": "tests/core/discharge.test.js#an acyclic discharge graph is accepted",
+      "description": "With c2 no longer citing a, the fixture validates with no error."
     }
   ]
 }

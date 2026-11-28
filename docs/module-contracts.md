@@ -80,7 +80,7 @@ Discrete-event execution of the state machines (`behavior` entities) named by a
 `scenario`. Pure and deterministic. The engine is the Lean semantics of `formal/`,
 called as `engine.run` through the Lean call boundary; `src/core/engine.js` is the only
 module that runs it. The Rust crate `engine/exegra-engine` is a differential oracle in
-the tests (`tools/rust-engine.js`, `tools/differential.js`), not part of the application. It reads the engine input of `src/core/sim-input.js`
+the tests (`tools/rust-engine.js`, `tools/differential.js`), not part of the application. It reads the engine input of the Lean lowering (`formal/Exegra/Lower/Input.lean`, `engineInput` in `src/core/engine.js`)
 and nothing else ([simulation.md](simulation.md), "Engine input and trace format").
 
 ```js
@@ -89,7 +89,7 @@ runEngine(input | inputJsonText) -> Trace     // synchronous after initEngine();
 runEngineText(inputJsonText) -> string        // the same, JSON text in and out
 runScenario(model, scenarioId, opts?) -> Trace
 //   opts.faults?: string[]  active fault ids; default = scenario.data.faults ?? []
-//   = runEngine(simulationInput(model, scenarioId, opts.faults))
+//   = runEngine(engineInput(model, scenarioId, opts.faults))
 createTraceCursor(trace) -> Simulation        // stepwise view of a finished trace
 createSimulation(model, scenarioId, opts?) -> Simulation   // createTraceCursor(runScenario(...))
 

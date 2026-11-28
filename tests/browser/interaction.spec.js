@@ -219,10 +219,10 @@ test('stepping a simulation sends a labelled marker along the edge from sender t
   await expect(page.getByTestId('sim-flow')).toHaveText(/Composition root → Transaction system$/);
   await page.screenshot({ path: path.join(SHOTS, 'test-sim-flow-edge.png') });
 
-  // Step 9: the save goes from the session straight to the workspace service, which no relationship connects.
+  // Step 9: the save goes from the session to the persistence client, along the relationship that connects them.
   for (let i = 2; i <= 9; i++) await ex(page, `session.simStep();`);
-  const save = /** @type {any[]} */ (await ex(page, `return view.getFlows().filter((f) => f.event === 'Save requested');`));
-  expect(save.map((f) => [f.kind, f.from, f.to])).toEqual([['undeclared', 'session', 'workspace-service']]);
-  await expect(page.locator('.scene-flow-label--undeclared')).toHaveText('Save requested · no declared relationship');
-  await expect(page.getByTestId('sim-flow')).toHaveText(/Application session → Workspace service \(1 without a declared relationship\)/);
+  const save = /** @type {any[]} */ (await ex(page, `return view.getFlows().filter((f) => f.event === 'Write intended');`));
+  expect(save.map((f) => [f.kind, f.from, f.to])).toEqual([['edge', 'session', 'persistence-client']]);
+  await expect(page.locator('.scene-flow-label--edge')).toHaveText('Write intended');
+  await expect(page.getByTestId('sim-flow')).toHaveText(/Application session → Persistence client$/);
 });

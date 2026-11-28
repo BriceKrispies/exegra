@@ -23,7 +23,14 @@
         { "id": "interaction-refused", "name": "Edit refused and rejection shown", "terminal": true }
       ],
       "transitions": [
-        { "id": "interaction-submit", "from": "interaction-idle", "to": "interaction-awaiting", "on": "edit-requested", "effects": [{ "emit": "operation-submitted" }] },
+        { "id": "interaction-submit", "from": "interaction-idle", "to": "interaction-awaiting", "on": "edit-requested", "effects": [
+            {
+              "emit": "operation-submitted",
+              "payload": {
+                "text": "event.text"
+              }
+            }
+          ] },
         { "id": "interaction-accept", "from": "interaction-awaiting", "to": "interaction-done", "on": "transaction-committed" },
         { "id": "interaction-refuse", "from": "interaction-awaiting", "to": "interaction-refused", "on": "transaction-rejected", "effects": [{ "set": "refusalShown", "to": true }] }
       ]
@@ -41,7 +48,14 @@
         { "id": "source-draft-kept", "name": "Draft kept after a rejection", "terminal": true }
       ],
       "transitions": [
-        { "id": "source-apply", "from": "source-in-sync", "to": "source-applying", "on": "source-apply-requested", "effects": [{ "emit": "operation-submitted" }] },
+        { "id": "source-apply", "from": "source-in-sync", "to": "source-applying", "on": "source-apply-requested", "effects": [
+            {
+              "emit": "operation-submitted",
+              "payload": {
+                "text": "event.text"
+              }
+            }
+          ] },
         { "id": "source-refresh-after-apply", "from": "source-applying", "to": "source-in-sync", "on": "model-published", "effects": [{ "set": "shownRevision", "to": "event.revision" }] },
         { "id": "source-keep-draft", "from": "source-applying", "to": "source-draft-kept", "on": "transaction-rejected" },
         { "id": "source-refresh-after-visual-edit", "from": "source-in-sync", "to": "source-in-sync", "on": "model-published", "effects": [{ "set": "shownRevision", "to": "event.revision" }] }
@@ -51,11 +65,29 @@
       "id": "session-flow",
       "name": "Session: refresh on commit, then save asynchronously",
       "subject": "session",
-      "description": "onCommit re-evaluates claims, re-projects and re-lays-out the scene (the renderer receives it), then announces the model to the inspector and source editor, and starts the flush. The flush writes later and asynchronously; the save state follows its result.",
+      "description": "onCommit re-evaluates claims, re-projects and re-lays-out the scene (the renderer receives it), then announces the model to the inspector and source editor, and starts the flush. The flush writes later and asynchronously, as persist.writeFile through the persistence client (write-intent, with the committed text's hash and the base hash it last read or wrote); the save state follows its result, and a successful write's hash becomes the new base hash.",
       "initial": "session-in-sync",
       "variables": [
-        { "name": "saveState", "type": "string", "initial": "saved" },
-        { "name": "rejectionsLogged", "type": "number", "initial": 0 }
+        {
+          "name": "saveState",
+          "type": "string",
+          "initial": "saved"
+        },
+        {
+          "name": "rejectionsLogged",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "textHash",
+          "type": "string",
+          "initial": "h1"
+        },
+        {
+          "name": "baseHash",
+          "type": "string",
+          "initial": "h1"
+        }
       ],
       "states": [
         { "id": "session-in-sync", "name": "Saved and in sync" },
@@ -92,9 +124,51 @@
             }
           ]
         },
-        { "id": "session-on-commit", "from": "session-in-sync", "to": "session-refreshing", "on": "transaction-committed", "effects": [{ "emit": "refresh-requested", "payload": { "revision": "event.revision" } }] },
-        { "id": "session-on-refreshed", "from": "session-refreshing", "to": "session-save-pending", "on": "projection-refreshed", "description": "The renderer already has the scene; now the model is published and the write is requested, one tick later.", "effects": [{ "set": "saveState", "to": "'saving'" }, { "emit": "model-published", "payload": { "revision": "event.revision" } }, { "emit": "save-requested", "after": 1, "payload": { "revision": "event.revision" } }] },
-        { "id": "session-on-saved", "from": "session-save-pending", "to": "session-in-sync", "on": "save-succeeded", "effects": [{ "set": "saveState", "to": "'saved'" }] },
+        { "id": "session-on-commit", "from": "session-in-sync", "to": "session-refreshing", "on": "transaction-committed", "effects": [
+            {
+              "set": "textHash",
+              "to": "event.text"
+            },
+            {
+              "emit": "refresh-requested",
+              "payload": {
+                "revision": "event.revision"
+              }
+            }
+          ] },
+        { "id": "session-on-refreshed", "from": "session-refreshing", "to": "session-save-pending", "on": "projection-refreshed", "description": "The renderer already has the scene; now the model is published and the write is requested, one tick later.", "effects": [
+            {
+              "set": "saveState",
+              "to": "'saving'"
+            },
+            {
+              "emit": "model-published",
+              "payload": {
+                "revision": "event.revision"
+              }
+            },
+            {
+              "emit": "write-intent",
+              "after": 1,
+              "payload": {
+                "name": "'exegra'",
+                "file": "'spec'",
+                "text": "textHash",
+                "baseHash": "baseHash",
+                "requestId": "event.revision"
+              }
+            }
+          ] },
+        { "id": "session-on-saved", "from": "session-save-pending", "to": "session-in-sync", "on": "save-succeeded", "effects": [
+            {
+              "set": "saveState",
+              "to": "'saved'"
+            },
+            {
+              "set": "baseHash",
+              "to": "event.hash"
+            }
+          ] },
         { "id": "session-on-conflict", "from": "session-save-pending", "to": "session-conflicted", "on": "save-conflicted", "description": "Nothing was overwritten; the conflict waits for the user to reload from disk or overwrite disk.", "effects": [{ "set": "saveState", "to": "'conflict'" }] },
         { "id": "session-on-rejection", "from": "session-in-sync", "to": "session-in-sync", "on": "transaction-rejected", "description": "The rejection is logged; no refresh and no write follow.", "effects": [{ "set": "rejectionsLogged", "to": "rejectionsLogged + 1" }] }
       ]
@@ -2288,7 +2362,8 @@
         {
           "name": "current",
           "type": "string",
-          "initial": "c0"
+          "initial": "c0",
+          "environment": true
         }
       ],
       "states": [

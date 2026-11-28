@@ -8,20 +8,46 @@
       "description": "Preconditions are checked and text edits computed; the candidate is parsed and validated. With no errors it commits and the revision increments; otherwise it is rejected and nothing changes. Precondition failures, which reject before any text is computed, are abstracted into the rejection.",
       "initial": "tx-idle",
       "variables": [
-        { "name": "revision", "type": "number", "initial": 1 },
-        { "name": "rejected", "type": "boolean", "initial": false }
+        {
+          "name": "revision",
+          "type": "number",
+          "initial": 1
+        },
+        {
+          "name": "rejected",
+          "type": "boolean",
+          "initial": false
+        },
+        {
+          "name": "textHash",
+          "type": "string",
+          "initial": "h1"
+        },
+        {
+          "name": "pendingText",
+          "type": "string",
+          "initial": "h1"
+        }
       ],
       "states": [
         { "id": "tx-idle", "name": "Idle" },
         { "id": "tx-validating", "name": "Candidate being parsed and validated" }
       ],
       "transitions": [
-        { "id": "tx-begin", "from": "tx-idle", "to": "tx-validating", "on": "operation-submitted", "effects": [{ "emit": "text-edits-computed" }] },
+        { "id": "tx-begin", "from": "tx-idle", "to": "tx-validating", "on": "operation-submitted", "effects": [
+            {
+              "set": "pendingText",
+              "to": "event.text"
+            },
+            {
+              "emit": "text-edits-computed"
+            }
+          ] },
         {
           "id": "tx-commit-unvalidated",
           "from": "tx-validating",
           "to": "tx-idle",
-          "on": "model-parsed",
+          "on": "text-edits-computed",
           "faultOnly": true,
           "effects": [
             {
@@ -33,9 +59,14 @@
               "to": "false"
             },
             {
+              "set": "textHash",
+              "to": "pendingText"
+            },
+            {
               "emit": "transaction-committed",
               "payload": {
-                "revision": "revision"
+                "revision": "revision",
+                "text": "textHash"
               }
             }
           ]
@@ -60,7 +91,27 @@
             }
           ]
         },
-        { "id": "tx-commit", "from": "tx-validating", "to": "tx-idle", "on": "validation-passed", "description": "Project.#commit: swap the texts, derive the snapshot, increment the revision, record history, notify subscribers.", "effects": [{ "set": "revision", "to": "revision + 1" }, { "set": "rejected", "to": false }, { "emit": "transaction-committed", "payload": { "revision": "revision" } }] },
+        { "id": "tx-commit", "from": "tx-validating", "to": "tx-idle", "on": "validation-passed", "description": "Project.#commit: swap the texts, derive the snapshot, increment the revision, record history, notify subscribers.", "effects": [
+            {
+              "set": "revision",
+              "to": "revision + 1"
+            },
+            {
+              "set": "rejected",
+              "to": false
+            },
+            {
+              "set": "textHash",
+              "to": "pendingText"
+            },
+            {
+              "emit": "transaction-committed",
+              "payload": {
+                "revision": "revision",
+                "text": "textHash"
+              }
+            }
+          ] },
         { "id": "tx-reject", "from": "tx-validating", "to": "tx-idle", "on": "validation-failed", "description": "The result would have validation errors: the texts, the model, the revision and the history stay as they were.", "effects": [{ "set": "rejected", "to": true }, { "emit": "transaction-rejected" }] }
       ]
     },

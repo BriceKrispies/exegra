@@ -554,12 +554,12 @@ test('the simulator shows the request log of contract events on a phone', { tag:
   await page.waitForFunction(() => !!(/** @type {any} */ (window).__exegra.session.sim.simulation));
   await ex(page, `session.simRunToEnd();`);
 
-  // The Requests section reads like a request log: a request, a refused write and a retry.
+  // The Requests section reads like a request log: a request, a refused write and a second request (the user's overwrite).
   const requests = page.getByTestId('sim-requests');
   await requests.scrollIntoViewIfNeeded();
   await expect(requests).toContainText('→ POST /__exegra/write');
-  await expect(requests).toContainText('← refused conflict {current: "h2"}');
-  await expect(requests).toContainText('← ok {ok: true, hash: "h3"}');
+  await expect(requests).toContainText('← refused conflict {current: "h1", requestId: 1}');
+  await expect(requests).toContainText('← ok {ok: true, hash: "9b2f1c0e", requestId: 2}');
   await expect(requests.locator('li')).toHaveCount(4);
   await expect(page.getByTestId('sim-checks')).toContainText('4 contract events fit their contracts and every response answers a request');
 
@@ -569,8 +569,8 @@ test('the simulator shows the request log of contract events on a phone', { tag:
     expect(box.height, 'a request line is at least 44 px tall').toBeGreaterThanOrEqual(43.5);
   }
   await expectNoHorizontalScroll(page, 'request log');
-  await page.getByTestId('sim-request-3').tap();
-  expect(await ex(page, `return session.sim.stepIndex;`)).toBe(3);
+  await page.getByTestId('sim-request-5').tap();
+  expect(await ex(page, `return session.sim.stepIndex;`)).toBe(5);
   await page.screenshot({ path: path.join(SHOTS, 'test-phone-request-log.png') });
 });
 

@@ -55,7 +55,7 @@ def supportSize : Core.Behav.Dist → Nat
 /-- Reference resolution of a claim expression in a calculus configuration (`configResolver` of
 `src/core/claims.js`): `time`, `<behavior>.state`, `<behavior>.<variable>`. -/
 def claimResolveB (I : Info) (c : Core.Behav.Cfg) : List String → Value
-  | ["time"] => .num c.time.toFloat
+  | ["time"] => .num (↑c.time : Rat)
   | [b, name] =>
     match I.behs.findIdx? (·.id == b) with
     | none => .undef
@@ -71,23 +71,54 @@ def claimResolveB (I : Info) (c : Core.Behav.Cfg) : List String → Value
             | none => .undef
   | _ => .undef
 
+/-- **The evaluator of claim expressions** (the one `exegra prove` and the live view share): the
+expression evaluated as a behaviour's expressions are (`Exegra.eval`, untyped), with references
+resolved by `resolve`. `true` or `false`, or why it is neither: a parse failure, an evaluation error
+(a division by zero, an unknown reference), or a value that is not a Boolean. A claim treats each of
+these as a violation. -/
+def claimTruthAst (resolve : List String → Value) (ast : Ast) : Except String Bool :=
+  match eval resolve TyEnv.untyped ast with
+  | .ok (.bool b) => .ok b
+  | .ok v => .error s!"The expression evaluates to {match v with
+      | .num _ => "number" | .str _ => "string" | .null => "null" | .undef => "undefined"
+      | .arr _ _ => "object" | .obj _ _ => "object" | .bool _ => "boolean"}, not a boolean."
+  | .error e => .error e
+
+def claimTruth (resolve : List String → Value) (src : String) : Except String Bool :=
+  match parseExpr src with
+  | .ok ast => claimTruthAst resolve ast
+  | .error e => .error s!"The expression does not parse: {e}"
+
 /-- A claim's state invariant as a predicate on calculus states: the expression evaluates to
-`true` in the state's configuration; anything else (false, not a Boolean, an error, a parse
-failure) is a violation. -/
+`true` in the state's configuration (`claimTruth`); anything else (false, not a Boolean, an error, a
+parse failure) is a violation. -/
 def claimInvB (I : Info) (src : String) : State → Bool :=
   match parseExpr src with
-  | .ok ast => fun s => match eval (claimResolveB I s.cfg) TyEnv.untyped ast with
-    | .ok (.bool true) => true
+  | .ok ast => fun s => match claimTruthAst (claimResolveB I s.cfg) ast with
+    | .ok true => true
     | _ => false
   | .error _ => fun _ => false
 
 /-- Is the expression `true`, `false`, or neither in a configuration? -/
 def evalB (I : Info) (src : String) (c : Core.Behav.Cfg) : Option Bool :=
-  match parseExpr src with
-  | .ok ast => match eval (claimResolveB I c) TyEnv.untyped ast with
-    | .ok (.bool b) => some b
-    | _ => none
-  | .error _ => none
+  (claimTruth (claimResolveB I c) src).toOption
+
+/-- Reference resolution in a configuration of a trace (`config` of a step: `time`, and per machine
+key its `state` and `vars`), as `configResolver` of `src/core/claims.js` reads it. -/
+def fieldOf? (v : Value) (k : String) : Option Value :=
+  match v with
+  | .obj _ fs => objGet? fs k
+  | _ => none
+
+def configResolve (cfg : Value) : List String → Value
+  | ["time"] => (fieldOf? cfg "time").getD .undef
+  | [b, x] =>
+    match fieldOf? cfg "machines" >>= (fieldOf? · b) with
+    | none => .undef
+    | some m =>
+      if x == "state" then (fieldOf? m "state").getD .undef
+      else ((fieldOf? m "vars").bind (fieldOf? · x)).getD .undef
+  | _ => .undef
 
 /-! ### Elaborated inputs -/
 
@@ -112,7 +143,7 @@ def capped (sys : Core.Behav.Sys) : Bool := sys.dists.any fun d => drawCap < sup
 
 /-- The explorer's result for one invariant. -/
 def exploreClaim (sys : Core.Behav.Sys) (I : Info) (src : String) (bound cap : Nat) : Gen.Result State :=
-  if capped sys then .incomplete 0
+  if capped sys then .incomplete .cap 0
   else Core.Behav.exploreB sys (claimInvB I src) bound cap
 
 /-! ### Replaying a path with the format-2 records -/
@@ -237,7 +268,7 @@ def bad (I : Info) (sys : Core.Behav.Sys) (f : Form) (n : TNode) : Bool :=
 
 /-- The temporal check: the search of the product for a violating node. -/
 def tcheckB (I : Info) (sys : Core.Behav.Sys) (f : Form) (bound cap : Nat) : Gen.Result TNode :=
-  if capped sys then .incomplete 0
+  if capped sys then .incomplete .cap 0
   else Gen.search (tsysB I sys f) (fun n => !bad I sys f n) bound cap
 
 /-- **A `holds` of the temporal check covers every reachable product node**, at any depth: no run
@@ -291,19 +322,19 @@ open Encode in
 def verdictJson (I : Info) (sys : Core.Behav.Sys) (id : String) (r : Gen.Result State) : Value :=
   match r with
   | .holds k => o [("id", s id), ("verdict", s "holds"), ("states", nat k)]
-  | .incomplete k => o [("id", s id), ("verdict", s "incomplete"), ("states", nat k)]
+  | .incomplete why k => o [("id", s id), ("verdict", s "incomplete"), ("reason", s why.name), ("states", nat k)]
   | .counterexample p => cexJson I sys id p.root p.picks
 
 open Encode in
 def tverdictJson (I : Info) (sys : Core.Behav.Sys) (id : String) (r : Gen.Result TNode) : Value :=
   match r with
   | .holds k => o [("id", s id), ("verdict", s "holds"), ("states", nat k)]
-  | .incomplete k => o [("id", s id), ("verdict", s "incomplete"), ("states", nat k)]
+  | .incomplete why k => o [("id", s id), ("verdict", s "incomplete"), ("reason", s why.name), ("states", nat k)]
   | .counterexample p => cexJson I sys id p.root.1 p.picks
 
 def natField (root : List (String × Value)) (k what : String) : Except String Nat :=
   match fieldOr root k with
-  | .num x => pure x.toUInt64.toNat
+  | .num x => pure x.floor.toNat
   | _ => throw s!"{what}: \"{k}\" must be a number"
 
 /-- `{input, claims: [{id, expr}], bound, maxStates}`: the explorer's result per claim. -/
@@ -372,6 +403,58 @@ def temporalValue (req : Value) : Except String String := do
 def runExplore (text : String) : Except String String := do exploreValue (← Json.parse text)
 def runTemporal (text : String) : Except String String := do temporalValue (← Json.parse text)
 
+/-! ### The live view's claim checks, by the same evaluator -/
+
+/-- What a step of a trace shows to a matcher (`occurrences` of `src/core/claims.js`): the event it
+delivers when its kind is `deliver`, and the transitions that fired in it. -/
+def occOfStep (step : Value) : Occ :=
+  let delivered := match fieldOf? step "kind", fieldOf? step "event" >>= (fieldOf? · "id") with
+    | some (.str "deliver"), some (.str e) => some e
+    | _, _ => none
+  let fired := match fieldOf? step "fired" with
+    | some (.arr _ fs) => fs.filterMap fun f => match fieldOf? f "transition" with
+      | some (.str t) => some t
+      | _ => none
+    | _ => []
+  { delivered, fired }
+
+open Encode in
+/-- `{expr, configs: [config]}`: per configuration `{value: b}` or `{error: message}` (`claimTruth`). -/
+def exprOnConfigsValue (args : Value) : Except String String := do
+  let src ← match fieldOf? args "expr" with
+    | some (.str x) => pure x
+    | _ => throw "claims.exprOnConfigs: \"expr\" must be a string"
+  let cfgs ← match fieldOf? args "configs" with
+    | some (.arr _ xs) => pure xs
+    | _ => throw "claims.exprOnConfigs: \"configs\" must be an array"
+  let out := match parseExpr src with
+    | .error e => cfgs.map fun _ => o [("error", s s!"The expression does not parse: {e}")]
+    | .ok ast => cfgs.map fun c => match claimTruthAst (configResolve c) ast with
+      | .ok b => o [("value", .bool b)]
+      | .error e => o [("error", s e)]
+  pure (Json.write (a out))
+
+/-- `{matcher, steps: [step]}`: whether each step has the occurrence (`Matcher.hit`). -/
+def matcherHitsValue (args : Value) : Except String String := do
+  let m ← decodeMatcher ((fieldOf? args "matcher").getD .undef)
+  let steps ← match fieldOf? args "steps" with
+    | some (.arr _ xs) => pure xs
+    | _ => throw "claims.matcherHits: \"steps\" must be an array"
+  pure (Json.write (Encode.a (steps.map fun st => .bool (m.hit (occOfStep st)))))
+
+/-- `{form, steps: [step]}`: the monitor of a temporal form (`Form.step`) over the steps: the index of
+the first step after which the run violates the form (or `null`), and whether the watched occurrence
+was seen. -/
+def formViolationValue (args : Value) : Except String String := do
+  let f ← decodeForm ((fieldOf? args "form").getD .undef)
+  let steps ← match fieldOf? args "steps" with
+    | some (.arr _ xs) => pure xs
+    | _ => throw "claims.formViolation: \"steps\" must be an array"
+  let (mo, at_) := steps.zipIdx.foldl (fun (acc : Mon × Option Nat) (st, i) =>
+    let mo' := f.step acc.1 (occOfStep st)
+    (mo', match acc.2 with | some k => some k | none => if mo'.viol then some i else none)) ({}, none)
+  pure (Json.write (Encode.o [("violatedAt", match at_ with | some k => Encode.nat k | none => .null), ("seen", .bool mo.seen)]))
+
 /-! ### What a generated proof file states -/
 
 /-- The elaborated system and the names of an engine input text, if it elaborates. -/
@@ -381,13 +464,13 @@ def prepareText (text : String) : Option (Core.Behav.Sys × Info) :=
   | .error _ => none
 
 /-- The verdict of an invariant claim on an engine input text, as a generated proof file states
-it: `("holds", n)`, `("incomplete", n)` or `("counterexample", picks)`. -/
+it: `("holds", n)`, `("incomplete:bound", n)`, `("incomplete:cap", n)` or `("counterexample", picks)`. -/
 def verdictOf (text src : String) (bound cap : Nat) : String × List Nat :=
   match prepareText text with
   | none => ("refused", [])
   | some (sys, I) => match exploreClaim sys I src bound cap with
     | .holds n => ("holds", [n])
-    | .incomplete n => ("incomplete", [n])
+    | .incomplete why n => ("incomplete:" ++ why.name, [n])
     | .counterexample p => ("counterexample", p.picks)
 
 /-- **A `holds` verdict of a generated proof file proves the invariant** of the calculus system of
@@ -408,7 +491,7 @@ theorem verdictOf_holds {text src : String} {bound cap : Nat} {ns : List Nat}
       split at hr
       · cases hr
       · exact Core.Behav.explore_holds_invariant hr
-    | incomplete k => simp [hp, hr] at h
+    | incomplete why k => cases why <;> simp [hp, hr, Gen.Reason.name] at h
     | counterexample q => simp [hp, hr] at h
 
 /-- The verdict of a temporal claim, as a generated proof file states it. -/
@@ -417,7 +500,7 @@ def tverdictOf (text : String) (f : Form) (bound cap : Nat) : String × List Nat
   | none => ("refused", [])
   | some (sys, I) => match tcheckB I sys f bound cap with
     | .holds n => ("holds", [n])
-    | .incomplete n => ("incomplete", [n])
+    | .incomplete why n => ("incomplete:" ++ why.name, [n])
     | .counterexample p => ("counterexample", p.picks)
 
 end Exegra.V2.ProveB

@@ -175,8 +175,9 @@
       ]
     },
     {
-      // Expression showcase: every operator, precedence and short-circuiting, on integers (WG-5681: the
-      // decimal literal, the comparison across sorts and the inexact division were removed).
+      // Expression showcase: every operator, precedence, short-circuiting and numbers that are not
+      // integers, computed exactly (WG-5683: 0.1 + 0.2 is 0.3 and 7 / 2 is 3.5; the comparison across
+      // sorts, 1 == '1', stays removed: it is ill-typed).
       "id": "ops-machine",
       "name": "Expression showcase",
       "subject": "ledger",
@@ -195,6 +196,7 @@
         { "name": "negneg", "type": "number", "initial": 0 },
         { "name": "prec", "type": "number", "initial": 0 },
         { "name": "paren", "type": "number", "initial": 0 },
+        { "name": "inexact", "type": "number", "initial": 0 },
         { "name": "cat", "type": "string", "initial": "" },
         { "name": "lt", "type": "boolean", "initial": false },
         { "name": "le", "type": "boolean", "initial": false },
@@ -225,12 +227,13 @@
             { "set": "sum", "to": "a + b" },
             { "set": "diff", "to": "a - b" },
             { "set": "prod", "to": "a * b" },
-            { "set": "quo", "to": "(a - 1) / b" },
+            { "set": "quo", "to": "a / b" },
             { "set": "rem", "to": "a % b" },
             { "set": "neg", "to": "-a" },
             { "set": "negneg", "to": "a - -b" },
             { "set": "prec", "to": "1 + 2 * 3 - 8 / 4 % 3" },
             { "set": "paren", "to": "(1 + 2) * 3" },
+            { "set": "inexact", "to": "0.1 + 0.2" },
             { "set": "cat", "to": "s + \"cd\" + 'ef'" },
             { "set": "lt", "to": "a < b" },
             { "set": "le", "to": "b <= 2" },
@@ -256,7 +259,7 @@
         },
         {
           "id": "ops-again", "from": "ops-done", "to": "ops-done", "on": "ops-second",
-          "guard": "sum == 9 && cat == 'abcdef' && !eq == false",
+          "guard": "sum == 9 && cat == 'abcdef' && inexact == 0.3 && !eq == false",
           "effects": [{ "set": "ticks", "to": "ticks + time" }, { "set": "flag", "to": true }]
         }
       ]

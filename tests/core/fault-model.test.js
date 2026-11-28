@@ -4,7 +4,7 @@ import { analyzeSpec } from '../../src/core/analyze.js';
 import { evaluateClaim } from '../../src/core/claims.js';
 import { initEngine } from '../../src/core/engine.js';
 import { Project } from '../../src/core/project.js';
-import { simulationInput } from '../../src/core/sim-input.js';
+import { engineInput } from '../../src/core/engine.js';
 
 initEngine();
 
@@ -158,7 +158,7 @@ test('a claim result states the fault model in its scope, for every method', () 
 
 test('a fault realises does not reach the engine input', () => {
   const { model } = load(SPEC);
-  const input = simulationInput(model, 'sc');
+  const input = engineInput(model, 'sc');
   assert.ok(!JSON.stringify(input).includes('realises'));
   assert.ok(!JSON.stringify(input).includes('fmod'));
 });

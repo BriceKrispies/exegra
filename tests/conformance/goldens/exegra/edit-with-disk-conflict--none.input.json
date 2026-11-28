@@ -14,7 +14,10 @@
     {
      "effects": [
       {
-       "emit": "operation-submitted"
+       "emit": "operation-submitted",
+       "payload": {
+        "text": "event.text"
+       }
       }
      ],
      "faultOnly": false,
@@ -68,7 +71,10 @@
     {
      "effects": [
       {
-       "emit": "operation-submitted"
+       "emit": "operation-submitted",
+       "payload": {
+        "text": "event.text"
+       }
       }
      ],
      "faultOnly": false,
@@ -135,6 +141,10 @@
     {
      "effects": [
       {
+       "set": "pendingText",
+       "to": "event.text"
+      },
+      {
        "emit": "text-edits-computed"
       }
      ],
@@ -156,9 +166,14 @@
        "to": "false"
       },
       {
+       "set": "textHash",
+       "to": "pendingText"
+      },
+      {
        "emit": "transaction-committed",
        "payload": {
-        "revision": "revision"
+        "revision": "revision",
+        "text": "textHash"
        }
       }
      ],
@@ -166,7 +181,7 @@
      "from": "tx-validating",
      "guard": null,
      "id": "tx-commit-unvalidated",
-     "on": "model-parsed",
+     "on": "text-edits-computed",
      "to": "tx-idle"
     },
     {
@@ -201,9 +216,14 @@
        "to": false
       },
       {
+       "set": "textHash",
+       "to": "pendingText"
+      },
+      {
        "emit": "transaction-committed",
        "payload": {
-        "revision": "revision"
+        "revision": "revision",
+        "text": "textHash"
        }
       }
      ],
@@ -240,6 +260,14 @@
     {
      "initial": false,
      "name": "rejected"
+    },
+    {
+     "initial": "h1",
+     "name": "textHash"
+    },
+    {
+     "initial": "h1",
+     "name": "pendingText"
     }
    ]
   },
@@ -370,6 +398,10 @@
     {
      "effects": [
       {
+       "set": "textHash",
+       "to": "event.text"
+      },
+      {
        "emit": "refresh-requested",
        "payload": {
         "revision": "event.revision"
@@ -397,9 +429,13 @@
       },
       {
        "after": 1,
-       "emit": "save-requested",
+       "emit": "write-intent",
        "payload": {
-        "revision": "event.revision"
+        "baseHash": "baseHash",
+        "file": "'spec'",
+        "name": "'exegra'",
+        "requestId": "event.revision",
+        "text": "textHash"
        }
       }
      ],
@@ -415,6 +451,10 @@
       {
        "set": "saveState",
        "to": "'saved'"
+      },
+      {
+       "set": "baseHash",
+       "to": "event.hash"
       }
      ],
      "faultOnly": false,
@@ -461,6 +501,14 @@
     {
      "initial": 0,
      "name": "rejectionsLogged"
+    },
+    {
+     "initial": "h1",
+     "name": "textHash"
+    },
+    {
+     "initial": "h1",
+     "name": "baseHash"
     }
    ]
   },
@@ -567,7 +615,7 @@
     "workspace-clean",
     "workspace-conflicted"
    ],
-   "subject": "workspace-service",
+   "subject": "persistence-client",
    "transitions": [
     {
      "effects": [
@@ -576,18 +624,23 @@
        "to": "true"
       },
       {
-       "set": "persistedRevision",
-       "to": "event.revision"
+       "set": "diskSpec",
+       "to": "event.text"
       },
       {
-       "emit": "save-conflicted"
+       "emit": "save-conflicted",
+       "payload": {
+        "currentHash": "'hx'",
+        "file": "event.file",
+        "requestId": "event.requestId"
+       }
       }
      ],
      "faultOnly": true,
      "from": "workspace-clean",
      "guard": null,
      "id": "workspace-overwrite-on-conflict",
-     "on": "save-requested",
+     "on": "write-intent",
      "to": "workspace-conflicted"
     },
     {
@@ -597,38 +650,122 @@
        "to": true
       },
       {
-       "emit": "save-conflicted"
+       "set": "diskSpec",
+       "to": "'hx'"
+      },
+      {
+       "emit": "save-conflicted",
+       "payload": {
+        "currentHash": "'hx'",
+        "file": "event.file",
+        "requestId": "event.requestId"
+       }
       }
      ],
      "faultOnly": true,
      "from": "workspace-clean",
      "guard": null,
      "id": "workspace-detect-conflict",
-     "on": "save-requested",
+     "on": "write-intent",
      "to": "workspace-conflicted"
     },
     {
      "effects": [
       {
-       "set": "persistedRevision",
-       "to": "event.revision"
+       "set": "diskSpec",
+       "to": "event.text"
       },
       {
-       "emit": "save-succeeded"
+       "emit": "save-succeeded",
+       "payload": {
+        "file": "event.file",
+        "hash": "event.text",
+        "requestId": "event.requestId"
+       }
       }
      ],
      "faultOnly": false,
      "from": "workspace-clean",
-     "guard": null,
+     "guard": "event.file == 'spec' && event.baseHash == diskSpec",
      "id": "workspace-write",
-     "on": "save-requested",
+     "on": "write-intent",
+     "to": "workspace-clean"
+    },
+    {
+     "effects": [
+      {
+       "set": "conflict",
+       "to": true
+      },
+      {
+       "emit": "save-conflicted",
+       "payload": {
+        "currentHash": "diskSpec",
+        "file": "event.file",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "workspace-clean",
+     "guard": "event.file == 'spec' && event.baseHash != diskSpec",
+     "id": "workspace-refuse-stale-base",
+     "on": "write-intent",
+     "to": "workspace-clean"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskLayout",
+       "to": "event.text"
+      },
+      {
+       "emit": "save-succeeded",
+       "payload": {
+        "file": "event.file",
+        "hash": "event.text",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "workspace-clean",
+     "guard": "event.file == 'layout' && event.baseHash == diskLayout",
+     "id": "workspace-write-layout",
+     "on": "write-intent",
+     "to": "workspace-clean"
+    },
+    {
+     "effects": [
+      {
+       "set": "conflict",
+       "to": true
+      },
+      {
+       "emit": "save-conflicted",
+       "payload": {
+        "currentHash": "diskLayout",
+        "file": "event.file",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "workspace-clean",
+     "guard": "event.file == 'layout' && event.baseHash != diskLayout",
+     "id": "workspace-refuse-stale-layout",
+     "on": "write-intent",
      "to": "workspace-clean"
     }
    ],
    "variables": [
     {
-     "initial": 1,
-     "name": "persistedRevision"
+     "initial": "h1",
+     "name": "diskSpec"
+    },
+    {
+     "initial": "L1",
+     "name": "diskLayout"
     },
     {
      "initial": false,
@@ -673,9 +810,6 @@
   },
   {
    "id": "model-published"
-  },
-  {
-   "id": "save-requested"
   },
   {
    "id": "save-succeeded"
@@ -1132,7 +1266,9 @@
    {
     "at": 0,
     "event": "edit-requested",
-    "payload": {}
+    "payload": {
+     "text": "h2"
+    }
    }
   ]
  },

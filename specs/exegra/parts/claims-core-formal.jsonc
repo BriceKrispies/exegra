@@ -674,7 +674,7 @@
       "assumptions": [
         "trusted-lean-kernel"
       ],
-      "rationale": "Theorem mod_truncates of formal/Exegra/Core/BehavExamples.lean (review-M2.1, finding 2, demonstration D2), by kernel evaluation of Int.tmod, format 2's Num.fmod (Number.lean:67-69, Expr.lean:364). typed_div_truncates shows that a typed integer / truncates toward zero, as format 2's divIn (Expr.lean:299-304); untyped_div_inexact that an untyped / with a remainder is an error, where format 2 computes a fraction the calculus does not represent.",
+      "rationale": "Theorem mod_truncates of formal/Exegra/Core/BehavExamples.lean (review-M2.1, finding 2, demonstration D2), by kernel evaluation of Int.tmod, format 2's Num.fmod (Number.lean:67-69, Expr.lean:364). typed_div_truncates shows that a typed integer / truncates toward zero, as format 2's divIn (Expr.lean:299-304); an untyped / with a remainder gives the exact rational (7 / 2 is 3.5, a #guard of the same file, WG-5683).",
       "evaluate": {
         "method": "lean-theorem",
         "theorem": "Exegra.Core.Behav.Examples.mod_truncates",
@@ -1529,6 +1529,655 @@
           "Exegra.Core.Behav.Sys.lts"
         ]
       }
+    },
+    {
+      "id": "lts-k-induction-sound",
+      "kind": "invariant",
+      "statement": "For k ≥ 1, a k-inductive predicate of a labelled transition system (it holds within k - 1 steps, and on every path of k + 1 states from any state whose first k states satisfy it, the last one does too) holds in every reachable state, with no bound on the length of runs.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/LTS.lean (review-M1 finding 1). WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.kInduction_sound",
+        "about": [
+          "Exegra.Core.LTS.KInductive",
+          "Exegra.Core.LTS.Invariant"
+        ]
+      }
+    },
+    {
+      "id": "lts-k-induction-example-not-inductive",
+      "kind": "invariant",
+      "statement": "The example system kSys (0 ⇄ 1 reachable, 2 → 3 → 3 unreachable) has a property, never in state 3, that is not inductive.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Examples.lean. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Examples.kSys_not_inductive",
+        "about": [
+          "Exegra.Core.LTS.Inductive",
+          "Exegra.Core.Examples.kSys"
+        ]
+      }
+    },
+    {
+      "id": "lts-k-induction-example-2-inductive",
+      "kind": "invariant",
+      "statement": "The property never in state 3 of kSys is 2-inductive.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Examples.lean. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Examples.kSys_kInductive",
+        "about": [
+          "Exegra.Core.LTS.KInductive",
+          "Exegra.Core.Examples.kSys"
+        ]
+      }
+    },
+    {
+      "id": "lts-k-induction-example-invariant",
+      "kind": "invariant",
+      "statement": "The property never in state 3 of kSys is an invariant, obtained from kInduction_sound with k = 2.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Examples.lean. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Examples.kSys_invariant",
+        "about": [
+          "Exegra.Core.LTS.Invariant",
+          "Exegra.Core.Examples.kSys"
+        ]
+      }
+    },
+    {
+      "id": "lts-strong-fairness-implies-weak",
+      "kind": "invariant",
+      "statement": "A run that is strongly fair to a set of actions is weakly fair to it.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Live.lean; runs extend a deadlocked state by stuttering. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.Run.strongFair_weakFair",
+        "about": [
+          "Exegra.Core.LTS.Run.StrongFair",
+          "Exegra.Core.LTS.Run.WeakFair"
+        ]
+      }
+    },
+    {
+      "id": "lts-lasso-refutes",
+      "kind": "invariant",
+      "statement": "A reachable state with a cycle back to itself (a path of at least one step, stuttering allowed at a deadlocked state) through a state violating P, on which every fair action enabled at every state is taken, refutes that every weakly fair run eventually always satisfies P.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Live.lean. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.lasso_refutes",
+        "about": [
+          "Exegra.Core.LTS.EvAlways",
+          "Exegra.Core.LTS.Run.WeakFair"
+        ]
+      }
+    },
+    {
+      "id": "lts-lasso-refutes-gf",
+      "kind": "invariant",
+      "statement": "A reachable state with a weakly fair cycle back to itself all of whose states violate P refutes that every weakly fair run satisfies P infinitely often.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Live.lean. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.lasso_refutes_GF",
+        "about": [
+          "Exegra.Core.LTS.InfOften",
+          "Exegra.Core.LTS.Run.WeakFair"
+        ]
+      }
+    },
+    {
+      "id": "lts-response-of-ranking",
+      "kind": "invariant",
+      "statement": "Given a ranking V and a helpful action h s at each reachable state violating P that is fair and enabled, every h s-step reaching P or decreasing V, and every step reaching P, decreasing V, or keeping V and the helpful action, every weakly fair run satisfies P infinitely often.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Live.lean. The helpful-action condition strengthens WG-5682 criterion 8, which is unsound as written (lts-ranking-without-helpful-unsound). WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.response_of_ranking",
+        "about": [
+          "Exegra.Core.LTS.InfOften",
+          "Exegra.Core.LTS.Run.WeakFair"
+        ]
+      }
+    },
+    {
+      "id": "lts-ranking-without-helpful-unsound",
+      "kind": "invariant",
+      "statement": "The ranking rule without the helpful-action condition (a fair action enabled at each reachable state violating P whose steps decrease V, and no step increasing V unless it reaches P) is unsound under weak fairness: a three-state system satisfies its premises and has a weakly fair run that never reaches P.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Live.lean: the counterexample to WG-5682 criterion 8 as written. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.ranking_without_helpful_unsound",
+        "about": [
+          "Exegra.Core.LTS.InfOften",
+          "Exegra.Core.LTS.Run.WeakFair"
+        ]
+      }
+    },
+    {
+      "id": "lts-blinker-not-fg-on",
+      "kind": "invariant",
+      "statement": "The blinker of modelchecking F4 (off → on by turn-on, on → off by turn-off) is not eventually always on under weak fairness of any set of actions: the lasso off → on → off refutes it.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Live.lean, from lasso_refutes. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.blinker_not_FG_on",
+        "about": [
+          "Exegra.Core.LTS.blinker",
+          "Exegra.Core.LTS.EvAlways"
+        ]
+      }
+    },
+    {
+      "id": "lts-blinker-gf-on",
+      "kind": "invariant",
+      "statement": "The blinker is on infinitely often in every run weakly fair to turn-on.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Live.lean, from response_of_ranking. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.blinker_GF_on",
+        "about": [
+          "Exegra.Core.LTS.blinker",
+          "Exegra.Core.LTS.InfOften"
+        ]
+      }
+    },
+    {
+      "id": "calculus-check-lasso-sound",
+      "kind": "invariant",
+      "statement": "A candidate lasso accepted by checkLasso satisfies the hypotheses of lasso_refutes (form FG) or lasso_refutes_GF (form GF) for the calculus system: its end is reachable, its cycle is a non-empty path back to it, the states the form needs violate the property, and the cycle is weakly fair.",
+      "subjects": [
+        "exhaustive-explorer"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavLive.lean. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.checkLasso_sound",
+        "about": [
+          "Exegra.Core.Behav.checkLasso",
+          "Exegra.Core.Behav.pathEnd"
+        ]
+      }
+    },
+    {
+      "id": "calculus-lasso-search-sound",
+      "kind": "invariant",
+      "statement": "A lasso result of the lasso search over the states of Exec.gen sys satisfies the hypotheses of lasso_refutes (or lasso_refutes_GF) for Sys.lts sys.",
+      "subjects": [
+        "exhaustive-explorer"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavLive.lean: the search returns a lasso only through checkLasso. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.lassoSearch_sound",
+        "about": [
+          "Exegra.Core.Behav.lassoSearch",
+          "Exegra.Core.Behav.pathEnd"
+        ]
+      }
+    },
+    {
+      "id": "calculus-check-ranking-sound",
+      "kind": "invariant",
+      "statement": "A ranking certificate accepted by checkRanking (a closed list of states, a ranking and helpful fair labels) proves that every weakly fair run of the calculus system satisfies the property infinitely often.",
+      "subjects": [
+        "exhaustive-explorer"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavLive.lean, from response_of_ranking. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.checkRanking_sound",
+        "about": [
+          "Exegra.Core.Behav.checkRanking",
+          "Exegra.Core.LTS.InfOften"
+        ]
+      }
+    },
+    {
+      "id": "calculus-rank-proves-sound",
+      "kind": "invariant",
+      "statement": "When the ranking search succeeds, every weakly fair run of the calculus system satisfies the property infinitely often.",
+      "subjects": [
+        "exhaustive-explorer"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavLive.lean. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.rankProves_sound",
+        "about": [
+          "Exegra.Core.Behav.rankProves",
+          "Exegra.Core.LTS.InfOften"
+        ]
+      }
+    },
+    {
+      "id": "calculus-quiescent-run-deadlocked",
+      "kind": "invariant",
+      "statement": "A run of the calculus scheduler classified quiescent, from a reachable state of a well-formed system, ends in a state from which the step relation has no step.",
+      "subjects": [
+        "exhaustive-explorer"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavExec.lean, from Exec.idle_deadlocked and Exec.stopped_deadlocked. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.run_quiescent_deadlocked",
+        "about": [
+          "Exegra.Core.Behav.Exec.run",
+          "Exegra.Core.LTS.Deadlocked"
+        ]
+      }
+    },
+    {
+      "id": "prove-certificate-invariant",
+      "kind": "invariant",
+      "statement": "A closed-set certificate of an invariant claim accepted by checkClosed over the calculus enumeration of an input text proves that every reachable state runs and satisfies the claim.",
+      "subjects": [
+        "proof-export"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/ProveLive.lean; exegra prove states the certificate of every invariant that holds. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.V2.ProveLive.invariant_of_certificate",
+        "about": [
+          "Exegra.Core.LTS.checkClosed",
+          "Exegra.Core.Behav.Exec.enum"
+        ]
+      }
+    },
+    {
+      "id": "prove-liveness-proved-meaning",
+      "kind": "invariant",
+      "statement": "A proved verdict of a GF liveness claim on an input text means every run of its calculus system weakly fair to the claim's fair labels satisfies the claim's predicate infinitely often.",
+      "subjects": [
+        "proof-export"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/ProveLive.lean. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.V2.ProveLive.liveVerdictOf_proved",
+        "about": [
+          "Exegra.V2.ProveLive.liveVerdictOf",
+          "Exegra.Core.LTS.InfOften"
+        ]
+      }
+    },
+    {
+      "id": "prove-liveness-violated-gf-meaning",
+      "kind": "invariant",
+      "statement": "A violated verdict of a GF liveness claim on an input text means not every weakly fair run of its calculus system satisfies the predicate infinitely often.",
+      "subjects": [
+        "proof-export"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/ProveLive.lean. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.V2.ProveLive.liveVerdictOf_violated_GF",
+        "about": [
+          "Exegra.V2.ProveLive.liveVerdictOf",
+          "Exegra.Core.LTS.InfOften"
+        ]
+      }
+    },
+    {
+      "id": "prove-liveness-violated-fg-meaning",
+      "kind": "invariant",
+      "statement": "A violated verdict of an FG liveness claim on an input text means not every weakly fair run of its calculus system eventually always satisfies the predicate.",
+      "subjects": [
+        "proof-export"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/ProveLive.lean. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.V2.ProveLive.liveVerdictOf_violated_FG",
+        "about": [
+          "Exegra.V2.ProveLive.liveVerdictOf",
+          "Exegra.Core.LTS.EvAlways"
+        ]
+      }
+    },
+    {
+      "id": "prove-kernel-certificate-invariant",
+      "kind": "invariant",
+      "statement": "A closed-set certificate checked over a calculus system written out as a Lean term proves, with the kernel and the standard axioms only, that every reachable state runs and satisfies the claim expression elaborated in the calculus.",
+      "subjects": [
+        "proof-export"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/ProveKernel.lean; exegra prove --module writes such certificates, checked by decide. WG-5682.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.invariant_of_kernel_certificate",
+        "about": [
+          "Exegra.Core.LTS.checkClosed",
+          "Exegra.Core.Behav.claimTrue"
+        ]
+      }
+    },
+    {
+      "id": "explorer-counts-calculus-states",
+      "kind": "invariant",
+      "statement": "The explorer counts calculus states, which hold no identities, sequence numbers or unbounded counters: eight independent clients, each with one pending entry addressed to it and one transition idle -> done, explored with no faults, give exactly 256 states, the subsets of delivered entries.",
+      "subjects": [
+        "exhaustive-explorer"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "rationale": "exegra prove on tests/fixtures/liveness, scenario eight-clients. WG-5682.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "explorer-incomplete-says-why",
+      "kind": "invariant",
+      "statement": "An exploration whose frontier is not empty is incomplete, never holds, and says why: the bound (a run hit it) or the state budget (a run was truncated). A counter from 0 to 100 with invariant n <= 50, explored to bound 20, is incomplete for its bound.",
+      "subjects": [
+        "exhaustive-explorer",
+        "proof-export"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "rationale": "exegra prove on tests/fixtures/liveness, scenario count-to-100, --bound 20. WG-5682.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "prove-invariants-certified",
+      "kind": "invariant",
+      "statement": "Every invariant exegra prove reports as holding comes with a closed-set certificate in its proof file: the visited states and checkClosed (Exec.enum sys) visited p = true, from which checkClosed_sound derives the invariant. Lean accepts the file, and refuses it when one state is removed from the list.",
+      "subjects": [
+        "proof-export"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "rationale": "exegra prove on the F4 fixture of the foundations (tests/fixtures/behaviour-order, order-ab). WG-5682.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "prove-liveness-under-fairness",
+      "kind": "invariant",
+      "statement": "exegra prove decides liveness claims over infinite runs under the weak fairness their assumptions declare, never from finite runs: on the F4 blinker, FG on is violated by the lasso off -> on -> off, and GF on holds under weak fairness of turn-on, citing that assumption.",
+      "subjects": [
+        "proof-export",
+        "exhaustive-explorer"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "rationale": "exegra prove on tests/fixtures/liveness, scenario blink-f4. WG-5682.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "prove-zeno-lasso-not-proved",
+      "kind": "invariant",
+      "statement": "A lasso whose cycle does not advance time is reported as a Zeno lasso, and a liveness claim it refutes is not proved: a transition that re-emits its own event with after 0 starves an entry due later.",
+      "subjects": [
+        "proof-export"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "rationale": "exegra prove on tests/fixtures/liveness, scenario zeno. WG-5682.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "numbers-are-exact-rationals",
+      "kind": "invariant",
+      "statement": "Every number of the Lean core is an exact rational: Value has no Float constructor and no Float occurs in formal/Exegra; a JSON number is read as the exact value of its decimal text; a version-2 input holding a decimal literal elaborates (there is no notInteger refusal) and runs on the behaviour calculus with exact arithmetic, so 0.1 + 0.2 == 0.3 evaluates to true; and fixture/expression-showcase, with inexact := 0.1 + 0.2 and quo := a / b, is accepted and records inexact 0.3 and quo 3.5.",
+      "rationale": "Owner decision 2026-11-27 (WG-5683, P3 criterion 4). Numbers are written as the double nearest to them, so a JavaScript or Rust reader reads the nearest double. The Rust oracle still computes with doubles and differs on non-integer arithmetic, which tests/conformance/expected-differences.json lists. Negative twin: an elaborator that refuses 0.5, or an evaluator that adds 0.1 and 0.2 in doubles, fails the test.",
+      "subjects": [
+        "formal-semantics",
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "behav-grant-within-limits",
+      "kind": "invariant",
+      "statement": "In the behaviour calculus, every grant settling makes leaves the held units of the resource within its capacity and the class limits in effect when it is granted.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavRes.lean (WG-5683, criterion 1): Resource.lean's held-at-most-limit theorem restated over the calculus; the limits in effect are those of the resource as the acting resource faults leave it (effDecl) at the capacity they give it (effCap), from which settleOne settles; releases only lower held units, enqueues do not change them, and each grant of the grant loop fits.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.grant_within_limits",
+        "about": [
+          "Exegra.Res.grantLoop",
+          "Exegra.Core.Behav.enqueuesOf",
+          "Exegra.Core.Behav.releasesOf",
+          "Exegra.Core.Behav.effDecl"
+        ]
+      }
+    },
+    {
+      "id": "behav-held-ok-invariant",
+      "kind": "invariant",
+      "statement": "For every system of the behaviour calculus whose faults never lower a capacity or class limit and whose initial states hold within the capacity and class limits in effect, every reachable state does (WorldOk is an invariant of Sys.lts).",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavRes.lean (WG-5683, criterion 1, corrected 2026-11-27). Sys.NoLowering says that no edge of a fault window, from any acting faults, lowers the capacity or a class limit of a resource; it is needed, since a windowed set-capacity or set-class-limit fault lowers a limit without revoking held units (Format2.lean effDecl). heldOk_invariant_of_empty discharges the initial-state hypothesis for a system whose initial world holds no units, as Elab builds it.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.heldOk_invariant",
+        "about": [
+          "Exegra.Core.Behav.WorldOk",
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Sys.NoLowering"
+        ]
+      }
+    },
+    {
+      "id": "hiding-keeps-boundary-traces",
+      "kind": "invariant",
+      "statement": "Hiding events internal to a composite never changes its trace over its boundary alphabet: projecting onto a boundary after hiding events disjoint from it is projecting onto the boundary.",
+      "rationale": "WG-5697 invariant I1 (P10). The hiding laws hide_hide, hide_comm and hide_append are proved beside it.",
+      "subjects": [
+        "formal-semantics",
+        "refinement-checker"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Boundary.onto_hide_disjoint",
+        "about": [
+          "Exegra.Boundary.hide",
+          "Exegra.Boundary.onto"
+        ]
+      }
+    },
+    {
+      "id": "hiding-composes",
+      "kind": "invariant",
+      "statement": "Hiding composes: hiding one set of events and then another hides their union.",
+      "rationale": "WG-5697 P10.",
+      "subjects": [
+        "formal-semantics",
+        "refinement-checker"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Boundary.hide_hide",
+        "about": [
+          "Exegra.Boundary.hide"
+        ]
+      }
+    },
+    {
+      "id": "boundary-refinement-preorder",
+      "kind": "invariant",
+      "statement": "Agreement of boundary traces, the refinement the refinement check decides, is transitive (and reflexive, Agrees.refl), so refinements checked level by level compose.",
+      "rationale": "WG-5697 invariant I3: refinement is a preorder.",
+      "subjects": [
+        "formal-semantics",
+        "refinement-checker"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Boundary.Agrees.trans",
+        "about": [
+          "Exegra.Boundary.Agrees"
+        ]
+      }
+    },
+    {
+      "id": "boundary-refinement-preserved-by-hiding",
+      "kind": "invariant",
+      "statement": "Agreement of boundary traces is preserved by hiding more events.",
+      "rationale": "WG-5697 invariant I3: refinement is preserved by hiding.",
+      "subjects": [
+        "formal-semantics",
+        "refinement-checker"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Boundary.Agrees.hide_more",
+        "about": [
+          "Exegra.Boundary.Agrees"
+        ]
+      }
+    },
+    {
+      "id": "boundary-comparison-exact",
+      "kind": "invariant",
+      "statement": "The comparison of two boundary traces finds no mismatch exactly when they are related position by position: a certificate means agreement and a counterexample a real difference.",
+      "rationale": "WG-5697 criterion 4: the refinement check's verdict is decided in Lean by this comparison (engine.refineBoundary).",
+      "subjects": [
+        "formal-semantics",
+        "refinement-checker"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Boundary.zipCheck_none_iff",
+        "about": [
+          "Exegra.Boundary.zipCheck",
+          "Exegra.Boundary.Rel2"
+        ]
+      }
     }
   ],
   "evidence": [
@@ -1573,6 +2222,48 @@
       "kind": "test",
       "ref": "tests/browser/lean-core.spec.js",
       "description": "In Chrome: the page loads the Lean core through src/core/lean.js, lists its functions, gets an error value for an unknown function and reproduces two golden traces."
+    },
+    {
+      "id": "ev-explore-eight-clients",
+      "claim": "explorer-counts-calculus-states",
+      "kind": "test",
+      "ref": "tests/proofs/formal-explore.test.js#eight independent clients explore exactly 256 states",
+      "description": "The invariant of the eight-client scenario holds with 256 states and no faults."
+    },
+    {
+      "id": "ev-explore-incomplete-bound",
+      "claim": "explorer-incomplete-says-why",
+      "kind": "test",
+      "ref": "tests/proofs/formal-explore.test.js#a counter to 100 with an invariant at 50 and bound 20 is incomplete for its bound and never holds",
+      "description": "The counter's invariant is incomplete with reason bound and is not described as holding for every reachable configuration."
+    },
+    {
+      "id": "ev-prove-certificate",
+      "claim": "prove-invariants-certified",
+      "kind": "test",
+      "ref": "tests/proofs/formal-explore.test.js#a holds result carries a closed-set certificate Lean accepts and Lean refuses it without one of its states",
+      "description": "The certificate of b.y == 0 is accepted; with its first state removed, Lean refuses the file."
+    },
+    {
+      "id": "ev-prove-blinker-liveness",
+      "claim": "prove-liveness-under-fairness",
+      "kind": "test",
+      "ref": "tests/proofs/formal-explore.test.js#the F4 blinker: FG on is violated by a lasso and GF on holds under weak fairness of turn-on",
+      "description": "The FG claim reads violated: lasso off -> on -> off; the GF claim reads holds under weak fairness of turn-on, with turn-on-fair as its open assumption."
+    },
+    {
+      "id": "ev-prove-zeno-lasso",
+      "claim": "prove-zeno-lasso-not-proved",
+      "kind": "test",
+      "ref": "tests/proofs/formal-explore.test.js#a zero-delay self-loop gives a Zeno lasso and its liveness claims are not proved",
+      "description": "The waiter's GF claim is violated by a lasso flagged zeno, never proved."
+    },
+    {
+      "id": "ev-decimal-literal",
+      "claim": "numbers-are-exact-rationals",
+      "kind": "test",
+      "ref": "tests/core/formal-elab.test.js#a decimal literal",
+      "description": "Decimal literals and initial values elaborate; 0.1 + 0.2 == 0.3 is true on the calculus path and 0.1 + 0.2 is written as 0.3; the expression-showcase golden input with inexact := 0.1 + 0.2 and quo := a / b is accepted."
     }
   ]
 }

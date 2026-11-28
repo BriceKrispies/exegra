@@ -103,18 +103,35 @@ function tiny(over = {}) {
   };
 }
 
-test('the decimal literals of expression-showcase before its edit are refused as non-integer', () => {
+test('a decimal literal', () => {
+  // Numbers are exact rationals (WG-5683): a decimal literal, an initial value or a payload elaborates,
+  // and 0.1 + 0.2 == 0.3 evaluates to true on the calculus path.
   for (const to of ['0.1 + 0.2', 'a + 0.5']) {
     const input = tiny();
     input.behaviors[0].variables.push({ name: 'a', initial: 1 });
     input.behaviors[0].transitions[0].effects = [{ set: 'n', to }];
-    const r = elab(input);
-    assert.equal(r.accepted, false, to);
-    assert.equal(r.kind, 'notInteger', to);
+    assert.equal(elab(input).accepted, true, to);
   }
   const init = tiny();
   init.behaviors[0].variables[0].initial = 0.5;
-  assert.equal(elab(init).kind, 'notInteger', 'a decimal initial value');
+  assert.equal(elab(init).accepted, true, 'a decimal initial value');
+  const exact = tiny();
+  exact.behaviors[0].variables.push({ name: 'ok', initial: false }, { name: 'x', initial: 0 });
+  exact.behaviors[0].transitions[0].effects = [{ set: 'x', to: '0.1 + 0.2' }, { set: 'ok', to: '0.1 + 0.2 == 0.3' }];
+  assert.equal(elab(exact).accepted, true);
+  const r = call('engine.run', exact);
+  assert.ok(r.ok, r.ok ? '' : r.error);
+  const trace = r.value;
+  assert.equal(trace.semantics, undefined, 'run on the calculus, not the legacy interpreter');
+  assert.equal(trace.final.machines.m.vars.ok, true, '0.1 + 0.2 == 0.3');
+  assert.equal(trace.final.machines.m.vars.x, 0.3, '0.1 + 0.2 is written as 0.3');
+  // fixture/expression-showcase with its original inexact := 0.1 + 0.2 (and quo := a / b) is accepted.
+  const showcase = JSON.parse(fs.readFileSync(path.join(GOLDENS, 'fixture', 'expression-showcase.input.json'), 'utf8'));
+  const setsOf = (/** @type {any} */ b) => b.transitions.flatMap((/** @type {any} */ t) => t.effects).map((/** @type {any} */ e) => `${e.set} := ${e.to}`);
+  const ops = showcase.behaviors.find((/** @type {any} */ b) => b.id === 'ops-machine');
+  assert.ok(setsOf(ops).includes('inexact := 0.1 + 0.2'));
+  assert.ok(setsOf(ops).includes('quo := a / b'));
+  assert.equal(elab(showcase).accepted, true, 'expression-showcase is accepted');
 });
 
 test('a minimal input is accepted', () => {

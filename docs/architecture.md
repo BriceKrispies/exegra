@@ -40,7 +40,7 @@ Exegra has one semantic core and several things attached to it. Everything the u
 | `hash.js` (the JavaScript binding; component `hash-binding`) | normal form and 53-bit hash of the semantic content (excludes comments, whitespace, key order, top-level declaration order, locations and layout), computed by the Lean kernel (`formal/Exegra/Hash.lean`) |
 | `query.js` | labels, containment, ownership, inbound references, component graph, dependency traversal, selectors |
 | `claims.js`, `claim-methods.js` | claim results with status, scope and counterexample ([claims-and-evidence.md](claims-and-evidence.md)) |
-| `engine.js`, `sim-input.js` | scenario traces: `sim-input.js` derives the engine input, `engine.js` runs it on the Lean core (`formal/`) compiled to WebAssembly ([simulation.md](simulation.md)) |
+| `engine.js`, `time-units.js` | scenario traces: the Lean lowering (`formal/Exegra/Lower.lean`, `engineInput`) derives the engine input, `engine.js` runs it on the Lean core (`formal/`) compiled to WebAssembly ([simulation.md](simulation.md)) |
 | `lean.js` | the call boundary to the Lean core: a JSON request `{fn, args}` to `{ok}` or `{error}` ([module-contracts.md](module-contracts.md)) |
 | `projections.js` | a `SceneModel` per view (`structural`, `claims`, `behavior`, `references`, `data`; `reader` draws no scene) |
 | `reader.js` | the page of a reader view: text, counts, tables, lists, document sections and an index of kinds, shown by `src/ui/reader.js` in place of the scene |

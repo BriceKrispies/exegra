@@ -11,7 +11,7 @@ import { runEngine } from '../core/engine.js';
 // trace named by the scenario they belong to (the self-model's abstraction; the texts themselves are not kept).
 
 /** @typedef {import('../core/engine.js').Trace} Trace */
-/** @typedef {import('../core/sim-input.js').SimulationInput} SimulationInput */
+/** @typedef {import('../core/engine.js').SimulationInput} SimulationInput */
 
 /**
  * @typedef {{run: (input: SimulationInput) => Promise<Trace>, dispose: () => void}} EngineRunner

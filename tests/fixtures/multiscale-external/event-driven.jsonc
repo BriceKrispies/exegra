@@ -1,0 +1,133 @@
+{
+  // An event-driven telemetry platform (WG-5735), the third external fixture of the multiscale audit (section 6.3):
+  // a producer side, a broker whose topics are connectors, consumers, and a rule check the aggregator calls.
+  // - Logical hierarchy: telemetry-platform over ingest (sensor-gateway, edge-filter), broker (telemetry-topic and
+  //   alerts-topic, both connectors), processing (aggregator, alert-rules) and delivery (notifier, dashboard, archiver).
+  // - Connectors and path contraction: edge-filter publishes to telemetry-topic, and aggregator, dashboard and archiver
+  //   subscribe to it; aggregator publishes to alerts-topic, which notifier and dashboard subscribe to. The contraction
+  //   (publishes then subscribes through a declared connector) gives edge-filter notifies aggregator, dashboard and
+  //   archiver, and aggregator notifies notifier and dashboard, each naming its connector. A direct edge is never invented.
+  // - Behaviour: five machines pass tick -> reading -> sample -> (rule-req -> rule-res) -> alert -> notified. The
+  //   composite behaviour `processing-flow` abstracts aggregator-flow and alert-rules-flow (rule-req and rule-res are
+  //   internal to processing), so a candidate with a block `processing` carries declared abstract behaviour (V6).
+  // - Contracts: aggregator invokes alert-rules under `rule-check`, and its events are typed by it (V7 holds there);
+  //   sensor-gateway invokes edge-filter under `reading-feed`, whose reading event is not typed by it, so a candidate
+  //   that separates the two puts an untyped contract on a block boundary (V7 fails there).
+  // - Cycle: alert-rules reads the aggregator's window while the aggregator invokes it, a dependency cycle between the two.
+  "exegra": "0.1",
+  "system": {
+    "id": "telemetry-platform",
+    "name": "Telemetry platform",
+    "description": "A multiscale fixture (WG-5735): an event-driven system whose producers and consumers meet at broker topics, which are connectors."
+  },
+
+  "components": [
+    { "id": "ingest", "name": "Ingest", "kind": "subsystem", "category": "computational", "parent": "telemetry-platform", "purpose": "Takes readings from the sensors and passes the ones worth keeping on." },
+    { "id": "sensor-gateway", "name": "Sensor gateway", "category": "computational", "parent": "ingest", "purpose": "Receives raw sensor readings.", "implementation": { "status": "manual", "modules": ["src/ingest/gateway.js"] } },
+    { "id": "edge-filter", "name": "Edge filter", "category": "computational", "parent": "ingest", "purpose": "Drops readings that carry nothing new and publishes the rest as samples.", "implementation": { "status": "manual", "modules": ["src/ingest/filter.js"] } },
+
+    { "id": "broker", "name": "Broker", "kind": "subsystem", "category": "computational", "parent": "telemetry-platform", "purpose": "Carries samples and alerts between producers and consumers." },
+    { "id": "telemetry-topic", "name": "Telemetry topic", "kind": "connector", "category": "computational", "parent": "broker", "purpose": "The channel samples travel on, in order, to every subscriber." },
+    { "id": "alerts-topic", "name": "Alerts topic", "kind": "connector", "category": "computational", "parent": "broker", "purpose": "The channel alerts travel on." },
+
+    { "id": "processing", "name": "Processing", "kind": "subsystem", "category": "computational", "parent": "telemetry-platform", "purpose": "Turns samples into alerts." },
+    { "id": "aggregator", "name": "Aggregator", "category": "computational", "parent": "processing", "purpose": "Windows samples and raises an alert when the rules say a window is out of range.", "implementation": { "status": "manual", "modules": ["src/processing/aggregator.js"] } },
+    { "id": "alert-rules", "name": "Alert rules", "category": "computational", "parent": "processing", "purpose": "Decides whether a value breaches a limit.", "implementation": { "status": "manual", "modules": ["src/processing/rules.js"] } },
+
+    { "id": "delivery", "name": "Delivery", "kind": "subsystem", "category": "computational", "parent": "telemetry-platform", "purpose": "Puts samples and alerts where people look." },
+    { "id": "notifier", "name": "Notifier", "category": "computational", "parent": "delivery", "purpose": "Pages the on-call person for each alert.", "implementation": { "status": "manual", "modules": ["src/delivery/notifier.js"] } },
+    { "id": "dashboard", "name": "Dashboard", "category": "computational", "parent": "delivery", "purpose": "Shows live samples and open alerts.", "implementation": { "status": "manual", "modules": ["src/delivery/dashboard.js"] } },
+    { "id": "archiver", "name": "Archiver", "category": "computational", "parent": "delivery", "purpose": "Writes every sample to long-term storage.", "implementation": { "status": "manual", "modules": ["src/delivery/archiver.js"] } }
+  ],
+
+  "contracts": [
+    { "id": "rule-check", "name": "Rule check", "description": "Ask the rules whether a value breaches a limit.",
+      "inputs": [{ "name": "value", "type": "number" }], "outputs": [{ "name": "breached", "type": "boolean" }] },
+    { "id": "reading-feed", "name": "Reading feed", "description": "Hand a raw reading to the filter.",
+      "inputs": [{ "name": "value", "type": "number" }], "outputs": [] }
+  ],
+
+  "relationships": [
+    { "id": "gateway-invokes-filter", "kind": "invokes", "from": "sensor-gateway", "to": "edge-filter", "contract": "reading-feed", "description": "The gateway hands each raw reading to the filter." },
+    { "id": "filter-publishes-telemetry", "kind": "publishes", "from": "edge-filter", "to": "telemetry-topic", "description": "Samples that pass the filter go out on the telemetry topic." },
+    { "id": "aggregator-subscribes-telemetry", "kind": "subscribes", "from": "aggregator", "to": "telemetry-topic", "description": "The aggregator reads every sample." },
+    { "id": "dashboard-subscribes-telemetry", "kind": "subscribes", "from": "dashboard", "to": "telemetry-topic", "description": "The dashboard shows every sample." },
+    { "id": "archiver-subscribes-telemetry", "kind": "subscribes", "from": "archiver", "to": "telemetry-topic", "description": "The archiver stores every sample." },
+    { "id": "aggregator-invokes-rules", "kind": "invokes", "from": "aggregator", "to": "alert-rules", "contract": "rule-check", "description": "The aggregator asks the rules about each value." },
+    { "id": "rules-reads-aggregator-window", "kind": "reads", "from": "alert-rules", "to": "aggregator", "description": "The rules read the aggregator's current window." },
+    { "id": "aggregator-publishes-alerts", "kind": "publishes", "from": "aggregator", "to": "alerts-topic", "description": "Alerts go out on the alerts topic." },
+    { "id": "notifier-subscribes-alerts", "kind": "subscribes", "from": "notifier", "to": "alerts-topic", "description": "The notifier pages for every alert." },
+    { "id": "filter-notifies-processing", "kind": "notifies", "from": "edge-filter", "to": "processing", "description": "At the level of the abstract processing behaviour, a sample reaches processing as a whole (the contraction through the telemetry topic reaches its aggregator)." },
+    { "id": "processing-notifies-notifier", "kind": "notifies", "from": "processing", "to": "notifier", "description": "At the level of the abstract processing behaviour, an alert leaves processing as a whole." },
+    { "id": "dashboard-subscribes-alerts", "kind": "subscribes", "from": "dashboard", "to": "alerts-topic", "description": "The dashboard lists open alerts." }
+  ],
+
+  "events": [
+    { "id": "tick", "name": "Tick", "payload": [{ "name": "value", "type": "number" }] },
+    { "id": "reading", "name": "Reading", "payload": [{ "name": "value", "type": "number" }] },
+    { "id": "sample", "name": "Sample", "delivery": "at-least-once", "payload": [{ "name": "value", "type": "number" }] },
+    { "id": "rule-req", "name": "Rule check request", "contract": "rule-check", "role": "request", "payload": [{ "name": "value", "type": "number" }] },
+    { "id": "rule-res", "name": "Rule check response", "contract": "rule-check", "role": "response", "payload": [{ "name": "breached", "type": "boolean" }] },
+    { "id": "alert", "name": "Alert", "delivery": "at-least-once" },
+    { "id": "notified", "name": "Notified" }
+  ],
+
+  "behaviors": [
+    {
+      "id": "gateway-flow", "name": "Sensor gateway", "subject": "sensor-gateway", "initial": "g-ready",
+      "states": [{ "id": "g-ready", "name": "Ready" }],
+      "transitions": [{ "id": "g-tick", "from": "g-ready", "to": "g-ready", "on": "tick", "effects": [{ "emit": "reading", "payload": { "value": "event.value" } }] }]
+    },
+    {
+      "id": "filter-flow", "name": "Edge filter", "subject": "edge-filter", "initial": "f-ready",
+      "states": [{ "id": "f-ready", "name": "Ready" }],
+      "transitions": [{ "id": "f-reading", "from": "f-ready", "to": "f-ready", "on": "reading", "effects": [{ "emit": "sample", "payload": { "value": "event.value" } }] }]
+    },
+    {
+      "id": "aggregator-flow", "name": "Aggregator", "subject": "aggregator", "initial": "a-ready",
+      "states": [{ "id": "a-ready", "name": "Ready" }],
+      "transitions": [
+        { "id": "a-sample", "from": "a-ready", "to": "a-ready", "on": "sample", "effects": [{ "emit": "rule-req", "payload": { "value": "event.value" } }] },
+        { "id": "a-verdict", "from": "a-ready", "to": "a-ready", "on": "rule-res", "effects": [{ "emit": "alert" }] }
+      ]
+    },
+    {
+      "id": "alert-rules-flow", "name": "Alert rules", "subject": "alert-rules", "initial": "r-ready",
+      "states": [{ "id": "r-ready", "name": "Ready" }],
+      "transitions": [{ "id": "r-check", "from": "r-ready", "to": "r-ready", "on": "rule-req", "effects": [{ "emit": "rule-res", "payload": { "breached": "event.value > 10" } }] }]
+    },
+    {
+      "id": "processing-flow", "name": "Processing (abstract)", "subject": "processing", "initial": "p-ready",
+      "abstracts": { "members": ["aggregator-flow", "alert-rules-flow"] },
+      "states": [{ "id": "p-ready", "name": "Ready" }],
+      "transitions": [{ "id": "p-sample", "from": "p-ready", "to": "p-ready", "on": "sample", "effects": [{ "emit": "alert" }] }]
+    },
+    {
+      "id": "notifier-flow", "name": "Notifier", "subject": "notifier", "initial": "n-ready",
+      "states": [{ "id": "n-ready", "name": "Ready" }],
+      "transitions": [{ "id": "n-alert", "from": "n-ready", "to": "n-ready", "on": "alert", "effects": [{ "emit": "notified" }] }]
+    }
+  ],
+
+  "scenarios": [
+    { "id": "telemetry-run", "name": "One reading, processing in detail", "behaviors": ["gateway-flow", "filter-flow", "aggregator-flow", "alert-rules-flow", "notifier-flow"],
+      "steps": [{ "at": 0, "event": "tick", "payload": { "value": 12 } }] },
+    { "id": "telemetry-run-abstract", "name": "One reading, processing abstract", "behaviors": ["gateway-flow", "filter-flow", "processing-flow", "notifier-flow"],
+      "steps": [{ "at": 0, "event": "tick", "payload": { "value": 12 } }],
+      "cut": { "regions": [{ "abstraction": "processing-flow", "level": "abstract" }] } }
+  ],
+
+  "cuts": [
+    { "id": "telemetry-l0", "name": "The platform as one block", "depth": 0 },
+    { "id": "telemetry-l1", "name": "Ingest, broker, processing, delivery", "depth": 1 },
+    { "id": "telemetry-leaf", "name": "Every component and topic", "finest": true }
+  ],
+
+  "claims": [
+    { "id": "delivery-never-reaches-ingest", "kind": "structural",
+      "statement": "At cut telemetry-l1 no dependency path leads from delivery to ingest: consumers meet producers only at the broker.",
+      "evaluate": { "method": "no-relationship", "cut": "telemetry-l1", "from": "delivery", "to": "ingest", "kinds": ["invokes", "notifies", "publishes", "subscribes", "reads"] } },
+    { "id": "sample-before-alert", "kind": "temporal", "statement": "Every alert is preceded by a sample.",
+      "evaluate": { "method": "precedes", "scenarios": ["telemetry-run"], "first": { "event": "sample" }, "then": { "event": "alert" } } }
+  ]
+}

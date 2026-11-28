@@ -1,6 +1,6 @@
 // Fault models as specification entities, and which faults the generated runtime can produce.
 //
-import { durationIn, needsTimedInput } from './sim-input.js';
+import { durationIn, needsTimedInput } from './time-units.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Entity} Entity */

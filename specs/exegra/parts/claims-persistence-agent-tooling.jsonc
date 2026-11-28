@@ -16,7 +16,7 @@
     {
       "id": "conflict-never-overwrites",
       "kind": "invariant",
-      "statement": "In the edit whose write conflicts with the disk, at every step, once the conflict is flagged the revision persisted on disk is still the initial one: the conflicting file is never overwritten.",
+      "statement": "In the edit whose write conflicts with the disk, at every step, once the conflict is flagged the file on disk still holds the text the other process wrote (hx): the conflicting file is never overwritten.",
       "subjects": ["workspace-service", "session", "edit-with-disk-conflict", "write-file"],
       "assumptions": ["machines-abstract-the-code", "filesystem-honours-atomic-rename", "tests-exercise-shipped-modules", "recorded-results-reflect-current-code"],
       "evaluate": {
@@ -24,7 +24,7 @@
         "scenarios": [
           "edit-with-disk-conflict"
         ],
-        "expr": "workspace-flow.conflict => workspace-flow.persistedRevision == 1",
+        "expr": "workspace-flow.conflict => workspace-flow.diskSpec == 'hx'",
         "negatives": [
           {
             "scenario": "edit-with-disk-conflict",
@@ -902,6 +902,212 @@
         ]
       },
       "faultModel": "local-workstation"
+    },
+    {
+      "id": "product-installation-checks-composition",
+      "kind": "invariant",
+      "statement": "Installing a product checks the state-invariant claims of every installed product and of the candidate over every execution of the composed scenario of the installation; a claim that holds on its own scenario but fails composed refuses the installation, naming the composed scenario and the values at the failing configuration (the two-product ledger: held = 2 in {ledger, badges__awarder, promotions__awarder}).",
+      "subjects": [
+        "agent-cli"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/two-product-ledger.test.js over tests/fixtures/two-product-ledger. Each product claim is shown to hold by complete exploration of its own scenario (JavaScript explorer, every delivery order), not by a Lean theorem. WG-5685 criterion 7.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "verify-batches-test-runs",
+      "kind": "invariant",
+      "statement": "A verify run starts one node process per test file, never more than two test processes at a time, and one Playwright run for all browser references; each reference gets the outcome of its own tests: a reference whose name matches no test fails, a failing test fails only the references that match it, and a skipped test stays skipped.",
+      "subjects": [
+        "verification-pipeline"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "The run took 1,412 s with one process per reference (WG-5717), most of it process start-up. The outcome is read from the runner's per-test output with the rule the reuse path applies to recorded outcomes (testsVerdict), so the batch cannot pass a reference the old run failed.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "verify-reuses-unchanged-passes",
+      "kind": "invariant",
+      "statement": "A verify run reuses a recorded pass or skip, and reports it as reused, only when its reference is unchanged and the content of every file and directory listing its test file's run covered still hashes to the recorded value; a changed covered file, a reference with no recorded coverage, a changed reference and a recorded failure are run again.",
+      "subjects": [
+        "verification-pipeline"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "Coverage is recorded once per test file run (the modules it loaded and the files it read), so each reference of a file is taken to depend on all of them; this over-runs, never under-runs, for what the run touched through fs and module loading. What a program Exegra starts reads is covered by the sources of that program (formal/ for lake, the whole tree for others).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "evidence-ref-names-a-test",
+      "kind": "invariant",
+      "statement": "validate refuses a test evidence reference file#name whose name matches no test the file declares (a static scan of its test, it and describe calls); a file that names tests at run time is not refused.",
+      "subjects": [
+        "verification-pipeline"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "A reference to a renamed or deleted test can never pass, and verify only discovers it after a run; the scan finds it before.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "persistence-abstraction-refined",
+      "kind": "temporal",
+      "statement": "The save path's abstract behaviour workspace-flow is refined by its members, the persistence client and the write endpoint's abstraction: in the visual, source and rejected edits, running the members in its place, with the write-file hop hidden, gives the same boundary trace (events, payloads, times, outcome and the final state of every other machine).",
+      "rationale": "WG-5697 criterion 3 and 4 (V6). The two cuts of the visual edit agree on the boundary only because this refinement holds; before WG-5729 the abstraction took save-requested, which no member consumes, and the refinement check returned a boundary counterexample.",
+      "subjects": [
+        "persistence",
+        "workspace-flow",
+        "persistence-client-flow",
+        "write-endpoint-flow",
+        "visual-edit-flow"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "refines-composition",
+        "behavior": "workspace-flow",
+        "scenarios": [
+          "visual-edit-flow",
+          "source-edit-flow",
+          "rejected-edit"
+        ],
+        "negatives": [
+          {
+            "scenario": "visual-edit-flow",
+            "faults": [
+              "disk-changed-externally"
+            ],
+            "note": "The abstraction flags a conflict the members, on an unchanged disk, do not."
+          }
+        ]
+      }
+    },
+    {
+      "id": "persistence-abstraction-refined-finest",
+      "kind": "temporal",
+      "statement": "workspace-flow is refined by the finest members of the save path, two levels down: the persistence client, the development-server plugin and the workspace service (with its watcher), with the write-file and ws-* hops hidden, in the visual, source and rejected edits.",
+      "rationale": "WG-5697 criterion 4: refinement across multiple levels. workspace-flow abstracts persistence-client-flow and write-endpoint-flow; write-endpoint-flow abstracts dev-server-flow, workspace-disk-flow and workspace-watcher-flow.",
+      "subjects": [
+        "persistence",
+        "workspace-flow",
+        "dev-server-flow",
+        "workspace-disk-flow",
+        "visual-edit-flow"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "refines-composition",
+        "behavior": "workspace-flow",
+        "finest": true,
+        "scenarios": [
+          "visual-edit-flow",
+          "source-edit-flow",
+          "rejected-edit"
+        ],
+        "negatives": [
+          {
+            "scenario": "visual-edit-flow",
+            "faults": [
+              "disk-changed-externally"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "write-endpoint-abstraction-refined",
+      "kind": "temporal",
+      "statement": "The write endpoint's abstract behaviour write-endpoint-flow is refined by the development-server plugin and the workspace service: in the stale-base write, running them in its place with the ws-* hop hidden gives the same boundary trace.",
+      "rationale": "WG-5697 criterion 3: before WG-5729 write-endpoint-flow started with the disk at h2 while the workspace service starts at h1, and the refinement check returned the boundary counterexample write-file-conflict {current: h2} against {current: h1}.",
+      "subjects": [
+        "dev-server-plugin",
+        "workspace-service",
+        "write-endpoint-flow",
+        "write-with-stale-base-hash"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "refines-composition",
+        "behavior": "write-endpoint-flow",
+        "scenarios": [
+          "write-with-stale-base-hash"
+        ],
+        "negatives": [
+          {
+            "scenario": "write-with-stale-base-hash",
+            "faults": [
+              "endpoint-ignores-base-hash"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "persistence-alternatives-reconciled",
+      "kind": "structural",
+      "statement": "The persistence client, the development-server plugin and the workspace service each have one behaviour per level: no two of their behaviours share an event without running together or being related by a declared, checked abstraction.",
+      "rationale": "WG-5697 criterion 9. write-client-flow (a retrying client, which abstracted the session's overwrite) was removed; write-endpoint-flow and workspace-flow are declared abstractions whose refinement is checked (write-endpoint-abstraction-refined, persistence-abstraction-refined). session-flow and project-session-flow are still alternative machines of the session (refinement-checker unknowns).",
+      "subjects": [
+        "persistence-client",
+        "dev-server-plugin",
+        "workspace-service"
+      ],
+      "evaluate": {
+        "method": "alternatives-reconciled",
+        "subjects": [
+          "persistence-client",
+          "dev-server-plugin",
+          "workspace-service"
+        ]
+      }
+    },
+    {
+      "id": "save-order-transfers-to-persistence-members",
+      "kind": "temporal",
+      "statement": "That every write request follows a projection refresh, established where the save path runs as workspace-flow, holds with the persistence client and the write endpoint in its place, by the preservation rule for safety over the boundary down a certified refinement.",
+      "rationale": "WG-5697 criterion 8, invariant I6.",
+      "subjects": [
+        "workspace-flow",
+        "persistence"
+      ],
+      "evaluate": {
+        "method": "transfers",
+        "claim": "save-follows-refresh",
+        "abstraction": "workspace-flow"
+      }
+    },
+    {
+      "id": "save-liveness-not-transferred",
+      "kind": "temporal",
+      "statement": "That the file eventually matches the model after a valid edit, established where the save path runs as workspace-flow, is not transferred to its members: a liveness claim never transfers without a declared fairness hypothesis, and the reason is shown.",
+      "rationale": "WG-5697 criterion 8, invariant I6: trace inclusion on the boundary preserves safety, not liveness.",
+      "subjects": [
+        "workspace-flow",
+        "persistence"
+      ],
+      "evaluate": {
+        "method": "transfers",
+        "claim": "file-matches-model-after-save",
+        "abstraction": "workspace-flow",
+        "expect": "not-transferred"
+      }
     }
   ],
   // ---- Evidence --------------------------------------------------------------------------
@@ -1405,6 +1611,48 @@
       "kind": "test",
       "ref": "tests/core/navigation.test.js#L0 draws the system as one block in its environment and every block of L0 and L1 states a purpose and L1 opens the system as a container",
       "description": "Purposes and responsibilities of every block of l0 and l1."
+    },
+    {
+      "id": "ev-ledger-each-alone",
+      "claim": "product-installation-checks-composition",
+      "kind": "test",
+      "ref": "tests/core/two-product-ledger.test.js#each product alone keeps its one-hold claim on every execution of its own scenario",
+      "description": "Each product installed alone is admitted; its one-hold claim holds on every execution of its own scenario."
+    },
+    {
+      "id": "ev-ledger-second-refused",
+      "claim": "product-installation-checks-composition",
+      "kind": "test",
+      "ref": "tests/core/two-product-ledger.test.js#installing the second product is refused with the composed scenario and held 2",
+      "description": "Installing promotions after badges is refused for both one-hold claims, naming {ledger, badges__awarder, promotions__awarder} and ledger.held = 2."
+    },
+    {
+      "id": "ev-verify-batches-attribution",
+      "claim": "verify-batches-test-runs",
+      "kind": "test",
+      "ref": "tests/core/verify-batching.test.js#each reference gets the outcome of its own tests from one process per file",
+      "description": "A fixture file with passing, failing, skipped and suite-nested tests and a name that matches nothing: each reference gets its own outcome, a failing test elsewhere in the file does not fail the others, a skipped test stays skipped, and the run starts one process per test file."
+    },
+    {
+      "id": "ev-verify-reuses-unchanged",
+      "claim": "verify-reuses-unchanged-passes",
+      "kind": "test",
+      "ref": "tests/core/verify-batching.test.js#a recorded pass is reused until a file its test covered changes and then only that file reruns",
+      "description": "Three fixture test files, one loading a module, one reading a data file, one with neither: editing the module reruns only the first, editing the data file only the second, restoring a file restores the reuse; a reference with no coverage, a changed reference and a recorded failure run again."
+    },
+    {
+      "id": "ev-evidence-ref-names-test",
+      "claim": "evidence-ref-names-a-test",
+      "kind": "test",
+      "ref": "tests/core/verify-batching.test.js#validate refuses a reference whose name matches no test its file declares",
+      "description": "The static scan of a fixture test file, suite names in front of test names, run-time names, and the diagnostic for a reference to a test that was renamed away, with none for the declared one or a missing file."
+    },
+    {
+      "id": "ev-evidence-ref-names-validate",
+      "claim": "evidence-ref-names-a-test",
+      "kind": "test",
+      "ref": "tests/core/verify-batching.test.js#the validate command reports the reference that names no test and only that one",
+      "description": "exegra validate on a fixture specification with one declared and one renamed-away reference reports exactly evidence.ref-no-test for the second."
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
- "description": "Every golden whose input or trace changed since the base commit, with its class (WG-5681, criterion 22). tests/core/conformance.test.js recomputes the classes (tools/conformance.js, goldenChanges) and checks that they are exactly these. (a) every golden: its version-1 input became the version-2 input simulationInput derives and its trace a version-2 trace, equal under strip to the version-1 trace ('version 2'); (b) fixture/expression-showcase: input edited (inexact := 0.1 + 0.2 and mixed := 1 == '1' removed, quo := a / b replaced by (a - 1) / b), trace re-recorded; (c) fixture/error-type and fixture/error-guard-not-boolean: their ill-typed transitions moved to calc-bad-machine, which the elaborator refuses, so they have no trace golden (tests/core/formal-elab.test.js tests the refusals); (d) the other calc-machine goldens: input re-recorded without calc-type and calc-guard, trace equal under strip.",
+ "description": "Every golden whose input or trace changed since the base commit, with its class (WG-5681, criterion 22). tests/core/conformance.test.js recomputes the classes (tools/conformance.js, goldenChanges) and checks that they are exactly these. (a) every golden: its version-1 input became the version-2 input simulationInput derives and its trace a version-2 trace, equal under strip to the version-1 trace ('version 2'); (b) fixture/expression-showcase: input edited (mixed := 1 == '1' removed, as ill-typed; WG-5681 also removed inexact := 0.1 + 0.2 and replaced quo := a / b by (a - 1) / b, and WG-5683 restored both, numbers being exact rationals, with the guard inexact == 0.3 in place of the double-rounding inexact > 0.3), trace re-recorded (WG-5683: inexact is 0.3 and quo 3.5 exactly); (c) fixture/error-type and fixture/error-guard-not-boolean: their ill-typed transitions moved to calc-bad-machine, which the elaborator refuses, so they have no trace golden (tests/core/formal-elab.test.js tests the refusals); (d) the other calc-machine goldens: input re-recorded without calc-type and calc-guard, trace equal under strip.",
  "base": "67134ff3bec9b35bfa2b1d4f1639d4e809a51cf9",
  "changes": {
   "exegra/app-start-and-open": "input edited, trace re-recorded",
@@ -35,11 +35,11 @@
   "exegra/rejected-edit--none": "input edited, trace re-recorded",
   "exegra/simulation-panel-run": "input edited, trace re-recorded",
   "exegra/simulation-reload-cancels-run": "input re-recorded, trace equal under strip",
-  "exegra/source-edit-flow": "input re-recorded, trace equal under strip",
+  "exegra/source-edit-flow": "input edited, trace re-recorded",
   "exegra/two-session-edit-race": "added",
   "exegra/undo-restores-and-saves": "input re-recorded, trace equal under strip",
   "exegra/visual-edit-flow": "input edited, trace re-recorded",
-  "exegra/write-with-stale-base-hash": "input re-recorded, trace equal under strip",
+  "exegra/write-with-stale-base-hash": "input edited, trace re-recorded",
   "fixture/core-flow": "version 2",
   "fixture/default-step-limit": "version 2",
   "fixture/empty-run": "version 2",

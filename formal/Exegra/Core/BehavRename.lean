@@ -100,6 +100,7 @@ def Ref.rename {S : Sig} (π : MPerm S.machines) {me : Fin S.machines} :
   | .count g name => .count (g.map π.f) name
   | .agg op g => .agg op (g.map fun p => ⟨π.f p.1, Fin.cast (S.rename_vars_len π p.1) p.2⟩)
   | .absent τ => .absent τ
+  | .res r q => .res r q
 
 def Expr.rename {S : Sig} (π : MPerm S.machines) {me : Fin S.machines} :
     Expr S (π.g me) → Expr (S.rename π) me
@@ -120,6 +121,8 @@ def Effect.rename {S : Sig} (π : MPerm S.machines) {me : Fin S.machines} :
   | .timer n after ev pl => .timer n after ev (renamePayload π pl)
   | .cancel n => .cancel n
   | .reply ev after pl => .reply ev after (renamePayload π pl)
+  | .request r cl u k th rf d st pl => .request r cl u k th rf d st (renamePayload π pl)
+  | .release r cl u => .release r cl u
 
 def Trans.rename {S : Sig} (π : MPerm S.machines) {me : Fin S.machines} (t : Trans S (π.g me)) :
     Trans (S.rename π) me :=
@@ -160,6 +163,7 @@ def State.rename {n : Nat} (π : MPerm n) : State → State
   faults := sys.faults.map (Fault.rename π)
   stopAt := sys.stopAt
   samples := sys.samples.map (fun s => (π.nat s.1, s.2))
+  resources := sys.resources
 
 /-- **The system listed in the order `π`**: machine `π.g m'` of `sys` is machine `m'`, and every
 reference to a machine is renamed. A system whose initial configuration does not have one machine
@@ -262,6 +266,7 @@ theorem Ref.eval_rename {S : Sig} (π : MPerm S.machines) {me : Fin S.machines} 
   | .agg op g => by
     simp only [Ref.rename, Ref.eval, Ctx.rename, intsIn_rename π hl]
   | .absent τ => rfl
+  | .res r q => rfl
 
 theorem Expr.eval_rename {S : Sig} (π : MPerm S.machines) {me : Fin S.machines} {cx : Ctx}
     (hl : cx.snap.length = S.machines) : (x : Expr S (π.g me)) →
@@ -383,6 +388,29 @@ theorem runEffects_rename {S : Sig} (π : MPerm S.machines) {me : Fin S.machines
           | ok r =>
             obtain ⟨st, outs, tn⟩ := r
             simp [Out.rename, Entry.rename, π.nat_g, Cfg.renameFull]
+  | .request r cl u k th rf d st pl :: rest, own => by
+    rw [List.map_cons]
+    unfold Effect.rename runEffects
+    rw [ctxOf_renameFull, evalPayload_rename π hl]
+    cases evalPayload (ctxOf c e own) pl with
+    | error err => rfl
+    | ok vs =>
+      dsimp only
+      erw [runEffects_rename π e hl rest own]
+      cases runEffects c e rest own with
+      | error err => rfl
+      | ok r =>
+        obtain ⟨st', outs, tn⟩ := r
+        simp [Out.rename, Entry.rename, π.nat_g, Cfg.renameFull, opEntry]
+  | .release r cl u :: rest, own => by
+    rw [List.map_cons]
+    unfold Effect.rename runEffects
+    erw [runEffects_rename π e hl rest own]
+    cases runEffects c e rest own with
+    | error err => rfl
+    | ok r =>
+      obtain ⟨st', outs, tn⟩ := r
+      simp [Out.rename, Entry.rename, π.nat_g, Cfg.renameFull, opEntry]
 
 /-! ### Winners and phase 2 under a renaming -/
 
@@ -653,10 +681,10 @@ section
 variable {n : Nat} (π : MPerm n)
 
 theorem Entry.rename_inj {a b : Entry} (h : a.rename π = b.rename π) : a = b := by
-  obtain ⟨t1, e1, p1, g1, m1, d1, s1⟩ := a
-  obtain ⟨t2, e2, p2, g2, m2, d2, s2⟩ := b
+  obtain ⟨t1, e1, p1, g1, m1, d1, s1, k1⟩ := a
+  obtain ⟨t2, e2, p2, g2, m2, d2, s2, k2⟩ := b
   simp only [Entry.rename, Entry.mk.injEq] at h
-  obtain ⟨rfl, rfl, rfl, hg, rfl, rfl, hs⟩ := h
+  obtain ⟨rfl, rfl, rfl, hg, rfl, rfl, hs, rfl⟩ := h
   have hinj : ∀ (x y : Option Nat), x.map π.nat = y.map π.nat → x = y := by
     intro x y hxy
     cases x <;> cases y <;> simp at hxy ⊢
@@ -666,6 +694,7 @@ theorem Entry.rename_inj {a b : Entry} (h : a.rename π = b.rename π) : a = b :
 @[simp] theorem Entry.rename_time (e : Entry) : (e.rename π).time = e.time := rfl
 @[simp] theorem Entry.rename_event (e : Entry) : (e.rename π).event = e.event := rfl
 @[simp] theorem Entry.rename_done (e : Entry) : (e.rename π).done = e.done := rfl
+@[simp] theorem Entry.rename_kind (e : Entry) : (e.rename π).kind = e.kind := rfl
 
 theorem erase_map_rename (a : Entry) : (l : List Entry) →
     (l.map (Entry.rename π)).erase (a.rename π) = (l.erase a).map (Entry.rename π)
@@ -696,8 +725,8 @@ theorem foldl_insertByTime_rename : (l q : List Entry) →
 
 theorem Cfg.popE_renameFull (c : Cfg) (e : Entry) :
     (c.popE e).renameFull π = (c.renameFull π).popE (e.rename π) := by
-  simp only [Cfg.popE, Cfg.renameFull, Cfg.attemptsOf, erase_map_rename, Entry.rename_event,
-    Entry.rename_time]
+  simp only [Cfg.popE, Cfg.renameFull, erase_map_rename, Entry.rename_event, Entry.rename_time]
+  rfl
 
 theorem Cfg.enq_renameFull (c : Cfg) (x : Entry) :
     (c.enq x).renameFull π = (c.renameFull π).enq (x.rename π) := by
@@ -810,7 +839,7 @@ theorem isTimerOf_rename (bs : Emitted) (x : Entry) :
 theorem commit_rename (c0 : Cfg) (ms : List MState) (bs : Emitted) :
     ((c0.renameFull π).commit n (permList π ms) (Emitted.rename π bs)).Approx
       ((c0.commit n ms bs).renameFull π) := by
-  refine ⟨rfl, rfl, rfl, ?_⟩
+  refine ⟨rfl, rfl, ⟨rfl, rfl, rfl⟩, ?_⟩
   simp only [Cfg.commit, Cfg.renameFull]
   have hf : (c0.pending.map (Entry.rename π)).filter (fun x => !isTimerOf (touchedOf (Emitted.rename π bs)) x) =
       (c0.pending.filter (fun x => !isTimerOf (touchedOf bs) x)).map (Entry.rename π) := by
@@ -820,7 +849,10 @@ theorem commit_rename (c0 : Cfg) (ms : List MState) (bs : Emitted) :
     intro x _
     simp only [Function.comp_def, isTimerOf_rename]
   rw [hf, ← foldl_insertByTime_rename]
-  exact foldl_insertByTime_perm2 (inMachineOrder_rename π bs) (List.Perm.refl _)
+  refine foldl_insertByTime_perm2 ?_ (List.Perm.refl _)
+  have := (inMachineOrder_rename π bs).filter (fun x => x.kind == .event)
+  rw [List.filter_map] at this
+  exact this
 
 theorem Dup.rename {act : List (Nat × Fault)} {e : Entry} {att : Nat} {c1 c1' c2 : Cfg}
     (h : c1'.Approx (c1.renameFull π)) (hd : Dup act e att c1 c2) :
@@ -883,7 +915,12 @@ theorem rmap_eq_error {α β : Type} {f : α → β} {x : Except Err α} {e : Er
 
 theorem Effect.rename_withAfter {S : Sig} (π : MPerm S.machines) {me : Fin S.machines} (a : Nat)
     (eff : Effect S (π.g me)) : (eff.withAfter a).rename π = (eff.rename π).withAfter a := by
-  cases eff <;> rfl
+  cases eff with
+  | set v rhs =>
+    cases rhs with
+    | val w => cases w <;> rfl
+    | _ => rfl
+  | _ => rfl
 
 theorem siteDraw_renameFull (sys : Sys) (π : MPerm sys.sig.machines) (ds : List Nat)
     (m : Fin sys.sig.machines) (i j : Nat) :
@@ -1006,10 +1043,10 @@ def State.renameFull {n : Nat} (π : MPerm n) : State → State
   | .run m c => .run m (c.renameFull π)
   | .err m c => .err m (c.renameFull π)
 
-/-- `Step.deliverOk` with the system of the draws named. -/
-theorem Step.deliverOk_via {sys : Sys} {mask : List Bool} {c : Cfg} {l : Label} {X : Sys}
-    (hX : sys.resolve l.draws = X) {ws : List (Winner X)} {ms : List MState} {bs : Emitted} {c'' : Cfg}
-    (hd : DrawsOk sys l.draws) (hr : Ready sys c l.entry)
+/-- `Step.deliverOk` with the system of the draws named, for a system without resources. -/
+theorem Step.deliverOk_via {sys : Sys} (hres : sys.resources = []) {mask : List Bool} {c : Cfg} {l : Label}
+    {X : Sys} (hX : sys.resolve l.draws = X) {ws : List (Winner X)} {ms : List MState} {bs : Emitted} {c'' : Cfg}
+    (hd : DrawsOk sys l.draws) (hr : Ready sys c l.entry) (hk : l.entry.kind = .event) (hw0 : l.wdraws = [])
     (hdr : ¬ dropHit (sys.active mask) l.entry (c.attemptsOf l.entry.event + 1))
     (hn : delayFault (sys.active mask) l.entry (c.attemptsOf l.entry.event + 1) = none)
     (hw : winners X (sys.active mask) (c.popE l.entry) l.entry = .ok ws)
@@ -1017,17 +1054,22 @@ theorem Step.deliverOk_via {sys : Sys} {mask : List Bool} {c : Cfg} {l : Label} 
     (hdup : Dup (sys.active mask) l.entry (c.attemptsOf l.entry.event + 1)
       ((c.popE l.entry).commit sys.sig.machines ms bs) c'') :
     Step sys mask c l (.run mask c'') := by
-  subst hX; exact Step.deliverOk hd hr hdr hn hw hp hdup
+  subst hX
+  exact Step.deliverOk hd hr hk hdr hn hw hp (settle_nil_res (by exact hres) _ _ _ _) (drawsFit_nil hw0) rfl hdup
 
 /-- `Step.deliverErr` with the system of the draws named. -/
 theorem Step.deliverErr_via {sys : Sys} {mask : List Bool} {c : Cfg} {l : Label} {X : Sys}
     (hX : sys.resolve l.draws = X)
-    (hd : DrawsOk sys l.draws) (hr : Ready sys c l.entry)
+    (hd : DrawsOk sys l.draws) (hr : Ready sys c l.entry) (hk : l.entry.kind = .event)
     (hdr : ¬ dropHit (sys.active mask) l.entry (c.attemptsOf l.entry.event + 1))
     (hn : delayFault (sys.active mask) l.entry (c.attemptsOf l.entry.event + 1) = none)
-    (hf : Fails X (sys.active mask) (c.popE l.entry) l.entry (c.attemptsOf l.entry.event + 1)) :
+    (hf : Fails X (sys.active mask) (c.popE l.entry) l.entry (c.attemptsOf l.entry.event + 1) l.wdraws) :
     Step sys mask c l (.err mask c) := by
-  subst hX; exact Step.deliverErr hd hr hdr hn hf
+  subst hX; exact Step.deliverErr hd hr hk hdr hn hf
+
+theorem Cfg.popW_renameFull {n : Nat} (π : MPerm n) (c : Cfg) (e : Entry) :
+    (c.popW e).renameFull π = (c.renameFull π).popW (e.rename π) := by
+  simp only [Cfg.popW, Cfg.renameFull, erase_map_rename, Entry.rename_time]
 
 section
 variable {sys : Sys} (π : MPerm sys.sig.machines)
@@ -1039,7 +1081,7 @@ theorem ready_renameFull {c : Cfg} {e : Entry} :
     Ready (sys.renameFull π) (c.renameFull π) (e.rename π) ↔ Ready sys c e := by
   simp only [Ready, Cfg.renameFull, mem_map_rename, List.forall_mem_map, Entry.rename_time]
 
-theorem step_rename {mask : List Bool} {c : Cfg} {l : Label} {t : State}
+theorem step_rename (hres : sys.resources = []) {mask : List Bool} {c : Cfg} {l : Label} {t : State}
     (hl : c.machines.length = sys.sig.machines) (h : Step sys mask c l t) :
     ∃ t', Step (sys.renameFull π) mask (c.renameFull π) (l.rename π) t' ∧ t'.Approx (t.renameFull π) := by
   have hact : (sys.renameFull π).active mask = renameAct π (sys.active mask) := active_renameFull sys π mask
@@ -1047,14 +1089,14 @@ theorem step_rename {mask : List Bool} {c : Cfg} {l : Label} {t : State}
   have hatt : (c.renameFull π).attemptsOf (l.rename π).entry.event = c.attemptsOf l.entry.event := rfl
   have hlp : (c.popE l.entry).machines.length = sys.sig.machines := hl
   cases h with
-  | drop hd hr hdr =>
-    refine ⟨_, Step.drop ((drawsOk_renameFull π).mpr hd) ((ready_renameFull π).mpr hr)
+  | drop hd hr hk hw0 hdr =>
+    refine ⟨_, Step.drop ((drawsOk_renameFull π).mpr hd) ((ready_renameFull π).mpr hr) hk hw0
       (by rw [hact, hatt]; exact (dropHit_rename π _ _ _).mpr hdr), ?_⟩
     show State.Approx (.run mask _) (.run mask _)
     rw [Label.rename, ← hpop]
     exact ⟨rfl, Cfg.Approx.refl _⟩
-  | delay hd hr hdr hf hlt =>
-    refine ⟨_, Step.delay ((drawsOk_renameFull π).mpr hd) ((ready_renameFull π).mpr hr)
+  | delay hd hr hk hw0 hdr hf hlt =>
+    refine ⟨_, Step.delay ((drawsOk_renameFull π).mpr hd) ((ready_renameFull π).mpr hr) hk hw0
       (by rw [hact, hatt]; exact fun h' => hdr ((dropHit_rename π _ _ _).mp h'))
       (by rw [hact, hatt]; simp only [Label.rename]; rw [delayFault_rename, hf]; rfl)
       (by simp only [Label.rename, Fault.rename]; rw [later_rename, hlt]; rfl), ?_⟩
@@ -1062,14 +1104,15 @@ theorem step_rename {mask : List Bool} {c : Cfg} {l : Label} {t : State}
     simp only [Label.rename]
     rw [← hpop, ← Cfg.enq_renameFull]
     exact ⟨rfl, Cfg.Approx.refl _⟩
-  | delayTimeErr hd hr hdr hf hlt =>
-    refine ⟨_, Step.delayTimeErr ((drawsOk_renameFull π).mpr hd) ((ready_renameFull π).mpr hr)
+  | delayTimeErr hd hr hk hw0 hdr hf hlt =>
+    refine ⟨_, Step.delayTimeErr ((drawsOk_renameFull π).mpr hd) ((ready_renameFull π).mpr hr) hk hw0
       (by rw [hact, hatt]; exact fun h' => hdr ((dropHit_rename π _ _ _).mp h'))
       (by rw [hact, hatt]; simp only [Label.rename]; rw [delayFault_rename, hf]; rfl)
       (by simp only [Label.rename, Fault.rename]; rw [later_rename, hlt]; rfl), ?_⟩
     exact ⟨rfl, Cfg.Approx.refl _⟩
-  | deliverOk hd hr hdr hnone hw hp2 hdup =>
-    rename_i ws ms bs c''
+  | deliverOk hd hr hk hdr hnone hw hp2 hs hfit hfill hdup =>
+    rename_i ws ms bs w acts c2 c''
+    obtain ⟨hw0, rfl⟩ := nores_settle hres hs hfit hfill
     have hR := resolve_renameFull sys π l.draws
     obtain ⟨ws', hw', hperm⟩ := winners_rename_fwd (R := sys.resolve l.draws) π hlp hw
     have hnd := winners_nodup hw
@@ -1082,37 +1125,49 @@ theorem step_rename {mask : List Bool} {c : Cfg} {l : Label} {t : State}
         rw [show (c.popE l.entry).commit sys.sig.machines r2.1 r2.2 =
           (c.popE l.entry).commit sys.sig.machines ms bs from hcommit] at this
         exact this) hdup
-    refine ⟨.run mask c2', Step.deliverOk_via (l := l.rename π) (ws := ws') (ms := permList π r2.1) (bs := Emitted.rename π r2.2) hR ((drawsOk_renameFull π).mpr hd)
-      ((ready_renameFull π).mpr hr) ?_ ?_ ?_ ?_ ?_, rfl, hc2⟩
+    refine ⟨.run mask c2', Step.deliverOk_via (sys := sys.renameFull π) hres (l := l.rename π) (ws := ws')
+      (ms := permList π r2.1) (bs := Emitted.rename π r2.2) hR ((drawsOk_renameFull π).mpr hd)
+      ((ready_renameFull π).mpr hr) hk hw0 ?_ ?_ ?_ ?_ ?_, rfl, hc2⟩
     · rw [hact, hatt]; exact fun h' => hdr ((dropHit_rename π _ _ _).mp h')
     · rw [hact, hatt]; simp only [Label.rename]; rw [delayFault_rename, hnone]; rfl
     · rw [hact]; simp only [Label.rename]; rw [← hpop]; exact hw'
     · simp only [Label.rename]; rw [← hpop]; exact hp2'
     · rw [hact, hatt]; simp only [Label.rename]; rw [← hpop]; exact hd2
-  | deliverErr hd hr hdr hnone hfail =>
+  | deliverErr hd hr hk hdr hnone hfail =>
     have hR := resolve_renameFull sys π l.draws
     refine ⟨.err mask (c.renameFull π), Step.deliverErr_via (l := l.rename π) hR ((drawsOk_renameFull π).mpr hd)
-      ((ready_renameFull π).mpr hr) ?_ ?_ ?_, rfl, Cfg.Approx.refl _⟩
+      ((ready_renameFull π).mpr hr) hk ?_ ?_ ?_, rfl, Cfg.Approx.refl _⟩
     · rw [hact, hatt]; exact fun h' => hdr ((dropHit_rename π _ _ _).mp h')
     · rw [hact, hatt]; simp only [Label.rename]; rw [delayFault_rename, hnone]; rfl
     · rw [hact, hatt]; simp only [Label.rename]; rw [← hpop]
       cases hfail with
-      | winners hw =>
+      | winners hw0 hw =>
         obtain ⟨err', h'⟩ := (winners_rename_err (R := sys.resolve l.draws) π hlp).mpr ⟨_, hw⟩
-        exact Fails.winners h'
-      | phase2 hw hp2 =>
+        exact Fails.winners hw0 h'
+      | settle hw hp2 hs hfit hfill => exact (nores_settle_err (sys := sys.resolve l.draws) hres hs hfill).elim
+      | phase2 hw0 hw hp2 =>
         obtain ⟨ws', hw', hperm⟩ := winners_rename_fwd (R := sys.resolve l.draws) π hlp hw
         obtain ⟨err', h2⟩ := phase2_perm_err hperm.symm (winners_nodup hw) hp2
         have hp2' := phase2_rename (sys := sys.resolve l.draws) π l.entry hlp ws' (c.popE l.entry).machines hl
         rw [h2] at hp2'
-        exact Fails.phase2 hw' hp2'
-      | dup hw hp2 h0 hl0 =>
+        exact Fails.phase2 hw0 hw' hp2'
+      | dup hw hp2 hs hfit hfill h0 hl0 =>
+        obtain ⟨hw0, rfl⟩ := nores_settle (sys := sys.resolve l.draws) hres hs hfit hfill
         obtain ⟨ws', hw', hperm⟩ := winners_rename_fwd (R := sys.resolve l.draws) π hlp hw
         obtain ⟨r2, hr2, -⟩ := phase2_perm_ok hperm.symm (winners_nodup hw) hp2
         have hp2' := phase2_rename (sys := sys.resolve l.draws) π l.entry hlp ws' (c.popE l.entry).machines hl
         rw [hr2] at hp2'
-        exact Fails.dup hw' hp2' (by rw [dupFault_rename, h0]; rfl)
+        exact Fails.dup hw' hp2' (settle_nil_res (by exact hres) _ _ _ _) (drawsFit_nil hw0) rfl
+          (by rw [dupFault_rename, h0]; rfl)
           (by simp only [Fault.rename]; rw [later_rename, hl0]; rfl)
+  | worldOk hd hr hk hs hfit hfill =>
+    obtain ⟨hw0, rfl⟩ := nores_world hres hs hfit hfill
+    refine ⟨_, Step.worldOk ((drawsOk_renameFull π).mpr hd) ((ready_renameFull π).mpr hr) hk
+      (worldStep_nil_res (sys := sys.renameFull π) hres _ _) (drawsFit_nil hw0) rfl, ?_⟩
+    show State.Approx (.run mask _) (.run mask _)
+    rw [Cfg.popW_renameFull]
+    exact ⟨rfl, Cfg.Approx.refl _⟩
+  | worldErr hd hr hk hs hfit hfill => exact (nores_world_err hres hs hfill).elim
 
 end
 
@@ -1126,8 +1181,8 @@ theorem winners_phase2_via {sys : Sys} {act : List (Nat × Fault)} {c0 : Cfg} {e
   subst hX; exact ⟨ws, hw, hp⟩
 
 theorem fails_via {sys : Sys} {act : List (Nat × Fault)} {c0 : Cfg} {e : Entry} {att : Nat}
-    {ds : List Nat} {X : Sys} (hX : sys.resolve ds = X) (h : Fails (sys.resolve ds) act c0 e att) :
-    Fails X act c0 e att := by
+    {ds wds : List Nat} {X : Sys} (hX : sys.resolve ds = X) (h : Fails (sys.resolve ds) act c0 e att wds) :
+    Fails X act c0 e att wds := by
   subst hX; exact h
 
 theorem delayFault_unrename {n : Nat} (π : MPerm n) {act : List (Nat × Fault)} {e : Entry} {att i : Nat}
@@ -1162,7 +1217,7 @@ theorem delayFault_none_unrename {n : Nat} (π : MPerm n) {act : List (Nat × Fa
 section
 variable {sys : Sys} (π : MPerm sys.sig.machines)
 
-theorem step_unrename {mask : List Bool} {c : Cfg} {l : Label} {t' : State}
+theorem step_unrename (hres : sys.resources = []) {mask : List Bool} {c : Cfg} {l : Label} {t' : State}
     (hl : c.machines.length = sys.sig.machines)
     (h : Step (sys.renameFull π) mask (c.renameFull π) (l.rename π) t') :
     ∃ t, Step sys mask c l t ∧ t'.Approx (t.renameFull π) := by
@@ -1172,14 +1227,14 @@ theorem step_unrename {mask : List Bool} {c : Cfg} {l : Label} {t' : State}
   have hlp : (c.popE l.entry).machines.length = sys.sig.machines := hl
   have hent : (l.rename π).entry = l.entry.rename π := rfl
   cases h with
-  | drop hd hr hdr =>
+  | drop hd hr hk hw0 hdr =>
     rw [hact, hatt, hent] at hdr
-    refine ⟨_, Step.drop ((drawsOk_renameFull π).mp hd) ((ready_renameFull π).mp hr)
+    refine ⟨_, Step.drop ((drawsOk_renameFull π).mp hd) ((ready_renameFull π).mp hr) hk hw0
       ((dropHit_rename π _ _ _).mp hdr), ?_⟩
     show State.Approx (.run mask _) (.run mask _)
     rw [hent, ← hpop]
     exact ⟨rfl, Cfg.Approx.refl _⟩
-  | delay hd hr hdr hf hlt =>
+  | delay hd hr hk hw0 hdr hf hlt =>
     rename_i i f cp
     rw [hact, hatt, hent] at hdr hf
     obtain ⟨f0, hf0, rfl⟩ := delayFault_unrename π hf
@@ -1187,23 +1242,24 @@ theorem step_unrename {mask : List Bool} {c : Cfg} {l : Label} {t' : State}
     simp only [Fault.rename] at hlt
     rw [later_rename] at hlt
     obtain ⟨cp0, hcp0, rfl⟩ := rmap_eq_ok hlt
-    refine ⟨_, Step.delay ((drawsOk_renameFull π).mp hd) ((ready_renameFull π).mp hr)
+    refine ⟨_, Step.delay ((drawsOk_renameFull π).mp hd) ((ready_renameFull π).mp hr) hk hw0
       (fun h' => hdr ((dropHit_rename π _ _ _).mpr h')) hf0 hcp0, ?_⟩
     show State.Approx (.run mask _) (.run mask _)
     rw [hent, ← hpop, ← Cfg.enq_renameFull]
     exact ⟨rfl, Cfg.Approx.refl _⟩
-  | delayTimeErr hd hr hdr hf hlt =>
+  | delayTimeErr hd hr hk hw0 hdr hf hlt =>
     rename_i i f err
     rw [hact, hatt, hent] at hdr hf
     obtain ⟨f0, hf0, rfl⟩ := delayFault_unrename π hf
     rw [hent] at hlt
     simp only [Fault.rename] at hlt
     rw [later_rename] at hlt
-    refine ⟨_, Step.delayTimeErr ((drawsOk_renameFull π).mp hd) ((ready_renameFull π).mp hr)
+    refine ⟨_, Step.delayTimeErr ((drawsOk_renameFull π).mp hd) ((ready_renameFull π).mp hr) hk hw0
       (fun h' => hdr ((dropHit_rename π _ _ _).mpr h')) hf0 (rmap_eq_error hlt), ?_⟩
     exact ⟨rfl, Cfg.Approx.refl _⟩
-  | deliverOk hd hr hdr hnone hw hp2 hdup =>
-    rename_i ws' ms' bs' c2'
+  | deliverOk hd hr hk hdr hnone hw hp2 hs hfit hfill hdup =>
+    rename_i ws' ms' bs' w acts c3 c2'
+    obtain ⟨hw0, rfl⟩ := nores_settle (sys := sys.renameFull π) hres hs hfit hfill
     have hR := resolve_renameFull sys π l.draws
     obtain ⟨ws2, hw2, hp22⟩ := winners_phase2_via (ds := l.draws) hR hw hp2
     rw [hact, hatt, hent] at hdr hnone hdup
@@ -1225,30 +1281,33 @@ theorem step_unrename {mask : List Bool} {c : Cfg} {l : Label} {t' : State}
         (c.popE l.entry).commit sys.sig.machines r2.1 r2.2 from hc3]
       exact this
     obtain ⟨c2, hd2, hc2⟩ := Dup.unrename π happ hdup
-    refine ⟨.run mask c2, Step.deliverOk ((drawsOk_renameFull π).mp hd) ((ready_renameFull π).mp hr)
-      (fun h' => hdr ((dropHit_rename π _ _ _).mpr h')) (delayFault_none_unrename π hnone) hws hr3 hd2,
+    refine ⟨.run mask c2, Step.deliverOk_via hres rfl ((drawsOk_renameFull π).mp hd) ((ready_renameFull π).mp hr)
+      hk hw0 (fun h' => hdr ((dropHit_rename π _ _ _).mpr h')) (delayFault_none_unrename π hnone) hws hr3 hd2,
       rfl, hc2⟩
-  | deliverErr hd hr hdr hnone hfail =>
+  | deliverErr hd hr hk hdr hnone hfail =>
     have hR := resolve_renameFull sys π l.draws
     have hf2 := fails_via (ds := l.draws) hR hfail
     rw [hact, hatt, hent] at hdr hnone hf2
     rw [← hpop] at hf2
-    refine ⟨.err mask c, Step.deliverErr ((drawsOk_renameFull π).mp hd) ((ready_renameFull π).mp hr)
+    refine ⟨.err mask c, Step.deliverErr ((drawsOk_renameFull π).mp hd) ((ready_renameFull π).mp hr) hk
       (fun h' => hdr ((dropHit_rename π _ _ _).mpr h')) (delayFault_none_unrename π hnone) ?_,
       rfl, Cfg.Approx.refl _⟩
     cases hf2 with
-    | winners hw =>
+    | winners hw0 hw =>
       obtain ⟨err', h'⟩ := (winners_rename_err (R := sys.resolve l.draws) π hlp).mp ⟨_, hw⟩
-      exact Fails.winners h'
-    | phase2 hw hp =>
+      exact Fails.winners hw0 h'
+    | settle hw hp hs hfit hfill =>
+      exact (nores_settle_err (sys := (sys.resolve l.draws).renameFull π) hres hs hfill).elim
+    | phase2 hw0 hw hp =>
       rename_i ws2 err
       obtain ⟨ws, hws, hperm⟩ := winners_rename_bwd (R := sys.resolve l.draws) π hlp hw
       have hp2' := phase2_rename (sys := sys.resolve l.draws) π l.entry hlp ws2 (c.popE l.entry).machines hl
       have h2 := rmap_eq_error (hp2'.symm.trans hp)
       obtain ⟨err', h3⟩ := phase2_perm_err (R := sys.resolve l.draws) hperm (winners_nodup_back (R := sys.resolve l.draws) π hws hperm) h2
-      exact Fails.phase2 hws h3
-    | dup hw hp h0 hl0 =>
-      rename_i ws2 ms2 bs2 i f err
+      exact Fails.phase2 hw0 hws h3
+    | dup hw hp hs hfit hfill h0 hl0 =>
+      rename_i ws2 ms2 bs2 w acts c2 i f err
+      obtain ⟨hw0, rfl⟩ := nores_settle (sys := (sys.resolve l.draws).renameFull π) hres hs hfit hfill
       obtain ⟨ws, hws, hperm⟩ := winners_rename_bwd (R := sys.resolve l.draws) π hlp hw
       have hp2' := phase2_rename (sys := sys.resolve l.draws) π l.entry hlp ws2 (c.popE l.entry).machines hl
       obtain ⟨r2, hr2, -⟩ := rmap_eq_ok (hp2'.symm.trans hp)
@@ -1257,14 +1316,24 @@ theorem step_unrename {mask : List Bool} {c : Cfg} {l : Label} {t' : State}
       obtain ⟨f0, hf0, rfl⟩ := dupFault_unrename π h0
       simp only [Fault.rename] at hl0
       rw [later_rename] at hl0
-      exact Fails.dup hws hr3 hf0 (rmap_eq_error hl0)
+      exact Fails.dup hws hr3 (settle_nil_res (by exact hres) _ _ _ _) (drawsFit_nil hw0) rfl hf0 (rmap_eq_error hl0)
+  | worldOk hd hr hk hs hfit hfill =>
+    obtain ⟨hw0, rfl⟩ := nores_world (sys := sys.renameFull π) hres hs hfit hfill
+    refine ⟨_, Step.worldOk ((drawsOk_renameFull π).mp hd) ((ready_renameFull π).mp hr) hk
+      (worldStep_nil_res hres _ _) (drawsFit_nil hw0) rfl, ?_⟩
+    show State.Approx (.run mask _) (.run mask _)
+    rw [hent, Cfg.popW_renameFull]
+    exact ⟨rfl, Cfg.Approx.refl _⟩
+  | worldErr hd hr hk hs hfit hfill =>
+    exact (nores_world_err (sys := sys.renameFull π) hres hs hfill).elim
 
 end
 
 /-! ### Equality up to the order of the pending list -/
 
 theorem Cfg.Approx.trans {a b c : Cfg} (h1 : a.Approx b) (h2 : b.Approx c) : a.Approx c :=
-  ⟨h1.1.trans h2.1, h1.2.1.trans h2.2.1, h1.2.2.1.trans h2.2.2.1, h1.2.2.2.trans h2.2.2.2⟩
+  ⟨h1.1.trans h2.1, h1.2.1.trans h2.2.1, ⟨h1.2.2.1.1.trans h2.2.2.1.1, h1.2.2.1.2.1.trans h2.2.2.1.2.1,
+    h1.2.2.1.2.2.trans h2.2.2.1.2.2⟩, h1.2.2.2.trans h2.2.2.2⟩
 
 theorem State.Approx.symm {s t : State} (h : s.Approx t) : t.Approx s := by
   cases s <;> cases t <;> simp only [State.Approx] at h ⊢
@@ -1287,7 +1356,7 @@ theorem State.Approx.renameFull {n : Nat} (π : MPerm n) {s s' : State} (h : s.A
   all_goals first | exact h | exact ⟨h.1, Cfg.Approx.renameFull π h.2⟩
 
 theorem Entry.rename_inv {n : Nat} (π : MPerm n) (e : Entry) : (e.rename π).rename π⁻¹ = e := by
-  obtain ⟨t, ev, p, g, m, d, s⟩ := e
+  obtain ⟨t, ev, p, g, m, d, s, k⟩ := e
   simp only [Entry.rename, Option.map_map, Function.comp_def, π.inv_nat_nat, Option.map_id']
 
 theorem Cfg.renameFull_inv {n : Nat} (π : MPerm n) {c : Cfg} (hl : c.machines.length = n) :
@@ -1343,11 +1412,16 @@ theorem step_length {sys : Sys} {m : List Bool} {c : Cfg} {l : Label} {t : State
   | drop => rfl
   | delay => rfl
   | delayTimeErr => rfl
-  | deliverOk _ _ _ _ _ hp hd =>
+  | deliverOk _ _ _ _ _ _ hp _ _ hfill hd =>
     simp only [State.cfg]
-    rw [Dup.machines hd]
+    rw [Dup.machines hd, (fill_frame hfill).1]
     exact phase2_length _ _ hp
   | deliverErr => rfl
+  | worldOk _ _ _ _ _ hfill =>
+    simp only [State.cfg]
+    rw [(fill_frame hfill).1]
+    rfl
+  | worldErr => rfl
 
 theorem reach_length {sys : Sys} {s : State} (h : (Sys.lts sys).Reach s) :
     s.cfg.machines.length = sys.init.machines.length := by
@@ -1380,19 +1454,58 @@ theorem foldl_injectStep_rename {n : Nat} (π : MPerm n) : (act : List (Nat × F
     rw [injectStep_rename]
     exact foldl_injectStep_rename π act _
 
+theorem edgeStep_rename (sys : Sys) (π : MPerm sys.sig.machines) (q : List Entry) (p : Nat × Fault) :
+    (sys.renameFull π).edgeStep (q.map (Entry.rename π)) (p.1, p.2.rename π) =
+      (sys.edgeStep q p).map (Entry.rename π) := by
+  unfold Sys.edgeStep
+  have he : (sys.renameFull π).edgeOk (p.2.rename π) = sys.edgeOk p.2 := rfl
+  simp only [he]
+  simp only [Fault.rename]
+  by_cases hc : sys.edgeOk p.2 = true
+  · simp only [hc, ↓reduceIte]
+    cases p.2.window with
+    | none => rfl
+    | some au =>
+      obtain ⟨a, u⟩ := au
+      cases u with
+      | none => exact insertByTime_rename π (edgeEntry p.1 a true) q
+      | some u =>
+        exact (congrArg (insertByTime · (edgeEntry p.1 u false)) (insertByTime_rename π (edgeEntry p.1 a true) q)).trans
+          (insertByTime_rename π (edgeEntry p.1 u false) _)
+  · simp only [hc]; rfl
+
+theorem foldl_edgeStep_rename (sys : Sys) (π : MPerm sys.sig.machines) : (act : List (Nat × Fault)) →
+    (q : List Entry) → (renameAct π act).foldl (sys.renameFull π).edgeStep (q.map (Entry.rename π)) =
+      (act.foldl sys.edgeStep q).map (Entry.rename π)
+  | [], q => rfl
+  | p :: act, q => by
+    simp only [renameAct, List.map_cons, List.foldl_cons] at *
+    rw [edgeStep_rename]
+    exact foldl_edgeStep_rename sys π act _
+
+theorem foldl_initWorldStep_rename (sys : Sys) (π : MPerm sys.sig.machines) : (act : List (Nat × Fault)) →
+    (w : World) → (renameAct π act).foldl (sys.renameFull π).initWorldStep w = act.foldl sys.initWorldStep w
+  | [], w => rfl
+  | p :: act, w => by
+    simp only [renameAct, List.map_cons, List.foldl_cons] at *
+    have : (sys.renameFull π).initWorldStep w (p.1, p.2.rename π) = sys.initWorldStep w p := by
+      unfold Sys.initWorldStep; rfl
+    rw [this]
+    exact foldl_initWorldStep_rename sys π act _
+
 theorem initCfg_renameFull (sys : Sys) (π : MPerm sys.sig.machines) (mask : List Bool) :
     (sys.renameFull π).initCfg mask = (sys.initCfg mask).renameFull π := by
   unfold Sys.initCfg
   rw [active_renameFull]
   simp only [Cfg.renameFull]
-  rw [← foldl_injectStep_rename]
+  rw [foldl_injectStep_rename, foldl_edgeStep_rename, foldl_initWorldStep_rename]
 
 /-! ### Reachability in the two systems -/
 
 section
 variable {sys : Sys} (π : MPerm sys.sig.machines)
 
-theorem reach_renameFull (hlen : sys.init.machines.length = sys.sig.machines) {s : State}
+theorem reach_renameFull (hres : sys.resources = []) (hlen : sys.init.machines.length = sys.sig.machines) {s : State}
     (h : (Sys.lts sys).Reach s) :
     ∃ s', (Sys.lts (sys.renameFull π)).Reach s' ∧ s'.Approx (s.renameFull π) := by
   induction h with
@@ -1408,15 +1521,16 @@ theorem reach_renameFull (hlen : sys.init.machines.length = sys.sig.machines) {s
     cases s with
     | err => exact absurd hst id
     | run m c =>
-      obtain ⟨t1, ht1, ht1a⟩ := step_rename π hl (show Step sys m c a t from hst)
+      obtain ⟨t1, ht1, ht1a⟩ := step_rename π hres hl (show Step sys m c a t from hst)
       cases s' with
       | err => exact hap.elim
       | run m' c' =>
         obtain ⟨rfl, hca⟩ := hap
-        obtain ⟨t2, ht2, ht2a⟩ := pending_perm_bisim hca.2.2.2.symm hca.1.symm hca.2.1.symm hca.2.2.1.symm ht1
+        obtain ⟨t2, ht2, ht2a⟩ := pending_perm_bisim hca.2.2.2.symm hca.1.symm hca.2.1.symm
+          ⟨hca.2.2.1.1.symm, hca.2.2.1.2.1.symm, hca.2.2.1.2.2.symm⟩ ht1
         exact ⟨t2, .step hs' ht2, ht2a.trans ht1a⟩
 
-theorem reach_unrename (hlen : sys.init.machines.length = sys.sig.machines) {s' : State}
+theorem reach_unrename (hres : sys.resources = []) (hlen : sys.init.machines.length = sys.sig.machines) {s' : State}
     (h : (Sys.lts (sys.renameFull π)).Reach s') :
     ∃ s, (Sys.lts sys).Reach s ∧ s'.Approx (s.renameFull π) := by
   induction h with
@@ -1443,10 +1557,10 @@ theorem reach_unrename (hlen : sys.init.machines.length = sys.sig.machines) {s' 
         obtain ⟨t1, ht1, ht1a⟩ := pending_perm_bisim hca.2.2.2 hca.1 hca.2.1 hca.2.2.1 hst'
         obtain ⟨-, hrdy⟩ := Step.ready ht1
         obtain ⟨e, -, he⟩ := List.mem_map.mp hrdy.1
-        have hlab : a' = Label.rename π ⟨e, a'.draws⟩ := by
+        have hlab : a' = Label.rename π ⟨e, a'.draws, a'.wdraws⟩ := by
           cases a'; simp only [Label.rename] at he ⊢; rw [he]
         rw [hlab] at ht1
-        obtain ⟨t, ht, hta⟩ := step_unrename π hl ht1
+        obtain ⟨t, ht, hta⟩ := step_unrename π hres hl ht1
         exact ⟨t, .step hs ht, ht1a.symm.trans hta⟩
 
 end
@@ -1457,8 +1571,9 @@ end
 `[b, a]` example). For every permutation `π` of the machine indices and every property `P` that
 does not distinguish states equal up to the order of the pending list, `P` is an invariant of
 `sys` exactly when `P ∘ State.rename π⁻¹` is an invariant of `sys.rename π`, the system listing
-its machines in the order `π`. -/
-theorem invariant_rename {sys : Sys} (π : MPerm sys.sig.machines) {P : State → Prop}
+its machines in the order `π`. Stated for systems without resources (WG-5683): renaming does not
+yet carry the owners of resource holdings and requests. -/
+theorem invariant_rename {sys : Sys} (hres : sys.resources = []) (π : MPerm sys.sig.machines) {P : State → Prop}
     (hP : ∀ s s', s.Approx s' → (P s ↔ P s')) :
     (Sys.lts sys).Invariant P ↔ (Sys.lts (sys.rename π)).Invariant (P ∘ State.rename π⁻¹) := by
   by_cases hlen : sys.init.machines.length = sys.sig.machines
@@ -1477,10 +1592,10 @@ theorem invariant_rename {sys : Sys} (π : MPerm sys.sig.machines) {P : State �
       exact this
     constructor
     · intro hinv s' hs'
-      obtain ⟨s, hs, hap⟩ := reach_unrename π hlen hs'
+      obtain ⟨s, hs, hap⟩ := reach_unrename π hres hlen hs'
       exact (hP _ _ (hback s s' hs hap)).mpr (hinv s hs)
     · intro hinv s hs
-      obtain ⟨s', hs', hap⟩ := reach_renameFull π hlen hs
+      obtain ⟨s', hs', hap⟩ := reach_renameFull π hres hlen hs
       exact (hP _ _ (hback s s' hs hap)).mp (hinv s' hs')
   · have hsys : sys.rename π = sys := by simp [Sys.rename, hlen]
     rw [hsys]

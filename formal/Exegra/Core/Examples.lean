@@ -7,7 +7,7 @@ criteria). Each is proved, not tested; `#print axioms` below pins what each proo
 
 * `counter_le`: a counter with guard `n < L` and effect `n := n + 1` never exceeds `L`, for every
   `L ≥ 0`, with no bound on the length of runs. Proved by an inductive invariant; this is the
-  property that separates an `Int` semantics from a `Float` one (assessment, foundations C1).
+  property that separates an `Int` semantics from a floating-point one (assessment, foundations C1).
 * `ne_neg_one_not_inductive` and `ne_neg_one_invariant`: `n ≠ -1` is true of every reachable state
   of an unbounded counter but is not inductive (from `-2`, a state that satisfies it but is not
   reachable, one step violates it). The method does not accept it as it stands; it is proved
@@ -17,6 +17,9 @@ criteria). Each is proved, not tested; `#print axioms` below pins what each proo
   finds no counterexample proves anything beyond that depth.
 * `vacuous_false`: a system with no initial state has `False` as an invariant, which is why claims
   built on invariants must establish `NonVacuous` (every program does: `Prog.nonVacuous`).
+* `kSys_not_inductive`, `kSys_kInductive`, `kSys_invariant`: a property that is not inductive (a
+  state outside the reachable set violates it after one step) but is 2-inductive, proved an
+  invariant by `kInduction_sound`.
 * `mod3_in_range`: a finite system proved safe with no bound by a closed-set certificate checked by
   kernel evaluation (`decide`), not `native_decide`.
 -/
@@ -165,6 +168,43 @@ theorem mod3_in_range :
   checkClosed_sound mod3.enum [[0], [1], [2]]
     (fun s => decide (0 ≤ getAt s 0) && decide (getAt s 0 ≤ 2)) (by decide)
 
+/-! ### A 2-inductive invariant that is not inductive -/
+
+/-- States `0 ⇄ 1` are reachable; `2 → 3 → 3` is not: nothing leads to `2`. -/
+def kSys : LTS Nat Unit where
+  init s := s = 0
+  step s _ t := (s = 0 ∧ t = 1) ∨ (s = 1 ∧ t = 0) ∨ (s = 2 ∧ t = 3) ∨ (s = 3 ∧ t = 3)
+
+/-- The property: the state is never `3`. -/
+def kP (s : Nat) : Prop := s ≠ 3
+
+/-- **Not inductive**: `2` satisfies `kP` and steps to `3`. -/
+theorem kSys_not_inductive : ¬ kSys.Inductive kP := by
+  intro h
+  exact h.2 2 () 3 (by simp [kP]) (by simp [kSys]) rfl
+
+/-- **2-inductive**: a path of three states whose first two are not `3` cannot end in `3`, because
+the only other way into `3` is from `2`, which has no predecessor. -/
+theorem kSys_kInductive : kSys.KInductive 2 kP := by
+  refine ⟨?_, ?_⟩
+  · intro s hs
+    cases hs with
+    | init hi => simp [kSys] at hi; simp [kP, hi]
+    | step h0 hst =>
+      cases h0 with
+      | init hi => simp only [kSys] at hi hst; subst hi; simp [kP]; omega
+  · intro xs hl hp hpre
+    match xs, hl, hp with
+    | [x0, x1, x2], _, ⟨⟨_, h01⟩, ⟨_, h12⟩, _⟩ =>
+      have p0 : x0 ≠ 3 := hpre 0 (by omega)
+      have p1 : x1 ≠ 3 := hpre 1 (by omega)
+      show x2 ≠ 3
+      simp only [kSys] at h01 h12
+      omega
+
+/-- **The invariant, by k-induction** with `k = 2`. -/
+theorem kSys_invariant : kSys.Invariant kP := kInduction_sound (by decide) kSys_kInductive
+
 end Exegra.Core.Examples
 
 /-- info: 'Exegra.Core.LTS.safe_of_inductive' does not depend on any axioms -/
@@ -198,3 +238,19 @@ end Exegra.Core.Examples
 /-- info: 'Exegra.Core.Examples.mod3_in_range' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Examples.mod3_in_range
+
+/-- info: 'Exegra.Core.LTS.kInduction_sound' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms Exegra.Core.LTS.kInduction_sound
+
+/-- info: 'Exegra.Core.Examples.kSys_not_inductive' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms Exegra.Core.Examples.kSys_not_inductive
+
+/-- info: 'Exegra.Core.Examples.kSys_kInductive' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms Exegra.Core.Examples.kSys_kInductive
+
+/-- info: 'Exegra.Core.Examples.kSys_invariant' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms Exegra.Core.Examples.kSys_invariant

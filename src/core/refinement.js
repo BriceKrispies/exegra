@@ -386,6 +386,49 @@ export function checkRefinementTrace(model, impl, trace, scenario) {
       }
       seen.push(rs);
     }
+    // An input the implementation ignores must be one the model ignores too (WG-5685, criterion 9): when the
+    // engine records that I took no transition on the delivered event (or, in a trace without `ignored`, I
+    // fired nothing), the model, from the mapped configuration, must have no transition on it whose guard holds.
+    // Otherwise I refuses an input A must handle, and every later step is about a run A does not have.
+    const event = step.event?.id;
+    const ignoredByImpl = Array.isArray(step.ignored)
+      ? step.ignored.some((/** @type {any} */ g) => g?.behavior === impl.id && g.reason !== 'disabled')
+      : !fired.some((/** @type {any} */ f) => f.behavior === impl.id);
+    const ikey = keyIn(before, impl.id, undefined);
+    if (ignoredByImpl && typeof event === 'string' && ikey && !step.error) {
+      const m = before.machines[ikey];
+      const mFrom = ref.states[m.state] ?? null;
+      /** @type {RefinementStep} */
+      const rs = { scenario, stepIndex: step.index, machine: ikey, event, transition: null, implFrom: m.state, implTo: m.state, model: null, modelFrom: mFrom, modelTo: mFrom, ok: true };
+      const payload = step.event?.payload ?? {};
+      try {
+        const vars = mapVars(m);
+        const modelTime = step.time / ref.timeScale;
+        /** @param {string[]} path */
+        const resolve = (path) => {
+          if (path.length === 1 && path[0] === 'time') return modelTime;
+          if (path.length === 1 && Object.hasOwn(vars, path[0])) return vars[path[0]];
+          if (path.length === 2 && path[0] === 'event') return Object.hasOwn(payload, path[1]) ? payload[path[1]] : undefined;
+          if (path.length === 2 && path[0] === A.id) return path[1] === 'state' ? mFrom : Object.hasOwn(vars, path[1]) ? vars[path[1]] : undefined;
+          if (path.length === 2) return readOther(before, path[0], path[1]);
+          throw new Unsupported(`it reads "${path.join('.')}", which the refinement check does not resolve`);
+        };
+        for (const t of aTransitions) {
+          if (t.data.from !== mFrom || t.data.on !== event || t.data.faultOnly === true) continue;
+          const g = t.data.guard;
+          const holds = typeof g !== 'string' || !g.trim() ? true : evalExpr(parseOrThrow(g), resolve);
+          if (holds === true) {
+            rs.model = t.id;
+            rs.modelTo = t.data.to ?? null;
+            return fail('ignored-input', `At step ${step.index}, "${impl.id}" in "${m.state}" ignores "${event}", but from the mapped state "${mFrom}" the model takes "${t.id}"${typeof g === 'string' && g.trim() ? `, whose guard \`${g}\` holds` : ''}: the implementation refuses an input its model must handle.`, rs, [t.id, m.state]);
+          }
+        }
+      } catch (e) {
+        if (e instanceof Unsupported) return { checkedSteps, movingSteps, machines: [...machines], failure: null, unsupported: `At step ${step.index} of scenario "${scenario}", ${e.message}.` };
+        if (e instanceof ExprError) return fail('model-expression-error', `Evaluating the model's transitions on "${event}" at an input "${impl.id}" ignores failed: ${e.message}.`, rs, []);
+        throw e;
+      }
+    }
     if (!step.error) before = step.config;
   }
   return { checkedSteps, movingSteps, machines: [...machines], failure: null, unsupported: null };

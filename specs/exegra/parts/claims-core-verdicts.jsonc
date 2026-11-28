@@ -317,8 +317,8 @@
     {
       "id": "refines-checks-machine-refinement",
       "kind": "invariant",
-      "statement": "A refines claim is verified only when, in the traces of the scenarios that run the implementation behavior, every initial configuration and every fired transition of it maps through its refinement mapping to the step its model machine takes or to a stutter, and at least one step matched a model transition; a step to the wrong model state, a step whose model guard is false, a wrong mapped post-variable, a moving step mapped to a stutter, different emitted events and a wrong initial state each make it violated, with the failing step as the last step of the counterexample trace. Timers the implementation sets are compared with the model's timers when the model transition sets some and are internal to the implementation otherwise; a model guard or effect that reads another behavior reads it from the same trace, through the machine that refines that behavior when it does not run itself. With refinement.timeScale, the model reads the trace time divided by it and its timer delays are compared multiplied by it. A delayed emit of the model is realised only by a delayed emit of the implementation for the same event and the payload fields the model sets, delivered after the model delay times the time scale; a timer never realises an emit, and an undelayed emit for a delayed one, or the reverse, is violated (reason emits).",
-      "rationale": "Supported by tests/core/refinement.test.js. The check covers the listed traces only, each with its scenario's own faults; checking every explored execution is WG-4852. The check is JavaScript in the verdict-kernel component claim-evaluator and is listed by core-logic-in-lean until it is ported.",
+      "statement": "A refines claim is verified only when, in the traces of the scenarios that run the implementation behavior and in every execution of their inputs that delivers simultaneous entries in another order, every initial configuration and every fired transition of it maps through its refinement mapping to the step its model machine takes or to a stutter, every input it ignores is one its model ignores from the mapped configuration, and at least one step matched a model transition; a step to the wrong model state, a step whose model guard is false, a wrong mapped post-variable, a moving step mapped to a stutter, different emitted events, a wrong initial state and an ignored input the model would take (reason ignored-input) each make it violated, with the failing step as the last step of the counterexample trace. Timers the implementation sets are compared with the model's timers when the model transition sets some and are internal to the implementation otherwise; a model guard or effect that reads another behavior reads it from the same trace, through the machine that refines that behavior when it does not run itself. With refinement.timeScale, the model reads the trace time divided by it and its timer delays are compared multiplied by it. A delayed emit of the model is realised only by a delayed emit of the implementation for the same event and the payload fields the model sets, delivered after the model delay times the time scale; a timer never realises an emit, and an undelayed emit for a delayed one, or the reverse, is violated (reason emits). A failure the engine's order does not reach is violated with the delivery order in the counterexample; an exploration that reaches its configuration cap or the step limit, or a scenario with faults, sampled delays, cancellations or instances, is inconclusive and never verified.",
+      "rationale": "Supported by tests/core/refinement.test.js. The engine trace of each scenario is checked, then every order of simultaneous entries of its input (WG-4852, WG-5685 criterion 10); fault masks and draws are not enumerated, so a scenario with them is inconclusive. The check is JavaScript in the verdict-kernel component claim-evaluator and is listed by core-logic-in-lean until it is ported.",
       "subjects": [
         "claim-evaluator"
       ],
@@ -685,6 +685,36 @@
         "session"
       ],
       "rationale": "Supported by the core fixture with a cycle of blocks and a claim naming an element hidden at the cut, and by the browser walk, which compares the shown result with the command line at every step (core-independent-of-ui is not expressible at L0 and verified at the other steps).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "trace-claims-share-prove-evaluator",
+      "kind": "invariant",
+      "statement": "The live view and exegra prove evaluate the expressions of state-invariant and eventually claims, match the occurrences of never, precedes and eventually claims, and run the precedes monitor with the same Lean functions (claimTruth, Matcher.hit, Form.step of formal/Exegra/ProveB.lean); an expression that cannot be evaluated is a violation in both, so a claim expression dividing by zero is violated in the live view and has a counterexample in exegra prove.",
+      "subjects": [
+        "claim-evaluator",
+        "proof-export"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "rationale": "The live view calls claims.exprOnConfigs, claims.matcherHits and claims.formViolation through the Lean core (src/core/lean.js); exegra prove runs claimInvB, Matcher.hit and Form.step in exegra-lean. WG-5682 (moved from WG-5684).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "conformance-stages-graded",
+      "kind": "invariant",
+      "statement": "Conformance of the implementation is graded in six stages, each a claim method conformance-<stage> whose result names its stage: structural, interface, transition, trace and runtime-monitor rest on test evidence and give at most checkedOnInstances; verified-refinement rests on a Lean theorem and gives proved with subject implementation.",
+      "subjects": [
+        "claim-evaluator"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/conformance-stages.test.js, one test per stage; what each stage establishes and does not establish is the table of docs/claims-and-evidence.md, Conformance stages. WG-5685 criterion 11.",
       "evaluate": {
         "method": "external-evidence"
       }
@@ -1145,6 +1175,90 @@
       "kind": "test",
       "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to module elements with each step equal to the CLI",
       "description": "The shown result equals exegra evaluate --cut at every step."
+    },
+    {
+      "id": "ev-claims-evaluation-error-agrees",
+      "claim": "trace-claims-share-prove-evaluator",
+      "kind": "test",
+      "ref": "tests/core/claims.test.js#prove and the live view agree on an evaluation error",
+      "description": "On tests/fixtures/liveness, the claim 1 / 0 == 0 is violated in the live view and has a counterexample in the initial configuration in exegra prove."
+    },
+    {
+      "id": "ev-refines-ignored-input",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#an implementation that ignores release is refused",
+      "description": "The lease implementation ignores release in li-renewing while the model releases from lm-held: violated at that step (ignored-input), strength refuted, with acquire, renew and the ignored release as the counterexample trace."
+    },
+    {
+      "id": "ev-refines-other-order",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#a refinement that holds on the scenario trace but fails under another delivery order is violated at that step",
+      "description": "acquire and release at the same time: the engine order refines the model, release first reaches a stutter that writes the mapped holder; violated with the order [release]."
+    },
+    {
+      "id": "ev-refines-explore-step-limit",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#an exploration that reaches the step limit is inconclusive and never verified",
+      "description": "With maxSteps 2 the exploration reaches the step limit with entries pending: inconclusive."
+    },
+    {
+      "id": "ev-refines-explore-cap",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#an exploration that reaches its configuration cap is incomplete",
+      "description": "With a cap of 2 configurations the exploration of the lease reports incomplete."
+    },
+    {
+      "id": "ev-conformance-stage-1",
+      "claim": "conformance-stages-graded",
+      "kind": "test",
+      "ref": "tests/core/conformance-stages.test.js#the six conformance stages are claim methods",
+      "description": "The six stages are registered methods, weakest first."
+    },
+    {
+      "id": "ev-conformance-stage-2",
+      "claim": "conformance-stages-graded",
+      "kind": "test",
+      "ref": "tests/core/conformance-stages.test.js#the structural stage names its stage and gives at most checkedOnInstances",
+      "description": "A fresh passing test and a document give the structural stage checkedOnInstances, subject implementation, not established."
+    },
+    {
+      "id": "ev-conformance-stage-3",
+      "claim": "conformance-stages-graded",
+      "kind": "test",
+      "ref": "tests/core/conformance-stages.test.js#the interface stage names its stage and gives at most checkedOnInstances",
+      "description": "A fresh passing test and a document give the interface stage checkedOnInstances, subject implementation, not established."
+    },
+    {
+      "id": "ev-conformance-stage-4",
+      "claim": "conformance-stages-graded",
+      "kind": "test",
+      "ref": "tests/core/conformance-stages.test.js#the transition stage names its stage and gives at most checkedOnInstances",
+      "description": "A fresh passing test and a document give the transition stage checkedOnInstances, subject implementation, not established."
+    },
+    {
+      "id": "ev-conformance-stage-5",
+      "claim": "conformance-stages-graded",
+      "kind": "test",
+      "ref": "tests/core/conformance-stages.test.js#the trace stage names its stage and gives at most checkedOnInstances",
+      "description": "A fresh passing test and a document give the trace stage checkedOnInstances, subject implementation, not established."
+    },
+    {
+      "id": "ev-conformance-stage-6",
+      "claim": "conformance-stages-graded",
+      "kind": "test",
+      "ref": "tests/core/conformance-stages.test.js#the runtime-monitor stage names its stage and gives at most checkedOnInstances",
+      "description": "A fresh passing test and a document give the runtime-monitor stage checkedOnInstances, subject implementation, not established."
+    },
+    {
+      "id": "ev-conformance-stage-7",
+      "claim": "conformance-stages-graded",
+      "kind": "test",
+      "ref": "tests/core/conformance-stages.test.js#the verified-refinement stage names its stage and is proved with subject implementation",
+      "description": "A fresh accepted theorem check gives the verified-refinement stage proved, subject implementation."
     }
   ]
 }

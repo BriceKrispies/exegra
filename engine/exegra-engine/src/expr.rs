@@ -412,8 +412,6 @@ fn require_type(v: &Value, ty: &str, op: &str) -> Result<(), ExprError> {
 /// The largest magnitude of an integer without a declared type in the integer fragment
 /// (`2^53 - 1`, formal/Exegra/Core/Behav.lean's `maxSafe`).
 pub const MAX_SAFE: f64 = 9_007_199_254_740_991.0;
-/// The error of an untyped division with a remainder in the integer fragment.
-pub const INEXACT: &str = "Division with a remainder: an untyped / must be exact";
 /// The error of an untyped result outside `±(2^53 - 1)` in the integer fragment.
 pub const OVERFLOW: &str =
     "Integer overflow: an untyped result is outside -9007199254740991..9007199254740991";
@@ -440,9 +438,10 @@ fn checked(integer: bool, x: f64, y: f64, r: f64) -> Result<Value, ExprError> {
     Ok(Value::Number(r))
 }
 
-/// Evaluate a parsed expression; with `integer` (an input in the integer fragment of the behaviour
-/// calculus, WG-5681), untyped arithmetic is checked in `±(2^53 - 1)` and an untyped division with
-/// a remainder is the error [`INEXACT`].
+/// Evaluate a parsed expression; with `integer` (an input in the fragment of the behaviour calculus,
+/// WG-5681), untyped arithmetic is checked in `±(2^53 - 1)`. The calculus computes untyped numbers as
+/// exact rationals (WG-5683); this oracle computes them as doubles, so the two agree on integers and
+/// on results a double holds exactly, and differ elsewhere (tests/conformance/expected-differences.json).
 pub fn eval_expr_mode(
     ast: &Ast,
     resolve: &dyn Fn(&[String]) -> Value,
@@ -520,7 +519,6 @@ pub fn eval_expr_mode(
                 BinOp::Sub => checked(integer, x, y, x - y),
                 BinOp::Mul => checked(integer, x, y, x * y),
                 BinOp::Div | BinOp::Rem if y == 0.0 => Err(ExprError::eval("Division by zero")),
-                BinOp::Div if integer && x % y != 0.0 => Err(ExprError::eval(INEXACT)),
                 BinOp::Div => checked(integer, x, y, x / y),
                 // Rust's f64 `%` is fmod, like JavaScript's: the sign of the dividend.
                 BinOp::Rem => checked(integer, x, y, x % y),

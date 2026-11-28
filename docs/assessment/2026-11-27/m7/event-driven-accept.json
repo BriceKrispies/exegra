@@ -1,0 +1,208 @@
+{
+ "emptied": [
+  "broker",
+  "delivery",
+  "ingest"
+ ],
+ "fixture": "event-driven",
+ "accepted": "telemetry-by-role",
+ "dryRunOperations": 6,
+ "operations": 6,
+ "semanticHash": {
+  "before": "19afbc08a39798",
+  "afterAccept": "02108bf519e904",
+  "afterUndo": "19afbc08a39798",
+  "afterRedo": "02108bf519e904",
+  "undoRestores": true,
+  "redoRestores": true
+ },
+ "validate": {
+  "errors": 0,
+  "warnings": 0
+ },
+ "cut": {
+  "id": "telemetry-by-role-cut",
+  "blocks": 7,
+  "interactions": 6,
+  "connectors": 5,
+  "realisations": {
+   "maps": 0,
+   "ok": true
+  },
+  "diagnostics": []
+ },
+ "navigation": {
+  "hierarchy": "telemetry-by-role",
+  "cuts": [
+   "telemetry-by-role-top",
+   "telemetry-by-role-cut"
+  ],
+  "blocksAtCut": [
+   "ingest",
+   "broker",
+   "processing",
+   "delivery",
+   "consumers",
+   "producers",
+   "topics"
+  ]
+ },
+ "levelBoundClaims": {
+  "telemetry-by-role-level-claim@telemetry-by-role-cut": {
+   "status": "verified",
+   "expressible": true
+  },
+  "telemetry-by-role-level-claim@telemetry-by-role-top": {
+   "status": "inconclusive",
+   "expressible": false
+  }
+ },
+ "after": {
+  "coherence": {
+   "ok": true,
+   "messages": 7,
+   "unwitnessed": 0
+  },
+  "boundary-contracts": {
+   "ok": false,
+   "hops": 2,
+   "findings": [
+    "gateway-invokes-filter"
+   ]
+  }
+ },
+ "operationList": [
+  {
+   "type": "CreateEntity",
+   "kind": "component",
+   "data": {
+    "id": "consumers",
+    "name": "Consumers",
+    "category": "logical",
+    "parent": "telemetry-platform",
+    "purpose": "A block of the accepted decomposition \"telemetry-by-role\" of \"telemetry-platform\": it groups archiver, dashboard, notifier."
+   }
+  },
+  {
+   "type": "CreateEntity",
+   "kind": "component",
+   "data": {
+    "id": "producers",
+    "name": "Producers",
+    "category": "logical",
+    "parent": "telemetry-platform",
+    "purpose": "A block of the accepted decomposition \"telemetry-by-role\" of \"telemetry-platform\": it groups edge-filter, sensor-gateway."
+   }
+  },
+  {
+   "type": "CreateEntity",
+   "kind": "component",
+   "data": {
+    "id": "topics",
+    "name": "Topics",
+    "category": "logical",
+    "parent": "telemetry-platform",
+    "purpose": "A block of the accepted decomposition \"telemetry-by-role\" of \"telemetry-platform\": it groups alerts-topic, telemetry-topic."
+   }
+  },
+  {
+   "type": "CreateEntity",
+   "kind": "hierarchy",
+   "data": {
+    "id": "telemetry-by-role",
+    "name": "Producers, topics, processing, consumers",
+    "description": "The candidate decomposition \"telemetry-by-role\" of \"telemetry-platform\", accepted: 4 blocks over the leaves of the scope (source: data). Every other element is placed as the logical hierarchy places it.",
+    "groups": [
+     {
+      "parent": "consumers",
+      "members": [
+       "archiver",
+       "dashboard",
+       "notifier"
+      ]
+     },
+     {
+      "parent": "processing",
+      "members": [
+       "aggregator",
+       "alert-rules"
+      ]
+     },
+     {
+      "parent": "producers",
+      "members": [
+       "edge-filter",
+       "sensor-gateway"
+      ]
+     },
+     {
+      "parent": "telemetry-platform",
+      "members": [
+       "broker",
+       "consumers",
+       "delivery",
+       "ingest",
+       "processing",
+       "producers",
+       "topics"
+      ]
+     },
+     {
+      "parent": "topics",
+      "members": [
+       "alerts-topic",
+       "telemetry-topic"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "type": "CreateEntity",
+   "kind": "cut",
+   "data": {
+    "id": "telemetry-by-role-top",
+    "name": "Producers, topics, processing, consumers: scope as one block",
+    "hierarchy": "telemetry-by-role",
+    "expand": []
+   }
+  },
+  {
+   "type": "CreateEntity",
+   "kind": "cut",
+   "data": {
+    "id": "telemetry-by-role-cut",
+    "name": "Producers, topics, processing, consumers: blocks",
+    "hierarchy": "telemetry-by-role",
+    "expand": [
+     "telemetry-platform"
+    ]
+   }
+  }
+ ],
+ "claimOperation": {
+  "type": "AddClaim",
+  "data": {
+   "id": "telemetry-by-role-level-claim",
+   "kind": "structural",
+   "statement": "At the accepted cut no dependency path leads from the consumers to the producers.",
+   "subjects": [
+    "consumers",
+    "producers"
+   ],
+   "evaluate": {
+    "method": "no-relationship",
+    "cut": "telemetry-by-role-cut",
+    "from": "consumers",
+    "to": "producers",
+    "kinds": [
+     "invokes",
+     "notifies",
+     "publishes",
+     "subscribes",
+     "reads"
+    ]
+   }
+  }
+ }
+}

@@ -9,7 +9,7 @@
   {
    "path": "cli/admit.js",
    "language": "js",
-   "digest": "sha256:7f2ce048189d5401efe25e34b5f5ed5606aa9b23c4304c224eff9f02e34c58cf",
+   "digest": "sha256:ea945d737fd99d2f735a7c7b60402d87ac39604e9db2613e9162cd6d8c1192d4",
    "imports": [
     {
      "spec": "../src/core/integrity.js",
@@ -58,13 +58,37 @@
      "how": "static",
      "resolved": "src/core/impact.js",
      "external": false
+    },
+    {
+     "spec": "../src/core/layers.js",
+     "how": "static",
+     "resolved": "src/core/layers.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/layer-values.js",
+     "how": "static",
+     "resolved": "src/core/layer-values.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/refinement-explore.js",
+     "how": "static",
+     "resolved": "src/core/refinement-explore.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/expr.js",
+     "how": "static",
+     "resolved": "src/core/expr.js",
+     "external": false
     }
    ]
   },
   {
    "path": "cli/commands.js",
    "language": "js",
-   "digest": "sha256:b18f53df2ab8b468c50e68b39f1683bf688c6e2b782230e807375ce5a09e441a",
+   "digest": "sha256:6161cb70b651fbca871ac558124f3db0deb0e4004aa52d21a442a80c93e3e724",
    "imports": [
     {
      "spec": "node:crypto",
@@ -295,6 +319,18 @@
      "external": false
     },
     {
+     "spec": "../tools/test-names.js",
+     "how": "static",
+     "resolved": "tools/test-names.js",
+     "external": false
+    },
+    {
+     "spec": "./test-batch.js",
+     "how": "static",
+     "resolved": "cli/test-batch.js",
+     "external": false
+    },
+    {
      "spec": "./admit.js",
      "how": "static",
      "resolved": "cli/admit.js",
@@ -313,9 +349,51 @@
      "external": false
     },
     {
+     "spec": "./composition-commands.js",
+     "how": "static",
+     "resolved": "cli/composition-commands.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/composition.js",
+     "how": "static",
+     "resolved": "src/core/composition.js",
+     "external": false
+    },
+    {
      "spec": "../src/core/abstraction.js",
      "how": "static",
      "resolved": "src/core/abstraction.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/coherence.js",
+     "how": "static",
+     "resolved": "src/core/coherence.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/function-composition.js",
+     "how": "static",
+     "resolved": "src/core/function-composition.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/fault-lifting.js",
+     "how": "static",
+     "resolved": "src/core/fault-lifting.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/decomposition.js",
+     "how": "static",
+     "resolved": "src/core/decomposition.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/interactions.js",
+     "how": "static",
+     "resolved": "src/core/interactions.js",
      "external": false
     },
     {
@@ -339,9 +417,34 @@
    ]
   },
   {
+   "path": "cli/composition-commands.js",
+   "language": "js",
+   "digest": "sha256:f52ff65927fdf707df3b1d227efce123e1d2968a28aca2c950504eea259de035",
+   "imports": [
+    {
+     "spec": "../src/core/composition.js",
+     "how": "static",
+     "resolved": "src/core/composition.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/engine.js",
+     "how": "static",
+     "resolved": "src/core/engine.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/claims.js",
+     "how": "static",
+     "resolved": "src/core/claims.js",
+     "external": false
+    }
+   ]
+  },
+  {
    "path": "cli/evidence-run.js",
    "language": "js",
-   "digest": "sha256:0c134d623edc386dc4d7625f0b302e0c8ffcf9bfdf60460827e39f7200a5c482",
+   "digest": "sha256:0dac5c998d7de8db7687570e5288b833125b08b777512becb8857d67c35b5c9d",
    "imports": []
   },
   {
@@ -408,6 +511,73 @@
    ]
   },
   {
+   "path": "cli/test-batch.js",
+   "language": "js",
+   "digest": "sha256:6a82963f14027b673e3c30dbcebf8e76d904f92a7aa4cad8a65264475605f8ec",
+   "imports": [
+    {
+     "spec": "node:crypto",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:child_process",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:module",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:os",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "../src/core/evidence-ref.js",
+     "how": "static",
+     "resolved": "src/core/evidence-ref.js",
+     "external": false
+    },
+    {
+     "spec": "../tools/tree-stamp.js",
+     "how": "static",
+     "resolved": "tools/tree-stamp.js",
+     "external": false
+    },
+    {
+     "spec": "./outcomes.js",
+     "how": "static",
+     "resolved": "cli/outcomes.js",
+     "external": false
+    }
+   ]
+  },
+  {
    "path": "engine/exegra-engine-wasm/src/lib.rs",
    "language": "rust",
    "digest": "sha256:235d0623a82da5f17d3dd32910f944d5d171b7fc0fde19c61bdd2678e317b033",
@@ -423,7 +593,7 @@
   {
    "path": "engine/exegra-engine/src/expr.rs",
    "language": "rust",
-   "digest": "sha256:e50237059dad7e8e9df419e932594631e5343e3940a2e02743969066b59c1393",
+   "digest": "sha256:641ca7c0deea1cbd74499c906953a0c8182f2f690c304556f227a6b9f2e40854",
    "imports": [
     {
      "spec": "std::fmt",
@@ -535,7 +705,7 @@
   {
    "path": "engine/exegra-engine/src/v2.rs",
    "language": "rust",
-   "digest": "sha256:3c94e8c62c412072fd55f6d046b989130d639572467038b3da0d1a2b4eff9f8d",
+   "digest": "sha256:cd35241563cc46605ec6c5956e724a003f2082fe1f3bbdcab1cbe1fe1c632aa6",
    "imports": [
     {
      "spec": "std::cell::RefCell",
@@ -724,7 +894,7 @@
   {
    "path": "formal/Exegra.lean",
    "language": "lean",
-   "digest": "sha256:c469340e0682c4bad8feb2fbc8a0899608865be1e04e14de9f1d7b75b470c80a",
+   "digest": "sha256:88665fc69d6018e01ab5b4f0ca772d9621fee8bddfe78606c551699367d8f305",
    "imports": [
     {
      "spec": "Exegra.Number",
@@ -847,9 +1017,21 @@
      "external": false
     },
     {
+     "spec": "Exegra.Boundary",
+     "how": "import",
+     "resolved": "formal/Exegra/Boundary.lean",
+     "external": false
+    },
+    {
      "spec": "Exegra.Core.LTS",
      "how": "import",
      "resolved": "formal/Exegra/Core/LTS.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.Live",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Live.lean",
      "external": false
     },
     {
@@ -895,6 +1077,12 @@
      "external": false
     },
     {
+     "spec": "Exegra.Core.BehavRes",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/BehavRes.lean",
+     "external": false
+    },
+    {
      "spec": "Exegra.Elab",
      "how": "import",
      "resolved": "formal/Exegra/Elab.lean",
@@ -917,13 +1105,61 @@
      "how": "import",
      "resolved": "formal/Exegra/ProveB.lean",
      "external": false
+    },
+    {
+     "spec": "Exegra.Lower",
+     "how": "import",
+     "resolved": "formal/Exegra/Lower.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.BehavLive",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/BehavLive.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.Compose",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Compose.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.Contract",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Contract.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.Refine",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Refine.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.ProveLive",
+     "how": "import",
+     "resolved": "formal/Exegra/ProveLive.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.ProveKernel",
+     "how": "import",
+     "resolved": "formal/Exegra/ProveKernel.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Proofs.VisualEditFlow",
+     "how": "import",
+     "resolved": "formal/Exegra/Proofs/VisualEditFlow.lean",
+     "external": false
     }
    ]
   },
   {
    "path": "formal/Exegra/Api.lean",
    "language": "lean",
-   "digest": "sha256:da34121a508e44b0959ce780fd9e7483e27923176d9d4127edda33a914f387be",
+   "digest": "sha256:9099f6611e0c31042cf2799ca1c80d2b5017eebb007ce124d2b7536182e7f243",
    "imports": [
     {
      "spec": "Exegra.Api.Basic",
@@ -948,6 +1184,12 @@
      "how": "import",
      "resolved": "formal/Exegra/Api/Verdict.lean",
      "external": false
+    },
+    {
+     "spec": "Exegra.Api.Boundary",
+     "how": "import",
+     "resolved": "formal/Exegra/Api/Boundary.lean",
+     "external": false
     }
    ]
   },
@@ -965,9 +1207,28 @@
    ]
   },
   {
+   "path": "formal/Exegra/Api/Boundary.lean",
+   "language": "lean",
+   "digest": "sha256:f8abfd19ab8b1c18a37ca4a0466c00c78a417ca1b96cdab2420694b76bd2751d",
+   "imports": [
+    {
+     "spec": "Exegra.Api.Basic",
+     "how": "import",
+     "resolved": "formal/Exegra/Api/Basic.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Boundary",
+     "how": "import",
+     "resolved": "formal/Exegra/Boundary.lean",
+     "external": false
+    }
+   ]
+  },
+  {
    "path": "formal/Exegra/Api/Engine.lean",
    "language": "lean",
-   "digest": "sha256:2f275c6cdfcff84630ebb5a840a9460863fd1c04059573516153f754b659508e",
+   "digest": "sha256:69f8dcb2cffe5a10d6752b5fb7df414e6cc83f6094dbe4f997ce8a75f35c7b34",
    "imports": [
     {
      "spec": "Exegra.Api.Basic",
@@ -997,6 +1258,18 @@
      "spec": "Exegra.ProveB",
      "how": "import",
      "resolved": "formal/Exegra/ProveB.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Lower",
+     "how": "import",
+     "resolved": "formal/Exegra/Lower.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.ProveLive",
+     "how": "import",
+     "resolved": "formal/Exegra/ProveLive.lean",
      "external": false
     }
    ]
@@ -1046,14 +1319,45 @@
    ]
   },
   {
+   "path": "formal/Exegra/Boundary.lean",
+   "language": "lean",
+   "digest": "sha256:a964d350a5a99169a87911ee6532cdc9b0256676fe2f1b6080ea7e345585abe0",
+   "imports": [
+    {
+     "spec": "Exegra.Json",
+     "how": "import",
+     "resolved": "formal/Exegra/Json.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Trace",
+     "how": "import",
+     "resolved": "formal/Exegra/Trace.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Impl.Semantics",
+     "how": "import",
+     "resolved": "formal/Exegra/Impl/Semantics.lean",
+     "external": false
+    }
+   ]
+  },
+  {
    "path": "formal/Exegra/Core/Behav.lean",
    "language": "lean",
-   "digest": "sha256:1b3826e08e45ebfe93ff8e4c721ad301bb601f672e2cfe03d13123b4d8479b3d",
+   "digest": "sha256:10d25011ea644ede53265e3284b8b177be2535893a82ff78b8263cd593fdf3ed",
    "imports": [
     {
      "spec": "Exegra.Core.LTS",
      "how": "import",
      "resolved": "formal/Exegra/Core/LTS.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Resource",
+     "how": "import",
+     "resolved": "formal/Exegra/Resource.lean",
      "external": false
     }
    ]
@@ -1061,7 +1365,7 @@
   {
    "path": "formal/Exegra/Core/BehavCheck.lean",
    "language": "lean",
-   "digest": "sha256:5b3f96293492bffc68406445b322e5b4aed51585db7d65d04e83d00a64a01ed8",
+   "digest": "sha256:e52b06fd1426b48faa11e1155cc9d78dcec4fbe528bd6d82cd6392926b8a8f72",
    "imports": [
     {
      "spec": "Exegra.Core.BehavExec",
@@ -1074,7 +1378,7 @@
   {
    "path": "formal/Exegra/Core/BehavExamples.lean",
    "language": "lean",
-   "digest": "sha256:baaec8cfd9afc7218d32c37a20694b1f3aff082cb154b20ca9e71326c6877315",
+   "digest": "sha256:3ca484aa1e41dfb1d31420368717798f59aeb955ae30788a2c0e7793d575a0ca",
    "imports": [
     {
      "spec": "Exegra.Core.BehavExec",
@@ -1087,7 +1391,7 @@
   {
    "path": "formal/Exegra/Core/BehavExec.lean",
    "language": "lean",
-   "digest": "sha256:5d9e5c12db5ee6ef2c4cec5b7f316b9ad709e4c4e5ba631dbb7c481e1c8ee99b",
+   "digest": "sha256:d7ea3670789d2acf172938b3cde79d987d48262d9cc6d2671162f210f05c495e",
    "imports": [
     {
      "spec": "Exegra.Core.Behav",
@@ -1110,9 +1414,47 @@
    ]
   },
   {
+   "path": "formal/Exegra/Core/BehavLive.lean",
+   "language": "lean",
+   "digest": "sha256:42bafb93bda3bfedd88e2eb089ef5a106a2d3b71bcbff9f025e2e475ada54e09",
+   "imports": [
+    {
+     "spec": "Std.Data.HashMap",
+     "how": "import",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "Exegra.Core.BehavExec",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/BehavExec.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.Live",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Live.lean",
+     "external": false
+    }
+   ]
+  },
+  {
    "path": "formal/Exegra/Core/BehavRename.lean",
    "language": "lean",
-   "digest": "sha256:20937a496e57d5fe002b769a007074ccf1e43472d8d051b9a5f2ca8c09bc1d29",
+   "digest": "sha256:fa0e278426ff40be089995694d7de4f2429038f821861f582485124502006969",
+   "imports": [
+    {
+     "spec": "Exegra.Core.Behav",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Behav.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Core/BehavRes.lean",
+   "language": "lean",
+   "digest": "sha256:3b07cb208e7fab1969cb4410612659b483571ce2f99b9ddd6a14bbcd69086fff",
    "imports": [
     {
      "spec": "Exegra.Core.Behav",
@@ -1125,7 +1467,7 @@
   {
    "path": "formal/Exegra/Core/Calculus.lean",
    "language": "lean",
-   "digest": "sha256:a50ea93f42ca752dac0e5566ba0ac42735cb5457c08c4290658626aa4bbfb793",
+   "digest": "sha256:bf6f6d0790f25615c058afd3c86812cff4d5ce3c5719a3396898c02c1042f0b1",
    "imports": [
     {
      "spec": "Exegra.Core.LTS",
@@ -1136,9 +1478,35 @@
    ]
   },
   {
+   "path": "formal/Exegra/Core/Compose.lean",
+   "language": "lean",
+   "digest": "sha256:aefacc432b627838eec387b9621afae86a61dde291ce71a385e5211ba538d1a3",
+   "imports": [
+    {
+     "spec": "Exegra.Core.Live",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Live.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Core/Contract.lean",
+   "language": "lean",
+   "digest": "sha256:3670e837841e2ed76e1aa0fa528ae3fbc44d5799dba87522e82998db6a1f084f",
+   "imports": [
+    {
+     "spec": "Exegra.Core.Compose",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Compose.lean",
+     "external": false
+    }
+   ]
+  },
+  {
    "path": "formal/Exegra/Core/Examples.lean",
    "language": "lean",
-   "digest": "sha256:fc5692edd88aba8214e1a157f0ed0da8a0dbe0d157fd8c53123b38b03eca650b",
+   "digest": "sha256:cbf1dc1c9a50782cd05af1ca13e2370b0bc85a2c275e30e05177cfafd4bae4ee",
    "imports": [
     {
      "spec": "Exegra.Core.Calculus",
@@ -1157,8 +1525,34 @@
   {
    "path": "formal/Exegra/Core/LTS.lean",
    "language": "lean",
-   "digest": "sha256:2848d94c43cc17122828b4554447c25cfba94f4800819cc1305532ad44809d61",
+   "digest": "sha256:b8a517045cd105bce7a687d96c38ea403ba69d6542ec624104ccd0f5e46e2368",
    "imports": []
+  },
+  {
+   "path": "formal/Exegra/Core/Live.lean",
+   "language": "lean",
+   "digest": "sha256:17649968ecd5bd57b3cf17007de4d17d8c9b4a4fcf36899f9ead4731a9164cfd",
+   "imports": [
+    {
+     "spec": "Exegra.Core.LTS",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/LTS.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Core/Refine.lean",
+   "language": "lean",
+   "digest": "sha256:20cd2a8d4aa9599e9dd27c76300832c12f1b1a702321d843d35fa1eea0d0319d",
+   "imports": [
+    {
+     "spec": "Exegra.Core.Compose",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Compose.lean",
+     "external": false
+    }
+   ]
   },
   {
    "path": "formal/Exegra/Core/Search.lean",
@@ -1182,7 +1576,7 @@
   {
    "path": "formal/Exegra/Elab.lean",
    "language": "lean",
-   "digest": "sha256:96db6aa70dca7f84fb9fc5a83301716e920c94544c101413094cb31556f22ffb",
+   "digest": "sha256:726b948e7164149e76d8fb5db426e0f7f45033a20d86ff647fe3c5abe28ae267",
    "imports": [
     {
      "spec": "Exegra.Format2",
@@ -1201,7 +1595,7 @@
   {
    "path": "formal/Exegra/Expr.lean",
    "language": "lean",
-   "digest": "sha256:7ea1d725b14f9676cee8cfd1ff8bbafa7d11cd460fdba02b647ee136075a21cd",
+   "digest": "sha256:886acb31462f005dda767118dd41673c51b914324c5c396f4e82d8e60eaaf0ee",
    "imports": [
     {
      "spec": "Exegra.Value",
@@ -1214,7 +1608,7 @@
   {
    "path": "formal/Exegra/Format2.lean",
    "language": "lean",
-   "digest": "sha256:fa64ef554c8994262ff9b8323851ac263a1c92e7ea924bb5c0f6cac16d836c72",
+   "digest": "sha256:8998ce8dceaa966cef7642cc30a75deb9fa3337fdb5d64c1aca9042d61665ed8",
    "imports": [
     {
      "spec": "Exegra.Expr",
@@ -1257,7 +1651,7 @@
   {
    "path": "formal/Exegra/Format2B.lean",
    "language": "lean",
-   "digest": "sha256:f2a9b24f03daa6d1b7607c505f9705c469b85408849d8163f891b72f57ef76fa",
+   "digest": "sha256:4e38111d29e5f7f7d44b1f8f234d9c5eafe8c6bfe97ee95953232ed0ad1b33ea",
    "imports": [
     {
      "spec": "Exegra.Elab",
@@ -1360,7 +1754,7 @@
   {
    "path": "formal/Exegra/Input.lean",
    "language": "lean",
-   "digest": "sha256:62dfc00f90a5df87cae2334cc886a4c0d1b9b84055adda411848b8d53f802f99",
+   "digest": "sha256:3a3013f268105cf4ca99afd1abe5472eb632397a279689cd0418d76150865b57",
    "imports": [
     {
      "spec": "Exegra.Json",
@@ -1373,7 +1767,7 @@
   {
    "path": "formal/Exegra/Integrity.lean",
    "language": "lean",
-   "digest": "sha256:346f042e57f9c953ccddd6e8797fd4294dd6a71760c41acbfcf5039f21b29a30",
+   "digest": "sha256:a0afc1bb1c0604d0b6c3a9593e3d4132fbe5c53762b59d0cbcc34c8fce8f30c5",
    "imports": [
     {
      "spec": "Exegra.Json",
@@ -1386,7 +1780,45 @@
   {
    "path": "formal/Exegra/Json.lean",
    "language": "lean",
-   "digest": "sha256:4bd9076cd3f8897895d7e7260ec61f0840e96eb8c2bc93424d42b809db5d6cc0",
+   "digest": "sha256:d6efa3d2423683a3b93f9993dc9536330771c23ca09a6c3caf76f29ce835884f",
+   "imports": [
+    {
+     "spec": "Std.Data.HashSet",
+     "how": "import",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "Exegra.Value",
+     "how": "import",
+     "resolved": "formal/Exegra/Value.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Lower.lean",
+   "language": "lean",
+   "digest": "sha256:710d65beb4ea87a433877b13a81fcc551493672fde954eb150f76fea256553c7",
+   "imports": [
+    {
+     "spec": "Exegra.Lower.Input",
+     "how": "import",
+     "resolved": "formal/Exegra/Lower/Input.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Elab",
+     "how": "import",
+     "resolved": "formal/Exegra/Elab.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Lower/Dist.lean",
+   "language": "lean",
+   "digest": "sha256:e72815a357abe6e946ab93322f5eee37d16d6bbd4374e61315be6858aa94595e",
    "imports": [
     {
      "spec": "Exegra.Value",
@@ -1397,9 +1829,54 @@
    ]
   },
   {
+   "path": "formal/Exegra/Lower/Families.lean",
+   "language": "lean",
+   "digest": "sha256:c0589fa9870de006e0a60901c54f3c51dec38978edd1e1dcde97c2544b182b52",
+   "imports": [
+    {
+     "spec": "Exegra.Lower.Pinned",
+     "how": "import",
+     "resolved": "formal/Exegra/Lower/Pinned.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Lower/Input.lean",
+   "language": "lean",
+   "digest": "sha256:e26a3b059f3f996ccf734f3b2b13c15ce27e269ed46b1c101a1f300edf168750",
+   "imports": [
+    {
+     "spec": "Exegra.Model",
+     "how": "import",
+     "resolved": "formal/Exegra/Model.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Lower.Families",
+     "how": "import",
+     "resolved": "formal/Exegra/Lower/Families.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Lower/Pinned.lean",
+   "language": "lean",
+   "digest": "sha256:9162e180a432e342ebe03394f27685346fe83854f2ba18bacb6c2500615e9ca9",
+   "imports": [
+    {
+     "spec": "Exegra.Lower.Dist",
+     "how": "import",
+     "resolved": "formal/Exegra/Lower/Dist.lean",
+     "external": false
+    }
+   ]
+  },
+  {
    "path": "formal/Exegra/Model.lean",
    "language": "lean",
-   "digest": "sha256:781e01876970eed3e1545cd2684ff8e0124166988935e48ea58883544fe05191",
+   "digest": "sha256:c88c0b938e3a64a30d503530f65e4ad9c295dbe2acd0a7e095e8ae58141d5541",
    "imports": [
     {
      "spec": "Std.Data.HashMap",
@@ -1437,13 +1914,26 @@
   {
    "path": "formal/Exegra/Number.lean",
    "language": "lean",
-   "digest": "sha256:a75ba037f5cad1f7dbc1e6881e7b12ba12aa104bb3df084a7f733584b58ef9ab",
+   "digest": "sha256:859731d4abdc888116e9167feb7a9ba9b70e72dec201180dbaa4d459cd9eba6b",
    "imports": []
+  },
+  {
+   "path": "formal/Exegra/Proofs/VisualEditFlow.lean",
+   "language": "lean",
+   "digest": "sha256:705211b44d8db7f162d6d446a23a141cdd46319c6846a7c0756c0100798ccc63",
+   "imports": [
+    {
+     "spec": "Exegra.ProveKernel",
+     "how": "import",
+     "resolved": "formal/Exegra/ProveKernel.lean",
+     "external": false
+    }
+   ]
   },
   {
    "path": "formal/Exegra/ProveB.lean",
    "language": "lean",
-   "digest": "sha256:3cdbaa59e2a3d8b427f161d689b2c0ff3db1750f2abbf79a8014d57121ec1e6b",
+   "digest": "sha256:ab8a268b8c4b1f7e4e8ca43fcebcedc63d372fad955f4fca35958c25bca7e52b",
    "imports": [
     {
      "spec": "Exegra.Format2B",
@@ -1460,6 +1950,38 @@
    ]
   },
   {
+   "path": "formal/Exegra/ProveKernel.lean",
+   "language": "lean",
+   "digest": "sha256:b4554ad5b99553f682509299f4371ae317d3905a8193e3609c8b5882ce38ca13",
+   "imports": [
+    {
+     "spec": "Exegra.ProveLive",
+     "how": "import",
+     "resolved": "formal/Exegra/ProveLive.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/ProveLive.lean",
+   "language": "lean",
+   "digest": "sha256:68a33eca5c4335e5fccfe7f3dccf15bf5ee93fc99e75d10384bcd44304d7b037",
+   "imports": [
+    {
+     "spec": "Exegra.ProveB",
+     "how": "import",
+     "resolved": "formal/Exegra/ProveB.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.BehavLive",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/BehavLive.lean",
+     "external": false
+    }
+   ]
+  },
+  {
    "path": "formal/Exegra/Random.lean",
    "language": "lean",
    "digest": "sha256:d1f74477b9da4d9aa9f8b3c441349e25458f26bde4890a74aa383ab6d362218d",
@@ -1468,13 +1990,13 @@
   {
    "path": "formal/Exegra/Resource.lean",
    "language": "lean",
-   "digest": "sha256:3b053367e338cab8552f65a29d89acad9d12634ee312c4dc7e93cd41c23c72d9",
+   "digest": "sha256:808a9a84cde95605d8604c222d9671e1a6cbec785fbb3e40d0a4de8ce2d297fb",
    "imports": []
   },
   {
    "path": "formal/Exegra/Search.lean",
    "language": "lean",
-   "digest": "sha256:c3757e0619d7855330a3d83665c77bf3b41a1606e82920083180b2d638469a5f",
+   "digest": "sha256:2d793589f6a601112762733b27b9a8b5dc4056bba0dec3cd3746fa1a4c667bdf",
    "imports": [
     {
      "spec": "Std.Data.HashSet",
@@ -1487,7 +2009,7 @@
   {
    "path": "formal/Exegra/Trace.lean",
    "language": "lean",
-   "digest": "sha256:42848e75dd2116f49396be7b9445ab5a145302c4eeb0c1d0167446ca007e44ce",
+   "digest": "sha256:4693fa92e0725352fc499fb3970779939d49d6efd3dd8cefdde77dd9a2220df2",
    "imports": [
     {
      "spec": "Exegra.Json",
@@ -1500,7 +2022,7 @@
   {
    "path": "formal/Exegra/Value.lean",
    "language": "lean",
-   "digest": "sha256:ac7765acfa37327172a433ab972e680668fa5ee051e5983f4943d1b43c53f193",
+   "digest": "sha256:62e632a710f6a59f1726dd84dbd1cd7b49d15b9d55406f8a7869d3e37b79f284",
    "imports": [
     {
      "spec": "Exegra.Number",
@@ -1513,7 +2035,7 @@
   {
    "path": "formal/Exegra/Verdict.lean",
    "language": "lean",
-   "digest": "sha256:2426ed90e1812552ecc5b45f99782d50f6277aa2acdd6b07ee6b155bb76669b3",
+   "digest": "sha256:064de0e4a1b02d65996e0507555d0e6b72780f96d8ed409039624e8adb385f69",
    "imports": [
     {
      "spec": "Exegra.Json",
@@ -1532,7 +2054,7 @@
   {
    "path": "formal/Main.lean",
    "language": "lean",
-   "digest": "sha256:3285c406a314944fea1df7f7996a7887a08aca83f40c6ba1d9102cdee3ae0850",
+   "digest": "sha256:c0e677f6fd71633217b792ddbd27f202123f3b04a05c344f40978544ed2e261a",
    "imports": [
     {
      "spec": "Exegra.Format2",
@@ -1563,6 +2085,24 @@
      "how": "import",
      "resolved": "formal/Exegra/ProveB.lean",
      "external": false
+    },
+    {
+     "spec": "Exegra.Api",
+     "how": "import",
+     "resolved": "formal/Exegra/Api.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.ProveLive",
+     "how": "import",
+     "resolved": "formal/Exegra/ProveLive.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.ProveKernel",
+     "how": "import",
+     "resolved": "formal/Exegra/ProveKernel.lean",
+     "external": false
     }
    ]
   },
@@ -1581,7 +2121,7 @@
   {
    "path": "src/app/engine-runner.js",
    "language": "js",
-   "digest": "sha256:c438944e7f3007fc2fd4959521cba05d6113b7d3cc2c4594dd9564f37658f27e",
+   "digest": "sha256:030a7a6ecef2f084ceac7d6ce8dddd224ac89f80720b92cb68328a6de8276c66",
    "imports": [
     {
      "spec": "../core/engine.js",
@@ -1692,7 +2232,7 @@
   {
    "path": "src/app/session.js",
    "language": "js",
-   "digest": "sha256:af1c2c2d4ee9baa1cf743dfac4fc57cac044dc121952edf44991e894712c71fa",
+   "digest": "sha256:2839621150abc58dbc8c2d702bf1d5c6cc989f753707856a71bd0f508abdec18",
    "imports": [
     {
      "spec": "../core/project.js",
@@ -1734,12 +2274,6 @@
      "spec": "../core/engine.js",
      "how": "static",
      "resolved": "src/core/engine.js",
-     "external": false
-    },
-    {
-     "spec": "../core/sim-input.js",
-     "how": "static",
-     "resolved": "src/core/sim-input.js",
      "external": false
     },
     {
@@ -1813,7 +2347,7 @@
   {
    "path": "src/core/abstraction.js",
    "language": "js",
-   "digest": "sha256:0968b56314312d46a61f18d619f7478b116336e643af6dcd7519e34efaf94078",
+   "digest": "sha256:fd884e7e6f27a4fad3a8217710ac7bccd044cb35f9ecf189239a62f381ca2b91",
    "imports": [
     {
      "spec": "./own.js",
@@ -1901,13 +2435,13 @@
   {
    "path": "src/core/claim-methods.js",
    "language": "js",
-   "digest": "sha256:dbea2e2093decebb665c93b926fd2f12f23d8e38c03fa267579796cbabfa9ac8",
+   "digest": "sha256:26cbd5d0a27ae021cef44297f40ba32e72a034a421232251333ee449215d5614",
    "imports": []
   },
   {
    "path": "src/core/claim-strength.js",
    "language": "js",
-   "digest": "sha256:6052644f29267fbd81a3ced9263008581998c0254387e2f77a37d4e8b0306bc0",
+   "digest": "sha256:4f6d32a884f903338b0655d0f918db5265628eb1dd10e16feac90add93040388",
    "imports": [
     {
      "spec": "./expr.js",
@@ -1938,7 +2472,7 @@
   {
    "path": "src/core/claims.js",
    "language": "js",
-   "digest": "sha256:1bf1c3a706084c7c61bf00ee46f73976f770b5add79640f09ef71b73811d0a2a",
+   "digest": "sha256:fde7d0c053aa36bbc38ad61e70642cb717eee5ba8411bc472b5da81333282405",
    "imports": [
     {
      "spec": "./fault-model.js",
@@ -2019,9 +2553,15 @@
      "external": false
     },
     {
-     "spec": "./sim-input.js",
+     "spec": "./time-units.js",
      "how": "static",
-     "resolved": "src/core/sim-input.js",
+     "resolved": "src/core/time-units.js",
+     "external": false
+    },
+    {
+     "spec": "./lean.js",
+     "how": "static",
+     "resolved": "src/core/lean.js",
      "external": false
     },
     {
@@ -2043,9 +2583,21 @@
      "external": false
     },
     {
-     "spec": "./pools.js",
+     "spec": "./refinement-explore.js",
      "how": "static",
-     "resolved": "src/core/pools.js",
+     "resolved": "src/core/refinement-explore.js",
+     "external": false
+    },
+    {
+     "spec": "./pool-rules.js",
+     "how": "static",
+     "resolved": "src/core/pool-rules.js",
+     "external": false
+    },
+    {
+     "spec": "./composition.js",
+     "how": "static",
+     "resolved": "src/core/composition.js",
      "external": false
     }
    ]
@@ -2071,6 +2623,62 @@
      "spec": "./type-expr.js",
      "how": "static",
      "resolved": "src/core/type-expr.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/coherence.js",
+   "language": "js",
+   "digest": "sha256:e66d8241f87a57b8021529d1d432c9082f5b00804e0fd7491ffe4e157d65d600",
+   "imports": [
+    {
+     "spec": "./query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "./abstraction.js",
+     "how": "static",
+     "resolved": "src/core/abstraction.js",
+     "external": false
+    },
+    {
+     "spec": "./interactions.js",
+     "how": "static",
+     "resolved": "src/core/interactions.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/composition.js",
+   "language": "js",
+   "digest": "sha256:c471610f1664ea3829a253b58b9d51e8fe28675b69464a18e5e14f69a7173ddf",
+   "imports": [
+    {
+     "spec": "./engine.js",
+     "how": "static",
+     "resolved": "src/core/engine.js",
+     "external": false
+    },
+    {
+     "spec": "./lean.js",
+     "how": "static",
+     "resolved": "src/core/lean.js",
+     "external": false
+    },
+    {
+     "spec": "./expr.js",
+     "how": "static",
+     "resolved": "src/core/expr.js",
+     "external": false
+    },
+    {
+     "spec": "./query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
      "external": false
     }
    ]
@@ -2133,9 +2741,52 @@
    ]
   },
   {
+   "path": "src/core/decomposition.js",
+   "language": "js",
+   "digest": "sha256:959467c13f1b24ea8743f6c5a81bd80fc6ded0086439cfe65691b16926024cc5",
+   "imports": [
+    {
+     "spec": "./abstraction.js",
+     "how": "static",
+     "resolved": "src/core/abstraction.js",
+     "external": false
+    },
+    {
+     "spec": "./query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "./interactions.js",
+     "how": "static",
+     "resolved": "src/core/interactions.js",
+     "external": false
+    },
+    {
+     "spec": "./extraction.js",
+     "how": "static",
+     "resolved": "src/core/extraction.js",
+     "external": false
+    },
+    {
+     "spec": "./coherence.js",
+     "how": "static",
+     "resolved": "src/core/coherence.js",
+     "external": false
+    },
+    {
+     "spec": "./composition.js",
+     "how": "static",
+     "resolved": "src/core/composition.js",
+     "external": false
+    }
+   ]
+  },
+  {
    "path": "src/core/derivation-cache.js",
    "language": "js",
-   "digest": "sha256:77137b01fa94d48f4886592e25c1a6bf422d898e593aa3ebfad820507266a658",
+   "digest": "sha256:bdf598ff7d4d915ce62646a408b7ed7c43af84223360a0d95870f406680b42b8",
    "imports": [
     {
      "spec": "node:fs",
@@ -2189,22 +2840,10 @@
    ]
   },
   {
-   "path": "src/core/distributions.js",
-   "language": "js",
-   "digest": "sha256:5239975a5e4105d092ed1ace1af122774d6ae3d3e0db4c9d990481a7575dcbd5",
-   "imports": []
-  },
-  {
    "path": "src/core/edit-history.js",
    "language": "js",
-   "digest": "sha256:670e02babfccf478b7abe3da51fc5a74bf0a715fe568c3d5e0d255147c13a8a4",
+   "digest": "sha256:164e71a10890d528eda3350b9302996b102e8ce3fe7543f28949f96ec95053ac",
    "imports": [
-    {
-     "spec": "./sim-input.js",
-     "how": "static",
-     "resolved": "src/core/sim-input.js",
-     "external": false
-    },
     {
      "spec": "./engine.js",
      "how": "static",
@@ -2216,14 +2855,8 @@
   {
    "path": "src/core/engine.js",
    "language": "js",
-   "digest": "sha256:405969abfd9d6a88f26dec42400413956c445d37f85d8dc23f6d565a4528ee79",
+   "digest": "sha256:c58f606f309ef8f9dad995082aeaa83ef352875d224b5acbbfad8059dc9aaa70",
    "imports": [
-    {
-     "spec": "./sim-input.js",
-     "how": "static",
-     "resolved": "src/core/sim-input.js",
-     "external": false
-    },
     {
      "spec": "./lean.js",
      "how": "static",
@@ -2276,14 +2909,33 @@
    "imports": []
   },
   {
-   "path": "src/core/fault-model.js",
+   "path": "src/core/fault-lifting.js",
    "language": "js",
-   "digest": "sha256:ed912e287c6a6d2a55958aa420d0af125c4a89ebab438b21dd7598c97c793c0d",
+   "digest": "sha256:948706ac11066a720a216ca165a54bddc48a35f5d93ed6bb707a674c213e9a33",
    "imports": [
     {
-     "spec": "./sim-input.js",
+     "spec": "./query.js",
      "how": "static",
-     "resolved": "src/core/sim-input.js",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "./abstraction.js",
+     "how": "static",
+     "resolved": "src/core/abstraction.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/fault-model.js",
+   "language": "js",
+   "digest": "sha256:4d2f1c23259e9486d6b71405a458b36be153972eb1211ce936f1d288804a5a5f",
+   "imports": [
+    {
+     "spec": "./time-units.js",
+     "how": "static",
+     "resolved": "src/core/time-units.js",
      "external": false
     }
    ]
@@ -2334,6 +2986,19 @@
      "spec": "./abstraction.js",
      "how": "static",
      "resolved": "src/core/abstraction.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/function-composition.js",
+   "language": "js",
+   "digest": "sha256:3dcd769a01fb8e37c00018d31e04ced8a641bd1b875ea7489e5adb99ddb16547",
+   "imports": [
+    {
+     "spec": "./query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
      "external": false
     }
    ]
@@ -2620,7 +3285,7 @@
   {
    "path": "src/core/impact.js",
    "language": "js",
-   "digest": "sha256:46c814c1c20a47d32f6b30d0e3b7ec1bb3536e53cde7e1a1362bb9d52200de2d",
+   "digest": "sha256:dfdb97e99ba341e156bb69ba5938f7852d354b7f26f4aa80a3c8d932e218ecc3",
    "imports": [
     {
      "spec": "./lean.js",
@@ -2909,18 +3574,12 @@
   {
    "path": "src/core/machine-coverage.js",
    "language": "js",
-   "digest": "sha256:44d6c6880c153934768ed8c2ded546fa251c24ebeb3045b265b5ad03dc914fba",
+   "digest": "sha256:c99db03f788a286d5d16fce748a3e1e24987ccff7f73f707f5b6612aa10260df",
    "imports": [
     {
      "spec": "./realisation.js",
      "how": "static",
      "resolved": "src/core/realisation.js",
-     "external": false
-    },
-    {
-     "spec": "./sim-input.js",
-     "how": "static",
-     "resolved": "src/core/sim-input.js",
      "external": false
     },
     {
@@ -2946,7 +3605,7 @@
   {
    "path": "src/core/metamodel.json",
    "language": "json",
-   "digest": "sha256:17a0012a846cada99237103ddf3f9db17a680b2dfecf487b923980fe1e02530f",
+   "digest": "sha256:d424e191ac4e4685efe84f10c384bdbeaefc40f80144a2f20f0538d55099cb24",
    "imports": []
   },
   {
@@ -3061,9 +3720,9 @@
    ]
   },
   {
-   "path": "src/core/pools.js",
+   "path": "src/core/pool-rules.js",
    "language": "js",
-   "digest": "sha256:30b3c190ae7fe1135368aaaf1112cfd8786643235c23e7f5c228fc5f8439e7e3",
+   "digest": "sha256:7d5d232c941f6b9a7261af145a8bce2959882916839dcbdb6491a43fc5e5c92d",
    "imports": [
     {
      "spec": "./constructs.js",
@@ -3174,12 +3833,12 @@
   {
    "path": "src/core/proof-export.js",
    "language": "js",
-   "digest": "sha256:f34d0a70342e88f3e7c47bb9971fc40943ead79a9c761f50c9c78eb872e102ed",
+   "digest": "sha256:4491ac1eb8ada5ce141961555256bab9527ea37d236498e98025705c957e6cc5",
    "imports": [
     {
-     "spec": "./sim-input.js",
+     "spec": "./engine.js",
      "how": "static",
-     "resolved": "src/core/sim-input.js",
+     "resolved": "src/core/engine.js",
      "external": false
     },
     {
@@ -3195,9 +3854,9 @@
      "external": false
     },
     {
-     "spec": "./pools.js",
+     "spec": "./pool-rules.js",
      "how": "static",
-     "resolved": "src/core/pools.js",
+     "resolved": "src/core/pool-rules.js",
      "external": false
     }
    ]
@@ -3237,7 +3896,7 @@
   {
    "path": "src/core/readiness-machines.js",
    "language": "js",
-   "digest": "sha256:ff308d9bc0d8cc395a4c18ab4b4bb94b19392406bbb9c29b823d1402c6c6bf4d",
+   "digest": "sha256:b72b0ab334e92cacf85cd78812711a9ce3ee8a57fc124ddfac3e71ee2b200181",
    "imports": [
     {
      "spec": "./codegen-model.js",
@@ -3262,7 +3921,7 @@
   {
    "path": "src/core/readiness-time.js",
    "language": "js",
-   "digest": "sha256:b83834640893e486258e5f633ca3f9938757b2147367abe2999a95f6c9266bb9",
+   "digest": "sha256:1932b91f5f7158e973c6ed0c0c7dc1f918b047c64771aa9d6e58697acfb84648",
    "imports": [
     {
      "spec": "./expr.js",
@@ -3271,9 +3930,9 @@
      "external": false
     },
     {
-     "spec": "./sim-input.js",
+     "spec": "./time-units.js",
      "how": "static",
-     "resolved": "src/core/sim-input.js",
+     "resolved": "src/core/time-units.js",
      "external": false
     }
    ]
@@ -3340,9 +3999,34 @@
    "imports": []
   },
   {
+   "path": "src/core/refinement-explore.js",
+   "language": "js",
+   "digest": "sha256:706891c863687d5304d43b87f219845cc8f18c493d33de560afb975a3dfe7203",
+   "imports": [
+    {
+     "spec": "./engine.js",
+     "how": "static",
+     "resolved": "src/core/engine.js",
+     "external": false
+    },
+    {
+     "spec": "./replay.js",
+     "how": "static",
+     "resolved": "src/core/replay.js",
+     "external": false
+    },
+    {
+     "spec": "./refinement.js",
+     "how": "static",
+     "resolved": "src/core/refinement.js",
+     "external": false
+    }
+   ]
+  },
+  {
    "path": "src/core/refinement.js",
    "language": "js",
-   "digest": "sha256:76538f55eedde2c84e960a8de5a8c34863aa42f03ad1dec8c9a84327f15eaf61",
+   "digest": "sha256:ac823dd1c7b3742f0bbc29aa400c898180fecc41dd766eb44f28d828191f0c76",
    "imports": [
     {
      "spec": "./expr.js",
@@ -3355,12 +4039,12 @@
   {
    "path": "src/core/replay.js",
    "language": "js",
-   "digest": "sha256:91c8e281e521a63aab4ea8c22b757dc57a55e2c1ad7b0da1c09f24f70875a622",
+   "digest": "sha256:3f21c6fe066bdf823d96c153140d050a3958650fca61d637612fe3c4041e1bad",
    "imports": [
     {
-     "spec": "./sim-input.js",
+     "spec": "./engine.js",
      "how": "static",
-     "resolved": "src/core/sim-input.js",
+     "resolved": "src/core/engine.js",
      "external": false
     },
     {
@@ -3416,37 +4100,6 @@
    "imports": []
   },
   {
-   "path": "src/core/sim-input.js",
-   "language": "js",
-   "digest": "sha256:f978ee56e23ec4f0ff3a74b3973f442b3d2806fe32721ab24b851305eae401f9",
-   "imports": [
-    {
-     "spec": "./distributions.js",
-     "how": "static",
-     "resolved": "src/core/distributions.js",
-     "external": false
-    },
-    {
-     "spec": "./codegen-model.js",
-     "how": "static",
-     "resolved": "src/core/codegen-model.js",
-     "external": false
-    },
-    {
-     "spec": "./fault-model.js",
-     "how": "static",
-     "resolved": "src/core/fault-model.js",
-     "external": false
-    },
-    {
-     "spec": "./pools.js",
-     "how": "static",
-     "resolved": "src/core/pools.js",
-     "external": false
-    }
-   ]
-  },
-  {
    "path": "src/core/stable-json.js",
    "language": "js",
    "digest": "sha256:d75d013ea8edbe892c1daf9b03daf5212a401b5b4c5446df902ae597046ce33c",
@@ -3495,6 +4148,19 @@
    "language": "js",
    "digest": "sha256:4f35116b20e6390be554676b2aec153a8d7b9905820cc5d164a3cea1770de5a1",
    "imports": []
+  },
+  {
+   "path": "src/core/time-units.js",
+   "language": "js",
+   "digest": "sha256:1693f7a8dc436767d656dd6d405624931f1196da4e7557f64c6368859a1c6b2f",
+   "imports": [
+    {
+     "spec": "./codegen-model.js",
+     "how": "static",
+     "resolved": "src/core/codegen-model.js",
+     "external": false
+    }
+   ]
   },
   {
    "path": "src/core/type-expr.js",
@@ -3568,7 +4234,7 @@
   {
    "path": "src/core/validate.js",
    "language": "js",
-   "digest": "sha256:1853ada9797ba8124fc88e95b550098087f1ab2cf1ebdc2ad8e55755a94a1e50",
+   "digest": "sha256:87e830234178108ee9c39a9c8ce25b10f5b723cdec1a5bd5b5fceafe053fb2f6",
    "imports": [
     {
      "spec": "./expr.js",
@@ -3631,6 +4297,12 @@
      "external": false
     },
     {
+     "spec": "./function-composition.js",
+     "how": "static",
+     "resolved": "src/core/function-composition.js",
+     "external": false
+    },
+    {
      "spec": "./tenant-data.js",
      "how": "static",
      "resolved": "src/core/tenant-data.js",
@@ -3685,9 +4357,9 @@
      "external": false
     },
     {
-     "spec": "./pools.js",
+     "spec": "./pool-rules.js",
      "how": "static",
-     "resolved": "src/core/pools.js",
+     "resolved": "src/core/pool-rules.js",
      "external": false
     },
     {
@@ -3754,6 +4426,12 @@
      "spec": "./abstraction.js",
      "how": "static",
      "resolved": "src/core/abstraction.js",
+     "external": false
+    },
+    {
+     "spec": "./composition.js",
+     "how": "static",
+     "resolved": "src/core/composition.js",
      "external": false
     }
    ]
@@ -4717,7 +5395,7 @@
   {
    "path": "tools/differential.js",
    "language": "js",
-   "digest": "sha256:67196e978efa596da65f43843f63d52834ff15a01e21c3a861f87c54cbb3aaae",
+   "digest": "sha256:3e3e6df52a15cef9dfc34dcdeb1cef721ce3d9318ea057790740047e2a2eb5c4",
    "imports": [
     {
      "spec": "node:fs",
@@ -4791,7 +5469,7 @@
   {
    "path": "tools/gen-engine-inputs.js",
    "language": "js",
-   "digest": "sha256:f3cdcfbd8581a18ff1a8d61ea970540662fbae1a0deebffcaa6d7459ae4f4094",
+   "digest": "sha256:0bfa307896429849f6bb9c155af21f769dbc7803efcbcf0d9b785af91a34afd8",
    "imports": [
     {
      "spec": "node:fs",
@@ -5167,7 +5845,7 @@
   {
    "path": "tools/prove.js",
    "language": "js",
-   "digest": "sha256:0b26ff40378954b30d4aad27ae2f18fc8d50747022729ed9d8420b2172e2cd2a",
+   "digest": "sha256:23633963003d5f079095910b2dc159fa0eb61f43bf2edb652815ddd83eae2cbb",
    "imports": [
     {
      "spec": "node:fs",
@@ -5210,7 +5888,7 @@
   {
    "path": "tools/record-goldens.js",
    "language": "js",
-   "digest": "sha256:3e08dfc3e64f56aef9dc424dea9f8f503887c82637e4fe15222443124c8c9fb7",
+   "digest": "sha256:68faab36a249aaa4d672c5e6f684248fb219a5fa345be370d555706ae6dc3f2f",
    "imports": [
     {
      "spec": "node:fs",
@@ -5246,12 +5924,6 @@
      "spec": "../src/core/engine.js",
      "how": "static",
      "resolved": "src/core/engine.js",
-     "external": false
-    },
-    {
-     "spec": "../src/core/sim-input.js",
-     "how": "static",
-     "resolved": "src/core/sim-input.js",
      "external": false
     },
     {
@@ -5479,6 +6151,80 @@
    ]
   },
   {
+   "path": "tools/test-names.js",
+   "language": "js",
+   "digest": "sha256:9a1f611b17fe783663b9a52d208eac2600dac2272674ebd89dc1a9acfc04a723",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "../cli/outcomes.js",
+     "how": "static",
+     "resolved": "cli/outcomes.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/trace-reads.js",
+   "language": "js",
+   "digest": "sha256:e75c353fcb8dd9856f8882f32032ea6a308af4d8e8e84f4e1afd9e7b8da52862",
+   "imports": [
+    {
+     "spec": "node:child_process",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:module",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:util",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:worker_threads",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
    "path": "tools/traceability.js",
    "language": "js",
    "digest": "sha256:e18abe9c6141f0cd59096b32f781ff837ae92c860f24f0fec91f3f144e477cde",
@@ -5518,7 +6264,7 @@
   {
    "path": "tools/tree-stamp.js",
    "language": "js",
-   "digest": "sha256:e3a2ca90ff4d81cedac48e3e9ee1912d30f085ee7bee3ddaebd6c9459110b811",
+   "digest": "sha256:dae03f15810fa1c6372d3aff202abb1a7e117673c60889e8c24f6bacdef2dd83",
    "imports": [
     {
      "spec": "node:crypto",
@@ -5580,7 +6326,7 @@
   {
    "path": "tools/workspace.js",
    "language": "js",
-   "digest": "sha256:42285632e152f56c76be408290fc6c6ebc75eb1daf5cc0a1d3cbab4555673786",
+   "digest": "sha256:5028bd27eae0ef1023fc72061f258ae62915b57c2c2a4a71ee70625cfcb919d6",
    "imports": [
     {
      "spec": "node:crypto",

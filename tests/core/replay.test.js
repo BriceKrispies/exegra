@@ -107,3 +107,44 @@ test('the replay is incremental and deterministic', () => {
   assert.deepEqual(r.trace(), whole.trace);
   assert.equal(r.trace().outcome, 'running');
 });
+
+test('the replay-blind stream yields three divergences', () => {
+  // docs/assessment/2026-11-26/demos/replay-blind.mjs (WG-5685, criterion 13): the recorded write-intent drops
+  // text and carries a base hash the model never had (baseHash is not declared environment, so it is not
+  // calibrated), and save-requested arrives after close, when no behavior accepts it.
+  /** @type {any[]} */
+  const ents = [];
+  const add = (/** @type {string} */ kind, /** @type {string} */ id, /** @type {any} */ data, /** @type {string|null} */ owner = null) => { ents.push({ kind, id, data, owner }); };
+  for (const id of ['open', 'save-requested', 'write-intent', 'saved', 'close']) add('event', id, {});
+  add('behavior', 'client', { subject: 'c', initial: 'idle', variables: [{ name: 'baseHash', initial: 'h0' }] });
+  add('behavior', 'server', { subject: 's', initial: 'up', variables: [] });
+  for (const s of ['idle', 'ready', 'saving']) add('state', s, {}, 'client');
+  add('state', 'up', {}, 'server');
+  add('transition', 'c-open', { from: 'idle', to: 'ready', on: 'open', effects: [] }, 'client');
+  add('transition', 'c-save', { from: 'ready', to: 'saving', on: 'save-requested', effects: [{ emit: 'write-intent', payload: { file: 'event.file', text: 'event.text', base: 'baseHash' } }] }, 'client');
+  add('transition', 'c-saved', { from: 'saving', to: 'ready', on: 'saved', effects: [] }, 'client');
+  add('transition', 'c-close', { from: 'ready', to: 'idle', on: 'close', effects: [] }, 'client');
+  add('transition', 's-write', { from: 'up', to: 'up', on: 'write-intent', effects: [{ emit: 'saved', payload: { file: 'event.file' } }] }, 'server');
+  add('scenario', 'live-session', { behaviors: ['client', 'server'], steps: [] });
+  /** @type {Record<string, any[]>} */
+  const byKind = {};
+  for (const e of ents) (byKind[e.kind] ??= []).push(e);
+  const blind = /** @type {any} */ ({ entities: new Map(ents.map((e) => [e.id, e])), byKind, meta: {} });
+  const stream = [
+    { seq: 1, id: 'open', payload: {} },
+    { seq: 2, id: 'save-requested', payload: { file: 'spec', text: 'abc' } },
+    { seq: 3, id: 'write-intent', payload: { file: 'spec', base: 'some-other-hash' } },
+    { seq: 4, id: 'saved', payload: { file: 'spec' } },
+    { seq: 5, id: 'close', payload: {} },
+    { seq: 6, id: 'save-requested', payload: { file: 'spec', text: 'lost' } },
+  ];
+  const { divergences } = replayStream(blind, stream);
+  assert.deepEqual(divergences.map((d) => [d.kind, d.event, d.field ?? null]), [
+    ['payload', 'write-intent', 'text'],
+    ['payload', 'write-intent', 'base'],
+    ['not-allowed', 'save-requested', null],
+  ]);
+  assert.match(divergences[0].explanation, /has no field text/);
+  assert.match(divergences[1].explanation, /some-other-hash/);
+  assert.match(divergences[2].explanation, /client in idle accepts it in no transition/);
+});

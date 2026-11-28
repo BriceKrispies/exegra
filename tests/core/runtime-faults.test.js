@@ -2,7 +2,7 @@
 // docs/semantics.md, "Faults the runtime can produce"): rules fault.unrealisable
 // (src/core/fault-model.js) and machine.initial-unreachable (src/core/readiness-machines.js), the
 // lowering of the fault kinds duplicate-event, lose-event and retry-event into the engine input
-// (src/core/sim-input.js), and what the engine does with them. The fixture is a machine whose scenario
+// (Exegra.Lower.engineInput, formal/Exegra/Lower/Input.lean), and what the engine does with them. The fixture is a machine whose scenario
 // injects only faults the runtime can produce and has no error; each negative case changes one thing
 // and must give exactly the named error, as the rule for validation rules asks (WG-4948).
 
@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { analyzeSpec } from '../../src/core/analyze.js';
 import { initEngine, runScenario } from '../../src/core/engine.js';
-import { simulationInput } from '../../src/core/sim-input.js';
+import { engineInput } from '../../src/core/engine.js';
 import { retryDelay, isRetryDelay } from '../../src/core/fault-model.js';
 
 initEngine();
@@ -93,7 +93,7 @@ test('the runtime default backoff is 1 s, 2 s, 4 s, ... capped at 300 s', () => 
 
 test('the new fault kinds lower into a format-2 engine input: retry by the backoff, duplicate by its delay', () => {
   const m = analyzeSpec(FIXED).model;
-  const input = simulationInput(m, 'run');
+  const input = engineInput(m, 'run');
   assert.equal(input.version, 2);
   const byId = Object.fromEntries(input.faults.map((f) => [f.id, f]));
   assert.equal(byId['f-notice-twice'].kind, 'duplicate-event');
@@ -102,7 +102,7 @@ test('the new fault kinds lower into a format-2 engine input: retry by the backo
   assert.equal(byId['f-hint-lost'].kind, 'lose-event');
   // A duplicate with no delay comes at once.
   const noBy = analyzeSpec(broken('"event": "ev-notice", "by": "500 ms", "occurrence": 1', '"event": "ev-notice", "occurrence": 1')).model;
-  assert.equal(simulationInput(noBy, 'run').faults.find((f) => f.id === 'f-notice-twice').by, 0);
+  assert.equal(engineInput(noBy, 'run').faults.find((f) => f.id === 'f-notice-twice').by, 0);
 });
 
 test('the engine delivers a duplicate twice and drops a lost event and delays a retried one by its backoff', () => {

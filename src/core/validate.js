@@ -14,6 +14,7 @@ import { checkCodegenConsistency, exprClass, typeClass } from './codegen-model.j
 import { checkTypeShapes } from './type-shapes.js';
 import { checkLanguages } from './language.js';
 import { checkFunctions } from './function.js';
+import { checkFunctionComposition } from './function-composition.js';
 import { checkTenantData } from './tenant-data.js';
 import { checkDerivations } from './derivation.js';
 import { checkSuppliedInputs } from './supplied-inputs.js';
@@ -24,7 +25,7 @@ import { checkTelemetryConsistency } from './telemetry.js';
 import { checkAccessConsistency } from './access.js';
 import { checkCapabilityConsistency } from './capabilities.js';
 import { checkResidency } from './residency.js';
-import { allPoolMachines, checkPools, scenarioMachineIds, POOL_VARIABLES } from './pools.js';
+import { allPoolMachines, checkPools, scenarioMachineIds, POOL_VARIABLES } from './pool-rules.js';
 import { READINESS_RULES } from './readiness.js';
 import { notImplemented } from './realisation.js';
 import { checkDataConsistency, dataRuleDiagnostics, RULE_IDS } from './data-model.js';
@@ -36,6 +37,7 @@ import { machineReadiness, keyFieldsOf } from './readiness-machines.js';
 import { testRefProblem, describeTestRefProblem } from './evidence-ref.js';
 import { LOGICAL, hierarchyOf, moduleDeclarations, cutMap, cutHierarchyId, isFacet } from './query.js';
 import { portConnectionProblems, checkRealisations } from './abstraction.js';
+import { checkComposition } from './composition.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Entity} Entity */
@@ -79,6 +81,14 @@ export function validateModel(model, opts = {}) {
         cur = typeof cur.data.parent === 'string' ? get(cur.data.parent) : undefined;
       }
     }
+  }
+
+  // --- the discharge graph of assumptions (WG-5685, criterion 5) -----------
+  // An assumption depends on the claims that discharge it, a claim on the assumptions it cites. Discharge is sound
+  // only when this graph has no cycle (Exegra.Core.discharge_sound): a cycle would let claims discharge each other.
+  for (const cycle of dischargeCycles(model)) {
+    const at = get(cycle[0].id);
+    if (at) report('error', 'assumption.discharge-cycle', at, `The discharge graph has a cycle: ${[...cycle, cycle[0]].map((n) => n.id).join(' → ')}. A claim cannot rest, through the assumptions it cites, on an assumption it discharges.`);
   }
 
   // --- elements, hierarchies, facets and cuts ------------------------------
@@ -369,6 +379,7 @@ export function validateModel(model, opts = {}) {
         });
       }
     }
+    if (ev.method === 'liveness' && ev.form !== undefined && ev.form !== 'GF' && ev.form !== 'FG') report('error', 'claim.param.value', c, 'Method "liveness" takes form "GF" (always eventually) or "FG" (eventually always).', ['evaluate', 'form']);
     if (ev.method === 'eventually' && ev.occurs === undefined && ev.expr === undefined) report('error', 'claim.param.required', c, 'Method "eventually" needs "occurs" or "expr".', ['evaluate']);
   }
   };
@@ -601,6 +612,7 @@ export function validateModel(model, opts = {}) {
   out.push(...checkTypeShapes(model));
   out.push(...checkLanguages(model));
   out.push(...checkFunctions(model));
+  out.push(...checkFunctionComposition(model));
 
   out.push(...checkTenantData(model));
   out.push(...checkDerivations(model));
@@ -613,6 +625,7 @@ export function validateModel(model, opts = {}) {
   out.push(...checkCapabilityConsistency(model));
   out.push(...checkResidency(model));
   out.push(...checkPools(model));
+  out.push(...checkComposition(model));
   if (model.system.data.generation !== undefined) {
     // The machine rules are reported above for every implementation-level behavior, switch or not.
     for (const g of READINESS_RULES.flatMap((rule) => rule(model))) {
@@ -679,6 +692,54 @@ export function validateModel(model, opts = {}) {
   }
 
   return out;
+}
+
+/**
+ * The cycles of the discharge graph: an assumption points to every claim that discharges it (`discharges`), a
+ * claim to every assumption it cites (`assumptions`). Each cycle is reported once, starting at its first node in
+ * declaration order, as the list of its nodes.
+ * @param {Model} model
+ * @returns {{kind: 'assumption'|'claim', id: string}[][]}
+ */
+export function dischargeCycles(model) {
+  /** @type {Map<string, {kind: 'assumption'|'claim', id: string}[]>} */
+  const next = new Map();
+  const key = (/** @type {string} */ k, /** @type {string} */ id) => `${k}:${id}`;
+  /** @param {'assumption'|'claim'} k @param {string} id @param {'assumption'|'claim'} k2 @param {string} id2 */
+  const edge = (k, id, k2, id2) => {
+    const list = next.get(key(k, id)) ?? [];
+    list.push({ kind: k2, id: id2 });
+    next.set(key(k, id), list);
+  };
+  const claims = model.byKind.claim ?? [];
+  for (const c of claims) {
+    for (const a of Array.isArray(c.data.assumptions) ? c.data.assumptions : []) if (typeof a === 'string') edge('claim', c.id, 'assumption', a);
+    for (const a of Array.isArray(c.data.discharges) ? c.data.discharges : []) if (typeof a === 'string') edge('assumption', a, 'claim', c.id);
+  }
+  /** @type {{kind: 'assumption'|'claim', id: string}[][]} */
+  const cycles = [];
+  /** @type {Map<string, number>} 1 on the stack, 2 done */
+  const state = new Map();
+  /** @type {{kind: 'assumption'|'claim', id: string}[]} */
+  const stack = [];
+  /** @param {{kind: 'assumption'|'claim', id: string}} n */
+  const visit = (n) => {
+    const k = key(n.kind, n.id);
+    state.set(k, 1);
+    stack.push(n);
+    for (const m of next.get(k) ?? []) {
+      const s = state.get(key(m.kind, m.id));
+      if (s === 1) {
+        const from = stack.findIndex((x) => x.kind === m.kind && x.id === m.id);
+        cycles.push(stack.slice(from));
+      } else if (s === undefined) visit(m);
+    }
+    stack.pop();
+    state.set(k, 2);
+  };
+  for (const a of model.byKind.assumption ?? []) if (!state.has(key('assumption', a.id))) visit({ kind: 'assumption', id: a.id });
+  for (const c of claims) if (!state.has(key('claim', c.id))) visit({ kind: 'claim', id: c.id });
+  return cycles;
 }
 
 /**

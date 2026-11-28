@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import { analyzeSpec } from '../../src/core/analyze.js';
 import { evaluateClaim } from '../../src/core/claims.js';
 import { initEngine } from '../../src/core/engine.js';
+import { exploreRefinement } from '../../src/core/refinement-explore.js';
 
 initEngine();
 
@@ -113,8 +114,58 @@ test('a refinement with an internal state mapped by stutter is verified on the t
   assert.equal(r.status, 'verified', r.explanation);
   assert.equal(r.evaluator, 'exegra.refinement/0.1');
   assert.match(r.explanation, /4 steps \(2 matched to a model transition, 2 stutters\)/);
-  assert.match(r.scope, /not of all possible executions/);
+  assert.match(r.scope, /over every execution of their inputs that delivers simultaneous entries in another order/);
   assert.ok(r.involved.includes('lease-model') && r.involved.includes('lease-cycle'));
+});
+
+test('a refinement that holds on the scenario trace but fails under another delivery order is violated at that step', () => {
+  // acquire and release arrive at the same time. The engine delivers acquire first, and that trace refines the
+  // model; delivered first, release reaches li-early-release, which writes the mapped holder in a stutter.
+  const spec = leaseSpec();
+  spec.scenarios[0].steps = [{ at: 0, event: 'acquire', payload: { client: 'a' } }, { at: 0, event: 'release', payload: { client: 'a' } }];
+  spec.behaviors[1].states[0].ignores = ['renew', 'renewed'];
+  spec.behaviors[1].transitions.push({ id: 'li-early-release', from: 'li-free', to: 'li-free', on: 'release', otherwise: true, effects: [{ set: 'owner', to: 'event.client' }] });
+  /** @type {any} */ (spec.behaviors[1].refinement.transitions)['li-early-release'] = null;
+  const r = result(spec);
+  assert.equal(r.status, 'violated', r.explanation);
+  assert.equal(r.counterexample.reason, 'stutter-variables');
+  assert.equal(r.counterexample.explored, true);
+  assert.deepEqual(r.counterexample.order, ['release']);
+  assert.equal(r.counterexample.trace.at(-1).transition, 'li-early-release');
+  assert.match(r.explanation, /the engine's order does not reach it/);
+});
+
+test('an exploration that reaches its configuration cap is incomplete', () => {
+  const model = load(leaseSpec());
+  const x = exploreRefinement(model, /** @type {any} */ (model.entities.get('lease-impl')), 'lease-cycle', { stateCap: 2 });
+  assert.equal(x.status, 'incomplete');
+  assert.match(/** @type {any} */ (x).reason, /cap of 2 configurations/);
+});
+
+test('an exploration that reaches the step limit is inconclusive and never verified', () => {
+  const spec = leaseSpec();
+  /** @type {any} */ (spec.scenarios[0]).maxSteps = 2;
+  const r = result(spec);
+  assert.equal(r.status, 'inconclusive', r.explanation);
+  assert.match(r.explanation, /step limit/);
+});
+
+test('an implementation that ignores release is refused', () => {
+  // docs/assessment/2026-11-26/demos/refines-ignore.mjs: li-renewing ignores release, which the model's lm-held
+  // accepts from the holder, so the implementation holds the lease forever and never grants b.
+  const spec = leaseSpec();
+  spec.scenarios[0].steps = [
+    { at: 0, event: 'acquire', payload: { client: 'a' } }, { at: 1, event: 'renew' }, { at: 2, event: 'release', payload: { client: 'a' } },
+    { at: 3, event: 'renewed' }, { at: 4, event: 'acquire', payload: { client: 'b' } },
+  ];
+  const r = result(spec);
+  assertFailsAt(r, 'ignored-input', 3, null);
+  assert.equal(r.verdict.strength, 'refuted');
+  const last = r.counterexample.trace[r.counterexample.trace.length - 1];
+  assert.equal(last.event, 'release');
+  assert.equal(last.implFrom, 'li-renewing');
+  assert.equal(last.model, 'lm-release');
+  assert.deepEqual(r.counterexample.trace.map((/** @type {any} */ s) => s.transition), ['li-acquire', 'li-renew', null]);
 });
 
 test('refines is violated by a step to the wrong model state', () => {

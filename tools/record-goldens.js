@@ -22,8 +22,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { analyzeSpec } from '../src/core/analyze.js';
 import { stableStringify } from '../src/core/stable-json.js';
-import { initEngine, runScenario } from '../src/core/engine.js';
-import { simulationInput } from '../src/core/sim-input.js';
+import { engineInput, initEngine, runScenario } from '../src/core/engine.js';
 import { ELAB_REFUSAL, GOLDENS_DIR, REPO_ROOT } from './conformance.js';
 import { readSpecFile } from './spec-manifest.js';
 
@@ -98,7 +97,7 @@ function main(argv) {
     counts[source] = 0;
     for (const scenario of model.byKind.scenario ?? []) {
       for (const v of variantsOf(model, scenario.id)) {
-        const input = simulationInput(model, v.scenarioId, v.faults);
+        const input = engineInput(model, v.scenarioId, v.faults);
         // An input the engine refuses as ill-typed or non-integer has no trace golden (WG-5681).
         /** @type {any} */
         let trace = null;

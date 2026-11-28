@@ -77,7 +77,7 @@ def truthy : Value → Bool
   | .undef => false
   | .null => false
   | .bool b => b
-  | .num x => !(x == 0 || x.isNaN)
+  | .num x => !(x == 0)
   | .str s => !s.isEmpty
   | _ => true
 
@@ -97,7 +97,7 @@ def sameValue : Value → Value → Bool
   | .undef, .undef => true
   | .null, .null => true
   | .bool a, .bool b => a == b
-  | .num a, .num b => a == b || (a.isNaN && b.isNaN)
+  | .num a, .num b => a == b
   | .str a, .str b => a == b
   | _, _ => false
 
@@ -347,7 +347,7 @@ def segKey : Value → String
 
 /-- `Number(seg)` as an array index, when it is one. -/
 def segIndex : Value → Option Nat
-  | .num x => if x ≥ 0 && x.floor == x && x < 9007199254740992.0 then some x.toUInt64.toNat else none
+  | .num x => if x ≥ 0 && Num.isInteger x && x < 9007199254740992 then some x.floor.toNat else none
   | .str x => if x.isEmpty then some 0 else if x.all Char.isDigit then some (Num.digitsToNat x.toList) else none
   | _ => none
 
@@ -608,7 +608,7 @@ def effectiveMeta (mm methods vocab : Value) (report : Report) : M Value := do
     else
       let mut i := 0
       for d in itemsOf props do
-        let p := [s "vocabulary", s "properties", .num i.toFloat]
+        let p := [s "vocabulary", s "properties", .num (↑i : Rat)]
         i := i + 1
         if !isObject d then
           report "vocabulary.type" "A property definition must be an object." p
@@ -686,7 +686,7 @@ def idRefs (owner : String) (n : Node) (p : List Value) (allowed : List String) 
   | .arr _ xs =>
     let mut i := 0
     for x in xs do
-      idRef owner ⟨x, i :: n.raw⟩ (p ++ [.num i.toFloat]) allowed
+      idRef owner ⟨x, i :: n.raw⟩ (p ++ [.num (↑i : Rat)]) allowed
       i := i + 1
   | _ => pure ()
 
@@ -737,8 +737,8 @@ def checkEvaluation (ctx : Ctx) (owner : String) (node : Node) (path : List Valu
         let nn : Node := ⟨neg, i :: entry.val.raw⟩
         if isObject neg then
           let nm ← members nn
-          if let some sc := lookup nm "scenario" then idRef owner sc.val (p ++ [.num i.toFloat, s "scenario"]) ["scenario"]
-          if let some fs := lookup nm "faults" then idRefs owner fs.val (p ++ [.num i.toFloat, s "faults"]) ["fault"]
+          if let some sc := lookup nm "scenario" then idRef owner sc.val (p ++ [.num (↑i : Rat), s "scenario"]) ["scenario"]
+          if let some fs := lookup nm "faults" then idRefs owner fs.val (p ++ [.num (↑i : Rat), s "faults"]) ["fault"]
         i := i + 1
     else if type == "expr" then
       if let .str x := entry.val.v then
@@ -788,7 +788,7 @@ def checkValue (ctx : Ctx) : Nat → Value → Node → List Value → String �
       | .arr _ xs =>
         let mut i := 0
         for x in xs do
-          checkValue ctx fuel (get pd "items") ⟨x, i :: node.raw⟩ (path ++ [.num i.toFloat]) owner s!"{label}[{i}]"
+          checkValue ctx fuel (get pd "items") ⟨x, i :: node.raw⟩ (path ++ [.num (↑i : Rat)]) owner s!"{label}[{i}]"
           i := i + 1
       | _ => bad "property.type" s!"{label} must be an array."
     | "object", v =>
@@ -863,7 +863,7 @@ def parseEntity (ctx : Ctx) (idPattern : String) : Nat → String → Node → L
         let mut i := 0
         for x in xs do
           parseEntity ctx idPattern fuel (segKey (get pdef "entity")) ⟨x, i :: entry.val.raw⟩
-            (path ++ [s key, .num i.toFloat]) (some id)
+            (path ++ [s key, .num (↑i : Rat)]) (some id)
           i := i + 1
       | _ =>
         push { code := "property.type", message := s!"\"{key}\" must be an array.", raw := entry.val.raw,
@@ -937,7 +937,7 @@ def build (mm methods doc : Value) : M (Option Model) := do
         | .arr _ xs =>
           let mut i := 0
           for x in xs do
-            parseEntity ctx idPattern fuel (segKey ent) ⟨x, i :: entry.val.raw⟩ [s sec, .num i.toFloat] none
+            parseEntity ctx idPattern fuel (segKey ent) ⟨x, i :: entry.val.raw⟩ [s sec, .num (↑i : Rat)] none
             i := i + 1
         | _ =>
           push { code := "spec.section-type", message := s!"Section \"{sec}\" must be an array.",

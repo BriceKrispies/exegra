@@ -1,0 +1,362 @@
+{
+  "exegra": "0.1",
+  "system": {
+    "id": "shop",
+    "name": "Shop",
+    "description": "A multiscale fixture (WG-5730): a distributed web shop with a logical hierarchy, a deployment hierarchy, realisation maps between them and failure modes at both levels."
+  },
+  "components": [
+    {
+      "id": "storefront",
+      "name": "Storefront",
+      "category": "computational",
+      "purpose": "What the customer uses.",
+      "implementation": {
+        "status": "manual"
+      },
+      "kind": "subsystem",
+      "parent": "shop"
+    },
+    {
+      "id": "web-ui",
+      "name": "Web UI",
+      "category": "computational",
+      "purpose": "The pages.",
+      "implementation": {
+        "status": "manual"
+      },
+      "parent": "storefront"
+    },
+    {
+      "id": "cart",
+      "name": "Cart service",
+      "category": "computational",
+      "purpose": "Holds the basket.",
+      "implementation": {
+        "status": "manual"
+      },
+      "parent": "storefront"
+    },
+    {
+      "id": "fulfilment",
+      "name": "Fulfilment",
+      "category": "computational",
+      "purpose": "Orders and stock.",
+      "implementation": {
+        "status": "manual"
+      },
+      "kind": "subsystem",
+      "parent": "shop"
+    },
+    {
+      "id": "orders",
+      "name": "Order service",
+      "category": "computational",
+      "purpose": "Takes orders.",
+      "implementation": {
+        "status": "manual"
+      },
+      "parent": "fulfilment"
+    },
+    {
+      "id": "inventory",
+      "name": "Inventory service",
+      "category": "computational",
+      "purpose": "Keeps stock.",
+      "implementation": {
+        "status": "manual"
+      },
+      "parent": "fulfilment"
+    },
+    {
+      "id": "infrastructure",
+      "name": "Infrastructure",
+      "category": "computational",
+      "purpose": "The machines the shop runs on.",
+      "implementation": {
+        "status": "manual"
+      },
+      "kind": "subsystem",
+      "parent": "shop"
+    },
+    {
+      "id": "zone-1",
+      "name": "Zone 1",
+      "category": "computational",
+      "purpose": "A failure domain.",
+      "implementation": {
+        "status": "manual"
+      },
+      "kind": "external",
+      "parent": "infrastructure"
+    },
+    {
+      "id": "zone-2",
+      "name": "Zone 2",
+      "category": "computational",
+      "purpose": "A second failure domain.",
+      "implementation": {
+        "status": "manual"
+      },
+      "kind": "external",
+      "parent": "infrastructure"
+    },
+    {
+      "id": "edge-host",
+      "name": "Edge host",
+      "category": "computational",
+      "purpose": "Serves the web UI.",
+      "implementation": {
+        "status": "manual"
+      },
+      "kind": "external",
+      "parent": "infrastructure"
+    },
+    {
+      "id": "app-host-a",
+      "name": "App host A",
+      "category": "computational",
+      "purpose": "Runs the cart.",
+      "implementation": {
+        "status": "manual"
+      },
+      "kind": "external",
+      "parent": "infrastructure"
+    },
+    {
+      "id": "app-host-b",
+      "name": "App host B",
+      "category": "computational",
+      "purpose": "Runs the order service.",
+      "implementation": {
+        "status": "manual"
+      },
+      "kind": "external",
+      "parent": "infrastructure"
+    },
+    {
+      "id": "db-host",
+      "name": "Database host",
+      "category": "computational",
+      "purpose": "Runs the inventory service.",
+      "implementation": {
+        "status": "manual"
+      },
+      "kind": "external",
+      "parent": "infrastructure"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "ui-calls-cart",
+      "kind": "invokes",
+      "from": "web-ui",
+      "to": "cart",
+      "description": "The page reads and changes the basket."
+    },
+    {
+      "id": "cart-places-order",
+      "kind": "invokes",
+      "from": "cart",
+      "to": "orders",
+      "description": "Checkout places an order."
+    },
+    {
+      "id": "orders-reserve-stock",
+      "kind": "invokes",
+      "from": "orders",
+      "to": "inventory",
+      "description": "An order reserves stock."
+    },
+    {
+      "id": "link-edge-a",
+      "kind": "network-link",
+      "from": "edge-host",
+      "to": "app-host-a",
+      "description": "Network from the edge to app host A, inside zone 1."
+    },
+    {
+      "id": "link-a-b",
+      "kind": "network-link",
+      "from": "app-host-a",
+      "to": "app-host-b",
+      "description": "Network between the zones."
+    },
+    {
+      "id": "link-b-db",
+      "kind": "network-link",
+      "from": "app-host-b",
+      "to": "db-host",
+      "description": "Network inside zone 2."
+    }
+  ],
+  "hierarchies": [
+    {
+      "id": "deployment",
+      "name": "Deployment",
+      "groups": [
+        {
+          "parent": "zone-1",
+          "members": [
+            "edge-host",
+            "app-host-a"
+          ]
+        },
+        {
+          "parent": "zone-2",
+          "members": [
+            "app-host-b",
+            "db-host"
+          ]
+        },
+        {
+          "parent": "edge-host",
+          "members": [
+            "web-ui"
+          ]
+        },
+        {
+          "parent": "app-host-a",
+          "members": [
+            "cart"
+          ]
+        },
+        {
+          "parent": "app-host-b",
+          "members": [
+            "orders"
+          ]
+        },
+        {
+          "parent": "db-host",
+          "members": [
+            "inventory"
+          ]
+        }
+      ]
+    }
+  ],
+  "realisations": [
+    {
+      "id": "ui-calls-cart-over-network",
+      "interaction": "ui-calls-cart",
+      "hierarchy": "deployment",
+      "path": [
+        "link-edge-a"
+      ]
+    },
+    {
+      "id": "cart-places-order-over-network",
+      "interaction": "cart-places-order",
+      "hierarchy": "deployment",
+      "path": [
+        "link-a-b"
+      ]
+    },
+    {
+      "id": "orders-reserve-stock-over-network",
+      "interaction": "orders-reserve-stock",
+      "hierarchy": "deployment",
+      "path": [
+        "link-b-db"
+      ]
+    }
+  ],
+  "cuts": [
+    {
+      "id": "shop-l1",
+      "name": "Subsystems",
+      "depth": 1
+    },
+    {
+      "id": "shop-leaf",
+      "name": "Every service",
+      "finest": true
+    }
+  ],
+  "assumptions": [
+    {
+      "id": "as-fleet-history",
+      "statement": "Failure rates and durations are those of the last year of the fleet.",
+      "illustrative": true
+    }
+  ],
+  "failureModes": [
+    {
+      "id": "fm-link-a-b-partition",
+      "name": "Partition between the zones",
+      "kind": "partition",
+      "target": "link-a-b",
+      "scope": "zone",
+      "description": "The link between app host A and app host B is down: a deployment-level fault.",
+      "rate": {
+        "value": 2,
+        "per": "year",
+        "source": "as-fleet-history"
+      },
+      "duration": {
+        "typical": 5,
+        "max": 60,
+        "unit": "minute",
+        "source": "as-fleet-history"
+      }
+    },
+    {
+      "id": "fm-app-host-b-crash",
+      "name": "App host B crashes",
+      "kind": "crash",
+      "target": "app-host-b",
+      "scope": "host",
+      "description": "The host that runs the order service stops.",
+      "rate": {
+        "value": 4,
+        "per": "year",
+        "source": "as-fleet-history"
+      },
+      "duration": {
+        "typical": 5,
+        "max": 60,
+        "unit": "minute",
+        "source": "as-fleet-history"
+      }
+    },
+    {
+      "id": "fm-zone-2-outage",
+      "name": "Zone 2 outage",
+      "kind": "dependency-outage",
+      "target": "zone-2",
+      "scope": "zone",
+      "description": "Everything placed in zone 2 is unreachable.",
+      "rate": {
+        "value": 1,
+        "per": "year",
+        "source": "as-fleet-history"
+      },
+      "duration": {
+        "typical": 5,
+        "max": 60,
+        "unit": "minute",
+        "source": "as-fleet-history"
+      }
+    },
+    {
+      "id": "fm-inventory-slow",
+      "name": "Slow inventory storage",
+      "kind": "slow-storage",
+      "target": "inventory",
+      "scope": "instance",
+      "description": "A logical-level fault: the inventory service answers late.",
+      "rate": {
+        "value": 12,
+        "per": "year",
+        "source": "as-fleet-history"
+      },
+      "duration": {
+        "typical": 5,
+        "max": 60,
+        "unit": "minute",
+        "source": "as-fleet-history"
+      }
+    }
+  ]
+}

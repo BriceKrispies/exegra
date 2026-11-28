@@ -1,0 +1,143 @@
+{
+ "note": "The two groupings of docs/assessment/2026-11-27/multiscale.md section 5.3, recovered from its table. rest places every child the table does not list (the planned simulation and refinement components, and any later child) in simulation, as the audit placed its planned components.",
+ "candidates": [
+  {
+   "id": "audit-first",
+   "name": "Audit section 5.3, first grouping",
+   "source": "data",
+   "scope": "semantic-core",
+   "grain": "children",
+   "blocks": [
+    {
+     "id": "model-kernel",
+     "members": [
+      "metamodel",
+      "parser",
+      "model-derivation",
+      "model-hash",
+      "hash-binding",
+      "stable-serialization",
+      "lean-call-boundary",
+      "derivation-cache",
+      "spec-layers",
+      "queries",
+      "expression-language"
+     ]
+    },
+    {
+     "id": "editing",
+     "members": [
+      "transactions"
+     ]
+    },
+    {
+     "id": "well-formedness",
+     "members": [
+      "validator",
+      "integrity-rules",
+      "generation-readiness",
+      "data-model",
+      "contract-conformance",
+      "machine-coverage"
+     ]
+    },
+    {
+     "id": "verdicts",
+     "members": [
+      "claim-evaluator",
+      "claim-method-registry",
+      "claim-strength",
+      "metric-claims",
+      "proof-export",
+      "reader-pages"
+     ]
+    },
+    {
+     "id": "simulation",
+     "members": [
+      "simulation-engine",
+      "simulation-contract",
+      "fault-model",
+      "exhaustive-explorer",
+      "formal-semantics",
+      "lts-foundation",
+      "resource-model",
+      "workload-model",
+      "performance-metrics",
+      "self-model-replay"
+     ]
+    }
+   ],
+   "rest": "simulation"
+  },
+  {
+   "id": "audit-second",
+   "name": "Audit section 5.3, second grouping: the registry in the kernel, layer analysis in well-formedness",
+   "source": "data",
+   "scope": "semantic-core",
+   "grain": "children",
+   "blocks": [
+    {
+     "id": "model-kernel",
+     "members": [
+      "metamodel",
+      "parser",
+      "model-derivation",
+      "model-hash",
+      "hash-binding",
+      "stable-serialization",
+      "lean-call-boundary",
+      "derivation-cache",
+      "queries",
+      "expression-language",
+      "claim-method-registry"
+     ]
+    },
+    {
+     "id": "editing",
+     "members": [
+      "transactions"
+     ]
+    },
+    {
+     "id": "well-formedness",
+     "members": [
+      "validator",
+      "integrity-rules",
+      "generation-readiness",
+      "data-model",
+      "contract-conformance",
+      "machine-coverage",
+      "spec-layers"
+     ]
+    },
+    {
+     "id": "verdicts",
+     "members": [
+      "claim-evaluator",
+      "claim-strength",
+      "metric-claims",
+      "proof-export",
+      "reader-pages"
+     ]
+    },
+    {
+     "id": "simulation",
+     "members": [
+      "simulation-engine",
+      "simulation-contract",
+      "fault-model",
+      "exhaustive-explorer",
+      "formal-semantics",
+      "lts-foundation",
+      "resource-model",
+      "workload-model",
+      "performance-metrics",
+      "self-model-replay"
+     ]
+    }
+   ],
+   "rest": "simulation"
+  }
+ ]
+}

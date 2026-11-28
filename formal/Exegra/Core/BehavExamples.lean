@@ -45,7 +45,7 @@ open Exegra.Core.Behav
 /-! ### The `[a, b]` / `[b, a]` example -/
 
 /-- The label delivering the head of a configuration's queue, with no draws. -/
-def headLabel (c : Cfg) : Label := ⟨c.pending.headD { time := 0, event := 0, payload := [] }, []⟩
+def headLabel (c : Cfg) : Label := ⟨c.pending.headD { time := 0, event := 0, payload := [] }, [], []⟩
 
 /-- Two machines, each with one integer variable and one control state `s`. -/
 def f4Sig : Sig := { machines := 2, vars := fun _ => [Ty.num], states := fun _ => ["s"] }
@@ -115,7 +115,7 @@ theorem f4BA_deliver : (deliver f4BA [] f4Init (headLabel f4Init)).map (outcome 
 /-- The two reachable states of a system with no faults and no sampled delays whose initial
 configuration has one pending entry, delivered to `c₁`, which has nothing pending. -/
 theorem two_state_inductive {sys : Sys} {c₁ : Cfg} (hf : sys.faults = []) (hsm : sys.samples = [])
-    (hlen : sys.init.pending.length = 1)
+    (hres : sys.resources = []) (hlen : sys.init.pending.length = 1)
     (hd : (deliver sys [] sys.init (headLabel sys.init)).map (outcome [] sys.init) = some (.run [] c₁))
     (h₁ : c₁.pending = []) :
     (Sys.lts sys).Inductive (fun s => s = .run [] sys.init ∨ s = .run [] c₁) := by
@@ -135,9 +135,10 @@ theorem two_state_inductive {sys : Sys} {c₁ : Cfg} (hf : sys.faults = []) (hsm
         have hmem := hrdy.1
         rw [hx] at hmem
         have hxe : l.entry = x := List.mem_singleton.mp hmem
+        have hwd : l.wdraws = [] := wdraws_nil_of_nores hres hst'
         cases l
-        simp only [headLabel, hx] at hdl hxe ⊢
-        rw [hxe, hdl]; rfl
+        simp only [headLabel, hx] at hdl hxe hwd ⊢
+        rw [hxe, hdl, hwd]; rfl
       have h2 := (deliver_eq_step (sys := sys) (mask := []) (c := sys.init) (l := l) (t := t)).mpr hst'
       rw [hl, hd] at h2
       exact Or.inr (Option.some.inj h2).symm
@@ -145,13 +146,13 @@ theorem two_state_inductive {sys : Sys} {c₁ : Cfg} (hf : sys.faults = []) (hsm
 
 /-- **`[a, b]`: `b.y = 0` in every reachable state**, and no run fails. -/
 theorem f4_ab_safe : (Sys.lts f4AB).Invariant (fun s => yAB s = some (.int 0)) :=
-  safe_of_inductive (two_state_inductive (c₁ := f4AB1) rfl rfl rfl f4AB_deliver rfl) (by
+  safe_of_inductive (two_state_inductive (c₁ := f4AB1) rfl rfl rfl rfl f4AB_deliver rfl) (by
     intro s hs
     rcases hs with rfl | rfl <;> decide)
 
 /-- **`[b, a]`: `b.y = 0` in every reachable state**, and no run fails: the same verdict. -/
 theorem f4_ba_safe : (Sys.lts f4BA).Invariant (fun s => yBA s = some (.int 0)) :=
-  safe_of_inductive (two_state_inductive (c₁ := f4BA1) rfl rfl rfl f4BA_deliver rfl) (by
+  safe_of_inductive (two_state_inductive (c₁ := f4BA1) rfl rfl rfl rfl f4BA_deliver rfl) (by
     intro s hs
     rcases hs with rfl | rfl <;> decide)
 
@@ -184,10 +185,10 @@ theorem f4_exec_same_machines :
 of today's rule, `phase2Next`) the same delivery leaves `b.y = 1` when `a` is listed first (machine
 1 of `f4AB`) and `b.y = 0` when `b` is (machine 0 of `f4BA`). -/
 theorem f4_next_reads_differ :
-    (deliverNext f4AB [] f4Init 0).map (outcome [] f4Init) =
+    (deliverNext f4AB [] f4Init 0 []).map (outcome [] f4Init) =
         some (.run [] { time := 0, machines := [⟨0, [.int 1]⟩, ⟨0, [.int 1]⟩], pending := [],
                         attempts := [1] }) ∧
-      (deliverNext f4BA [] f4Init 0).map (outcome [] f4Init) = some (.run [] f4BA1) := by
+      (deliverNext f4BA [] f4Init 0 []).map (outcome [] f4Init) = some (.run [] f4BA1) := by
   decide
 
 /-- The initial configuration of the example has the shape of its signature. -/
@@ -251,21 +252,21 @@ theorem aggFirst_deliver :
 `worker.sum.x + worker.count.busy` is `0` in every reachable state of both listings, although
 both workers fire in the same step. -/
 theorem agg_last_safe : (Sys.lts aggLast).Invariant (fun s => yOf 2 s = some (.int 0)) :=
-  safe_of_inductive (two_state_inductive (c₁ := aggLast1) rfl rfl rfl aggLast_deliver rfl) (by
+  safe_of_inductive (two_state_inductive (c₁ := aggLast1) rfl rfl rfl rfl aggLast_deliver rfl) (by
     intro s hs
     rcases hs with rfl | rfl <;> decide)
 
 theorem agg_first_safe : (Sys.lts aggFirst).Invariant (fun s => yOf 0 s = some (.int 0)) :=
-  safe_of_inductive (two_state_inductive (c₁ := aggFirst1) rfl rfl rfl aggFirst_deliver rfl) (by
+  safe_of_inductive (two_state_inductive (c₁ := aggFirst1) rfl rfl rfl rfl aggFirst_deliver rfl) (by
     intro s hs
     rcases hs with rfl | rfl <;> decide)
 
 /-- Under the next-configuration rule (`deliverNext`) the monitor listed last reads both workers
 as they fired, `2 + 2 = 4`, and the monitor listed first reads `0`: two verdicts. -/
 theorem agg_next_reads_differ :
-    (deliverNext aggLast [] aggInit 0).map (outcome [] aggInit) =
+    (deliverNext aggLast [] aggInit 0 []).map (outcome [] aggInit) =
         some (.run [] { aggLast1 with machines := [⟨1, [.int 1]⟩, ⟨1, [.int 1]⟩, ⟨0, [.int 4]⟩] }) ∧
-      (deliverNext aggFirst [] aggInit 0).map (outcome [] aggInit) = some (.run [] aggFirst1) := by
+      (deliverNext aggFirst [] aggInit 0 []).map (outcome [] aggInit) = some (.run [] aggFirst1) := by
   decide
 
 /-! ### Replies -/
@@ -345,10 +346,14 @@ theorem typed_div_truncates :
     BOp.apply (.arith .div i32) (.int 7) (.int 2) = .ok (.int 3) ∧
       BOp.apply (.arith .div i32) (.int (-7)) (.int 2) = .ok (.int (-3)) := ⟨rfl, rfl⟩
 
-/-- Untyped `/` with a remainder is an error (format 2 computes the fraction `3.5`, which the
-calculus does not represent), never another value. -/
-theorem untyped_div_inexact : BOp.apply (.arith .div .untyped) (.int 7) (.int 2) = .error .inexact := by
-  rfl
+-- Untyped `/` with a remainder is the exact rational (WG-5683): `7 / 2` is `7/2`, not `3` and not
+-- an error; `0.1 + 0.2 == 0.3`. Checked by evaluation: `Rat` arithmetic does not reduce in the kernel.
+#guard match BOp.apply (.arith .div .untyped) (.int 7) (.int 2) with
+  | .ok (.rat q) => q == 7 / 2
+  | _ => false
+#guard match BOp.apply (.arith .add .untyped) (.rat (1 / 10)) (.rat (2 / 10)) with
+  | .ok v => v.equiv (.rat (3 / 10))
+  | _ => false
 
 def u8Sig : Sig := { machines := 1, vars := fun _ => [Ty.int 0 255], states := fun _ => ["s"] }
 
@@ -380,7 +385,7 @@ def oSys : Sys :=
 
 /-- The entry emitted at time 5 is inserted before the pending entry at time 10. -/
 theorem emitted_inserted_by_time :
-    (deliverAt oSys [] oSys.init 0).map (outcome [] oSys.init) =
+    (deliverAt oSys [] oSys.init 0 []).map (outcome [] oSys.init) =
       some (.run [] { time := 0, machines := [⟨0, []⟩],
                       pending := [{ time := 5, event := 1, payload := [], sender := some 0 },
                                  { time := 10, event := 2, payload := [] }],
@@ -401,7 +406,7 @@ def emSys : Sys :=
 /-- **Emission order is irrelevant**: firing the two winners in reverse order gives the same
 successor, pending list included (review-M2.1, D1). -/
 theorem emission_order_irrelevant :
-    (deliverWith emSys (fun c e ws ms => phase2 emSys c e ws.reverse ms) [] emSys.init 0).map
+    (deliverWith emSys (fun c e ws ms => phase2 emSys c e ws.reverse ms) [] emSys.init 0 []).map
         (outcome [] emSys.init) =
       some (.run [] { time := 0, machines := [⟨0, []⟩, ⟨0, []⟩],
                       pending := [{ time := 0, event := 1, payload := [], sender := some 0 },
@@ -425,14 +430,14 @@ def onZero (effs : List (Effect oSig ⟨0, Nat.zero_lt_one⟩)) : Sys :=
 /-- **Setting a timer and cancelling it in the same transition leaves no entry**, and the timer's
 earlier entry is dropped too. -/
 theorem timer_then_cancel :
-    ((deliverAt (onZero [.timer 0 5 1 [], .cancel 0]) [] (onZero [.timer 0 5 1 [], .cancel 0]).init 0).bind
+    ((deliverAt (onZero [.timer 0 5 1 [], .cancel 0]) [] (onZero [.timer 0 5 1 [], .cancel 0]).init 0 []).bind
       (·.toOption)).map (·.pending) = some [] := by
   decide
 
 /-- **Setting a timer replaces its pending entry**: the entry at 10 is dropped, the new one is at
 3. -/
 theorem timer_reset :
-    ((deliverAt (onZero [.timer 0 3 1 []]) [] (onZero [.timer 0 3 1 []]).init 0).bind
+    ((deliverAt (onZero [.timer 0 3 1 []]) [] (onZero [.timer 0 3 1 []]).init 0 []).bind
       (·.toOption)).map (·.pending) =
       some [{ time := 3, event := 1, payload := [], target := some 0, timer := some 0 }] := by
   decide
@@ -531,7 +536,7 @@ theorem ctr_rhs (n : Nat) (cx : Ctx) (hc : cx.own = ⟨0, [.int n]⟩) (hn : (n 
   have h4 : (1 : Int) ≤ maxSafe := by rw [hm0]; omega
   have h5 : -maxSafe ≤ (n : Int) + 1 := by rw [hm0]; omega
   have h6 : (n : Int) + 1 ≤ maxSafe := by rw [hm0]; omega
-  simp [Expr.eval, Ref.eval, at?, BOp.apply, AOp.apply, checked, ATy.holds, ATy.lo, ATy.hi, h1, h2, h3, h4, h5, h6]
+  simp [Expr.eval, Ref.eval, at?, BOp.apply, arithVals, AOp.apply, checked, ATy.holds, ATy.lo, ATy.hi, h1, h2, h3, h4, h5, h6]
 
 theorem ctr_effects (L : Int) (c : Cfg) (e : Entry) (n : Nat) (hm : c.machines = [⟨0, [.int n]⟩])
     (hn : (n : Int) + 1 ≤ 9007199254740991) (hT : c.time + 1 < timeLimit) :
@@ -541,7 +546,7 @@ theorem ctr_effects (L : Int) (c : Cfg) (e : Entry) (n : Nat) (hm : c.machines =
   have hm0 : maxSafe = 9007199254740991 := rfl
   have hfit : Val.check ((ctrS.vars (⟨0, Nat.zero_lt_one⟩ : Fin ctrS.machines)).get ⟨0, by decide⟩) (.int ((n : Int) + 1)) = .ok (.int ((n : Int) + 1)) := by
     show Val.check Ty.num _ = _
-    simp only [Val.check, Val.fits, Ty.num, hm0]
+    simp only [Val.check, Val.fits, hm0]
     have h5 : -9007199254740991 ≤ (n : Int) + 1 := by omega
     simp [h5, hn]
   have hl : ¬ timeLimit ≤ c.time + 1 := Nat.not_le.mpr hT
@@ -602,10 +607,13 @@ theorem ctr_step (L : Int) (hL : L < 9007199254740991) {s' : State} {l : Label} 
   have hTL : timeLimit = 9007199254740992 := rfl
   have hmach : (ctrSys L).sig.machines = 1 := rfl
   cases h with
-  | drop _ _ hdr => rw [ctr_active] at hdr; simp [dropHit] at hdr
-  | delay _ _ _ hf => rw [ctr_active] at hf; simp [delayFault] at hf
-  | delayTimeErr _ _ _ hf => rw [ctr_active] at hf; simp [delayFault] at hf
-  | deliverOk hd hr hdr hnone hw hp2 hdup =>
+  | drop _ _ _ _ hdr => rw [ctr_active] at hdr; simp [dropHit] at hdr
+  | delay _ _ _ _ _ hf => rw [ctr_active] at hf; simp [delayFault] at hf
+  | delayTimeErr _ _ _ _ _ hf => rw [ctr_active] at hf; simp [delayFault] at hf
+  | worldOk _ _ hk => exact absurd (by rw [hle]) hk
+  | worldErr _ _ hk => exact absurd (by rw [hle]) hk
+  | deliverOk hd hr _ hdr hnone hw hp2 hs hfit hfill hdup =>
+    obtain ⟨-, rfl⟩ := nores_settle (sys := ctrSys L) rfl hs hfit hfill
     generalize hS : (ctrSys L).resolve l.draws = S at *
     have hS' := hS.symm.trans (resolve_nil (sys := ctrSys L) rfl l.draws)
     subst hS'
@@ -622,7 +630,7 @@ theorem ctr_step (L : Int) (hL : L < 9007199254740991) {s' : State} {l : Label} 
       cases hp2
       cases hdup with
       | none h0 =>
-        exact ⟨n + 1, n, [{ time := n + 1, event := 0, payload := [], sender := some 0 }], setAt a 0 (a.getD 0 0 + 1), by omega, by omega, Or.inr ⟨some 0, rfl⟩, by simp [Cfg.commit, Cfg.popE, inMachineOrder, blockOf, isTimerOf, touchedOf, Cfg.attemptsOf, hmach, List.range_succ, insertByTime]⟩
+        exact ⟨n + 1, n, [{ time := n + 1, event := 0, payload := [], sender := some 0 }], setAt a 0 (a.getD 0 0 + 1), by omega, by omega, Or.inr ⟨some 0, rfl⟩, by simp [Cfg.commit, Cfg.popE, Cfg.bumpAttempts, inMachineOrder, blockOf, isTimerOf, touchedOf, Cfg.attemptsOf, hmach, List.range_succ, insertByTime]⟩
       | some h0 hl => simp [dupFault] at h0
     · rw [if_neg hlt] at hw
       cases hw
@@ -630,9 +638,9 @@ theorem ctr_step (L : Int) (hL : L < 9007199254740991) {s' : State} {l : Label} 
       cases hp2
       cases hdup with
       | none h0 =>
-        exact ⟨n, n, [], setAt a 0 (a.getD 0 0 + 1), by omega, by omega, Or.inl rfl, by simp [Cfg.commit, Cfg.popE, inMachineOrder, blockOf, isTimerOf, touchedOf, Cfg.attemptsOf, hmach, List.range_succ, insertByTime]⟩
+        exact ⟨n, n, [], setAt a 0 (a.getD 0 0 + 1), by omega, by omega, Or.inl rfl, by simp [Cfg.commit, Cfg.popE, Cfg.bumpAttempts, inMachineOrder, blockOf, isTimerOf, touchedOf, Cfg.attemptsOf, hmach, List.range_succ, insertByTime]⟩
       | some h0 hl => simp [dupFault] at h0
-  | deliverErr hd hr hdr hnone hfail =>
+  | deliverErr hd hr _ hdr hnone hfail =>
     generalize hS : (ctrSys L).resolve l.draws = S at *
     have hS' := hS.symm.trans (resolve_nil (sys := ctrSys L) rfl l.draws)
     subst hS'
@@ -640,8 +648,9 @@ theorem ctr_step (L : Int) (hL : L < 9007199254740991) {s' : State} {l : Label} 
     have hn1 : (n : Int) + 1 ≤ 9007199254740991 := by omega
     have hT1 : n + 1 < timeLimit := by rw [hTL]; omega
     cases hfail with
-    | winners hw => rw [ctr_winners L _ _ n rfl rfl rfl] at hw; cases hw
-    | phase2 hw hp2 =>
+    | winners _ hw => rw [ctr_winners L _ _ n rfl rfl rfl] at hw; cases hw
+    | settle _ _ hs _ hfill => exact (nores_settle_err (sys := ctrSys L) rfl hs hfill).elim
+    | phase2 _ hw hp2 =>
       rw [ctr_winners L _ _ n rfl rfl rfl] at hw
       by_cases hlt : (n : Int) < L
       · rw [if_pos hlt] at hw
@@ -651,7 +660,7 @@ theorem ctr_step (L : Int) (hL : L < 9007199254740991) {s' : State} {l : Label} 
       · rw [if_neg hlt] at hw
         cases hw
         simp only [phase2] at hp2; cases hp2
-    | dup hw hp2 h0 hl => simp [dupFault] at h0
+    | dup _ _ _ _ _ h0 _ => simp [dupFault] at h0
 
 /-- **The counter never exceeds its bound**, for every bound below `2^53 - 1`, by an inductive
 invariant (no unfolding of `deliver` on concrete times). -/
@@ -731,35 +740,35 @@ theorem choice_safe_search : (Sys.lts chSys).Invariant (fun s => chGood s = true
 
 end Exegra.Core.Behav.Examples
 
-/-- info: 'Exegra.Core.Behav.phase2_perm' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.phase2_perm' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.phase2_perm
 
-/-- info: 'Exegra.Core.Behav.phase2_perm_emitted' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.phase2_perm_emitted' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.phase2_perm_emitted
 
-/-- info: 'Exegra.Core.Behav.winners_nodup' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.winners_nodup' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.winners_nodup
 
-/-- info: 'Exegra.Core.Behav.deliver_perm' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.deliver_perm' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.deliver_perm
 
-/-- info: 'Exegra.Core.Behav.mask_const' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.mask_const' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.mask_const
 
-/-- info: 'Exegra.Core.Behav.shaped_invariant' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.shaped_invariant' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.shaped_invariant
 
-/-- info: 'Exegra.Core.Behav.deliver_ne_shape' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.deliver_ne_shape' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.deliver_ne_shape
 
-/-- info: 'Exegra.Core.Behav.shape_unreachable' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.shape_unreachable' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.shape_unreachable
 
@@ -767,11 +776,11 @@ end Exegra.Core.Behav.Examples
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Expr.eval_fits
 
-/-- info: 'Exegra.Core.Behav.time_invariant' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.time_invariant' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.time_invariant
 
-/-- info: 'Exegra.Core.Behav.sorted_invariant' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.sorted_invariant' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.sorted_invariant
 
@@ -783,7 +792,7 @@ end Exegra.Core.Behav.Examples
 #guard_msgs in
 #print axioms Exegra.Core.Behav.sort_unreachable
 
-/-- info: 'Exegra.Core.Behav.wf_shaped_invariant' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.wf_shaped_invariant' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.wf_shaped_invariant
 
@@ -791,11 +800,11 @@ end Exegra.Core.Behav.Examples
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Expr.eval_ne_sort
 
-/-- info: 'Exegra.Core.Behav.Exec.step_sound' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Exec.step_sound' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Exec.step_sound
 
-/-- info: 'Exegra.Core.Behav.Exec.step_failed' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Exec.step_failed' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Exec.step_failed
 
@@ -803,7 +812,7 @@ end Exegra.Core.Behav.Examples
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Exec.idle_deadlocked
 
-/-- info: 'Exegra.Core.Behav.Exec.stopped_deadlocked' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Exec.stopped_deadlocked' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Exec.stopped_deadlocked
 
@@ -811,7 +820,7 @@ end Exegra.Core.Behav.Examples
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Exec.step_live
 
-/-- info: 'Exegra.Core.Behav.run_reach' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.run_reach' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.run_reach
 
@@ -819,7 +828,7 @@ end Exegra.Core.Behav.Examples
 #guard_msgs in
 #print axioms Exegra.Core.Behav.successors_complete
 
-/-- info: 'Exegra.Core.Behav.successors_sound' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.successors_sound' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.successors_sound
 
@@ -839,11 +848,11 @@ end Exegra.Core.Behav.Examples
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Exec.cex_refutes
 
-/-- info: 'Exegra.Core.Behav.Examples.f4_ab_safe' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.f4_ab_safe' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.f4_ab_safe
 
-/-- info: 'Exegra.Core.Behav.Examples.f4_ba_safe' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.f4_ba_safe' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.f4_ba_safe
 
@@ -851,67 +860,63 @@ end Exegra.Core.Behav.Examples
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.f4_ab_safe_closed
 
-/-- info: 'Exegra.Core.Behav.Examples.f4_wf' depends on axioms: [propext] -/
+/-- info: 'Exegra.Core.Behav.Examples.f4_wf' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.f4_wf
 
-/-- info: 'Exegra.Core.Behav.Examples.f4_exec_same_machines' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.f4_exec_same_machines' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.f4_exec_same_machines
 
-/-- info: 'Exegra.Core.Behav.Examples.f4_next_reads_differ' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.f4_next_reads_differ' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.f4_next_reads_differ
 
-/-- info: 'Exegra.Core.Behav.Examples.f4_ab_no_shape' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.f4_ab_no_shape' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.f4_ab_no_shape
 
-/-- info: 'Exegra.Core.Behav.Examples.divZero_counterexample' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.divZero_counterexample' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.divZero_counterexample
 
-/-- info: 'Exegra.Core.Behav.Examples.mod_truncates' depends on axioms: [propext] -/
+/-- info: 'Exegra.Core.Behav.Examples.mod_truncates' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.mod_truncates
 
-/-- info: 'Exegra.Core.Behav.Examples.typed_div_truncates' depends on axioms: [propext] -/
+/-- info: 'Exegra.Core.Behav.Examples.typed_div_truncates' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.typed_div_truncates
 
-/-- info: 'Exegra.Core.Behav.Examples.untyped_div_inexact' depends on axioms: [propext] -/
-#guard_msgs in
-#print axioms Exegra.Core.Behav.Examples.untyped_div_inexact
-
-/-- info: 'Exegra.Core.Behav.Examples.u8_overflow' depends on axioms: [propext] -/
+/-- info: 'Exegra.Core.Behav.Examples.u8_overflow' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.u8_overflow
 
-/-- info: 'Exegra.Core.Behav.Examples.emitted_inserted_by_time' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.emitted_inserted_by_time' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.emitted_inserted_by_time
 
-/-- info: 'Exegra.Core.Behav.Examples.emission_order_irrelevant' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.emission_order_irrelevant' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.emission_order_irrelevant
 
-/-- info: 'Exegra.Core.Behav.Examples.timer_then_cancel' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.timer_then_cancel' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.timer_then_cancel
 
-/-- info: 'Exegra.Core.Behav.Examples.timer_reset' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.timer_reset' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.timer_reset
 
-/-- info: 'Exegra.Core.Behav.Examples.drop_second_delivery' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.drop_second_delivery' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.drop_second_delivery
 
-/-- info: 'Exegra.Core.Behav.Examples.drop_fault_optional' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.drop_fault_optional' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.drop_fault_optional
 
-/-- info: 'Exegra.Core.Behav.deliver_iff_step' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.deliver_iff_step' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.deliver_iff_step
 
@@ -919,7 +924,7 @@ end Exegra.Core.Behav.Examples
 #guard_msgs in
 #print axioms Exegra.Core.Behav.pending_perm_bisim
 
-/-- info: 'Exegra.Core.Behav.target_only' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.target_only' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.target_only
 
@@ -931,11 +936,11 @@ end Exegra.Core.Behav.Examples
 #guard_msgs in
 #print axioms Exegra.Core.Behav.sample_mem_support
 
-/-- info: 'Exegra.Core.Behav.successorsUpTo_eq' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.successorsUpTo_eq' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.successorsUpTo_eq
 
-/-- info: 'Exegra.Core.Behav.Exec.stopped_deadlocked' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Exec.stopped_deadlocked' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Exec.stopped_deadlocked
 
@@ -951,26 +956,26 @@ end Exegra.Core.Behav.Examples
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.choice_safe_search
 
-/-- info: 'Exegra.Core.Behav.phase2_eq_par' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.phase2_eq_par' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.phase2_eq_par
 
-/-- info: 'Exegra.Core.Behav.Examples.agg_last_safe' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.agg_last_safe' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.agg_last_safe
 
-/-- info: 'Exegra.Core.Behav.Examples.agg_first_safe' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.agg_first_safe' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.agg_first_safe
 
-/-- info: 'Exegra.Core.Behav.Examples.agg_next_reads_differ' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.agg_next_reads_differ' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.agg_next_reads_differ
 
-/-- info: 'Exegra.Core.Behav.Examples.reply_reaches_requester' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.reply_reaches_requester' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.reply_reaches_requester
 
-/-- info: 'Exegra.Core.Behav.Examples.reply_without_sender_fails' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Exegra.Core.Behav.Examples.reply_without_sender_fails' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms Exegra.Core.Behav.Examples.reply_without_sender_fails

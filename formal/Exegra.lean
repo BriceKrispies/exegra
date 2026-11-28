@@ -18,7 +18,9 @@ import Exegra.ModelProps
 import Exegra.Verdict
 import Exegra.Impact
 import Exegra.Api
+import Exegra.Boundary
 import Exegra.Core.LTS
+import Exegra.Core.Live
 import Exegra.Core.Calculus
 import Exegra.Core.Search
 import Exegra.Core.Examples
@@ -26,7 +28,16 @@ import Exegra.Core.Behav
 import Exegra.Core.BehavExec
 import Exegra.Core.BehavExamples
 import Exegra.Core.BehavRename
+import Exegra.Core.BehavRes
 import Exegra.Elab
 import Exegra.Core.BehavCheck
 import Exegra.Format2B
 import Exegra.ProveB
+import Exegra.Lower
+import Exegra.Core.BehavLive
+import Exegra.Core.Compose
+import Exegra.Core.Contract
+import Exegra.Core.Refine
+import Exegra.ProveLive
+import Exegra.ProveKernel
+import Exegra.Proofs.VisualEditFlow

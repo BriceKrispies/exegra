@@ -803,6 +803,16 @@ export function deriveModel(model, ref, opts = {}) {
 }
 
 /**
+ * The derived model at a level the caller built itself (a candidate decomposition, src/core/decomposition.js, whose
+ * hierarchy is not declared in the model). The same derivation as deriveModel, not memoised: the level is not a
+ * key the model knows.
+ * @param {Model} model @param {Level} level @param {{coarsen?: string[]|'all'|null}} [opts]
+ */
+export function deriveLevel(model, level, opts = {}) {
+  return assemble(model, level, opts.coarsen ?? null, null);
+}
+
+/**
  * Build the derived model. `reuse` (from rederive) supplies interactions and fibres that are known to be unchanged
  * and the keys and blocks that must be computed again.
  * @param {Model} model @param {Level} level @param {string[]|'all'|null} coarsen

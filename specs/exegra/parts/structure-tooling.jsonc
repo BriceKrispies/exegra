@@ -93,10 +93,13 @@
         "Decide what a reference's matched tests establish with one function on the fresh path (node's TAP output, Playwright's summary) and the reuse path (the recorded outcomes) alike: only leaf tests count, a describe block is not a test, todo tests are recorded as todo, and a reference passes only when at least one matched test executed and passed and none failed, skipped or is a todo",
         "Stamp what it records: the records stamp (the tree stamp without specs/<project>/evidence/results.json and specs/<project>/generated/) on every evidence result, and on every Lean theorem check the hash of the formal/ sources checked, the records stamp and the sha256 of the theorem statement as Lean printed it",
         "Scan the imports of every module a component claims (tools/import-scan.js) and record the outcome for the assumption relationships-match-imports: refuted when an import between components, or a module reaching the file system, has no declared dependency relationship",
-        "Record the repository files each node test run executed (NODE_V8_COVERAGE) with its result, for change impact",
         "With a change set (verify --change), run only the evidence of the claims the change re-marks and reuse the results the last verification recorded fresh (cli/evidence-run.js)",
         "Report for each theorem check the defining file, the Exegra declarations its statement uses with their files, the statement hash with binder names erased, and, for a claim's supersedes theorem, whether it is a kernel-checked implication from the new statement whose conclusion hash is recorded",
-        "Extract the static structure of the implementation (tools/extract.js, over the surface of tools/surface.js): per file its digest and its imports, re-exports and dynamic imports (JavaScript), import lines (Lean) and module-level mod and use (Rust), resolved to files, with the extractor identity and version, into specs/<project>/extracted/facts.json; and the observed facts of a recorded session (tools/observe.js). Static extraction establishes static structure only and is never presented as runtime behavioural fidelity"
+        "Extract the static structure of the implementation (tools/extract.js, over the surface of tools/surface.js): per file its digest and its imports, re-exports and dynamic imports (JavaScript), import lines (Lean) and module-level mod and use (Rust), resolved to files, with the extractor identity and version, into specs/<project>/extracted/facts.json; and the observed facts of a recorded session (tools/observe.js). Static extraction establishes static structure only and is never presented as runtime behavioural fidelity",
+        "Record, for each node test file, the repository files its run loaded or read (tools/trace-reads.js: the modules it loaded, the files and directories it read through fs, the programs other than node and git it started) with a hash of their contents, for change impact and for reuse; the references of one test file share that record (per-test coverage is not attempted)",
+        "Run the test evidence in batches (cli/test-batch.js): one node --test process per test file, given every name pattern the file's references use, one Playwright run with two workers for all browser references, and at most two processes at a time (a Playwright run takes both slots); attribute each reference's outcome from the runner's own per-test results, so a reference that matches no test fails, a failing test fails only the references that match it, and a skipped test stays skipped",
+        "Reuse a recorded pass, or a recorded skip (a test that skipped itself), and report it as reused, when its reference is unchanged and every file its test file's run covered (files it only probed for existence included), every directory listing it read and the tools it started (with whether they are installed) still hash to the recorded value; the references of one test file are reused together or run together; verify has no option that runs a subset of the evidence",
+        "Refuse in `validate` a test evidence reference whose name matches no test its file declares, by a static scan of the file's test, it and describe calls (tools/test-names.js); a file that names tests at run time is not refused"
       ],
       "unknowns": [
         "Only evidence of kind test is executed; measurement, document and review evidence stay author-entered.",
@@ -119,7 +122,10 @@
           "cli/evidence-run.js",
           "tools/extract.js",
           "tools/surface.js",
-          "tools/observe.js"
+          "tools/observe.js",
+          "cli/test-batch.js",
+          "tools/test-names.js",
+          "tools/trace-reads.js"
         ],
         "notes": "Orchestrated by the verify command in cli/commands.js (claimed by agent-cli).",
         "language": "js",
@@ -266,7 +272,15 @@
           "tests/browser/navigation.spec.js",
           "tests/core/navigation.test.js",
           "tests/core/edit-history.test.js",
-          "tests/browser/edit-history.spec.js"
+          "tests/browser/edit-history.spec.js",
+          "tests/core/decomposition.test.js",
+          "tests/fixtures/decomposition/",
+          "tests/core/coherence.test.js",
+          "tests/core/function-composition.test.js",
+          "tests/core/fault-lifting.test.js",
+          "tests/fixtures/multiscale-external/",
+          "tests/core/decomposition-behaviour.test.js",
+          "tests/browser/decomposition-navigation.spec.js"
         ],
         "language": "js"
       }
@@ -560,7 +574,7 @@
       "kind": "exercises",
       "from": "test-suites",
       "to": "simulation-contract",
-      "description": "The conformance test and the golden runner read the engine input derived by sim-input.js and the goldens of the contract."
+      "description": "The conformance test and the golden runner read the engine input derived by the Lean lowering (Exegra.Lower.engineInput) and the goldens of the contract."
     },
     {
       "id": "test-suites-calls-stable-serialization",

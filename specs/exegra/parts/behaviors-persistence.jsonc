@@ -3,13 +3,26 @@
   "behaviors": [
     {
       "id": "workspace-flow",
-      "name": "File service: replace the file or report a conflict",
-      "subject": "workspace-service",
-      "description": "The HTTP hop between the persistence client, the plugin and the workspace service is abstracted. persistedRevision is the revision whose text the file on disk holds; conflict records that the last write was refused because the file on disk differed from the base hash.",
+      "name": "Persistence path: replace the file or report a conflict",
+      "subject": "persistence-client",
+      "description": "The whole save path as the session sees it: the persistence client, the development-server plugin and the workspace service are one behaviour here, a declared abstraction of persistence-client-flow, dev-server-flow, workspace-disk-flow and workspace-watcher-flow (abstracts), whose write-file-* and ws-* hops are hidden. It takes the persistence client's interface: a write-intent with the text's hash and the base hash, answered by save-succeeded with the new hash or save-conflicted with the hash on disk. diskSpec and diskLayout are the hashes of the texts on disk, starting where the workspace service starts (h1, L1); conflict records that a write was refused because the file on disk differed from the base hash. The refinement check runs the members in its place and compares the boundary traces (claim persistence-abstraction-refined).",
       "initial": "workspace-clean",
       "variables": [
-        { "name": "persistedRevision", "type": "number", "initial": 1 },
-        { "name": "conflict", "type": "boolean", "initial": false }
+        {
+          "name": "diskSpec",
+          "type": "string",
+          "initial": "h1"
+        },
+        {
+          "name": "diskLayout",
+          "type": "string",
+          "initial": "L1"
+        },
+        {
+          "name": "conflict",
+          "type": "boolean",
+          "initial": false
+        }
       ],
       "states": [
         { "id": "workspace-clean", "name": "File matches the base hash" },
@@ -20,7 +33,7 @@
           "id": "workspace-overwrite-on-conflict",
           "from": "workspace-clean",
           "to": "workspace-conflicted",
-          "on": "save-requested",
+          "on": "write-intent",
           "faultOnly": true,
           "effects": [
             {
@@ -28,130 +41,146 @@
               "to": "true"
             },
             {
-              "set": "persistedRevision",
-              "to": "event.revision"
+              "set": "diskSpec",
+              "to": "event.text"
             },
             {
-              "emit": "save-conflicted"
-            }
-          ]
-        },
-        { "id": "workspace-detect-conflict", "from": "workspace-clean", "to": "workspace-conflicted", "on": "save-requested", "faultOnly": true, "description": "The file's hash differs from the base hash: nothing is written and the current content is returned.", "effects": [{ "set": "conflict", "to": true }, { "emit": "save-conflicted" }] },
-        { "id": "workspace-write", "from": "workspace-clean", "to": "workspace-clean", "on": "save-requested", "description": "The hashes match: the file is replaced atomically.", "effects": [{ "set": "persistedRevision", "to": "event.revision" }, { "emit": "save-succeeded" }] }
-      ]
-    },
-    {
-      "id": "write-client-flow",
-      "name": "Persistence client: write a file, retry after a conflict",
-      "subject": "persistence-client",
-      "description": "Sends the text with the base hash it last read. A conflict returns the current hash, which becomes the new base hash for one more request; an accepted write ends the flow. The retry abstracts the user's \"Overwrite disk\" (session.resolveConflict('overwrite'), which takes the conflict's hash as base hash and flushes again): the real persistence client and the session never retry on their own. project-session-flow models that resolution as it is.",
-      "initial": "write-client-idle",
-      "variables": [
-        {
-          "name": "attempts",
-          "type": "number",
-          "initial": 0
-        },
-        {
-          "name": "baseHash",
-          "type": "string",
-          "initial": "h1"
-        },
-        {
-          "name": "saved",
-          "type": "boolean",
-          "initial": false
-        }
-      ],
-      "states": [
-        {
-          "id": "write-client-idle",
-          "name": "Idle"
-        },
-        {
-          "id": "write-client-awaiting",
-          "name": "Awaiting the answer"
-        },
-        {
-          "id": "write-client-saved",
-          "name": "Written",
-          "terminal": true
-        }
-      ],
-      "transitions": [
-        {
-          "id": "write-client-send",
-          "from": "write-client-idle",
-          "to": "write-client-awaiting",
-          "on": "write-intent",
-          "effects": [
-            {
-              "set": "attempts",
-              "to": "attempts + 1"
-            },
-            {
-              "emit": "write-file-request",
+              "emit": "save-conflicted",
               "payload": {
-                "name": "'exegra'",
-                "file": "'spec'",
-                "text": "'spec text of revision 2'",
-                "baseHash": "baseHash"
+                "file": "event.file",
+                "currentHash": "'hx'",
+                "requestId": "event.requestId"
               }
             }
           ]
         },
-        {
-          "id": "write-client-retry",
-          "from": "write-client-awaiting",
-          "to": "write-client-awaiting",
-          "on": "write-file-conflict",
-          "guard": "attempts < 3",
-          "description": "The base hash was stale: adopt the current hash and send the same text again.",
-          "effects": [
+        { "id": "workspace-detect-conflict", "from": "workspace-clean", "to": "workspace-conflicted", "on": "write-intent", "faultOnly": true, "description": "The file's hash differs from the base hash: nothing is written and the current content is returned.", "effects": [
             {
-              "set": "attempts",
-              "to": "attempts + 1"
-            },
-            {
-              "set": "baseHash",
-              "to": "event.current"
-            },
-            {
-              "emit": "write-file-request",
-              "payload": {
-                "name": "'exegra'",
-                "file": "'spec'",
-                "text": "'spec text of revision 2'",
-                "baseHash": "event.current"
-              }
-            }
-          ]
-        },
-        {
-          "id": "write-client-done",
-          "from": "write-client-awaiting",
-          "to": "write-client-saved",
-          "on": "write-file-ok",
-          "effects": [
-            {
-              "set": "saved",
+              "set": "conflict",
               "to": true
+            },
+            {
+              "set": "diskSpec",
+              "to": "'hx'"
+            },
+            {
+              "emit": "save-conflicted",
+              "payload": {
+                "file": "event.file",
+                "currentHash": "'hx'",
+                "requestId": "event.requestId"
+              }
+            }
+          ] },
+        {
+          "id": "workspace-write",
+          "from": "workspace-clean",
+          "to": "workspace-clean",
+          "on": "write-intent",
+          "description": "The hashes match: the file is replaced atomically.",
+          "effects": [
+            {
+              "set": "diskSpec",
+              "to": "event.text"
+            },
+            {
+              "emit": "save-succeeded",
+              "payload": {
+                "file": "event.file",
+                "hash": "event.text",
+                "requestId": "event.requestId"
+              }
+            }
+          ],
+          "guard": "event.file == 'spec' && event.baseHash == diskSpec"
+        },
+        {
+          "id": "workspace-refuse-stale-base",
+          "from": "workspace-clean",
+          "to": "workspace-clean",
+          "on": "write-intent",
+          "guard": "event.file == 'spec' && event.baseHash != diskSpec",
+          "effects": [
+            {
+              "set": "conflict",
+              "to": true
+            },
+            {
+              "emit": "save-conflicted",
+              "payload": {
+                "file": "event.file",
+                "currentHash": "diskSpec",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "workspace-write-layout",
+          "from": "workspace-clean",
+          "to": "workspace-clean",
+          "on": "write-intent",
+          "guard": "event.file == 'layout' && event.baseHash == diskLayout",
+          "effects": [
+            {
+              "set": "diskLayout",
+              "to": "event.text"
+            },
+            {
+              "emit": "save-succeeded",
+              "payload": {
+                "file": "event.file",
+                "hash": "event.text",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "workspace-refuse-stale-layout",
+          "from": "workspace-clean",
+          "to": "workspace-clean",
+          "on": "write-intent",
+          "guard": "event.file == 'layout' && event.baseHash != diskLayout",
+          "effects": [
+            {
+              "set": "conflict",
+              "to": true
+            },
+            {
+              "emit": "save-conflicted",
+              "payload": {
+                "file": "event.file",
+                "currentHash": "diskLayout",
+                "requestId": "event.requestId"
+              }
             }
           ]
         }
-      ]
+      ],
+      "abstracts": {
+        "members": [
+          "persistence-client-flow",
+          "write-endpoint-flow"
+        ]
+      }
     },
     {
       "id": "write-endpoint-flow",
       "name": "Development server: accept a write or refuse it as a conflict",
       "subject": "dev-server-plugin",
-      "description": "POST /__exegra/write: the file is replaced only when the base hash equals the hash of the text on disk; otherwise it is left untouched and the conflict carries the current hash.",
+      "description": "POST /__exegra/write as the browser sees it, abstracted from the development-server plugin and the workspace service (dev-server-flow, workspace-disk-flow and workspace-watcher-flow, whose ws-* hop is hidden): a file is replaced only when the base hash equals the hash of its text on disk; otherwise it is left untouched and the conflict carries the current hash. The disk starts with the hashes the workspace service starts with (h1 for the specification, L1 for the layout): the earlier model started at h2, which the refinement check exposed as a boundary counterexample against the members (a conflict with current h2 where the members accept from h1).",
       "initial": "write-endpoint-ready",
       "variables": [
         {
           "name": "diskHash",
           "type": "string",
-          "initial": "h2"
+          "initial": "h1"
+        },
+        {
+          "name": "diskLayout",
+          "type": "string",
+          "initial": "L1"
         },
         {
           "name": "writes",
@@ -172,11 +201,38 @@
       ],
       "transitions": [
         {
+          "id": "write-endpoint-accept-stale",
+          "from": "write-endpoint-ready",
+          "to": "write-endpoint-ready",
+          "on": "write-file-request",
+          "faultOnly": true,
+          "description": "A defect the endpoint must not have: the write is accepted whatever the base hash.",
+          "guard": "event.file == 'spec'",
+          "effects": [
+            {
+              "set": "diskHash",
+              "to": "event.text"
+            },
+            {
+              "set": "writes",
+              "to": "writes + 1"
+            },
+            {
+              "emit": "write-file-ok",
+              "payload": {
+                "ok": true,
+                "hash": "event.text",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
           "id": "write-endpoint-conflict",
           "from": "write-endpoint-ready",
           "to": "write-endpoint-ready",
           "on": "write-file-request",
-          "guard": "event.baseHash != diskHash",
+          "guard": "event.file == 'spec' && event.baseHash != diskHash",
           "effects": [
             {
               "set": "conflicts",
@@ -186,7 +242,8 @@
               "emit": "write-file-conflict",
               "payload": {
                 "code": "'conflict'",
-                "current": "diskHash"
+                "current": "diskHash",
+                "requestId": "event.requestId"
               }
             }
           ]
@@ -196,11 +253,11 @@
           "from": "write-endpoint-ready",
           "to": "write-endpoint-ready",
           "on": "write-file-request",
-          "guard": "event.baseHash == diskHash",
+          "guard": "event.file == 'spec' && event.baseHash == diskHash",
           "effects": [
             {
               "set": "diskHash",
-              "to": "'h3'"
+              "to": "event.text"
             },
             {
               "set": "writes",
@@ -209,13 +266,67 @@
             {
               "emit": "write-file-ok",
               "payload": {
-                "ok": "true",
-                "hash": "'h3'"
+                "ok": true,
+                "hash": "event.text",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "write-endpoint-conflict-layout",
+          "from": "write-endpoint-ready",
+          "to": "write-endpoint-ready",
+          "on": "write-file-request",
+          "guard": "event.file == 'layout' && event.baseHash != diskLayout",
+          "effects": [
+            {
+              "set": "conflicts",
+              "to": "conflicts + 1"
+            },
+            {
+              "emit": "write-file-conflict",
+              "payload": {
+                "code": "'conflict'",
+                "current": "diskLayout",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "write-endpoint-accept-layout",
+          "from": "write-endpoint-ready",
+          "to": "write-endpoint-ready",
+          "on": "write-file-request",
+          "guard": "event.file == 'layout' && event.baseHash == diskLayout",
+          "effects": [
+            {
+              "set": "diskLayout",
+              "to": "event.text"
+            },
+            {
+              "set": "writes",
+              "to": "writes + 1"
+            },
+            {
+              "emit": "write-file-ok",
+              "payload": {
+                "ok": true,
+                "hash": "event.text",
+                "requestId": "event.requestId"
               }
             }
           ]
         }
-      ]
+      ],
+      "abstracts": {
+        "members": [
+          "dev-server-flow",
+          "workspace-disk-flow",
+          "workspace-watcher-flow"
+        ]
+      }
     },
     {
       "id": "persistence-client-flow",
@@ -922,22 +1033,26 @@
         {
           "name": "diskSpec",
           "type": "string",
-          "initial": "h1"
+          "initial": "h1",
+          "environment": true
         },
         {
           "name": "diskLayout",
           "type": "string",
-          "initial": "L1"
+          "initial": "L1",
+          "environment": true
         },
         {
           "name": "recordedVersion",
           "type": "string",
-          "initial": "r1"
+          "initial": "r1",
+          "environment": true
         },
         {
           "name": "generatedHash",
           "type": "string",
-          "initial": "g1"
+          "initial": "g1",
+          "environment": true
         },
         {
           "name": "journalLines",

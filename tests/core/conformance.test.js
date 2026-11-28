@@ -2,9 +2,10 @@
 // src/core/engine.js and src/core/lean.js), reproduces every golden trace of tests/conformance exactly,
 // from the model and from the committed engine input alone; the Rust engine, kept as a differential
 // oracle, reproduces them too and gives byte-identical traces, as WebAssembly (src/engine/pkg) and as
-// the native binary engine/target/release/exegra-sim when they are built; the committed engine
-// inputs are what simulationInput derives; and the conformance runner reports a difference at the
-// right step and path.
+// the native binary engine/target/release/exegra-sim when they are built, except the goldens of
+// tests/conformance/expected-differences.json (the Rust oracle computes untyped numbers as doubles, the
+// Lean engine as exact rationals, WG-5683); the committed engine inputs are what engineInput derives;
+// and the conformance runner reports a difference at the right step and path.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -13,14 +14,21 @@ import os from 'node:os';
 import path from 'node:path';
 import { initEngine, runEngineText, runScenario } from '../../src/core/engine.js';
 import { rustEngineBuilt, runRustEngineText } from '../../tools/rust-engine.js';
-import { simulationInput } from '../../src/core/sim-input.js';
+import { engineInput } from '../../src/core/engine.js';
 import { SOURCES, loadModel, variantsOf } from '../../tools/record-goldens.js';
+import { expectedDifferences } from '../../tools/differential.js';
 import { ELAB_REFUSAL, GOLDENS_DIR, REPO_ROOT, compareTraces, describeFailure, goldenChanges, listGoldens, runConformance, runEngineCommand } from '../../tools/conformance.js';
 
 initEngine();
 
 /** The native engine binary, when it has been built (cargo build --release in engine/). */
 const NATIVE = path.join(REPO_ROOT, 'engine', 'target', 'release', process.platform === 'win32' ? 'exegra-sim.exe' : 'exegra-sim');
+
+/** The goldens the Rust oracle is held to: not refused, and not an expected difference. */
+const rustGoldens = () => {
+  const exp = expectedDifferences();
+  return listGoldens().filter((g) => !g.refused && !exp[`golden ${g.source}/${g.name}`]);
+};
 
 /** @param {any} v */
 const viaJson = (v) => JSON.parse(JSON.stringify(v));
@@ -41,7 +49,7 @@ test('the Lean WebAssembly engine reproduces every golden trace when run from th
         // A golden without a trace is an input the engine refuses as ill-typed or non-integer (WG-5681).
         if (golden.refused) assert.throws(run, (/** @type {any} */ e) => ELAB_REFUSAL.test(e.message), `${source}/${v.name} is refused`);
         else assert.equal(compareTraces(readJson(golden.tracePath), run()), null, `${source}/${v.name}`);
-        assert.deepEqual(viaJson(simulationInput(model, v.scenarioId, v.faults)), readJson(golden.inputPath), `${source}/${v.name} input`);
+        assert.deepEqual(viaJson(engineInput(model, v.scenarioId, v.faults)), readJson(golden.inputPath), `${source}/${v.name} input`);
         checked++;
       }
     }
@@ -63,11 +71,11 @@ test('the Rust WebAssembly engine reproduces every golden trace and agrees with 
     return;
   }
   // The Rust engine does not mirror static typing: the goldens the Lean engine refuses are left out.
-  const results = runConformance({ engine: (text) => JSON.parse(runRustEngineText(text)), skipRefused: true });
+  const results = runConformance({ goldens: rustGoldens(), engine: (text) => JSON.parse(runRustEngineText(text)) });
   assert.ok(results.length >= 50);
   assert.deepEqual(results.filter((r) => r.status !== 'ok').map(describeFailure), []);
   const differ = [];
-  for (const g of listGoldens().filter((x) => !x.refused)) {
+  for (const g of rustGoldens()) {
     const text = fs.readFileSync(g.inputPath, 'utf8');
     if (runRustEngineText(text) !== runEngineText(text)) differ.push(g.name);
   }
@@ -80,7 +88,7 @@ test('the native Rust engine binary reproduces every golden trace', (t) => {
     return;
   }
   const command = `"${NATIVE}"`;
-  const results = runConformance({ engine: (text) => runEngineCommand(command, text), skipRefused: true });
+  const results = runConformance({ goldens: rustGoldens(), engine: (text) => runEngineCommand(command, text) });
   assert.ok(results.length >= 50);
   assert.deepEqual(results.filter((r) => r.status !== 'ok').map(describeFailure), []);
 });
@@ -136,6 +144,7 @@ test('golden changes are exactly the manifest', (t) => {
   assert.equal(Object.keys(changes).length, listGoldens().length, 'every golden changed (version 1 to version 2)');
   // The exegra goldens changed again on purpose after WG-5681: the composition root of the multiscale work (WG-5692)
   // re-addressed behaviours, and the two-session-write event (WG-5720) joined every exegra input; the two-session
-  // edit race is a new golden.
-  assert.deepEqual(counts, { 'version 2': 43, 'input re-recorded, trace equal under strip': 33, 'trace removed (refused)': 2, 'input edited, trace re-recorded': 10, added: 1 });
+  // edit race is a new golden. Re-subjecting workspace-flow (WG-5728) edited the source-edit-flow input as well, and the
+  // save path speaking the persistence client's interface (WG-5729) re-recorded write-with-stale-base-hash.
+  assert.deepEqual(counts, { 'version 2': 43, 'input re-recorded, trace equal under strip': 31, 'trace removed (refused)': 2, 'input edited, trace re-recorded': 12, added: 1 });
 });

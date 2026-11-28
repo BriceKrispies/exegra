@@ -31,7 +31,7 @@
       "runsIn": "node",
       "purpose": "A command line that prints one JSON document per command so an AI coding agent can read, check, simulate, generate, verify and change a specification through the same pipeline as the UI.",
       "responsibilities": [
-        "Commands: projects, validate, list, show, deps, contracts, claims, evaluate, gaps, ops, apply, admit, plan-delete, simulate, trace, prove, integrity, prove-integrity, generate, traceability, verify, readiness, cover-machines, cover-functions, store, help",
+        "Commands: projects, validate, list, show, deps, contracts, claims, evaluate, gaps, ops, apply, admit, plan-delete, simulate, trace, prove, integrity, prove-integrity, generate, traceability, verify, readiness, cover-machines, cover-functions, compose-functions, lift-faults, decompose, accept-decomposition, store, help",
         "Print a JSON envelope (ok, command, project, semanticHash, result or error with code and diagnostics) and use exit codes 0 ok, 1 command failed, 2 usage error",
         "Apply operations through Project.apply, then write the changed files with the base hashes read at the start; a stale --expect-hash, an invalid operation or a disk conflict leaves the files unchanged",
         "Run the verification pipeline: validation, traceability, execution of test evidence and recording of the results, each with the records stamp of the tree; record a reference that skipped, wholly or in part, as not-run instead of keeping an older pass",
@@ -48,7 +48,8 @@
         "Targeted reads (cli/read-commands.js): get prints named entities with their declaration, owner, source file and line and resolved references both ways; find filters entities by kind, property, references, text and prints only requested fields up to a limit; refs lists the outbound and inbound references of one entity exactly as the model holds them. They answer from the semantic model, so an agent never has to open the specification text.",
         "Print the claims a change set re-marks (impact --change), decided in Lean over the dependency graph",
         "Take a change set over the specification, Lean, test and measurement files in admit (--change), report the claims it re-marks and list every guarantee change apart; refuse a weakened lean-theorem claim (admit.theorem-weakened, decided in Lean) unless --accept names the claim; decide claim regressions in admit and verify with the Lean function verdict.isRegression over status tuples",
-        "Replay a captured history with replay-edits --file and return a nonzero exit status for an incompatible or inconclusive capture."
+        "Replay a captured history with replay-edits --file and return a nonzero exit status for an incompatible or inconclusive capture.",
+        "Report behavioural composition (cli/composition-commands.js, docs/composition.md): interfaces, compose, refine, environment, order-check and transfer, and simulate's behavioural cut, environment report and --level"
       ],
       "ports": [
         {
@@ -80,7 +81,8 @@
           "cli/commands.js",
           "cli/admit.js",
           "cli/read-commands.js",
-          "cli/locations.js"
+          "cli/locations.js",
+          "cli/composition-commands.js"
         ],
         "notes": "The `verify` command's pipeline (runVerify, runTestReference) lives in cli/commands.js; the traceability check it uses is in tools/traceability.js, claimed by verification-pipeline.",
         "language": "js"
@@ -114,7 +116,14 @@
   ],
   "relationships": [
     { "id": "agent-cli-submits-edits-transactions", "kind": "submits-edits", "from": "agent-cli", "to": "transactions", "description": "The apply command submits operations through Project.apply with origin cli; nothing edits specification text directly.", "contract": "apply-transaction" },
-    { "id": "agent-cli-calls-workspace-service", "kind": "invokes", "from": "agent-cli", "to": "workspace-service", "description": "Reads projects and writes changed files with the hashes read at the start; records verification results and generated artifacts." },
+    {
+      "id": "agent-cli-calls-workspace-service",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "workspace-service",
+      "description": "Reads projects and writes changed files with the hashes read at the start; records verification results and generated artifacts.",
+      "contract": "write-file"
+    },
     { "id": "agent-cli-data-flow-workspace-service", "kind": "data-flow", "from": "agent-cli", "to": "workspace-service", "description": "The committed spec and layout text with their base hashes travel to the workspace service after a successful transaction." },
     { "id": "agent-cli-calls-queries", "kind": "invokes", "from": "agent-cli", "to": "queries", "description": "Answers list, show, deps, contracts and plan-delete." },
     { "id": "agent-cli-calls-claim-evaluator", "kind": "invokes", "from": "agent-cli", "to": "claim-evaluator", "description": "Evaluates claims for claims, evaluate, trace and verify.", "contract": "evaluate-claims" },
@@ -268,6 +277,13 @@
       "from": "agent-cli",
       "to": "self-model-replay",
       "description": "Replay a captured two-session edit against the shared-base scenario."
+    },
+    {
+      "id": "agent-cli-calls-decomposition-evaluator",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "decomposition-evaluator",
+      "description": "The decompose command generates, evaluates and compares candidate decompositions."
     }
   ]
 }

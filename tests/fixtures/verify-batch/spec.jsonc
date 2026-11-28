@@ -1,0 +1,16 @@
+// Fixture for tests/core/verify-batching.test.js: a specification whose second evidence reference names a test its
+// file does not declare. `validate` refuses it (evidence.ref-no-test); the first reference is fine.
+{
+  "exegra": "0.1",
+  "system": { "id": "ref-names", "name": "Reference names", "description": "A fixture for evidence references." },
+  "components": [
+    { "id": "service", "name": "Service", "category": "logical", "purpose": "Serves requests." }
+  ],
+  "claims": [
+    { "id": "c1", "kind": "invariant", "statement": "Requests are answered.", "evaluate": { "method": "external-evidence" } }
+  ],
+  "evidence": [
+    { "id": "ev-declared", "claim": "c1", "kind": "test", "ref": "tests/fixtures/verify-batch/mixed.test.js#passes one" },
+    { "id": "ev-renamed-away", "claim": "c1", "kind": "test", "ref": "tests/fixtures/verify-batch/mixed.test.js#a test that was renamed away" }
+  ]
+}

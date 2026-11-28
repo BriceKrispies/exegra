@@ -1,0 +1,187 @@
+{
+ "emptied": [
+  "backend",
+  "frontend"
+ ],
+ "fixture": "compiler",
+ "accepted": "compiler-pipeline-thirds",
+ "dryRunOperations": 6,
+ "operations": 6,
+ "semanticHash": {
+  "before": "10692eed6a0f94",
+  "afterAccept": "0e4045a2dcfc68",
+  "afterUndo": "10692eed6a0f94",
+  "afterRedo": "0e4045a2dcfc68",
+  "undoRestores": true,
+  "redoRestores": true
+ },
+ "validate": {
+  "errors": 0,
+  "warnings": 0
+ },
+ "cut": {
+  "id": "compiler-pipeline-thirds-cut",
+  "blocks": 8,
+  "interactions": 5,
+  "connectors": 0,
+  "realisations": {
+   "maps": 0,
+   "ok": true
+  },
+  "diagnostics": []
+ },
+ "navigation": {
+  "hierarchy": "compiler-pipeline-thirds",
+  "cuts": [
+   "compiler-pipeline-thirds-top",
+   "compiler-pipeline-thirds-cut"
+  ],
+  "blocksAtCut": [
+   "frontend",
+   "backend",
+   "diagnostics",
+   "team-front",
+   "team-back",
+   "analysis-and-optimisation",
+   "emission",
+   "syntax"
+  ]
+ },
+ "levelBoundClaims": {
+  "compiler-pipeline-thirds-level-claim@compiler-pipeline-thirds-cut": {
+   "status": "verified",
+   "expressible": true
+  },
+  "compiler-pipeline-thirds-level-claim@compiler-pipeline-thirds-top": {
+   "status": "inconclusive",
+   "expressible": false
+  }
+ },
+ "after": {
+  "compose-functions": {
+   "composites": 3,
+   "diagnostics": 0
+  }
+ },
+ "operationList": [
+  {
+   "type": "CreateEntity",
+   "kind": "component",
+   "data": {
+    "id": "analysis-and-optimisation",
+    "name": "Analysis and optimisation",
+    "category": "logical",
+    "parent": "compiler",
+    "purpose": "A block of the accepted decomposition \"compiler-pipeline-thirds\" of \"compiler\": it groups checker, optimiser."
+   }
+  },
+  {
+   "type": "CreateEntity",
+   "kind": "component",
+   "data": {
+    "id": "emission",
+    "name": "Emission",
+    "category": "logical",
+    "parent": "compiler",
+    "purpose": "A block of the accepted decomposition \"compiler-pipeline-thirds\" of \"compiler\": it groups emitter."
+   }
+  },
+  {
+   "type": "CreateEntity",
+   "kind": "component",
+   "data": {
+    "id": "syntax",
+    "name": "Syntax",
+    "category": "logical",
+    "parent": "compiler",
+    "purpose": "A block of the accepted decomposition \"compiler-pipeline-thirds\" of \"compiler\": it groups lexer, parser."
+   }
+  },
+  {
+   "type": "CreateEntity",
+   "kind": "hierarchy",
+   "data": {
+    "id": "compiler-pipeline-thirds",
+    "name": "Compiler in three thirds",
+    "description": "The candidate decomposition \"compiler-pipeline-thirds\" of \"compiler\", accepted: 4 blocks over the leaves of the scope (source: data). Every other element is placed as the logical hierarchy places it.",
+    "groups": [
+     {
+      "parent": "analysis-and-optimisation",
+      "members": [
+       "checker",
+       "optimiser"
+      ]
+     },
+     {
+      "parent": "compiler",
+      "members": [
+       "analysis-and-optimisation",
+       "backend",
+       "diagnostics",
+       "emission",
+       "frontend",
+       "syntax"
+      ]
+     },
+     {
+      "parent": "emission",
+      "members": [
+       "emitter"
+      ]
+     },
+     {
+      "parent": "syntax",
+      "members": [
+       "lexer",
+       "parser"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "type": "CreateEntity",
+   "kind": "cut",
+   "data": {
+    "id": "compiler-pipeline-thirds-top",
+    "name": "Compiler in three thirds: scope as one block",
+    "hierarchy": "compiler-pipeline-thirds",
+    "expand": []
+   }
+  },
+  {
+   "type": "CreateEntity",
+   "kind": "cut",
+   "data": {
+    "id": "compiler-pipeline-thirds-cut",
+    "name": "Compiler in three thirds: blocks",
+    "hierarchy": "compiler-pipeline-thirds",
+    "expand": [
+     "compiler"
+    ]
+   }
+  }
+ ],
+ "claimOperation": {
+  "type": "AddClaim",
+  "data": {
+   "id": "compiler-pipeline-thirds-level-claim",
+   "kind": "structural",
+   "statement": "At the accepted cut no data flows back from emission to syntax.",
+   "subjects": [
+    "emission",
+    "syntax"
+   ],
+   "evaluate": {
+    "method": "no-relationship",
+    "cut": "compiler-pipeline-thirds-cut",
+    "from": "emission",
+    "to": "syntax",
+    "kinds": [
+     "data-flow",
+     "invokes"
+    ]
+   }
+  }
+ }
+}

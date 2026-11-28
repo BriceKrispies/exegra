@@ -292,7 +292,7 @@ def intIn (v : Value) (path : String) (lo hi : Nat) : R Nat :=
   let err := s!"Field \"{path}\" must be an integer in [{lo}, {hi}]."
   match v with
   | .num x =>
-    if x.floor == x && x ≥ lo.toFloat && x ≤ hi.toFloat then .ok x.toUInt64.toNat else .error err
+    if Num.isInteger x && x ≥ (↑lo : Rat) && x ≤ (↑hi : Rat) then .ok x.floor.toNat else .error err
   | _ => .error err
 
 def optInt (o : List (String × Value)) (key path : String) (lo hi : Nat) : R (Option Nat) :=
@@ -572,8 +572,8 @@ def resource (v : Value) (i : Nat) : R ResourceDecl := do
         let priority ← match field co "priority" with
           | .undef | .null => pure (0 : Int)
           | .num x =>
-            if x.floor == x && x.abs < 4294967296 then
-              pure (if x < 0 then -((-x).toUInt64.toNat : Int) else (x.toUInt64.toNat : Int))
+            if Num.isInteger x && -4294967296 < x && x < 4294967296 then
+              pure x.floor
             else throw s!"Field \"{cw}.priority\" must be an integer in [-4294967295, 4294967295]."
           | _ => throw s!"Field \"{cw}.priority\" must be an integer in [-4294967295, 4294967295]."
         let reserved ← intOr co "reserved" s!"{cw}.reserved" 0 (two32 - 1) 0
@@ -929,7 +929,7 @@ structure ReqInfo where
 
 inductive EntryKind where
   | event
-  | serviceDone (res : String) (r : Req ReqInfo) (waited served : Nat)
+  | serviceDone (res : String) (r : Req String ReqInfo) (waited served : Nat)
   | waitTimeout (res : String) (request : Nat)
   /-- A closed client gives up on its request `n`. -/
   | clientTimeout (workload : String) (client : Nat) (n : Nat)
@@ -995,7 +995,7 @@ structure Conf where
   /-- Behavior id ↦ its instances, in index or creation order. -/
   insts : List (String × List Value)
   pending : List Entry
-  resources : List (String × RState ReqInfo)
+  resources : List (String × RState String ReqInfo)
   routeCounters : List (String × Nat)
   streams : List (String × Nat)
   workloads : List (String × WState) := []
@@ -1014,7 +1014,7 @@ def Conf.setLQueue (c : Conf) (l k : String) (q : LQueue) : Conf :=
     { c with lqueues := c.lqueues.map fun (lk, x) => if lk == (l, k) then (lk, q) else (lk, x) }
   else { c with lqueues := c.lqueues ++ [((l, k), q)] }
 
-instance : Inhabited (RState ReqInfo) := ⟨{ capacity := 0, holds := [], waiting := [] }⟩
+instance : Inhabited (RState String ReqInfo) := ⟨{ capacity := 0, holds := [], waiting := [] }⟩
 
 def Conf.machine? (c : Conf) (k : String) : Option Machine := (c.machines.find? (·.1 == k)).map (·.2)
 
@@ -1025,10 +1025,10 @@ def Conf.setMachine (c : Conf) (k : String) (m : Machine) : Conf :=
 
 def Conf.instsOf (c : Conf) (b : String) : List Value := ((c.insts.find? (·.1 == b)).map (·.2)).getD []
 
-def Conf.resource? (c : Conf) (r : String) : Option (RState ReqInfo) :=
+def Conf.resource? (c : Conf) (r : String) : Option (RState String ReqInfo) :=
   (c.resources.find? (·.1 == r)).map (·.2)
 
-def Conf.setResource (c : Conf) (r : String) (s : RState ReqInfo) : Conf :=
+def Conf.setResource (c : Conf) (r : String) (s : RState String ReqInfo) : Conf :=
   { c with resources := c.resources.map fun (k, x) => if k == r then (k, s) else (k, x) }
 
 def lookup (xs : List (String × Nat)) (k : String) : Nat := ((xs.find? (·.1 == k)).map (·.2)).getD 0
@@ -1151,7 +1151,7 @@ def refsOf : Ast → List (List String)
   | .un _ a => refsOf a
   | .bin _ a b => refsOf a ++ refsOf b
 
-def numsOf (path : String) (vs : List Value) : Except String (List Float) :=
+def numsOf (path : String) (vs : List Value) : Except String (List Rat) :=
   vs.mapM fun
     | .num x => .ok x
     | v => .error s!"Aggregate \"{path}\" needs numbers, got {v.typeName}."
@@ -1168,7 +1168,7 @@ def resolve (env : Env) (view start : Conf) (mk : String) (inst : Value) (payloa
   let machinesOf (b : BehaviorIn) : List Machine :=
     (start.instsOf b.id).filterMap fun v => start.machine? (machineKey b v)
   match path with
-  | ["time"] => .ok (.num time.toFloat)
+  | ["time"] => .ok (.num (↑time : Rat))
   | ["instance"] => .ok inst
   | [name] => .ok (((view.machine? mk).bind fun m => objGet? m.vars name).getD .undef)
   | ["event", f] => .ok (match payload with
@@ -1176,18 +1176,18 @@ def resolve (env : Env) (view start : Conf) (mk : String) (inst : Value) (payloa
     | _ => .undef)
   | [r, "inUse"] =>
     match start.resource? r with
-    | some s => .ok (.num (Res.heldAll s.holds).toFloat)
+    | some s => .ok (.num (↑(Res.heldAll s.holds) : Rat))
     | none => .ok .undef
   | [r, "waiting"] =>
     match start.resource? r with
-    | some s => .ok (.num s.waiting.length.toFloat)
+    | some s => .ok (.num (↑s.waiting.length : Rat))
     | none => .ok .undef
   | [r, "inUse", c] | [r, "waiting", c] =>
     match start.resource? r, i.resource? r with
     | some s, some d =>
       match d.classes.findIdx? (·.id == c) with
-      | some k => .ok (.num (if path[1]! == "inUse" then Res.heldC s.holds k
-                             else Res.waitingC s.waiting k).toFloat)
+      | some k => .ok (.num (↑(if path[1]! == "inUse" then Res.heldC s.holds k
+                             else Res.waitingC s.waiting k) : Rat))
       | none => .ok .undef
     | _, _ => .ok .undef
   | [b, name] =>
@@ -1203,7 +1203,7 @@ def resolve (env : Env) (view start : Conf) (mk : String) (inst : Value) (payloa
     match i.behavior? b with
     | some bd => match bd.instances with
       | .single => .ok .undef
-      | _ => .ok (.num (start.instsOf b).length.toFloat)
+      | _ => .ok (.num (↑(start.instsOf b).length : Rat))
     | none => .ok .undef
   | [b, agg, x] =>
     match i.behavior? b with
@@ -1213,7 +1213,7 @@ def resolve (env : Env) (view start : Conf) (mk : String) (inst : Value) (payloa
       | .single => .ok .undef
       | _ =>
         let ms := machinesOf bd
-        if agg == "count" then .ok (.num (ms.filter (·.state == x)).length.toFloat)
+        if agg == "count" then .ok (.num (↑(ms.filter (·.state == x)).length : Rat))
         else if agg == "sum" || agg == "min" || agg == "max" then do
           let ns ← numsOf joined (ms.map fun m => (objGet? m.vars x).getD .undef)
           match agg, ns with
@@ -1331,7 +1331,7 @@ def chooseAll (env : Env) (cur : Conf) (head : Entry) :
 
 /-- A resource operation recorded in phase 2. -/
 inductive Op where
-  | req (r : Req ReqInfo) (maxWait : Option Nat)
+  | req (r : Req String ReqInfo) (maxWait : Option Nat)
   | release (owner : String) (cls : Nat) (units : Nat)
   deriving Inhabited
 
@@ -1420,7 +1420,7 @@ def sizeOf (event : String) (v : Value) : Except String Nat :=
   let err (x : String) := s!"Size of emit \"{event}\" must be an integer in [0, 2^40), got {x}."
   match v with
   | .num x =>
-    if x.floor == x && x ≥ 0 && x < 1099511627776 then .ok x.toUInt64.toNat else .error (err (Json.write v))
+    if Num.isInteger x && x ≥ 0 && x < 1099511627776 then .ok x.floor.toNat else .error (err (Json.write v))
   | _ => .error (err v.typeName)
 
 def runEffects (env : Env) (start : Conf) (head : Entry) (w : Winner) :
@@ -1453,7 +1453,7 @@ def runEffects (env : Env) (start : Conf) (head : Entry) (w : Winner) :
           .error s!"Effect sets \"{varName}\", which is not a variable of \"{w.b.id}\"."
         else
           let (x, drs, streams) := sample env.input.scenario.seed s.next.streams s!"sample:{site}" d
-          let value := Value.num x.toFloat
+          let value := Value.num (↑x : Rat)
           let before := (objGet? m.vars varName).getD .undef
           let next := { s.next.setMachine w.key { m with vars := objSet m.vars varName value } with streams }
           runEffects env start head w (k + 1) rest { s with next, draws := s.draws ++ drs }
@@ -1482,7 +1482,7 @@ def runEffects (env : Env) (start : Conf) (head : Entry) (w : Winner) :
           let next := { s.next with pending := insertE s.next.pending entry, streams }
           runEffects env start head w (k + 1) rest
             { s with next, seq := s.seq + 1, nid := nid + 1, draws := s.draws ++ drs } sets
-            (emits ++ [{ event, time := atTime.toFloat, seq := s.seq, payload := pv }])
+            (emits ++ [{ event, time := (↑atTime : Rat), seq := s.seq, payload := pv }])
     | .request kind res cls units demand thenEv refused entries =>
       match env.input.resource? res with
       | none => .error s!"Effect uses \"{res}\", which is not a resource."
@@ -1497,7 +1497,7 @@ def runEffects (env : Env) (start : Conf) (head : Entry) (w : Winner) :
               { requester := { behavior := w.b.id, inst := w.inst, incarnation := 0 },
                 requesterKey := w.key, thenEv, refused, payload := fs, demand,
                 stream := s!"demand:{site}" }
-            let r : Req ReqInfo :=
+            let r : Req String ReqInfo :=
               { id := 0, owner := w.key, cls := ci, units, since := time, kind, info }
             runEffects env start head w (k + 1) rest
               { s with nid, ops := s.ops ++ [(res, .req r ((d.classAt? ci).bind (·.maxWait)))] } sets emits
@@ -1543,7 +1543,7 @@ def runEffects (env : Env) (start : Conf) (head : Entry) (w : Winner) :
                              target := tg, sender }
             match sendMsg env.input l fan k m time { s with seq := s.seq + 1, nid := s.nid + 1 } with
             | .error e => .error e
-            | .ok s => .ok (s, ems ++ [{ event, time := time.toFloat, seq := m.id, payload := m.payload }])) (s, [])
+            | .ok s => .ok (s, ems ++ [{ event, time := (↑time : Rat), seq := m.id, payload := m.payload }])) (s, [])
           match r with
           | .error e => .error e
           | .ok (s, ems) => runEffects env start head w (k + 1) rest s sets (emits ++ ems)
@@ -1565,7 +1565,7 @@ def runEffects (env : Env) (start : Conf) (head : Entry) (w : Winner) :
         let next := { s.next with pending := insertE (dropTimer s.next.pending tid) entry, streams }
         runEffects env start head w (k + 1) rest
           { s with next, seq := s.seq + 1, nid := nid + 1, draws := s.draws ++ drs } sets
-          (emits ++ [{ event, time := atTime.toFloat, seq := s.seq, payload := pv }])
+          (emits ++ [{ event, time := (↑atTime : Rat), seq := s.seq, payload := pv }])
     | .cancel name =>
       let tid := s!"{w.key}/{name}"
       runEffects env start head w (k + 1) rest
@@ -1651,7 +1651,7 @@ def removeTimeout (res : String) (rid : Nat) (q : List Entry) : List Entry :=
 def classId (d : ResourceDecl) (c : Nat) : String := ((d.classAt? c).map (·.id)).getD "default"
 
 /-- The `then` or `refused` entry answering a request, targeted at its requester. -/
-def answer (st : Settle) (res : String) (d : ResourceDecl) (r : Req ReqInfo) (event : String)
+def answer (st : Settle) (res : String) (d : ResourceDecl) (r : Req String ReqInfo) (event : String)
     (outcome : String) (extra : List (String × Value)) : Settle :=
   -- ORDER: the effect's payload, then `resource`, `class` and the extra fields, each set as
   -- `o[k] = v` (a payload field of the same name is overwritten in place).
@@ -1664,13 +1664,13 @@ def answer (st : Settle) (res : String) (d : ResourceDecl) (r : Req ReqInfo) (ev
       sender := none, routes := none }
   { st with conf := { st.conf with pending := insertE st.conf.pending e }, seq := st.seq + 1, nid }
 
-def resRec (res : String) (d : ResourceDecl) (r : Req ReqInfo) (action : String) (atTime : Nat) : ResRecord :=
+def resRec (res : String) (d : ResourceDecl) (r : Req String ReqInfo) (action : String) (atTime : Nat) : ResRecord :=
   { resource := res, cls := classId d r.cls, request := some r.id, action, atTime, waited := none,
     served := none, reason := none, units := none }
 
 /-- Grant outcomes become entries and records, in grant order. -/
 def applyGrants (env : Env) (res : String) (d : ResourceDecl) :
-    List (Res.Out ReqInfo) → Settle → Except String Settle
+    List (Res.Out String ReqInfo) → Settle → Except String Settle
   | [], st => .ok st
   | .granted r occ :: rest, st =>
     let now := st.conf.time
@@ -1695,13 +1695,13 @@ def applyGrants (env : Env) (res : String) (d : ResourceDecl) :
       applyGrants env res d rest
         { st with conf := { st.conf with pending := insertE st.conf.pending e, streams }, seq := st.seq + 1, draws := st.draws ++ drs, recs := st.recs ++ [{ resRec res d r "granted" now with waited := some waited }] }
     | .acquire =>
-      let st := answer st res d r r.info.thenEv "granted" [("waited", .num waited.toFloat)]
+      let st := answer st res d r r.info.thenEv "granted" [("waited", .num (↑waited : Rat))]
       applyGrants env res d rest
         { st with recs := st.recs ++ [{ resRec res d r "granted" now with waited := some waited }] }
   | _ :: rest, st => applyGrants env res d rest st
 
 /-- Requests removed at a bound, in removal order. -/
-def applyRemoved (res : String) (d : ResourceDecl) : List (Req ReqInfo) → Settle → Settle
+def applyRemoved (res : String) (d : ResourceDecl) : List (Req String ReqInfo) → Settle → Settle
   | [], st => st
   | r :: rest, st =>
     let now := st.conf.time
@@ -1713,7 +1713,7 @@ def applyRemoved (res : String) (d : ResourceDecl) : List (Req ReqInfo) → Sett
       | .shedOldest => ("shed", some "shed")
     let st := match reason, r.info.refused with
       | some why, some ev =>
-        answer st res d r ev "refused" [("waited", .num waited.toFloat), ("reason", .str why)]
+        answer st res d r ev "refused" [("waited", .num (↑waited : Rat)), ("reason", .str why)]
       | _, _ => st
     applyRemoved res d rest
       { st with recs := st.recs ++ [{ resRec res d r action now with waited := some waited, reason }] }
@@ -1858,10 +1858,10 @@ def genPayload (i : Input) (w : WorkloadIn) (st : WState) (n : Nat) (client : Op
     let pname := s!"payload:{w.id}:{f}"
     match pf with
     | .lit v => let (v, nid) := v.copy nid; (objInsert fs f v, nid, pdraws, streams)
-    | .counter => (objInsert fs f (.num n.toFloat), nid, pdraws, streams)
+    | .counter => (objInsert fs f (.num (↑n : Rat)), nid, pdraws, streams)
     | .sample d =>
       let (x, drs, streams) := sample i.scenario.seed streams pname d
-      (objInsert fs f (.num x.toFloat), nid, pdraws ++ drs, streams)
+      (objInsert fs f (.num (↑x : Rat)), nid, pdraws ++ drs, streams)
     | .choose vs ws =>
       let (r, dr, streams) := drawNext seed streams pname
       let (v, nid) := (vs.getD (Random.categorical r ws) .null).copy nid
@@ -2259,7 +2259,7 @@ def stepHead (env : Env) (c : Config) (next : Conf) (nid : Nat) (head : Entry) :
       let next := next.setResource res { s with holds := Res.endService r.id s.holds }
       let st : Settle := { conf := next, seq := c.seq, nid, draws := [], recs := [] }
       let st := answer st res d r r.info.thenEv "completed"
-        [("waited", .num waited.toFloat), ("served", .num served.toFloat)]
+        [("waited", .num (↑waited : Rat)), ("served", .num (↑served : Rat))]
       finish env c head .serviceDone [] [] [] [] [] [res] st c.attempts
         [{ resRec res d r "completed" next.time with waited := some waited, served := some served }]
     | _, _ => .committed (blank c.taken head .serviceDone next) { c with conf := next, nid, taken := c.taken + 1 }
@@ -2273,7 +2273,7 @@ def stepHead (env : Env) (c : Config) (next : Conf) (nid : Nat) (head : Entry) :
         let st : Settle := { conf := next, seq := c.seq, nid, draws := [], recs := [] }
         let waited := next.time - r.since
         let st := match r.info.refused with
-          | some ev => answer st res d r ev "refused" [("waited", .num waited.toFloat), ("reason", .str "timeout")]
+          | some ev => answer st res d r ev "refused" [("waited", .num (↑waited : Rat)), ("reason", .str "timeout")]
           | none => st
         finish env c head .waitTimeout [] [] [] [] [] [res] st c.attempts
           [{ resRec res d r "timed-out" next.time with waited := some waited, reason := some "timeout" }]
@@ -2384,7 +2384,7 @@ injected faults. -/
 def initialConf (i : Input) (faults : List FaultIn) : Conf × Nat × List Draw :=
   let insts := i.behaviors.map fun b => (b.id, match b.instances with
     | .single => [Value.num 0]
-    | .count n => (List.range n).map fun k => Value.num k.toFloat
+    | .count n => (List.range n).map fun (k : Nat) => Value.num (k : Rat)
     | .keyed .. => [])
   let insts := insts.foldl (fun acc (k, v) => if acc.any (·.1 == k) then acc else acc ++ [(k, v)]) []
   let machines := insts.flatMap fun (bid, vs) =>
@@ -2849,7 +2849,7 @@ namespace Encode
 
 open Exegra.Encode (o s nat a strings)
 
-def n (k : Nat) : Value := .num k.toFloat
+def n (k : Nat) : Value := .num (↑k : Rat)
 
 def addr (x : Addr) : Value :=
   o [("behavior", s x.behavior), ("instance", x.inst), ("incarnation", n x.incarnation)]

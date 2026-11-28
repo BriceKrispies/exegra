@@ -148,6 +148,10 @@ function claimEntry(ctx, claim) {
   if (ctx.model.meta?.verificationMethods && Object.hasOwn(ctx.model.meta.verificationMethods, method)) {
     return entry(evidenceCheck(ctx, claim), `Verified outside Exegra by the method "${method}"; the status comes from evidence.`, notApplicable('The status rests on evidence outside the model.'));
   }
+  if (method.startsWith('conformance-') && method !== 'conformance-verified-refinement') {
+    const check = evidenceCheck(ctx, claim);
+    return entry(check, `Conformance stage "${method.slice(12)}": the status comes from attached test evidence, at most checked on instances.`, notApplicable('The status rests on evidence about the implementation.'));
+  }
   if (method === 'external-evidence') {
     const check = evidenceCheck(ctx, claim);
     return entry(check, check === 'test' ? 'The status comes from attached test evidence.' : 'The status comes from attached evidence that is not a test.', notApplicable('The status rests on evidence outside the model.'));
@@ -162,7 +166,7 @@ function claimEntry(ctx, claim) {
     return entry('structural', `Decided over the whole declared component graph by "${method}".`, { grounding: 'bound', why: 'Reads the declared components and relationships of the model.', reads: ['components and relationships'] });
   }
   if (method === 'data-model') return entry('data-model', 'Decided over the records and copies of the model by the data rules.', dataModelGrounding(ctx, ev));
-  if (method === 'lean-theorem') {
+  if (method === 'lean-theorem' || method === 'conformance-verified-refinement') {
     const about = arr(ev.about).filter((a) => typeof a === 'string');
     return entry('lean-theorem', `A theorem of the Lean core, "${ev.theorem}", checked by the Lean kernel; it covers every input.`, { grounding: 'bound', why: `States a property of the Lean definitions${about.length ? ` ${quoted(about)}` : ''}.`, reads: [`theorem "${ev.theorem}"`, ...about.map((a) => `definition "${a}"`)] });
   }

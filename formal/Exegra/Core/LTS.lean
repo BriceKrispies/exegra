@@ -25,6 +25,9 @@ This file proves the safety theory the rest builds on:
 * `ReachIn n` and `BoundedInvariant n P`, what a search to depth `n` can establish, and
   `invariant_iff_all_bounds`: an invariant is exactly a bounded invariant at every depth. No single
   depth suffices in general (`Exegra.Core.Examples.bounded_not_unbounded`);
+* `IsPath`, `KInductive k P` and `kInduction_sound`: for `k ≥ 1`, a predicate that holds within
+  `k - 1` steps and on the last state of every path of `k + 1` states (from any state) whose first
+  `k` states satisfy it is an invariant (`Exegra.Core.Examples.kSys_*`: 2-inductive, not inductive);
 * `Enum`, a complete enumeration of initial states and successors, and `invariant_of_closed`: a
   finite list of states that contains the initial states and is closed under successors proves an
   invariant of every state in it, with no bound. `checkClosed` is a Boolean check of that
@@ -129,6 +132,105 @@ theorem invariant_iff_all_bounds (M : LTS σ α) (P : σ → Prop) :
   · intro h s hs
     obtain ⟨n, hn⟩ := reachIn_of_reach hs
     exact h n s hn
+
+/-! ### k-induction -/
+
+/-- Consecutive states of the list are related by some step. The first state need not be
+initial: a path may start anywhere, reachable or not. -/
+def IsPath (M : LTS σ α) : List σ → Prop
+  | [] => True
+  | [_] => True
+  | s :: t :: rest => (∃ a, M.step s a t) ∧ IsPath M (t :: rest)
+
+/-- `P` is `k`-inductive: it holds in every state reachable in at most `k - 1` steps, and on every
+path of `k + 1` states (from any state) whose first `k` states satisfy `P`, the last one does too.
+For `k = 1` this is `Inductive P` restated over paths. -/
+def KInductive (M : LTS σ α) (k : Nat) (P : σ → Prop) : Prop :=
+  M.BoundedInvariant (k - 1) P ∧
+    ∀ (xs : List σ) (hl : xs.length = k + 1), IsPath M xs →
+      (∀ i (hi : i < k), P (xs[i]'(by omega))) → P (xs[k]'(by omega))
+
+/-- The states reachable from an initial state in exactly `n` steps. -/
+inductive ReachExact (M : LTS σ α) : Nat → σ → Prop
+  | init {s : σ} : M.init s → ReachExact M 0 s
+  | step {n : Nat} {s t : σ} {a : α} : ReachExact M n s → M.step s a t → ReachExact M (n + 1) t
+
+theorem reachExact_of_reach {M : LTS σ α} {s : σ} (h : M.Reach s) : ∃ n, M.ReachExact n s := by
+  induction h with
+  | init hi => exact ⟨0, .init hi⟩
+  | step _ hst ih =>
+    obtain ⟨n, hn⟩ := ih
+    exact ⟨n + 1, .step hn hst⟩
+
+theorem reachIn_mono {M : LTS σ α} {n m : Nat} {s : σ} (h : M.ReachIn n s) (hnm : n ≤ m) :
+    M.ReachIn m s := by
+  induction h generalizing m with
+  | init hi => exact .init hi
+  | step _ hst ih =>
+    rename_i n' _ _ _
+    obtain ⟨m', rfl⟩ : ∃ m', m = m' + 1 := ⟨m - 1, by omega⟩
+    exact .step (ih (by omega)) hst
+
+theorem reachIn_of_exact {M : LTS σ α} {n : Nat} {s : σ} (h : M.ReachExact n s) : M.ReachIn n s := by
+  induction h with
+  | init hi => exact .init hi
+  | step _ hst ih => exact .step ih hst
+
+theorem isPath_append {M : LTS σ α} : ∀ (xs : List σ) (u t : σ) (a : α),
+    IsPath M (xs ++ [u]) → M.step u a t → IsPath M (xs ++ [u, t])
+  | [], _, _, a, _, hst => ⟨⟨a, hst⟩, trivial⟩
+  | [_], _, _, a, h, hst => ⟨h.1, ⟨a, hst⟩, trivial⟩
+  | _ :: y :: rest, u, t, a, h, hst => ⟨h.1, isPath_append (y :: rest) u t a h.2 hst⟩
+
+/-- The last `j + 1` states of a run of exactly `n + j` steps: a path ending at `s` whose `i`-th
+state is reachable in exactly `n + i` steps. -/
+theorem back_path {M : LTS σ α} : ∀ (j n : Nat) (s : σ), M.ReachExact (n + j) s →
+    ∃ (xs : List σ) (hl : xs.length = j + 1), IsPath M xs ∧ xs[j]'(by omega) = s ∧
+      ∀ i (hi : i < j + 1), M.ReachExact (n + i) (xs[i]'(by omega))
+  | 0, n, s, h => ⟨[s], rfl, trivial, rfl, fun i hi => by
+      obtain rfl : i = 0 := by omega
+      simpa using h⟩
+  | j + 1, n, s, h => by
+    cases h with
+    | step hu hst =>
+      rename_i u a
+      obtain ⟨xs, hl, hp, hlast, hr⟩ := back_path j n u hu
+      have hxs : xs = xs.take j ++ [u] := by
+        conv => lhs; rw [← List.take_append_drop j xs]
+        congr 1
+        rw [List.drop_eq_getElem_cons (by omega), hlast]
+        simp [List.drop_eq_nil_of_le (by omega : xs.length ≤ j + 1)]
+      refine ⟨xs ++ [s], by simp [hl], ?_, ?_, ?_⟩
+      · have := isPath_append (M := M) (xs.take j) u s a (hxs ▸ hp) hst
+        rw [hxs]; simpa using this
+      · simp [List.getElem_append_right, hl]
+      · intro i hi
+        by_cases hij : i < j + 1
+        · rw [List.getElem_append_left (by omega)]
+          exact hr i hij
+        · obtain rfl : i = j + 1 := by omega
+          rw [List.getElem_append_right (by omega)]
+          simpa [hl, Nat.add_assoc] using (ReachExact.step hu hst : M.ReachExact (n + j + 1) s)
+
+/-- **k-induction is sound**: for `k ≥ 1`, a `k`-inductive predicate is an invariant, with no
+bound on the length of runs. -/
+theorem kInduction_sound {M : LTS σ α} {k : Nat} {P : σ → Prop} (hk : 0 < k)
+    (h : M.KInductive k P) : M.Invariant P := by
+  obtain ⟨hb, hstep⟩ := h
+  have key : ∀ n s, M.ReachExact n s → P s := by
+    intro n
+    induction n using Nat.strongRecOn with
+    | ind n ih =>
+      intro s hs
+      by_cases hn : n < k
+      · exact hb s (reachIn_mono (reachIn_of_exact hs) (by omega))
+      · obtain ⟨d, rfl⟩ : ∃ d, n = d + k := ⟨n - k, by omega⟩
+        obtain ⟨xs, hl, hp, hlast, hr⟩ := back_path k d s hs
+        have := hstep xs hl hp (fun i hi => ih (d + i) (by omega) _ (hr i (by omega)))
+        rwa [hlast] at this
+  intro s hs
+  obtain ⟨n, hn⟩ := reachExact_of_reach hs
+  exact key n s hn
 
 /-! ### Closed-set certificates -/
 

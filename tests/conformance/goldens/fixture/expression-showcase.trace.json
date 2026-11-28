@@ -24,6 +24,7 @@
      "imp1": false,
      "imp2": true,
      "imp3": true,
+     "inexact": 0.3,
      "le": true,
      "lt": false,
      "mix": true,
@@ -36,7 +37,7 @@
      "paren": 9,
      "prec": 5,
      "prod": 14,
-     "quo": 3,
+     "quo": 3.5,
      "rem": 1,
      "s": "ab",
      "short_and": false,
@@ -81,6 +82,7 @@
      "imp1": true,
      "imp2": false,
      "imp3": false,
+     "inexact": 0,
      "le": false,
      "lt": false,
      "mix": false,
@@ -167,6 +169,7 @@
        "imp1": false,
        "imp2": true,
        "imp3": true,
+       "inexact": 0.3,
        "le": true,
        "lt": false,
        "mix": true,
@@ -179,7 +182,7 @@
        "paren": 9,
        "prec": 5,
        "prod": 14,
-       "quo": 3,
+       "quo": 3.5,
        "rem": 1,
        "s": "ab",
        "short_and": false,
@@ -248,7 +251,7 @@
        "variable": "prod"
       },
       {
-       "after": 3,
+       "after": 3.5,
        "before": 0,
        "variable": "quo"
       },
@@ -276,6 +279,11 @@
        "after": 9,
        "before": 0,
        "variable": "paren"
+      },
+      {
+       "after": 0.3,
+       "before": 0,
+       "variable": "inexact"
       },
       {
        "after": "abcdef",
@@ -425,6 +433,7 @@
        "imp1": false,
        "imp2": true,
        "imp3": true,
+       "inexact": 0.3,
        "le": true,
        "lt": false,
        "mix": true,
@@ -437,7 +446,7 @@
        "paren": 9,
        "prec": 5,
        "prod": 14,
-       "quo": 3,
+       "quo": 3.5,
        "rem": 1,
        "s": "ab",
        "short_and": false,
@@ -475,7 +484,7 @@
      "behavior": "ops-machine",
      "emitted": [],
      "from": "ops-done",
-     "guard": "sum == 9 && cat == 'abcdef' && !eq == false",
+     "guard": "sum == 9 && cat == 'abcdef' && inexact == 0.3 && !eq == false",
      "instance": 0,
      "sets": [
       {

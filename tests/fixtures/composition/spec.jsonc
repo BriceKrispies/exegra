@@ -1,0 +1,134 @@
+{
+  // Behavioural composition along the hierarchy (docs/composition.md, WG-5729): a store composite whose two
+  // members (a front end and a disk) are abstracted by one behaviour of the store, a writer outside it, and the
+  // scenarios that run the store at its two levels. tests/core/composition.test.js varies this fixture to make
+  // each diagnostic and each counterexample appear.
+  // - store-flow abstracts front-flow and disk-flow; put-req, put-ok and put-conflict are internal to the store.
+  // - store-top-flow abstracts store-flow alone: the finest members of store-top-flow are front-flow and disk-flow.
+  // - writer-at-store runs the store at its abstract level, writer-at-members at its members, writer-front-only
+  //   omits the disk (the environment), writer-front-assumed omits it with an environment assumption, and
+//   writer-stale-at-store writes with a stale base hash (the store refuses it, unless store-ignores-base acts).
+  // - race-ab / race-ba: two machines answer one event in the same step; the claim first-before-second holds
+  //   for one listing and not for the other (an order-dependent verdict).
+  "exegra": "0.1",
+  "system": { "id": "composition-fixture", "name": "Composition fixture", "illustrative": true },
+
+  "components": [
+    { "id": "top", "name": "Top", "kind": "subsystem", "category": "logical", "purpose": "Everything." },
+    { "id": "app", "name": "App", "kind": "subsystem", "category": "logical", "parent": "top", "purpose": "The writer side." },
+    { "id": "writer", "name": "Writer", "category": "logical", "parent": "app", "purpose": "Writes a text." },
+    { "id": "store", "name": "Store", "kind": "subsystem", "category": "logical", "parent": "top", "purpose": "Keeps a text." },
+    { "id": "front", "name": "Front end", "category": "logical", "parent": "store", "purpose": "Takes writes." },
+    { "id": "disk", "name": "Disk", "category": "logical", "parent": "store", "purpose": "Holds the text." },
+    { "id": "racers", "name": "Racers", "category": "logical", "purpose": "Two machines answering one event." }
+  ],
+
+  "relationships": [
+    { "id": "writer-invokes-front", "kind": "invokes", "from": "writer", "to": "front" },
+    { "id": "front-invokes-disk", "kind": "invokes", "from": "front", "to": "disk" }
+  ],
+
+  "events": [
+    { "id": "go", "name": "Go", "payload": [{ "name": "base", "type": "string" }] },
+    { "id": "put", "name": "Put", "payload": [{ "name": "text", "type": "string" }, { "name": "base", "type": "string" }] },
+    { "id": "put-req", "name": "Put request", "payload": [{ "name": "text", "type": "string" }, { "name": "base", "type": "string" }] },
+    { "id": "put-ok", "name": "Put accepted", "payload": [{ "name": "hash", "type": "string" }] },
+    { "id": "put-conflict", "name": "Put refused", "payload": [{ "name": "current", "type": "string" }] },
+    { "id": "saved", "name": "Saved", "payload": [{ "name": "hash", "type": "string" }] },
+    { "id": "conflicted", "name": "Conflicted", "payload": [{ "name": "current", "type": "string" }] },
+    { "id": "start", "name": "Start" },
+    { "id": "first", "name": "First" },
+    { "id": "second", "name": "Second" }
+  ],
+
+  "behaviors": [
+    {
+      "id": "writer-flow", "name": "Writer", "subject": "writer", "initial": "w-idle",
+      "variables": [{ "name": "done", "type": "boolean", "initial": false }],
+      "states": [{ "id": "w-idle", "name": "Idle" }, { "id": "w-waiting", "name": "Waiting" }, { "id": "w-done", "name": "Done" }, { "id": "w-conflict", "name": "Conflict" }],
+      "transitions": [
+        { "id": "w-go", "from": "w-idle", "to": "w-waiting", "on": "go", "effects": [{ "emit": "put", "payload": { "text": "'t2'", "base": "event.base" } }] },
+        { "id": "w-saved", "from": "w-waiting", "to": "w-done", "on": "saved", "effects": [{ "set": "done", "to": "true" }] },
+        { "id": "w-conflicted", "from": "w-waiting", "to": "w-conflict", "on": "conflicted" }
+      ]
+    },
+    {
+      "id": "front-flow", "name": "Front end", "subject": "front", "initial": "f-ready",
+      "states": [{ "id": "f-ready", "name": "Ready" }],
+      "transitions": [
+        { "id": "f-put", "from": "f-ready", "to": "f-ready", "on": "put", "effects": [{ "emit": "put-req", "payload": { "text": "event.text", "base": "event.base" } }] },
+        { "id": "f-ok", "from": "f-ready", "to": "f-ready", "on": "put-ok", "effects": [{ "emit": "saved", "payload": { "hash": "event.hash" } }] },
+        { "id": "f-conflict", "from": "f-ready", "to": "f-ready", "on": "put-conflict", "effects": [{ "emit": "conflicted", "payload": { "current": "event.current" } }] }
+      ]
+    },
+    {
+      "id": "disk-flow", "name": "Disk", "subject": "disk", "initial": "d-ready",
+      "variables": [{ "name": "hash", "type": "string", "initial": "t1" }],
+      "states": [{ "id": "d-ready", "name": "Ready" }],
+      "transitions": [
+        { "id": "d-accept", "from": "d-ready", "to": "d-ready", "on": "put-req", "guard": "event.base == hash", "effects": [{ "set": "hash", "to": "event.text" }, { "emit": "put-ok", "payload": { "hash": "event.text" } }] },
+        { "id": "d-refuse", "from": "d-ready", "to": "d-ready", "on": "put-req", "guard": "event.base != hash", "effects": [{ "emit": "put-conflict", "payload": { "current": "hash" } }] }
+      ]
+    },
+    {
+      "id": "store-flow", "name": "Store (abstract)", "subject": "store", "initial": "s-ready",
+      "abstracts": { "members": ["front-flow", "disk-flow"] },
+      "variables": [{ "name": "hash", "type": "string", "initial": "t1" }],
+      "states": [{ "id": "s-ready", "name": "Ready" }],
+      "transitions": [
+        { "id": "s-accept-anyway", "from": "s-ready", "to": "s-ready", "on": "put", "faultOnly": true, "effects": [{ "set": "hash", "to": "event.text" }, { "emit": "saved", "payload": { "hash": "event.text" } }] },
+        { "id": "s-accept", "from": "s-ready", "to": "s-ready", "on": "put", "guard": "event.base == hash", "effects": [{ "set": "hash", "to": "event.text" }, { "emit": "saved", "payload": { "hash": "event.text" } }] },
+        { "id": "s-refuse", "from": "s-ready", "to": "s-ready", "on": "put", "guard": "event.base != hash", "effects": [{ "emit": "conflicted", "payload": { "current": "hash" } }] }
+      ]
+    },
+    {
+      "id": "store-top-flow", "name": "Store (abstract, second level)", "subject": "store", "initial": "st-ready",
+      "abstracts": { "members": ["store-flow"] },
+      "variables": [{ "name": "hash", "type": "string", "initial": "t1" }],
+      "states": [{ "id": "st-ready", "name": "Ready" }],
+      "transitions": [
+        { "id": "st-accept", "from": "st-ready", "to": "st-ready", "on": "put", "guard": "event.base == hash", "effects": [{ "set": "hash", "to": "event.text" }, { "emit": "saved", "payload": { "hash": "event.text" } }] },
+        { "id": "st-refuse", "from": "st-ready", "to": "st-ready", "on": "put", "guard": "event.base != hash", "effects": [{ "emit": "conflicted", "payload": { "current": "hash" } }] }
+      ]
+    },
+    {
+      "id": "racer-a", "name": "Racer a", "subject": "racers", "initial": "ra",
+      "states": [{ "id": "ra", "name": "A" }],
+      "transitions": [{ "id": "ra-go", "from": "ra", "to": "ra", "on": "start", "effects": [{ "emit": "first" }] }]
+    },
+    {
+      "id": "racer-b", "name": "Racer b", "subject": "racers", "initial": "rb",
+      "states": [{ "id": "rb", "name": "B" }],
+      "transitions": [{ "id": "rb-go", "from": "rb", "to": "rb", "on": "start", "effects": [{ "emit": "second" }] }]
+    }
+  ],
+
+  "faults": [
+    { "id": "store-ignores-base", "name": "Store ignores the base hash", "kind": "enable-transition", "transition": "s-accept-anyway" }
+  ],
+
+  "scenarios": [
+    { "id": "writer-at-store", "name": "Writer, store abstract", "behaviors": ["writer-flow", "store-flow"], "steps": [{ "at": 0, "event": "go", "payload": { "base": "t1" } }],
+      "cut": { "regions": [{ "abstraction": "store-flow", "level": "abstract" }] } },
+    { "id": "writer-at-members", "name": "Writer, store members", "behaviors": ["writer-flow", "front-flow", "disk-flow"], "steps": [{ "at": 0, "event": "go", "payload": { "base": "t1" } }],
+      "cut": { "regions": [{ "abstraction": "store-flow", "level": "members" }] } },
+    { "id": "writer-at-top", "name": "Writer, store at the second level", "behaviors": ["writer-flow", "store-top-flow"], "steps": [{ "at": 0, "event": "go", "payload": { "base": "t1" } }] },
+    { "id": "writer-front-only", "name": "Writer and front end, disk omitted", "behaviors": ["writer-flow", "front-flow"], "steps": [{ "at": 0, "event": "go", "payload": { "base": "t1" } }] },
+    { "id": "writer-front-assumed", "name": "Writer and front end, disk as environment", "behaviors": ["writer-flow", "front-flow"], "steps": [{ "at": 0, "event": "go", "payload": { "base": "t1" } }],
+      "cut": { "environment": [{ "element": "disk", "events": ["put-req"], "note": "The disk answers nothing in this scenario." }] } },
+    { "id": "writer-stale-at-store", "name": "Writer with a stale base, store abstract", "behaviors": ["writer-flow", "store-flow"], "steps": [{ "at": 0, "event": "go", "payload": { "base": "t0" } }] },
+    { "id": "race-ab", "name": "Race, a first", "behaviors": ["racer-a", "racer-b"], "steps": [{ "at": 0, "event": "start" }] },
+    { "id": "race-ba", "name": "Race, b first", "behaviors": ["racer-b", "racer-a"], "steps": [{ "at": 0, "event": "start" }] }
+  ],
+
+  "claims": [
+    { "id": "save-follows-go", "kind": "temporal", "statement": "Every saved is preceded by a go.",
+      "evaluate": { "method": "precedes", "scenarios": ["writer-at-store"], "first": { "event": "go" }, "then": { "event": "saved" } } },
+    { "id": "writer-eventually-done", "kind": "temporal", "statement": "The writer is eventually done.",
+      "evaluate": { "method": "eventually", "scenarios": ["writer-at-store"], "expr": "writer-flow.done" } },
+    { "id": "store-hash-stays-known", "kind": "invariant", "statement": "The store's hash is t1 or t2.",
+      "evaluate": { "method": "state-invariant", "scenarios": ["writer-at-store"], "expr": "store-flow.hash == 't1' || store-flow.hash == 't2'" } },
+    { "id": "first-before-second", "kind": "temporal", "statement": "first is delivered before second.",
+      "evaluate": { "method": "precedes", "scenarios": ["race-ab"], "first": { "event": "first" }, "then": { "event": "second" } } }
+  ]
+}

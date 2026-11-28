@@ -977,7 +977,7 @@ theorem violated_of_refutes {u : Facts} {prog : Program} {T : Table} {φ : Formu
 
 open Exegra.Json in
 private def num : Value → Except String Nat
-  | .num x => pure x.toUInt64.toNat
+  | .num x => pure x.floor.toNat
   | _ => throw "integrity: expected a number"
 
 open Exegra.Json in
@@ -1060,7 +1060,7 @@ private def decodeEnt (v : Value) : Except String Ent := do
   return { id := (← num (field fs "id")), kind := (← num (field fs "kind")), props }
 
 private def tuplesJson (ts : List (List Nat)) : Value :=
-  .arr 0 (ts.map fun w => .arr 0 (w.map fun n => .num n.toFloat))
+  .arr 0 (ts.map fun w => .arr 0 (w.map fun (n : Nat) => .num (n : Rat)))
 
 /-- Reads `{entities, program?, rules: [{id, formula}]}` and writes whether the program is
 stratified (`wf`), whether the checker solved it, the solved tables (higher strata first, as
@@ -1085,8 +1085,8 @@ def runIntegrity (text : String) : Except String String := do
     let holds := eval u (look T) [] φ
     let ws := cex u (look T) [] φ
     .obj 0 [("id", .str id), ("holds", .bool holds),
-      ("witnesses", .arr 0 (ws.map fun w => .arr 0 (w.map fun n => .num n.toFloat)))]
-  let tables : List Value := T.map fun (r, ts) => .obj 0 [("id", .num r.toFloat), ("tuples", tuplesJson ts)]
+      ("witnesses", .arr 0 (ws.map fun w => .arr 0 (w.map fun (n : Nat) => .num (n : Rat))))]
+  let tables : List Value := T.map fun (r, ts) => .obj 0 [("id", .num (↑r : Rat)), ("tuples", tuplesJson ts)]
   return Json.write (.obj 0 [("searchTree", .bool (Facts.bst none none u)), ("wf", .bool (wf prog)),
     ("solved", .bool solved.isSome), ("tables", .arr 0 tables), ("results", .arr 0 out)])
 

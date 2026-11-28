@@ -7,7 +7,7 @@ It is the smallest language in which the safety theory of `Exegra.Core.LTS` can 
 programs rather than on hand-written relations. It fixes the choices the behaviour calculus of M2
 keeps:
 
-* **Integers.** Values are `Int`, so arithmetic facts are provable (`omega`); a `Float` semantics
+* **Integers.** Values are `Int`, so arithmetic facts are provable (`omega`); a floating-point semantics
   admits no such proof.
 * **Total, well-scoped expressions.** A program over `n` variables has expressions `IExpr n` whose
   variables are `Fin n`: a reference to a variable that does not exist cannot be written. Evaluation

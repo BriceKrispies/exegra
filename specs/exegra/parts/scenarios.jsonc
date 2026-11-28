@@ -11,10 +11,21 @@
         {
           "at": 0,
           "event": "edit-requested",
-          "note": "An inspector property change, a dragged node or a dialog submission."
+          "payload": {
+            "text": "h2"
+          },
+          "note": "An inspector property change, a dragged node or a dialog submission; h2 is the hash of the text it produces."
         }
       ],
-      "faultModel": "local-workstation"
+      "faultModel": "local-workstation",
+      "cut": {
+        "regions": [
+          {
+            "abstraction": "workspace-flow",
+            "level": "abstract"
+          }
+        ]
+      }
     },
     {
       "id": "source-edit-flow",
@@ -25,10 +36,21 @@
         {
           "at": 0,
           "event": "source-apply-requested",
+          "payload": {
+            "text": "h2"
+          },
           "note": "The user applies a valid draft."
         }
       ],
-      "faultModel": "local-workstation"
+      "faultModel": "local-workstation",
+      "cut": {
+        "regions": [
+          {
+            "abstraction": "workspace-flow",
+            "level": "abstract"
+          }
+        ]
+      }
     },
     {
       "id": "rejected-edit",
@@ -40,10 +62,21 @@
         {
           "at": 0,
           "event": "edit-requested",
+          "payload": {
+            "text": "h2"
+          },
           "note": "An edit whose result would have validation errors."
         }
       ],
-      "faultModel": "local-workstation"
+      "faultModel": "local-workstation",
+      "cut": {
+        "regions": [
+          {
+            "abstraction": "workspace-flow",
+            "level": "abstract"
+          }
+        ]
+      }
     },
     {
       "id": "edit-with-disk-conflict",
@@ -55,17 +88,28 @@
         {
           "at": 0,
           "event": "edit-requested",
+          "payload": {
+            "text": "h2"
+          },
           "note": "A valid edit while the file on disk has changed."
         }
       ],
-      "faultModel": "local-workstation"
+      "faultModel": "local-workstation",
+      "cut": {
+        "regions": [
+          {
+            "abstraction": "workspace-flow",
+            "level": "abstract"
+          }
+        ]
+      }
     },
     {
       "id": "write-with-stale-base-hash",
       "name": "A write with a stale base hash is refused and retried",
-      "description": "Contract events between the persistence client and the development server's write endpoint (contract write-file): the first request carries a stale base hash and is refused with a conflict; the client retries with the current hash and the write is accepted. The trace reads as a request log: a request, a refused write and a retry.",
+      "description": "Contract events between the persistence client and the development server's write endpoint (contract write-file): the first request carries a stale base hash and is refused with a conflict; the session, told of the conflict, writes again with the current hash (the user's Overwrite disk) and the write is accepted. The trace reads as a request log: a request, a refused write and a second request. The persistence client is the real one (persistence-client-flow), which never retries on its own; the session is environment. The write endpoint runs at its abstract level (write-endpoint-flow, an abstraction of the development-server plugin and the workspace service).",
       "behaviors": [
-        "write-client-flow",
+        "persistence-client-flow",
         "write-endpoint-flow"
       ],
       "steps": [
@@ -79,9 +123,39 @@
             "baseHash": "stale",
             "requestId": 1
           },
-          "note": "The session writes the committed text; the client's base hash is out of date."
+          "note": "The session writes the committed text; its base hash is out of date."
+        },
+        {
+          "at": 1,
+          "event": "write-intent",
+          "payload": {
+            "name": "exegra",
+            "file": "spec",
+            "text": "9b2f1c0e",
+            "baseHash": "h1",
+            "requestId": 2
+          },
+          "note": "The user chose Overwrite disk: the session writes again with the conflict's current hash as base hash (session.resolveConflict('overwrite'))."
         }
-      ]
+      ],
+      "cut": {
+        "regions": [
+          {
+            "abstraction": "write-endpoint-flow",
+            "level": "abstract"
+          }
+        ],
+        "environment": [
+          {
+            "element": "session",
+            "events": [
+              "save-conflicted",
+              "save-succeeded"
+            ],
+            "assumption": "session-receives-save-results"
+          }
+        ]
+      }
     },
     {
       "id": "app-start-and-open",
@@ -410,7 +484,19 @@
           "note": "A valid edit."
         }
       ],
-      "faultModel": "local-workstation"
+      "faultModel": "local-workstation",
+      "cut": {
+        "environment": [
+          {
+            "element": "simulation-engine",
+            "events": [
+              "claim-scenarios-run"
+            ],
+            "assumption": "engine-answers-run-scenario",
+            "note": "The claim evaluator runs its scenarios through the engine; the engine runs no behaviour here."
+          }
+        ]
+      }
     },
     {
       "id": "export-after-save",
@@ -581,7 +667,20 @@
           "note": "The session flushes a commit."
         }
       ],
-      "faultModel": "local-workstation"
+      "faultModel": "local-workstation",
+      "cut": {
+        "environment": [
+          {
+            "element": "session",
+            "events": [
+              "save-succeeded",
+              "save-conflicted",
+              "save-failed"
+            ],
+            "assumption": "session-receives-save-results"
+          }
+        ]
+      }
     },
     {
       "id": "simulation-panel-run",
@@ -827,7 +926,18 @@
           "note": "node cli/exegra.js verify"
         }
       ],
-      "faultModel": "local-workstation"
+      "faultModel": "local-workstation",
+      "cut": {
+        "environment": [
+          {
+            "element": "simulation-engine",
+            "events": [
+              "claim-scenarios-run"
+            ],
+            "assumption": "engine-answers-run-scenario"
+          }
+        ]
+      }
     },
     {
       "id": "cli-trace-written",

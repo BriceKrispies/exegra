@@ -14,8 +14,7 @@
 // Everything the report claims as covered was observed in a trace of the engine.
 
 import { effectiveRealisation } from './realisation.js';
-import { simulationInput } from './sim-input.js';
-import { runEngine } from './engine.js';
+import { engineInput, runEngine } from './engine.js';
 import { parseExpr, exprRefs } from './expr.js';
 import { typeStructure } from './codegen-model.js';
 
@@ -267,7 +266,7 @@ function searchSpace(model, b, transitions, scenarios) {
   const scenarioEntity = /** @type {Entity} */ (/** @type {unknown} */ ({ id, owner: null, kind: 'scenario', data: sdata, path: [], loc: { line: 0, column: 0 } }));
   const entities = new Map(model.entities);
   entities.set(id, scenarioEntity);
-  const input = simulationInput(/** @type {Model} */ ({ ...model, entities }), id);
+  const input = engineInput(/** @type {Model} */ ({ ...model, entities }), id);
   /** @type {Set<string>} */
   const used = new Set(inputs);
   for (const t of transitions) { used.add(t.data.on); for (const fx of list(t.data.effects)) if (isObj(fx) && typeof fx.emit === 'string') used.add(fx.emit); }
@@ -444,7 +443,7 @@ export function machineCoverage(model, opts = {}) {
     const scenarioErrors = [];
     for (const s of scenarios) {
       try {
-        const trace = runEngine(simulationInput(model, s.id));
+        const trace = runEngine(engineInput(model, s.id));
         for (const it of exercisedItems(transitions, b.id, trace)) if (!by.has(it)) by.set(it, s.id);
         if (trace.outcome === 'error') scenarioErrors.push({ id: s.id, error: String(trace.steps.at(-1)?.error?.message ?? 'the run ended with an error') });
       } catch (e) {

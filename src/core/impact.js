@@ -75,7 +75,7 @@ export function dependencyGraph(model, opts = {}) {
         const e = model.entities.get(s);
         if (e && e.id !== c.id) edge(node, entityNode(e));
       }
-      if (ev.method === 'lean-theorem' && typeof ev.theorem === 'string' && ev.theorem) {
+      if ((ev.method === 'lean-theorem' || ev.method === 'conformance-verified-refinement') && typeof ev.theorem === 'string' && ev.theorem) {
         const thm = /** @type {ImpactNode} */ ({ kind: 'leanDecl', id: ev.theorem });
         edge(node, thm);
         const rec = recorded.theorems && Object.hasOwn(recorded.theorems, ev.theorem) ? recorded.theorems[ev.theorem] : null;

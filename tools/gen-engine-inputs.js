@@ -939,7 +939,8 @@ export function generateInputsV2(seed, n) {
 /**
  * An input of generateInputV2 brought into the integer fragment of the behaviour calculus
  * (formal/Exegra/Elab.lean): no resources, routes, keyed instances, workloads, request classes or
- * metrics, no resource effects or `sample` sets, no guards reading resources, and every number an
+ * metrics, no resource effects, no guards reading resources (`sample` sets stay: the calculus covers
+ * them since WG-5683), and every number an
  * integer of at most 5 digits (fractional literals in expressions and in JSON truncated). Most such
  * inputs elaborate; those that do not (ill-typed expressions) are counted as refusals.
  * @param {any} input
@@ -967,7 +968,7 @@ export function toIntegerFragment(input) {
       const vars = new Set(b.variables.map((/** @type {any} */ v) => v.name));
       const events = new Set((out.events ?? []).map((/** @type {any} */ e) => e.id));
       t.effects = (t.effects ?? []).filter((/** @type {any} */ fx) => fx && typeof fx === 'object' &&
-        !('use' in fx) && !('acquire' in fx) && !('release' in fx) && !(fx.to && typeof fx.to === 'object' && 'sample' in fx.to) &&
+        !('use' in fx) && !('acquire' in fx) && !('release' in fx) &&
         !('set' in fx && (!vars.has(fx.set) || fx.to === undefined || fx.to === null)) && !('emit' in fx && !events.has(fx.emit)));
     }
   }
@@ -982,7 +983,7 @@ export function toIntegerFragment(input) {
  * A version-2 input in the integer fragment of the behaviour calculus with well-typed expressions
  * (WG-5681): counted and single behaviours with integer, Boolean and string variables, guards and
  * effects over own variables, other machines, control states, aggregates, payload fields and time;
- * emits with fixed and sampled delays, replies, timers and cancels; targeted steps; drop, lose,
+ * sampled sets (WG-5683); emits with fixed and sampled delays, replies, timers and cancels; targeted steps; drop, lose,
  * delay, retry, duplicate, enable, disable and inject faults with occurrences and windows; stopAt.
  * @param {Rng} r @param {Coverage} [cov]
  * @returns {any}
@@ -1038,7 +1039,8 @@ export function generateCalculusInput(r, cov = {}) {
       const effects = [];
       for (let e = r.int(4); e > 0; e--) {
         const k = r.int(9);
-        if (k <= 2) effects.push({ set: 'n', to: intExpr(b) });
+        if (k <= 1) effects.push({ set: 'n', to: intExpr(b) });
+        else if (k === 2) { effects.push({ set: 'n', to: { sample: dist() } }); count(cov, 'calculus sample'); }
         else if (k === 3) effects.push({ set: 'flag', to: boolExpr(b) });
         else if (k === 4) effects.push({ set: 'label', to: r.chance(0.5) ? `'${r.pick(['a', 'b'])}'` : "label + 'x'" });
         else if (k <= 6) {

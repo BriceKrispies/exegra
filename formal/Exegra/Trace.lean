@@ -34,7 +34,7 @@ structure SetRecord where
 
 structure EmitRecord where
   event : String
-  time : Float
+  time : Rat
   seq : Nat
   payload : Value
   deriving Inhabited
@@ -81,8 +81,8 @@ namespace Encode
 
 def o (fs : List (String × Value)) : Value := .obj 0 fs
 def s (x : String) : Value := .str x
-def n (x : Float) : Value := .num x
-def nat (k : Nat) : Value := .num k.toFloat
+def n (x : Rat) : Value := .num x
+def nat (k : Nat) : Value := .num (↑k : Rat)
 def a (xs : List Value) : Value := .arr 0 xs
 def strings (xs : List String) : Value := a (xs.map s)
 

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { analyzeSpec } from '../../src/core/analyze.js';
 import { initEngine } from '../../src/core/engine.js';
 import { createWorkspace } from '../../tools/workspace.js';
-import { simulationInput } from '../../src/core/sim-input.js';
+import { engineInput } from '../../src/core/engine.js';
 import { BUILTIN_TYPES, isBuiltinType } from '../../src/core/builtin-types.js';
 import { machineReadiness, typeResolves } from '../../src/core/readiness-machines.js';
 
@@ -119,7 +119,7 @@ test('a model-level behavior is not held to the machine rules', () => {
 });
 
 test('the implementation-level properties do not reach the simulation input', () => {
-  const input = JSON.stringify(simulationInput(analyzeSpec(FIXED).model, 'run'));
+  const input = JSON.stringify(engineInput(analyzeSpec(FIXED).model, 'run'));
   for (const key of ['storedIn', '"storage"', 'otherwise', 'ignores', 'transaction', 'level', 'repr', 'delivery', 'elapsed', 'mailer']) assert.ok(!input.includes(key), key);
   assert.ok(input.includes('"instances":{"key":"id"}'));
 });

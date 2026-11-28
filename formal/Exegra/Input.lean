@@ -18,14 +18,14 @@ inductive Occurrence where
   /-- No `occurrence`: every attempt. -/
   | any
   /-- A number: that attempt only. -/
-  | exactly (n : Float)
+  | exactly (n : Rat)
   /-- Present but not a number: `occurrence === attempt` never holds. -/
   | never
   deriving Inhabited
 
 def Occurrence.matches : Occurrence → Nat → Bool
   | .any, _ => true
-  | .exactly n, k => n == k.toFloat
+  | .exactly n, k => n == (↑k : Rat)
   | .never, _ => false
 
 namespace Decode
@@ -44,7 +44,7 @@ def string (o : List (String × Value)) (key what : String) : R String :=
   | .str s => .ok s
   | _ => .error s!"{what}: \"{key}\" must be a string."
 
-def number (o : List (String × Value)) (key what : String) : R Float :=
+def number (o : List (String × Value)) (key what : String) : R Rat :=
   match field o key with
   | .num x => .ok x
   | _ => .error s!"{what}: \"{key}\" must be a number."

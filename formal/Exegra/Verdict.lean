@@ -1116,10 +1116,10 @@ def verdictJson (item : Value) : Except String Value := do
   let decoded := (items (field item "facts")).zipIdx.map fun (f, i) => (i, decodeFact f)
   let facts := decoded.filterMap fun (_, r) => match r with | .ok (f, _) => some f | .error _ => none
   let refused := decoded.filterMap fun (i, r) => match r with
-    | .error e => some (Value.obj 0 [("index", .num i.toFloat), ("error", .str e)])
+    | .error e => some (Value.obj 0 [("index", .num (↑i : Rat)), ("error", .str e)])
     | .ok _ => none
   let reasons := decoded.filterMap fun (i, r) => match r with
-    | .ok (f, some (code, d)) => some (Value.obj 0 [("index", .num i.toFloat), ("outcome", .str f.outcome.name),
+    | .ok (f, some (code, d)) => some (Value.obj 0 [("index", .num (↑i : Rat)), ("outcome", .str f.outcome.name),
         ("reason", .str code), ("detail", .str d)])
     | _ => none
   let fresh := decoded.map fun (_, r) => match r with

@@ -118,13 +118,18 @@ export function traceCoverage(trace, cov) {
 }
 
 /**
- * Check a set of inputs on both engines.
+ * Check a set of inputs on both engines. An input listed in tests/conformance/expected-differences.json
+ * that differs is reported in `expected`, not as a mismatch (WG-5683: the Lean engine computes untyped
+ * numbers as exact rationals, the Rust oracle as doubles).
  * @param {{inputs: NamedInput[], rustBin?: string, leanBin?: string}} opts
- * @returns {{checked: number, mismatches: Mismatch[], traceCoverage: Record<string, number>}}
+ * @returns {{checked: number, mismatches: Mismatch[], expected: string[], traceCoverage: Record<string, number>}}
  */
 export function checkInputs(opts) {
   const rustBin = opts.rustBin ?? RUST_BIN;
   const leanBin = opts.leanBin ?? LEAN_BIN;
+  const exp = expectedDifferences();
+  /** @type {string[]} */
+  const expected = [];
   /** @type {Mismatch[]} */
   const mismatches = [];
   /** @type {Record<string, number>} */
@@ -138,9 +143,10 @@ export function checkInputs(opts) {
     if (rust.ok) traceCoverage(rust.trace, cov);
     else cov.refusal = (cov.refusal ?? 0) + 1;
     const detail = compareResults(rust, lean);
-    if (detail) mismatches.push({ name, inputText: text, rust, lean, detail });
+    if (detail && exp[name]) expected.push(name);
+    else if (detail) mismatches.push({ name, inputText: text, rust, lean, detail });
   }
-  return { checked: opts.inputs.length, mismatches, traceCoverage: cov };
+  return { checked: opts.inputs.length, mismatches, expected, traceCoverage: cov };
 }
 
 /**
@@ -322,9 +328,10 @@ function main(argv) {
   const result = checkInputs({ inputs, rustBin, leanBin });
   const files = saveMismatches(result.mismatches, out);
   for (const m of result.mismatches) process.stdout.write(`MISMATCH ${m.name}: ${m.detail}\n`);
+  for (const n of result.expected) process.stdout.write(`expected difference: ${n}\n`);
   process.stdout.write(`generated input coverage (seed ${seed}, ${count} version-1 and ${count} version-2 inputs):\n${formatCoverage(gen.coverage)}\n`);
   process.stdout.write(`trace coverage (Rust traces):\n${formatCoverage(result.traceCoverage)}\n`);
-  process.stdout.write(`differential: ${result.checked} inputs (${goldens ? 'goldens and ' : ''}seed ${seed}, ${count} generated of each version), ${result.checked - result.mismatches.length} agree, ${result.mismatches.length} mismatch${files.length ? `; inputs saved under ${out}` : ''}\n`);
+  process.stdout.write(`differential: ${result.checked} inputs (${goldens ? 'goldens and ' : ''}seed ${seed}, ${count} generated of each version), ${result.checked - result.mismatches.length - result.expected.length} agree, ${result.mismatches.length} mismatch, ${result.expected.length} expected differences${files.length ? `; inputs saved under ${out}` : ''}\n`);
   return result.mismatches.length ? 1 : 0;
 }
 

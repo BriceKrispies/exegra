@@ -101,6 +101,16 @@
       "id": "extracted-facts-current",
       "statement": "The fact file of extracted imports (specs/<project>/extracted/facts.json) describes the files on disk: the digest of every file of the implementation surface equals the digest recorded in it, by the extractor version that wrote it.",
       "rationale": "An extracted fact is a function of the bytes it was read from and the extractor version. Verification re-reads the digests of the tree and records the outcome (src/core/facts.js, kind importScan); a recorded failure makes every claim that rests on it undecided, and stale facts are never read as benign."
+    },
+    {
+      "id": "engine-answers-run-scenario",
+      "statement": "The simulation engine answers every run-scenario request the claim evaluator makes (contract run-scenario): a scenario the evaluator runs yields a trace or a refusal, without the engine's own behaviour taking part in the scenario.",
+      "rationale": "The scenarios that re-evaluate claims (commit-reevaluates-claims, cli-verify-with-open-session) model the claim evaluator, not the engine: the engine is environment there, and this is what that environment is assumed to do (docs/composition.md, \"Behavioural cuts\")."
+    },
+    {
+      "id": "session-receives-save-results",
+      "statement": "The session takes the persistence client's save results (save-succeeded, save-conflicted) as project-session-flow describes, so a scenario about the persistence path alone may leave the session out.",
+      "rationale": "The scenarios that run only the persistence path (write-with-stale-base-hash, real-write-recorded) stop at the persistence client's answer; what the session does with it is modelled and checked in the session scenarios."
     }
   ]
 }

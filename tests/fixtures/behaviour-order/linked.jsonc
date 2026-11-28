@@ -1,0 +1,18 @@
+{
+  // A machine that sends over a link: links are outside the behaviour calculus until WG-5683
+  // criterion 1 covers them, so exploring it is refused (tests/proofs/formal-explore.test.js).
+  "exegra": "0.1",
+  "system": { "id": "behaviour-linked-fixture", "name": "Out-of-fragment exploration fixture", "version": "0.1.0", "description": "A scenario the behaviour calculus does not cover.", "illustrative": true },
+  "components": [{ "id": "pair", "name": "Pair", "category": "computational", "purpose": "A machine that sends over a link.", "illustrative": true }],
+  "events": [{ "id": "go", "name": "Go" }, { "id": "done", "name": "Done" }],
+  "behaviors": [
+    {
+      "id": "sender", "name": "Sender", "subject": "pair", "initial": "s-s",
+      "states": [{ "id": "s-s", "name": "S" }],
+      "transitions": [{ "id": "s-go", "from": "s-s", "to": "s-s", "on": "go", "effects": [{ "emit": "done", "via": "net" }] }]
+    }
+  ],
+  "links": [{ "id": "net", "from": "pair", "to": "pair", "latency": 1 }],
+  "scenarios": [{ "id": "linked", "name": "A machine that sends over a link", "behaviors": ["sender"], "steps": [{ "at": 0, "event": "go" }] }],
+  "claims": [{ "id": "sender-stays", "kind": "invariant", "statement": "The sender stays in its state.", "evaluate": { "method": "state-invariant", "scenarios": ["linked"], "expr": "sender.state == 's-s'" } }]
+}

@@ -1,0 +1,30 @@
+{
+  "note": "Candidates a person gives for compiler.jsonc, regrouping the six leaves (the stages and the shared diagnostics sink). compiler-pipeline-thirds cuts the pipeline in three; compiler-front-and-back regroups as the declared hierarchy does, under blocks that exist; compiler-syntax-first splits the syntax stages off; compiler-overlap names the lexer twice and is not a partition.",
+  "scope": "compiler",
+  "grain": "leaves",
+  "candidates": [
+    { "id": "compiler-pipeline-thirds", "name": "Compiler in three thirds", "blocks": [
+      { "id": "syntax", "name": "Syntax", "members": ["lexer", "parser"] },
+      { "id": "analysis-and-optimisation", "name": "Analysis and optimisation", "members": ["checker", "optimiser"] },
+      { "id": "emission", "name": "Emission", "members": ["emitter"] },
+      { "id": "diagnostics", "members": ["diagnostics"] }
+    ] },
+    { "id": "compiler-front-and-back", "name": "Front and back, as declared", "blocks": [
+      { "id": "frontend", "members": ["lexer", "parser", "checker"] },
+      { "id": "backend", "members": ["optimiser", "emitter"] },
+      { "id": "diagnostics", "members": ["diagnostics"] }
+    ] },
+    { "id": "compiler-syntax-first", "name": "Syntax split off", "blocks": [
+      { "id": "syntax", "name": "Syntax", "members": ["lexer", "parser"] },
+      { "id": "checker", "members": ["checker"] },
+      { "id": "backend", "members": ["optimiser", "emitter"] },
+      { "id": "diagnostics", "members": ["diagnostics"] }
+    ] },
+    { "id": "compiler-overlap", "name": "Lexer in two blocks", "blocks": [
+      { "id": "syntax", "members": ["lexer", "parser"] },
+      { "id": "analysis", "members": ["lexer", "checker"] },
+      { "id": "backend", "members": ["optimiser", "emitter"] },
+      { "id": "diagnostics", "members": ["diagnostics"] }
+    ] }
+  ]
+}

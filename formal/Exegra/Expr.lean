@@ -57,7 +57,7 @@ inductive Ast where
 /-! ## Tokenizer -/
 
 inductive Tok where
-  | num (x : Float)
+  | num (x : Rat)
   | str (s : String)
   | ident (s : String)
   | op (s : String)
@@ -256,9 +256,9 @@ def isTrue : Value → Bool
   | .bool true => true
   | _ => false
 
-def numOf : Value → Float
+def numOf : Value → Rat
   | .num x => x
-  | _ => Float.nan
+  | _ => 0
 
 def BinOp.isArith : BinOp → Bool
   | .add | .sub | .mul | .div | .rem => true
@@ -278,27 +278,23 @@ def staticTy (tys : TyEnv) : Ast → STy
   | _ => .none
 
 /-- Is `x` a value of the integer type `k`: a whole number within its range? -/
-def IntKind.holds (k : IntKind) (x : Float) : Bool :=
-  x.floor == x && k.lo ≤ x && x ≤ k.hi
+def IntKind.holds (k : IntKind) (x : Rat) : Bool :=
+  Num.isInteger x && k.lo ≤ x && x ≤ k.hi
 
-/-- The result of an arithmetic operator in type `ty` (WG-4902): untyped arithmetic is IEEE;
-integer arithmetic checks that both operands and the exact result `r` are values of the type,
-and otherwise ends the step with an error. On integers within `2^53` a double computes `+`, `-`
-and `*` exactly whenever the exact result is within `2^53`, and rounds monotonically otherwise,
-so a result outside the range is never mistaken for one inside it. -/
-def intResult (ty : STy) (op : String) (x y r : Float) : Except String Value :=
+/-- The result of an arithmetic operator in type `ty` (WG-4902): untyped arithmetic is exact on
+rationals (WG-5683); integer arithmetic checks that both operands and the exact result `r` are
+values of the type, and otherwise ends the step with an error. -/
+def intResult (ty : STy) (op : String) (x y r : Rat) : Except String Value :=
   match ty with
   | .int k =>
     if !(k.holds x) then .error s!"Operator \"{op}\" on {k.name}: operand {Num.jsNumberToString x} is not a {k.name}"
     else if !(k.holds y) then .error s!"Operator \"{op}\" on {k.name}: operand {Num.jsNumberToString y} is not a {k.name}"
     else if !(k.holds r) then .error s!"Integer overflow: \"{op}\" on {k.name} gives {Num.jsNumberToString r}, outside {Num.jsNumberToString k.lo}..{Num.jsNumberToString k.hi}"
-    -- `r + 0` is `r` except that `-0` becomes `0`: an integer has no negative zero.
-    else .ok (.num (r + 0))
+    else .ok (.num r)
   | _ => .ok (.num r)
 
-/-- Division in type `ty`: integer division truncates toward zero. `x - fmod x y` is a multiple
-of `y` no larger than `x` in magnitude, so it and the quotient are exact. -/
-def divIn (ty : STy) (x y : Float) : Float :=
+/-- Division in type `ty`: integer division truncates toward zero; untyped division is exact. -/
+def divIn (ty : STy) (x y : Rat) : Rat :=
   match ty with
   | .int _ => (x - Num.fmod x y) / y
   | _ => x / y
@@ -359,7 +355,7 @@ def eval (resolve : List String → Value) (tys : TyEnv) : Ast → Except String
       | .add => intResult ty "+" x y (x + y)
       | .sub => intResult ty "-" x y (x - y)
       | .mul => intResult ty "*" x y (x * y)
-      -- ORDER: division by zero (also by -0) is reported after both type checks.
+      -- ORDER: division by zero is reported after both type checks.
       | .div => if y == 0 then throw "Division by zero" else intResult ty "/" x y (divIn ty x y)
       | .rem => if y == 0 then throw "Division by zero" else intResult ty "%" x y (Num.fmod x y)
       | _ => throw "Malformed expression"

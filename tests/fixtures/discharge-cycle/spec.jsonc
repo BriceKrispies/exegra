@@ -1,0 +1,18 @@
+// The discharge-cycle fixture (WG-5685, criterion 5): claim c1 discharges assumption a and rests on b, claim c2
+// discharges b and rests on a, so the discharge graph has the cycle a → c1 → b → c2 → a. Validation refuses it
+// with assumption.discharge-cycle; discharge is sound only over an acyclic graph (Exegra.Core.discharge_sound).
+{
+  "exegra": "0.1",
+  "system": { "id": "discharge-cycle", "name": "Discharge cycle", "description": "Two claims that discharge each other's assumptions." },
+  "components": [
+    { "id": "service", "name": "Service", "category": "logical", "purpose": "Serves requests." }
+  ],
+  "assumptions": [
+    { "id": "a", "statement": "The service answers within a second." },
+    { "id": "b", "statement": "The client retries at most once." }
+  ],
+  "claims": [
+    { "id": "c1", "kind": "invariant", "statement": "The service answers within a second.", "assumptions": ["b"], "discharges": ["a"], "evaluate": { "method": "external-evidence" } },
+    { "id": "c2", "kind": "invariant", "statement": "The client retries at most once.", "assumptions": ["a"], "discharges": ["b"], "evaluate": { "method": "external-evidence" } }
+  ]
+}

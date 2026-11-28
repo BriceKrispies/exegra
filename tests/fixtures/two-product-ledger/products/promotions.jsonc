@@ -1,0 +1,23 @@
+// Promotions: awards once, placing one hold on the platform ledger, and claims the ledger then holds at most one.
+{
+  "product": { "id": "promotions", "name": "Promotions", "imports": { "spec": "../spec.jsonc", "entities": ["ledger", "hold", "ledger-service"] } },
+  "events": [
+    { "id": "promotions__award", "name": "Promotions award" }
+  ],
+  "behaviors": [
+    {
+      "id": "promotions__awarder", "name": "Promotions awarder", "subject": "ledger-service", "initial": "promotions__ready",
+      "states": [{ "id": "promotions__ready", "name": "Ready" }, { "id": "promotions__done", "name": "Done" }],
+      "transitions": [
+        { "id": "promotions__award-once", "from": "promotions__ready", "to": "promotions__done", "on": "promotions__award", "effects": [{ "emit": "hold" }] }
+      ]
+    }
+  ],
+  "scenarios": [
+    { "id": "promotions__solo", "name": "Promotions alone", "behaviors": ["ledger", "promotions__awarder"], "steps": [{ "at": 0, "event": "promotions__award" }] }
+  ],
+  "claims": [
+    { "id": "promotions__one-hold", "kind": "invariant", "statement": "The ledger holds at most one hold.", "subjects": ["ledger-service"],
+      "evaluate": { "method": "state-invariant", "scenarios": ["promotions__solo"], "expr": "ledger.held <= 1" } }
+  ]
+}

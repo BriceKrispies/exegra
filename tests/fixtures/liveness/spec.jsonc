@@ -1,0 +1,130 @@
+{
+  // A fixture for model checking on the behaviour calculus (tests/core/formal-explore.test.js, WG-5682).
+  // - eight-clients: eight independent clients, each with one pending entry addressed to it (its own
+  //   event) and one transition idle -> done; the reachable configurations are the 2^8 subsets of
+  //   delivered entries.
+  // - count-to-100: a counter that counts from 0 to 100, one step per tick; its invariant n <= 50
+  //   fails only after 51 steps, so a search bounded at 20 steps is incomplete.
+  // - blink-f4: the blinker of modelchecking F4: off -> on -> off on tick, each transition emitting the
+  //   next tick at once. Its runs never end; it is on infinitely often, but not eventually always.
+  // - claim-divides-by-zero: an invariant whose expression cannot be evaluated (a division by zero),
+  //   a violation for exegra prove and for the live view alike (tests/core/claims.test.js).
+  // - zeno: a spinner re-emits its own event with after 0 forever, so time never reaches the entry at
+  //   time 1 that would finish the waiter (a Zeno run).
+  "exegra": "0.1",
+  "system": {
+    "id": "liveness-fixture",
+    "name": "Model checking fixture",
+    "version": "0.1.0",
+    "description": "Machines for state counting, bounded search and liveness on the behaviour calculus.",
+    "illustrative": true
+  },
+
+  "components": [
+    { "id": "clients", "name": "Clients", "category": "computational", "purpose": "Machines explored by the model checker.", "illustrative": true }
+  ],
+
+  "assumptions": [
+    { "id": "turn-on-fair", "statement": "Weak fairness of turn-on: a tick that can turn the blinker on is eventually delivered.", "fairness": { "kind": "weak", "transitions": ["turn-on"] } },
+    { "id": "finish-fair", "statement": "Weak fairness of finish.", "fairness": { "kind": "weak", "transitions": ["waiter-finish"] } }
+  ],
+
+  "events": [
+    {"id": "tick", "name": "Tick"},
+    {"id": "inc", "name": "Increment"},
+    {"id": "spin", "name": "Spin"},
+    {"id": "finish", "name": "Finish"},
+    {"id": "go-a", "name": "Go A"},
+    {"id": "go-b", "name": "Go B"},
+    {"id": "go-c", "name": "Go C"},
+    {"id": "go-d", "name": "Go D"},
+    {"id": "go-e", "name": "Go E"},
+    {"id": "go-f", "name": "Go F"},
+    {"id": "go-g", "name": "Go G"},
+    {"id": "go-h", "name": "Go H"}
+  ],
+
+  "behaviors": [
+    {
+      "id": "client-a", "name": "Client A", "subject": "clients", "initial": "idle-a",
+      "states": [{ "id": "idle-a", "name": "Idle" }, { "id": "done-a", "name": "Done" }],
+      "transitions": [{ "id": "finish-a", "from": "idle-a", "to": "done-a", "on": "go-a" }]
+    },
+    {
+      "id": "client-b", "name": "Client B", "subject": "clients", "initial": "idle-b",
+      "states": [{ "id": "idle-b", "name": "Idle" }, { "id": "done-b", "name": "Done" }],
+      "transitions": [{ "id": "finish-b", "from": "idle-b", "to": "done-b", "on": "go-b" }]
+    },
+    {
+      "id": "client-c", "name": "Client C", "subject": "clients", "initial": "idle-c",
+      "states": [{ "id": "idle-c", "name": "Idle" }, { "id": "done-c", "name": "Done" }],
+      "transitions": [{ "id": "finish-c", "from": "idle-c", "to": "done-c", "on": "go-c" }]
+    },
+    {
+      "id": "client-d", "name": "Client D", "subject": "clients", "initial": "idle-d",
+      "states": [{ "id": "idle-d", "name": "Idle" }, { "id": "done-d", "name": "Done" }],
+      "transitions": [{ "id": "finish-d", "from": "idle-d", "to": "done-d", "on": "go-d" }]
+    },
+    {
+      "id": "client-e", "name": "Client E", "subject": "clients", "initial": "idle-e",
+      "states": [{ "id": "idle-e", "name": "Idle" }, { "id": "done-e", "name": "Done" }],
+      "transitions": [{ "id": "finish-e", "from": "idle-e", "to": "done-e", "on": "go-e" }]
+    },
+    {
+      "id": "client-f", "name": "Client F", "subject": "clients", "initial": "idle-f",
+      "states": [{ "id": "idle-f", "name": "Idle" }, { "id": "done-f", "name": "Done" }],
+      "transitions": [{ "id": "finish-f", "from": "idle-f", "to": "done-f", "on": "go-f" }]
+    },
+    {
+      "id": "client-g", "name": "Client G", "subject": "clients", "initial": "idle-g",
+      "states": [{ "id": "idle-g", "name": "Idle" }, { "id": "done-g", "name": "Done" }],
+      "transitions": [{ "id": "finish-g", "from": "idle-g", "to": "done-g", "on": "go-g" }]
+    },
+    {
+      "id": "client-h", "name": "Client H", "subject": "clients", "initial": "idle-h",
+      "states": [{ "id": "idle-h", "name": "Idle" }, { "id": "done-h", "name": "Done" }],
+      "transitions": [{ "id": "finish-h", "from": "idle-h", "to": "done-h", "on": "go-h" }]
+    },
+    {
+      "id": "counter", "name": "Counter", "subject": "clients", "initial": "counting",
+      "variables": [{ "name": "n", "type": "number", "initial": 0 }],
+      "states": [{ "id": "counting", "name": "Counting" }],
+      "transitions": [{ "id": "count", "from": "counting", "to": "counting", "on": "inc", "guard": "n < 100", "effects": [{ "set": "n", "to": "n + 1" }, { "emit": "inc", "after": 1 }] }]
+    },
+    {
+      "id": "blinker", "name": "Blinker", "subject": "clients", "initial": "off",
+      "states": [{ "id": "off", "name": "Off" }, { "id": "on", "name": "On" }],
+      "transitions": [
+        { "id": "turn-on", "from": "off", "to": "on", "on": "tick", "effects": [{ "emit": "tick" }] },
+        { "id": "turn-off", "from": "on", "to": "off", "on": "tick", "effects": [{ "emit": "tick" }] }
+      ]
+    },
+    {
+      "id": "spinner", "name": "Spinner", "subject": "clients", "initial": "spinning",
+      "states": [{ "id": "spinning", "name": "Spinning" }],
+      "transitions": [{ "id": "spin-again", "from": "spinning", "to": "spinning", "on": "spin", "effects": [{ "emit": "spin", "after": 0 }] }]
+    },
+    {
+      "id": "waiter", "name": "Waiter", "subject": "clients", "initial": "waiting",
+      "states": [{ "id": "waiting", "name": "Waiting" }, { "id": "finished", "name": "Finished" }],
+      "transitions": [{ "id": "waiter-finish", "from": "waiting", "to": "finished", "on": "finish" }]
+    }
+  ],
+
+  "scenarios": [
+    { "id": "eight-clients", "name": "Eight independent clients", "behaviors": ["client-a", "client-b", "client-c", "client-d", "client-e", "client-f", "client-g", "client-h"], "steps": [{ "at": 0, "event": "go-a" }, { "at": 0, "event": "go-b" }, { "at": 0, "event": "go-c" }, { "at": 0, "event": "go-d" }, { "at": 0, "event": "go-e" }, { "at": 0, "event": "go-f" }, { "at": 0, "event": "go-g" }, { "at": 0, "event": "go-h" }] },
+    { "id": "count-to-100", "name": "Count to 100", "behaviors": ["counter"], "maxSteps": 1000, "steps": [{ "at": 0, "event": "inc" }] },
+    { "id": "blink-f4", "name": "The F4 blinker", "behaviors": ["blinker"], "steps": [{ "at": 0, "event": "tick" }] },
+    { "id": "zeno", "name": "A zero-delay loop", "behaviors": ["spinner", "waiter"], "steps": [{ "at": 0, "event": "spin" }, { "at": 1, "event": "finish" }] }
+  ],
+
+  "claims": [
+    { "id": "clients-in-their-states", "kind": "invariant", "statement": "Each client is idle or done.", "evaluate": { "method": "state-invariant", "scenarios": ["eight-clients"], "expr": "client-a.state == 'idle-a' || client-a.state == 'done-a'" } },
+    { "id": "counter-at-most-50", "kind": "invariant", "statement": "The counter stays at most 50.", "evaluate": { "method": "state-invariant", "scenarios": ["count-to-100"], "expr": "counter.n <= 50" } },
+    { "id": "blinker-on-or-off", "kind": "invariant", "statement": "The blinker is on or off.", "evaluate": { "method": "state-invariant", "scenarios": ["blink-f4"], "expr": "blinker.state == 'on' || blinker.state == 'off'" } },
+    { "id": "claim-divides-by-zero", "kind": "invariant", "statement": "A claim whose expression divides by zero.", "evaluate": { "method": "state-invariant", "scenarios": ["blink-f4"], "expr": "1 / 0 == 0" } },
+    { "id": "blinker-fg-on", "kind": "temporal", "statement": "The blinker is eventually always on.", "assumptions": ["turn-on-fair"], "evaluate": { "method": "liveness", "scenarios": ["blink-f4"], "form": "FG", "expr": "blinker.state == 'on'" } },
+    { "id": "blinker-gf-on", "kind": "temporal", "statement": "The blinker is on infinitely often.", "assumptions": ["turn-on-fair"], "evaluate": { "method": "liveness", "scenarios": ["blink-f4"], "form": "GF", "expr": "blinker.state == 'on'" } },
+    { "id": "waiter-finishes-often", "kind": "temporal", "statement": "The waiter is finished infinitely often.", "assumptions": ["finish-fair"], "evaluate": { "method": "liveness", "scenarios": ["zeno"], "form": "GF", "expr": "waiter.state == 'finished'" } }
+  ]
+}

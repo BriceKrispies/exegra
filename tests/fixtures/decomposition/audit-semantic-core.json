@@ -1,0 +1,990 @@
+{
+ "exegra": "0.1",
+ "system": {
+  "id": "exegra",
+  "name": "Exegra at the audit"
+ },
+ "components": [
+  {
+   "id": "semantic-core",
+   "name": "semantic-core",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it."
+  },
+  {
+   "id": "chaos-aspect",
+   "name": "chaos-aspect",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "claim-evaluator",
+   "name": "claim-evaluator",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "claim-method-registry",
+   "name": "claim-method-registry",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "claim-strength",
+   "name": "claim-strength",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "contract-conformance",
+   "name": "contract-conformance",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "cost-aspect",
+   "name": "cost-aspect",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "data-model",
+   "name": "data-model",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "deployment-model",
+   "name": "deployment-model",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "derivation-cache",
+   "name": "derivation-cache",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "exhaustive-explorer",
+   "name": "exhaustive-explorer",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "expression-language",
+   "name": "expression-language",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "fault-model",
+   "name": "fault-model",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "formal-semantics",
+   "name": "formal-semantics",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "generation-readiness",
+   "name": "generation-readiness",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "hash-binding",
+   "name": "hash-binding",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "implementation-refinement",
+   "name": "implementation-refinement",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "integrity-rules",
+   "name": "integrity-rules",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "lean-call-boundary",
+   "name": "lean-call-boundary",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "load-aspect",
+   "name": "load-aspect",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "lts-foundation",
+   "name": "lts-foundation",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "machine-coverage",
+   "name": "machine-coverage",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "metamodel",
+   "name": "metamodel",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "metric-claims",
+   "name": "metric-claims",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "model-derivation",
+   "name": "model-derivation",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "model-hash",
+   "name": "model-hash",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "parser",
+   "name": "parser",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "performance-metrics",
+   "name": "performance-metrics",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "proof-export",
+   "name": "proof-export",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "queries",
+   "name": "queries",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "reader-pages",
+   "name": "reader-pages",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "refinement-checker",
+   "name": "refinement-checker",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "resource-model",
+   "name": "resource-model",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "self-model-replay",
+   "name": "self-model-replay",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "simulation-aspect-registry",
+   "name": "simulation-aspect-registry",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "simulation-contract",
+   "name": "simulation-contract",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "simulation-engine",
+   "name": "simulation-engine",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "spec-layers",
+   "name": "spec-layers",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "stable-serialization",
+   "name": "stable-serialization",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "transactions",
+   "name": "transactions",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "validator",
+   "name": "validator",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  },
+  {
+   "id": "workload-model",
+   "name": "workload-model",
+   "category": "logical",
+   "purpose": "A component of the semantic core as the audit found it.",
+   "parent": "semantic-core"
+  }
+ ],
+ "relationships": [
+  {
+   "id": "parser-calls-derivation-cache",
+   "kind": "calls",
+   "from": "parser",
+   "to": "derivation-cache",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "validator-calls-derivation-cache",
+   "kind": "calls",
+   "from": "validator",
+   "to": "derivation-cache",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "parser-reads-metamodel",
+   "kind": "reads",
+   "from": "parser",
+   "to": "metamodel",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "parser-reads-claim-method-registry",
+   "kind": "reads",
+   "from": "parser",
+   "to": "claim-method-registry",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "validator-calls-queries",
+   "kind": "calls",
+   "from": "validator",
+   "to": "queries",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "validator-calls-parser",
+   "kind": "calls",
+   "from": "validator",
+   "to": "parser",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "validator-calls-expression-language",
+   "kind": "calls",
+   "from": "validator",
+   "to": "expression-language",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "validator-reads-claim-method-registry",
+   "kind": "reads",
+   "from": "validator",
+   "to": "claim-method-registry",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "transactions-calls-parser",
+   "kind": "calls",
+   "from": "transactions",
+   "to": "parser",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "transactions-calls-validator",
+   "kind": "calls",
+   "from": "transactions",
+   "to": "validator",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "transactions-calls-expression-language",
+   "kind": "calls",
+   "from": "transactions",
+   "to": "expression-language",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "transactions-calls-queries",
+   "kind": "calls",
+   "from": "transactions",
+   "to": "queries",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "transactions-reads-metamodel",
+   "kind": "reads",
+   "from": "transactions",
+   "to": "metamodel",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-evaluator-reads-claim-method-registry",
+   "kind": "reads",
+   "from": "claim-evaluator",
+   "to": "claim-method-registry",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-evaluator-calls-queries",
+   "kind": "calls",
+   "from": "claim-evaluator",
+   "to": "queries",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-evaluator-calls-expression-language",
+   "kind": "calls",
+   "from": "claim-evaluator",
+   "to": "expression-language",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-evaluator-calls-simulation-engine",
+   "kind": "calls",
+   "from": "claim-evaluator",
+   "to": "simulation-engine",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "lts-foundation-depends-on-exhaustive-explorer",
+   "kind": "depends-on",
+   "from": "lts-foundation",
+   "to": "exhaustive-explorer",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "simulation-engine-calls-simulation-aspect-registry",
+   "kind": "calls",
+   "from": "simulation-engine",
+   "to": "simulation-aspect-registry",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "simulation-aspect-registry-calls-chaos-aspect",
+   "kind": "calls",
+   "from": "simulation-aspect-registry",
+   "to": "chaos-aspect",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "simulation-aspect-registry-calls-load-aspect",
+   "kind": "calls",
+   "from": "simulation-aspect-registry",
+   "to": "load-aspect",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "simulation-aspect-registry-calls-cost-aspect",
+   "kind": "calls",
+   "from": "simulation-aspect-registry",
+   "to": "cost-aspect",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "cost-aspect-depends-on-load-aspect",
+   "kind": "depends-on",
+   "from": "cost-aspect",
+   "to": "load-aspect",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "refinement-checker-calls-simulation-engine",
+   "kind": "calls",
+   "from": "refinement-checker",
+   "to": "simulation-engine",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-evaluator-calls-refinement-checker",
+   "kind": "calls",
+   "from": "claim-evaluator",
+   "to": "refinement-checker",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-evaluator-calls-exhaustive-explorer",
+   "kind": "calls",
+   "from": "claim-evaluator",
+   "to": "exhaustive-explorer",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "exhaustive-explorer-calls-simulation-engine",
+   "kind": "calls",
+   "from": "exhaustive-explorer",
+   "to": "simulation-engine",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "exhaustive-explorer-depends-on-fault-model",
+   "kind": "depends-on",
+   "from": "exhaustive-explorer",
+   "to": "fault-model",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-evaluator-depends-on-fault-model",
+   "kind": "depends-on",
+   "from": "claim-evaluator",
+   "to": "fault-model",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "deployment-model-depends-on-exhaustive-explorer",
+   "kind": "depends-on",
+   "from": "deployment-model",
+   "to": "exhaustive-explorer",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "implementation-refinement-depends-on-fault-model",
+   "kind": "depends-on",
+   "from": "implementation-refinement",
+   "to": "fault-model",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-evaluator-calls-implementation-refinement",
+   "kind": "calls",
+   "from": "claim-evaluator",
+   "to": "implementation-refinement",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "validator-calls-fault-model",
+   "kind": "calls",
+   "from": "validator",
+   "to": "fault-model",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "simulation-engine-depends-on-formal-semantics",
+   "kind": "depends-on",
+   "from": "simulation-engine",
+   "to": "formal-semantics",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "proof-export-depends-on-formal-semantics",
+   "kind": "depends-on",
+   "from": "proof-export",
+   "to": "formal-semantics",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "proof-export-depends-on-exhaustive-explorer",
+   "kind": "depends-on",
+   "from": "proof-export",
+   "to": "exhaustive-explorer",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-evaluator-calls-proof-export",
+   "kind": "calls",
+   "from": "claim-evaluator",
+   "to": "proof-export",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "validator-calls-contract-conformance",
+   "kind": "calls",
+   "from": "validator",
+   "to": "contract-conformance",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-evaluator-calls-contract-conformance",
+   "kind": "calls",
+   "from": "claim-evaluator",
+   "to": "contract-conformance",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "validator-calls-data-model",
+   "kind": "calls",
+   "from": "validator",
+   "to": "data-model",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-evaluator-calls-data-model",
+   "kind": "calls",
+   "from": "claim-evaluator",
+   "to": "data-model",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "data-model-calls-queries",
+   "kind": "calls",
+   "from": "data-model",
+   "to": "queries",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "data-model-reads-metamodel",
+   "kind": "reads",
+   "from": "data-model",
+   "to": "metamodel",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "exhaustive-explorer-depends-on-formal-semantics",
+   "kind": "depends-on",
+   "from": "exhaustive-explorer",
+   "to": "formal-semantics",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "proof-export-calls-simulation-contract",
+   "kind": "calls",
+   "from": "proof-export",
+   "to": "simulation-contract",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "proof-export-calls-expression-language",
+   "kind": "calls",
+   "from": "proof-export",
+   "to": "expression-language",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "proof-export-calls-contract-conformance",
+   "kind": "calls",
+   "from": "proof-export",
+   "to": "contract-conformance",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "simulation-engine-calls-resource-model",
+   "kind": "calls",
+   "from": "simulation-engine",
+   "to": "resource-model",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "simulation-engine-calls-workload-model",
+   "kind": "calls",
+   "from": "simulation-engine",
+   "to": "workload-model",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "simulation-engine-calls-performance-metrics",
+   "kind": "calls",
+   "from": "simulation-engine",
+   "to": "performance-metrics",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "resource-model-depends-on-formal-semantics",
+   "kind": "depends-on",
+   "from": "resource-model",
+   "to": "formal-semantics",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "workload-model-depends-on-formal-semantics",
+   "kind": "depends-on",
+   "from": "workload-model",
+   "to": "formal-semantics",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "performance-metrics-depends-on-formal-semantics",
+   "kind": "depends-on",
+   "from": "performance-metrics",
+   "to": "formal-semantics",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "simulation-contract-calls-resource-model",
+   "kind": "calls",
+   "from": "simulation-contract",
+   "to": "resource-model",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "simulation-contract-calls-workload-model",
+   "kind": "calls",
+   "from": "simulation-contract",
+   "to": "workload-model",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "metric-claims-calls-simulation-engine",
+   "kind": "calls",
+   "from": "metric-claims",
+   "to": "simulation-engine",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "metric-claims-reads-performance-metrics",
+   "kind": "reads",
+   "from": "metric-claims",
+   "to": "performance-metrics",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-evaluator-calls-metric-claims",
+   "kind": "calls",
+   "from": "claim-evaluator",
+   "to": "metric-claims",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "load-aspect-depends-on-workload-model",
+   "kind": "depends-on",
+   "from": "load-aspect",
+   "to": "workload-model",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "load-aspect-depends-on-resource-model",
+   "kind": "depends-on",
+   "from": "load-aspect",
+   "to": "resource-model",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "cost-aspect-reads-performance-metrics",
+   "kind": "reads",
+   "from": "cost-aspect",
+   "to": "performance-metrics",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "self-model-replay-calls-simulation-contract",
+   "kind": "calls",
+   "from": "self-model-replay",
+   "to": "simulation-contract",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "self-model-replay-calls-expression-language",
+   "kind": "calls",
+   "from": "self-model-replay",
+   "to": "expression-language",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "simulation-engine-calls-lean-call-boundary",
+   "kind": "calls",
+   "from": "simulation-engine",
+   "to": "lean-call-boundary",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "lean-call-boundary-calls-formal-semantics",
+   "kind": "calls",
+   "from": "lean-call-boundary",
+   "to": "formal-semantics",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "validator-calls-integrity-rules",
+   "kind": "calls",
+   "from": "validator",
+   "to": "integrity-rules",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "transactions-calls-integrity-rules",
+   "kind": "calls",
+   "from": "transactions",
+   "to": "integrity-rules",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "integrity-rules-calls-proof-export",
+   "kind": "calls",
+   "from": "integrity-rules",
+   "to": "proof-export",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "integrity-rules-depends-on-formal-semantics",
+   "kind": "depends-on",
+   "from": "integrity-rules",
+   "to": "formal-semantics",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "reader-pages-calls-queries",
+   "kind": "calls",
+   "from": "reader-pages",
+   "to": "queries",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "parser-calls-lean-call-boundary",
+   "kind": "calls",
+   "from": "parser",
+   "to": "lean-call-boundary",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "lean-call-boundary-calls-model-derivation",
+   "kind": "calls",
+   "from": "lean-call-boundary",
+   "to": "model-derivation",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "lean-call-boundary-calls-model-hash",
+   "kind": "calls",
+   "from": "lean-call-boundary",
+   "to": "model-hash",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "model-derivation-calls-model-hash",
+   "kind": "calls",
+   "from": "model-derivation",
+   "to": "model-hash",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "simulation-contract-calls-stable-serialization",
+   "kind": "calls",
+   "from": "simulation-contract",
+   "to": "stable-serialization",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-evaluator-calls-simulation-contract",
+   "kind": "calls",
+   "from": "claim-evaluator",
+   "to": "simulation-contract",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "simulation-engine-calls-simulation-contract",
+   "kind": "calls",
+   "from": "simulation-engine",
+   "to": "simulation-contract",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "validator-calls-metric-claims",
+   "kind": "calls",
+   "from": "validator",
+   "to": "metric-claims",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "transactions-calls-hash-binding",
+   "kind": "calls",
+   "from": "transactions",
+   "to": "hash-binding",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-evaluator-calls-hash-binding",
+   "kind": "calls",
+   "from": "claim-evaluator",
+   "to": "hash-binding",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "hash-binding-calls-lean-call-boundary",
+   "kind": "calls",
+   "from": "hash-binding",
+   "to": "lean-call-boundary",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "validator-calls-generation-readiness",
+   "kind": "calls",
+   "from": "validator",
+   "to": "generation-readiness",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "generation-readiness-calls-data-model",
+   "kind": "calls",
+   "from": "generation-readiness",
+   "to": "data-model",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "generation-readiness-reads-metamodel",
+   "kind": "reads",
+   "from": "generation-readiness",
+   "to": "metamodel",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "generation-readiness-calls-expression-language",
+   "kind": "calls",
+   "from": "generation-readiness",
+   "to": "expression-language",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "machine-coverage-calls-simulation-engine",
+   "kind": "calls",
+   "from": "machine-coverage",
+   "to": "simulation-engine",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "machine-coverage-calls-simulation-contract",
+   "kind": "calls",
+   "from": "machine-coverage",
+   "to": "simulation-contract",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "machine-coverage-calls-validator",
+   "kind": "calls",
+   "from": "machine-coverage",
+   "to": "validator",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "machine-coverage-calls-expression-language",
+   "kind": "calls",
+   "from": "machine-coverage",
+   "to": "expression-language",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "machine-coverage-calls-generation-readiness",
+   "kind": "calls",
+   "from": "machine-coverage",
+   "to": "generation-readiness",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "spec-layers-calls-parser",
+   "kind": "calls",
+   "from": "spec-layers",
+   "to": "parser",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "spec-layers-calls-validator",
+   "kind": "calls",
+   "from": "spec-layers",
+   "to": "validator",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "spec-layers-calls-generation-readiness",
+   "kind": "calls",
+   "from": "spec-layers",
+   "to": "generation-readiness",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "spec-layers-reads-metamodel",
+   "kind": "reads",
+   "from": "spec-layers",
+   "to": "metamodel",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "transactions-calls-spec-layers",
+   "kind": "calls",
+   "from": "transactions",
+   "to": "spec-layers",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-strength-calls-simulation-engine",
+   "kind": "calls",
+   "from": "claim-strength",
+   "to": "simulation-engine",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-strength-calls-expression-language",
+   "kind": "calls",
+   "from": "claim-strength",
+   "to": "expression-language",
+   "description": "As declared when the audit was written."
+  },
+  {
+   "id": "claim-strength-calls-integrity-rules",
+   "kind": "calls",
+   "from": "claim-strength",
+   "to": "integrity-rules",
+   "description": "As declared when the audit was written."
+  }
+ ]
+}

@@ -73,7 +73,15 @@
       "kind": "temporal",
       "statement": "Every write request to the file service is preceded by a projection refresh: the write is asynchronous and happens after the views were refreshed, in all three edits that commit.",
       "rationale": "Records the real order, local-first and optimistic: refresh at commit, write afterwards.",
-      "subjects": ["session", "projection-system", "projection-refreshed", "save-requested", "visual-edit-flow", "source-edit-flow", "edit-with-disk-conflict"],
+      "subjects": [
+        "session",
+        "projection-system",
+        "projection-refreshed",
+        "write-intent",
+        "visual-edit-flow",
+        "source-edit-flow",
+        "edit-with-disk-conflict"
+      ],
       "assumptions": ["machines-abstract-the-code"],
       "evaluate": {
         "method": "precedes",
@@ -86,7 +94,7 @@
           "event": "projection-refreshed"
         },
         "then": {
-          "event": "save-requested"
+          "event": "write-intent"
         },
         "negatives": [
           {
@@ -128,7 +136,12 @@
       "id": "rejected-edit-never-persists",
       "kind": "temporal",
       "statement": "In the rejected edit no write to the file service is ever requested.",
-      "subjects": ["session", "workspace-service", "save-requested", "rejected-edit"],
+      "subjects": [
+        "session",
+        "workspace-service",
+        "write-intent",
+        "rejected-edit"
+      ],
       "assumptions": ["machines-abstract-the-code"],
       "evaluate": {
         "method": "never",
@@ -136,7 +149,7 @@
           "rejected-edit"
         ],
         "occurs": {
-          "event": "save-requested"
+          "event": "write-intent"
         },
         "negatives": [
           {
@@ -161,7 +174,7 @@
         "scenarios": [
           "edit-with-disk-conflict"
         ],
-        "expr": "session-flow.saveState == 'conflict' && renderer-flow.shownRevision == transaction-flow.revision && workspace-flow.persistedRevision < transaction-flow.revision",
+        "expr": "session-flow.saveState == 'conflict' && renderer-flow.shownRevision == transaction-flow.revision && workspace-flow.diskSpec != transaction-flow.textHash",
         "negatives": [
           {
             "scenario": "edit-with-disk-conflict",
@@ -700,7 +713,7 @@
     {
       "id": "real-runs-replay-through-self-model",
       "kind": "invariant",
-      "statement": "The events a running Exegra really produces (requests and answers of the persistence client with the development server's own events, change notices, engine-worker messages, commits, claim evaluations, simulator controls, preference and camera storage writes) are recorded with their requestId and a logical sequence number and replayed through the behaviors of the scenario live-session; every divergence from the self-model (an event the specification does not name, an event the model does not predict at that point, a predicted event no behavior accepts, a payload value that differs, a predicted event not seen within 200 recorded events or by the end of a closed stream) is reported as a failed check at its step and listed in the simulator panel's Live mode, and a real open, edit and save replays without one.",
+      "statement": "The events a running Exegra really produces (requests and answers of the persistence client with the development server's own events, change notices, engine-worker messages, commits, claim evaluations, simulator controls, preference and camera storage writes) are recorded with their requestId and a logical sequence number and replayed through the behaviors of the scenario live-session; every divergence from the self-model (an event the specification does not name, an event the model does not predict at that point, an event some behavior consumes that no behavior accepts in its state, whether predicted or from outside, a payload value that differs or a predicted field the recording lacks, a predicted event not seen within 200 recorded events or by the end of a closed stream) is reported as a failed check at its step and listed in the simulator panel's Live mode, and a real open, edit and save replays without one. Only variables declared environment are calibrated from the first recorded value; any other difference is a divergence (WG-5685).",
       "rationale": "Built in WG-4777. Supported, not verified: the evidence is a recorded real stream replayed in a unit test with doctored copies as negatives, and a browser test of the running application. A clean replay shows that the code and the model agree on the runs recorded, not on every run; divergences found on longer real sessions are recorded in the unknowns of self-model-replay.",
       "subjects": [
         "traffic-recorder",
@@ -854,25 +867,11 @@
         "camera-memory",
         "camera-remembered"
       ],
-      "assumptions": [
-        "machines-abstract-the-code"
-      ],
+      "assumptions": [],
       "evaluate": {
-        "method": "eventually",
-        "scenarios": [
-          "camera-remembered"
-        ],
-        "expr": "camera-memory-flow.current == 'cA' && camera-memory-flow.view == 'structural'",
-        "negatives": [
-          {
-            "scenario": "camera-remembered",
-            "faults": [
-              "camera-save-lost"
-            ]
-          }
-        ]
+        "method": "conformance-trace"
       },
-      "faultModel": "local-workstation"
+      "rationale": "Checked at the trace stage (WG-5685 criterion 12): tests/core/camera-conformance.test.js runs the camera code of src/app/main.js through leaving a view, switching, and coming back. The machine-level check is camera-restored-in-model. A result recorded before an edit of main.js reads stale; docs/assessment/2026-11-26/conformance.md, L1."
     },
     {
       "id": "session-adopts-recorded-results",
@@ -1118,6 +1117,37 @@
       "evaluate": {
         "method": "external-evidence"
       }
+    },
+    {
+      "id": "camera-restored-in-model",
+      "kind": "temporal",
+      "statement": "In the camera-memory model, coming back to a view restores the camera the user left it with.",
+      "subjects": [
+        "composition-root",
+        "browser-storage",
+        "camera-memory",
+        "camera-remembered"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "camera-remembered"
+        ],
+        "expr": "camera-memory-flow.current == 'cA' && camera-memory-flow.view == 'structural'",
+        "negatives": [
+          {
+            "scenario": "camera-remembered",
+            "faults": [
+              "camera-save-lost"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation",
+      "rationale": "The model-level check of camera-restored-per-view: true of the camera-memory machine, not of the code (machines-abstract-the-code). The code is checked by camera-restored-per-view at the trace stage. WG-5685 criterion 12."
     }
   ],
   "evidence": [
@@ -1322,9 +1352,9 @@
     {
       "id": "ev-flows-collapse-invariant",
       "kind": "test",
-      "ref": "tests/core/abstraction.test.js#flows classify the visual-edit-flow save hop identically collapsed and expanded",
+      "ref": "tests/core/abstraction.test.js#flows follow the declared edge of the visual-edit-flow save hop collapsed and expanded",
       "claim": "flows-classified-on-derived-model",
-      "description": "The save-requested hop from the session to the workspace service is undeclared in both scenes."
+      "description": "The save-requested hop from the session to the persistence client follows the same relationship in the expanded and the collapsed scene."
     },
     {
       "id": "ev-nav-walk-core",
@@ -1472,6 +1502,27 @@
       "kind": "test",
       "ref": "tests/core/spec-manifest.test.js#a production build bundles the self-specification resolved and the shipped application derives the CLI model from it",
       "description": "The build's bundled specification (the resolved manifest) with the bundled fact file gives the semantic hash and the L1 interactions the command line gives, so the read-only application draws the same derived model."
+    },
+    {
+      "id": "ev-camera-trace-stage",
+      "claim": "camera-restored-per-view",
+      "kind": "test",
+      "ref": "tests/core/camera-conformance.test.js#the camera code of main.js restores the camera a view was left with",
+      "description": "The camera code of main.js, run with a stand-in session storage, restores camera cA on coming back to the structural view."
+    },
+    {
+      "id": "ev-camera-edit-stale-refuted",
+      "claim": "camera-restored-per-view",
+      "kind": "test",
+      "ref": "tests/core/camera-conformance.test.js#an edit of main.js that stores no camera makes the camera claims stale and the trace stage refutes it",
+      "description": "In a temporary copy, main.js stores an empty camera: without rerunning, the claim and the claims whose evidence covers main.js read stale; the trace-stage check then refutes the claim."
+    },
+    {
+      "id": "ev-replay-blind-three",
+      "claim": "real-runs-replay-through-self-model",
+      "kind": "test",
+      "ref": "tests/core/replay.test.js#the replay-blind stream yields three divergences",
+      "description": "The replay-blind stream of the 2026-11-26 assessment: write-intent without text, a base hash the model never had, and save-requested after close are three divergences."
     }
   ]
 }

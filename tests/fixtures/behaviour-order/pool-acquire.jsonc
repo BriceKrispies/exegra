@@ -1,0 +1,32 @@
+{
+  // Two machines acquire one pool slot (WG-5683): resources are in the behaviour calculus, so the
+  // explorer closes the reachable states, world included, and Lean accepts the closed-set
+  // certificate (tests/proofs/formal-explore.test.js).
+  "exegra": "0.1",
+  "system": { "id": "behaviour-pool-fixture", "name": "Pool acquire exploration fixture", "version": "0.1.0", "description": "Two machines contend for one pool slot.", "illustrative": true },
+  "components": [{ "id": "pair", "name": "Pair", "category": "computational", "purpose": "Machines that hold a pool.", "illustrative": true }],
+  "events": [{ "id": "go", "name": "Go" }, { "id": "done-a", "name": "Done A" }, { "id": "done-b", "name": "Done B" }],
+  "behaviors": [
+    {
+      "id": "holder-a", "name": "Holder A", "subject": "pair", "initial": "a-idle",
+      "states": [{ "id": "a-idle", "name": "Idle" }, { "id": "a-held", "name": "Held" }],
+      "transitions": [
+        { "id": "a-go", "from": "a-idle", "to": "a-idle", "on": "go", "effects": [{ "acquire": "slot", "units": 1, "then": "done-a" }] },
+        { "id": "a-got", "from": "a-idle", "to": "a-held", "on": "done-a" }
+      ]
+    },
+    {
+      "id": "holder-b", "name": "Holder B", "subject": "pair", "initial": "b-idle",
+      "states": [{ "id": "b-idle", "name": "Idle" }, { "id": "b-held", "name": "Held" }],
+      "transitions": [
+        { "id": "b-go", "from": "b-idle", "to": "b-idle", "on": "go", "effects": [{ "acquire": "slot", "units": 1, "then": "done-b" }] },
+        { "id": "b-got", "from": "b-idle", "to": "b-held", "on": "done-b" }
+      ]
+    }
+  ],
+  "resources": [{ "id": "slot", "kind": "pool", "capacity": 1 }],
+  "scenarios": [{ "id": "pool-acquire", "name": "Two machines acquire one slot", "behaviors": ["holder-a", "holder-b"], "steps": [{ "at": 0, "event": "go" }] }],
+  "claims": [
+    { "id": "pool-one-holder", "kind": "invariant", "statement": "At most one machine holds the slot.", "evaluate": { "method": "state-invariant", "scenarios": ["pool-acquire"], "expr": "!(holder-a.state == 'a-held' && holder-b.state == 'b-held')" } }
+  ]
+}

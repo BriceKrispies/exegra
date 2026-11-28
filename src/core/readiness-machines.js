@@ -8,7 +8,7 @@
 
 import { typeResolves, unsharedText } from './codegen-model.js';
 import { parseExpr, exprRefs } from './expr.js';
-import { timeReadiness, scenarioIntegerReadiness, simulatedNumberReadiness } from './readiness-time.js';
+import { timeReadiness, scenarioIntegerReadiness } from './readiness-time.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Entity} Entity */
@@ -190,9 +190,6 @@ export function machineReadiness(model) {
     out.push({ code, severity: 'error', message, entityId: entity.id, loc: entity.loc, path: sub ? [...entity.path, ...sub] : entity.path });
   };
   const list = (/** @type {any} */ v) => (Array.isArray(v) ? v : []);
-
-  // Every simulated behaviour computes on integers (WG-5681).
-  simulatedNumberReadiness(model, report);
 
   const behaviors = kind('behavior').filter((b) => b.data.level === 'implementation');
   if (!behaviors.length) return out;

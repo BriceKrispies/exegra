@@ -123,7 +123,7 @@
         "Check time and integers in implementation-level machines (src/core/readiness-time.js, WG-4902): a variable compared with time holds a value set from time wherever it is read (ready.time-epoch); time - x is read only after x <= time (ready.time-difference); the scenarios running the machine agree on a time unit, fixed delays are whole milliseconds and a machine reading time runs in ms (ready.delay-unit); literals, integer initial values and scenario payload values are within their integer range, at most 2^53 - 1 (ready.number-bound)",
         "Check the realisation and durability of machines (src/core/realisation.js, WG-4922): behavior.realisation and contract.deployment (shipped or target, defaulting from the component's implementation status; an explicit shipped on a not-implemented component is behavior.realisation-subject or contract.deployment-subject) and storage.durability (record or memory; a memory machine names no record, creates none and declares no transaction, or storage.durability)",
         "Check residency (src/core/residency.js): follow each record a tenant class binds to its owner, the holder of each copy and both ends of each relationship that carries it, and report a component that cannot keep a tenant of the class in its permitted regions (residency.record-outside, residency.copy-outside, residency.flow-outside) unless an active residency exception names that copy or flow; a holder of bound data states its placement (residency.placement-missing) and a per-region one has an instance in every provisioned region (residency.region-uncovered); placement and regions agree (component.placement-regions); a tenant class has one selector and at least one region (tenant-class.selector, tenant-class.provisioned-in); an exception names one copy or flow of bound data, its durations are durations, a bounded one states its purge and a renewal window is shorter than its longest duration (residency.exception-target, residency.exception-duration, residency.exception-purge, residency.exception-renewal)",
-        "Check quota pools (src/core/pools.js): at least one pooled limit with a unique lower-case name (pool.limits), exactly one of quota and a positive perMember (pool.limit-contribution), a pooled quota counted per tenant over the pool's window as a rate (pool.quota-scope, pool.quota-window, pool.limit-kind) and held by the pool's component (pool.held-by), usage and exemption events with the payload fields the pool reads (pool.usage-event, pool.event-payload), the window, over-share count and release (pool.window, pool.over-share, pool.release), 1 to 4 modelled members (pool.model-members), an exemption role that confers its capability (pool.exemption-capability) and machine ids no entity takes (pool.machine-id); a scenario runs a behavior or a pool (scenario.empty), and a claim expression reads only variables of the machines of pools every listed scenario runs (expr.reference)"
+        "Check quota pools (src/core/pool-rules.js): at least one pooled limit with a unique lower-case name (pool.limits), exactly one of quota and a positive perMember (pool.limit-contribution), a pooled quota counted per tenant over the pool's window as a rate (pool.quota-scope, pool.quota-window, pool.limit-kind) and held by the pool's component (pool.held-by), usage and exemption events with the payload fields the pool reads (pool.usage-event, pool.event-payload), the window, over-share count and release (pool.window, pool.over-share, pool.release), 1 to 4 modelled members (pool.model-members), an exemption role that confers its capability (pool.exemption-capability) and machine ids no entity takes (pool.machine-id); a scenario runs a behavior or a pool (scenario.empty), and a claim expression reads only variables of the machines of pools every listed scenario runs (expr.reference)"
       ],
       "implementation": {
         "status": "manual",
@@ -134,7 +134,8 @@
           "src/core/readiness-machines.js",
           "src/core/readiness-time.js",
           "src/core/realisation.js",
-          "src/core/residency.js"
+          "src/core/residency.js",
+          "src/core/pool-rules.js"
         ],
         "notes": "The rules are hard-coded. Claim parameter checks read the claim method registry, the gap rules read `expected` flags of the effective meta-model and view filters are checked against the effective vocabulary.",
         "language": "js"
@@ -285,7 +286,30 @@
       },
       "tags": [
         "verdict-kernel"
-      ]
+      ],
+      "interface": {
+        "inputs": [
+          "edit-applied",
+          "model-parsed",
+          "node-moved",
+          "operation-submitted",
+          "project-opened",
+          "redo-requested",
+          "reload-requested",
+          "undo-requested",
+          "validation-failed",
+          "validation-passed"
+        ],
+        "outputs": [
+          "commit-notified",
+          "text-edits-computed",
+          "transaction-committed",
+          "transaction-rejected"
+        ],
+        "observables": [
+          "transaction-flow.revision"
+        ]
+      }
     },
     {
       "id": "claim-evaluator",
@@ -305,7 +329,7 @@
         "Add the automatic contract-conformance checks of a trace to the checks of checkTrace (src/core/contract-trace.js), as failed checks with the step",
         "Evaluate data-model claims (method data-model, a list of rules) on the records and copies of the model: violated with the first finding as counterexample, verified when every listed rule had something to check and found nothing, inconclusive when a listed rule had nothing to check",
         "Run every declared negative of a trace claim (its scenario with the scenario's own faults plus the negative's) and report the claim verified only when it holds on its scenarios and each negative, at least one, violates it; a trace claim with no negative, or with a negative that does not definitely violate it, is inconclusive and the explanation says which",
-        "Evaluate refines claims (src/core/refinement.js): in the trace of each scenario that runs the implementation behavior, check that its initial configurations and every transition it fires map through its refinement mapping to the transition its model would fire (from, to, event, guard true and first in declaration order, effects giving the mapped post-variables, the same emitted events) or to a stutter that changes no mapped state or variable and emits nothing; violated at the first failing step with the steps up to it as a trace and a reason; inconclusive when a run ends in an error, a model expression reads what the mapping does not define, or no step matched a model transition",
+        "Evaluate refines claims (src/core/refinement.js): in the trace of each scenario that runs the implementation behavior, check that its initial configurations and every transition it fires map through its refinement mapping to the transition its model would fire (from, to, event, guard true and first in declaration order, effects giving the mapped post-variables, the same emitted events) or to a stutter that changes no mapped state or variable and emits nothing; violated at the first failing step with the steps up to it as a trace and a reason; then explore every execution of the scenario's input that delivers simultaneous entries in another order (src/core/refinement-explore.js, with the step of src/core/replay.js) and check every step it reaches, violated with the delivery order as part of the counterexample; inconclusive when the exploration reaches its configuration cap or the step limit or meets what it does not enumerate (faults, draws, cancellations, instances), when a run ends in an error, a model expression reads what the mapping does not define, or no step matched a model transition",
         "In refines claims, tell a transition's queued entries apart into emits and timers by its effects, compare timers only with a model transition that sets timers, and read other behaviors named by model expressions from the same trace configuration, through the machine that refines them when they do not run themselves"
       ],
       "ports": [
@@ -331,7 +355,8 @@
         "modules": [
           "src/core/claims.js",
           "src/core/concordance.js",
-          "src/core/refinement.js"
+          "src/core/refinement.js",
+          "src/core/refinement-explore.js"
         ],
         "language": "js"
       },
@@ -441,7 +466,7 @@
       "runsIn": "both",
       "purpose": "Replays a recorded stream of real events through the behaviors of a scenario of this specification (live-session), one event at a time, and reports every divergence between what the running application did and what the self-model allows.",
       "responsibilities": [
-        "Execute the behaviors of the scenario with the step semantics of the engine (phase 1 choice reading the configuration before the step, phase 2 effects in scenario order, the expression language of src/core/expr.js, the engine input of src/core/sim-input.js), delivering the recorded events in recorded order with their recorded payloads; logical time is the recorded sequence number",
+        "Execute the behaviors of the scenario with the step semantics of the engine (phase 1 choice reading the configuration before the step, phase 2 effects in scenario order, the expression language of src/core/expr.js, the engine input of the Lean lowering (Exegra.Lower.engineInput)), delivering the recorded events in recorded order with their recorded payloads; logical time is the recorded sequence number",
         "Keep the events the model emits as predictions instead of queueing them: a recorded event that some transition of the scenario emits must match a pending prediction of the same event (by its correlation field or requestId when both carry it, else the oldest); any interleaving of predictions that respects causality is accepted, because a real run interleaves independent chains (a network answer, a file-watch notice, a claim evaluation) in whatever order they happen",
         "Report divergences under the claim real-runs-replay-through-self-model: an event that is not an event of the specification (unknown-event), an event the model emits but did not predict here (unpredicted), a predicted event that no behavior consuming it accepts in its current state (not-allowed), a recorded payload value that differs from the predicted one (payload; correlation fields and values the transition gives as number literals, which stand for counts the model does not track, are not compared; nor are arrays and objects), a prediction not matched within 200 recorded events or by the end of a closed stream (missing), and an expression of the model that fails on the recorded payload (error)",
         "Calibrate instead of diverging when a predicted value reads a variable that no transition has written since the start of the stream: its declared initial value stands for the environment when the stream started (a file hash on disk, a stored preference), so it takes the recorded value; the step lists the calibration",
@@ -835,14 +860,18 @@
         "Report the realisation path of every contract hop by hop, flagging hops whose events carry no contract",
         "Check its own invariants on a model: witness completeness, boundary accounting, recoverability, interfaces from boundaries, functoriality, kind preservation and determinism",
         "Record footprints on derived facts and claim results, and re-derive after an edit only the facts whose footprint the edit touches",
-        "Read extracted and observed facts as data (src/core/extraction.js) and keep them beside the declared relationships with their own provenance: one imports relationship per pair of module elements the extracted imports connect, so that an extracted import is a witness of the derived interaction at every cut; reconcile the declarations with them (a declared static dependency inside the surface is redundant; a declared runtime interaction no recording shows is not observed, never false); report what a check rests on (declared, extracted or observed)"
+        "Read extracted and observed facts as data (src/core/extraction.js) and keep them beside the declared relationships with their own provenance: one imports relationship per pair of module elements the extracted imports connect, so that an extracted import is a witness of the derived interaction at every cut; reconcile the declarations with them (a declared static dependency inside the surface is redundant; a declared runtime interaction no recording shows is not observed, never false); report what a check rests on (declared, extracted or observed)",
+        "Derive the message interactions of the behaviors (an event emitted by a behavior of one element and consumed by a behavior of another) and check them against the relationships: every cross-element message witnessed at the base and, through the cut, by a derived interaction made by a relationship between the same two elements, never by a different witness (V5); and the events that cross a relationship that declares a contract typed by that contract (V7)"
       ],
       "implementation": {
         "status": "manual",
         "modules": [
           "src/core/abstraction.js",
           "src/core/footprints.js",
-          "src/core/extraction.js"
+          "src/core/extraction.js",
+          "src/core/function-composition.js",
+          "src/core/fault-lifting.js",
+          "src/core/coherence.js"
         ],
         "language": "js",
         "notes": "Pure functions of a model snapshot, memoised per snapshot and cut. The lifting rule is a small function rather than an integrity relation: the rule language ranges over entities, and blocks, module elements and witness sets are not entities."
@@ -873,6 +902,67 @@
           "formal/Main.lean",
           "formal/Exegra/Api.lean"
         ]
+      }
+    },
+    {
+      "id": "lts-composition",
+      "name": "Components, contracts and refinement (Lean 4)",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Relations between transition systems (WG-5685): components with interfaces and their parallel composition, assume-guarantee contracts over traces with the discharge of assumptions, and refinement of a specification by an implementation through a stuttering simulation.",
+      "responsibilities": [
+        "Compose components (Exegra.Core.Comp.compose): a joint step on a label in both alphabets, a step of one side alone on a label in its alphabet only; prove composition commutative and associative up to isomorphism of transition systems (compose_comm, compose_assoc) and the projection lemma relating the traces of a composition to the traces of its sides (traces_compose)",
+        "Define contracts over traces, their satisfaction by an open component (Exegra.Core.Comp.Sat), refinement and compatibility; prove circular assume-guarantee composition sound under the one-step-ahead non-circularity condition (ag_compose) and unsound without it (ag_circular_unsound)",
+        "Prove that discharging every assumption by a claim, over an acyclic discharge graph, makes every guarantee hold (Exegra.Core.discharge_sound)",
+        "Define stuttering simulation through an abstraction (Exegra.Core.LTS.Simulates) and prove that it preserves observable finite traces (refines_traces), invariants (refines_safety) and, with no infinite stuttering and a mapping of fair actions, properties of weakly fair runs (refines_liveness)"
+      ],
+      "unknowns": [
+        "Sys.compose on calculus systems (machines appended, references lifted by Expr.lift) and compose_lts, the isomorphism between the composed calculus system and the composition of the two systems' transition systems, are not defined or proved (WG-5685 criterion 6).",
+        "A contract's satisfaction is over the open component's traces (its traces in an arbitrary environment, Comp.Open); contracts are not attached to specification components or checked by exegra.",
+        "refines_liveness reads a run as its sequence of states, so a property of labels is not covered; MapsFair asks every step of the implementation's fair action to be a step of the specification that only the mapped fair action makes.",
+        "Product installation (admitProduct in cli/admit.js) shows a product claim holds on its own scenario and refutes it on the composed scenario by complete exploration in JavaScript (src/core/refinement-explore.js over the step of src/core/replay.js), not by a Lean theorem, so a product claim is not proved; exegra admit has no option yet to install a product file from the command line (WG-5685 criterion 7).",
+        "The explorer of src/core/refinement-explore.js enumerates the orders of simultaneous entries only: faults, sampled delays, cancellations, instances, resources, workloads and links make an exploration incomplete (inconclusive), and its step is the JavaScript step of src/core/replay.js, not the Lean semantics."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "formal/Exegra/Core/Compose.lean",
+          "formal/Exegra/Core/Contract.lean",
+          "formal/Exegra/Core/Refine.lean"
+        ],
+        "notes": "formal/Exegra/Core/Compose.lean (Lang, LTS.Path, LTS.Traces, Iface, Comp, Iso, compose, compose_comm, compose_assoc, restrict, traces_compose), Contract.lean (Comp.Open, Sat, Refines, Compatible, NonCircular, ag_compose, ag_circular_unsound, DischargeGraph, discharge_sound), Refine.lean (Obs, ObsTraces, Simulates, refines_traces, refines_safety, Run.map, NoInfiniteStutter, MapsFair, refines_liveness); axioms pinned with #guard_msgs. Checked by lake build in .github/workflows/check.yml.",
+        "trusts": [
+          "trusted-lean-kernel"
+        ],
+        "language": "lean"
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
+    },
+    {
+      "id": "decomposition-evaluator",
+      "name": "Decomposition candidates",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Proposes candidate decompositions of an element from the established semantics (the declared hierarchy, module directories, cycles of the dependency classes, contract-bounded and connector-bounded regions, split, merge and move refinements, or data given by a person), checks each against the validity conditions V1 to V7 through one registry, measures the valid ones deterministically with the evidence behind every boundary, and records a candidate a person accepts as a named hierarchy through a transaction. A candidate is a hierarchy over the same elements: evaluating it never changes a fact. Valid is not meaningful: it reports measurements side by side and never ranks, scores or accepts a candidate.",
+      "responsibilities": [
+        "Generate candidates from declared structure, extracted module paths, cycle condensation, contract and connector regions and refinements, and read candidates given as data",
+        "Reject a candidate that is not a laminar covering partition of its scope's grain (an overlap, an uncovered element, an unknown or misplaced member, a block id that collides with an element), naming the failing condition and its witnesses",
+        "Run the validity conditions of one registry in order: V1 partition, V2 witnessed coarse facts, V3 interface agreement, V4 kind preservation, and the behavioural conditions the candidate's blocks are read as the composites of a cut for: V5 every message between blocks witnessed structurally (a path through a declared connector counts), V6 refinement where a block declares abstract behaviour (reported as not applicable, with the reason, where none does), V7 every contract on a boundary between blocks typed by the events that cross it",
+        "Measure a valid candidate: boundary size, cohesion, coupling, dependency cycles by class with their back edges, interface size, contract coverage of boundary interactions, redundancy of declared facts, and the knowledge-status and provenance mix; compare candidates side by side without ranking them",
+        "List per boundary its crossing witnesses, the back edges of cycles and the interactions no contract covers",
+        "Accept a candidate only when every condition holds, and only as one transaction of the project (acceptCandidate): the components its blocks need, the named hierarchy (the logical placement with the blocks under the scope) and two cuts of it, so the application navigates it at once and a claim stated at a cut evaluates at them; undo reverses it as one step"
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/decomposition.js"
+        ],
+        "language": "js",
+        "notes": "Pure functions of a model snapshot and a candidate, apart from acceptCandidate, which applies the operations of the acceptance to a Project. The derivation is semantic-abstraction's (deriveLevel); V5 and V7 are decided from semantic-abstraction's coherence checks (coherenceAtLevel, contractPaths) and V6 by the refinement checker. A module element a candidate places in a block stays with its component in the recorded hierarchy and is listed as unrecorded."
       }
     }
   ],
@@ -1257,6 +1347,34 @@
       "from": "self-model-replay",
       "to": "simulation-engine",
       "description": "Run both serial orders of the specified shared-base write protocol."
+    },
+    {
+      "id": "decomposition-evaluator-calls-semantic-abstraction",
+      "kind": "invokes",
+      "from": "decomposition-evaluator",
+      "to": "semantic-abstraction",
+      "description": "Derives the model at each candidate's level (deriveLevel) and reads the base facts and the extraction reconciliation."
+    },
+    {
+      "id": "decomposition-evaluator-calls-queries",
+      "kind": "invokes",
+      "from": "decomposition-evaluator",
+      "to": "queries",
+      "description": "Reads the logical hierarchy, the elements, the module declarations and the knowledge status of elements."
+    },
+    {
+      "id": "decomposition-evaluator-calls-refinement-checker",
+      "kind": "invokes",
+      "from": "decomposition-evaluator",
+      "to": "refinement-checker",
+      "description": "V6: the abstraction a block declares is checked against its members (checkAbstraction)."
+    },
+    {
+      "id": "decomposition-evaluator-calls-transactions",
+      "kind": "invokes",
+      "from": "decomposition-evaluator",
+      "to": "transactions",
+      "description": "Accepting a candidate applies its operations as one transaction of the project (Project.apply)."
     }
   ]
 }

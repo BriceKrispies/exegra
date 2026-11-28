@@ -1,6 +1,6 @@
 // Metric claims in a specification (format 2, WG-4729; docs/simulation.md, "Specification-level
 // form" and "Claims over metrics"): a specification declares a resource, an open workload, a
-// request class, a format-2 scenario and a metric-bound claim; simulationInput derives version 2
+// request class, a format-2 scenario and a metric-bound claim; engineInput derives version 2
 // with times in base units and distributions lowered, and evaluateClaims reports model-holds (or
 // violated) with the run count and confidence, never verified.
 
@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { analyzeSpec } from '../../src/core/analyze.js';
 import { evaluateClaim } from '../../src/core/claims.js';
 import { initEngine } from '../../src/core/engine.js';
-import { simulationInput } from '../../src/core/sim-input.js';
+import { engineInput } from '../../src/core/engine.js';
 
 initEngine();
 
@@ -50,8 +50,8 @@ function load(text) {
   return model;
 }
 
-test('simulationInput derives format 2 from declared resources, workloads and request classes', () => {
-  const input = /** @type {any} */ (simulationInput(load(SPEC('20 ms')), 'steady'));
+test('engineInput derives format 2 from declared resources, workloads and request classes', () => {
+  const input = /** @type {any} */ (engineInput(load(SPEC('20 ms')), 'steady'));
   assert.equal(input.version, 2);
   assert.deepEqual(input.time, { unit: 'us', perSecond: 1000000 });
   assert.equal(input.scenario.horizon, 3000000);

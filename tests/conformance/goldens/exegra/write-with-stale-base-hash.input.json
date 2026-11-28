@@ -1,92 +1,375 @@
 {
  "behaviors": [
   {
-   "id": "write-client-flow",
-   "initial": "write-client-idle",
+   "id": "persistence-client-flow",
+   "initial": "client-ready",
    "states": [
-    "write-client-idle",
-    "write-client-awaiting",
-    "write-client-saved"
+    "client-ready"
    ],
    "subject": "persistence-client",
    "transitions": [
     {
      "effects": [
       {
-       "set": "attempts",
-       "to": "attempts + 1"
+       "set": "calls",
+       "to": "calls + 1"
       },
       {
-       "emit": "write-file-request",
+       "emit": "read-project-request",
        "payload": {
-        "baseHash": "baseHash",
-        "file": "'spec'",
-        "name": "'exegra'",
-        "text": "'spec text of revision 2'"
+        "name": "event.name",
+        "requestId": "event.requestId"
        }
       }
      ],
      "faultOnly": false,
-     "from": "write-client-idle",
+     "from": "client-ready",
      "guard": null,
-     "id": "write-client-send",
+     "id": "client-read",
+     "on": "read-intent",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "project-files-read",
+       "payload": {
+        "layoutHash": "event.layout",
+        "recorded": "event.recorded",
+        "requestId": "event.requestId",
+        "specHash": "event.spec"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-read-ok",
+     "on": "read-project-ok",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "project-read-failed",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-read-failed",
+     "on": "read-project-failed",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "calls",
+       "to": "calls + 1"
+      },
+      {
+       "emit": "list-projects-request",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-list",
+     "on": "list-intent",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "projects-listed",
+       "payload": {
+        "projects": "event.projects"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-listed",
+     "on": "list-projects-ok",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "calls",
+       "to": "calls + 1"
+      },
+      {
+       "set": "lastFile",
+       "to": "event.file"
+      },
+      {
+       "emit": "write-file-request",
+       "payload": {
+        "baseHash": "event.baseHash",
+        "file": "event.file",
+        "name": "event.name",
+        "requestId": "event.requestId",
+        "text": "event.text"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-write",
      "on": "write-intent",
-     "to": "write-client-awaiting"
+     "to": "client-ready"
     },
     {
      "effects": [
       {
-       "set": "attempts",
-       "to": "attempts + 1"
-      },
-      {
-       "set": "baseHash",
-       "to": "event.current"
-      },
-      {
-       "emit": "write-file-request",
+       "emit": "save-succeeded",
        "payload": {
-        "baseHash": "event.current",
-        "file": "'spec'",
-        "name": "'exegra'",
-        "text": "'spec text of revision 2'"
+        "file": "lastFile",
+        "hash": "event.hash",
+        "requestId": "event.requestId"
        }
       }
      ],
      "faultOnly": false,
-     "from": "write-client-awaiting",
-     "guard": "attempts < 3",
-     "id": "write-client-retry",
-     "on": "write-file-conflict",
-     "to": "write-client-awaiting"
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-write-ok",
+     "on": "write-file-ok",
+     "to": "client-ready"
     },
     {
      "effects": [
       {
-       "set": "saved",
-       "to": true
+       "emit": "save-conflicted",
+       "payload": {
+        "currentHash": "event.current",
+        "file": "lastFile",
+        "requestId": "event.requestId"
+       }
       }
      ],
      "faultOnly": false,
-     "from": "write-client-awaiting",
+     "from": "client-ready",
      "guard": null,
-     "id": "write-client-done",
-     "on": "write-file-ok",
-     "to": "write-client-saved"
+     "id": "client-write-conflict",
+     "on": "write-file-conflict",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "save-failed",
+       "payload": {
+        "file": "lastFile",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-write-failed",
+     "on": "write-file-failed",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "watch-project-request",
+       "payload": {
+        "name": "event.name"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-watch",
+     "on": "watch-intent",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "external-change-received",
+       "payload": {
+        "file": "event.file",
+        "hash": "event.hash"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-notice",
+     "on": "file-change-notice-sent",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "calls",
+       "to": "calls + 1"
+      },
+      {
+       "emit": "export-request",
+       "payload": {
+        "name": "event.name",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-export",
+     "on": "export-intent",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "bundle-received",
+       "payload": {
+        "files": "event.files",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-export-ok",
+     "on": "export-ok",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "export-refused-received",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-export-failed",
+     "on": "export-failed",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "calls",
+       "to": "calls + 1"
+      },
+      {
+       "emit": "import-request",
+       "payload": {
+        "bundle": "event.bundle",
+        "name": "event.name",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-import",
+     "on": "import-intent",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "import-done",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-import-ok",
+     "on": "import-ok",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "import-refused-received",
+       "payload": {
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-import-refused",
+     "on": "import-refused",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "calls",
+       "to": "calls + 1"
+      },
+      {
+       "emit": "generated-write-request",
+       "payload": {
+        "files": "event.files",
+        "name": "event.name",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-generated",
+     "on": "generated-intent",
+     "to": "client-ready"
+    },
+    {
+     "effects": [
+      {
+       "emit": "generated-saved",
+       "payload": {
+        "requestId": "event.requestId",
+        "written": "event.written"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "client-ready",
+     "guard": null,
+     "id": "client-generated-ok",
+     "on": "generated-write-ok",
+     "to": "client-ready"
     }
    ],
    "variables": [
     {
+     "initial": "spec",
+     "name": "lastFile"
+    },
+    {
      "initial": 0,
-     "name": "attempts"
-    },
-    {
-     "initial": "h1",
-     "name": "baseHash"
-    },
-    {
-     "initial": false,
-     "name": "saved"
+     "name": "calls"
     }
    ]
   },
@@ -101,29 +384,8 @@
     {
      "effects": [
       {
-       "set": "conflicts",
-       "to": "conflicts + 1"
-      },
-      {
-       "emit": "write-file-conflict",
-       "payload": {
-        "code": "'conflict'",
-        "current": "diskHash"
-       }
-      }
-     ],
-     "faultOnly": false,
-     "from": "write-endpoint-ready",
-     "guard": "event.baseHash != diskHash",
-     "id": "write-endpoint-conflict",
-     "on": "write-file-request",
-     "to": "write-endpoint-ready"
-    },
-    {
-     "effects": [
-      {
        "set": "diskHash",
-       "to": "'h3'"
+       "to": "event.text"
       },
       {
        "set": "writes",
@@ -132,23 +394,124 @@
       {
        "emit": "write-file-ok",
        "payload": {
-        "hash": "'h3'",
-        "ok": "true"
+        "hash": "event.text",
+        "ok": true,
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": true,
+     "from": "write-endpoint-ready",
+     "guard": "event.file == 'spec'",
+     "id": "write-endpoint-accept-stale",
+     "on": "write-file-request",
+     "to": "write-endpoint-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "conflicts",
+       "to": "conflicts + 1"
+      },
+      {
+       "emit": "write-file-conflict",
+       "payload": {
+        "code": "'conflict'",
+        "current": "diskHash",
+        "requestId": "event.requestId"
        }
       }
      ],
      "faultOnly": false,
      "from": "write-endpoint-ready",
-     "guard": "event.baseHash == diskHash",
+     "guard": "event.file == 'spec' && event.baseHash != diskHash",
+     "id": "write-endpoint-conflict",
+     "on": "write-file-request",
+     "to": "write-endpoint-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskHash",
+       "to": "event.text"
+      },
+      {
+       "set": "writes",
+       "to": "writes + 1"
+      },
+      {
+       "emit": "write-file-ok",
+       "payload": {
+        "hash": "event.text",
+        "ok": true,
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "write-endpoint-ready",
+     "guard": "event.file == 'spec' && event.baseHash == diskHash",
      "id": "write-endpoint-accept",
+     "on": "write-file-request",
+     "to": "write-endpoint-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "conflicts",
+       "to": "conflicts + 1"
+      },
+      {
+       "emit": "write-file-conflict",
+       "payload": {
+        "code": "'conflict'",
+        "current": "diskLayout",
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "write-endpoint-ready",
+     "guard": "event.file == 'layout' && event.baseHash != diskLayout",
+     "id": "write-endpoint-conflict-layout",
+     "on": "write-file-request",
+     "to": "write-endpoint-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "diskLayout",
+       "to": "event.text"
+      },
+      {
+       "set": "writes",
+       "to": "writes + 1"
+      },
+      {
+       "emit": "write-file-ok",
+       "payload": {
+        "hash": "event.text",
+        "ok": true,
+        "requestId": "event.requestId"
+       }
+      }
+     ],
+     "faultOnly": false,
+     "from": "write-endpoint-ready",
+     "guard": "event.file == 'layout' && event.baseHash == diskLayout",
+     "id": "write-endpoint-accept-layout",
      "on": "write-file-request",
      "to": "write-endpoint-ready"
     }
    ],
    "variables": [
     {
-     "initial": "h2",
+     "initial": "h1",
      "name": "diskHash"
+    },
+    {
+     "initial": "L1",
+     "name": "diskLayout"
     },
     {
      "initial": 0,
@@ -197,9 +560,6 @@
   },
   {
    "id": "model-published"
-  },
-  {
-   "id": "save-requested"
   },
   {
    "id": "save-succeeded"
@@ -661,6 +1021,17 @@
      "file": "spec",
      "name": "exegra",
      "requestId": 1,
+     "text": "9b2f1c0e"
+    }
+   },
+   {
+    "at": 1,
+    "event": "write-intent",
+    "payload": {
+     "baseHash": "h1",
+     "file": "spec",
+     "name": "exegra",
+     "requestId": 2,
      "text": "9b2f1c0e"
     }
    }

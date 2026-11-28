@@ -14,7 +14,7 @@ import { call, initLean } from '../../src/core/lean.js';
 
 const TABLE = JSON.parse(readFileSync(fileURLToPath(new URL('../fixtures/expr-cases.json', import.meta.url)), 'utf8'));
 
-/** The engine type of a specification type name in the table (sim-input.js, evalTypeOf). @param {string} t */
+/** The engine type of a specification type name in the table (time-units.js, evalTypeOf). @param {string} t */
 function engineType(t) {
   if (t === 'timestamp') return 'i64';
   if (t === 'duration') return 'u64';

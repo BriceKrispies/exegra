@@ -81,8 +81,8 @@
     {
       "id": "refinement-agrees-at-boundary",
       "kind": "invariant",
-      "statement": "When a component has an abstract behavior and refined child behaviors, the refined trace projected onto the component's boundary is allowed by the abstract behavior, or the first diverging boundary event is reported as a violation.",
-      "rationale": "Planned (WG-4666). Not evaluated until recorded evidence of its test exists.",
+      "statement": "When a behaviour is declared as an abstraction of a set of member behaviours (of a composite or of any member set, at any level), the members run in its place with their internal events hidden give the same boundary trace as the abstraction, as a step correspondence; otherwise the first diverging boundary step is reported as a counterexample, with the strength of the result (exact, conservative or incomplete).",
+      "rationale": "Built by WG-5729 (refinement-checker, docs/composition.md); the self-specification's own abstractions are checked by persistence-abstraction-refined and write-endpoint-abstraction-refined.",
       "subjects": [
         "refinement-checker"
       ],
@@ -97,8 +97,8 @@
     {
       "id": "simulation-depth-follows-collapse",
       "kind": "temporal",
-      "statement": "Collapsing a subsystem in the view runs its abstract behavior and expanding it runs its children's, and the simulator panel says which level each component ran at.",
-      "rationale": "Planned (WG-4666). Not evaluated until recorded evidence of its test exists.",
+      "statement": "No collapse or view state changes a trace, a refinement verdict or a claim verdict: the level each region of a simulation runs at is the scenario's declared behavioural cut (or a level given on the command line), and a view may display that cut but never chooses it.",
+      "rationale": "WG-5697 criterion 5 and invariant I4; supersedes the plan of WG-4666 (a run choosing the level per region from the view's collapse state), which would have made presentation state part of the semantics. Built by WG-5729.",
       "subjects": [
         "refinement-checker",
         "session",
@@ -627,8 +627,8 @@
     {
       "id": "distribution-lowering-bit-exact",
       "kind": "invariant",
-      "statement": "simulationInput lowers distributions with integer arithmetic only: the exponential and normal quantile tables are produced by the integer algorithms of docs/simulation.md and equal the correctly rounded values at the 1,045 grid points, their canonical text hashing to SHA-256 a23cd2a9566c106701375d5cf75ef982b8db6f3e52c199c47e6239649c840950; exp_fp, ln_fp and the exponential, log-normal and empirical constructions reproduce every reference output bit for bit; and a lowered value of 2^53 base units or more, a sigma above 8 or a p99 above 10^6 times the median is refused.",
-      "rationale": "Built (WG-4715) in src/core/distributions.js. Negative twin: an implementation that evaluates the log-normal quantile with Math.exp or AS 241 in doubles, rounds sigma instead of flooring it, or computes the normal CDF at 2^-96 instead of 2^-192, must fail the table hash or a reference output; a log-normal of median 1 ms and sigma 9 must be refused. The correctly rounded values were checked once against an 80-digit computation when the algorithms were specified; the test pins them through the hash.",
+      "statement": "The lowering (formal/Exegra/Lower/Dist.lean) lowers distributions with integer arithmetic only: the exponential and normal quantile tables are produced by the integer algorithms of docs/simulation.md and equal the correctly rounded values at the 1,045 grid points, their canonical text hashing to SHA-256 a23cd2a9566c106701375d5cf75ef982b8db6f3e52c199c47e6239649c840950; exp_fp, ln_fp and the exponential, log-normal and empirical constructions reproduce every reference output bit for bit; and a lowered value of 2^53 base units or more, a sigma above 8 or a p99 above 10^6 times the median is refused.",
+      "rationale": "Built (WG-4715) in src/core/distributions.js and moved to Lean (formal/Exegra/Lower/Dist.lean, Families.lean, Pinned.lean, WG-5683); the reference values of exp_fp, ln_fp, the log-normal sigma, Qexp and Qnorm are also #guard checks there. Negative twin: an implementation that evaluates the log-normal quantile with Math.exp or AS 241 in doubles, rounds sigma instead of flooring it, or computes the normal CDF at 2^-96 instead of 2^-192, must fail the table hash or a reference output; a log-normal of median 1 ms and sigma 9 must be refused. The correctly rounded values were checked once against an 80-digit computation when the algorithms were specified; the test pins them through the hash.",
       "subjects": [
         "workload-model",
         "simulation-contract"
@@ -763,7 +763,7 @@
       "id": "implementation-properties-declarative",
       "kind": "invariant",
       "statement": "The implementation-level properties (level, instances.storedIn, delivery, elapsed, an emit effect's to, transaction, otherwise, ignores) never change simulation: the engine input derived by simulationInput does not contain them and a specification that uses them parses and validates like any other. The one exception is the declared types of an implementation-level behavior (variable repr, payload field types), which reach the engine input only as the behavior's lowered types, never as repr.",
-      "rationale": "docs/semantics.md states that these properties are declarative and names the Lean definition that stays normative for each machine construct; since WG-4902 the declared types make arithmetic checked (claim expression-semantics-shared). The derivation in src/core/sim-input.js builds behaviors and transitions field by field and strips storedIn and an emit's to. Supported by the core tests over the fixture machines.",
+      "rationale": "docs/semantics.md states that these properties are declarative and names the Lean definition that stays normative for each machine construct; since WG-4902 the declared types make arithmetic checked (claim expression-semantics-shared). The lowering (formal/Exegra/Lower/Input.lean, Exegra.Lower.engineInput) builds behaviors and transitions field by field and strips storedIn and an emit's to. Supported by the core tests over the fixture machines.",
       "subjects": [
         "simulation-contract",
         "validator"
@@ -806,6 +806,115 @@
       "assumptions": [
         "tests-exercise-shipped-modules",
         "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "lowering-in-lean-reproduces-recorded-inputs",
+      "kind": "invariant",
+      "statement": "The engine input of a scenario is derived in Lean (Exegra.Lower.engineInput, formal/Exegra/Lower/Input.lean) and called through src/core/engine.js; it equals the input the deleted JavaScript lowering (src/core/sim-input.js, pools.js, distributions.js) derived for every scenario variant recorded in tests/fixtures/lowering/inputs.json and for every golden input, the refusal message included when the scenario is refused, and the distribution tables Lean builds equal, byte for byte as JSON text, the tables recorded in tests/fixtures/lowering/tables.json for every distribution family of the queueing fixtures and the reference families.",
+      "rationale": "WG-5683 (P3) moves the lowering to Lean so that the engine runs on the lowering of a model and a scenario. The fixtures were recorded from the JavaScript lowering before its deletion; tests/fixtures/lowering/timed.jsonc exercises every branch of the timed lowering (resources, links, workloads, quota pools, resource and retry faults, distributions) and its refusals. Negative twin: a lowering that keeps an emit's to, rounds a rate instead of reducing it, or takes the first of two entities with one id instead of the last, fails an entry of the fixture.",
+      "subjects": [
+        "simulation-contract",
+        "workload-model"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "events-belong-to-interfaces",
+      "kind": "structural",
+      "statement": "Every event of the specification belongs to the interface of an element or a port, every cross-element state read goes through an observable that a declared interface exports, and every declared interface lists its members' boundary events.",
+      "rationale": "WG-5697 criterion 1. A read of state that a declared interface does not export is a validation error (behavior.reads-unexported).",
+      "subjects": [
+        "refinement-checker",
+        "transactions",
+        "session",
+        "simulation-engine",
+        "persistence"
+      ],
+      "evaluate": {
+        "method": "interfaces-closed"
+      }
+    },
+    {
+      "id": "scenario-environments-declared",
+      "kind": "temporal",
+      "statement": "In every scenario, each delivered event that an omitted element would receive is covered by an environment assumption of the scenario's behavioural cut: commit-reevaluates-claims states the simulation engine as its environment for claim-scenarios-run.",
+      "rationale": "WG-5697 criterion 5. Without the engine's environment assumption, commit-reevaluates-claims reports claim-scenarios-run (the negative).",
+      "subjects": [
+        "simulation-engine",
+        "claim-evaluator",
+        "commit-reevaluates-claims"
+      ],
+      "assumptions": [
+        "engine-answers-run-scenario"
+      ],
+      "evaluate": {
+        "method": "environment-assumed",
+        "scenarios": [
+          "visual-edit-flow",
+          "source-edit-flow",
+          "rejected-edit",
+          "edit-with-disk-conflict",
+          "write-with-stale-base-hash",
+          "app-start-and-open",
+          "production-read-only-edit",
+          "conflict-resolved-by-reload",
+          "conflict-resolved-by-overwrite",
+          "external-change-adopted",
+          "own-write-notice-ignored",
+          "undo-restores-and-saves",
+          "layout-move-saved",
+          "commit-reevaluates-claims",
+          "export-after-save",
+          "import-bundle",
+          "import-unparseable-bundle",
+          "generate-from-panel",
+          "real-write-recorded",
+          "simulation-panel-run",
+          "simulation-reload-cancels-run",
+          "preferences-remembered",
+          "camera-remembered",
+          "cli-apply",
+          "cli-apply-partial-write",
+          "cli-verify-with-open-session",
+          "cli-trace-written",
+          "cli-trace-refused",
+          "prove-accepted",
+          "prove-lean-rejects",
+          "markdown-import",
+          "markdown-import-coverage-fails",
+          "engine-conformance-agrees",
+          "engine-conformance-diverges",
+          "live-session",
+          "two-session-edit-race"
+        ],
+        "negatives": [
+          {
+            "scenario": "commit-reevaluates-claims",
+            "without": [
+              "simulation-engine"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "composition-order-independent",
+      "kind": "invariant",
+      "statement": "No verdict of a scenario depends on the order in which it lists its behaviours: every scenario, and every negative run of its claims, run with its behaviours reversed and in every rotation, gives each of its invariant and temporal claims the verdict of the scenario's own order.",
+      "rationale": "WG-5697 criterion 7, invariant I2. invariant_rename (behav-invariant-rename) proves it for every interleaving in the calculus; the evidence checks the scheduler's runs of every scenario in every rotation. That is several hundred engine runs, so it runs with the proof checks (tests/proofs) and backs this claim as evidence rather than being re-evaluated live in the application. It exposed the negative of commit-only-after-validation, whose verdict depended on whether transaction-flow was listed before validator-flow (fixed in WG-5729).",
+      "subjects": [
+        "refinement-checker",
+        "simulation-engine"
       ],
       "evaluate": {
         "method": "external-evidence"
@@ -1086,6 +1195,76 @@
       "kind": "test",
       "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a claim reading a variable a pool machine does not have is reported once as expr.reference at claims.0.evaluate.expr",
       "description": "Pooled quotas: a claim reading a variable a pool machine does not have is reported once as expr.reference at claims.0.evaluate.expr."
+    },
+    {
+      "id": "ev-lowering-tables-unchanged",
+      "claim": "lowering-in-lean-reproduces-recorded-inputs",
+      "kind": "test",
+      "ref": "tests/core/lower.test.js#tables unchanged",
+      "description": "The Lean lowering (lower.tables) gives the pinned tables' canonical text, the unitExponential table and every recorded family's table or refusal exactly as tests/fixtures/lowering/tables.json holds them, compared as JSON text."
+    },
+    {
+      "id": "ev-lowering-inputs-unchanged",
+      "claim": "lowering-in-lean-reproduces-recorded-inputs",
+      "kind": "test",
+      "ref": "tests/core/lower.test.js#engine inputs unchanged",
+      "description": "engineInput (the Lean lowering) derives the recorded engine input, or throws the recorded refusal message, for every entry of tests/fixtures/lowering/inputs.json."
+    },
+    {
+      "id": "ev-lowering-golden-inputs",
+      "claim": "lowering-in-lean-reproduces-recorded-inputs",
+      "kind": "test",
+      "ref": "tests/core/conformance.test.js#the Lean WebAssembly engine reproduces every golden trace when run from the model",
+      "description": "Every golden input is what engineInput derives from its source specification, and the engine reproduces its trace when run from the model."
+    },
+    {
+      "id": "ev-composition-certificate",
+      "claim": "refinement-agrees-at-boundary",
+      "kind": "test",
+      "ref": "tests/core/composition.test.js#a declared abstraction refined by its members gives a step correspondence with the hidden steps as stutters: conservative"
+    },
+    {
+      "id": "ev-composition-counterexample",
+      "claim": "refinement-agrees-at-boundary",
+      "kind": "test",
+      "ref": "tests/core/composition.test.js#an abstraction that disagrees with its members gives the first boundary counterexample and no strength"
+    },
+    {
+      "id": "ev-composition-levels",
+      "claim": "refinement-agrees-at-boundary",
+      "kind": "test",
+      "ref": "tests/core/composition.test.js#abstractions at several levels: checked level by level and against the finest members"
+    },
+    {
+      "id": "ev-composition-time-scale",
+      "claim": "refinement-agrees-at-boundary",
+      "kind": "test",
+      "ref": "tests/core/composition.test.js#a time scale relates the times of the members to those of the abstraction and a wrong one is a time counterexample"
+    },
+    {
+      "id": "ev-composition-opaque",
+      "claim": "refinement-agrees-at-boundary",
+      "kind": "test",
+      "ref": "tests/core/composition.test.js#an element of the composite of an abstraction that no running machine covers is opaque: incomplete"
+    },
+    {
+      "id": "ev-composition-presentation-independent",
+      "claim": "simulation-depth-follows-collapse",
+      "kind": "test",
+      "ref": "tests/core/composition.test.js#no presentation state changes a trace or a refinement verdict or a claim verdict"
+    },
+    {
+      "id": "ev-composition-level-from-cli",
+      "claim": "simulation-depth-follows-collapse",
+      "kind": "test",
+      "ref": "tests/core/composition.test.js#simulate runs a region at another level from the command line and refuses an unknown abstraction"
+    },
+    {
+      "id": "ev-composition-order-independent-self-spec",
+      "claim": "composition-order-independent",
+      "kind": "test",
+      "ref": "tests/proofs/composition-order.test.js#reordering the behaviours of any self-specification scenario changes no claim verdict",
+      "description": "exegra order-check runs every self-specification scenario and the negative runs of its claims with the behaviours reversed and in every rotation, and no invariant or temporal verdict differs from the scenario's own order."
     }
   ]
 }
