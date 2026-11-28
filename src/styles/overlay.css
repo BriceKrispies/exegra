@@ -164,4 +164,10 @@
   @media (min-width: 768px) {
     .app.app--transport:not([data-sim-open="true"]) :is(.overlay__corner--bl, .overlay__corner--br) { bottom: calc(var(--s-4) + 56px); }
   }
+
+  /* Claims stated at a cut, with their result at the cut a structural view shows (WG-5695). */
+  .overlay__level { display: flex; flex-direction: column; gap: var(--s-1); pointer-events: auto; max-width: 100%; }
+  .overlay__level[hidden] { display: none; }
+  .overlay__level-claims { display: flex; flex-direction: column; gap: var(--s-1); }
+  .overlay__level-claim .chip { white-space: normal; }
 }

@@ -1,6 +1,12 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "pinger-machine": 0
+  },
+  "links": {},
   "machines": {
    "pinger-machine": {
     "state": "pg-ready",
@@ -9,10 +15,17 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "pong",
+    "from": {
+     "behavior": "pinger-machine",
+     "incarnation": 0,
+     "instance": 0
+    },
     "payload": {},
+    "scheduledAt": 5,
     "seq": 5,
     "source": {
      "behavior": "pinger-machine",
@@ -22,9 +35,20 @@
     "time": 5
    }
   ],
-  "time": 4
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 4,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "pinger-machine": 0
+  },
+  "links": {},
   "machines": {
    "pinger-machine": {
     "state": "pg-ready",
@@ -33,10 +57,12 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "ping",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -45,13 +71,26 @@
     "time": 0
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "step-limit",
  "scenarioId": "step-limit-reached",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "pinger-machine": 0
+    },
+    "links": {},
     "machines": {
      "pinger-machine": {
       "state": "pg-ready",
@@ -60,10 +99,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "pong",
+      "from": {
+       "behavior": "pinger-machine",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 1,
       "seq": 1,
       "source": {
        "behavior": "pinger-machine",
@@ -73,11 +119,18 @@
       "time": 1
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "ping",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -98,6 +151,7 @@
      ],
      "from": "pg-ready",
      "guard": "rounds < 3",
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -112,6 +166,8 @@
    "ignored": [],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ping",
     "pg-ping",
@@ -122,6 +178,12 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "pinger-machine": 0
+    },
+    "links": {},
     "machines": {
      "pinger-machine": {
       "state": "pg-ready",
@@ -130,10 +192,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ping",
+      "from": {
+       "behavior": "pinger-machine",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 2,
       "seq": 2,
       "source": {
        "behavior": "pinger-machine",
@@ -143,11 +212,23 @@
       "time": 2
      }
     ],
-    "time": 1
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 1,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "pinger-machine",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "pong",
     "payload": {},
+    "scheduledAt": 1,
     "seq": 1,
     "source": {
      "behavior": "pinger-machine",
@@ -169,6 +250,7 @@
      ],
      "from": "pg-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "pg-ready",
      "transition": "pg-pong"
@@ -177,6 +259,8 @@
    "ignored": [],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "pong",
     "pg-pong",
@@ -187,6 +271,12 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "pinger-machine": 0
+    },
+    "links": {},
     "machines": {
      "pinger-machine": {
       "state": "pg-ready",
@@ -195,10 +285,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "pong",
+      "from": {
+       "behavior": "pinger-machine",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 3,
       "seq": 3,
       "source": {
        "behavior": "pinger-machine",
@@ -208,11 +305,23 @@
       "time": 3
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "pinger-machine",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ping",
     "payload": {},
+    "scheduledAt": 2,
     "seq": 2,
     "source": {
      "behavior": "pinger-machine",
@@ -234,6 +343,7 @@
      ],
      "from": "pg-ready",
      "guard": "rounds < 3",
+     "instance": 0,
      "sets": [
       {
        "after": 2,
@@ -248,6 +358,8 @@
    "ignored": [],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ping",
     "pg-ping",
@@ -258,6 +370,12 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "pinger-machine": 0
+    },
+    "links": {},
     "machines": {
      "pinger-machine": {
       "state": "pg-ready",
@@ -266,10 +384,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ping",
+      "from": {
+       "behavior": "pinger-machine",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 4,
       "seq": 4,
       "source": {
        "behavior": "pinger-machine",
@@ -279,11 +404,23 @@
       "time": 4
      }
     ],
-    "time": 3
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 3,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "pinger-machine",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "pong",
     "payload": {},
+    "scheduledAt": 3,
     "seq": 3,
     "source": {
      "behavior": "pinger-machine",
@@ -305,6 +442,7 @@
      ],
      "from": "pg-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "pg-ready",
      "transition": "pg-pong"
@@ -313,6 +451,8 @@
    "ignored": [],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "pong",
     "pg-pong",
@@ -323,6 +463,12 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "pinger-machine": 0
+    },
+    "links": {},
     "machines": {
      "pinger-machine": {
       "state": "pg-ready",
@@ -331,10 +477,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "pong",
+      "from": {
+       "behavior": "pinger-machine",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 5,
       "seq": 5,
       "source": {
        "behavior": "pinger-machine",
@@ -344,11 +497,23 @@
       "time": 5
      }
     ],
-    "time": 4
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 4,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "pinger-machine",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ping",
     "payload": {},
+    "scheduledAt": 4,
     "seq": 4,
     "source": {
      "behavior": "pinger-machine",
@@ -370,6 +535,7 @@
      ],
      "from": "pg-ready",
      "guard": "rounds < 3",
+     "instance": 0,
      "sets": [
       {
        "after": 3,
@@ -384,6 +550,8 @@
    "ignored": [],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ping",
     "pg-ping",
@@ -392,5 +560,9 @@
    ],
    "time": 4
   }
- ]
+ ],
+ "stepsTaken": 5,
+ "timeUnit": "tick",
+ "truncated": true,
+ "version": 2
 }

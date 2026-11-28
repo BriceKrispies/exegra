@@ -1,14 +1,38 @@
-# Detect golden traces whose behaviour changes under snapshot reads of OTHER machines in phase 2.
-# A phase-2 expression (set `to` string, emit payload string entries) of fired behaviour B reading
-# A.x / A.state (A != B) reads a different value iff an earlier fired entry of the same step, of
-# behaviour A, changed x (a `sets` record with before != after) or changed state (from != to).
+# Detect golden traces whose behaviour changes under snapshot reads of OTHER machines in phase 2
+# (docs/assessment/2026-11-26/plan-M2.md, section 3; WG-5681 criterion 23).
+#
+# A phase-2 expression (a `set` whose `to` is a string, a string entry of an emit payload) of a fired
+# instance reads another machine through `A.x` or `A.state` (A a behaviour other than its own), or reads
+# every instance of a behaviour through an aggregate (`A.count.s`, `A.sum.x`, `A.min.x`, `A.max.x`,
+# `A.instances.count`). Under snapshot reads it reads the start of the step; under today's rule it reads
+# the configuration being written. The two can differ only in a step in which the reader and a machine
+# it reads both fire. This script counts those steps (in either order of firing; a machine is a
+# behaviour and an instance, `fired[].instance`), and among them the steps where the read machine
+# fired earlier and changed what is read (a `sets` record with before != after, or from != to).
+#
+#   python snapshot_diff.py <goldens dir> [--check]
+#
+# With --check the exit status is 1 when any step has a reader and a machine it reads firing together.
 import json, re, sys, glob, os
-root = sys.argv[1]
-REF = re.compile(r"(?<![\w'\"-])([A-Za-z_][\w]*(?:-[\w]+)*)\.([A-Za-z_][\w]*(?:-[\w]+)*)")
+
+args = [a for a in sys.argv[1:] if not a.startswith('--')]
+check = '--check' in sys.argv[1:]
+root = args[0] if args else 'tests/conformance/goldens'
+SEG = r"[A-Za-z_][\w]*(?:-[\w]+)*"
+REF = re.compile(r"(?<![\w'\"-])(" + SEG + r")\.(" + SEG + r")(?:\.(" + SEG + r"))?")
+AGG = {'count', 'sum', 'min', 'max', 'instances'}
+
 def strip_strings(s):
     return re.sub(r"'[^']*'|\"[^\"]*\"", "''", s)
+
 def refs(src):
-    return REF.findall(strip_strings(src))
+    """(behaviour, what, aggregate) for every reference with a behaviour prefix."""
+    out = []
+    for a, x, y in REF.findall(strip_strings(src)):
+        if y and x in AGG: out.append((a, y if x != 'instances' else 'count', True))
+        else: out.append((a, x, False))
+    return out
+
 def exprs_of_transition(t):
     out = []
     for e in t.get('effects', []):
@@ -17,47 +41,44 @@ def exprs_of_transition(t):
             for k, v in (e.get('payload') or {}).items():
                 if isinstance(v, str): out.append(('emit', e['emit'] + '.' + k, v))
     return out
-stats = dict(inputs=0, steps=0, cross_static=set(), changed=[], nonint=set(), typed=set(), divmod=set(), strings=set())
+
+def changes(g, x):
+    if x == 'state': return g.get('from') != g.get('to')
+    return any(s_['variable'] == x and s_['before'] != s_['after'] for s_ in g.get('sets', []))
+
+stats = dict(inputs=0, steps=0, cross_static=set(), together=[], changed=[])
 for inp in sorted(glob.glob(os.path.join(root, '**', '*.input.json'), recursive=True)):
-    name = os.path.relpath(inp, root).replace('.input.json', '')
-    d = json.load(open(inp)); stats['inputs'] += 1
-    tr = json.load(open(inp.replace('.input.json', '.trace.json')))
+    name = os.path.relpath(inp, root).replace('.input.json', '').replace('\\', '/')
+    tp = inp.replace('.input.json', '.trace.json')
+    if not os.path.exists(tp): continue  # a golden the engine refuses has no trace
+    d = json.load(open(inp, encoding='utf-8')); stats['inputs'] += 1
+    tr = json.load(open(tp, encoding='utf-8'))
     beh = {b['id']: b for b in d.get('behaviors', [])}
     trans = {(b['id'], t['id']): t for b in d.get('behaviors', []) for t in b.get('transitions', [])}
-    if any(b.get('types') for b in d.get('behaviors', [])): stats['typed'].add(name)
-    txt = json.dumps(d)
-    def walk(x):
-        if isinstance(x, float) and x != int(x): stats['nonint'].add(name)
-        if isinstance(x, dict): [walk(v) for v in x.values()]
-        if isinstance(x, list): [walk(v) for v in x]
-    walk(d)
     for (bid, tid), t in trans.items():
-        for kind, tgt, src in exprs_of_transition(t) + ([('guard', '', t['guard'])] if t.get('guard') else []):
-            s = strip_strings(src)
-            if re.search(r"[^/]/[^/]|%", s): stats['divmod'].add(name)
-            if "'" in src: stats['strings'].add(name)
-            if kind == 'guard': continue
-            for a, x in refs(src):
-                if a in beh and a != bid: stats['cross_static'].add((name, bid, tid, kind, tgt, f"{a}.{x}"))
+        for kind, tgt, src in exprs_of_transition(t):
+            for a, x, agg in refs(src):
+                if a in beh and (a != bid or agg): stats['cross_static'].add((name, bid, tid, kind, tgt, f"{a}.{x}", 'aggregate' if agg else 'machine'))
     for st in tr.get('steps', []):
         stats['steps'] += 1
         fired = st.get('fired', [])
         for j, f in enumerate(fired):
             t = trans.get((f['behavior'], f['transition']))
             if not t: continue
+            me = (f['behavior'], f.get('instance'))
             for kind, tgt, src in exprs_of_transition(t):
-                for a, x in refs(src):
-                    if a not in beh or a == f['behavior']: continue
-                    for g in fired[:j]:
-                        if g['behavior'] != a: continue
-                        if x == 'state' and g['from'] != g['to'] or any(s_['variable'] == x and s_['before'] != s_['after'] for s_ in g.get('sets', [])):
+                for a, x, agg in refs(src):
+                    if a not in beh or (a == f['behavior'] and not agg): continue
+                    for k, g in enumerate(fired):
+                        if g['behavior'] != a or (g['behavior'], g.get('instance')) == me: continue
+                        stats['together'].append((name, st['index'], f['behavior'], f.get('instance'), f['transition'], f"{a}.{x}", g.get('instance')))
+                        if k < j and changes(g, x):
                             stats['changed'].append((name, st['index'], f['behavior'], f['transition'], f"{a}.{x}"))
 print('inputs', stats['inputs'], 'steps', stats['steps'])
-print('phase-2 cross reads (static):', len(stats['cross_static']))
+print('phase-2 reads of other machines and aggregates (static):', len(stats['cross_static']))
 for c in sorted(stats['cross_static']): print('  ', c)
-print('steps whose phase-2 read changes under snapshot:', len(stats['changed']))
+print('steps in which a reader and a machine it reads fire together:', len(stats['together']))
+for c in stats['together']: print('  ', c)
+print('steps whose phase-2 read changes under snapshot reads:', len(stats['changed']))
 for c in stats['changed']: print('  ', c)
-print('inputs with non-integer numbers:', sorted(stats['nonint']))
-print('inputs with declared types:', len(stats['typed']), sorted(stats['typed'])[:10])
-print('inputs with / or %:', sorted(stats['divmod']))
-print('inputs with string literals in expressions:', len(stats['strings']))
+sys.exit(1 if check and stats['together'] else 0)

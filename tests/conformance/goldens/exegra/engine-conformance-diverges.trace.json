@@ -1,6 +1,14 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "conformance-flow": 0,
+   "differential-flow": 0,
+   "engine-under-test-flow": 0
+  },
+  "links": {},
   "machines": {
    "conformance-flow": {
     "state": "conformance-done",
@@ -22,10 +30,24 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "conformance-flow": 0,
+   "differential-flow": 0,
+   "engine-under-test-flow": 0
+  },
+  "links": {},
   "machines": {
    "conformance-flow": {
     "state": "conformance-idle",
@@ -47,10 +69,12 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "engine-diverges",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -61,6 +85,7 @@
    {
     "event": "conformance-run",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -71,6 +96,7 @@
    {
     "event": "differential-run",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 2,
     "source": {
      "kind": "scenario",
@@ -79,13 +105,28 @@
     "time": 0
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "engine-conformance-diverges",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "conformance-flow": 0,
+     "differential-flow": 0,
+     "engine-under-test-flow": 0
+    },
+    "links": {},
     "machines": {
      "conformance-flow": {
       "state": "conformance-idle",
@@ -107,10 +148,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "conformance-run",
       "payload": {},
+      "scheduledAt": 0,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -121,6 +164,7 @@
      {
       "event": "differential-run",
       "payload": {},
+      "scheduledAt": 0,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -129,11 +173,18 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "engine-diverges",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -147,6 +198,7 @@
      "emitted": [],
      "from": "eut-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": false,
@@ -162,16 +214,20 @@
     {
      "behavior": "conformance-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "differential-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "engine-diverges",
     "eut-diverge",
@@ -182,6 +238,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "conformance-flow": 0,
+     "differential-flow": 0,
+     "engine-under-test-flow": 0
+    },
+    "links": {},
     "machines": {
      "conformance-flow": {
       "state": "conformance-idle",
@@ -203,10 +267,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "differential-run",
       "payload": {},
+      "scheduledAt": 0,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -216,7 +282,13 @@
      },
      {
       "event": "golden-replayed",
+      "from": {
+       "behavior": "conformance-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 3,
       "source": {
        "behavior": "conformance-flow",
@@ -226,11 +298,18 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "conformance-run",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -251,6 +330,7 @@
      ],
      "from": "conformance-idle",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "conformance-idle",
      "transition": "conformance-start"
@@ -260,16 +340,20 @@
     {
      "behavior": "engine-under-test-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "differential-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "conformance-run",
     "conformance-start",
@@ -280,6 +364,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "conformance-flow": 0,
+     "differential-flow": 0,
+     "engine-under-test-flow": 0
+    },
+    "links": {},
     "machines": {
      "conformance-flow": {
       "state": "conformance-idle",
@@ -301,10 +393,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "golden-replayed",
+      "from": {
+       "behavior": "conformance-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 3,
       "source": {
        "behavior": "conformance-flow",
@@ -315,7 +414,13 @@
      },
      {
       "event": "differential-mismatch-saved",
+      "from": {
+       "behavior": "differential-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 4,
       "source": {
        "behavior": "differential-flow",
@@ -325,11 +430,18 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "differential-run",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 2,
     "source": {
      "kind": "scenario",
@@ -350,6 +462,7 @@
      ],
      "from": "diff-idle",
      "guard": "!engine-under-test-flow.agrees",
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -365,16 +478,20 @@
     {
      "behavior": "conformance-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-under-test-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "differential-run",
     "diff-run-mismatch",
@@ -385,6 +502,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "conformance-flow": 0,
+     "differential-flow": 0,
+     "engine-under-test-flow": 0
+    },
+    "links": {},
     "machines": {
      "conformance-flow": {
       "state": "conformance-idle",
@@ -406,10 +531,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "differential-mismatch-saved",
+      "from": {
+       "behavior": "differential-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 4,
       "source": {
        "behavior": "differential-flow",
@@ -420,9 +552,15 @@
      },
      {
       "event": "golden-compared",
+      "from": {
+       "behavior": "engine-under-test-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "matches": false
       },
+      "scheduledAt": 0,
       "seq": 5,
       "source": {
        "behavior": "engine-under-test-flow",
@@ -432,11 +570,23 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "conformance-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "golden-replayed",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 3,
     "source": {
      "behavior": "conformance-flow",
@@ -460,6 +610,7 @@
      ],
      "from": "eut-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "eut-ready",
      "transition": "eut-replay"
@@ -469,16 +620,20 @@
     {
      "behavior": "conformance-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "differential-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "golden-replayed",
     "eut-replay",
@@ -489,6 +644,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "conformance-flow": 0,
+     "differential-flow": 0,
+     "engine-under-test-flow": 0
+    },
+    "links": {},
     "machines": {
      "conformance-flow": {
       "state": "conformance-idle",
@@ -510,12 +673,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "golden-compared",
+      "from": {
+       "behavior": "engine-under-test-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "matches": false
       },
+      "scheduledAt": 0,
       "seq": 5,
       "source": {
        "behavior": "engine-under-test-flow",
@@ -525,11 +695,23 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "differential-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "differential-mismatch-saved",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 4,
     "source": {
      "behavior": "differential-flow",
@@ -543,21 +725,26 @@
     {
      "behavior": "conformance-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-under-test-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "differential-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "differential-mismatch-saved"
    ],
@@ -565,6 +752,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "conformance-flow": 0,
+     "differential-flow": 0,
+     "engine-under-test-flow": 0
+    },
+    "links": {},
     "machines": {
      "conformance-flow": {
       "state": "conformance-done",
@@ -586,12 +781,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "conformance-reported",
+      "from": {
+       "behavior": "conformance-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "ok": false
       },
+      "scheduledAt": 0,
       "seq": 6,
       "source": {
        "behavior": "conformance-flow",
@@ -601,13 +803,25 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "engine-under-test-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "golden-compared",
     "payload": {
      "matches": false
     },
+    "scheduledAt": 0,
     "seq": 5,
     "source": {
      "behavior": "engine-under-test-flow",
@@ -631,6 +845,7 @@
      ],
      "from": "conformance-idle",
      "guard": "!event.matches",
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -646,16 +861,20 @@
     {
      "behavior": "engine-under-test-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "differential-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 5,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "golden-compared",
     "conformance-mismatch",
@@ -666,6 +885,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "conformance-flow": 0,
+     "differential-flow": 0,
+     "engine-under-test-flow": 0
+    },
+    "links": {},
     "machines": {
      "conformance-flow": {
       "state": "conformance-done",
@@ -687,14 +914,27 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "conformance-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "conformance-reported",
     "payload": {
      "ok": false
     },
+    "scheduledAt": 0,
     "seq": 6,
     "source": {
      "behavior": "conformance-flow",
@@ -708,25 +948,34 @@
     {
      "behavior": "conformance-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-under-test-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "differential-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 6,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "conformance-reported"
    ],
    "time": 0
   }
- ]
+ ],
+ "stepsTaken": 7,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

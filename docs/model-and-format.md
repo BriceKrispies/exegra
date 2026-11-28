@@ -6,7 +6,7 @@ A project is the directory `specs/<name>/` (name matches `^[a-z0-9][a-z0-9_-]{0,
 
 | File | Role |
 |---|---|
-| `spec.jsonc` | The specification. The serialized authority. |
+| `spec.jsonc` | The specification. The serialized authority. It may be a manifest of part files ([below](#a-specification-kept-as-a-manifest-of-part-files)); Exegra's own is. |
 | `layout.jsonc` | Presentation only: pinned node positions per view. Optional; created on the first move. |
 | `evidence/results.json` | Recorded results of executing test evidence, written by `exegra verify`. |
 | `project.jsonc` | Optional, written only by `exegra project add` and removed by `project remove` ([agent-interface.md](agent-interface.md#project)): `spec` names a specification kept in another repository, `products` lists product files layered on it ([Product files](#product-files)), and `roots` declares the repositories the project is realised in, which modules and test evidence address as `<alias>:<path>` ([verification.md](verification.md#realisation-roots-code-and-tests-in-other-repositories)). |
@@ -15,6 +15,26 @@ A project is the directory `specs/<name>/` (name matches `^[a-z0-9][a-z0-9_-]{0,
 | `<spec>.sqlite` | Optional: the SQLite store of the specification, beside it (`exegra store import`). Rebuilt from the JSONC, never committed ([store.md](store.md)). |
 
 A linked project (a specification kept in another repository) has a `project.jsonc` in its directory: `{"spec": "<path relative to project.jsonc>"}` names the specification, and `{"concordanceResults": "<path relative to project.jsonc>"}` names a per-claim results file written by Concordance. Each `claims` entry of that file with outcome `pass` or `fail` becomes a derived `test` evidence item of its claim (id `concordance-<claim id>`), in the evaluation only; it is not a spec entity, is never written back and does not change the semantic hash. The file's `source` must name the project's specification (matched on trailing path segments), and its `tool` must be `concordance`; otherwise, a missing or invalid file, or an entry for an unknown claim, is a warning and only the affected statuses stay as they are ([claims-and-evidence.md](claims-and-evidence.md#concordance-results)).
+
+### A specification kept as a manifest of part files
+
+`spec.jsonc` may be a manifest instead of the specification itself: an object whose only members are `specParts`, a list of part files (paths relative to the manifest), and an optional `specSections` placement table (`tools/spec-manifest.js`, WG-5386). Each part is a JSONC object holding some of the top-level sections. Exegra resolves the manifest to the one text a single file holding every section would have, and every consumer reads that text: validation, the semantic hash, claims, the generators, `store import` and the Vite dev server. Array sections are concatenated in manifest order, so a section may be in several parts and an entity belongs to the part that holds it; a section that is not an array (`system`, `vocabulary`, `exegra`) is in one part only. A missing part, a part that is itself a manifest, a manifest with sections of its own and an id that two parts give one section are refused, naming the files. The semantic hash does not depend on the order of the entities of a section, so splitting a specification, or moving an entity to another part, leaves it unchanged.
+
+Exegra's own specification is a manifest (WG-5704): `specs/exegra/spec.jsonc` lists the 27 files of `specs/exegra/parts/`, none over 120 KB:
+
+| Area | Parts |
+|---|---|
+| System and vocabulary | `system` (`exegra`, `system`, `vocabulary`) |
+| Components and relationships, one part per top-level subsystem | `structure-application`, `-visualization`, `-persistence`, `-agent-interface`, `-tooling`, `-core-model` and `-core-engines` (the semantic core in two), `-top` (the subsystems' own top-level components, the composition root, the external systems and the actors) |
+| Contracts | `contracts` |
+| Events and behaviours | `events-faults`, `behaviors-app`, `behaviors-persistence`, `behaviors-core-tools` |
+| Scenarios and assumptions | `scenarios`, `assumptions` |
+| Claims and evidence, one part per area | `claims-core-validation`, `-derivation`, `-verdicts`, `-simulation`, `-formal`, `-generation` (its evidence in `evidence-core-generation`), `claims-app-ui`, `claims-persistence-agent-tooling` |
+| Views and the rest | `records-and-decisions`, `views-and-rest` (views, environments, failure modes, fault models, integrity rules, hierarchies, facets, cuts) |
+
+**Where `apply` writes.** An entity stays in the part that holds it; an edit changes only that part. A new entity goes where `specSections` puts its section: a part name, or a rule `{"by": "<field>", "values": {<value>: <part>}, "default": <part>, "via": [...]}`. The field of the entity (a list is tried in order) is looked up in `values`. With `via`, a value that `values` does not name is followed to the entity it identifies, so the rule is computed from the model: each hop `{"section": "components", "field": "parent", "repeat": true}` is the entity with that id in that section, whose `field` gives the next values (`repeat` goes up the chain again). Exegra's table places a component by its own id or the nearest ancestor `values` names (`by: "id"`, so a child of a component created in the same transaction follows it), a relationship by its `from`, a behaviour by its `subject`, a claim by its first `subjects` entry that resolves, and evidence by the `subjects` of its `claim`; the values name the subsystems of the semantic core and the other top-level subsystems. A component with no parent that the table does not name goes to the `default` part, `structure-top`. Without a rule the entity goes beside the entities of its section that already exist, else to the first part. A comment between two entities stays with the entity it precedes when the list is written again; a comment inside an entity is part of it.
+
+**Adding a part.** Create `specs/<project>/parts/<name>.jsonc` holding the sections it takes (`{ "claims": [ ... ] }`), list it in `specParts`, and name it in `specSections` where a section's new entities should land there; `readManifest` refuses a table entry naming a part the manifest does not list. To split a specification that is one file, run `node tools/split-spec.js <spec.jsonc> --dry-run` (the table in that script is Exegra's own; another project writes its own) and check the result with `node tools/compare-spec.js <before.jsonc> <manifest>` and the semantic hash from `validate`. Source locations (`get`, `find`, `refs`, `validate`) name the part file and the line in it; the assembled text has no file. Read and edit parts only through the commands (`get`, `find`, `refs`, `apply`): `tools/spec-guard.js` refuses a direct `Read`, `Edit`, `Write`, `Grep` or `cat` of a part or of the directory that holds the parts.
 
 ### Product files
 
@@ -39,7 +59,7 @@ Exegra splices the product entities into the platform text at the end of their s
 `spec.jsonc` is JSON with comments and trailing commas allowed (`jsonc-parser`). Comments and formatting are preserved by every operation. The top level is an object whose keys are the sections declared in `src/core/metamodel.json`:
 
 ```
-exegra  system  vocabulary  components  relationships  contracts  events
+exegra  system  vocabulary  components  elementKinds  hierarchies  facets  cuts  relationships  contracts  events
 behaviors  faults  environments  failureModes  faultModels  types  functions  exampleFixtures  records  copies  policies  validations  retentions
 quotas  retries  audits  scenarios  assumptions  claims  integrityRules  integrityRelations  evidence  views
 ```
@@ -70,6 +90,51 @@ Every entity has an `id` matching `^[a-z][a-z0-9_]*(-[a-z0-9_]+)*$` (lower-case 
 
 (The snippet is abridged from the illustrative example in `tests/fixtures/multiplayer/spec.jsonc`, a test fixture, not a shipped project.) A relationship endpoint may be a component or a port; queries resolve ports to their component.
 
+### Interaction kinds
+
+A relationship's `kind` says what the interaction means, and the kind alone decides how every analysis reads it. Each kind, built in (`metamodel.json`) or declared in `vocabulary.relationshipKinds`, states:
+
+- a **class**, its dependency class: `static` (the source names the target in its own code), `runtime` (the source uses the target while it runs) or `none` (not a dependency). The legacy `dependency` flag is derived from it: true unless the class is `none`.
+- a **direction**, `{"control": ..., "data": ...}`, each of `with` (the edge), `against`, `both` or `none`: which way control and data flow.
+- a **parent**, the kind it coarsens to. The parents form a tree rooted at `interacts-with`; every other kind has exactly one parent, and the tree has no cycle. Coarsening relabels a kind for a coarser view; the class and direction that analyses read stay those of the original kind, and the endpoints, contract, carried data and provenance never change.
+
+| Kind | Class | Control / data | Parent | Meaning |
+|---|---|---|---|---|
+| `interacts-with` | none | none / none | (root) | Any interaction. |
+| `depends-on` | static | none / none | `interacts-with` | The source requires the target. |
+| `imports` | static | none / none | `depends-on` | The source names the target in its own code. |
+| `invokes` | runtime | with / both | `depends-on` | A synchronous operation call. |
+| `calls` | runtime | with / both | `invokes` | **Legacy**, see below. |
+| `reads`, `writes` | runtime | with / against, with / with | `depends-on` | State held by the target is read or changed. |
+| `subscribes` | runtime | against / against | `depends-on` | The source consumes from a channel or connector. |
+| `notifies` | none | with / with | `interacts-with` | The source delivers a callback, subscription message or event to the target, which registered for it. The receiver depends on the notifier through its registration, not the reverse. |
+| `publishes` | none | with / with | `notifies` | The source emits to a channel or connector. |
+| `composes` | none | with / none | `interacts-with` | Lifecycle: the source mounts, constructs or wires the target. |
+| `data-flow` | none | none / with | `interacts-with` | Data moves; says nothing about who initiates. |
+| `observes` | none | none / against | `interacts-with` | The source collects telemetry about the target. |
+| `exercises` | none | with / against | `observes` | The source drives the target to check it (a test, a probe). |
+| `network-link` | none | none / both | `interacts-with` | Deployment: a link between nodes. |
+
+A vocabulary kind declares the three fields beside its label, line and colour; `dependency` may then be left out (a `dependency` that contradicts the class is an error). `vocabulary.kind-taxonomy` is the error for a missing or invalid field or an unknown parent, `vocabulary.kind-cycle` for a cycle in the kind tree. A vocabulary kind that states none of the three still loads, with the warning `vocabulary.kind-unclassified`: its class follows its `dependency` flag, its direction is none and its parent is the root.
+
+```jsonc
+"relationshipKinds": {
+  "submits-edits": { "label": "Submits edits to", "line": "solid", "color": "blue",
+                     "class": "runtime", "direction": { "control": "with", "data": "with" }, "parent": "invokes",
+                     "description": "The source sends typed operations to the target, which validates and commits them." }
+}
+```
+
+**`calls` is a legacy kind.** It says only that the source invokes the target, so a specification that uses it keeps exactly that meaning: every analysis treats `calls` as `invokes` (same class, direction and coarsening), and validation reports one warning, `relationship.legacy-kind`, that names the kind and the relationships using it. State what each one is instead: `imports` for a static use, `invokes` for an operation call, `notifies` for a callback or subscription delivery, `composes` for mounting, constructing or wiring.
+
+**Provenance.** A relationship may state `provenance`: `declared` (written by hand, the default when absent), `extracted` (read from code or configuration), `observed` (seen at run time), `derived` (computed from other facts) or `assumed` (stated without evidence). Queries expose it: each edge of `componentGraph` has `provenance`.
+
+**Carried data.** `carries` on a relationship lists what passes along it: records (the residency rules follow them), types (a payload shape) and events (what a notification delivers). A component or an unknown id is `ref.kind` or `ref.unresolved`.
+
+**Connectors.** A component whose `kind` is `connector` mediates `publishes` and `subscribes`. `mediatedInteractions(model)` (`src/core/interactions.js`) contracts each `publishes` from P to a connector C and each `subscribes` from S to C into one `notifies` from P to S that names C, the two relationships it stands for and the union of what they carry, with provenance `derived`. A pair is contracted only through a declared connector element; a direct edge is never invented. `componentGraph(model, {contractConnectors: true})` drops the relationships that touch connectors and adds these `notifies` edges.
+
+**Layout.** The layout orders components only by relationship edges whose kind has the class `static` or `runtime`: the projections mark each relationship edge with `dependencyClass`, and `data-flow`, `notifies`, `composes`, claim and evidence edges do not give the flow direction.
+
 ## Entity kinds
 
 Defined in `metamodel.json`; the parser and the inspector both read it.
@@ -77,11 +142,15 @@ Defined in `metamodel.json`; the parser and the inspector both read it.
 | Kind | Declared in | Purpose |
 |---|---|---|
 | `system` | `system` | Name, description, version, `illustrative`, `notes`, `generation`. |
-| `component` | `components` | `category`, `kind` (`component` or `subsystem`), `parent` (must be a subsystem; cycles are errors), `purpose`, `responsibilities`, `owner`, `trustZone`, `ports`, `unknowns`, `tags`, `implementation` (`status`, `modules`, `notes`). |
+| `component` | `components` | An element ([Elements, hierarchies, facets and cuts](#elements-hierarchies-facets-and-cuts)): `category`, `kind` (`system`, `subsystem`, `component`, `module`, `actor`, `store`, `connector`, `external`, or an `elementKind`; default `component`), `parent` (any element or the system; cycles are errors), `knowledge` (`opaque`, `unknown`), `purpose`, `responsibilities`, `owner`, `trustZone`, `ports`, `unknowns`, `tags`, `implementation` (`status`, `modules`, `notes`). |
+| `elementKind` | `elementKinds` | An element kind beyond the built-in ones: `name`, `description`. |
+| `hierarchy` | `hierarchies` | A named laminar hierarchy over the elements other than the logical one: `groups` (`{parent, members}`), `groupBy` (`{property, parents: {value: element}}`). |
+| `facet` | `facets` | A named, possibly overlapping grouping: `members`, `tag`. Selected and claimed over, never contracted. |
+| `cut` | `cuts` | A level of a hierarchy: `hierarchy` (default `logical`), and either `expand`, `depth`, `finest`, or `blocks`. |
 | `port` | owned by a component | `direction` (`provides`/`requires`), `contract`, `protocol`. |
 | `relationship` | `relationships` | Typed, directed `from`/`to` between components or ports. |
 | `contract` | `contracts` | Inputs, outputs, preconditions, postconditions, errors, obligations; optional `binding` (`protocol`, `method`, `path`, `operation`, display only; `case`, the wire case, see [Wire naming and json](#wire-naming-and-json); and `suppliedBy`, see [Supplied inputs](#supplied-inputs)). An input or output may be marked `optional: true`. |
-| `event` | `events` | Name and payload fields; optional `contract`, `role` and `correlation` make it a request, response or error of a contract (see [Contract events](#contract-events)). |
+| `event` | `events` | Name and payload fields; optional `contract`, `role` and `correlation` make it a request, response or error of a contract (see [Contract events](#contract-events)); optional `producedBy`, the element that produces it when no behavior emits it (a person or an external actor). |
 | `behavior` | `behaviors` | State machine of one `subject` component: `variables`, `states`, `transitions`, `initial`. |
 | `state`, `transition` | owned by a behavior | Transition: `from`, `to`, `on` (event), `guard`, `effects`, `faultOnly`. |
 | `fault` | `faults` | `drop-event`, `delay-event`, `enable-transition`, `disable-transition`, `inject-event`, `duplicate-event`, `lose-event`, `retry-event` (with `attempts`; [semantics.md](semantics.md#faults-the-runtime-can-produce)); optional `realises` (the failure mode the injection is an instance of; never read by the engine). |
@@ -113,6 +182,44 @@ Defined in `metamodel.json`; the parser and the inspector both read it.
 A specification can declare further kinds in its `vocabulary` (below); they are entities like these, in sections of their own.
 
 `implementation.status` is one of `manual`, `model-configured`, `partially-generated`, `generated`, `not-implemented`. `illustrative: true` on a system, component, relationship or assumption marks content as an example, not a description of real software.
+
+## Elements, hierarchies, facets and cuts
+
+The things a specification describes, at every grain, are **elements** of one kind: the system (the `system` section is the root element), every component, and the **module elements** derived from the components' `implementation.modules`, one per declared path (a file, or a directory ending in `/`), with the id `module:<path>`. A component's `kind` says what sort of element it is: `system`, `subsystem`, `component`, `module`, `actor` (a person or an external agent), `store`, `connector` or `external`, or a kind the specification declares in `elementKinds`. Whether an element is **composite** is derived: it is composite in a hierarchy when it has members there. Any element may be a parent; only cycles are errors. A specification that declares none of these constructs means what it meant before: `parent` and `kind: subsystem` load as the logical hierarchy, and every query below reads them.
+
+**Hierarchies.** A hierarchy is a laminar family over all elements: a forest, each element with at most one parent. `logical` is the default hierarchy: `component.parent`, with the system allowed as a parent, and each module element under the component that declares it. Other perspectives are declared in `hierarchies`:
+
+```jsonc
+"hierarchies": [{
+  "id": "runtime", "name": "Runtime placement",
+  "groups": [{ "parent": "javascript-runtime", "members": ["browser-platform", "nodejs-runtime"] }],
+  "groupBy": { "property": "runsIn", "parents": { "browser": "browser-platform", "node": "nodejs-runtime", "both": "javascript-runtime" } }
+}]
+```
+
+`groups` place members under a parent; `groupBy` places every component by the value of one of its properties (an element whose value maps to itself is not placed by it); an explicit group wins over `groupBy`. An element placed nowhere is a root of that hierarchy, and a module element is a member of its component in every hierarchy. The id `logical` is reserved.
+
+**Facets.** A facet is a named, possibly overlapping set of elements: a cross-cutting concern. `facets: [{id, name, members, tag}]`; `tag` adds every component carrying that tag, and a tag no facet declares is an implicit facet of the same name. A claim selector selects a facet with `{"facet": id}`. A facet is never contracted: used as a hierarchy, a parent or a cut block it is `facet.contraction`.
+
+**Cuts.** A cut of a hierarchy is an antichain that covers every element: every path from a root to a leaf meets it exactly once. Its **abstraction map** `α_C` sends each element at or below the cut to its unique ancestor-or-self on it; the elements strictly above it are the ones the cut opens. A cut is declared by expansion, starting from the roots:
+
+- `expand`: composites replaced by their members; each must be composite (`cut.not-composite`) and each of its ancestors expanded too (`cut.ancestor-not-expanded`);
+- `depth: n`: every composite whose depth is less than `n` is expanded (the roots are at depth 0);
+- `finest: true`: every composite is expanded, so the blocks are the leaves;
+
+or by its blocks, `blocks: [ids]`, which must cover every element (`cut.uncovered`) and hold no element together with its ancestor (`cut.not-antichain`); `blocks` excludes the expansion fields (`cut.form`). `hierarchy` names the hierarchy, `logical` by default. Cuts are ordered by refinement: `C ≤ C'` when every block of `C` lies at or below a block of `C'`, and then `α_{C'} = α_{C→C'} ∘ α_C`. Cuts, hierarchies and facets are semantic: they are in the text and in the semantic hash. A viewer's collapse state is interaction state, not a cut. A structural **view** names the cut it opens at (`view.cut`), and may name its hierarchy (`view.hierarchy`) and a kind coarsening (`view.coarsen`, kinds or `["all"]`); the viewer then expands and collapses blocks, which changes the cut shown without changing the model. The system may state a `purpose` and `responsibilities` like a component: it is the one block of the coarsest cut, and the first coherence condition of a level asks every block to state its purpose.
+
+**Knowledge status.** Each element is `transparent` (it has members in the logical hierarchy), `opaque` (no members, and it declares `knowledge: "opaque"`, is `not-implemented`, or is external: kind `external` or `actor`, or category `external`) or `unknown` (it declares `knowledge: "unknown"`); any other leaf is a transparent leaf.
+
+**Queries** (`src/core/query.js`): `elementsOf`, `moduleDeclarations` (the one source of module elements), `hierarchyIds`, `hierarchyOf`, `membersIn`, `ancestorsIn`, `cutBlocksOf`, `abstractionOf`, `refinementOf`, `cutMap` and `blockOf` (`α_C` of a declared cut), `cutToCut` (`α_{C→C'}`), `facetMembers`, `knowledgeOf`, `knowledgeStatus`. `node cli/exegra.js cut --cut <id>` prints a cut's blocks and its element-to-block map; `cut --depth N`, `--expand a,b` or `--finest` (with `--hierarchy`) gives an ad hoc one, and `cut` alone lists the hierarchies and cuts. `show <id>` adds an element's members and knowledge status. The claim method `abstraction-well-formed` decides the well-formedness of hierarchies and cuts over the model.
+
+**The derived model at a cut** (`src/core/abstraction.js`, WG-5694). `deriveModel(model, cut, {coarsen})` derives, from the relationships alone, the architectural model at a cut: the blocks (and an implicit block for each element the cut opens that a relationship is attached to: a composite's own facts sit on it as an implicit member); for each pair of blocks and each kind (or each kind coarsened along the kind tree), the lifted interaction with its complete witness set, sorted by id, and a summary that is a monoid homomorphism (count, kinds, contracts, carried data, delivery guarantees of carried events, provenance mix, ports); each block's fibre (its internal relationships), boundary and derived interface (the boundary grouped by direction, kind and contract), compared with the ports the block declares; contractions through connector elements; the realisation path of every contract, hop by hop, with the hops whose events carry no contract flagged; the realisation maps; and the diagnostics of the abstraction: V1 (the cut and hierarchy problems), V2 (`abstraction.unwitnessed`: a relationship declared at a transparent composite that no member relationship witnesses), V3 (`interface.unrealised-port`, `interface.undeclared-boundary`), V4 (`abstraction.kind-not-coarsening`), incompatible port connections and broken realisation maps. It is pure, memoised per model snapshot and cut, and takes no presentation input; the structural projection draws it (a collapse set corresponds to a cut, `cutForCollapse`) and message flows are classified against it. `node cli/exegra.js derive --cut <id>` prints it.
+
+**Relationships at ports.** A relationship may start at a `requires` port and end at a `provides` port (`componentOf` gives the owner); a relationship that starts at a provides port or ends at a requires port is `relationship.port-direction`, and one whose contract differs from its ports' contracts is `relationship.port-contract` (errors).
+
+**Realisation maps** (section `realisations`, entity `realisation`: `interaction`, a relationship; `hierarchy`; `path`, a list of relationships). A logical interaction is realised by a path in another perspective, such as a chain of `network-link`s between the hosts of a deployment hierarchy. Each map is checked as a fact: every hop exists (`realisation.path-missing`), the hops run head to tail (`realisation.path-broken`), and the path starts at a placement of the interaction's source in that hierarchy and ends at a placement of its target (`realisation.endpoint`).
+
+**Diagnostics** (errors): `component.parent-cycle` (a cycle in the logical hierarchy), `module.multiple-owners` (a module path declared by two components: two parents in the logical hierarchy), `hierarchy.multiple-parents`, `hierarchy.cycle`, `hierarchy.unknown-parent`, `hierarchy.reserved-id`, `facet.contraction`, `cut.not-composite`, `cut.ancestor-not-expanded`, `cut.uncovered`, `cut.not-antichain`, `cut.form`, and `claim.selector.facet` (a selector naming neither a facet nor a tag). `exegra traceability` reports a surface file covered by two module elements as the error `traceability.multiple-owners`: the module-to-element map is a function, so a file several elements share belongs to one shared element at their lowest common ancestor. These checks run in `validate.js`; the Lean derivation accepts the sections as data and does not check them yet.
 
 ## Fault models and sources
 
@@ -1167,14 +1274,14 @@ where the event is emitted.
 
 ## Meta-model and vocabulary
 
-The meta-model is data. `metamodel.json` lists entity kinds with typed properties (`string`, `text`, `boolean`, `number`, `enum`, `ref`, `list`, `object`, `entities`, `expr`, `effect`, `evaluation`, `map`, `any`), default categories (shape and colour per category) and relationship kinds (line style, colour, `dependency` flag). The parser checks structure against it; the inspector builds property controls from it; projections take shapes and colours from it.
+The meta-model is data. `metamodel.json` lists entity kinds with typed properties (`string`, `text`, `boolean`, `number`, `enum`, `ref`, `list`, `object`, `entities`, `expr`, `effect`, `evaluation`, `map`, `any`), default categories (shape and colour per category) and relationship kinds (line style, colour, class, direction, parent and the derived `dependency` flag). The parser checks structure against it; the inspector builds property controls from it; projections take shapes and colours from it.
 
 A specification extends it through `vocabulary`. Five keys are accepted:
 
 | Key | Adds |
 |---|---|
 | `categories` | Component categories: label, shape, colour, description. |
-| `relationshipKinds` | Relationship kinds: label, line style, colour, `dependency` flag. |
+| `relationshipKinds` | Relationship kinds: label, line style, colour, `class`, `direction`, `parent` (see [Interaction kinds](#interaction-kinds)) and a `dependency` flag that may be left out when `class` is stated. |
 | `properties` | Properties on any entity kind, built-in or declared: `entity`, an alphanumeric `name`, and a type that is one of `string`, `text`, `boolean`, `number`, `enum` (with `values`), `ref` (with `ref`: the entity kind or kinds it may point to) or `list` (with `items`: a scalar, enum or `ref` type; lists do not nest). Also `label`, `doc`, `required` and `expected`. |
 | `entityKinds` | New entity kinds: `label`, `section` (the top-level key their entities are declared under), `shape`, `color`, `doc` and `properties` (an object keyed by property name, with the same types as above). |
 | `verificationMethods` | Evaluation methods carried out by tools outside Exegra: `label` and `description`. A claim whose `evaluate.method` names one is evaluated as external evidence ([claims-and-evidence.md](claims-and-evidence.md#external-verification-methods)). |
@@ -1213,7 +1320,8 @@ A specification converted from a large Markdown specification (a linked project)
 "vocabulary": {
   "relationshipKinds": {
     "authenticates-with": { "label": "Authenticates with", "line": "dotted", "color": "violet",
-                            "dependency": true, "description": "The source obtains or verifies identity assertions through the target." }
+                            "class": "runtime", "direction": { "control": "with", "data": "both" }, "parent": "invokes",
+                            "description": "The source obtains or verifies identity assertions through the target." }
   }
 }
 ```
@@ -1224,8 +1332,8 @@ Defining the vocabulary in the specification means a new property or kind alread
 
 Diagnostics have a stable `code`, a severity, a message and a location (line, column). `parseSpec` reports syntax errors, structure, ids and references; `validateModel` runs only when structure is sound.
 
-- **error**: syntax, unknown properties, wrong types, duplicate or malformed ids, unresolved or wrongly typed references (`ref.unresolved`, `ref.kind`), containment cycles, bad expressions, bad effects, bad faults, bad scenarios.
-- **warning**: self-relationships, duplicate relationships, unreachable states, a fault enabling a transition not marked `faultOnly`, an unknown claim method.
+- **error**: syntax, unknown properties, wrong types, duplicate or malformed ids, unresolved or wrongly typed references (`ref.unresolved`, `ref.kind`), containment cycles, ill-formed hierarchies, facets and cuts ([Elements, hierarchies, facets and cuts](#elements-hierarchies-facets-and-cuts)), bad expressions, bad effects, bad faults, bad scenarios.
+- **warning**: self-relationships, duplicate relationships, unreachable states, a fault enabling a transition not marked `faultOnly`, an unknown claim method, the legacy relationship kind `calls` (`relationship.legacy-kind`), a vocabulary relationship kind without class, direction and parent (`vocabulary.kind-unclassified`).
 - **info (gaps)**: `gap.no-fault-model`, missing expected properties (`purpose` on components, `description` on relationships), unconnected components, empty subsystems, components with `unknowns`, unused events, `external-evidence` claims with no evidence.
 
 References are indexed when the text is parsed, including those inside `claim.evaluate` and in transition effects (`emit`). That index drives rename and cascade delete ([transactions-and-persistence.md](transactions-and-persistence.md)).

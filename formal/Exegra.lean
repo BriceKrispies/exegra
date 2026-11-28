@@ -6,14 +6,8 @@ import Exegra.Json
 import Exegra.Expr
 import Exegra.Input
 import Exegra.Trace
-import Exegra.Semantics
-import Exegra.Properties
-import Exegra.Explore
 import Exegra.Search
-import Exegra.Prove
-import Exegra.Temporal
 import Exegra.Format2
-import Exegra.Lift
 import Exegra.Integrity
 import Exegra.Impl.Semantics
 import Exegra.Impl.Refinement
@@ -21,6 +15,8 @@ import Exegra.Hash
 import Exegra.Model
 import Exegra.HashProps
 import Exegra.ModelProps
+import Exegra.Verdict
+import Exegra.Impact
 import Exegra.Api
 import Exegra.Core.LTS
 import Exegra.Core.Calculus
@@ -29,3 +25,8 @@ import Exegra.Core.Examples
 import Exegra.Core.Behav
 import Exegra.Core.BehavExec
 import Exegra.Core.BehavExamples
+import Exegra.Core.BehavRename
+import Exegra.Elab
+import Exegra.Core.BehavCheck
+import Exegra.Format2B
+import Exegra.ProveB

@@ -1,6 +1,13 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "camera-memory-flow": 0,
+   "session-storage-flow": 0
+  },
+  "links": {},
   "machines": {
    "camera-memory-flow": {
     "state": "camera-live",
@@ -24,10 +31,23 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 5
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 5,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "camera-memory-flow": 0,
+   "session-storage-flow": 0
+  },
+  "links": {},
   "machines": {
    "camera-memory-flow": {
     "state": "camera-live",
@@ -51,12 +71,14 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "camera-moved",
     "payload": {
      "camera": "cA"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -69,6 +91,7 @@
     "payload": {
      "view": "data"
     },
+    "scheduledAt": 2,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -81,6 +104,7 @@
     "payload": {
      "camera": "cB"
     },
+    "scheduledAt": 3,
     "seq": 2,
     "source": {
      "kind": "scenario",
@@ -93,6 +117,7 @@
     "payload": {
      "view": "structural"
     },
+    "scheduledAt": 5,
     "seq": 3,
     "source": {
      "kind": "scenario",
@@ -101,13 +126,27 @@
     "time": 5
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "camera-remembered",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "camera-memory-flow": 0,
+     "session-storage-flow": 0
+    },
+    "links": {},
     "machines": {
      "camera-memory-flow": {
       "state": "camera-live",
@@ -131,13 +170,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "camera-saved",
+      "from": {
+       "behavior": "camera-memory-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "camera": "cA",
        "view": "structural"
       },
+      "scheduledAt": 0,
       "seq": 4,
       "source": {
        "behavior": "camera-memory-flow",
@@ -151,6 +197,7 @@
       "payload": {
        "view": "data"
       },
+      "scheduledAt": 2,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -163,6 +210,7 @@
       "payload": {
        "camera": "cB"
       },
+      "scheduledAt": 3,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -175,6 +223,7 @@
       "payload": {
        "view": "structural"
       },
+      "scheduledAt": 5,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -183,13 +232,20 @@
       "time": 5
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "camera-moved",
     "payload": {
      "camera": "cA"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -213,6 +269,7 @@
      ],
      "from": "camera-live",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "cA",
@@ -228,21 +285,31 @@
     {
      "behavior": "session-storage-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "camera-moved",
     "camera-move",
     "camera-memory-flow",
-    "visual-interaction"
+    "composition-root"
    ],
    "time": 0
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "camera-memory-flow": 0,
+     "session-storage-flow": 0
+    },
+    "links": {},
     "machines": {
      "camera-memory-flow": {
       "state": "camera-live",
@@ -266,12 +333,14 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "view-switched",
       "payload": {
        "view": "data"
       },
+      "scheduledAt": 2,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -284,6 +353,7 @@
       "payload": {
        "camera": "cB"
       },
+      "scheduledAt": 3,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -296,6 +366,7 @@
       "payload": {
        "view": "structural"
       },
+      "scheduledAt": 5,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -304,14 +375,26 @@
       "time": 5
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "camera-memory-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "camera-saved",
     "payload": {
      "camera": "cA",
      "view": "structural"
     },
+    "scheduledAt": 0,
     "seq": 4,
     "source": {
      "behavior": "camera-memory-flow",
@@ -326,6 +409,7 @@
      "emitted": [],
      "from": "tab-storage-ready",
      "guard": "event.view == 'structural'",
+     "instance": 0,
      "sets": [
       {
        "after": "cA",
@@ -341,11 +425,14 @@
     {
      "behavior": "camera-memory-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "camera-saved",
     "tab-storage-save-structural",
@@ -356,6 +443,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "camera-memory-flow": 0,
+     "session-storage-flow": 0
+    },
+    "links": {},
     "machines": {
      "camera-memory-flow": {
       "state": "camera-live",
@@ -379,12 +473,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "camera-restore-requested",
+      "from": {
+       "behavior": "camera-memory-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "view": "data"
       },
+      "scheduledAt": 2,
       "seq": 5,
       "source": {
        "behavior": "camera-memory-flow",
@@ -398,6 +499,7 @@
       "payload": {
        "camera": "cB"
       },
+      "scheduledAt": 3,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -410,6 +512,7 @@
       "payload": {
        "view": "structural"
       },
+      "scheduledAt": 5,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -418,13 +521,20 @@
       "time": 5
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "view-switched",
     "payload": {
      "view": "data"
     },
+    "scheduledAt": 2,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -447,6 +557,7 @@
      ],
      "from": "camera-live",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "data",
@@ -462,21 +573,31 @@
     {
      "behavior": "session-storage-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "view-switched",
     "camera-switch",
     "camera-memory-flow",
-    "visual-interaction"
+    "composition-root"
    ],
    "time": 2
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "camera-memory-flow": 0,
+     "session-storage-flow": 0
+    },
+    "links": {},
     "machines": {
      "camera-memory-flow": {
       "state": "camera-live",
@@ -500,12 +621,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "camera-none",
+      "from": {
+       "behavior": "session-storage-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "view": "data"
       },
+      "scheduledAt": 2,
       "seq": 6,
       "source": {
        "behavior": "session-storage-flow",
@@ -519,6 +647,7 @@
       "payload": {
        "camera": "cB"
       },
+      "scheduledAt": 3,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -531,6 +660,7 @@
       "payload": {
        "view": "structural"
       },
+      "scheduledAt": 5,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -539,13 +669,25 @@
       "time": 5
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "camera-memory-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "camera-restore-requested",
     "payload": {
      "view": "data"
     },
+    "scheduledAt": 2,
     "seq": 5,
     "source": {
      "behavior": "camera-memory-flow",
@@ -569,6 +711,7 @@
      ],
      "from": "tab-storage-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "tab-storage-ready",
      "transition": "tab-storage-nothing"
@@ -578,11 +721,14 @@
     {
      "behavior": "camera-memory-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "camera-restore-requested",
     "tab-storage-nothing",
@@ -593,6 +739,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "camera-memory-flow": 0,
+     "session-storage-flow": 0
+    },
+    "links": {},
     "machines": {
      "camera-memory-flow": {
       "state": "camera-live",
@@ -616,13 +769,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "camera-saved",
+      "from": {
+       "behavior": "camera-memory-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "camera": "cA",
        "view": "data"
       },
+      "scheduledAt": 2,
       "seq": 7,
       "source": {
        "behavior": "camera-memory-flow",
@@ -636,6 +796,7 @@
       "payload": {
        "camera": "cB"
       },
+      "scheduledAt": 3,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -648,6 +809,7 @@
       "payload": {
        "view": "structural"
       },
+      "scheduledAt": 5,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -656,13 +818,25 @@
       "time": 5
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "session-storage-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "camera-none",
     "payload": {
      "view": "data"
     },
+    "scheduledAt": 2,
     "seq": 6,
     "source": {
      "behavior": "session-storage-flow",
@@ -687,6 +861,7 @@
      ],
      "from": "camera-live",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "camera-live",
      "transition": "camera-keep"
@@ -696,21 +871,31 @@
     {
      "behavior": "session-storage-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "camera-none",
     "camera-keep",
     "camera-memory-flow",
-    "visual-interaction"
+    "composition-root"
    ],
    "time": 2
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "camera-memory-flow": 0,
+     "session-storage-flow": 0
+    },
+    "links": {},
     "machines": {
      "camera-memory-flow": {
       "state": "camera-live",
@@ -734,12 +919,14 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "camera-moved",
       "payload": {
        "camera": "cB"
       },
+      "scheduledAt": 3,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -752,6 +939,7 @@
       "payload": {
        "view": "structural"
       },
+      "scheduledAt": 5,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -760,14 +948,26 @@
       "time": 5
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "camera-memory-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "camera-saved",
     "payload": {
      "camera": "cA",
      "view": "data"
     },
+    "scheduledAt": 2,
     "seq": 7,
     "source": {
      "behavior": "camera-memory-flow",
@@ -782,6 +982,7 @@
      "emitted": [],
      "from": "tab-storage-ready",
      "guard": "event.view == 'data'",
+     "instance": 0,
      "sets": [
       {
        "after": "cA",
@@ -797,11 +998,14 @@
     {
      "behavior": "camera-memory-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 5,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "camera-saved",
     "tab-storage-save-data",
@@ -812,6 +1016,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "camera-memory-flow": 0,
+     "session-storage-flow": 0
+    },
+    "links": {},
     "machines": {
      "camera-memory-flow": {
       "state": "camera-live",
@@ -835,13 +1046,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "camera-saved",
+      "from": {
+       "behavior": "camera-memory-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "camera": "cB",
        "view": "data"
       },
+      "scheduledAt": 3,
       "seq": 8,
       "source": {
        "behavior": "camera-memory-flow",
@@ -855,6 +1073,7 @@
       "payload": {
        "view": "structural"
       },
+      "scheduledAt": 5,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -863,13 +1082,20 @@
       "time": 5
      }
     ],
-    "time": 3
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 3,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "camera-moved",
     "payload": {
      "camera": "cB"
     },
+    "scheduledAt": 3,
     "seq": 2,
     "source": {
      "kind": "scenario",
@@ -893,6 +1119,7 @@
      ],
      "from": "camera-live",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "cB",
@@ -908,21 +1135,31 @@
     {
      "behavior": "session-storage-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 6,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "camera-moved",
     "camera-move",
     "camera-memory-flow",
-    "visual-interaction"
+    "composition-root"
    ],
    "time": 3
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "camera-memory-flow": 0,
+     "session-storage-flow": 0
+    },
+    "links": {},
     "machines": {
      "camera-memory-flow": {
       "state": "camera-live",
@@ -946,12 +1183,14 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "view-switched",
       "payload": {
        "view": "structural"
       },
+      "scheduledAt": 5,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -960,14 +1199,26 @@
       "time": 5
      }
     ],
-    "time": 3
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 3,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "camera-memory-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "camera-saved",
     "payload": {
      "camera": "cB",
      "view": "data"
     },
+    "scheduledAt": 3,
     "seq": 8,
     "source": {
      "behavior": "camera-memory-flow",
@@ -982,6 +1233,7 @@
      "emitted": [],
      "from": "tab-storage-ready",
      "guard": "event.view == 'data'",
+     "instance": 0,
      "sets": [
       {
        "after": "cB",
@@ -997,11 +1249,14 @@
     {
      "behavior": "camera-memory-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 7,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "camera-saved",
     "tab-storage-save-data",
@@ -1012,6 +1267,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "camera-memory-flow": 0,
+     "session-storage-flow": 0
+    },
+    "links": {},
     "machines": {
      "camera-memory-flow": {
       "state": "camera-live",
@@ -1035,12 +1297,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "camera-restore-requested",
+      "from": {
+       "behavior": "camera-memory-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "view": "structural"
       },
+      "scheduledAt": 5,
       "seq": 9,
       "source": {
        "behavior": "camera-memory-flow",
@@ -1050,13 +1319,20 @@
       "time": 5
      }
     ],
-    "time": 5
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 5,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "view-switched",
     "payload": {
      "view": "structural"
     },
+    "scheduledAt": 5,
     "seq": 3,
     "source": {
      "kind": "scenario",
@@ -1079,6 +1355,7 @@
      ],
      "from": "camera-live",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "structural",
@@ -1094,21 +1371,31 @@
     {
      "behavior": "session-storage-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 8,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "view-switched",
     "camera-switch",
     "camera-memory-flow",
-    "visual-interaction"
+    "composition-root"
    ],
    "time": 5
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "camera-memory-flow": 0,
+     "session-storage-flow": 0
+    },
+    "links": {},
     "machines": {
      "camera-memory-flow": {
       "state": "camera-live",
@@ -1132,13 +1419,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "camera-restored",
+      "from": {
+       "behavior": "session-storage-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "camera": "cA",
        "view": "structural"
       },
+      "scheduledAt": 5,
       "seq": 10,
       "source": {
        "behavior": "session-storage-flow",
@@ -1148,13 +1442,25 @@
       "time": 5
      }
     ],
-    "time": 5
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 5,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "camera-memory-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "camera-restore-requested",
     "payload": {
      "view": "structural"
     },
+    "scheduledAt": 5,
     "seq": 9,
     "source": {
      "behavior": "camera-memory-flow",
@@ -1179,6 +1485,7 @@
      ],
      "from": "tab-storage-ready",
      "guard": "event.view == 'structural' && structuralCamera != 'none'",
+     "instance": 0,
      "sets": [],
      "to": "tab-storage-ready",
      "transition": "tab-storage-restore-structural"
@@ -1188,11 +1495,14 @@
     {
      "behavior": "camera-memory-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 9,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "camera-restore-requested",
     "tab-storage-restore-structural",
@@ -1203,6 +1513,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "camera-memory-flow": 0,
+     "session-storage-flow": 0
+    },
+    "links": {},
     "machines": {
      "camera-memory-flow": {
       "state": "camera-live",
@@ -1226,13 +1543,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "camera-saved",
+      "from": {
+       "behavior": "camera-memory-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "camera": "cA",
        "view": "structural"
       },
+      "scheduledAt": 5,
       "seq": 11,
       "source": {
        "behavior": "camera-memory-flow",
@@ -1242,14 +1566,26 @@
       "time": 5
      }
     ],
-    "time": 5
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 5,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "session-storage-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "camera-restored",
     "payload": {
      "camera": "cA",
      "view": "structural"
     },
+    "scheduledAt": 5,
     "seq": 10,
     "source": {
      "behavior": "session-storage-flow",
@@ -1274,6 +1610,7 @@
      ],
      "from": "camera-live",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "cA",
@@ -1289,21 +1626,31 @@
     {
      "behavior": "session-storage-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 10,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "camera-restored",
     "camera-apply",
     "camera-memory-flow",
-    "visual-interaction"
+    "composition-root"
    ],
    "time": 5
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "camera-memory-flow": 0,
+     "session-storage-flow": 0
+    },
+    "links": {},
     "machines": {
      "camera-memory-flow": {
       "state": "camera-live",
@@ -1327,15 +1674,28 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 5
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 5,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "camera-memory-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "camera-saved",
     "payload": {
      "camera": "cA",
      "view": "structural"
     },
+    "scheduledAt": 5,
     "seq": 11,
     "source": {
      "behavior": "camera-memory-flow",
@@ -1350,6 +1710,7 @@
      "emitted": [],
      "from": "tab-storage-ready",
      "guard": "event.view == 'structural'",
+     "instance": 0,
      "sets": [
       {
        "after": "cA",
@@ -1365,11 +1726,14 @@
     {
      "behavior": "camera-memory-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 11,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "camera-saved",
     "tab-storage-save-structural",
@@ -1378,5 +1742,9 @@
    ],
    "time": 5
   }
- ]
+ ],
+ "stepsTaken": 12,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

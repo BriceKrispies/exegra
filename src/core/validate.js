@@ -7,6 +7,7 @@
 import { parseExpr, exprRefs } from './expr.js';
 import { CLAIM_METHODS } from './claim-methods.js';
 import { own } from './own.js';
+import { checkTaxonomy } from './interactions.js';
 import { validateFaultModels } from './fault-model.js';
 import { scenarioInputDiagnostics } from './scenario-input.js';
 import { checkCodegenConsistency, exprClass, typeClass } from './codegen-model.js';
@@ -33,6 +34,8 @@ import { integrityDiagnostics } from './integrity.js';
 import { minRuns, parseRational } from './metric-stats.js';
 import { machineReadiness, keyFieldsOf } from './readiness-machines.js';
 import { testRefProblem, describeTestRefProblem } from './evidence-ref.js';
+import { LOGICAL, hierarchyOf, moduleDeclarations, cutMap, cutHierarchyId, isFacet } from './query.js';
+import { portConnectionProblems, checkRealisations } from './abstraction.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Entity} Entity */
@@ -63,13 +66,11 @@ export function validateModel(model, opts = {}) {
   const kind = (/** @type {string} */ k) => model.byKind[k] ?? [];
 
   // --- components ---------------------------------------------------------
+  // Any element may be the parent of others (composite is derived from having members); only cycles are wrong.
   for (const c of kind('component')) {
     const parentId = c.data.parent;
     if (typeof parentId === 'string') {
       const parent = get(parentId);
-      if (parent && parent.kind === 'component' && parent.data.kind !== 'subsystem') {
-        report('error', 'component.parent-not-subsystem', c, `Parent "${parentId}" is not declared with kind "subsystem".`, ['parent']);
-      }
       const seen = new Set([c.id]);
       let cur = parent;
       while (cur && cur.kind === 'component') {
@@ -80,6 +81,9 @@ export function validateModel(model, opts = {}) {
     }
   }
 
+  // --- elements, hierarchies, facets and cuts ------------------------------
+  if (!opts.claimsOnly) checkAbstraction(model, report);
+
   // --- relationships ------------------------------------------------------
   const relKeys = new Map();
   for (const r of kind('relationship')) {
@@ -87,6 +91,19 @@ export function validateModel(model, opts = {}) {
     const key = `${r.data.kind}|${r.data.from}|${r.data.to}`;
     if (relKeys.has(key)) report('warning', 'relationship.duplicate', r, `Same kind and endpoints as relationship "${relKeys.get(key)}".`);
     else relKeys.set(key, r.id);
+  }
+  // The interaction taxonomy: kinds without class, direction and parent, cycles in the kind tree, legacy kinds in use.
+  checkTaxonomy(model, report);
+  // Relationships that end at ports: requires to provides, one contract (abstraction.js).
+  for (const p of portConnectionProblems(model)) {
+    const r = get(p.relationship);
+    if (r) report('error', p.code, r, p.message, p.path);
+  }
+  // Realisation maps between hierarchies: each path exists and runs from the source's placement to the target's.
+  for (const m of checkRealisations(model)) {
+    const e = get(m.id);
+    if (!e) continue;
+    for (const p of m.problems) report('error', p.code, e, p.message, p.path);
   }
 
   // --- behaviors, transitions --------------------------------------------
@@ -280,7 +297,20 @@ export function validateModel(model, opts = {}) {
         const okIds = typeof v === 'string' || (Array.isArray(v) && v.every((x) => typeof x === 'string'));
         if (!okIds) {
           if (!v || typeof v !== 'object' || Array.isArray(v)) { report('error', 'claim.param.type', c, `Parameter "${name}" must be a selector.`, sub); continue; }
-          for (const k of Object.keys(v)) if (!['ids', 'category', 'kind', 'tag', 'trustZone', 'within', 'all'].includes(k)) report('error', 'claim.selector.unknown', c, `Unsupported selector field "${k}".`, [...sub, k]);
+          for (const k of Object.keys(v)) if (!['ids', 'category', 'kind', 'tag', 'facet', 'trustZone', 'within', 'outside', 'except', 'all'].includes(k)) report('error', 'claim.selector.unknown', c, `Unsupported selector field "${k}".`, [...sub, k]);
+          if (v.outside !== undefined) {
+            const o = typeof v.outside === 'string' ? get(v.outside) : undefined;
+            if (!o || (o.kind !== 'component' && o.kind !== 'system')) report('error', 'claim.selector.outside', c, `Selector "${name}" takes the complement of ${JSON.stringify(v.outside)}, which is not an element.`, [...sub, 'outside']);
+          }
+          if (v.except !== undefined) {
+            if (!Array.isArray(v.except)) report('error', 'claim.selector.except', c, `Selector "${name}": "except" must be a list of {"id": element, "reason": text}.`, [...sub, 'except']);
+            else v.except.forEach((/** @type {any} */ x, /** @type {number} */ i) => {
+              if (!x || typeof x !== 'object' || Array.isArray(x) || typeof x.id !== 'string' || typeof x.reason !== 'string' || !x.reason.trim() || Object.keys(x).some((k) => k !== 'id' && k !== 'reason')) {
+                report('error', 'claim.selector.except', c, `Selector "${name}": exception ${i} must be {"id": element, "reason": text}; an element is left out of a selection only with a stated reason.`, [...sub, 'except', i]);
+              } else if (get(x.id)?.kind !== 'component') report('error', 'claim.selector.except', c, `Selector "${name}" leaves out "${x.id}", which is not a component.`, [...sub, 'except', i, 'id']);
+            });
+          }
+          if (v.facet !== undefined && (typeof v.facet !== 'string' || !isFacet(model, v.facet))) report('error', 'claim.selector.facet', c, `Selector "${name}" names facet ${JSON.stringify(v.facet)}, which is neither a declared facet nor a tag of any component.`, [...sub, 'facet']);
           if (!Object.keys(v).length) report('error', 'claim.selector.empty', c, `Selector "${name}" selects nothing; use {"all": true} to select every component.`, sub);
         }
       } else if (type === 'string') { if (typeof v !== 'string') report('error', 'claim.param.type', c, `Parameter "${name}" must be a string.`, sub); }
@@ -621,7 +651,8 @@ export function validateModel(model, opts = {}) {
     }
     if (e.kind === 'component') {
       if (e.data.kind === 'subsystem') { if (!hasChildren.has(e.id)) report('info', 'gap.empty-subsystem', e, `Subsystem "${e.id}" contains no components.`); }
-      else if (!touched.has(e.id)) report('info', 'gap.unconnected', e, `Component "${e.id}" takes part in no relationship.`);
+      // A composite of another kind needs no relationship of its own: its members have them.
+      else if (!touched.has(e.id) && !hasChildren.has(e.id)) report('info', 'gap.unconnected', e, `Component "${e.id}" takes part in no relationship.`);
       if (Array.isArray(e.data.unknowns) && e.data.unknowns.length) report('info', 'gap.unknowns', e, `Component "${e.id}" records ${e.data.unknowns.length} open unknown(s).`);
     }
   }
@@ -648,4 +679,76 @@ export function validateModel(model, opts = {}) {
   }
 
   return out;
+}
+
+/**
+ * The well-formedness of the abstraction structure (docs/model-and-format.md, "Elements, hierarchies, facets
+ * and cuts"): every hierarchy laminar and acyclic, every module element under exactly one element, facets
+ * never used as contractions, and every cut an antichain that covers every element. The logical hierarchy's
+ * cycles are component.parent-cycle, reported above.
+ * @param {Model} model
+ * @param {(severity: 'error'|'warning'|'info', code: string, entity: Entity, message: string, sub?: (string|number)[]) => void} report
+ */
+function checkAbstraction(model, report) {
+  const get = (/** @type {string} */ id) => model.entities.get(id);
+  const facetAt = (/** @type {any} */ id) => typeof id === 'string' && get(id)?.kind === 'facet';
+  // Module elements: one owner each.
+  const logical = /** @type {import('./query.js').Hierarchy} */ (hierarchyOf(model, LOGICAL));
+  const decls = moduleDeclarations(model);
+  for (const p of logical.problems) {
+    if (p.code !== 'multiple-owners') continue;
+    const owners = p.others ?? [];
+    for (const d of decls) {
+      if (d.id !== p.element || d.component === owners[0]) continue;
+      const c = get(d.component);
+      if (c) report('error', 'module.multiple-owners', c, p.message, ['implementation', 'modules', d.index]);
+    }
+  }
+  // Declared hierarchies.
+  for (const h of model.byKind.hierarchy ?? []) {
+    if (h.id === LOGICAL) report('error', 'hierarchy.reserved-id', h, `"${LOGICAL}" is the hierarchy component.parent declares; a declared hierarchy needs another id.`, ['id']);
+    (Array.isArray(h.data.groups) ? h.data.groups : []).forEach((/** @type {any} */ g, /** @type {number} */ i) => {
+      if (g && facetAt(g.parent)) report('error', 'facet.contraction', h, `Hierarchy "${h.id}" places members under facet "${g.parent}"; a facet may overlap other groupings, so it is never a parent in a hierarchy.`, ['groups', i, 'parent']);
+    });
+    const by = h.data.groupBy;
+    if (by && by.parents && typeof by.parents === 'object') {
+      for (const [v, p] of Object.entries(by.parents)) {
+        if (facetAt(p)) report('error', 'facet.contraction', h, `Hierarchy "${h.id}" places the elements whose "${by.property}" is "${v}" under facet "${p}"; a facet is never a parent in a hierarchy.`, ['groupBy', 'parents', v]);
+        else if (typeof p !== 'string') report('error', 'hierarchy.unknown-parent', h, `groupBy.parents."${v}" must be an element id.`, ['groupBy', 'parents', v]);
+      }
+    }
+    const built = hierarchyOf(model, h.id);
+    for (const p of built?.problems ?? []) {
+      if (p.code === 'multiple-parents') report('error', 'hierarchy.multiple-parents', h, p.message, p.at?.path);
+      else if (p.code === 'cycle') report('error', 'hierarchy.cycle', h, p.message, ['groups']);
+      else if (p.code === 'unknown-parent' && !facetAt(p.others?.[0])) report('error', 'hierarchy.unknown-parent', h, p.message, p.at?.path);
+    }
+  }
+  // Cuts.
+  /** @type {Record<string, string>} */
+  const CUT_CODES = { 'not-composite': 'cut.not-composite', 'ancestor-not-expanded': 'cut.ancestor-not-expanded', uncovered: 'cut.uncovered', 'not-antichain': 'cut.not-antichain' };
+  for (const c of model.byKind.cut ?? []) {
+    const d = c.data;
+    const hid = cutHierarchyId(c);
+    if (facetAt(hid)) { report('error', 'facet.contraction', c, `Cut "${c.id}" is a cut of facet "${hid}"; a facet may overlap, so it has no cuts. Name a hierarchy.`, ['hierarchy']); continue; }
+    for (const key of ['expand', 'blocks']) {
+      (Array.isArray(d[key]) ? d[key] : []).forEach((/** @type {any} */ x, /** @type {number} */ i) => {
+        if (facetAt(x)) report('error', 'facet.contraction', c, `Cut "${c.id}" ${key === 'expand' ? 'expands' : 'has as a block'} facet "${x}"; a facet is never contracted or expanded, only selected.`, [key, i]);
+      });
+    }
+    if (Array.isArray(d.blocks) && (d.expand !== undefined || d.depth !== undefined || d.finest !== undefined)) {
+      report('error', 'cut.form', c, `Cut "${c.id}" lists its blocks and also expand, depth or finest; give the blocks, or the expansion, not both.`, ['blocks']);
+    }
+    if (d.depth !== undefined && !(Number.isInteger(d.depth) && d.depth >= 0)) report('error', 'cut.form', c, `The depth of cut "${c.id}" must be a whole number of at least 0.`, ['depth']);
+    const m = cutMap(model, c.id);
+    if (!m) continue;
+    for (const p of m.problems) {
+      const code = CUT_CODES[p.code];
+      if (!code) continue;
+      const key = Array.isArray(d.blocks) ? 'blocks' : 'expand';
+      const list = Array.isArray(d[key]) ? d[key] : [];
+      const i = list.indexOf(p.element);
+      report('error', code, c, `Cut "${c.id}": ${p.message}`, i >= 0 ? [key, i] : undefined);
+    }
+  }
 }

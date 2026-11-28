@@ -1,0 +1,106 @@
+// Assumptions.
+{
+  // ---- Assumptions -----------------------------------------------------------------------
+  "assumptions": [
+    {
+      "id": "machines-abstract-the-code",
+      "statement": "The scenario state machines in this file faithfully abstract the code they describe: session.apply, Project.apply and its commit, the session's onCommit and flush, the renderer, inspector and source editor refresh and the workspace write.",
+      "rationale": "The correspondence between the machines and the code is maintained by hand and is not checked or generated. A behavioral claim here is true of the machines; it is true of Exegra only to the extent that this assumption holds."
+    },
+    {
+      "id": "views-derive-from-committed-model",
+      "statement": "Every representation (scene, inspector, source editor) derives its content from the committed model snapshot and from interaction state, and from nothing else.",
+      "rationale": "The equivalence claims compare the revision each view shows with the revision of the transaction system. They say nothing about a view that kept private state of the specification; the session and the panels are written not to, but that is not checked."
+    },
+    {
+      "id": "tests-exercise-shipped-modules",
+      "statement": "The core tests import and run the same modules under src/core and tools that the application and the agent command line run.",
+      "rationale": "Test evidence supports a claim about the shipped code only if the test exercises the shipped code and not a copy."
+    },
+    {
+      "id": "browser-tests-run-real-application",
+      "statement": "The browser tests drive the real application served by the Vite development server, against scratch copies of this specification and of the multiplayer test fixture (one pair per Playwright worker) (and, read-only, a project linked locally), in the locally installed Chrome.",
+      "rationale": "They show behaviour in one browser on one machine; other browsers are not exercised."
+    },
+    {
+      "id": "recorded-results-reflect-current-code",
+      "statement": "A recorded result of a test in evidence/results.json was produced by the code and the specification as they are now.",
+      "rationale": "Recorded results carry the records stamp of the tree and Lean checks the hash of the formal/ sources; the command line reads a result of another stamp as stale and never positive. Where no stamp can be computed (the browser bundle) the results are shown with unverifiable freshness, and this assumption is what they rest on."
+    },
+    {
+      "id": "filesystem-honours-atomic-rename",
+      "statement": "Renaming a temporary file over the target replaces the target atomically on the file system holding the project.",
+      "rationale": "The workspace service relies on it for atomic replacement. On Windows it retries a blocked rename and finally writes in place, which is not atomic."
+    },
+    {
+      "id": "single-workstation",
+      "statement": "The browser, the development server and the project files run on one developer workstation: one host, one clock, loopback between browser and server, one local disk.",
+      "rationale": "This is how Exegra is run today (npm run dev). It says nothing about a shared or hosted deployment."
+    },
+    {
+      "id": "workstation-rates-assumed",
+      "statement": "The rates and durations of the workstation failure modes are the author's estimates of ordinary development use, not measurements.",
+      "rationale": "No telemetry exists for the development server or the browser session. A recorded measurement would replace these values; until then they only order the modes by plausibility."
+    },
+    {
+      "id": "one-fault-at-a-time",
+      "statement": "On a developer workstation at most one of the listed failures is in progress at a time; two independent failures overlapping within one save is not considered.",
+      "rationale": "A single user drives one session; overlapping faults are rare enough to leave out of the fault model, and the model says so."
+    },
+    {
+      "id": "seeded-streams-independent",
+      "statement": "Draws from distinct SplitMix64 streams (distinct seeds, or distinct stream names under one seed) behave as independent uniform 64-bit values for the purposes of the simulator.",
+      "rationale": "Metric claims treat runs with distinct seeds as independent and identically distributed (the exact binomial test of docs/simulation.md). This rests on the statistical quality of SplitMix64 (it passes BigCrush) and of the FNV-1a and mix64 derivation of stream keys, which is tested, not proved."
+    },
+    {
+      "id": "trusted-lean-kernel",
+      "statement": "The Lean 4 kernel of the toolchain formal/lean-toolchain pins (v4.35.0) accepts only well-typed proof terms.",
+      "rationale": "Trusted base of every lean-theorem claim (WG-4792). The kernel is the one component a proof is checked by; nothing in this repository checks it. A theorem is proved only relative to it and to the three standard axioms propext, Classical.choice and Quot.sound."
+    },
+    {
+      "id": "trusted-lean-compiler-runtime",
+      "statement": "The Lean compiler translates the Lean core faithfully to C, and the Lean v4.35.0 C/C++ runtime, with the two-hunk patch formal/wasm/patches/lean-v4.35.0-runtime-wasm.patch applied, executes that C as Lean defines it.",
+      "rationale": "Trusted base of the claim that the code which runs is the code the theorems are about (WG-4792). The theorems are about Lean definitions; the compiled module (src/engine/lean/) and the native exegra-lean run the C that the compiler emits (lake build for Exegra, `lean -c` of the toolchain for Init and Std), linked with the runtime. The patch fixes string_to_list_core (a 32-bit-only bug, a no-op on 64-bit) and an emscripten-only stub signature."
+    },
+    {
+      "id": "trusted-emscripten-toolchain",
+      "statement": "Emscripten 7.0.0 (clang/LLVM, wasm-ld, binaryen, musl libc, libc++ and the generated JS loader) compiles and links the C of the Lean core and the runtime to WebAssembly (wasm64, Memory64) without changing its meaning.",
+      "rationale": "Pinned in tools/build-formal-wasm.js (emsdk commit and SDK version). The same C is compiled natively for exegra-lean, and the WebAssembly engine is checked byte for byte against goldens and against the Rust engine, but that is testing, not a proof (WG-4792)."
+    },
+    {
+      "id": "trusted-libuv",
+      "statement": "libuv v1.48.0, linked into the WebAssembly module because the Lean runtime references it, does not affect the result of a call: the core reaches none of its I/O.",
+      "rationale": "Pinned by commit in tools/build-formal-wasm.js; compiled from its sources with Lean's emscripten source list (no-proctitle.c). Only error-string paths are reachable from Exegra.Api (WG-4792)."
+    },
+    {
+      "id": "trusted-js-glue",
+      "statement": "The glue between JavaScript and the Lean core (src/core/lean.js, formal/wasm/glue.c, the emscripten-generated exegra-lean.mjs) passes request and reply bytes unchanged and reports failures as errors.",
+      "rationale": "Small and hand-written (glue.c, lean.js) or generated (exegra-lean.mjs); tested by tests/core/lean.test.js, not proved (WG-4792)."
+    },
+    {
+      "id": "trusted-wasm-engine",
+      "statement": "The WebAssembly engine of the host (V8 in Node and Chrome, SpiderMonkey in Firefox) executes the module according to the WebAssembly specification, Memory64 and exception handling included.",
+      "rationale": "Stable Safari does not ship Memory64, so Exegra's Lean core does not run there until it does (decision 2026-11-18, WG-4792)."
+    },
+    {
+      "id": "trusted-os-filesystem",
+      "statement": "The operating system and file system store and return the specification, layout and recorded-results files as written.",
+      "rationale": "Every claim about Exegra's persisted state rests on it; nothing in Exegra checks it."
+    },
+    {
+      "id": "trusted-js-shell",
+      "statement": "The JavaScript shell outside the verified kernel (the application UI, layout, projections, scene, generators, live replay, request-log rendering, the agent command line's arguments, workspace I/O, the development server and the JSONC text layer of the parser) computes what it is specified to compute, and the kernel components not yet ported to Lean do too.",
+      "rationale": "These components are outside the verdict path (decision 2026-11-18, WG-4799): no claim's status is decided by them, they present, store and route what the kernel computes. The kernel components still in JavaScript are trusted, tested and not proved until their ports finish; claim core-logic-in-lean lists them."
+    },
+    {
+      "id": "static-extractor-sound",
+      "statement": "The static extractor (tools/extract.js) reports exactly the static imports of the files it reads: every import, re-export and dynamic import of a JavaScript file, every import line of a Lean file, every mod and use of a Rust file, resolved to the file it names, and nothing else.",
+      "rationale": "The extractor is a trusted component: its soundness is not provable in Lean. It is checked against a corpus of source texts (tests/core/extract.test.js) and, where practical, against a second parser. A pattern it does not know (an import built from a string at run time) is invisible to it, which is why extracted facts are static structure only."
+    },
+    {
+      "id": "extracted-facts-current",
+      "statement": "The fact file of extracted imports (specs/<project>/extracted/facts.json) describes the files on disk: the digest of every file of the implementation surface equals the digest recorded in it, by the extractor version that wrote it.",
+      "rationale": "An extracted fact is a function of the bytes it was read from and the extractor version. Verification re-reads the digests of the tree and records the outcome (src/core/facts.js, kind importScan); a recorded failure makes every claim that rests on it undecided, and stale facts are never read as benign."
+    }
+  ]
+}

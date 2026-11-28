@@ -1,0 +1,1578 @@
+// Part of the specification: claims, evidence.
+{
+  "claims": [
+    {
+      "id": "exhaustive-exploration-sound",
+      "kind": "invariant",
+      "statement": "Exhaustive exploration within stated bounds finds the known race of a fixture protocol with a counterexample run that Lean accepts, reports its fixed version as holding for all N explored configurations, and gives the same N on every run.",
+      "rationale": "The explorer is defined and proved in Lean over the behaviour calculus (formal/Exegra/Core/BehavCheck.lean and ProveB.lean, WG-5681): explore_holds_invariant, explore_cex_real and verdictOf_holds build with only Lean's standard axioms, pinned with #guard_msgs. N counts calculus states. The test runs exegra prove on tests/fixtures/race: the read-modify-write store's lost update, which its scripted run does not show, is found as a counterexample; the atomic store is verified for all N configurations, the same N on two runs. Each result is a theorem discharged by native_decide, so it also trusts the Lean compiler. Exegra records the test as evidence; it does not check the proofs itself.",
+      "subjects": [
+        "exhaustive-explorer",
+        "simulation-engine"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "formal-semantics-properties-proved",
+      "kind": "invariant",
+      "statement": "The behaviour calculus's scheduler step is a function, fires at most one transition per machine per step, and every run of an elaborated engine input stops within its step limit, with no unproved assumption in the proofs.",
+      "rationale": "Supported by the test that builds formal/ (WG-4685, WG-5681): lake build type-checks every theorem of formal/Exegra/ (Exec.step is a total function, so each state has one scheduled successor; winners_nodup: at most one winner per machine; runB_terminates: the run of an elaborated input ends with an outcome other than running within stepLimit steps; Exec.step_failed: a failed step keeps nothing), and its #guard_msgs checks fail the build if any theorem depends on sorryAx or on an axiom other than propext, Classical.choice and Quot.sound. The test also refuses sorry, admit and axiom declarations in the sources. Exegra records the build as test evidence; it does not check the proofs itself.",
+      "subjects": [
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "invariants-proved-unbounded",
+      "kind": "invariant",
+      "statement": "A state-invariant claim reported as verified by proof has a Lean theorem, building with no unproved assumption, that the invariant holds in every reachable configuration of its scenario under its fault model.",
+      "rationale": "Planned (WG-4686). The bounded part exists: invariants-proved-within-bounds (WG-4696) covers every configuration within a stated bound, with its own evidence. Proving an invariant for every reachable configuration at every depth, by induction over the step relation, remains WG-4686, so this claim stays not evaluated until evidence of that exists.",
+      "subjects": [
+        "proof-export",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "invariants-proved-within-bounds",
+      "kind": "invariant",
+      "statement": "A state-invariant claim reported by exegra prove as holding has a Lean theorem, accepted by Lean, that the verified explorer visited every configuration of its scenario reachable within the stated bound (over every order of simultaneous events and every subset of the scenario's faults) and found the invariant true in each; the result names the axioms the theorem depends on.",
+      "rationale": "The bounded part of invariants-proved-unbounded (WG-4696). Supported by the test of exegra prove on tests/fixtures/race. The theorem is explore env inv bound maxStates = holds N; explore_sound turns it into the invariant for every reachable state within the bound. It is discharged by native_decide, so its axioms include one that trusts the compiled code, and the result lists it. Exegra records the test as evidence; it does not check the proofs itself.",
+      "subjects": [
+        "proof-export",
+        "exhaustive-explorer",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "sampled-explorations-never-verified",
+      "kind": "invariant",
+      "statement": "exegra prove on a format-2 scenario reports the seed first, and the scope \"fault times fixed as declared\" when the scenario has windowed faults, and shows a result as verified only when the engine input contains no distribution other than fixed or choice anywhere and no element that draws (no Poisson process; no batch, think, closed start, population start.at, emit size or after, timer delay or restartAfter other than fixed or choice; no uniform client pick, groups, choose or sample payload field, or random route), a check made statically on the input; choice values and any routes are enumerated as nondeterminism.",
+      "rationale": "Planned (WG-4664, WG-4715; the criterion is stated once in docs/simulation.md, Exploration and sampling). Negative twin: a fixture that is fixed everywhere except one emit size drawn from a uniform distribution must not be shown as verified; the same fixture with that size fixed, and a route changed from random to any, must be, after the explorer enumerates every instance. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "exhaustive-explorer",
+        "proof-export",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "temporal-claims-checked-on-all-runs",
+      "kind": "invariant",
+      "statement": "A never, precedes or eventually claim reported by exegra prove as holding has a Lean theorem, accepted by Lean, that the explorer of the behaviour calculus found no reachable node of the product of its scenario with the claim's monitor that violates the form (every order of ready entries, every draw of a sampled delay, every subset of its faults); a reported counterexample is a real path of that product to a violating node, and a path the bound or the state budget cuts off is reported incomplete.",
+      "rationale": "WG-4698, moved onto the calculus by WG-5681. The forms and the monitor are defined in formal/Exegra/Core/BehavCheck.lean (monitor_sound) and checked in formal/Exegra/ProveB.lean (tcheckB_holds, tcheckB_cex), with only Lean's standard axioms, pinned with #guard_msgs. The test runs exegra prove on tests/fixtures/race and tests/fixtures/behaviour-order: an eventually that holds, an eventually that fails because a path drops the event and ends first, a precedes that holds, and a precedes that the scripted run satisfies and a reordering violates. Each result is discharged by native_decide, so it also trusts the Lean compiler. Exegra records the test as evidence; it does not check the proofs itself.",
+      "subjects": [
+        "exhaustive-explorer",
+        "proof-export"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "prove-reports-only-lean-accepted",
+      "kind": "invariant",
+      "statement": "exegra prove reports a claim result only when Lean accepted its theorem.",
+      "subjects": [
+        "proof-export",
+        "formal-semantics",
+        "proof-outputs",
+        "prove-accepted",
+        "prove-lean-rejects"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "state-invariant",
+        "scenarios": [
+          "prove-accepted",
+          "prove-lean-rejects"
+        ],
+        "expr": "prove-flow.reported => prove-flow.leanAccepted",
+        "negatives": [
+          {
+            "scenario": "prove-lean-rejects",
+            "faults": [
+              "prove-reports-unchecked"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "engine-run-terminates-proved",
+      "kind": "invariant",
+      "statement": "Every run of an engine input that the engine elaborates into the behaviour calculus stops: its outcome is never running, and it has at most stepLimit steps.",
+      "subjects": [
+        "formal-semantics",
+        "simulation-engine"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "The theorem Exegra.V2.runB_terminates of formal/Exegra/Format2B.lean, about Exegra.V2.runInput, the definition of a version-2 run (WG-4792, WG-5681): for an elaborated input, whatever runInput returns is the trace of traceOfB, which stops within stepLimit steps. The engine runs the implementation Exegra.Impl, equal to the definition on every input by Exegra.Impl.runAnyValue_eq (claim engine-run-refines-definition), so the property holds of what runs. Inputs outside the calculus run the legacy interpreter and are not covered. Proved, not tested: it covers every elaborated input, not a list of scenarios.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.V2.runB_terminates",
+        "about": [
+          "Exegra.V2.runInput"
+        ]
+      }
+    },
+    {
+      "id": "lean-engine-is-exegra-lean",
+      "kind": "structural",
+      "statement": "The engine the JavaScript shell calls (engine.run at the Lean call boundary) is the function the native exegra-lean runs: runAny is Json.parse followed by Exegra.Api.call \"engine.run\".",
+      "subjects": [
+        "lean-call-boundary",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "The theorem Exegra.Api.runAny_eq_parse_call of formal/Exegra/Api.lean (WG-4792): the definition on text is Json.parse followed by engine.run. Since WG-4793 engine.run is the implementation Exegra.Impl.runAnyValue, so the proof goes through the refinement theorem Exegra.Impl.runAny_eq; Exegra.Api.implRunAny_eq_parse_call states by rfl that exegra-lean (Exegra.Impl.runAny) and the boundary run one function.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Api.runAny_eq_parse_call",
+        "about": [
+          "Exegra.runAny",
+          "Exegra.Api.call"
+        ]
+      }
+    },
+    {
+      "id": "lean-registry-names-unique",
+      "kind": "structural",
+      "statement": "No two functions registered at the Lean call boundary share a name, so a name selects exactly one function.",
+      "subjects": [
+        "lean-call-boundary"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "The theorem Exegra.Api.registry_names_nodup (by decide), about Exegra.Api.registry (WG-4792). A module port that registers a duplicate name fails lake build.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Api.registry_names_nodup",
+        "about": [
+          "Exegra.Api.registry"
+        ]
+      }
+    },
+    {
+      "id": "lean-boundary-errors-are-values",
+      "kind": "structural",
+      "statement": "Every call through the Lean call boundary returns a reply: an unknown function, a malformed request and a refusal come back as an error value, and the boundary lists its registered functions.",
+      "subjects": [
+        "lean-call-boundary"
+      ],
+      "assumptions": [
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "Supported by tests/core/lean.test.js (WG-4792).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "lts-safe-of-inductive",
+      "kind": "structural",
+      "statement": "An inductive invariant that implies P proves that P holds in every reachable state of a labelled transition system, with no bound on the length of runs.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/LTS.lean. It depends on no axiom. It is the soundness of the proof method, not a result about any particular system.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.safe_of_inductive",
+        "about": [
+          "Exegra.Core.LTS.Invariant",
+          "Exegra.Core.LTS.Inductive"
+        ]
+      }
+    },
+    {
+      "id": "lts-bounded-is-not-unbounded",
+      "kind": "structural",
+      "statement": "For every depth k there is a guarded-command program in which a property holds in every state reachable in at most k steps and does not hold in every reachable state: bounded exploration that finds no counterexample is not a proof.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Examples.lean about the unbounded counter. It records, as a theorem, the distinction between bounded and unbounded results that claim statuses must keep.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Examples.bounded_not_unbounded",
+        "about": [
+          "Exegra.Core.LTS.BoundedInvariant",
+          "Exegra.Core.LTS.Invariant"
+        ]
+      }
+    },
+    {
+      "id": "lts-vacuous-without-initial-state",
+      "kind": "structural",
+      "statement": "A labelled transition system with no initial state has every predicate as an invariant, so an invariant result must be accompanied by a proof that the system has an initial state.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/LTS.lean; Exegra.Core.Examples.vacuous_false instantiates it with False. Every guarded-command program has an initial state (Exegra.Core.Prog.nonVacuous).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.invariant_of_no_init",
+        "about": [
+          "Exegra.Core.LTS.Invariant",
+          "Exegra.Core.LTS.NonVacuous"
+        ]
+      }
+    },
+    {
+      "id": "lts-search-holds-is-invariant",
+      "kind": "structural",
+      "statement": "When the generic search reports holds on a search system that covers a labelled transition system (every initial state and every step present), the searched property holds in every reachable state of that transition system, with no bound.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Search.lean, from Exegra.Gen.search_sound. The coverage obligation is a hypothesis: for Exegra's own explorer it is not yet discharged against a transition-system semantics of the behaviour language (milestone M2).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.LTS.invariant_of_search",
+        "about": [
+          "Exegra.Gen.search",
+          "Exegra.Core.LTS.Invariant"
+        ]
+      }
+    },
+    {
+      "id": "lts-counter-bounded-for-every-limit",
+      "kind": "structural",
+      "statement": "The guarded-command counter with guard n < L and effect n := n + 1 never exceeds L, for every L >= 0, in every reachable state with no bound on runs.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Examples.lean, proved by an inductive invariant over Int with omega; the property separates an integer semantics from a Float one (docs/assessment/2026-11-26/foundations.md, cross-challenge C1).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Examples.counter_le",
+        "about": [
+          "Exegra.Core.Prog.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-phase2-order-independent",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, when the winners of a step are on distinct machines and every winner reads other machines from the start-of-step snapshot, the machines after phase 2 are the same for every order in which the winners fire (or phase 2 fails in every order). This is about the machines only; the whole configuration after the step is the subject of behav-delivery-order-independent.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Behav.lean (plan-M2, M2.1), proved by induction on the permutation with a swap lemma for two winners on distinct machines; it holds for every starting list of machines. The companion phase2_perm_emitted shows the blocks of emitted entries (one per winner, tagged with its machine) are permutations of each other when both orders succeed; winners_nodup discharges the distinct-machines hypothesis for the winners a step computes. Which error is reported when phase 2 fails may depend on the order. It is about the calculus, not about the format-2 interpreter, whose phase 2 reads the configuration being written.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.phase2_perm",
+        "about": [
+          "Exegra.Core.Behav.phase2"
+        ]
+      }
+    },
+    {
+      "id": "behav-f4-ab-safe",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, two machines reacting to one event at time 0, a setting x := 1 and b setting y := a.x, listed a first, keep y = 0 in every reachable state with no bound on runs, and no run reaches the error state.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavExamples.lean (the [a, b] listing of the example in docs/foundations.md M2), proved by an inductive invariant over the two reachable states with the delivery computed by kernel evaluation (decide). The system has an initial state (f4_nonVacuous), so the invariant is not vacuous.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.f4_ab_safe",
+        "about": [
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Examples.f4AB",
+          "Exegra.Core.LTS.Invariant"
+        ]
+      }
+    },
+    {
+      "id": "behav-f4-ba-safe",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, the same two machines listed b first also keep y = 0 in every reachable state with no bound on runs, and no run reaches the error state: both listings give one verdict.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavExamples.lean (the [b, a] listing), proved like behav-f4-ab-safe. Together with it, it is the one-verdict criterion of docs/foundations.md M2 for this example, in the calculus; the product-level verdict (exegra prove on a specification) waits for M2.6.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.f4_ba_safe",
+        "about": [
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Examples.f4BA",
+          "Exegra.Core.LTS.Invariant"
+        ]
+      }
+    },
+    {
+      "id": "behav-f4-next-reads-differ",
+      "kind": "structural",
+      "statement": "In the calculus's model of today's next-configuration rule (deliverNext, whose phase 2 lets a winner read other machines as earlier winners of the same step left them), the same delivery leaves y = 1 when a is listed first and y = 0 when b is listed first.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavExamples.lean, by kernel evaluation (decide) of deliverNext on the two listings; the statement names the successor configurations. It shows that the order dependence the snapshot rule removes is real in the model. phase2Next is a re-implementation in the calculus, linked to the format-2 interpreter (Exegra.V2) by no theorem or test: for this example it follows Format2.lean (winners fire in listing order and effects read the configuration being written), but in general it differs (an absent variable reads as undefined in format 2 and is the error shape here; aggregates and resources are absent). A differential run of Exegra.V2 on the format-2 fixture of the example belongs to M2.5.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.f4_next_reads_differ",
+        "about": [
+          "Exegra.Core.Behav.deliverNext",
+          "Exegra.Core.Behav.Examples.f4AB",
+          "Exegra.Core.Behav.Examples.f4BA"
+        ]
+      }
+    },
+    {
+      "id": "behav-failed-step-is-counterexample",
+      "kind": "structural",
+      "statement": "In the behaviour calculus a delivery whose guard divides by zero leads to the error state, which is reachable, so the property that every reachable state is running is refuted rather than satisfied by the absence of a step.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavExamples.lean (review-M1, finding 6): failed steps are modelled by an explicit error state, never by a missing successor, so a safety claim stated over running states cannot silently exclude runs that fail.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.divZero_counterexample",
+        "about": [
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.LTS.Invariant"
+        ]
+      }
+    },
+    {
+      "id": "lean-core-runs-in-browser",
+      "kind": "structural",
+      "statement": "The Lean core, compiled to WebAssembly (wasm64), runs in the application page and reproduces golden traces exactly.",
+      "subjects": [
+        "lean-call-boundary",
+        "simulation-engine"
+      ],
+      "assumptions": [
+        "trusted-wasm-engine",
+        "trusted-js-glue"
+      ],
+      "rationale": "Supported by tests/browser/lean-core.spec.js in Chrome (WG-4792). Stable Safari is not supported until it ships Memory64.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "engine-run-refines-definition",
+      "kind": "invariant",
+      "statement": "The engine the application runs (Exegra.Impl.runAnyValue, registered as engine.run and run by exegra-lean) returns exactly what the definition of the semantics (Exegra.runAnyValue) returns, on every parsed engine input of format 1 and format 2.",
+      "subjects": [
+        "formal-semantics",
+        "simulation-engine",
+        "lean-call-boundary"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "The refinement theorem Exegra.Impl.runAnyValue_eq of formal/Exegra/Impl/Refinement.lean (WG-4793), built from one lemma per function of a run (stepC_compile, evalFast_eq, write'_eq, ...). The implementation parses expressions once and evaluates arithmetic on unboxed floats; the theorem carries every theorem about Exegra.runInput over to it.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Impl.runAnyValue_eq",
+        "about": [
+          "Exegra.Impl.runAnyValue",
+          "Exegra.runAnyValue"
+        ]
+      }
+    },
+    {
+      "id": "engine-call-computes-definition",
+      "kind": "structural",
+      "statement": "A call of engine.run at the Lean call boundary computes the definition of the semantics, Exegra.runAnyValue, on its parsed arguments.",
+      "subjects": [
+        "lean-call-boundary",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "The theorem Exegra.Api.call_engine_run_spec of formal/Exegra/Api.lean (WG-4793): the registered function is the implementation (call_engine_run, by rfl), equal to the definition by Exegra.Impl.runAnyValue_eq.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Api.call_engine_run_spec",
+        "about": [
+          "Exegra.Api.call",
+          "Exegra.runAnyValue"
+        ]
+      }
+    },
+    {
+      "id": "fast-json-writer-is-json-write",
+      "kind": "invariant",
+      "statement": "The in-place JSON writer the engine writes traces with (Exegra.Impl.JsonOut.write') gives the text of the definition Exegra.Json.write for every value.",
+      "subjects": [
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime"
+      ],
+      "rationale": "The theorem Exegra.Impl.JsonOut.write'_eq of formal/Exegra/Impl/Json.lean (WG-4793), by mutual induction over values; Json.write is total (structural recursion).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Impl.JsonOut.write'_eq",
+        "about": [
+          "Exegra.Impl.JsonOut.write'",
+          "Exegra.Json.write"
+        ]
+      }
+    },
+    {
+      "id": "semantic-hash-call-computes-definition",
+      "kind": "structural",
+      "statement": "A call of hash.semantic at the Lean call boundary returns the definition of the semantic hash of the declarations it is given.",
+      "subjects": [
+        "lean-call-boundary",
+        "model-hash"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "Theorem of formal/Exegra/Api.lean (WG-4799).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Api.call_hash_semantic",
+        "about": [
+          "Exegra.Api.call",
+          "Exegra.Hash.semanticHash"
+        ]
+      }
+    },
+    {
+      "id": "behav-delivery-order-independent",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, under every fault mask, firing the winners a step computes in any order (any permutation, chosen per configuration and delivered entry) leads to the same successor state as the step itself: the same configuration, with time, machines, pending list and attempt counts equal (not only up to a permutation), or the error state in both orders. Emitted entries enter the pending list in machine-index order, by time, after the pending entries of the timers the winners set or cancelled are removed.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem deliver_perm of formal/Exegra/Core/Behav.lean (review-M2.1, finding 1), from phase2_perm (machines), phase2_perm_emitted (the emitted blocks are permutations), winners_nodup (the winners are on distinct machines) and the fact that blocks tagged with distinct machines are reassembled in machine-index order whatever their order. Emitted entries are inserted like format 2's insertE (Format2.lean:1022-1025); since format 2 fires winners in listing order, which is machine-index order in the calculus, the queue is format 2's for a given listing. Which error is reported may depend on the order; the error state does not carry it. BehavExamples.lean shows it on two machines emitting on one event (emission_order_irrelevant). It is about the calculus, not about the format-2 interpreter.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.deliver_perm",
+        "about": [
+          "Exegra.Core.Behav.deliverAt",
+          "Exegra.Core.Behav.deliverWith",
+          "Exegra.Core.Behav.phase2"
+        ]
+      }
+    },
+    {
+      "id": "behav-winners-distinct",
+      "kind": "structural",
+      "statement": "The winners a step of the behaviour calculus computes are on distinct machines, so the order-independence theorems apply to every step.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem winners_nodup of formal/Exegra/Core/Behav.lean (review-M2.1, finding 4): the machines of the winners form a sublist of the machine indices in order, which have no duplicate. It discharges the hypothesis of phase2_perm and phase2_perm_emitted for the winners deliver actually fires.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.winners_nodup",
+        "about": [
+          "Exegra.Core.Behav.winners"
+        ]
+      }
+    },
+    {
+      "id": "behav-shape-invariant",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, from an initial configuration of the shape of its signature (one machine state per machine, each with a control state of its machine and one value of the declared sort per variable), every reachable state has that shape, with no bound on runs.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem shaped_invariant of formal/Exegra/Core/Behav.lean (review-M2.1, finding 9), by an inductive invariant: assignments check the declared sort, a move goes to a control state of the machine, phase 2 writes only the winner's machine, and a failing step keeps the configuration before it. Reads past the end of a state are the error shape; from a shaped configuration that error cannot occur (behav-shape-error-unreachable).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.shaped_invariant",
+        "about": [
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Cfg.Shaped",
+          "Exegra.Core.Behav.State.Shaped",
+          "Exegra.Core.LTS.Invariant"
+        ]
+      }
+    },
+    {
+      "id": "behav-shape-error-unreachable",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, from a shaped initial configuration no step from a reachable configuration fails with the error shape.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem shape_unreachable of formal/Exegra/Core/Behav.lean (review-M2.1, finding 9), from shaped_invariant and deliver_ne_shape: in a shaped configuration every machine, variable and control-state index a step uses is in range. The theorem rests on the shape of the initial configuration as a hypothesis; a static well-formedness predicate Sys.WF that implies it is M2.2's. BehavExamples.lean discharges it for the [a, b] example (f4Init_shaped, f4_ab_no_shape).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.shape_unreachable",
+        "about": [
+          "Exegra.Core.Behav.deliver",
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Cfg.Shaped"
+        ]
+      }
+    },
+    {
+      "id": "behav-static-sort-sound",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, when the static sort of an expression is defined, every value the expression evaluates to in a typed context fits that sort: it has that sort, and an integer lies in the sort's range (an integer literal has the one-point range of its value, an arithmetic node the range of its arithmetic sort).",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem Expr.eval_fits of formal/Exegra/Core/Behav.lean (review-M2.1, finding 6). A typed context has a shaped snapshot, own variables of their declared sorts and a time within 2^53 - 1 (the sort of the time; the bound on time is M2.2's). Every arithmetic node checks its result against its sort and a payload field is checked against its sort when read, so the theorem needs no induction hypothesis on operands. No theorem yet uses it to exclude the error sort from well-formed systems (Sys.WF, M2.2).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Expr.eval_fits",
+        "about": [
+          "Exegra.Core.Behav.Expr.eval",
+          "Exegra.Core.Behav.Val.fits",
+          "Exegra.Core.Behav.Ctx.Typed"
+        ]
+      }
+    },
+    {
+      "id": "behav-integer-overflow-at-node",
+      "kind": "structural",
+      "statement": "In the behaviour calculus an arithmetic node is checked against its declared integer type: with x : u8 = 200, the guard x + 100 > 255 is the error overflow, as format 2 reports, not true.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem u8_overflow of formal/Exegra/Core/BehavExamples.lean (review-M2.1, finding 3, demonstration D3), by kernel evaluation. Each arithmetic node carries the sort format 2's staticTy gives it (Expr.lean:267-277), and both operands and the exact result are checked against it on every operator, as format 2's intResult does (Expr.lean:289-297). That M2.4's elaboration assigns staticTy is not yet proved.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.u8_overflow",
+        "about": [
+          "Exegra.Core.Behav.Expr.eval",
+          "Exegra.Core.Behav.Examples.u8Guard"
+        ]
+      }
+    },
+    {
+      "id": "behav-remainder-truncates",
+      "kind": "structural",
+      "statement": "In the behaviour calculus % is the truncated remainder, as format 2 computes it: -7 % 2 is -1, not 1.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem mod_truncates of formal/Exegra/Core/BehavExamples.lean (review-M2.1, finding 2, demonstration D2), by kernel evaluation of Int.tmod, format 2's Num.fmod (Number.lean:67-69, Expr.lean:364). typed_div_truncates shows that a typed integer / truncates toward zero, as format 2's divIn (Expr.lean:299-304); untyped_div_inexact that an untyped / with a remainder is an error, where format 2 computes a fraction the calculus does not represent.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.mod_truncates",
+        "about": [
+          "Exegra.Core.Behav.BOp.apply"
+        ]
+      }
+    },
+    {
+      "id": "behav-mask-constant",
+      "kind": "structural",
+      "statement": "In the behaviour calculus the fault mask chosen in the initial state is kept by every step: faults are all-or-nothing per run, as in format 2.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem mask_const of formal/Exegra/Core/Behav.lean (plan-M2, M2.2). Format 2's run is the all-true mask over the scenario's faults; the relation has one initial state per mask, so an invariant of Sys.lts holds under every subset of the scenario's faults. Choosing a fault per occurrence is not modelled.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.mask_const",
+        "about": [
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.State.mask"
+        ]
+      }
+    },
+    {
+      "id": "behav-time-invariant",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, from an initial configuration at time 0 whose pending and injected entries are below 2^53, in every reachable state the current time is below 2^53 and no later than any pending entry's time, and every pending entry's time is below 2^53.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem time_invariant of formal/Exegra/Core/Behav.lean (plan-M2, M2.2), by an inductive invariant over deliver_ok_form: the delivered entry has minimal time, emitted, timer and copied entries are scheduled at the step's time or later, and a time at or beyond 2^53 is the error timeBound, as format 2's 'Value time exceeds 2^53'. It is what lets the time be read at the sort of 0..2^53-1.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.time_invariant",
+        "about": [
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Cfg.TimeOK",
+          "Exegra.Core.Behav.Sys.TimesOK"
+        ]
+      }
+    },
+    {
+      "id": "behav-sorted-invariant",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, when the initial queue is sorted by time, the queue of every reachable state is sorted by time.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem sorted_invariant of formal/Exegra/Core/Behav.lean (plan-M2, M2.2-M2.3). Entries are inserted before the first entry of a later time, and removing entries keeps a list sorted. On a sorted queue the head has minimal time, which the scheduler relies on (behav-exec-idle-deadlocked).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.sorted_invariant",
+        "about": [
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Cfg.Sorted"
+        ]
+      }
+    },
+    {
+      "id": "behav-wf-no-sort-error",
+      "kind": "structural",
+      "statement": "In the behaviour calculus no step of a well-formed system fails with the error sort, from any reachable state: guards are Booleans, operands have the sorts their operators take, and assignments write values of the variable's sort.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem sort_unreachable of formal/Exegra/Core/Behav.lean (plan-M2, M2.2). Sys.WF is decidable (Sys.wf): the initial configuration has the shape of the signature, starts at time 0 with a sorted queue below 2^53, guards have static sort bool and effects are well-typed. It rests on shaped_invariant, time_invariant, Expr.eval_fits and Expr.eval_ne_sort. Other errors (overflow, operand, divZero, inexact, absent or ill-sorted payload fields, timeBound) remain possible and lead to the error state.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.sort_unreachable",
+        "about": [
+          "Exegra.Core.Behav.deliver",
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Sys.WF"
+        ]
+      }
+    },
+    {
+      "id": "behav-exec-step-sound",
+      "kind": "structural",
+      "statement": "Every step the executable scheduler of the behaviour calculus commits is a step of the calculus's transition system, labelled by the head of the queue.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem Exec.step_sound of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3). Exec.step computes with the relation's own delivery function at label 0, so the theorem is close to its definition; what makes the scheduler one scheduler of the relation is that it never stops where the relation has a step (behav-exec-idle-deadlocked, behav-exec-stopped-deadlocked). Exec.step_failed proves the failing case leads to the error state.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Exec.step_sound",
+        "about": [
+          "Exegra.Core.Behav.Exec.step",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-exec-step-failed",
+      "kind": "structural",
+      "statement": "When the executable scheduler of the behaviour calculus fails a step, the calculus's transition system has a step to the explicit error state carrying the configuration before the step.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem Exec.step_failed of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3): a failed step is a counterexample state of the relation, never a missing step.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Exec.step_failed",
+        "about": [
+          "Exegra.Core.Behav.Exec.step",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-exec-idle-deadlocked",
+      "kind": "structural",
+      "statement": "When the executable scheduler of the behaviour calculus is idle on a state whose queue is sorted, the calculus's transition system has no step from that state.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem Exec.idle_deadlocked of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3). With sorted_invariant it covers every reachable state of a well-formed system: the scheduler stops only on quiescence or the error state.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Exec.idle_deadlocked",
+        "about": [
+          "Exegra.Core.Behav.Exec.step",
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Cfg.Sorted"
+        ]
+      }
+    },
+    {
+      "id": "behav-exec-stopped-deadlocked",
+      "kind": "structural",
+      "statement": "When the executable scheduler of the behaviour calculus stops at stopAt on a state whose queue is sorted, the calculus's transition system has no step from that state.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem Exec.stopped_deadlocked of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3): every pending entry is then after stopAt.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Exec.stopped_deadlocked",
+        "about": [
+          "Exegra.Core.Behav.Exec.step",
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Core.Behav.Cfg.Sorted"
+        ]
+      }
+    },
+    {
+      "id": "behav-run-states-reachable",
+      "kind": "structural",
+      "statement": "Every state of a run of the executable scheduler of the behaviour calculus from a reachable state is reachable in the calculus's transition system.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem run_reach of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3), from Exec.step_sound and Exec.step_failed. A run truncated by its step limit is a prefix of a run of the relation.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.run_reach",
+        "about": [
+          "Exegra.Core.Behav.Exec.run",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-successors-complete",
+      "kind": "structural",
+      "statement": "Every step of the behaviour calculus's transition system, with its label, is produced by the calculus's successor function.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem successors_complete of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3); successors_sound gives the converse. Exec.enum is therefore a complete enumeration and Exec.covers holds for the search system Exec.gen.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.successors_complete",
+        "about": [
+          "Exegra.Core.Behav.Exec.successors",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-successors-sound",
+      "kind": "structural",
+      "statement": "Every successor the behaviour calculus's successor function produces is a step of its transition system with that label.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem successors_sound of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3); with it Exec.sound holds for the search system Exec.gen.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.successors_sound",
+        "about": [
+          "Exegra.Core.Behav.Exec.successors",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-search-holds-invariant",
+      "kind": "structural",
+      "statement": "When the generic search reports holds on the behaviour calculus's search system, the searched property holds in every reachable state of the calculus's transition system, with no bound.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem Exec.holds_invariant of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3): invariant_of_search instantiated with Exec.covers, discharging the coverage obligation that lts-search-holds-is-invariant leaves as a hypothesis, for the calculus. Failed steps are error states, so a property false on them is refuted, not satisfied by a missing step.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Exec.holds_invariant",
+        "about": [
+          "Exegra.Core.Behav.Exec.gen",
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Gen.search",
+          "Exegra.Core.LTS.Invariant"
+        ]
+      }
+    },
+    {
+      "id": "behav-search-cex-refutes",
+      "kind": "structural",
+      "statement": "When the generic search reports a counterexample on the behaviour calculus's search system, the searched property is not an invariant of the calculus's transition system.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem Exec.cex_refutes of formal/Exegra/Core/BehavExec.lean (plan-M2, M2.3): not_invariant_of_search instantiated with Exec.sound.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Exec.cex_refutes",
+        "about": [
+          "Exegra.Core.Behav.Exec.gen",
+          "Exegra.Core.Behav.Sys.lts",
+          "Exegra.Gen.search",
+          "Exegra.Core.LTS.Invariant"
+        ]
+      }
+    },
+    {
+      "id": "behav-timer-cancel",
+      "kind": "structural",
+      "statement": "In the behaviour calculus a transition that sets a timer and then cancels it leaves no entry of that timer, and drops the timer's earlier pending entry.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem timer_then_cancel of formal/Exegra/Core/BehavExamples.lean (plan-M2, M2.2), by kernel evaluation; timer_reset shows that setting a timer replaces its pending entry.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.timer_then_cancel",
+        "about": [
+          "Exegra.Core.Behav.deliverAt",
+          "Exegra.Core.Behav.Examples.onZero"
+        ]
+      }
+    },
+    {
+      "id": "behav-drop-occurrence",
+      "kind": "structural",
+      "statement": "In the behaviour calculus a drop fault with occurrence 2 drops exactly the second delivery of its event: three deliveries of a counting transition leave the counter at 2 with three attempts counted, and at 3 under the mask without the fault.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorems drop_second_delivery and drop_fault_optional of formal/Exegra/Core/BehavExamples.lean (plan-M2, M2.2), by kernel evaluation of the executable scheduler Exec.run under the two masks.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.drop_second_delivery",
+        "about": [
+          "Exegra.Core.Behav.Exec.run",
+          "Exegra.Core.Behav.Examples.dropSys"
+        ]
+      }
+    },
+    {
+      "id": "behav-f4-exec-same-machines",
+      "kind": "structural",
+      "statement": "The executable scheduler of the behaviour calculus commits the same machines for the [a, b] and [b, a] listings of the example: a has x = 1 and b has y = 0 in both.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem f4_exec_same_machines of formal/Exegra/Core/BehavExamples.lean (plan-M2, M2.3), by kernel evaluation; f4_ab_safe_closed proves the [a, b] invariant again from a closed-set certificate over the executable enumeration Exec.enum.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.f4_exec_same_machines",
+        "about": [
+          "Exegra.Core.Behav.Exec.step",
+          "Exegra.Core.Behav.Examples.f4AB",
+          "Exegra.Core.Behav.Examples.f4BA"
+        ]
+      }
+    },
+    {
+      "id": "behav-deliver-iff-step",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, for a well-formed system the executable delivery of a label (delivered entry and draws) leads to a state exactly when the declarative step relation Step relates the configuration, the label and that state.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Behav.lean (WG-5681). Step states scheduling, faults, draws and queue handling without calling deliver; guard and effect evaluation, winner selection and the commit are the functions both share, so the theorem does not check them against a second statement.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.deliver_iff_step",
+        "about": [
+          "Exegra.Core.Behav.deliver"
+        ]
+      }
+    },
+    {
+      "id": "behav-pending-perm-bisim",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, two configurations that differ only by a permutation of the pending list have the same steps with the same labels, up to a permutation of the pending list of the successors.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Behav.lean (WG-5681); labels name the delivered entry, not its position.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.pending_perm_bisim",
+        "about": [
+          "Exegra.Core.Behav.State.Approx"
+        ]
+      }
+    },
+    {
+      "id": "behav-target-only",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, a step that delivers an entry addressed to machine i changes no other machine.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Behav.lean (WG-5681), from the winners of an addressed entry being on its target and phase 2 writing only winners.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.target_only",
+        "about": [
+          "Exegra.Core.Behav.Label.entry"
+        ]
+      }
+    },
+    {
+      "id": "behav-phase2-eq-par",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, phase 2 with winners on distinct machines equals a parallel step: each winner fires from the starting machine and the snapshot and the results are written at their machines.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Behav.lean (WG-5681, review-M2.1 finding 5).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.phase2_eq_par",
+        "about": [
+          "Exegra.Core.Behav.phase2",
+          "Exegra.Core.Behav.fireOne"
+        ]
+      }
+    },
+    {
+      "id": "behav-sample-mem-support",
+      "kind": "structural",
+      "statement": "Every draw of a well-formed distribution through the SplitMix streams of Random.lean lies in the support of the distribution.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavExec.lean (WG-5681), from the bounds of uniformInt and a bound on the segments of sampleTable; a degenerate distribution is refused by Sys.WF.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.sample_mem_support",
+        "about": [
+          "Exegra.Core.Behav.Dist.sample",
+          "Exegra.Core.Behav.Dist.support"
+        ]
+      }
+    },
+    {
+      "id": "behav-successors-up-to-eq",
+      "kind": "structural",
+      "statement": "When no support has more values than the cap, the capped successor function of the calculus equals the complete one.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavExec.lean (WG-5681).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.successorsUpTo_eq",
+        "about": [
+          "Exegra.Core.Behav.Exec.successorsUpTo",
+          "Exegra.Core.Behav.Exec.successors"
+        ]
+      }
+    },
+    {
+      "id": "behav-ctr-le",
+      "kind": "structural",
+      "statement": "A one-machine counter with guard n < L, effect n := n + 1 and an emit of its own event never exceeds L, for every L below 2^53 - 1, and no run reaches the error state.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavExamples.lean (WG-5681), by an inductive invariant over the states (winner selection, phase 2 and the commit are computed symbolically), not by unfolding the delivery on concrete times.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.ctr_le",
+        "about": [
+          "Exegra.Core.Behav.Examples.ctrSys",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-choice-safe",
+      "kind": "structural",
+      "statement": "A system whose only randomness is a two-outcome choice keeps an invariant that holds for both outcomes, in every reachable state.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavExamples.lean (WG-5681), by a closed-set certificate checked by decide over the enumeration of the calculus.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.choice_safe",
+        "about": [
+          "Exegra.Core.Behav.Examples.chSys",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-choice-unsafe",
+      "kind": "structural",
+      "statement": "For the two-outcome choice system, an invariant that fails for one outcome is refuted.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavExamples.lean (WG-5681), through reachability in the search system of the calculus (Gen.search itself uses an opaque hash and cannot be evaluated by the kernel).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.choice_unsafe",
+        "about": [
+          "Exegra.Core.Behav.Examples.chSys",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-phase2-perm-emitted",
+      "kind": "structural",
+      "statement": "In the behaviour calculus, when phase 2 succeeds for two orders of the same winners on distinct machines, the emitted blocks are permutations of each other; aggregates over instances are read from the start-of-step snapshot, so this holds for counted instances.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/Behav.lean (WG-5681, criterion 7).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.phase2_perm_emitted",
+        "about": [
+          "Exegra.Core.Behav.phase2"
+        ]
+      }
+    },
+    {
+      "id": "behav-exec-covers",
+      "kind": "structural",
+      "statement": "The search system of the behaviour calculus (Exec.gen) contains every initial state and every step of the calculus's transition system.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavExec.lean (WG-5681, criterion 6), from successors_complete.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Exec.covers",
+        "about": [
+          "Exegra.Core.Behav.Exec.gen",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-exec-sound",
+      "kind": "structural",
+      "statement": "Every initial node and every successor of the search system of the behaviour calculus (Exec.gen) is an initial state or a step of the calculus's transition system.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavExec.lean (WG-5681, criterion 6), from successors_sound.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Exec.sound",
+        "about": [
+          "Exegra.Core.Behav.Exec.gen",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-invariant-rename",
+      "kind": "structural",
+      "statement": "For every permutation of the machine indices and every property that does not depend on the order of the pending list, the property is an invariant of a calculus system exactly when its renamed form is an invariant of the system listing its machines in the permuted order.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavRename.lean (WG-5681, criterion 8): a bisimulation up to the order of the pending list between a system and its renaming (step_rename, step_unrename) with pending_perm_bisim. It replaces reliance on the [a, b] / [b, a] example.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.invariant_rename",
+        "about": [
+          "Exegra.Core.Behav.Sys.rename",
+          "Exegra.Core.Behav.State.rename",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-elab-wf",
+      "kind": "structural",
+      "statement": "Every format-2 engine input the elaborator accepts elaborates to a well-formed behaviour-calculus system.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Elab.lean (WG-5681, criterion 13); the elaborator checks the decidable Sys.wf last and refuses as ill-typed what fails it.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.V2.Elab.elab_wf",
+        "about": [
+          "Exegra.V2.Elab.elab",
+          "Exegra.Core.Behav.Sys.WF"
+        ]
+      }
+    },
+    {
+      "id": "behav-runb-reach",
+      "kind": "structural",
+      "statement": "For a format-2 input the elaborator accepts, every state of a run of the calculus scheduler from the format-2 initial state, up to the scenario's step limit, is a reachable state of the calculus.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Elab.lean (WG-5681, criterion 14, first half), from elab_wf and run_reach. V2.runInput runs this scheduler for every elaborated input (traceOfB); runB_terminates is the second half.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.V2.runB_reach",
+        "about": [
+          "Exegra.V2.Elab.elab",
+          "Exegra.Core.Behav.Exec.run",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-explore-holds-invariant",
+      "kind": "structural",
+      "statement": "A holds result of the calculus explorer, which it returns only on an empty frontier, proves that every reachable state of the calculus is not the error state and satisfies the property, with no bound.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavCheck.lean (WG-5681, criterion 24), from Exec.covers.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.explore_holds_invariant",
+        "about": [
+          "Exegra.Core.Behav.exploreB",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-explore-cex-real",
+      "kind": "structural",
+      "statement": "A counterexample of the calculus explorer refutes the invariant and replays through the explorer's successor function to a state where the property fails.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavCheck.lean (WG-5681, criterion 24), from Exec.sound and the search's counterexample theorem. The criterion's \"the counterexample is a real run\" is read as replay through the successor function, which successors_sound makes a run of the step relation.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.explore_cex_real",
+        "about": [
+          "Exegra.Core.Behav.exploreB",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-monitor-sound",
+      "kind": "structural",
+      "statement": "On every finite run of the calculus ending in a deadlocked state, the monitor of each temporal form (eventually, never, precedes, response within a time bound) accepts exactly the runs that satisfy the form.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavCheck.lean (WG-5681, criterion 25). exegra prove checks temporal claims with these forms over the product of the calculus with the monitor (ProveB.lean, tcheckB).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.monitor_sound",
+        "about": [
+          "Exegra.Core.Behav.monitor",
+          "Exegra.Core.Behav.FinSat"
+        ]
+      }
+    },
+    {
+      "id": "behav-agg-reads-snapshot",
+      "kind": "structural",
+      "statement": "Two instances of a worker and a monitor reading worker.sum.x + worker.count.busy in the same step give the monitor the value 0 in every reachable state, whichever way the machines are listed.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavExamples.lean (WG-5681, criterion 7); agg_next_reads_differ shows the next-configuration rule gives two verdicts for the same model.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.agg_last_safe",
+        "about": [
+          "Exegra.Core.Behav.Examples.aggLast",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "behav-reply-reaches-requester",
+      "kind": "structural",
+      "statement": "In the behaviour calculus a request carries its sender and a reply to it is delivered to that sender.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavExamples.lean (WG-5681, criterion 7), by kernel evaluation of the scheduler.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Examples.reply_reaches_requester",
+        "about": [
+          "Exegra.Core.Behav.Examples.rSys",
+          "Exegra.Core.Behav.Exec.run"
+        ]
+      }
+    },
+    {
+      "id": "behav-elab-check",
+      "kind": "structural",
+      "statement": "An engine input the elaborator accepts elaborates to a well-formed calculus system and has a step limit of at least 1.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Elab.lean (WG-5681): elab returns a system only after the decidable check Sys.wf and the step limit test pass.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.V2.Elab.elab_check",
+        "about": [
+          "Exegra.V2.Elab.elab",
+          "Exegra.Core.Behav.Sys.WF"
+        ]
+      }
+    },
+    {
+      "id": "behav-tcheck-holds",
+      "kind": "structural",
+      "statement": "A holds result of the temporal check over the calculus covers every reachable node of the product of the calculus with the claim's monitor: no reachable node violates the form.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/ProveB.lean (WG-5681, criterion 25), from the search's soundness theorem.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.V2.ProveB.tcheckB_holds",
+        "about": [
+          "Exegra.V2.ProveB.tcheckB",
+          "Exegra.V2.ProveB.tsysB"
+        ]
+      }
+    },
+    {
+      "id": "behav-tcheck-cex",
+      "kind": "structural",
+      "statement": "A counterexample of the temporal check over the calculus is a path of the product from an initial node that replays to a node violating the form.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/ProveB.lean (WG-5681, criterion 25), from the search's counterexample theorem.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.V2.ProveB.tcheckB_cex",
+        "about": [
+          "Exegra.V2.ProveB.tcheckB",
+          "Exegra.V2.ProveB.tsysB"
+        ]
+      }
+    },
+    {
+      "id": "behav-verdict-holds",
+      "kind": "structural",
+      "statement": "A holds verdict of a generated proof file proves, with no bound, that every reachable state of the calculus system of the input text is not the error state and satisfies the claim's invariant.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/ProveB.lean (WG-5681, criterion 24): the verdict exegra prove states for an invariant claim, from explore_holds_invariant.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.V2.ProveB.verdictOf_holds",
+        "about": [
+          "Exegra.V2.ProveB.verdictOf",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    },
+    {
+      "id": "search-list-equals-hashset",
+      "kind": "structural",
+      "statement": "The list-based breadth-first search returns exactly the result of the hash-set search on every system, predicate, bound and budget.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Search.lean (WG-5681, criterion 11), by a simulation between the hash set and the list (Agree) through addAll, layer and bfs. The list form reduces in the kernel, so its results can be established by decide.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Gen.search_eq_searchL",
+        "about": [
+          "Exegra.Gen.search",
+          "Exegra.Gen.searchL"
+        ]
+      }
+    },
+    {
+      "id": "behav-cex-refutes-kernel",
+      "kind": "structural",
+      "statement": "A counterexample of the list-based search on the calculus refutes the invariant of its LTS, so a refutation can be established by kernel evaluation with no native_decide.",
+      "subjects": [
+        "lts-foundation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Core/BehavExec.lean (WG-5681, criterion 11), from search_eq_searchL and Exec.cex_refutes. Examples.choice_unsafe uses it with decide, and its axioms are pinned to propext, Classical.choice and Quot.sound.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Core.Behav.Exec.cex_refutesL",
+        "about": [
+          "Exegra.Gen.searchL",
+          "Exegra.Core.Behav.Sys.lts"
+        ]
+      }
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev-formal-proofs",
+      "claim": "formal-semantics-properties-proved",
+      "kind": "test",
+      "ref": "tests/proofs/formal-semantics.test.js#the Lean proofs build with no sorry and only standard axioms",
+      "description": "Builds formal/ with lake: every theorem of formal/Exegra/ type-checks, and the #guard_msgs axiom checks fail the build on sorryAx or a non-standard axiom; no Lean source uses sorry or admit or declares an axiom. Skipped, with a message, when lake is not on the PATH."
+    },
+    {
+      "id": "ev-formal-explore",
+      "claim": "exhaustive-exploration-sound",
+      "kind": "test",
+      "ref": "tests/proofs/formal-explore.test.js",
+      "description": "exegra prove on the race fixture: the lost update is a counterexample accepted by Lean, its scripted run passes the trace check, the atomic store holds for all N configurations with the same N on two runs, and its precedes claim holds on every complete run. Skipped, with a message, when lake is not on the PATH."
+    },
+    {
+      "id": "ev-formal-explore-bounded",
+      "claim": "invariants-proved-within-bounds",
+      "kind": "test",
+      "ref": "tests/proofs/formal-explore.test.js#the atomic store is verified for every reachable configuration",
+      "description": "exegra prove reports the atomic store's invariant as holding with method lean-exhaustive, the bound and N, after Lean accepted the theorem in the generated file. Skipped, with a message, when lake is not on the PATH."
+    },
+    {
+      "id": "ev-formal-explore-temporal",
+      "claim": "temporal-claims-checked-on-all-runs",
+      "kind": "test",
+      "ref": "tests/proofs/formal-explore.test.js#temporal claims: eventually holds",
+      "description": "exegra prove on the race fixture: an eventually holds on every path; an eventually fails with a counterexample run that drops the event and ends without it; a precedes that the scripted run satisfies is violated by a run that reorders simultaneous events. Skipped, with a message, when lake is not on the PATH."
+    },
+    {
+      "id": "ev-lean-boundary",
+      "claim": "lean-boundary-errors-are-values",
+      "kind": "test",
+      "ref": "tests/core/lean.test.js",
+      "description": "Calls through src/core/lean.js: the registry lists engine.run, an unknown function, a malformed request and refused arguments come back as errors, and a run returns the trace the engine returns."
+    },
+    {
+      "id": "ev-lean-core-browser",
+      "claim": "lean-core-runs-in-browser",
+      "kind": "test",
+      "ref": "tests/browser/lean-core.spec.js",
+      "description": "In Chrome: the page loads the Lean core through src/core/lean.js, lists its functions, gets an error value for an unknown function and reproduces two golden traces."
+    }
+  ]
+}

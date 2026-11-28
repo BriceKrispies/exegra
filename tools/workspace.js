@@ -27,6 +27,9 @@ export const WORKSPACE_FILES = {
   recorded: 'evidence/results.json',
 };
 
+/** Facts read from outside the specification (src/core/extraction.js): extracted by tools/extract.js, observed by tools/observe.js. */
+export const FACT_FILES = { extracted: 'extracted/facts.json', observed: 'extracted/observed.json' };
+
 const BUNDLE_FORMAT = 'exegra-project';
 const BUNDLE_VERSION = 1;
 const BUNDLE_KEYS = new Set(Object.values(WORKSPACE_FILES));
@@ -123,6 +126,26 @@ async function readSpecResolved(file) {
     if (err instanceof SpecManifestError) throw new WorkspaceError('spec.invalid', err.message);
     throw err;
   }
+}
+
+/**
+ * The `spec` entry of what a read returns. For a manifest it also carries `locate`, a non-enumerable function
+ * that says which part file and line an offset of the assembled text is in, so a source location can name the
+ * part. It is not serialised with the entry.
+ * @param {import('./spec-manifest.js').ResolvedSpec} resolved @param {string} shownPath
+ */
+function specOf(resolved, shownPath) {
+  const entry = { text: resolved.text, hash: hashText(resolved.text), path: shownPath };
+  if (resolved.manifest) {
+    Object.defineProperty(entry, 'locate', {
+      enumerable: false,
+      value: (/** @type {number} */ offset) => {
+        const at = resolved.locate(offset);
+        return at === null ? null : { ...at, file: path.relative(path.resolve(process.cwd()), at.file).split(path.sep).join('/') };
+      },
+    });
+  }
+  return entry;
 }
 
 /** @param {string} file @returns {Promise<string|null>} the specification text, assembled when the file is a manifest */
@@ -454,22 +477,30 @@ export function createWorkspace(rootDir) {
    * @param {string} specPath @param {string[]} productPaths
    */
   async function readInline(specPath, productPaths) {
-    const specText = await readSpecOptional(specPath);
-    if (specText === null) throw new WorkspaceError('not-found', `The specification ${specPath} does not exist.`);
+    const resolvedSpec = await readSpecResolved(specPath);
+    if (resolvedSpec === null) throw new WorkspaceError('not-found', `The specification ${specPath} does not exist.`);
+    const specText = resolvedSpec.text;
     const layers = [];
     for (const file of expandProducts(productPaths, '/', specPath, 'The command line')) {
       const text = await fs.readFile(file, 'utf8');
       layers.push({ file: shown(file), text, hash: hashText(text), platform: importOf(file, text, specPath) });
     }
-    return { spec: { text: specText, hash: hashText(specText), path: shown(specPath) }, layers, layout: null, recorded: null, concordance: null };
+    return { spec: specOf(resolvedSpec, shown(specPath)), layers, layout: null, recorded: null, concordance: null };
+  }
+
+  /** @param {string|null} text */
+  function parseJsonOrNull(text) {
+    if (text === null) return null;
+    try { return JSON.parse(text); } catch { return null; }
   }
 
   async function read(name) {
     assertName(name);
-    const specText = await readSpecOptional(specFile(name));
-    if (specText === null) {
+    const resolvedSpec = await readSpecResolved(specFile(name));
+    if (resolvedSpec === null) {
       throw new WorkspaceError('not-found', `Project "${name}" has no specification at ${specLocation(name)}.`);
     }
+    const specText = resolvedSpec.text;
     const layoutText = await readOptional(resolve(name, WORKSPACE_FILES.layout));
     const recordedText = await readOptional(resolve(name, WORKSPACE_FILES.recorded));
     const spec = specFile(name);
@@ -479,11 +510,13 @@ export function createWorkspace(rootDir) {
       layers.push({ file: shown(file), text, hash: hashText(text), platform: importOf(file, text, spec) });
     }
     return {
-      spec: { text: specText, hash: hashText(specText), path: specLocation(name) },
+      spec: specOf(resolvedSpec, specLocation(name)),
       layers,
       layout: layoutText === null ? null : { text: layoutText, hash: hashText(layoutText) },
       recorded: parseRecorded(recordedText),
       concordance: await concordanceOf(name, specText),
+      extracted: parseJsonOrNull(await readOptional(resolve(name, FACT_FILES.extracted))),
+      observed: parseJsonOrNull(await readOptional(resolve(name, FACT_FILES.observed))),
     };
   }
 
@@ -686,8 +719,10 @@ export function createWorkspace(rootDir) {
    * @param {string} name
    * The product files project.jsonc lists are tracked as one file, 'products': its hash is taken over the
    * project.jsonc list and every product file in it, so a product file that changed, was added or was
-   * removed is reported (null when project.jsonc lists none).
-   * @param {(change: {file: 'spec'|'layout'|'recorded'|'products', hash: string|null}) => void} onChange
+   * removed is reported (null when project.jsonc lists none). The fact files (FACT_FILES: extracted and observed
+   * facts) are tracked as one file, 'facts': its hash is taken over both texts, so a re-extraction or a new
+   * recording is reported (null when neither exists).
+   * @param {(change: {file: 'spec'|'layout'|'recorded'|'products'|'facts', hash: string|null}) => void} onChange
    * @returns {() => void} unsubscribe
    */
   function watch(name, onChange) {
@@ -725,6 +760,12 @@ export function createWorkspace(rootDir) {
       }
     };
     seen.products = productsHash();
+    /** The hash of the fact files: both texts in a fixed order, or null when neither exists. */
+    const factsHash = () => {
+      const texts = Object.values(FACT_FILES).map((rel) => hashOfFileSync(path.join(projectDir, rel)));
+      return texts.every((t) => t === null) ? null : hashText(texts.map((t) => t ?? '-').join('|'));
+    };
+    seen.facts = factsHash();
     /** The directories to watch for product files outside the project directory: each listed directory, and the directory of each listed file (which also sees a file being added or removed). */
     const productDirs = () => {
       /** @type {Set<string>} */
@@ -790,6 +831,13 @@ export function createWorkspace(rootDir) {
     };
 
     const check = async (key, abs) => {
+      if (key === 'facts') {
+        const hash = factsHash();
+        if (closed || hash === seen.facts) return;
+        seen.facts = hash;
+        onChange({ file: 'facts', hash });
+        return;
+      }
       if (key === 'products') {
         const hash = productsHash();
         watchProductDirs();
@@ -831,8 +879,11 @@ export function createWorkspace(rootDir) {
           if (first === '.history' || first === 'generated' || rel.endsWith('.tmp')) return;
         }
         for (const entry of tracked) {
-          if (entry.inside && (rel === null || rel === entry.rel)) schedule(entry.key, entry.abs);
+          // The part files of a manifest in the project directory (parts/*.jsonc) change the specification too; check() compares the hash.
+          if (entry.inside && (rel === null || rel === entry.rel || (entry.key === 'spec' && rel.endsWith('.jsonc')))) schedule(entry.key, entry.abs);
         }
+        // The extracted and observed fact files (a re-extraction, a new recording).
+        if (rel === null || Object.values(FACT_FILES).includes(rel) || rel === 'extracted') schedule('facts', '');
         // project.jsonc lists the product files, and product files may sit inside the project directory.
         if (rel === null || rel === PROJECT_FILE || rel.endsWith('.jsonc')) schedule('products', '');
       });

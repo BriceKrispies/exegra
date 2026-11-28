@@ -14,6 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { isDeepStrictEqual } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { initEngine, runEngineText } from '../src/core/engine.js';
 
@@ -21,11 +22,18 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..');
 export const GOLDENS_DIR = path.join(REPO_ROOT, 'tests', 'conformance', 'goldens');
 
+/**
+ * The refusals of the Lean elaborator (formal/Exegra/Elab.lean, `Refusal.message`): an ill-typed input or
+ * one with a number that is not an integer. A golden the engine refuses so has an input file and no trace
+ * (WG-5681); the Rust engine does not mirror static typing and is not run on it.
+ */
+export const ELAB_REFUSAL = /^(exegra-lean: )?(The input (is ill-typed|uses)|The number at )/;
+
 /** Top-level trace fields in the order a difference is looked for. */
 const TRACE_FIELDS = ['scenarioId', 'faults', 'initial', 'steps', 'outcome', 'final'];
 
 /**
- * @typedef {{source:string, name:string, inputPath:string, tracePath:string}} GoldenFile
+ * @typedef {{source:string, name:string, inputPath:string, tracePath:string, refused:boolean}} GoldenFile
  * @typedef {{path:string, step:number|null, expected:any, actual:any}} Difference
  */
 
@@ -44,7 +52,8 @@ export function listGoldens(dir = GOLDENS_DIR) {
     for (const file of fs.readdirSync(sub).sort()) {
       if (!file.endsWith('.input.json')) continue;
       const name = file.slice(0, -'.input.json'.length);
-      out.push({ source, name, inputPath: path.join(sub, file), tracePath: path.join(sub, `${name}.trace.json`) });
+      const tracePath = path.join(sub, `${name}.trace.json`);
+      out.push({ source, name, inputPath: path.join(sub, file), tracePath, refused: !fs.existsSync(tracePath) });
     }
   }
   return out;
@@ -118,18 +127,31 @@ export function runEngineCommand(command, inputText) {
 
 /**
  * @typedef {{golden:GoldenFile, status:'ok'|'mismatch'|'error', difference?:Difference, error?:string}} GoldenResult
+ *
+ * A golden with no trace file (`refused`) is one the engine refuses: it passes when the engine refuses it
+ * with an elaboration refusal. `skipRefused` leaves such goldens out (for an engine without static typing).
  */
 
 /**
  * Check an engine against goldens. The engine is a function from the input text to a trace;
  * by default the WebAssembly engine (src/core/engine.js), run from the input alone.
- * @param {{goldens?: GoldenFile[], engine?: (inputText:string) => any}} [opts]
+ * @param {{goldens?: GoldenFile[], engine?: (inputText:string) => any, skipRefused?: boolean}} [opts]
  * @returns {GoldenResult[]}
  */
 export function runConformance(opts = {}) {
-  const goldens = opts.goldens ?? listGoldens();
+  const goldens = (opts.goldens ?? listGoldens()).filter((g) => !(opts.skipRefused && g.refused));
   const engine = opts.engine ?? ((/** @type {string} */ text) => JSON.parse(runEngineText(text)));
   return goldens.map((golden) => {
+    if (golden.refused) {
+      try {
+        engine(fs.readFileSync(golden.inputPath, 'utf8'));
+        return { golden, status: 'error', error: 'the engine returned a trace for an input it should refuse (the golden has no trace)' };
+      } catch (e) {
+        const msg = /** @type {Error} */ (e).message;
+        return ELAB_REFUSAL.test(msg) || ELAB_REFUSAL.test(msg.replace(/^the engine exited with status \d+: /, ''))
+          ? { golden, status: 'ok' } : { golden, status: 'error', error: msg };
+      }
+    }
     try {
       const expected = JSON.parse(fs.readFileSync(golden.tracePath, 'utf8'));
       const actual = engine(fs.readFileSync(golden.inputPath, 'utf8'));
@@ -139,6 +161,76 @@ export function runConformance(opts = {}) {
       return { golden, status: 'error', error: /** @type {Error} */ (e).message };
     }
   });
+}
+
+
+/** The version-1 trace fields a version-2 trace adds, removed by `strip` (WG-5681: format 1 is gone). */
+const V2_ONLY = ['resources', 'links', 'timers', 'workloads', 'meters', 'routeCounters', 'streams', 'down', 'incarnations', 'activeFaults'];
+const ENTRY_V2_ONLY = ['scheduledAt', 'routes', 'from', 'target', 'copyOf'];
+
+/**
+ * A version-2 trace without the fields version 2 adds: what a version-1 trace of the same run holds.
+ * @param {any} t
+ */
+export function strip(t) {
+  const drop = (/** @type {any} */ o, /** @type {string[]} */ keys) => { if (o && typeof o === 'object') for (const k of keys) delete o[k]; return o; };
+  const config = (/** @type {any} */ c) => {
+    drop(c, V2_ONLY);
+    for (const e of c?.pending ?? []) drop(e, ENTRY_V2_ONLY);
+    return c;
+  };
+  const out = structuredClone(t);
+  drop(out, ['version', 'timeUnit', 'seed', 'truncated', 'initialDraws', 'stepsTaken', 'semantics']);
+  config(out.initial);
+  config(out.final);
+  for (const st of out.steps ?? []) {
+    drop(st, ['resources', 'draws', 'links']);
+    drop(st.event, ENTRY_V2_ONLY);
+    for (const f of st.fired ?? []) drop(f, ['instance']);
+    for (const i of st.ignored ?? []) drop(i, ['instance']);
+    config(st.config);
+  }
+  return out;
+}
+
+/**
+ * How every golden changed since commit `base` (WG-5681, tests/conformance/golden-changes.json): by
+ * `<source>/<name>`, one of "version 2" (a version-1 golden whose input is the lifted version-1 input and
+ * whose trace, stripped of the version-2 fields, is the version-1 trace), "input re-recorded, trace equal
+ * under strip", "input edited, trace re-recorded", "trace removed (refused)", "trace changed", "added",
+ * "deleted", or nothing when it is unchanged. Throws when the base commit is not available.
+ * @param {string} base
+ * @returns {Record<string, string>}
+ */
+export function goldenChanges(base) {
+  const show = (/** @type {string} */ rel) => {
+    const r = spawnSync('git', ['-C', REPO_ROOT, 'show', `${base}:${rel}`], { encoding: 'utf8', maxBuffer: 1 << 28 });
+    return r.status === 0 ? JSON.parse(r.stdout) : null;
+  };
+  const tree = spawnSync('git', ['-C', REPO_ROOT, 'ls-tree', '-r', '--name-only', base, 'tests/conformance/goldens'], { encoding: 'utf8', maxBuffer: 1 << 26 });
+  if (tree.status !== 0) throw new Error(`the base commit ${base} is not available: ${tree.stderr.trim()}`);
+  const names = new Set(tree.stdout.split(/\r?\n/).filter((f) => f.endsWith('.input.json')).map((f) => f.slice('tests/conformance/goldens/'.length, -'.input.json'.length)));
+  for (const g of listGoldens()) names.add(`${g.source}/${g.name}`);
+  /** @type {Record<string, string>} */
+  const out = {};
+  for (const name of [...names].sort()) {
+    const rel = `tests/conformance/goldens/${name}`;
+    const oldIn = show(`${rel}.input.json`);
+    const oldTr = show(`${rel}.trace.json`);
+    const inPath = path.join(REPO_ROOT, `${rel}.input.json`);
+    const trPath = path.join(REPO_ROOT, `${rel}.trace.json`);
+    const newIn = fs.existsSync(inPath) ? JSON.parse(fs.readFileSync(inPath, 'utf8')) : null;
+    const newTr = fs.existsSync(trPath) ? JSON.parse(fs.readFileSync(trPath, 'utf8')) : null;
+    if (!oldIn) { out[name] = 'added'; continue; }
+    if (!newIn) { out[name] = 'deleted'; continue; }
+    if (isDeepStrictEqual(oldIn, newIn) && isDeepStrictEqual(oldTr, newTr)) continue;
+    if (oldTr && !newTr) { out[name] = 'trace removed (refused)'; continue; }
+    const lifted = oldIn.version === 1 && isDeepStrictEqual({ ...oldIn, version: 2, time: { unit: 'tick', perSecond: null } }, newIn);
+    const traceEqual = oldTr && newTr && compareTraces(oldTr, strip(newTr)) === null;
+    if (traceEqual) out[name] = lifted ? 'version 2' : 'input re-recorded, trace equal under strip';
+    else out[name] = lifted ? 'trace changed' : 'input edited, trace re-recorded';
+  }
+  return out;
 }
 
 /** @param {any} v */

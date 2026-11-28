@@ -4,8 +4,9 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { metricVerdict } from '../../src/core/metric-claims.js';
 import {
-  binomTail, binomialVerdict, claimStatus, cmp, evaluateRuns, minRuns, minSignTestRuns, parseRational, passesToFail,
+  binomTail, binomialVerdict, cmp, evaluateRuns, minRuns, minSignTestRuns, parseRational, passesToFail,
   passesToHold, rat, runSeed, signTestRank, toDecimal, underpowered,
 } from '../../src/core/metric-stats.js';
 
@@ -71,10 +72,12 @@ test('evaluating runs: underpowered, truncated, approx and the claim status', ()
   assert.equal(evaluateRuns(near, { approx: { value: rat(1000n), tolerance: parseRational('0.02') }, fraction: B95, confidence: C95, openStarted: true }).verdict, 'holds');
   assert.equal(evaluateRuns(near, { approx: { value: rat(500n), tolerance: parseRational('0.02') }, fraction: B95, confidence: C95, openStarted: true }).verdict, 'fails');
   assert.equal(evaluateRuns([...near.slice(1), { ...near[0], truncated: true }], { approx: { value: rat(1000n), tolerance: parseRational('0.02') }, fraction: B95, confidence: C95, openStarted: true }).verdict, 'inconclusive');
-  // Status: never verified; negatives must fail and control negatives hold.
-  assert.equal(claimStatus([{ verdict: 'holds' }], [{ verdict: 'fails' }], [{ verdict: 'holds' }]).status, 'model-holds');
-  assert.equal(claimStatus([{ verdict: 'holds' }], [{ verdict: 'holds' }]).status, 'inconclusive');
-  assert.equal(claimStatus([{ verdict: 'fails' }]).status, 'violated');
+  // Status (decided in Lean): never verified; negatives must fail and control negatives hold.
+  const verdictOf = (/** @type {any[]} */ scenarios, /** @type {any[]} */ negatives = [], /** @type {any[]} */ controlNegatives = []) => metricVerdict({ scenarios, negatives, controlNegatives });
+  assert.equal(verdictOf([{ verdict: 'holds' }], [{ verdict: 'fails' }], [{ verdict: 'holds' }]).label, 'model-holds');
+  assert.equal(verdictOf([{ verdict: 'holds' }], [{ verdict: 'fails' }], [{ verdict: 'holds' }]).strength, 'checkedOnInstances');
+  assert.equal(verdictOf([{ verdict: 'holds' }], [{ verdict: 'holds' }]).label, 'inconclusive');
+  assert.equal(verdictOf([{ verdict: 'fails' }]).label, 'violated');
 });
 
 test('underpowered statistics and run seeds', () => {

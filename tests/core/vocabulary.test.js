@@ -86,14 +86,14 @@ test('a claim verified by an external method is never reported as verified by Ex
   const m2 = analyzeSpec(withEvidence).model;
   assert.ok(m2);
   assert.equal(evaluateClaims(m2)[0].status, 'inconclusive');
-  assert.equal(evaluateClaims(m2, { recorded: { results: { 'ev-krn-002': { outcome: 'pass' } } } })[0].status, 'supported');
+  assert.equal(evaluateClaims(m2, { recorded: { results: { 'ev-krn-002': { outcome: 'pass', stamp: 'T' } } }, stamps: { tree: 'T', formal: 'F' } })[0].status, 'supported');
   assert.equal(evaluateClaims(m2, { recorded: { results: { 'ev-krn-002': { outcome: 'fail' } } } })[0].status, 'violated');
 });
 
 test('an outcome recorded per claim by an external tool decides supported or violated, never verified', () => {
   const { model } = analyzeSpec(SPEC);
   assert.ok(model);
-  const pass = evaluateClaims(model, { recorded: { tool: 'concordance', claims: { 'krn-002': { outcome: 'pass', detail: 'Proved by kernel::tests::determinism.', proofs: ['kernel::tests::determinism'] } } } })[0];
+  const pass = evaluateClaims(model, { recorded: { tool: 'concordance', claims: { 'krn-002': { outcome: 'pass', detail: 'Proved by kernel::tests::determinism.', proofs: ['kernel::tests::determinism'], stamp: 'T' } } }, stamps: { tree: 'T', formal: 'F' } })[0];
   assert.equal(pass.status, 'supported');
   assert.equal(pass.evaluator, 'external:property');
   assert.match(pass.explanation, /Recorded by concordance/);

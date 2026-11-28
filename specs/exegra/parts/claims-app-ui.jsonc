@@ -1,0 +1,1477 @@
+// Part of the specification: claims, evidence.
+{
+  "claims": [
+    {
+      "id": "edits-only-via-transactions",
+      "kind": "structural",
+      "statement": "Following relationships that carry edits and file content (submits-edits, data-flow, writes), every path from the editing surfaces (inspector, source editor, dialogs, the composition root that turns scene drags into operations, toolbar, shell) to the specification file passes through the transaction system.",
+      "rationale": "Control-only calls are not followed: every panel calls the session for selection and view state (including the toolbar's layout choice, a viewer preference). EXPECTED TO BE VIOLATED: the toolbar's Import sends a bundle to the persistence client, plugin and workspace service, which overwrite spec.jsonc without a transaction; the toolbar only refuses a bundle with syntax errors before sending it. This is a real discrepancy in the code, recorded in system.notes and on the toolbar.",
+      "subjects": [
+        "inspector",
+        "source-editor",
+        "dialogs",
+        "composition-root",
+        "toolbar",
+        "shell",
+        "transactions",
+        "specification-file",
+        "toolbar-data-flow-persistence-client"
+      ],
+      "assumptions": [
+        "static-extractor-sound",
+        "extracted-facts-current"
+      ],
+      "evaluate": { "method": "only-via", "from": [
+          "inspector",
+          "source-editor",
+          "dialogs",
+          "composition-root",
+          "toolbar",
+          "shell"
+        ], "to": "specification-file", "via": "transactions", "kinds": ["submits-edits", "data-flow", "writes"] }
+    },
+    {
+      "id": "editing-surfaces-except-import-via-transactions",
+      "kind": "structural",
+      "statement": "Following submits-edits, data-flow and writes relationships, every path from the inspector, source editor, dialogs, the composition root (scene drags) and shell to the specification file passes through the transaction system.",
+      "rationale": "The same check as edits-only-via-transactions without the toolbar, whose Import is the known bypass. It shows that the bypass is confined to that one control. The toolbar's other tools (create, delete, reset layout, undo, redo) do use transactions but cannot be separated from Import at component granularity. The Markdown importer is a tool, not an editing surface, and is not in the source list.",
+      "subjects": [
+        "inspector",
+        "source-editor",
+        "dialogs",
+        "composition-root",
+        "shell",
+        "transactions",
+        "specification-file"
+      ],
+      "assumptions": [
+        "static-extractor-sound",
+        "extracted-facts-current"
+      ],
+      "evaluate": { "method": "only-via", "from": [
+          "inspector",
+          "source-editor",
+          "dialogs",
+          "composition-root",
+          "shell"
+        ], "to": "specification-file", "via": "transactions", "kinds": ["submits-edits", "data-flow", "writes"] }
+    },
+    {
+      "id": "renderer-does-not-own-state",
+      "kind": "structural",
+      "statement": "The Three.js renderer has no writes or submits-edits relationship to the specification file, the layout file, the transaction system or the session.",
+      "rationale": "The renderer is a function of the scene it is given. A gesture reaches the model only through the callbacks the composition root (src/app/main.js) supplied, which submit operations.",
+      "subjects": ["scene-renderer", "specification-file", "layout-file", "transactions", "session"],
+      "assumptions": [
+        "static-extractor-sound",
+        "extracted-facts-current"
+      ],
+      "evaluate": { "method": "no-relationship", "from": "scene-renderer", "to": ["specification-file", "layout-file", "transactions", "session"], "kinds": ["writes", "submits-edits"], "transitive": false }
+    },
+    {
+      "id": "save-follows-refresh",
+      "kind": "temporal",
+      "statement": "Every write request to the file service is preceded by a projection refresh: the write is asynchronous and happens after the views were refreshed, in all three edits that commit.",
+      "rationale": "Records the real order, local-first and optimistic: refresh at commit, write afterwards.",
+      "subjects": ["session", "projection-system", "projection-refreshed", "save-requested", "visual-edit-flow", "source-edit-flow", "edit-with-disk-conflict"],
+      "assumptions": ["machines-abstract-the-code"],
+      "evaluate": {
+        "method": "precedes",
+        "scenarios": [
+          "visual-edit-flow",
+          "source-edit-flow",
+          "edit-with-disk-conflict"
+        ],
+        "first": {
+          "event": "projection-refreshed"
+        },
+        "then": {
+          "event": "save-requested"
+        },
+        "negatives": [
+          {
+            "scenario": "visual-edit-flow",
+            "faults": [
+              "save-before-refresh"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "rejected-edit-never-refreshes",
+      "kind": "temporal",
+      "statement": "In the rejected edit the projection is never refreshed.",
+      "subjects": ["projection-system", "projection-refreshed", "rejected-edit"],
+      "assumptions": ["machines-abstract-the-code", "views-derive-from-committed-model"],
+      "evaluate": {
+        "method": "never",
+        "scenarios": [
+          "rejected-edit"
+        ],
+        "occurs": {
+          "event": "projection-refreshed"
+        },
+        "negatives": [
+          {
+            "scenario": "rejected-edit",
+            "faults": [
+              "rejection-refreshes"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "rejected-edit-never-persists",
+      "kind": "temporal",
+      "statement": "In the rejected edit no write to the file service is ever requested.",
+      "subjects": ["session", "workspace-service", "save-requested", "rejected-edit"],
+      "assumptions": ["machines-abstract-the-code"],
+      "evaluate": {
+        "method": "never",
+        "scenarios": [
+          "rejected-edit"
+        ],
+        "occurs": {
+          "event": "save-requested"
+        },
+        "negatives": [
+          {
+            "scenario": "rejected-edit",
+            "faults": [
+              "rejection-refreshes"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "conflict-is-flagged",
+      "kind": "temporal",
+      "statement": "In the edit whose write conflicts with the disk, at quiescence the session reports a conflict, every view shows the new revision and the file on disk is behind the model.",
+      "rationale": "The edit is not lost and not forced onto the disk: the user must choose to reload from disk or overwrite disk.",
+      "subjects": ["session", "transactions", "scene-renderer", "workspace-service", "edit-with-disk-conflict"],
+      "assumptions": ["machines-abstract-the-code", "views-derive-from-committed-model"],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "edit-with-disk-conflict"
+        ],
+        "expr": "session-flow.saveState == 'conflict' && renderer-flow.shownRevision == transaction-flow.revision && workspace-flow.persistedRevision < transaction-flow.revision",
+        "negatives": [
+          {
+            "scenario": "edit-with-disk-conflict",
+            "faults": [
+              "conflict-swallowed"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "invalid-source-keeps-last-valid-model",
+      "kind": "invariant",
+      "statement": "An invalid source draft is rejected with diagnostics, the committed model is not changed and the draft stays as typed in the source editor.",
+      "subjects": ["source-editor", "transactions", "apply-transaction"],
+      "assumptions": ["tests-exercise-shipped-modules", "browser-tests-run-real-application", "recorded-results-reflect-current-code"],
+      "evaluate": { "method": "external-evidence" }
+    },
+    // ======== Measured claim without any recorded measurement
+    {
+      "id": "benchmark-scene-interactive",
+      "kind": "measured",
+      "statement": "The default structural view of specs/benchmark/spec.jsonc (396 components and 507 relationships) renders at an interactive frame rate on ordinary desktop hardware, measured as the fps reported by the scene view's getStats() while the camera orbits. The threshold for 'interactive' is not defined in this specification.",
+      "rationale": "No measurement is recorded and no test measures performance, so this claim is not evaluated. It could not be settled by a measurement until the threshold is stated.",
+      "subjects": ["scene-renderer", "projection-system", "layout-engine", "benchmark-generator"],
+      "evaluate": { "method": "external-evidence" }
+    },
+    {
+      "id": "sim-flow-matches-trace",
+      "kind": "invariant",
+      "statement": "For every simulation step, the message flow names as sender the component whose behavior emitted the delivered event (outside, for a scenario stimulus or an injected fault) and as receivers the components whose behaviors fired a transition on it.",
+      "subjects": [
+        "projection-system",
+        "simulation-engine"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "sim-flow-never-borrows-edges",
+      "kind": "invariant",
+      "statement": "A simulated message is drawn along a scene edge only when that edge connects its sender's and receiver's drawn nodes; when only a relationship the view does not draw connects them the message is marked unshown, and when no relationship connects them it is marked undeclared.",
+      "subjects": [
+        "projection-system",
+        "scene-renderer"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "sim-step-shows-message-moving",
+      "kind": "temporal",
+      "statement": "Stepping a simulation in a structural view moves a marker labelled with the event's name from the sender's node toward each receiver's node, and the simulator panel states who sent the event to whom.",
+      "subjects": [
+        "scene-renderer",
+        "simulator-panel",
+        "session"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code",
+        "browser-tests-run-real-application"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "overlays-follow-trace",
+      "kind": "invariant",
+      "statement": "Each overlay value shown at a time equals the trace's value for that component at that time, and a component without data shows nothing.",
+      "rationale": "Planned (WG-4671). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "simulation-overlays",
+        "scene-renderer"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "ui-touch-usable-on-phone",
+      "kind": "invariant",
+      "statement": "At a 390 by 844 touch viewport the page never scrolls horizontally, every visible interactive control is at least 44 by 44 CSS pixels, and with no panel expanded the 3D scene covers at least 60% of the screen.",
+      "rationale": "Rests on its browser test in tests/browser/mobile.spec.js (WG-4675); not evaluated until a recorded result of that test exists.",
+      "subjects": [
+        "responsive-layout",
+        "shell",
+        "toolbar",
+        "stylesheets"
+      ],
+      "assumptions": [
+        "browser-tests-run-real-application",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "ui-expands-to-desktop",
+      "kind": "invariant",
+      "statement": "From 768 CSS pixels wide panels open beside the scene instead of over it, and from 1200 CSS pixels the explorer, the scene and the context panel are visible side by side without opening anything.",
+      "rationale": "Rests on its browser test in tests/browser/mobile.spec.js (WG-4675); not evaluated until a recorded result of that test exists.",
+      "subjects": [
+        "responsive-layout",
+        "shell"
+      ],
+      "assumptions": [
+        "browser-tests-run-real-application",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "session-starts-after-engine",
+      "kind": "temporal",
+      "statement": "At start-up the session is started only after the engine has loaded or failed to load.",
+      "subjects": [
+        "composition-root",
+        "simulation-engine",
+        "session",
+        "app-start-and-open"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "precedes",
+        "scenarios": [
+          "app-start-and-open"
+        ],
+        "first": {
+          "event": "engine-load-settled"
+        },
+        "then": {
+          "event": "session-init-requested"
+        },
+        "negatives": [
+          {
+            "scenario": "app-start-and-open",
+            "faults": [
+              "session-started-before-engine"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "open-takes-disk-hashes",
+      "kind": "temporal",
+      "statement": "After start-up the opened project is saved and its base hash is the hash of the file on disk, so the first write is checked against what was read.",
+      "subjects": [
+        "session",
+        "persistence-client",
+        "workspace-service",
+        "read-project",
+        "app-start-and-open"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "app-start-and-open"
+        ],
+        "expr": "project-session-flow.projectName == 'exegra' && project-session-flow.baseHash == workspace-disk-flow.diskSpec && project-session-flow.saveState == 'saved'",
+        "negatives": [
+          {
+            "scenario": "app-start-and-open",
+            "faults": [
+              "open-ignores-read-hashes"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "read-only-build-never-writes",
+      "kind": "temporal",
+      "statement": "A production build never asks to write a project file, even after an edit.",
+      "subjects": [
+        "session",
+        "build-system",
+        "production-read-only-edit"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "never",
+        "scenarios": [
+          "production-read-only-edit"
+        ],
+        "occurs": {
+          "event": "write-intent"
+        },
+        "negatives": [
+          {
+            "scenario": "production-read-only-edit",
+            "faults": [
+              "readonly-build-writes"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "reload-adopts-disk-text",
+      "kind": "temporal",
+      "statement": "After a conflict resolved by reloading, the session holds the text on disk, reports saved, and the other process's change was never overwritten.",
+      "subjects": [
+        "session",
+        "workspace-service",
+        "conflict-resolved-by-reload"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "conflict-resolved-by-reload"
+        ],
+        "expr": "project-session-flow.textHash == workspace-disk-flow.diskSpec && project-session-flow.saveState == 'saved' && workspace-disk-flow.specWrites == 0",
+        "negatives": [
+          {
+            "scenario": "conflict-resolved-by-reload",
+            "faults": [
+              "session-reload-keeps-text"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "overwrite-writes-session-text",
+      "kind": "temporal",
+      "statement": "After a conflict resolved by overwriting, the file on disk holds the session's text and the session reports saved.",
+      "subjects": [
+        "session",
+        "workspace-service",
+        "write-file",
+        "conflict-resolved-by-overwrite"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "conflict-resolved-by-overwrite"
+        ],
+        "expr": "workspace-disk-flow.diskSpec == project-session-flow.textHash && project-session-flow.saveState == 'saved'",
+        "negatives": [
+          {
+            "scenario": "conflict-resolved-by-overwrite",
+            "faults": [
+              "session-overwrite-keeps-stale-base"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "external-change-is-adopted",
+      "kind": "temporal",
+      "statement": "A change made on disk by another process while nothing is pending is adopted: the session ends holding the text on disk with that text as its base hash.",
+      "subjects": [
+        "session",
+        "workspace-service",
+        "file-change-notice",
+        "external-change-adopted"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "external-change-adopted"
+        ],
+        "expr": "project-session-flow.textHash == workspace-disk-flow.diskSpec && project-session-flow.baseHash == workspace-disk-flow.diskSpec",
+        "negatives": [
+          {
+            "scenario": "external-change-adopted",
+            "faults": [
+              "change-notice-lost"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation",
+      "rationale": "The negative is a lost notice, a failure of the environment, not a defect: it shows that adoption rests on the change stream, which does not re-send a change made while it was down."
+    },
+    {
+      "id": "adopted-change-never-written-back",
+      "kind": "temporal",
+      "statement": "Text adopted from disk is never written back by the session.",
+      "subjects": [
+        "session",
+        "external-change-adopted"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "never",
+        "scenarios": [
+          "external-change-adopted"
+        ],
+        "occurs": {
+          "event": "write-intent"
+        },
+        "negatives": [
+          {
+            "scenario": "external-change-adopted",
+            "faults": [
+              "session-writes-back-external-change"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "own-write-never-reloaded",
+      "kind": "temporal",
+      "statement": "The notice of the session's own write never makes it reload the project.",
+      "subjects": [
+        "session",
+        "workspace-service",
+        "own-write-notice-ignored"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "never",
+        "scenarios": [
+          "own-write-notice-ignored"
+        ],
+        "occurs": {
+          "event": "reload-requested"
+        },
+        "negatives": [
+          {
+            "scenario": "own-write-notice-ignored",
+            "faults": [
+              "session-reloads-own-write"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "claim-results-follow-commits",
+      "kind": "temporal",
+      "statement": "After a semantic commit the claim results are those of the committed model.",
+      "subjects": [
+        "session",
+        "claim-evaluator",
+        "commit-reevaluates-claims"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "commit-reevaluates-claims"
+        ],
+        "expr": "session-claims-flow.resultsHash == project-history-flow.specHash && session-claims-flow.resultsHash == 'h2'",
+        "negatives": [
+          {
+            "scenario": "commit-reevaluates-claims",
+            "faults": [
+              "claims-reevaluation-skipped"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "export-holds-saved-text",
+      "kind": "temporal",
+      "statement": "An export made after an edit was saved holds the session's text.",
+      "subjects": [
+        "toolbar",
+        "workspace-service",
+        "export-project",
+        "project-bundle",
+        "export-after-save"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "export-after-save"
+        ],
+        "expr": "toolbar-exchange-flow.downloadedHash == project-session-flow.textHash",
+        "negatives": [
+          {
+            "scenario": "export-after-save",
+            "faults": [
+              "save-lands-after-export"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation",
+      "rationale": "The negative delays the save past the export: the bundle is read from disk, so an export made before the save lands does not hold the edit. The claim is true only of saved text."
+    },
+    {
+      "id": "import-shows-imported-text",
+      "kind": "temporal",
+      "statement": "After an import into the open project's name, the session shows the imported text, which is what is on disk.",
+      "subjects": [
+        "toolbar",
+        "session",
+        "workspace-service",
+        "import-project",
+        "import-bundle"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "import-bundle"
+        ],
+        "expr": "project-session-flow.textHash == 'hb' && workspace-disk-flow.diskSpec == 'hb'",
+        "negatives": [
+          {
+            "scenario": "import-bundle",
+            "faults": [
+              "toolbar-import-skips-reopen",
+              "change-notice-lost"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation",
+      "rationale": "Two paths bring the imported text in: the toolbar reopens the project, and the watcher notifies the change. The negative removes both; either one alone keeps the claim."
+    },
+    {
+      "id": "unparseable-bundle-never-sent",
+      "kind": "temporal",
+      "statement": "A bundle whose specification has syntax errors is never sent to the server.",
+      "subjects": [
+        "toolbar",
+        "import-project",
+        "import-unparseable-bundle"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "never",
+        "scenarios": [
+          "import-unparseable-bundle"
+        ],
+        "occurs": {
+          "event": "import-request"
+        },
+        "negatives": [
+          {
+            "scenario": "import-unparseable-bundle",
+            "faults": [
+              "toolbar-import-skips-syntax-check"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "generated-documents-match-model",
+      "kind": "temporal",
+      "statement": "Documents generated from the Realisation panel are derived from the session's current model.",
+      "subjects": [
+        "realisation-panel",
+        "generators",
+        "generated-documents",
+        "write-generated",
+        "generate-from-panel"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "generate-from-panel"
+        ],
+        "expr": "workspace-disk-flow.generatedHash == project-session-flow.textHash",
+        "negatives": [
+          {
+            "scenario": "generate-from-panel",
+            "faults": [
+              "generate-from-stale-model"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "real-runs-replay-through-self-model",
+      "kind": "invariant",
+      "statement": "The events a running Exegra really produces (requests and answers of the persistence client with the development server's own events, change notices, engine-worker messages, commits, claim evaluations, simulator controls, preference and camera storage writes) are recorded with their requestId and a logical sequence number and replayed through the behaviors of the scenario live-session; every divergence from the self-model (an event the specification does not name, an event the model does not predict at that point, a predicted event no behavior accepts, a payload value that differs, a predicted event not seen within 200 recorded events or by the end of a closed stream) is reported as a failed check at its step and listed in the simulator panel's Live mode, and a real open, edit and save replays without one.",
+      "rationale": "Built in WG-4777. Supported, not verified: the evidence is a recorded real stream replayed in a unit test with doctored copies as negatives, and a browser test of the running application. A clean replay shows that the code and the model agree on the runs recorded, not on every run; divergences found on longer real sessions are recorded in the unknowns of self-model-replay.",
+      "subjects": [
+        "traffic-recorder",
+        "self-model-replay",
+        "live-session",
+        "simulator-panel"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "browser-tests-run-real-application",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "sim-cursor-stays-in-trace",
+      "kind": "invariant",
+      "statement": "The step shown in the Simulation panel is always a recorded step of the trace (or none before the first), however often the user presses step.",
+      "subjects": [
+        "session",
+        "simulator-panel",
+        "simulation-panel-run"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "state-invariant",
+        "scenarios": [
+          "simulation-panel-run"
+        ],
+        "expr": "sim-session-flow.stepIndex == -1 || sim-session-flow.stepIndex < sim-session-flow.stepCount",
+        "negatives": [
+          {
+            "scenario": "simulation-panel-run",
+            "faults": [
+              "sim-steps-past-end"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "pulse-follows-step",
+      "kind": "temporal",
+      "statement": "The scene pulses only steps the session has shown.",
+      "subjects": [
+        "composition-root",
+        "session",
+        "simulation-panel-run"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "precedes",
+        "scenarios": [
+          "simulation-panel-run"
+        ],
+        "first": {
+          "event": "sim-step-shown"
+        },
+        "then": {
+          "event": "step-pulsed"
+        },
+        "negatives": [
+          {
+            "scenario": "simulation-panel-run",
+            "faults": [
+              "pulse-without-step"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "only-latest-run-adopted",
+      "kind": "invariant",
+      "statement": "The Simulation panel only ever shows the trace of the latest load.",
+      "subjects": [
+        "session",
+        "simulation-engine",
+        "engine-worker-run",
+        "simulation-reload-cancels-run"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "state-invariant",
+        "scenarios": [
+          "simulation-reload-cancels-run"
+        ],
+        "expr": "sim-session-flow.adoptedToken == 0 || sim-session-flow.adoptedToken == sim-session-flow.token",
+        "negatives": [
+          {
+            "scenario": "simulation-reload-cancels-run",
+            "faults": [
+              "runner-keeps-stale-job",
+              "runner-forwards-stale-reply",
+              "sim-adopts-stale-trace"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation",
+      "rationale": "Two protections: the runner terminates the worker of a replaced job, and the session compares tokens. The negative removes both; either alone keeps the claim."
+    },
+    {
+      "id": "interaction-state-restored",
+      "kind": "temporal",
+      "statement": "After a reload the session shows the selection and the view the user left.",
+      "subjects": [
+        "session",
+        "browser-storage",
+        "session-preferences",
+        "preferences-remembered"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "preferences-remembered"
+        ],
+        "expr": "interaction-prefs-flow.restored && interaction-prefs-flow.selection == 'session' && interaction-prefs-flow.viewId == 'data'",
+        "negatives": [
+          {
+            "scenario": "preferences-remembered",
+            "faults": [
+              "preferences-not-stored"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation",
+      "rationale": "The negative is storage being unavailable, a condition of the browser: the claim holds only where localStorage accepts the write, and then nothing tells the user that nothing is remembered."
+    },
+    {
+      "id": "camera-restored-per-view",
+      "kind": "temporal",
+      "statement": "Coming back to a view restores the camera the user left it with.",
+      "subjects": [
+        "composition-root",
+        "browser-storage",
+        "camera-memory",
+        "camera-remembered"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "camera-remembered"
+        ],
+        "expr": "camera-memory-flow.current == 'cA' && camera-memory-flow.view == 'structural'",
+        "negatives": [
+          {
+            "scenario": "camera-remembered",
+            "faults": [
+              "camera-save-lost"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "session-adopts-recorded-results",
+      "kind": "temporal",
+      "statement": "An open session adopts the results exegra verify records and re-evaluates its claims with them.",
+      "subjects": [
+        "session",
+        "workspace-service",
+        "session-recorded-results",
+        "cli-verify-with-open-session"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "cli-verify-with-open-session"
+        ],
+        "expr": "project-session-flow.recordedVersion == workspace-disk-flow.recordedVersion && session-claims-flow.evaluations == 2",
+        "negatives": [
+          {
+            "scenario": "cli-verify-with-open-session",
+            "faults": [
+              "change-notice-lost"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation",
+      "rationale": "The negative is a lost change notice: the session learns of recorded results only through the change stream."
+    },
+    {
+      "id": "changes-panel-pairs-by-revision",
+      "kind": "invariant",
+      "statement": "The changes panel pairs each history entry with the log entry of its own commit, matched by revision, so the pairing stays correct after the session log has dropped its oldest entries.",
+      "subjects": [
+        "activity-panels"
+      ],
+      "assumptions": [],
+      "rationale": "The session log is capped at 400 entries and history is not. Pairing by position mislabels every entry once the cap has dropped change entries.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "traffic-stream-bounded-and-logical",
+      "kind": "invariant",
+      "statement": "The traffic recorder keeps at most 5000 events, numbers them with strictly increasing logical sequence numbers, copies each payload when it is recorded, and hands the replay only the sequence number, the event id and the payload: the wall-clock time it keeps for display never reaches the core.",
+      "subjects": [
+        "traffic-recorder",
+        "self-model-replay"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "browser-tests-run-real-application",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "traffic-producers-name-spec-events",
+      "kind": "invariant",
+      "statement": "The producers record the events of this specification where its event descriptions say: the development server returns, for each request that carries a request id, its own events (workspace events and the answer) stamped with that id in the order it produced them, and infers an external edit (marked inferred) for a change notice whose hash it did not write; the engine runner records each message to and from the worker; texts are named by the same sha-256 the workspace computes.",
+      "subjects": [
+        "traffic-recorder",
+        "dev-server-plugin",
+        "simulation-engine",
+        "model-hash",
+        "persistence-client",
+        "session"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "browser-tests-run-real-application",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "reader-links-select-through-session",
+      "kind": "invariant",
+      "statement": "The reader surface replaces the scene only while the current view uses the reader projection, a link on it selects its entity through the session, and the page follows a committed edit.",
+      "subjects": [
+        "reader-surface",
+        "session",
+        "inspector"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "browser-tests-run-real-application",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "ui-every-function-on-phone",
+      "kind": "invariant",
+      "statement": "Every function the interface offers on a desktop (switching project and view, search, selecting and inspecting, editing, creating, connecting, deleting, undo and redo, simulation, verification, source, realisation, diagnostics, export and import) is reachable by touch at a 390 by 844 viewport.",
+      "rationale": "Rests on its browser test in tests/browser/mobile.spec.js (WG-4675); not evaluated until a recorded result of that test exists.",
+      "subjects": [
+        "responsive-layout",
+        "toolbar",
+        "explorer",
+        "inspector",
+        "simulator-panel",
+        "verification-panel",
+        "source-editor",
+        "dialogs"
+      ],
+      "assumptions": [
+        "browser-tests-run-real-application",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "browser-reloads-product-files",
+      "kind": "structural",
+      "statement": "When a product file of the open project changes, is added or is removed on disk (or the products list of project.jsonc changes), the application's session re-derives its model from the product layers on disk: the workspace watcher reports the change as the file products, the session reads the project again, and the platform text and layout in memory are kept. A product file that does not parse keeps the last valid model.",
+      "subjects": [
+        "session",
+        "workspace-service",
+        "persistence-client"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/disk-reload.test.js (the ev-product-reload-* evidence entries). WG-5041.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "structural-scene-draws-derived-model",
+      "kind": "invariant",
+      "statement": "The structural projection computes no lifting or bundling: for every view and every collapse set of this specification, its edges are the derived interactions of the cut the collapse set corresponds to, restricted by the view filters, each carrying its complete witness list.",
+      "subjects": [
+        "projection-system",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "flows-classified-on-derived-model",
+      "kind": "invariant",
+      "statement": "Message hops are classified against the derived model: a hop follows an edge only when a relationship between the two components is a witness of it, so the save hop of visual-edit-flow is classified the same with the subsystems collapsed and expanded.",
+      "subjects": [
+        "projection-system",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "navigation-scene-is-derived-model",
+      "kind": "structural",
+      "statement": "A structural view draws exactly the derived model of the cut it shows: its blocks are the derived blocks of that cut and its edges are the derived interactions with their complete witness sets, at every step of the walk from the system in its environment (L0) through the subsystems, persistence expanded, a component expanded to its module elements, and the semantic core expanded with persistence collapsed, and for every declared cut of the logical and runtime hierarchies; the scene equals what exegra derive prints for the same cut.",
+      "subjects": [
+        "projection-system",
+        "semantic-abstraction",
+        "session"
+      ],
+      "rationale": "Supported by the core test over the self-specification and by the browser walk, which compares a semantic dump of the scene with the command line at each step (WG-5695, invariant I1). tools/walk-shots.mjs records the same comparison with screenshots on phone and desktop.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "navigation-one-block-changes-alone",
+      "kind": "structural",
+      "statement": "Expanding or collapsing one block changes only the blocks inside it: every other node of the scene is drawn as it was, and collapsing it again restores the cut exactly. A view's cut is interaction state per view (the elements the viewer expanded), and a view may declare its default cut.",
+      "subjects": [
+        "session",
+        "semantic-abstraction",
+        "projection-system"
+      ],
+      "rationale": "Supported by the core test, which toggles blocks at every step of the walk, and by the browser walk, which compares the scene before and after expanding persistence.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "navigation-facts-are-inspectable",
+      "kind": "structural",
+      "statement": "Selecting a derived edge lists its complete witness set, equal to the derived model's, each witness with its kind, contract, carried data and provenance and a link to the relationship; selecting a block shows its purpose, responsibilities, knowledge status, boundary, derived interface, declared interface with the agreement result, and the findings about it at the current cut, on phone and desktop.",
+      "subjects": [
+        "inspector",
+        "semantic-abstraction"
+      ],
+      "rationale": "Supported by the browser walk, which checks the witness list against exegra derive at every step and the block panel against the derived boundaries and interfaces, and by the phone test.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "navigation-filters-report-removals",
+      "kind": "structural",
+      "statement": "Nothing a view's filter or the viewer's hiding removes is silently lost: a connection through hidden blocks is drawn as a labelled derived path summary (a may-path) carrying the relationships along it, and every other removed interaction, relationship or path is counted in the scene's notes; the \"N inside\" badge counts only what the filter keeps. Opaque, external, planned and unknown elements, blocks without a purpose, interface disagreements and unwitnessed or wrongly kinded coarse facts are each marked in the scene and named in text.",
+      "subjects": [
+        "projection-system",
+        "semantic-abstraction",
+        "scene-renderer"
+      ],
+      "rationale": "Supported by the core tests (hidden persistence, the semantic-core view, the kind filter of the data-and-edit-flow view, a hidden member of a collapsed block) and the browser test of a hidden block.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "presentation-holds-no-abstraction",
+      "kind": "structural",
+      "statement": "No module under src/ui, src/render or src/app lifts, bundles or maps entities to elements: they ask src/core/abstraction.js and src/core/query.js. Changing the cut, the hidden elements, the layout method, the pins or the camera changes no derived fact, no claim verdict and not the semantic hash.",
+      "subjects": [
+        "projection-system",
+        "inspector",
+        "session",
+        "scene-renderer",
+        "layout-engine"
+      ],
+      "rationale": "Supported by the core test that reads the presentation modules for the abstraction primitives, the core test that lays out every step of the walk by every method with pins and compares derived models, verdicts and the hash, and the browser walk, which ends with the hash and every verdict unchanged.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "layout-auto-reads-multiscale",
+      "kind": "structural",
+      "statement": "The automatic layout scores lines drawn through unrelated nodes as well as crossings, counts parallel edges between two nodes once, scores whitespace on a log scale, and scores labels that collide when the placement is fitted into a nominal viewport; interchangeable leaves take the slots that make edges leaving containers cross least, and around a hub much larger than its neighbours (an opened system) the radial method places the neighbours on rectangular rings hugging it. A hub with its neighbours is therefore not drawn as a grid with spokes through other nodes, an opened system with its environment gets most of the picture, and the layout stays deterministic and keeps pins.",
+      "subjects": [
+        "layout-engine"
+      ],
+      "rationale": "Supported by the layout tests (a hub of fourteen neighbours on a wide and a tall view; a line through a node and a parallel edge) and by the navigation test of L1 of the self-specification, where the opened system spans more than half of the picture with its members' labels apart.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    }
+  ],
+  "evidence": [
+    { "id": "ev-roundtrip-invalid-draft", "claim": "invalid-source-keeps-last-valid-model", "kind": "test", "ref": "tests/core/roundtrip.test.js#an invalid source draft is rejected", "description": "An invalid source draft is rejected with diagnostics and the committed model is not corrupted." },
+    { "id": "ev-browser-invalid-draft", "claim": "invalid-source-keeps-last-valid-model", "kind": "test", "ref": "tests/browser/exegra.spec.js#source edit updates the scene", "description": "In the application the rejected draft is kept as typed." },
+    {
+      "id": "ev-flows-trace",
+      "claim": "sim-flow-matches-trace",
+      "kind": "test",
+      "ref": "tests/core/flows.test.js",
+      "description": "Sender and receivers of every step of a scenario come from the trace; a scenario stimulus comes from outside."
+    },
+    {
+      "id": "ev-flows-edges",
+      "claim": "sim-flow-never-borrows-edges",
+      "kind": "test",
+      "ref": "tests/core/flows.test.js",
+      "description": "Paths follow the edge between the drawn nodes in either direction; an unconnected pair is undeclared, a relationship the view hides is unshown, a collapsed subsystem stands for its members, a dropped event is lost."
+    },
+    {
+      "id": "ev-browser-sim-flow",
+      "claim": "sim-step-shows-message-moving",
+      "kind": "test",
+      "ref": "tests/browser/interaction.spec.js#stepping a simulation sends a labelled marker along the edge from sender to receiver",
+      "description": "In the running application, stepping Exegra's own edit scenario sends a labelled marker into the interaction component from outside, then along the declared edge to the transaction system while it advances, and marks the undeclared save message; the panel names sender and receiver."
+    },
+    {
+      "id": "ev-browser-phone-touch-usable",
+      "claim": "ui-touch-usable-on-phone",
+      "kind": "test",
+      "ref": "tests/browser/mobile.spec.js#phone layout has no horizontal scroll and 44 px targets and the scene covers most of the screen",
+      "description": "At 390 by 844 with touch: no horizontal scroll, and no visible interactive control under 44 by 44 CSS px (offenders listed) with nothing open, with every destination's sheet at full height, in the More and overflow menus, in a dialog and in search; with no sheet open at least 60% of the window is uncovered scene."
+    },
+    {
+      "id": "ev-browser-phone-every-function",
+      "claim": "ui-every-function-on-phone",
+      "kind": "test",
+      "ref": "tests/browser/mobile.spec.js#every function is reachable by touch on a phone",
+      "description": "At 390 by 844, by taps: every destination's sheet, search, selection by tapping the canvas, a property edit, undo and redo, create, connect mode, delete with cascade, rename, explorer collapse, isolate and hide, layout, camera, legend and statistics, a scenario stepped with the docked transport, faults and the timeline, verification, source, realisation, diagnostics, changes, export, and view and project switching."
+    },
+    {
+      "id": "ev-browser-tablet-desktop-expand",
+      "claim": "ui-expands-to-desktop",
+      "kind": "test",
+      "ref": "tests/browser/mobile.spec.js#panels open beside the scene on a tablet and the desktop shows explorer scene and context panel side by side",
+      "description": "At 820 px the inspector, explorer and verification panels open beside the scene with no overlap of their boxes; a fresh 1600 by 1000 page shows the explorer, the scene and the context panel side by side with no overlap, nothing opened by hand."
+    },
+    {
+      "id": "ev-changes-pairing-by-revision",
+      "claim": "changes-panel-pairs-by-revision",
+      "kind": "test",
+      "ref": "tests/core/activity-pairing.test.js",
+      "description": "pairHistoryWithLog pairs more than 400 commits with their own log entries and leaves an entry unpaired when its log entry was dropped."
+    },
+    {
+      "id": "ev-replay-recorded-stream-clean",
+      "claim": "real-runs-replay-through-self-model",
+      "kind": "test",
+      "ref": "tests/core/replay.test.js#a recorded open edit and save replays through live-session without a divergence",
+      "description": "A stream recorded from the running application (tests/fixtures/live/open-edit-save.json) replays through live-session with no divergence and nothing awaited; steps carry fired transitions, responsible components and calibrations, and checkTrace and requestLog read the replay."
+    },
+    {
+      "id": "ev-replay-wrong-order",
+      "claim": "real-runs-replay-through-self-model",
+      "kind": "test",
+      "ref": "tests/core/replay.test.js#an event in the wrong order is a divergence",
+      "description": "Negative: save-succeeded moved before the request is reported as unpredicted, under the claim, with its step."
+    },
+    {
+      "id": "ev-replay-unknown-event",
+      "claim": "real-runs-replay-through-self-model",
+      "kind": "test",
+      "ref": "tests/core/replay.test.js#an event the specification does not name is a divergence",
+      "description": "Negative: an event id the specification does not declare is reported as unknown-event."
+    },
+    {
+      "id": "ev-replay-missing-response",
+      "claim": "real-runs-replay-through-self-model",
+      "kind": "test",
+      "ref": "tests/core/replay.test.js#a predicted response that never comes is a divergence",
+      "description": "Negative: a stream that ends after the server wrote the file is still waiting while open and reports write-file-ok missing once closed, naming the transition that predicted it."
+    },
+    {
+      "id": "ev-replay-bound",
+      "claim": "real-runs-replay-through-self-model",
+      "kind": "test",
+      "ref": "tests/core/replay.test.js#a predicted event not seen within the bound is missing even while the stream is open",
+      "description": "Negative: a prediction older than the bound is missing on an open stream."
+    },
+    {
+      "id": "ev-replay-payload",
+      "claim": "real-runs-replay-through-self-model",
+      "kind": "test",
+      "ref": "tests/core/replay.test.js#a recorded payload value that differs from the prediction is a divergence",
+      "description": "Negative: a doctored hash in write-file-ok is a payload divergence on that field."
+    },
+    {
+      "id": "ev-replay-not-allowed",
+      "claim": "real-runs-replay-through-self-model",
+      "kind": "test",
+      "ref": "tests/core/replay.test.js#a predicted event that no behavior consuming it accepts in its state is a divergence",
+      "description": "Negative: a camera saved for a view the model's tab storage has no place for is not-allowed."
+    },
+    {
+      "id": "ev-replay-incremental",
+      "claim": "real-runs-replay-through-self-model",
+      "kind": "test",
+      "ref": "tests/core/replay.test.js#the replay is incremental and deterministic",
+      "description": "Consuming events one at a time gives the same trace as replaying the whole stream."
+    },
+    {
+      "id": "ev-live-browser",
+      "claim": "real-runs-replay-through-self-model",
+      "kind": "test",
+      "ref": "tests/browser/live.spec.js#live mode replays an edit and its save through the self-model on the right components without divergence",
+      "description": "The running application opens a copy of its own specification; with Live mode on, an edit and its save are recorded in order on the components the model names, replay without divergence and without failed checks, the request log shows the write, and the panel works at phone width with 44 px source buttons and no horizontal scroll."
+    },
+    {
+      "id": "ev-traffic-bounded",
+      "claim": "traffic-stream-bounded-and-logical",
+      "kind": "test",
+      "ref": "tests/core/traffic.test.js#the recorder keeps a bounded stream with logical sequence numbers and keeps wall-clock times out of the replay",
+      "description": "A recorder with a limit of 3 keeps the last 3 events with their sequence numbers, counts the dropped ones, copies payloads, and forReplay carries no wall-clock time."
+    },
+    {
+      "id": "ev-traffic-live-seq",
+      "claim": "traffic-stream-bounded-and-logical",
+      "kind": "test",
+      "ref": "tests/browser/live.spec.js#live mode replays an edit and its save through the self-model on the right components without divergence",
+      "description": "In the running application the live trace's times are the recorded sequence numbers."
+    },
+    {
+      "id": "ev-traffic-server-events",
+      "claim": "traffic-producers-name-spec-events",
+      "kind": "test",
+      "ref": "tests/core/traffic.test.js#the development server returns its own events with each answer stamped with the request id",
+      "description": "Against the real middleware: list, read, write, conflict and a missing project each return their workspace events and answer in order with the request id; a request without an id gets none; changeTrace tells own writes from external edits."
+    },
+    {
+      "id": "ev-traffic-engine-runner",
+      "claim": "traffic-producers-name-spec-events",
+      "kind": "test",
+      "ref": "tests/core/traffic.test.js#the engine runner records the worker messages with the scenario standing for input and trace",
+      "description": "With a stand-in Worker: posts, the termination of a waiting worker, the reply with its generation and a refusal are recorded as the contract's events."
+    },
+    {
+      "id": "ev-traffic-sha256",
+      "claim": "traffic-producers-name-spec-events",
+      "kind": "test",
+      "ref": "tests/core/traffic.test.js#sha256Hex agrees with the workspace hash",
+      "description": "The browser's sha-256 equals the workspace hash for empty, ASCII, non-ASCII and large texts."
+    },
+    {
+      "id": "ev-traffic-browser-producers",
+      "claim": "traffic-producers-name-spec-events",
+      "kind": "test",
+      "ref": "tests/browser/live.spec.js#live mode replays an edit and its save through the self-model on the right components without divergence",
+      "description": "The session, the persistence client and the scene record the open, the edit and the save in the running application, matching the server's events by request id."
+    },
+    {
+      "id": "ev-reader-browser-select",
+      "claim": "reader-links-select-through-session",
+      "kind": "test",
+      "ref": "tests/browser/reader.spec.js#reader view replaces the scene and its links select entities",
+      "description": "The reader replaces the scene, a link selects its entity, and the scene returns on leaving the view."
+    },
+    {
+      "id": "ev-reader-browser-edit",
+      "claim": "reader-links-select-through-session",
+      "kind": "test",
+      "ref": "tests/browser/reader.spec.js#reader page follows an edit of the model",
+      "description": "A committed edit shows on the page."
+    },
+    {
+      "id": "ev-product-reload-watch",
+      "claim": "browser-reloads-product-files",
+      "kind": "test",
+      "ref": "tests/core/disk-reload.test.js#an added then changed then removed product file is reported by the watcher and re-derives the session model",
+      "description": "The watcher reports an added, a changed and a removed product file as products, and the session reload re-derives the layered model each time."
+    },
+    {
+      "id": "ev-product-reload-invalid",
+      "claim": "browser-reloads-product-files",
+      "kind": "test",
+      "ref": "tests/core/disk-reload.test.js#a product file that does not parse keeps the last valid model and the next good read adopts it",
+      "description": "A broken product file is seen and the next good read is adopted."
+    },
+    {
+      "id": "ev-product-reload-spec",
+      "claim": "browser-reloads-product-files",
+      "kind": "test",
+      "ref": "tests/core/disk-reload.test.js#a reload of the specification keeps the product layers of the read",
+      "description": "A specification reload carries the product layers."
+    },
+    {
+      "id": "ev-scene-equals-derived",
+      "kind": "test",
+      "ref": "tests/core/abstraction.test.js#structural scene edges equal derived edges for every view and collapse set of the self-specification",
+      "claim": "structural-scene-draws-derived-model",
+      "description": "Every structural view under every subset of the six subsystems collapsed."
+    },
+    {
+      "id": "ev-flows-collapse-invariant",
+      "kind": "test",
+      "ref": "tests/core/abstraction.test.js#flows classify the visual-edit-flow save hop identically collapsed and expanded",
+      "claim": "flows-classified-on-derived-model",
+      "description": "The save-requested hop from the session to the workspace service is undeclared in both scenes."
+    },
+    {
+      "id": "ev-nav-walk-core",
+      "claim": "navigation-scene-is-derived-model",
+      "kind": "test",
+      "ref": "tests/core/navigation.test.js#at every step of the walk the architecture scene draws exactly the derived model of its cut",
+      "description": "Every step of the walk projected and compared with deriveModel for its cut."
+    },
+    {
+      "id": "ev-nav-walk-browser",
+      "claim": "navigation-scene-is-derived-model",
+      "kind": "test",
+      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to module elements with each step equal to the CLI",
+      "description": "The walk in the running application, each step compared with exegra derive."
+    },
+    {
+      "id": "ev-nav-cuts",
+      "claim": "navigation-scene-is-derived-model",
+      "kind": "test",
+      "ref": "tests/core/navigation.test.js#every declared cut of the logical and runtime hierarchies gives the same derived model through the view as through derive",
+      "description": "Every declared cut, logical and runtime."
+    },
+    {
+      "id": "ev-nav-hierarchy-browser",
+      "claim": "navigation-scene-is-derived-model",
+      "kind": "test",
+      "ref": "tests/browser/navigation.spec.js#a hidden block on a path becomes a labelled path summary and the view switches hierarchy",
+      "description": "The view switched to the runtime hierarchy equals exegra derive."
+    },
+    {
+      "id": "ev-nav-one-block",
+      "claim": "navigation-one-block-changes-alone",
+      "kind": "test",
+      "ref": "tests/core/navigation.test.js#expanding or collapsing one block changes no other block of the scene",
+      "description": "Blocks toggled at every step; the rest unchanged, and the cut restored."
+    },
+    {
+      "id": "ev-nav-one-block-browser",
+      "claim": "navigation-one-block-changes-alone",
+      "kind": "test",
+      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to module elements with each step equal to the CLI",
+      "description": "Expanding persistence in the application leaves every other node as it was."
+    },
+    {
+      "id": "ev-nav-default-cut",
+      "claim": "navigation-one-block-changes-alone",
+      "kind": "test",
+      "ref": "tests/core/navigation.test.js#the default cut of a view is its declared cut or else the overview of a large model and a within filter opens its element",
+      "description": "Default cuts."
+    },
+    {
+      "id": "ev-nav-inspect-browser",
+      "claim": "navigation-facts-are-inspectable",
+      "kind": "test",
+      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to module elements with each step equal to the CLI",
+      "description": "Witness lists and block panels checked against exegra derive at every step."
+    },
+    {
+      "id": "ev-nav-inspect-phone",
+      "claim": "navigation-facts-are-inspectable",
+      "kind": "test",
+      "ref": "tests/browser/mobile.spec.js#a phone walks the levels of the self-specification by touch and inspects a derived edge and a block",
+      "description": "The same on a phone, by touch."
+    },
+    {
+      "id": "ev-nav-filter-core",
+      "claim": "navigation-filters-report-removals",
+      "kind": "test",
+      "ref": "tests/core/navigation.test.js#hiding a block on a path draws a labelled path summary through it and the inside badge follows the filter",
+      "description": "Path summaries through hidden persistence and the badge."
+    },
+    {
+      "id": "ev-nav-views-core",
+      "claim": "navigation-filters-report-removals",
+      "kind": "test",
+      "ref": "tests/core/navigation.test.js#views keep their meaning as cuts and filters: each opens at its declared cut and counts what its filter removes",
+      "description": "The four structural views as cuts and filters."
+    },
+    {
+      "id": "ev-nav-filter-browser",
+      "claim": "navigation-filters-report-removals",
+      "kind": "test",
+      "ref": "tests/browser/navigation.spec.js#a hidden block on a path becomes a labelled path summary and the view switches hierarchy",
+      "description": "A hidden block on a path in the application."
+    },
+    {
+      "id": "ev-nav-filter-fixture",
+      "claim": "navigation-filters-report-removals",
+      "kind": "test",
+      "ref": "tests/core/projections.test.js#hidden removes components with their descendants and a connection through them becomes a labelled path summary",
+      "description": "A path summary on a small fixture."
+    },
+    {
+      "id": "ev-nav-code-check",
+      "claim": "presentation-holds-no-abstraction",
+      "kind": "test",
+      "ref": "tests/core/navigation.test.js#presentation modules compute no lifting or bundling or entity-to-element mapping: they ask the core",
+      "description": "The presentation modules read for the abstraction primitives."
+    },
+    {
+      "id": "ev-nav-no-semantics",
+      "claim": "presentation-holds-no-abstraction",
+      "kind": "test",
+      "ref": "tests/core/navigation.test.js#no presentation state changes a derived fact or a claim verdict or the semantic hash",
+      "description": "Cuts, hiding, layout methods and pins leave derived models, verdicts and the hash unchanged."
+    },
+    {
+      "id": "ev-nav-no-semantics-browser",
+      "claim": "presentation-holds-no-abstraction",
+      "kind": "test",
+      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to module elements with each step equal to the CLI",
+      "description": "The walk ends with the hash and every verdict unchanged and nothing to undo."
+    },
+    {
+      "id": "ev-layout-hub",
+      "claim": "layout-auto-reads-multiscale",
+      "kind": "test",
+      "ref": "tests/core/layout.test.js#a hub with fourteen neighbours is drawn with its spokes clear of other nodes on a wide and a tall view",
+      "description": "A hub is drawn radially."
+    },
+    {
+      "id": "ev-layout-overlaps",
+      "claim": "layout-auto-reads-multiscale",
+      "kind": "test",
+      "ref": "tests/core/layout.test.js#scorePlacement counts a line through an unrelated node and counts parallel edges between two nodes once",
+      "description": "The overlap term and parallel edges."
+    },
+    {
+      "id": "ev-nav-extracted-facts-browser",
+      "claim": "navigation-scene-is-derived-model",
+      "kind": "test",
+      "ref": "tests/browser/navigation.spec.js#the application attaches the extracted facts as the CLI does and adopts a changed fact file",
+      "description": "The application attaches the extracted facts like the command line: at L1 its imports interactions equal exegra derive and are marked extracted, and removing and restoring the fact file on disk removes and restores them."
+    },
+    {
+      "id": "ev-layout-opened-system",
+      "claim": "layout-auto-reads-multiscale",
+      "kind": "test",
+      "ref": "tests/core/navigation.test.js#at L1 the automatic layout gives the opened system most of the picture with its environment around it",
+      "description": "At L1 of the self-specification the opened system spans at least half of the picture on a wide and a tall view, its members inside, its environment around it, and few labels collide."
+    },
+    {
+      "id": "ev-nav-production-bundle",
+      "claim": "navigation-scene-is-derived-model",
+      "kind": "test",
+      "ref": "tests/core/spec-manifest.test.js#a production build bundles the self-specification resolved and the shipped application derives the CLI model from it",
+      "description": "The build's bundled specification (the resolved manifest) with the bundled fact file gives the semantic hash and the L1 interactions the command line gives, so the read-only application draws the same derived model."
+    }
+  ]
+}

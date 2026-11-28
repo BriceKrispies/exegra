@@ -1,6 +1,13 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "lean-toolchain-flow": 0,
+   "prove-flow": 0
+  },
+  "links": {},
   "machines": {
    "lean-toolchain-flow": {
     "state": "lean-ready",
@@ -17,10 +24,23 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "lean-toolchain-flow": 0,
+   "prove-flow": 0
+  },
+  "links": {},
   "machines": {
    "lean-toolchain-flow": {
     "state": "lean-ready",
@@ -37,10 +57,12 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "lean-rejects-proof",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -53,6 +75,7 @@
     "payload": {
      "scenario": "lost-update-race"
     },
+    "scheduledAt": 0,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -61,13 +84,27 @@
     "time": 0
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "prove-lean-rejects",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "lean-toolchain-flow": 0,
+     "prove-flow": 0
+    },
+    "links": {},
     "machines": {
      "lean-toolchain-flow": {
       "state": "lean-ready",
@@ -84,12 +121,14 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "prove-requested",
       "payload": {
        "scenario": "lost-update-race"
       },
+      "scheduledAt": 0,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -98,11 +137,18 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "lean-rejects-proof",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -116,6 +162,7 @@
      "emitted": [],
      "from": "lean-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": false,
@@ -131,11 +178,14 @@
     {
      "behavior": "prove-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "lean-rejects-proof",
     "lean-broken",
@@ -146,6 +196,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "lean-toolchain-flow": 0,
+     "prove-flow": 0
+    },
+    "links": {},
     "machines": {
      "lean-toolchain-flow": {
       "state": "lean-ready",
@@ -162,10 +219,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "lake-build-requested",
+      "from": {
+       "behavior": "prove-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 2,
       "source": {
        "behavior": "prove-flow",
@@ -175,13 +239,20 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "prove-requested",
     "payload": {
      "scenario": "lost-update-race"
     },
+    "scheduledAt": 0,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -202,6 +273,7 @@
      ],
      "from": "prove-idle",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "prove-building",
      "transition": "prove-start"
@@ -211,11 +283,14 @@
     {
      "behavior": "lean-toolchain-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "prove-requested",
     "prove-start",
@@ -226,6 +301,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "lean-toolchain-flow": 0,
+     "prove-flow": 0
+    },
+    "links": {},
     "machines": {
      "lean-toolchain-flow": {
       "state": "lean-ready",
@@ -242,10 +324,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "lake-build-finished",
+      "from": {
+       "behavior": "lean-toolchain-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 3,
       "source": {
        "behavior": "lean-toolchain-flow",
@@ -255,11 +344,23 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "prove-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "lake-build-requested",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 2,
     "source": {
      "behavior": "prove-flow",
@@ -281,6 +382,7 @@
      ],
      "from": "lean-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "lean-ready",
      "transition": "lean-build"
@@ -290,11 +392,14 @@
     {
      "behavior": "prove-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "lake-build-requested",
     "lean-build",
@@ -305,6 +410,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "lean-toolchain-flow": 0,
+     "prove-flow": 0
+    },
+    "links": {},
     "machines": {
      "lean-toolchain-flow": {
       "state": "lean-ready",
@@ -321,12 +433,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "explorer-request-sent",
+      "from": {
+       "behavior": "prove-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "bound": 20
       },
+      "scheduledAt": 0,
       "seq": 4,
       "source": {
        "behavior": "prove-flow",
@@ -336,11 +455,23 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "lean-toolchain-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "lake-build-finished",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 3,
     "source": {
      "behavior": "lean-toolchain-flow",
@@ -364,6 +495,7 @@
      ],
      "from": "prove-building",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "prove-exploring",
      "transition": "prove-explore"
@@ -373,11 +505,14 @@
     {
      "behavior": "lean-toolchain-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "lake-build-finished",
     "prove-explore",
@@ -388,6 +523,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "lean-toolchain-flow": 0,
+     "prove-flow": 0
+    },
+    "links": {},
     "machines": {
      "lean-toolchain-flow": {
       "state": "lean-ready",
@@ -404,12 +546,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "explorer-result-returned",
+      "from": {
+       "behavior": "lean-toolchain-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "result": "holds"
       },
+      "scheduledAt": 0,
       "seq": 5,
       "source": {
        "behavior": "lean-toolchain-flow",
@@ -419,13 +568,25 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "prove-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "explorer-request-sent",
     "payload": {
      "bound": 20
     },
+    "scheduledAt": 0,
     "seq": 4,
     "source": {
      "behavior": "prove-flow",
@@ -449,6 +610,7 @@
      ],
      "from": "lean-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "lean-ready",
      "transition": "lean-explore"
@@ -458,11 +620,14 @@
     {
      "behavior": "prove-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "explorer-request-sent",
     "lean-explore",
@@ -473,6 +638,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "lean-toolchain-flow": 0,
+     "prove-flow": 0
+    },
+    "links": {},
     "machines": {
      "lean-toolchain-flow": {
       "state": "lean-ready",
@@ -489,12 +661,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "lean-file-written",
+      "from": {
+       "behavior": "prove-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "scenario": "race"
       },
+      "scheduledAt": 0,
       "seq": 6,
       "source": {
        "behavior": "prove-flow",
@@ -505,7 +684,13 @@
      },
      {
       "event": "lean-check-requested",
+      "from": {
+       "behavior": "prove-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 7,
       "source": {
        "behavior": "prove-flow",
@@ -515,13 +700,25 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "lean-toolchain-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "explorer-result-returned",
     "payload": {
      "result": "holds"
     },
+    "scheduledAt": 0,
     "seq": 5,
     "source": {
      "behavior": "lean-toolchain-flow",
@@ -551,6 +748,7 @@
      ],
      "from": "prove-exploring",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": true,
@@ -566,11 +764,14 @@
     {
      "behavior": "lean-toolchain-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 5,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "explorer-result-returned",
     "prove-write",
@@ -581,6 +782,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "lean-toolchain-flow": 0,
+     "prove-flow": 0
+    },
+    "links": {},
     "machines": {
      "lean-toolchain-flow": {
       "state": "lean-ready",
@@ -597,10 +805,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "lean-check-requested",
+      "from": {
+       "behavior": "prove-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 7,
       "source": {
        "behavior": "prove-flow",
@@ -610,13 +825,25 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "prove-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "lean-file-written",
     "payload": {
      "scenario": "race"
     },
+    "scheduledAt": 0,
     "seq": 6,
     "source": {
      "behavior": "prove-flow",
@@ -630,16 +857,20 @@
     {
      "behavior": "prove-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "lean-toolchain-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 6,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "lean-file-written"
    ],
@@ -647,6 +878,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "lean-toolchain-flow": 0,
+     "prove-flow": 0
+    },
+    "links": {},
     "machines": {
      "lean-toolchain-flow": {
       "state": "lean-ready",
@@ -663,12 +901,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "lean-check-finished",
+      "from": {
+       "behavior": "lean-toolchain-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "accepted": false
       },
+      "scheduledAt": 0,
       "seq": 8,
       "source": {
        "behavior": "lean-toolchain-flow",
@@ -678,11 +923,23 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "prove-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "lean-check-requested",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 7,
     "source": {
      "behavior": "prove-flow",
@@ -706,6 +963,7 @@
      ],
      "from": "lean-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "lean-ready",
      "transition": "lean-check"
@@ -715,11 +973,14 @@
     {
      "behavior": "prove-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 7,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "lean-check-requested",
     "lean-check",
@@ -730,6 +991,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "lean-toolchain-flow": 0,
+     "prove-flow": 0
+    },
+    "links": {},
     "machines": {
      "lean-toolchain-flow": {
       "state": "lean-ready",
@@ -746,12 +1014,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "prove-finished",
+      "from": {
+       "behavior": "prove-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "claims": 0
       },
+      "scheduledAt": 0,
       "seq": 9,
       "source": {
        "behavior": "prove-flow",
@@ -761,13 +1036,25 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "lean-toolchain-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "lean-check-finished",
     "payload": {
      "accepted": false
     },
+    "scheduledAt": 0,
     "seq": 8,
     "source": {
      "behavior": "lean-toolchain-flow",
@@ -791,6 +1078,7 @@
      ],
      "from": "prove-checking",
      "guard": "!event.accepted",
+     "instance": 0,
      "sets": [],
      "to": "prove-done",
      "transition": "prove-report-nothing"
@@ -800,11 +1088,14 @@
     {
      "behavior": "lean-toolchain-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 8,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "lean-check-finished",
     "prove-report-nothing",
@@ -815,6 +1106,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "lean-toolchain-flow": 0,
+     "prove-flow": 0
+    },
+    "links": {},
     "machines": {
      "lean-toolchain-flow": {
       "state": "lean-ready",
@@ -831,14 +1129,27 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "prove-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "prove-finished",
     "payload": {
      "claims": 0
     },
+    "scheduledAt": 0,
     "seq": 9,
     "source": {
      "behavior": "prove-flow",
@@ -852,20 +1163,28 @@
     {
      "behavior": "prove-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "lean-toolchain-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 9,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "prove-finished"
    ],
    "time": 0
   }
- ]
+ ],
+ "stepsTaken": 10,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

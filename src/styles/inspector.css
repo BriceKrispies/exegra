@@ -210,4 +210,11 @@
   .prop__params { margin: var(--s-1) 0 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 2px var(--s-3); }
   .prop__params dt { color: var(--text-1); }
   .prop__params dd { margin: 0; }
+
+  /* Witnesses of a derived interaction and the block panel (WG-5695). */
+  .witness-list { gap: var(--s-2); }
+  .witness { display: flex; flex-direction: column; gap: var(--s-1); padding-block: var(--s-1); border-bottom: 1px solid var(--line-1); }
+  .witness[aria-current="true"] { background: var(--selected); }
+  .witness__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+  .witness__kv .kv__row { grid-template-columns: 7em 1fr; }
 }

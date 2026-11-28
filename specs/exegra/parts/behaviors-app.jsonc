@@ -1,0 +1,2375 @@
+// Part of the specification: behaviors.
+{
+  // ---- Behaviors: Exegra's own edit flow as state machines ---------------------------------
+  // These abstract session.apply, Project.apply/#commit, the session's onCommit and flush,
+  // the renderer, inspector and source editor refresh, and the write to disk. The abstraction
+  // keeps the real order: the projection is refreshed when the transaction commits, and the
+  // write to disk happens afterwards and asynchronously (one logical tick later). One variable
+  // `revision` / `shownRevision` / `persistedRevision` stands for the revision of the model,
+  // of what a view shows, and of what the file on disk holds. The correspondence between these
+  // machines and the code is maintained by hand and is not checked.
+  "behaviors": [
+    {
+      "id": "interaction-flow",
+      "name": "Interaction layer: submit an edit and show its outcome",
+      "subject": "composition-root",
+      "description": "The scene, inspector or a dialog submits a typed operation and later shows the result: accepted, or the rejection with its diagnostics.",
+      "initial": "interaction-idle",
+      "variables": [{ "name": "refusalShown", "type": "boolean", "initial": false }],
+      "states": [
+        { "id": "interaction-idle", "name": "Idle" },
+        { "id": "interaction-awaiting", "name": "Awaiting the transaction result" },
+        { "id": "interaction-done", "name": "Edit accepted", "terminal": true },
+        { "id": "interaction-refused", "name": "Edit refused and rejection shown", "terminal": true }
+      ],
+      "transitions": [
+        { "id": "interaction-submit", "from": "interaction-idle", "to": "interaction-awaiting", "on": "edit-requested", "effects": [{ "emit": "operation-submitted" }] },
+        { "id": "interaction-accept", "from": "interaction-awaiting", "to": "interaction-done", "on": "transaction-committed" },
+        { "id": "interaction-refuse", "from": "interaction-awaiting", "to": "interaction-refused", "on": "transaction-rejected", "effects": [{ "set": "refusalShown", "to": true }] }
+      ]
+    },
+    {
+      "id": "source-editor-flow",
+      "name": "Source editor: apply a draft and stay in sync",
+      "subject": "source-editor",
+      "description": "The editor shows the committed text. Applying a draft submits ReplaceSource; a rejection keeps the draft as typed. After any commit the editor shows the committed revision.",
+      "initial": "source-in-sync",
+      "variables": [{ "name": "shownRevision", "type": "number", "initial": 1 }],
+      "states": [
+        { "id": "source-in-sync", "name": "In sync with the model" },
+        { "id": "source-applying", "name": "Applying a draft" },
+        { "id": "source-draft-kept", "name": "Draft kept after a rejection", "terminal": true }
+      ],
+      "transitions": [
+        { "id": "source-apply", "from": "source-in-sync", "to": "source-applying", "on": "source-apply-requested", "effects": [{ "emit": "operation-submitted" }] },
+        { "id": "source-refresh-after-apply", "from": "source-applying", "to": "source-in-sync", "on": "model-published", "effects": [{ "set": "shownRevision", "to": "event.revision" }] },
+        { "id": "source-keep-draft", "from": "source-applying", "to": "source-draft-kept", "on": "transaction-rejected" },
+        { "id": "source-refresh-after-visual-edit", "from": "source-in-sync", "to": "source-in-sync", "on": "model-published", "effects": [{ "set": "shownRevision", "to": "event.revision" }] }
+      ]
+    },
+    {
+      "id": "session-flow",
+      "name": "Session: refresh on commit, then save asynchronously",
+      "subject": "session",
+      "description": "onCommit re-evaluates claims, re-projects and re-lays-out the scene (the renderer receives it), then announces the model to the inspector and source editor, and starts the flush. The flush writes later and asynchronously; the save state follows its result.",
+      "initial": "session-in-sync",
+      "variables": [
+        { "name": "saveState", "type": "string", "initial": "saved" },
+        { "name": "rejectionsLogged", "type": "number", "initial": 0 }
+      ],
+      "states": [
+        { "id": "session-in-sync", "name": "Saved and in sync" },
+        { "id": "session-refreshing", "name": "Refreshing the scene" },
+        { "id": "session-save-pending", "name": "Save in flight" },
+        { "id": "session-conflicted", "name": "Save conflict unresolved", "terminal": true }
+      ],
+      "transitions": [
+        {
+          "id": "session-swallow-conflict",
+          "from": "session-save-pending",
+          "to": "session-in-sync",
+          "on": "save-conflicted",
+          "faultOnly": true,
+          "effects": [
+            {
+              "set": "saveState",
+              "to": "'saved'"
+            }
+          ]
+        },
+        {
+          "id": "session-refresh-on-rejection",
+          "from": "session-in-sync",
+          "to": "session-refreshing",
+          "on": "transaction-rejected",
+          "faultOnly": true,
+          "effects": [
+            {
+              "emit": "refresh-requested",
+              "payload": {
+                "revision": "transaction-flow.revision"
+              }
+            }
+          ]
+        },
+        { "id": "session-on-commit", "from": "session-in-sync", "to": "session-refreshing", "on": "transaction-committed", "effects": [{ "emit": "refresh-requested", "payload": { "revision": "event.revision" } }] },
+        { "id": "session-on-refreshed", "from": "session-refreshing", "to": "session-save-pending", "on": "projection-refreshed", "description": "The renderer already has the scene; now the model is published and the write is requested, one tick later.", "effects": [{ "set": "saveState", "to": "'saving'" }, { "emit": "model-published", "payload": { "revision": "event.revision" } }, { "emit": "save-requested", "after": 1, "payload": { "revision": "event.revision" } }] },
+        { "id": "session-on-saved", "from": "session-save-pending", "to": "session-in-sync", "on": "save-succeeded", "effects": [{ "set": "saveState", "to": "'saved'" }] },
+        { "id": "session-on-conflict", "from": "session-save-pending", "to": "session-conflicted", "on": "save-conflicted", "description": "Nothing was overwritten; the conflict waits for the user to reload from disk or overwrite disk.", "effects": [{ "set": "saveState", "to": "'conflict'" }] },
+        { "id": "session-on-rejection", "from": "session-in-sync", "to": "session-in-sync", "on": "transaction-rejected", "description": "The rejection is logged; no refresh and no write follow.", "effects": [{ "set": "rejectionsLogged", "to": "rejectionsLogged + 1" }] }
+      ]
+    },
+    {
+      "id": "projection-flow",
+      "name": "Projection: derive the scene of the committed revision",
+      "subject": "projection-system",
+      "initial": "projection-ready",
+      "variables": [{ "name": "shownRevision", "type": "number", "initial": 1 }],
+      "states": [{ "id": "projection-ready", "name": "Ready" }],
+      "transitions": [
+        { "id": "projection-refresh", "from": "projection-ready", "to": "projection-ready", "on": "refresh-requested", "effects": [{ "set": "shownRevision", "to": "event.revision" }, { "emit": "projection-refreshed", "payload": { "revision": "event.revision" } }] }
+      ]
+    },
+    {
+      "id": "renderer-flow",
+      "name": "Renderer: draw the refreshed scene",
+      "subject": "scene-renderer",
+      "initial": "renderer-ready",
+      "variables": [{ "name": "shownRevision", "type": "number", "initial": 1 }],
+      "states": [{ "id": "renderer-ready", "name": "Ready" }],
+      "transitions": [
+        { "id": "renderer-draw", "from": "renderer-ready", "to": "renderer-ready", "on": "projection-refreshed", "effects": [{ "set": "shownRevision", "to": "event.revision" }] }
+      ]
+    },
+    {
+      "id": "inspector-flow",
+      "name": "Inspector: refresh from the committed model",
+      "subject": "inspector",
+      "initial": "inspector-ready",
+      "variables": [{ "name": "shownRevision", "type": "number", "initial": 1 }],
+      "states": [{ "id": "inspector-ready", "name": "Ready" }],
+      "transitions": [
+        { "id": "inspector-refresh", "from": "inspector-ready", "to": "inspector-ready", "on": "model-published", "effects": [{ "set": "shownRevision", "to": "event.revision" }] }
+      ]
+    },
+    {
+      "id": "project-session-flow",
+      "name": "Session: open, save, conflicts and external changes",
+      "subject": "session",
+      "description": "src/app/session.js from the files' point of view: init lists projects and opens one; open reads the files and takes their hashes as base hashes; onCommit marks the changed file pending and flush writes it with the base hash (a commit with origin external is not written); the answer replaces the base hash, stores a conflict or records an error; resolveConflict reloads or overwrites; onExternalChange ignores the session's own writes by hash, re-reads the project and adopts the change only when nothing is pending. textHash and layoutHash stand for the texts the session holds; reqSeq numbers its requests. persistent is false in a production build, which reads the bundled specifications and never writes.",
+      "initial": "session-closed",
+      "variables": [
+        {
+          "name": "persistent",
+          "type": "boolean",
+          "initial": true
+        },
+        {
+          "name": "projectName",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "pendingName",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "baseHash",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "layoutBase",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "textHash",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "layoutHash",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "saveState",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "pendingAgain",
+          "type": "boolean",
+          "initial": false
+        },
+        {
+          "name": "conflictHash",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "reqSeq",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "readPurpose",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "recordedVersion",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "externalReloads",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "ownNotices",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "errorsLogged",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "projectsListed",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "session-closed",
+          "name": "No project open"
+        },
+        {
+          "id": "session-opening",
+          "name": "Reading the project"
+        },
+        {
+          "id": "session-open",
+          "name": "Open and saved"
+        },
+        {
+          "id": "session-saving",
+          "name": "Save in flight"
+        },
+        {
+          "id": "session-conflict",
+          "name": "Save conflict unresolved"
+        },
+        {
+          "id": "session-error",
+          "name": "Save failed"
+        },
+        {
+          "id": "session-readonly",
+          "name": "Open read-only"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "session-init",
+          "from": "session-closed",
+          "to": "session-closed",
+          "on": "session-init-requested",
+          "guard": "event.persistent",
+          "effects": [
+            {
+              "set": "pendingName",
+              "to": "event.project"
+            },
+            {
+              "set": "persistent",
+              "to": true
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "list-intent",
+              "payload": {
+                "requestId": "reqSeq"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-init-readonly",
+          "from": "session-closed",
+          "to": "session-closed",
+          "on": "session-init-requested",
+          "guard": "!event.persistent",
+          "description": "Without persistence the projects are the shipped specifications bundled in the build.",
+          "effects": [
+            {
+              "set": "persistent",
+              "to": false
+            },
+            {
+              "emit": "project-open-requested",
+              "payload": {
+                "name": "event.project"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-listed-open",
+          "from": "session-closed",
+          "to": "session-closed",
+          "on": "projects-listed",
+          "description": "init opens the project of the URL, the remembered one, or exegra.",
+          "effects": [
+            {
+              "set": "projectsListed",
+              "to": "projectsListed + 1"
+            },
+            {
+              "emit": "project-open-requested",
+              "payload": {
+                "name": "pendingName"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-open-read",
+          "from": "session-closed",
+          "to": "session-opening",
+          "on": "project-open-requested",
+          "guard": "persistent",
+          "effects": [
+            {
+              "set": "pendingName",
+              "to": "event.name"
+            },
+            {
+              "set": "readPurpose",
+              "to": "'open'"
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "read-intent",
+              "payload": {
+                "name": "event.name",
+                "requestId": "reqSeq",
+                "purpose": "'open'"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-open-shipped",
+          "from": "session-closed",
+          "to": "session-readonly",
+          "on": "project-open-requested",
+          "guard": "!persistent",
+          "effects": [
+            {
+              "set": "projectName",
+              "to": "event.name"
+            },
+            {
+              "set": "textHash",
+              "to": "'shipped'"
+            },
+            {
+              "set": "saveState",
+              "to": "'readonly'"
+            },
+            {
+              "emit": "project-opened",
+              "payload": {
+                "name": "event.name",
+                "specHash": "'shipped'",
+                "layoutHash": "'shipped-layout'"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-switch",
+          "from": "session-open",
+          "to": "session-opening",
+          "on": "project-open-requested",
+          "description": "Switching is allowed only when nothing is pending, in conflict or in error.",
+          "effects": [
+            {
+              "set": "pendingName",
+              "to": "event.name"
+            },
+            {
+              "set": "readPurpose",
+              "to": "'open'"
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "read-intent",
+              "payload": {
+                "name": "event.name",
+                "requestId": "reqSeq",
+                "purpose": "'open'"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-switch-refused-saving",
+          "from": "session-saving",
+          "to": "session-saving",
+          "on": "project-open-requested",
+          "effects": [
+            {
+              "set": "errorsLogged",
+              "to": "errorsLogged + 1"
+            },
+            {
+              "emit": "open-refused",
+              "payload": {
+                "name": "event.name"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-switch-refused-conflict",
+          "from": "session-conflict",
+          "to": "session-conflict",
+          "on": "project-open-requested",
+          "effects": [
+            {
+              "set": "errorsLogged",
+              "to": "errorsLogged + 1"
+            },
+            {
+              "emit": "open-refused",
+              "payload": {
+                "name": "event.name"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-switch-refused-error",
+          "from": "session-error",
+          "to": "session-error",
+          "on": "project-open-requested",
+          "effects": [
+            {
+              "set": "errorsLogged",
+              "to": "errorsLogged + 1"
+            },
+            {
+              "emit": "open-refused",
+              "payload": {
+                "name": "event.name"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-opened-without-base",
+          "from": "session-opening",
+          "to": "session-open",
+          "on": "project-files-read",
+          "faultOnly": true,
+          "description": "A defect open must not have: the hashes of the read are not kept as base hashes.",
+          "effects": [
+            {
+              "set": "projectName",
+              "to": "pendingName"
+            },
+            {
+              "set": "textHash",
+              "to": "event.specHash"
+            },
+            {
+              "set": "layoutHash",
+              "to": "event.layoutHash"
+            },
+            {
+              "set": "saveState",
+              "to": "'saved'"
+            },
+            {
+              "emit": "project-opened",
+              "payload": {
+                "name": "pendingName",
+                "specHash": "event.specHash",
+                "layoutHash": "event.layoutHash"
+              }
+            },
+            {
+              "emit": "watch-intent",
+              "payload": {
+                "name": "pendingName"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-opened",
+          "from": "session-opening",
+          "to": "session-open",
+          "on": "project-files-read",
+          "effects": [
+            {
+              "set": "projectName",
+              "to": "pendingName"
+            },
+            {
+              "set": "baseHash",
+              "to": "event.specHash"
+            },
+            {
+              "set": "textHash",
+              "to": "event.specHash"
+            },
+            {
+              "set": "layoutBase",
+              "to": "event.layoutHash"
+            },
+            {
+              "set": "layoutHash",
+              "to": "event.layoutHash"
+            },
+            {
+              "set": "recordedVersion",
+              "to": "event.recorded"
+            },
+            {
+              "set": "saveState",
+              "to": "'saved'"
+            },
+            {
+              "set": "pendingAgain",
+              "to": false
+            },
+            {
+              "set": "conflictHash",
+              "to": "'none'"
+            },
+            {
+              "emit": "project-opened",
+              "payload": {
+                "name": "pendingName",
+                "specHash": "event.specHash",
+                "layoutHash": "event.layoutHash"
+              }
+            },
+            {
+              "emit": "watch-intent",
+              "payload": {
+                "name": "pendingName"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-open-failed",
+          "from": "session-opening",
+          "to": "session-closed",
+          "on": "project-read-failed",
+          "guard": "projectName == 'none'",
+          "effects": [
+            {
+              "set": "errorsLogged",
+              "to": "errorsLogged + 1"
+            }
+          ]
+        },
+        {
+          "id": "session-open-failed-keep",
+          "from": "session-opening",
+          "to": "session-open",
+          "on": "project-read-failed",
+          "guard": "projectName != 'none'",
+          "description": "The current project stays fully functional.",
+          "effects": [
+            {
+              "set": "errorsLogged",
+              "to": "errorsLogged + 1"
+            }
+          ]
+        },
+        {
+          "id": "session-skip-flush-on-undo",
+          "from": "session-open",
+          "to": "session-open",
+          "on": "commit-notified",
+          "guard": "event.origin == 'undo'",
+          "faultOnly": true,
+          "description": "A defect onCommit must not have: an undo is treated like an adopted external change and not written.",
+          "effects": [
+            {
+              "set": "textHash",
+              "to": "event.text"
+            }
+          ]
+        },
+        {
+          "id": "session-flush-external-reload",
+          "from": "session-open",
+          "to": "session-saving",
+          "on": "commit-notified",
+          "guard": "event.origin == 'external'",
+          "faultOnly": true,
+          "description": "A defect onCommit must not have: text adopted from disk is written back.",
+          "effects": [
+            {
+              "set": "textHash",
+              "to": "event.text"
+            },
+            {
+              "set": "saveState",
+              "to": "'saving'"
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "write-intent",
+              "payload": {
+                "name": "projectName",
+                "file": "'spec'",
+                "text": "event.text",
+                "baseHash": "baseHash",
+                "requestId": "reqSeq"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-commit-external",
+          "from": "session-open",
+          "to": "session-open",
+          "on": "commit-notified",
+          "guard": "event.origin == 'external'",
+          "description": "Origin external: nothing is marked pending, nothing is written.",
+          "effects": [
+            {
+              "set": "textHash",
+              "to": "event.text"
+            }
+          ]
+        },
+        {
+          "id": "session-commit-spec",
+          "from": "session-open",
+          "to": "session-saving",
+          "on": "commit-notified",
+          "guard": "event.file == 'spec'",
+          "effects": [
+            {
+              "set": "textHash",
+              "to": "event.text"
+            },
+            {
+              "set": "saveState",
+              "to": "'saving'"
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "write-intent",
+              "payload": {
+                "name": "projectName",
+                "file": "'spec'",
+                "text": "event.text",
+                "baseHash": "baseHash",
+                "requestId": "reqSeq"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-commit-layout",
+          "from": "session-open",
+          "to": "session-saving",
+          "on": "commit-notified",
+          "guard": "event.file == 'layout'",
+          "effects": [
+            {
+              "set": "layoutHash",
+              "to": "event.text"
+            },
+            {
+              "set": "saveState",
+              "to": "'saving'"
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "write-intent",
+              "payload": {
+                "name": "projectName",
+                "file": "'layout'",
+                "text": "event.text",
+                "baseHash": "layoutBase",
+                "requestId": "reqSeq"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-readonly-flush",
+          "from": "session-readonly",
+          "to": "session-readonly",
+          "on": "commit-notified",
+          "faultOnly": true,
+          "description": "A defect a production build must not have: it tries to write.",
+          "effects": [
+            {
+              "set": "textHash",
+              "to": "event.text"
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "write-intent",
+              "payload": {
+                "name": "projectName",
+                "file": "'spec'",
+                "text": "event.text",
+                "baseHash": "baseHash",
+                "requestId": "reqSeq"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-readonly-commit",
+          "from": "session-readonly",
+          "to": "session-readonly",
+          "on": "commit-notified",
+          "description": "flush returns at once when persistence is unavailable; the save state stays read-only.",
+          "effects": [
+            {
+              "set": "textHash",
+              "to": "event.text"
+            }
+          ]
+        },
+        {
+          "id": "session-commit-while-saving",
+          "from": "session-saving",
+          "to": "session-saving",
+          "on": "commit-notified",
+          "guard": "event.file == 'spec' && event.origin != 'external'",
+          "description": "The flush loop writes the current text again after the answer: several quick commits may be saved as one write.",
+          "effects": [
+            {
+              "set": "textHash",
+              "to": "event.text"
+            },
+            {
+              "set": "pendingAgain",
+              "to": true
+            }
+          ]
+        },
+        {
+          "id": "session-saved-again",
+          "from": "session-saving",
+          "to": "session-saving",
+          "on": "save-succeeded",
+          "guard": "event.file == 'spec' && pendingAgain",
+          "effects": [
+            {
+              "set": "baseHash",
+              "to": "event.hash"
+            },
+            {
+              "set": "pendingAgain",
+              "to": false
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "write-intent",
+              "payload": {
+                "name": "projectName",
+                "file": "'spec'",
+                "text": "textHash",
+                "baseHash": "event.hash",
+                "requestId": "reqSeq"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-saved",
+          "from": "session-saving",
+          "to": "session-open",
+          "on": "save-succeeded",
+          "guard": "event.file == 'spec'",
+          "effects": [
+            {
+              "set": "baseHash",
+              "to": "event.hash"
+            },
+            {
+              "set": "saveState",
+              "to": "'saved'"
+            }
+          ]
+        },
+        {
+          "id": "session-layout-saved",
+          "from": "session-saving",
+          "to": "session-open",
+          "on": "save-succeeded",
+          "guard": "event.file == 'layout'",
+          "effects": [
+            {
+              "set": "layoutBase",
+              "to": "event.hash"
+            },
+            {
+              "set": "saveState",
+              "to": "'saved'"
+            }
+          ]
+        },
+        {
+          "id": "session-save-conflict",
+          "from": "session-saving",
+          "to": "session-conflict",
+          "on": "save-conflicted",
+          "description": "Nothing was overwritten; the file stays pending and the conflict waits for the user.",
+          "effects": [
+            {
+              "set": "conflictHash",
+              "to": "event.currentHash"
+            },
+            {
+              "set": "saveState",
+              "to": "'conflict'"
+            }
+          ]
+        },
+        {
+          "id": "session-save-failed",
+          "from": "session-saving",
+          "to": "session-error",
+          "on": "save-failed",
+          "description": "No automatic retry: the pending flag stays set until the next commit flushes.",
+          "effects": [
+            {
+              "set": "saveState",
+              "to": "'error'"
+            },
+            {
+              "set": "errorsLogged",
+              "to": "errorsLogged + 1"
+            }
+          ]
+        },
+        {
+          "id": "session-retry-on-commit",
+          "from": "session-error",
+          "to": "session-saving",
+          "on": "commit-notified",
+          "guard": "event.file == 'spec' && event.origin != 'external'",
+          "effects": [
+            {
+              "set": "textHash",
+              "to": "event.text"
+            },
+            {
+              "set": "saveState",
+              "to": "'saving'"
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "write-intent",
+              "payload": {
+                "name": "projectName",
+                "file": "'spec'",
+                "text": "event.text",
+                "baseHash": "baseHash",
+                "requestId": "reqSeq"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-resolve-reload-keeps-text",
+          "from": "session-conflict",
+          "to": "session-open",
+          "on": "conflict-resolution-chosen",
+          "guard": "event.how == 'reload'",
+          "faultOnly": true,
+          "description": "A defect resolveConflict must not have: the conflict is cleared but the disk text is not adopted.",
+          "effects": [
+            {
+              "set": "baseHash",
+              "to": "conflictHash"
+            },
+            {
+              "set": "saveState",
+              "to": "'saved'"
+            }
+          ]
+        },
+        {
+          "id": "session-resolve-reload",
+          "from": "session-conflict",
+          "to": "session-open",
+          "on": "conflict-resolution-chosen",
+          "guard": "event.how == 'reload'",
+          "description": "Adopt the disk text with Project.reload; the in-memory edits and the undo history are dropped.",
+          "effects": [
+            {
+              "set": "baseHash",
+              "to": "conflictHash"
+            },
+            {
+              "set": "saveState",
+              "to": "'saved'"
+            },
+            {
+              "emit": "reload-requested",
+              "payload": {
+                "file": "'spec'",
+                "text": "conflictHash"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-overwrite-stale-base",
+          "from": "session-conflict",
+          "to": "session-saving",
+          "on": "conflict-resolution-chosen",
+          "guard": "event.how == 'overwrite'",
+          "faultOnly": true,
+          "description": "A defect resolveConflict must not have: the overwrite keeps the stale base hash.",
+          "effects": [
+            {
+              "set": "saveState",
+              "to": "'saving'"
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "write-intent",
+              "payload": {
+                "name": "projectName",
+                "file": "'spec'",
+                "text": "textHash",
+                "baseHash": "baseHash",
+                "requestId": "reqSeq"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-resolve-overwrite",
+          "from": "session-conflict",
+          "to": "session-saving",
+          "on": "conflict-resolution-chosen",
+          "guard": "event.how == 'overwrite'",
+          "description": "The disk hash becomes the base hash and the in-memory text is written over it.",
+          "effects": [
+            {
+              "set": "baseHash",
+              "to": "conflictHash"
+            },
+            {
+              "set": "saveState",
+              "to": "'saving'"
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "write-intent",
+              "payload": {
+                "name": "projectName",
+                "file": "'spec'",
+                "text": "textHash",
+                "baseHash": "conflictHash",
+                "requestId": "reqSeq"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-recorded-changed",
+          "from": "session-open",
+          "to": "session-open",
+          "on": "external-change-received",
+          "guard": "event.file == 'recorded'",
+          "effects": [
+            {
+              "set": "readPurpose",
+              "to": "'recorded'"
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "read-intent",
+              "payload": {
+                "name": "projectName",
+                "requestId": "reqSeq",
+                "purpose": "'recorded'"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-reload-own-write",
+          "from": "session-open",
+          "to": "session-open",
+          "on": "external-change-received",
+          "guard": "event.file == 'spec'",
+          "faultOnly": true,
+          "description": "A defect onExternalChange must not have: every notice, the session's own write included, reloads the text.",
+          "effects": [
+            {
+              "set": "externalReloads",
+              "to": "externalReloads + 1"
+            },
+            {
+              "emit": "reload-requested",
+              "payload": {
+                "file": "'spec'",
+                "text": "event.hash"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-ignore-own-write",
+          "from": "session-open",
+          "to": "session-open",
+          "on": "external-change-received",
+          "guard": "event.file == 'spec' && event.hash == baseHash",
+          "description": "The notice of the session's own write carries the base hash it just acknowledged.",
+          "effects": [
+            {
+              "set": "ownNotices",
+              "to": "ownNotices + 1"
+            }
+          ]
+        },
+        {
+          "from": "session-open",
+          "to": "session-open",
+          "id": "session-ignore-own-layout-write",
+          "on": "external-change-received",
+          "guard": "event.file == 'layout' && event.hash == layoutBase",
+          "effects": [
+            {
+              "set": "ownNotices",
+              "to": "ownNotices + 1"
+            }
+          ]
+        },
+        {
+          "from": "session-open",
+          "to": "session-open",
+          "id": "session-external-layout-read",
+          "on": "external-change-received",
+          "guard": "event.file == 'layout'",
+          "effects": [
+            {
+              "set": "readPurpose",
+              "to": "'external-layout'"
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "read-intent",
+              "payload": {
+                "name": "projectName",
+                "requestId": "reqSeq",
+                "purpose": "'external'"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-external-read",
+          "from": "session-open",
+          "to": "session-open",
+          "on": "external-change-received",
+          "guard": "event.file == 'spec'",
+          "description": "Only when nothing is saving, pending or in conflict; in those states a notice is ignored and the pending write surfaces the conflict.",
+          "effects": [
+            {
+              "set": "readPurpose",
+              "to": "'external'"
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "read-intent",
+              "payload": {
+                "name": "projectName",
+                "requestId": "reqSeq",
+                "purpose": "'external'"
+              }
+            }
+          ]
+        },
+        {
+          "from": "session-open",
+          "to": "session-open",
+          "id": "session-external-layout-adopted",
+          "on": "project-files-read",
+          "guard": "readPurpose == 'external-layout' && event.layoutHash != layoutBase",
+          "effects": [
+            {
+              "set": "layoutBase",
+              "to": "event.layoutHash"
+            },
+            {
+              "set": "externalReloads",
+              "to": "externalReloads + 1"
+            },
+            {
+              "emit": "reload-requested",
+              "payload": {
+                "file": "'layout'",
+                "text": "event.layoutHash"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-recorded-adopted",
+          "from": "session-open",
+          "to": "session-open",
+          "on": "project-files-read",
+          "guard": "readPurpose == 'recorded'",
+          "effects": [
+            {
+              "set": "recordedVersion",
+              "to": "event.recorded"
+            },
+            {
+              "emit": "recorded-results-adopted",
+              "payload": {
+                "version": "event.recorded"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-external-adopted",
+          "from": "session-open",
+          "to": "session-open",
+          "on": "project-files-read",
+          "guard": "readPurpose == 'external' && event.specHash != baseHash",
+          "effects": [
+            {
+              "set": "baseHash",
+              "to": "event.specHash"
+            },
+            {
+              "set": "externalReloads",
+              "to": "externalReloads + 1"
+            },
+            {
+              "emit": "reload-requested",
+              "payload": {
+                "file": "'spec'",
+                "text": "event.specHash"
+              }
+            }
+          ]
+        },
+        {
+          "id": "session-projects-refreshed",
+          "from": "session-open",
+          "to": "session-open",
+          "on": "projects-listed",
+          "description": "refreshProjects after an import.",
+          "effects": [
+            {
+              "set": "projectsListed",
+              "to": "projectsListed + 1"
+            }
+          ]
+        },
+        {
+          "from": "session-open",
+          "to": "session-open",
+          "id": "session-external-unchanged",
+          "on": "project-files-read",
+          "guard": "readPurpose == 'external' || readPurpose == 'external-layout'",
+          "effects": []
+        },
+        {
+          "id": "session-notice-while-saving",
+          "from": "session-saving",
+          "to": "session-saving",
+          "on": "external-change-received",
+          "effects": [
+            {
+              "set": "ownNotices",
+              "to": "ownNotices + 1"
+            }
+          ],
+          "description": "onExternalChange of src/app/session.js returns while a save is in flight (saving, pending or conflict): the pending write will surface a conflict. Found by the live replay: the server's notice of the session's own write can arrive before the session has read the write's answer (write-file-ok is in the answer's headers, save-succeeded follows the body)."
+        }
+      ]
+    },
+    {
+      "id": "session-claims-flow",
+      "name": "Session: re-evaluate claims on open, semantic commits and recorded changes",
+      "subject": "session",
+      "description": "evaluate() of src/app/session.js: on open, on every commit that changed the specification (a layout-only commit only updates the highlight) and when the recorded results changed. resultsHash is the model the current claim results were evaluated at.",
+      "initial": "claims-ready",
+      "variables": [
+        {
+          "name": "modelHash",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "resultsHash",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "evaluations",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "claims-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "claims-on-open",
+          "from": "claims-ready",
+          "to": "claims-ready",
+          "on": "project-opened",
+          "effects": [
+            {
+              "set": "modelHash",
+              "to": "event.specHash"
+            },
+            {
+              "emit": "claims-evaluation-requested",
+              "payload": {
+                "modelHash": "event.specHash"
+              }
+            }
+          ]
+        },
+        {
+          "id": "claims-on-commit",
+          "from": "claims-ready",
+          "to": "claims-ready",
+          "on": "commit-notified",
+          "guard": "event.file == 'spec'",
+          "effects": [
+            {
+              "set": "modelHash",
+              "to": "event.text"
+            },
+            {
+              "emit": "claims-evaluation-requested",
+              "payload": {
+                "modelHash": "event.text"
+              }
+            }
+          ]
+        },
+        {
+          "id": "claims-on-recorded",
+          "from": "claims-ready",
+          "to": "claims-ready",
+          "on": "recorded-results-adopted",
+          "effects": [
+            {
+              "emit": "claims-evaluation-requested",
+              "payload": {
+                "modelHash": "modelHash"
+              }
+            }
+          ]
+        },
+        {
+          "id": "claims-results",
+          "from": "claims-ready",
+          "to": "claims-ready",
+          "on": "claims-evaluated",
+          "effects": [
+            {
+              "set": "resultsHash",
+              "to": "event.modelHash"
+            },
+            {
+              "set": "evaluations",
+              "to": "evaluations + 1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "toolbar-exchange-flow",
+      "name": "Toolbar: export and import project bundles",
+      "subject": "toolbar",
+      "description": "The Export and Import handlers of src/ui/toolbar.js. Export downloads what the server reads from disk. Import parses the file, refuses a specification with syntax errors (analyzeSpec) but not one with validation errors, sends the bundle, then refreshes the project list and opens the imported project.",
+      "initial": "toolbar-ready",
+      "variables": [
+        {
+          "name": "downloadedHash",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "importName",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "reqSeq",
+          "type": "number",
+          "initial": 100
+        },
+        {
+          "name": "exports",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "imports",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "refusedLocally",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "toolbar-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "toolbar-export",
+          "from": "toolbar-ready",
+          "to": "toolbar-ready",
+          "on": "export-clicked",
+          "effects": [
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "export-intent",
+              "payload": {
+                "name": "project-session-flow.projectName",
+                "requestId": "reqSeq"
+              }
+            }
+          ]
+        },
+        {
+          "id": "toolbar-bundle",
+          "from": "toolbar-ready",
+          "to": "toolbar-ready",
+          "on": "bundle-received",
+          "effects": [
+            {
+              "set": "downloadedHash",
+              "to": "event.files"
+            },
+            {
+              "set": "exports",
+              "to": "exports + 1"
+            },
+            {
+              "emit": "bundle-downloaded",
+              "payload": {
+                "specHash": "event.files"
+              }
+            }
+          ]
+        },
+        {
+          "id": "toolbar-import-unchecked",
+          "from": "toolbar-ready",
+          "to": "toolbar-ready",
+          "on": "import-file-chosen",
+          "faultOnly": true,
+          "description": "A defect the import handler must not have: the syntax check is skipped.",
+          "effects": [
+            {
+              "set": "importName",
+              "to": "event.name"
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "import-intent",
+              "payload": {
+                "name": "event.name",
+                "bundle": "event.specHash",
+                "requestId": "reqSeq"
+              }
+            }
+          ]
+        },
+        {
+          "id": "toolbar-import-refused-locally",
+          "from": "toolbar-ready",
+          "to": "toolbar-ready",
+          "on": "import-file-chosen",
+          "guard": "!event.syntaxOk",
+          "description": "analyzeSpec found syntax errors: \"Import failed\", nothing is sent.",
+          "effects": [
+            {
+              "set": "refusedLocally",
+              "to": "refusedLocally + 1"
+            }
+          ]
+        },
+        {
+          "id": "toolbar-import",
+          "from": "toolbar-ready",
+          "to": "toolbar-ready",
+          "on": "import-file-chosen",
+          "guard": "event.syntaxOk",
+          "effects": [
+            {
+              "set": "importName",
+              "to": "event.name"
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "import-intent",
+              "payload": {
+                "name": "event.name",
+                "bundle": "event.specHash",
+                "requestId": "reqSeq"
+              }
+            }
+          ]
+        },
+        {
+          "id": "toolbar-import-skip-reopen",
+          "from": "toolbar-ready",
+          "to": "toolbar-ready",
+          "on": "import-done",
+          "faultOnly": true,
+          "description": "A defect the import handler must not have: the imported project is not reopened.",
+          "effects": [
+            {
+              "set": "imports",
+              "to": "imports + 1"
+            }
+          ]
+        },
+        {
+          "id": "toolbar-import-done",
+          "from": "toolbar-ready",
+          "to": "toolbar-ready",
+          "on": "import-done",
+          "effects": [
+            {
+              "set": "imports",
+              "to": "imports + 1"
+            },
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "list-intent",
+              "payload": {
+                "requestId": "reqSeq"
+              }
+            },
+            {
+              "emit": "project-open-requested",
+              "payload": {
+                "name": "importName"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "realisation-generate-flow",
+      "name": "Realisation panel: generate and write the documents",
+      "subject": "realisation-panel",
+      "description": "generate() of src/ui/realisation-panel.js derives the five documents with generateAll from the session's current model and claim results and writes them through the persistence client. The documents stand for the model hash they were derived from.",
+      "initial": "realisation-ready",
+      "variables": [
+        {
+          "name": "lastGenerated",
+          "type": "string",
+          "initial": "g1"
+        },
+        {
+          "name": "reqSeq",
+          "type": "number",
+          "initial": 200
+        },
+        {
+          "name": "saved",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "realisation-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "realisation-generate-stale",
+          "from": "realisation-ready",
+          "to": "realisation-ready",
+          "on": "generate-clicked",
+          "faultOnly": true,
+          "description": "A defect the panel must not have: it writes documents derived from an earlier model.",
+          "effects": [
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "emit": "generated-intent",
+              "payload": {
+                "name": "project-session-flow.projectName",
+                "files": "lastGenerated",
+                "requestId": "reqSeq"
+              }
+            }
+          ]
+        },
+        {
+          "id": "realisation-generate",
+          "from": "realisation-ready",
+          "to": "realisation-ready",
+          "on": "generate-clicked",
+          "effects": [
+            {
+              "set": "reqSeq",
+              "to": "reqSeq + 1"
+            },
+            {
+              "set": "lastGenerated",
+              "to": "project-session-flow.textHash"
+            },
+            {
+              "emit": "generated-intent",
+              "payload": {
+                "name": "project-session-flow.projectName",
+                "files": "project-session-flow.textHash",
+                "requestId": "reqSeq"
+              }
+            }
+          ]
+        },
+        {
+          "id": "realisation-saved",
+          "from": "realisation-ready",
+          "to": "realisation-ready",
+          "on": "generated-saved",
+          "effects": [
+            {
+              "set": "saved",
+              "to": "saved + 1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "app-start-flow",
+      "name": "Application start: load the engine, then start the session",
+      "subject": "composition-root",
+      "description": "The end of src/app/main.js: initEngine() is awaited, and the session starts when it has loaded or failed (a failure is noted and the session starts anyway).",
+      "initial": "app-loading",
+      "variables": [
+        {
+          "name": "persistentFlag",
+          "type": "boolean",
+          "initial": true
+        },
+        {
+          "name": "project",
+          "type": "string",
+          "initial": "exegra"
+        }
+      ],
+      "states": [
+        {
+          "id": "app-loading",
+          "name": "Loading"
+        },
+        {
+          "id": "app-waiting-engine",
+          "name": "Waiting for the engine"
+        },
+        {
+          "id": "app-started",
+          "name": "Started"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "app-init-before-engine",
+          "from": "app-loading",
+          "to": "app-waiting-engine",
+          "on": "page-loaded",
+          "faultOnly": true,
+          "description": "A defect main.js must not have: the session starts before the engine has settled.",
+          "effects": [
+            {
+              "set": "persistentFlag",
+              "to": "event.persistent"
+            },
+            {
+              "emit": "session-init-requested",
+              "payload": {
+                "persistent": "event.persistent",
+                "project": "event.project"
+              }
+            },
+            {
+              "emit": "engine-load-requested"
+            }
+          ]
+        },
+        {
+          "id": "app-load-engine",
+          "from": "app-loading",
+          "to": "app-waiting-engine",
+          "on": "page-loaded",
+          "effects": [
+            {
+              "set": "persistentFlag",
+              "to": "event.persistent"
+            },
+            {
+              "set": "project",
+              "to": "event.project"
+            },
+            {
+              "emit": "engine-load-requested"
+            }
+          ]
+        },
+        {
+          "id": "app-start-session",
+          "from": "app-waiting-engine",
+          "to": "app-started",
+          "on": "engine-load-settled",
+          "effects": [
+            {
+              "emit": "session-init-requested",
+              "payload": {
+                "persistent": "persistentFlag",
+                "project": "project"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "traffic-recorder-flow",
+      "name": "Traffic recorder: count each recorded write event",
+      "subject": "traffic-recorder",
+      "description": "Every request and answer of a write that the persistence client sees is one recorded entry. traffic-step-recorded stands for the append to the stream; no real run produces it as an event (recording the recording would feed itself), so this machine is not part of live-session.",
+      "initial": "recorder-on",
+      "variables": [
+        {
+          "name": "lines",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "recorder-on",
+          "name": "Recording"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "recorder-request",
+          "from": "recorder-on",
+          "to": "recorder-on",
+          "on": "write-file-request",
+          "effects": [
+            {
+              "set": "lines",
+              "to": "lines + 1"
+            },
+            {
+              "emit": "traffic-step-recorded",
+              "payload": {
+                "event": "'write-file-request'"
+              }
+            }
+          ]
+        },
+        {
+          "id": "recorder-ok",
+          "from": "recorder-on",
+          "to": "recorder-on",
+          "on": "write-file-ok",
+          "effects": [
+            {
+              "set": "lines",
+              "to": "lines + 1"
+            },
+            {
+              "emit": "traffic-step-recorded",
+              "payload": {
+                "event": "'write-file-ok'"
+              }
+            }
+          ]
+        },
+        {
+          "id": "recorder-conflict",
+          "from": "recorder-on",
+          "to": "recorder-on",
+          "on": "write-file-conflict",
+          "effects": [
+            {
+              "set": "lines",
+              "to": "lines + 1"
+            },
+            {
+              "emit": "traffic-step-recorded",
+              "payload": {
+                "event": "'write-file-conflict'"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sim-session-flow",
+      "name": "Session: load a scenario, adopt its trace, step through it",
+      "subject": "session",
+      "description": "loadSim and the cursor of src/app/session.js: a load takes a new token and hands the engine input to the runner; a trace is adopted only if its token is still the current one; step, back and run to end move stepIndex within the revealed steps. stepCount stands for the length of the finished trace.",
+      "initial": "sim-idle",
+      "variables": [
+        {
+          "name": "token",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "adoptedToken",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "scenarioId",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "stepIndex",
+          "type": "number",
+          "initial": -1
+        },
+        {
+          "name": "stepCount",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "running",
+          "type": "boolean",
+          "initial": false
+        }
+      ],
+      "states": [
+        {
+          "id": "sim-idle",
+          "name": "Simulation panel"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "sim-load",
+          "from": "sim-idle",
+          "to": "sim-idle",
+          "on": "sim-load-requested",
+          "effects": [
+            {
+              "set": "token",
+              "to": "token + 1"
+            },
+            {
+              "set": "scenarioId",
+              "to": "event.scenario"
+            },
+            {
+              "set": "running",
+              "to": true
+            },
+            {
+              "set": "stepIndex",
+              "to": -1
+            },
+            {
+              "set": "stepCount",
+              "to": 0
+            },
+            {
+              "emit": "engine-run-intent",
+              "payload": {
+                "token": "token",
+                "scenario": "event.scenario"
+              }
+            }
+          ]
+        },
+        {
+          "id": "sim-adopt-stale",
+          "from": "sim-idle",
+          "to": "sim-idle",
+          "on": "sim-trace-ready",
+          "faultOnly": true,
+          "description": "A defect the code must not have. the trace is adopted without comparing its token with the current one.",
+          "effects": [
+            {
+              "set": "adoptedToken",
+              "to": "event.token"
+            },
+            {
+              "set": "running",
+              "to": false
+            },
+            {
+              "set": "stepCount",
+              "to": "event.steps"
+            },
+            {
+              "set": "stepIndex",
+              "to": -1
+            }
+          ]
+        },
+        {
+          "id": "sim-adopt",
+          "from": "sim-idle",
+          "to": "sim-idle",
+          "on": "sim-trace-ready",
+          "guard": "event.token == token",
+          "description": "createTraceCursor(trace); a trace whose token is stale matches no transition and is discarded.",
+          "effects": [
+            {
+              "set": "adoptedToken",
+              "to": "event.token"
+            },
+            {
+              "set": "running",
+              "to": false
+            },
+            {
+              "set": "stepCount",
+              "to": "event.steps"
+            },
+            {
+              "set": "stepIndex",
+              "to": -1
+            }
+          ]
+        },
+        {
+          "id": "sim-failed",
+          "from": "sim-idle",
+          "to": "sim-idle",
+          "on": "sim-run-failed",
+          "guard": "event.token == token",
+          "effects": [
+            {
+              "set": "running",
+              "to": false
+            },
+            {
+              "set": "scenarioId",
+              "to": "'none'"
+            }
+          ]
+        },
+        {
+          "id": "sim-step-past-end",
+          "from": "sim-idle",
+          "to": "sim-idle",
+          "on": "sim-step-requested",
+          "guard": "stepCount > 0",
+          "faultOnly": true,
+          "description": "A defect the code must not have. a step is taken past the last recorded step.",
+          "effects": [
+            {
+              "set": "stepIndex",
+              "to": "stepIndex + 1"
+            },
+            {
+              "emit": "sim-step-shown",
+              "payload": {
+                "stepIndex": "stepIndex"
+              }
+            }
+          ]
+        },
+        {
+          "id": "sim-step",
+          "from": "sim-idle",
+          "to": "sim-idle",
+          "on": "sim-step-requested",
+          "guard": "stepIndex < stepCount - 1",
+          "effects": [
+            {
+              "set": "stepIndex",
+              "to": "stepIndex + 1"
+            },
+            {
+              "emit": "sim-step-shown",
+              "payload": {
+                "stepIndex": "stepIndex"
+              }
+            }
+          ]
+        },
+        {
+          "id": "sim-step-at-end",
+          "from": "sim-idle",
+          "to": "sim-idle",
+          "on": "sim-step-requested",
+          "guard": "stepCount > 0",
+          "description": "At the last step simStep stops playback and changes nothing.",
+          "effects": [
+            {
+              "set": "running",
+              "to": false
+            }
+          ]
+        },
+        {
+          "id": "sim-back",
+          "from": "sim-idle",
+          "to": "sim-idle",
+          "on": "sim-back-requested",
+          "guard": "stepIndex >= 0",
+          "description": "No pulse: simChanged(false).",
+          "effects": [
+            {
+              "set": "stepIndex",
+              "to": "stepIndex - 1"
+            }
+          ]
+        },
+        {
+          "id": "sim-run-to-end",
+          "from": "sim-idle",
+          "to": "sim-idle",
+          "on": "sim-run-to-end-requested",
+          "guard": "stepCount > 0",
+          "effects": [
+            {
+              "set": "stepIndex",
+              "to": "stepCount - 1"
+            }
+          ]
+        },
+        {
+          "id": "sim-reset",
+          "from": "sim-idle",
+          "to": "sim-idle",
+          "on": "sim-reset-requested",
+          "guard": "stepCount > 0",
+          "effects": [
+            {
+              "set": "stepIndex",
+              "to": -1
+            }
+          ]
+        },
+        {
+          "id": "sim-seek",
+          "from": "sim-idle",
+          "to": "sim-idle",
+          "on": "sim-seek-requested",
+          "guard": "stepCount > 0",
+          "effects": [
+            {
+              "set": "stepIndex",
+              "to": "event.stepIndex"
+            }
+          ]
+        },
+        {
+          "id": "sim-project-opened",
+          "from": "sim-idle",
+          "to": "sim-idle",
+          "on": "project-opened",
+          "effects": [
+            {
+              "set": "token",
+              "to": "token + 1"
+            },
+            {
+              "set": "scenarioId",
+              "to": "'none'"
+            },
+            {
+              "set": "stepIndex",
+              "to": -1
+            },
+            {
+              "set": "stepCount",
+              "to": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scene-pulse-flow",
+      "name": "Scene: pulse the step just taken",
+      "subject": "composition-root",
+      "description": "The sim listener of src/app/main.js: a step announced with pulse true pulses its responsible entities and fired transitions and draws its message flow; a step back, a seek or a run to the end does not pulse.",
+      "initial": "pulse-ready",
+      "variables": [
+        {
+          "name": "pulsedStep",
+          "type": "number",
+          "initial": -1
+        },
+        {
+          "name": "pulses",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "pulse-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "pulse-step",
+          "from": "pulse-ready",
+          "to": "pulse-ready",
+          "on": "sim-step-shown",
+          "effects": [
+            {
+              "set": "pulsedStep",
+              "to": "event.stepIndex"
+            },
+            {
+              "set": "pulses",
+              "to": "pulses + 1"
+            },
+            {
+              "emit": "step-pulsed",
+              "payload": {
+                "stepIndex": "event.stepIndex"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "interaction-prefs-flow",
+      "name": "Session: remember and restore interaction state",
+      "subject": "session",
+      "description": "persistUi and the restore in session.open (src/app/session.js): every selection or view change writes the whole store to localStorage; after a reload the remembered selection and view come back (ids that no longer exist are dropped, not modelled).",
+      "initial": "prefs-live",
+      "variables": [
+        {
+          "name": "selection",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "viewId",
+          "type": "string",
+          "initial": "structural"
+        },
+        {
+          "name": "restored",
+          "type": "boolean",
+          "initial": false
+        }
+      ],
+      "states": [
+        {
+          "id": "prefs-live",
+          "name": "Live"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "prefs-select",
+          "from": "prefs-live",
+          "to": "prefs-live",
+          "on": "entity-selected",
+          "effects": [
+            {
+              "set": "selection",
+              "to": "event.id"
+            },
+            {
+              "emit": "preferences-written",
+              "payload": {
+                "selection": "event.id",
+                "viewId": "viewId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "prefs-view",
+          "from": "prefs-live",
+          "to": "prefs-live",
+          "on": "view-switched",
+          "effects": [
+            {
+              "set": "viewId",
+              "to": "event.view"
+            },
+            {
+              "emit": "preferences-written",
+              "payload": {
+                "selection": "selection",
+                "viewId": "event.view"
+              }
+            }
+          ],
+          "guard": "event.view != viewId"
+        },
+        {
+          "id": "prefs-reload",
+          "from": "prefs-live",
+          "to": "prefs-live",
+          "on": "page-reloaded",
+          "description": "In-memory state is gone; loadStore reads exegra.session.",
+          "effects": [
+            {
+              "set": "selection",
+              "to": "'none'"
+            },
+            {
+              "set": "viewId",
+              "to": "'structural'"
+            },
+            {
+              "set": "restored",
+              "to": false
+            },
+            {
+              "emit": "preferences-read"
+            }
+          ]
+        },
+        {
+          "id": "prefs-restore",
+          "from": "prefs-live",
+          "to": "prefs-live",
+          "on": "preferences-loaded",
+          "effects": [
+            {
+              "set": "selection",
+              "to": "event.selection"
+            },
+            {
+              "set": "viewId",
+              "to": "event.viewId"
+            },
+            {
+              "set": "restored",
+              "to": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "responsive-layout-flow",
+      "name": "Responsive layout: remember the panel arrangement",
+      "subject": "responsive-layout",
+      "description": "persist() of src/ui/layout.js writes exegra.layout on every open, close or resize of a panel.",
+      "initial": "layout-prefs-live",
+      "variables": [
+        {
+          "name": "explorerOpen",
+          "type": "boolean",
+          "initial": true
+        }
+      ],
+      "states": [
+        {
+          "id": "layout-prefs-live",
+          "name": "Live"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "layout-prefs-toggle",
+          "from": "layout-prefs-live",
+          "to": "layout-prefs-live",
+          "on": "panel-toggled",
+          "effects": [
+            {
+              "set": "explorerOpen",
+              "to": "event.open"
+            },
+            {
+              "emit": "layout-preferences-written",
+              "payload": {
+                "explorerOpen": "event.open"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "camera-memory-flow",
+      "name": "Camera memory: save per view, restore on switch",
+      "subject": "composition-root",
+      "description": "saveCamera and pushScene of src/app/main.js: pointer-up and wheel save the camera under the current project and view; a view switch first restores the camera stored for the new view (once per key), then saveCamera stores the current camera under the new view. A view with nothing stored therefore inherits, and stores, the previous view's camera.",
+      "initial": "camera-live",
+      "variables": [
+        {
+          "name": "view",
+          "type": "string",
+          "initial": "structural"
+        },
+        {
+          "name": "current",
+          "type": "string",
+          "initial": "c0"
+        }
+      ],
+      "states": [
+        {
+          "id": "camera-live",
+          "name": "Live"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "camera-move",
+          "from": "camera-live",
+          "to": "camera-live",
+          "on": "camera-moved",
+          "effects": [
+            {
+              "set": "current",
+              "to": "event.camera"
+            },
+            {
+              "emit": "camera-saved",
+              "payload": {
+                "view": "view",
+                "camera": "event.camera"
+              }
+            }
+          ]
+        },
+        {
+          "id": "camera-switch",
+          "from": "camera-live",
+          "to": "camera-live",
+          "on": "view-switched",
+          "effects": [
+            {
+              "set": "view",
+              "to": "event.view"
+            },
+            {
+              "emit": "camera-restore-requested",
+              "payload": {
+                "view": "event.view"
+              }
+            }
+          ]
+        },
+        {
+          "id": "camera-apply",
+          "from": "camera-live",
+          "to": "camera-live",
+          "on": "camera-restored",
+          "effects": [
+            {
+              "set": "current",
+              "to": "event.camera"
+            },
+            {
+              "emit": "camera-saved",
+              "payload": {
+                "view": "event.view",
+                "camera": "event.camera"
+              }
+            }
+          ]
+        },
+        {
+          "id": "camera-keep",
+          "from": "camera-live",
+          "to": "camera-live",
+          "on": "camera-none",
+          "effects": [
+            {
+              "emit": "camera-saved",
+              "payload": {
+                "view": "event.view",
+                "camera": "current"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

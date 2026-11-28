@@ -1,11 +1,12 @@
 // The simulation engine facade: the one place the rest of Exegra touches the engine.
 //
-// The engine is the Lean core (formal/, the definition of the behavior language that the theorems of
-// formal/Exegra/Properties.lean are about), compiled to WebAssembly and called through the call
-// boundary of src/core/lean.js as the registered function "engine.run": the dispatch the native
-// `exegra-lean` runs, format 1 and format 2. That function is the implementation Exegra.Impl
-// (formal/Exegra/Impl/: expressions parsed once per run, a fast evaluator and JSON writer), proved
-// equal to the definition on every input (Exegra.Impl.runAnyValue_eq). It reads one engine input (sim-input.js, format
+// The engine is the Lean core (formal/), compiled to WebAssembly and called through the call boundary
+// of src/core/lean.js as the registered function "engine.run": the dispatch the native `exegra-lean`
+// runs. A version-2 input the elaborator accepts runs on the scheduler of the behaviour calculus
+// (formal/Exegra/Format2B.lean, traceOfB), one outside the calculus's fragment on the legacy format-2
+// interpreter (its trace says "semantics": "legacy"), and a version-1 input is refused (format 1 was
+// removed, WG-5681). That function is the implementation Exegra.Impl, proved equal to the definition
+// on every input (Exegra.Impl.runAnyValue_eq). It reads one engine input (sim-input.js, format
 // "exegra-sim-input") and returns one trace. Semantics: docs/module-contracts.md, section
 // "Simulation"; formats: docs/simulation.md, "Engine input and trace format". The Rust engine
 // (engine/) is no longer run here: it stays as a differential oracle in the tests.
@@ -131,7 +132,12 @@ export function createTraceCursor(trace) {
   }
   /** @returns {Trace} */
   function snapshot() {
-    return { scenarioId: sim.scenarioId, faults: sim.faults.slice(), initial: sim.initial, steps: sim.steps.slice(), outcome: sim.outcome, final: sim.config };
+    // Every trace is version 2 (WG-5681): the fields beside the steps (version, timeUnit, seed,
+    // initialDraws, truncated, semantics, ...) are the trace's own; stepsTaken counts the revealed steps.
+    /** @type {any} */
+    const out = { ...trace, scenarioId: sim.scenarioId, faults: sim.faults.slice(), initial: sim.initial, steps: sim.steps.slice(), outcome: sim.outcome, final: sim.config };
+    if ('stepsTaken' in trace) out.stepsTaken = sim.steps.length;
+    return out;
   }
   sync();
   return sim;

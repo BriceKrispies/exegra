@@ -1,6 +1,15 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "engine-runner-flow": 0,
+   "engine-worker-flow": 0,
+   "scene-pulse-flow": 0,
+   "sim-session-flow": 0
+  },
+  "links": {},
   "machines": {
    "engine-runner-flow": {
     "state": "runner-ready",
@@ -38,10 +47,25 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 9
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 9,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "engine-runner-flow": 0,
+   "engine-worker-flow": 0,
+   "scene-pulse-flow": 0,
+   "sim-session-flow": 0
+  },
+  "links": {},
   "machines": {
    "engine-runner-flow": {
     "state": "runner-ready",
@@ -79,12 +103,14 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "sim-load-requested",
     "payload": {
      "scenario": "visual-edit-flow"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -95,6 +121,7 @@
    {
     "event": "sim-step-requested",
     "payload": {},
+    "scheduledAt": 4,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -105,6 +132,7 @@
    {
     "event": "sim-step-requested",
     "payload": {},
+    "scheduledAt": 5,
     "seq": 2,
     "source": {
      "kind": "scenario",
@@ -115,6 +143,7 @@
    {
     "event": "sim-step-requested",
     "payload": {},
+    "scheduledAt": 6,
     "seq": 3,
     "source": {
      "kind": "scenario",
@@ -125,6 +154,7 @@
    {
     "event": "sim-step-requested",
     "payload": {},
+    "scheduledAt": 7,
     "seq": 4,
     "source": {
      "kind": "scenario",
@@ -135,6 +165,7 @@
    {
     "event": "sim-back-requested",
     "payload": {},
+    "scheduledAt": 8,
     "seq": 5,
     "source": {
      "kind": "scenario",
@@ -145,6 +176,7 @@
    {
     "event": "sim-run-to-end-requested",
     "payload": {},
+    "scheduledAt": 9,
     "seq": 6,
     "source": {
      "kind": "scenario",
@@ -153,13 +185,29 @@
     "time": 9
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "simulation-panel-run",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -197,13 +245,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "engine-run-intent",
+      "from": {
+       "behavior": "sim-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "scenario": "visual-edit-flow",
        "token": 1
       },
+      "scheduledAt": 0,
       "seq": 7,
       "source": {
        "behavior": "sim-session-flow",
@@ -215,6 +270,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -225,6 +281,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 5,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -235,6 +292,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 6,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -245,6 +303,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 7,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -255,6 +314,7 @@
      {
       "event": "sim-back-requested",
       "payload": {},
+      "scheduledAt": 8,
       "seq": 5,
       "source": {
        "kind": "scenario",
@@ -265,6 +325,7 @@
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -273,13 +334,20 @@
       "time": 9
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "sim-load-requested",
     "payload": {
      "scenario": "visual-edit-flow"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -303,6 +371,7 @@
      ],
      "from": "sim-idle",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -338,21 +407,26 @@
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "scene-pulse-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "sim-load-requested",
     "sim-load",
@@ -363,6 +437,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -400,13 +483,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "engine-run-posted",
+      "from": {
+       "behavior": "engine-runner-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "id": 1,
        "input": "visual-edit-flow"
       },
+      "scheduledAt": 0,
       "seq": 8,
       "source": {
        "behavior": "engine-runner-flow",
@@ -418,6 +508,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -428,6 +519,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 5,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -438,6 +530,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 6,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -448,6 +541,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 7,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -458,6 +552,7 @@
      {
       "event": "sim-back-requested",
       "payload": {},
+      "scheduledAt": 8,
       "seq": 5,
       "source": {
        "kind": "scenario",
@@ -468,6 +563,7 @@
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -476,14 +572,26 @@
       "time": 9
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "sim-session-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "engine-run-intent",
     "payload": {
      "scenario": "visual-edit-flow",
      "token": 1
     },
+    "scheduledAt": 0,
     "seq": 7,
     "source": {
      "behavior": "sim-session-flow",
@@ -508,6 +616,7 @@
      ],
      "from": "runner-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -533,21 +642,26 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "scene-pulse-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "engine-run-intent",
     "runner-post",
@@ -558,6 +672,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -595,14 +718,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "worker-run-done",
+      "from": {
+       "behavior": "engine-worker-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "generation": 0,
        "id": 1,
        "input": "visual-edit-flow"
       },
+      "scheduledAt": 2,
       "seq": 9,
       "source": {
        "behavior": "engine-worker-flow",
@@ -614,6 +744,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -624,6 +755,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 5,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -634,6 +766,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 6,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -644,6 +777,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 7,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -654,6 +788,7 @@
      {
       "event": "sim-back-requested",
       "payload": {},
+      "scheduledAt": 8,
       "seq": 5,
       "source": {
        "kind": "scenario",
@@ -664,6 +799,7 @@
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -672,14 +808,26 @@
       "time": 9
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "engine-runner-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "engine-run-posted",
     "payload": {
      "id": 1,
      "input": "visual-edit-flow"
     },
+    "scheduledAt": 0,
     "seq": 8,
     "source": {
      "behavior": "engine-runner-flow",
@@ -705,6 +853,7 @@
      ],
      "from": "worker-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -720,21 +869,26 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "scene-pulse-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "engine-run-posted",
     "worker-run",
@@ -745,6 +899,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -782,14 +945,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "engine-run-returned",
+      "from": {
+       "behavior": "engine-worker-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "id": 1,
        "ok": true,
        "trace": "visual-edit-flow"
       },
+      "scheduledAt": 2,
       "seq": 10,
       "source": {
        "behavior": "engine-worker-flow",
@@ -801,6 +971,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -811,6 +982,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 5,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -821,6 +993,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 6,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -831,6 +1004,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 7,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -841,6 +1015,7 @@
      {
       "event": "sim-back-requested",
       "payload": {},
+      "scheduledAt": 8,
       "seq": 5,
       "source": {
        "kind": "scenario",
@@ -851,6 +1026,7 @@
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -859,15 +1035,27 @@
       "time": 9
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "engine-worker-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "worker-run-done",
     "payload": {
      "generation": 0,
      "id": 1,
      "input": "visual-edit-flow"
     },
+    "scheduledAt": 2,
     "seq": 9,
     "source": {
      "behavior": "engine-worker-flow",
@@ -893,6 +1081,7 @@
      ],
      "from": "worker-ready",
      "guard": "event.generation == generation",
+     "instance": 0,
      "sets": [],
      "to": "worker-ready",
      "transition": "worker-reply"
@@ -902,21 +1091,26 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "scene-pulse-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "worker-run-done",
     "worker-reply",
@@ -927,6 +1121,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -964,13 +1167,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "sim-trace-ready",
+      "from": {
+       "behavior": "engine-runner-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "steps": 3,
        "token": 1
       },
+      "scheduledAt": 2,
       "seq": 11,
       "source": {
        "behavior": "engine-runner-flow",
@@ -982,6 +1192,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -992,6 +1203,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 5,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -1002,6 +1214,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 6,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -1012,6 +1225,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 7,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -1022,6 +1236,7 @@
      {
       "event": "sim-back-requested",
       "payload": {},
+      "scheduledAt": 8,
       "seq": 5,
       "source": {
        "kind": "scenario",
@@ -1032,6 +1247,7 @@
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -1040,15 +1256,27 @@
       "time": 9
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "engine-worker-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "engine-run-returned",
     "payload": {
      "id": 1,
      "ok": true,
      "trace": "visual-edit-flow"
     },
+    "scheduledAt": 2,
     "seq": 10,
     "source": {
      "behavior": "engine-worker-flow",
@@ -1073,6 +1301,7 @@
      ],
      "from": "runner-ready",
      "guard": "event.id == waitingId",
+     "instance": 0,
      "sets": [
       {
        "after": 0,
@@ -1088,21 +1317,26 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "scene-pulse-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "engine-run-returned",
     "runner-forward",
@@ -1113,6 +1347,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -1150,10 +1393,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -1164,6 +1409,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 5,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -1174,6 +1420,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 6,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -1184,6 +1431,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 7,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -1194,6 +1442,7 @@
      {
       "event": "sim-back-requested",
       "payload": {},
+      "scheduledAt": 8,
       "seq": 5,
       "source": {
        "kind": "scenario",
@@ -1204,6 +1453,7 @@
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -1212,14 +1462,26 @@
       "time": 9
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "engine-runner-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "sim-trace-ready",
     "payload": {
      "steps": 3,
      "token": 1
     },
+    "scheduledAt": 2,
     "seq": 11,
     "source": {
      "behavior": "engine-runner-flow",
@@ -1234,6 +1496,7 @@
      "emitted": [],
      "from": "sim-idle",
      "guard": "event.token == token",
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -1264,21 +1527,26 @@
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "scene-pulse-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 5,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "sim-trace-ready",
     "sim-adopt",
@@ -1289,6 +1557,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -1326,12 +1603,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "sim-step-shown",
+      "from": {
+       "behavior": "sim-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "stepIndex": 0
       },
+      "scheduledAt": 4,
       "seq": 12,
       "source": {
        "behavior": "sim-session-flow",
@@ -1343,6 +1627,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 5,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -1353,6 +1638,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 6,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -1363,6 +1649,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 7,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -1373,6 +1660,7 @@
      {
       "event": "sim-back-requested",
       "payload": {},
+      "scheduledAt": 8,
       "seq": 5,
       "source": {
        "kind": "scenario",
@@ -1383,6 +1671,7 @@
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -1391,11 +1680,18 @@
       "time": 9
      }
     ],
-    "time": 4
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 4,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "sim-step-requested",
     "payload": {},
+    "scheduledAt": 4,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -1418,6 +1714,7 @@
      ],
      "from": "sim-idle",
      "guard": "stepIndex < stepCount - 1",
+     "instance": 0,
      "sets": [
       {
        "after": 0,
@@ -1433,21 +1730,26 @@
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "scene-pulse-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 6,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "sim-step-requested",
     "sim-step",
@@ -1458,6 +1760,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -1495,12 +1806,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "step-pulsed",
+      "from": {
+       "behavior": "scene-pulse-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "stepIndex": 0
       },
+      "scheduledAt": 4,
       "seq": 13,
       "source": {
        "behavior": "scene-pulse-flow",
@@ -1512,6 +1830,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 5,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -1522,6 +1841,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 6,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -1532,6 +1852,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 7,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -1542,6 +1863,7 @@
      {
       "event": "sim-back-requested",
       "payload": {},
+      "scheduledAt": 8,
       "seq": 5,
       "source": {
        "kind": "scenario",
@@ -1552,6 +1874,7 @@
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -1560,13 +1883,25 @@
       "time": 9
      }
     ],
-    "time": 4
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 4,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "sim-session-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "sim-step-shown",
     "payload": {
      "stepIndex": 0
     },
+    "scheduledAt": 4,
     "seq": 12,
     "source": {
      "behavior": "sim-session-flow",
@@ -1590,6 +1925,7 @@
      ],
      "from": "pulse-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 0,
@@ -1610,31 +1946,45 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 7,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "sim-step-shown",
     "pulse-step",
     "scene-pulse-flow",
-    "visual-interaction"
+    "composition-root"
    ],
    "time": 4
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -1672,10 +2022,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 5,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -1686,6 +2038,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 6,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -1696,6 +2049,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 7,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -1706,6 +2060,7 @@
      {
       "event": "sim-back-requested",
       "payload": {},
+      "scheduledAt": 8,
       "seq": 5,
       "source": {
        "kind": "scenario",
@@ -1716,6 +2071,7 @@
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -1724,13 +2080,25 @@
       "time": 9
      }
     ],
-    "time": 4
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 4,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "scene-pulse-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "step-pulsed",
     "payload": {
      "stepIndex": 0
     },
+    "scheduledAt": 4,
     "seq": 13,
     "source": {
      "behavior": "scene-pulse-flow",
@@ -1744,26 +2112,32 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "scene-pulse-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 8,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "step-pulsed"
    ],
@@ -1771,6 +2145,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -1808,12 +2191,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "sim-step-shown",
+      "from": {
+       "behavior": "sim-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "stepIndex": 1
       },
+      "scheduledAt": 5,
       "seq": 14,
       "source": {
        "behavior": "sim-session-flow",
@@ -1825,6 +2215,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 6,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -1835,6 +2226,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 7,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -1845,6 +2237,7 @@
      {
       "event": "sim-back-requested",
       "payload": {},
+      "scheduledAt": 8,
       "seq": 5,
       "source": {
        "kind": "scenario",
@@ -1855,6 +2248,7 @@
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -1863,11 +2257,18 @@
       "time": 9
      }
     ],
-    "time": 5
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 5,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "sim-step-requested",
     "payload": {},
+    "scheduledAt": 5,
     "seq": 2,
     "source": {
      "kind": "scenario",
@@ -1890,6 +2291,7 @@
      ],
      "from": "sim-idle",
      "guard": "stepIndex < stepCount - 1",
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -1905,21 +2307,26 @@
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "scene-pulse-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 9,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "sim-step-requested",
     "sim-step",
@@ -1930,6 +2337,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -1967,12 +2383,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "step-pulsed",
+      "from": {
+       "behavior": "scene-pulse-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "stepIndex": 1
       },
+      "scheduledAt": 5,
       "seq": 15,
       "source": {
        "behavior": "scene-pulse-flow",
@@ -1984,6 +2407,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 6,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -1994,6 +2418,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 7,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -2004,6 +2429,7 @@
      {
       "event": "sim-back-requested",
       "payload": {},
+      "scheduledAt": 8,
       "seq": 5,
       "source": {
        "kind": "scenario",
@@ -2014,6 +2440,7 @@
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -2022,13 +2449,25 @@
       "time": 9
      }
     ],
-    "time": 5
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 5,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "sim-session-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "sim-step-shown",
     "payload": {
      "stepIndex": 1
     },
+    "scheduledAt": 5,
     "seq": 14,
     "source": {
      "behavior": "sim-session-flow",
@@ -2052,6 +2491,7 @@
      ],
      "from": "pulse-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -2072,31 +2512,45 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 10,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "sim-step-shown",
     "pulse-step",
     "scene-pulse-flow",
-    "visual-interaction"
+    "composition-root"
    ],
    "time": 5
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -2134,10 +2588,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 6,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -2148,6 +2604,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 7,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -2158,6 +2615,7 @@
      {
       "event": "sim-back-requested",
       "payload": {},
+      "scheduledAt": 8,
       "seq": 5,
       "source": {
        "kind": "scenario",
@@ -2168,6 +2626,7 @@
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -2176,13 +2635,25 @@
       "time": 9
      }
     ],
-    "time": 5
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 5,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "scene-pulse-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "step-pulsed",
     "payload": {
      "stepIndex": 1
     },
+    "scheduledAt": 5,
     "seq": 15,
     "source": {
      "behavior": "scene-pulse-flow",
@@ -2196,26 +2667,32 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "scene-pulse-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 11,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "step-pulsed"
    ],
@@ -2223,6 +2700,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -2260,12 +2746,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "sim-step-shown",
+      "from": {
+       "behavior": "sim-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "stepIndex": 2
       },
+      "scheduledAt": 6,
       "seq": 16,
       "source": {
        "behavior": "sim-session-flow",
@@ -2277,6 +2770,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 7,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -2287,6 +2781,7 @@
      {
       "event": "sim-back-requested",
       "payload": {},
+      "scheduledAt": 8,
       "seq": 5,
       "source": {
        "kind": "scenario",
@@ -2297,6 +2792,7 @@
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -2305,11 +2801,18 @@
       "time": 9
      }
     ],
-    "time": 6
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 6,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "sim-step-requested",
     "payload": {},
+    "scheduledAt": 6,
     "seq": 3,
     "source": {
      "kind": "scenario",
@@ -2332,6 +2835,7 @@
      ],
      "from": "sim-idle",
      "guard": "stepIndex < stepCount - 1",
+     "instance": 0,
      "sets": [
       {
        "after": 2,
@@ -2347,21 +2851,26 @@
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "scene-pulse-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 12,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "sim-step-requested",
     "sim-step",
@@ -2372,6 +2881,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -2409,12 +2927,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "step-pulsed",
+      "from": {
+       "behavior": "scene-pulse-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "stepIndex": 2
       },
+      "scheduledAt": 6,
       "seq": 17,
       "source": {
        "behavior": "scene-pulse-flow",
@@ -2426,6 +2951,7 @@
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 7,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -2436,6 +2962,7 @@
      {
       "event": "sim-back-requested",
       "payload": {},
+      "scheduledAt": 8,
       "seq": 5,
       "source": {
        "kind": "scenario",
@@ -2446,6 +2973,7 @@
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -2454,13 +2982,25 @@
       "time": 9
      }
     ],
-    "time": 6
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 6,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "sim-session-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "sim-step-shown",
     "payload": {
      "stepIndex": 2
     },
+    "scheduledAt": 6,
     "seq": 16,
     "source": {
      "behavior": "sim-session-flow",
@@ -2484,6 +3024,7 @@
      ],
      "from": "pulse-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 2,
@@ -2504,31 +3045,45 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 13,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "sim-step-shown",
     "pulse-step",
     "scene-pulse-flow",
-    "visual-interaction"
+    "composition-root"
    ],
    "time": 6
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -2566,10 +3121,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "sim-step-requested",
       "payload": {},
+      "scheduledAt": 7,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -2580,6 +3137,7 @@
      {
       "event": "sim-back-requested",
       "payload": {},
+      "scheduledAt": 8,
       "seq": 5,
       "source": {
        "kind": "scenario",
@@ -2590,6 +3148,7 @@
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -2598,13 +3157,25 @@
       "time": 9
      }
     ],
-    "time": 6
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 6,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "scene-pulse-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "step-pulsed",
     "payload": {
      "stepIndex": 2
     },
+    "scheduledAt": 6,
     "seq": 17,
     "source": {
      "behavior": "scene-pulse-flow",
@@ -2618,26 +3189,32 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "scene-pulse-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 14,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "step-pulsed"
    ],
@@ -2645,6 +3222,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -2682,10 +3268,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "sim-back-requested",
       "payload": {},
+      "scheduledAt": 8,
       "seq": 5,
       "source": {
        "kind": "scenario",
@@ -2696,6 +3284,7 @@
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -2704,11 +3293,18 @@
       "time": 9
      }
     ],
-    "time": 7
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 7,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "sim-step-requested",
     "payload": {},
+    "scheduledAt": 7,
     "seq": 4,
     "source": {
      "kind": "scenario",
@@ -2722,6 +3318,7 @@
      "emitted": [],
      "from": "sim-idle",
      "guard": "stepCount > 0",
+     "instance": 0,
      "sets": [
       {
        "after": false,
@@ -2737,21 +3334,26 @@
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "scene-pulse-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 15,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "sim-step-requested",
     "sim-step-at-end",
@@ -2762,6 +3364,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -2799,10 +3410,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "sim-run-to-end-requested",
       "payload": {},
+      "scheduledAt": 9,
       "seq": 6,
       "source": {
        "kind": "scenario",
@@ -2811,11 +3424,18 @@
       "time": 9
      }
     ],
-    "time": 8
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 8,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "sim-back-requested",
     "payload": {},
+    "scheduledAt": 8,
     "seq": 5,
     "source": {
      "kind": "scenario",
@@ -2829,6 +3449,7 @@
      "emitted": [],
      "from": "sim-idle",
      "guard": "stepIndex >= 0",
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -2844,21 +3465,26 @@
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "scene-pulse-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 16,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "sim-back-requested",
     "sim-back",
@@ -2869,6 +3495,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "scene-pulse-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -2906,12 +3541,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 9
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 9,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "sim-run-to-end-requested",
     "payload": {},
+    "scheduledAt": 9,
     "seq": 6,
     "source": {
      "kind": "scenario",
@@ -2925,6 +3568,7 @@
      "emitted": [],
      "from": "sim-idle",
      "guard": "stepCount > 0",
+     "instance": 0,
      "sets": [
       {
        "after": 2,
@@ -2940,21 +3584,26 @@
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "scene-pulse-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 17,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "sim-run-to-end-requested",
     "sim-run-to-end",
@@ -2963,5 +3612,9 @@
    ],
    "time": 9
   }
- ]
+ ],
+ "stepsTaken": 18,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

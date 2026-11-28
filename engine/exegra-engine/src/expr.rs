@@ -409,9 +409,46 @@ fn require_type(v: &Value, ty: &str, op: &str) -> Result<(), ExprError> {
     }
 }
 
+/// The largest magnitude of an integer without a declared type in the integer fragment
+/// (`2^53 - 1`, formal/Exegra/Core/Behav.lean's `maxSafe`).
+pub const MAX_SAFE: f64 = 9_007_199_254_740_991.0;
+/// The error of an untyped division with a remainder in the integer fragment.
+pub const INEXACT: &str = "Division with a remainder: an untyped / must be exact";
+/// The error of an untyped result outside `±(2^53 - 1)` in the integer fragment.
+pub const OVERFLOW: &str =
+    "Integer overflow: an untyped result is outside -9007199254740991..9007199254740991";
+/// The error of an untyped operand outside `±(2^53 - 1)` in the integer fragment.
+pub const OPERAND: &str = "An untyped operand is outside -9007199254740991..9007199254740991";
+
 /// Evaluate a parsed expression. `resolve` maps a reference path to its value and returns
 /// [`Value::Undefined`] for an unknown reference (which is an error).
 pub fn eval_expr(ast: &Ast, resolve: &dyn Fn(&[String]) -> Value) -> Result<Value, ExprError> {
+    eval_expr_mode(ast, resolve, false)
+}
+
+/// Checks an untyped arithmetic result in the integer fragment: operands and result within
+/// `±(2^53 - 1)`, as the behaviour calculus checks them (`checked` at `Ty.num`).
+fn checked(integer: bool, x: f64, y: f64, r: f64) -> Result<Value, ExprError> {
+    if integer {
+        if x.abs() > MAX_SAFE || y.abs() > MAX_SAFE {
+            return Err(ExprError::eval(OPERAND));
+        }
+        if r.abs() > MAX_SAFE {
+            return Err(ExprError::eval(OVERFLOW));
+        }
+    }
+    Ok(Value::Number(r))
+}
+
+/// Evaluate a parsed expression; with `integer` (an input in the integer fragment of the behaviour
+/// calculus, WG-5681), untyped arithmetic is checked in `±(2^53 - 1)` and an untyped division with
+/// a remainder is the error [`INEXACT`].
+pub fn eval_expr_mode(
+    ast: &Ast,
+    resolve: &dyn Fn(&[String]) -> Value,
+    integer: bool,
+) -> Result<Value, ExprError> {
+    let eval_expr = |a: &Ast, r: &dyn Fn(&[String]) -> Value| eval_expr_mode(a, r, integer);
     match ast {
         Ast::Lit(v) => Ok(v.clone()),
         Ast::Ref { path, pos } => {
@@ -433,7 +470,8 @@ pub fn eval_expr(ast: &Ast, resolve: &dyn Fn(&[String]) -> Value) -> Result<Valu
                 }
                 UnOp::Neg => {
                     require_type(&a, "number", "-")?;
-                    Ok(Value::Number(-a.as_number().unwrap_or(f64::NAN)))
+                    let x = a.as_number().unwrap_or(f64::NAN);
+                    checked(integer, x, 0.0, -x)
                 }
             }
         }
@@ -473,22 +511,21 @@ pub fn eval_expr(ast: &Ast, resolve: &dyn Fn(&[String]) -> Value) -> Result<Valu
             require_type(&bv, "number", name)?;
             let x = av.as_number().unwrap_or(f64::NAN);
             let y = bv.as_number().unwrap_or(f64::NAN);
-            Ok(match op {
-                BinOp::Lt => Value::Bool(x < y),
-                BinOp::Le => Value::Bool(x <= y),
-                BinOp::Gt => Value::Bool(x > y),
-                BinOp::Ge => Value::Bool(x >= y),
-                BinOp::Add => Value::Number(x + y),
-                BinOp::Sub => Value::Number(x - y),
-                BinOp::Mul => Value::Number(x * y),
-                BinOp::Div | BinOp::Rem if y == 0.0 => {
-                    return Err(ExprError::eval("Division by zero"))
-                }
-                BinOp::Div => Value::Number(x / y),
+            match op {
+                BinOp::Lt => Ok(Value::Bool(x < y)),
+                BinOp::Le => Ok(Value::Bool(x <= y)),
+                BinOp::Gt => Ok(Value::Bool(x > y)),
+                BinOp::Ge => Ok(Value::Bool(x >= y)),
+                BinOp::Add => checked(integer, x, y, x + y),
+                BinOp::Sub => checked(integer, x, y, x - y),
+                BinOp::Mul => checked(integer, x, y, x * y),
+                BinOp::Div | BinOp::Rem if y == 0.0 => Err(ExprError::eval("Division by zero")),
+                BinOp::Div if integer && x % y != 0.0 => Err(ExprError::eval(INEXACT)),
+                BinOp::Div => checked(integer, x, y, x / y),
                 // Rust's f64 `%` is fmod, like JavaScript's: the sign of the dividend.
-                BinOp::Rem => Value::Number(x % y),
-                _ => return Err(ExprError::eval("Malformed expression")),
-            })
+                BinOp::Rem => checked(integer, x, y, x % y),
+                _ => Err(ExprError::eval("Malformed expression")),
+            }
         }
     }
 }

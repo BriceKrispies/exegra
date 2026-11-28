@@ -15,7 +15,7 @@ import { initEngine, runEngineText, runScenario } from '../../src/core/engine.js
 import { rustEngineBuilt, runRustEngineText } from '../../tools/rust-engine.js';
 import { simulationInput } from '../../src/core/sim-input.js';
 import { SOURCES, loadModel, variantsOf } from '../../tools/record-goldens.js';
-import { GOLDENS_DIR, REPO_ROOT, compareTraces, describeFailure, listGoldens, runConformance, runEngineCommand } from '../../tools/conformance.js';
+import { ELAB_REFUSAL, GOLDENS_DIR, REPO_ROOT, compareTraces, describeFailure, goldenChanges, listGoldens, runConformance, runEngineCommand } from '../../tools/conformance.js';
 
 initEngine();
 
@@ -37,8 +37,10 @@ test('the Lean WebAssembly engine reproduces every golden trace when run from th
         const golden = goldens.get(v.name);
         assert.ok(golden, `no golden for ${source}/${v.name}; run node tools/record-goldens.js`);
         goldens.delete(v.name);
-        const trace = runScenario(model, v.scenarioId, v.faults === undefined ? undefined : { faults: v.faults });
-        assert.equal(compareTraces(readJson(golden.tracePath), trace), null, `${source}/${v.name}`);
+        const run = () => runScenario(model, v.scenarioId, v.faults === undefined ? undefined : { faults: v.faults });
+        // A golden without a trace is an input the engine refuses as ill-typed or non-integer (WG-5681).
+        if (golden.refused) assert.throws(run, (/** @type {any} */ e) => ELAB_REFUSAL.test(e.message), `${source}/${v.name} is refused`);
+        else assert.equal(compareTraces(readJson(golden.tracePath), run()), null, `${source}/${v.name}`);
         assert.deepEqual(viaJson(simulationInput(model, v.scenarioId, v.faults)), readJson(golden.inputPath), `${source}/${v.name} input`);
         checked++;
       }
@@ -60,11 +62,12 @@ test('the Rust WebAssembly engine reproduces every golden trace and agrees with 
     t.skip('src/engine/pkg is not built (npm run build:engine)');
     return;
   }
-  const results = runConformance({ engine: (text) => JSON.parse(runRustEngineText(text)) });
+  // The Rust engine does not mirror static typing: the goldens the Lean engine refuses are left out.
+  const results = runConformance({ engine: (text) => JSON.parse(runRustEngineText(text)), skipRefused: true });
   assert.ok(results.length >= 50);
   assert.deepEqual(results.filter((r) => r.status !== 'ok').map(describeFailure), []);
   const differ = [];
-  for (const g of listGoldens()) {
+  for (const g of listGoldens().filter((x) => !x.refused)) {
     const text = fs.readFileSync(g.inputPath, 'utf8');
     if (runRustEngineText(text) !== runEngineText(text)) differ.push(g.name);
   }
@@ -77,7 +80,7 @@ test('the native Rust engine binary reproduces every golden trace', (t) => {
     return;
   }
   const command = `"${NATIVE}"`;
-  const results = runConformance({ engine: (text) => runEngineCommand(command, text) });
+  const results = runConformance({ engine: (text) => runEngineCommand(command, text), skipRefused: true });
   assert.ok(results.length >= 50);
   assert.deepEqual(results.filter((r) => r.status !== 'ok').map(describeFailure), []);
 });
@@ -114,4 +117,25 @@ test('the runner reports an altered trace as a mismatch with the right step and 
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
+});
+
+test('golden changes are exactly the manifest', (t) => {
+  // tests/conformance/golden-changes.json (WG-5681, criterion 22): every golden that differs from its
+  // version at the base commit, with its class; strip(version-2 trace) = version-1 trace for the shape change.
+  const manifest = readJson(path.join(REPO_ROOT, 'tests', 'conformance', 'golden-changes.json'));
+  let changes;
+  try {
+    changes = goldenChanges(manifest.base);
+  } catch (e) {
+    t.skip(`${/** @type {Error} */ (e).message} (a shallow checkout; the Check workflow fetches the history)`);
+    return;
+  }
+  assert.deepEqual(changes, manifest.changes);
+  const counts = /** @type {Record<string, number>} */ ({});
+  for (const c of Object.values(changes)) counts[c] = (counts[c] ?? 0) + 1;
+  assert.equal(Object.keys(changes).length, listGoldens().length, 'every golden changed (version 1 to version 2)');
+  // The exegra goldens changed again on purpose after WG-5681: the composition root of the multiscale work (WG-5692)
+  // re-addressed behaviours, and the two-session-write event (WG-5720) joined every exegra input; the two-session
+  // edit race is a new golden.
+  assert.deepEqual(counts, { 'version 2': 43, 'input re-recorded, trace equal under strip': 33, 'trace removed (refused)': 2, 'input edited, trace re-recorded': 10, added: 1 });
 });

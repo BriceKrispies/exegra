@@ -3,65 +3,33 @@
 //
 // A component may declare `implementation.modules`: paths relative to the
 // repository root (forward slashes). A module path ending in "/" claims every
-// file beneath that directory. Files under src/, cli/ and tools/ (extensions
-// .js, .json, .css, .html) plus index.html and vite.config.js at the root are
-// the implementation surface; any of them that no component claims is reported.
-// Build output under GENERATED_DIRS is not part of the surface: it is derived from
-// sources that a component claims (src/engine/pkg/ from engine/exegra-engine-wasm,
-// by npm run build:engine; src/engine/lean/ from formal/, by npm run build:formal-wasm) and
-// exists only after a build.
+// file beneath that directory. The implementation surface (tools/surface.js) is the files under src/, cli/
+// and tools/ (.js, .json, .css, .html), the Lean sources under formal/, the Rust sources under engine/, and
+// index.html and vite.config.js at the root; any of them that no component claims is reported.
 //
 // With realisation roots (tools/realisation-roots.js), a module "<alias>:<path>"
 // is checked in that root, and unclaimed files come only from roots that declare
 // include globs: this repository's surface is not scanned, since the project is
 // realised elsewhere.
+//
+// Each declared module path is a module element (src/core/query.js, moduleDeclarations), placed under
+// the component that declares it. The map from surface files to module elements must be a function:
+// a file covered by two module elements (two components declaring it, or a directory and a file inside
+// it) is an error, traceability.multiple-owners, listed in `multipleOwners` and in `errors`.
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { traceRoots } from './realisation-roots.js';
+import { moduleDeclarations } from '../src/core/query.js';
+import { scanSurface, GENERATED_DIRS } from './surface.js';
 
 /** @typedef {import('../src/core/types.js').Model} Model */
 /** @typedef {import('./realisation-roots.js').RealisationRoot} RealisationRoot */
 
-const SCAN_DIRS = ['src', 'cli', 'tools'];
-const SCAN_EXT = new Set(['.js', '.json', '.css', '.html']);
-const SCAN_ROOT_FILES = ['index.html', 'vite.config.js'];
-/** Generated directories (repo-relative, trailing slash) left out of the surface. */
-export const GENERATED_DIRS = ['src/engine/pkg/', 'src/engine/lean/'];
+export { GENERATED_DIRS };
 
 /** @param {string} p */
-const slash = (p) => p.replace(/\\/g, '/');
-
-/**
- * Every implementation-surface file, as repo-relative forward-slash paths.
- * @param {string} repoRoot
- * @returns {string[]}
- */
-function scanSurface(repoRoot) {
-  /** @type {string[]} */
-  const out = [];
-  /** @param {string} abs */
-  const walk = (abs) => {
-    let entries;
-    try {
-      entries = fs.readdirSync(abs, { withFileTypes: true });
-    } catch {
-      return;
-    }
-    for (const entry of entries) {
-      if (entry.name === 'node_modules' || entry.name.startsWith('local-')) continue; // local-* files are local data (gitignored)
-      const child = path.join(abs, entry.name);
-      if (entry.isDirectory()) {
-        if (!GENERATED_DIRS.includes(`${slash(path.relative(repoRoot, child))}/`)) walk(child);
-      } else if (entry.isFile() && SCAN_EXT.has(path.extname(entry.name))) out.push(slash(path.relative(repoRoot, child)));
-    }
-  };
-  for (const dir of SCAN_DIRS) walk(path.join(repoRoot, dir));
-  for (const file of SCAN_ROOT_FILES) {
-    if (fs.existsSync(path.join(repoRoot, file))) out.push(file);
-  }
-  return out.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-}
+const slash = (p) => p.replace(/[\\]/g, '/');
 
 /**
  * @param {string} repoRoot @param {string} modulePath
@@ -82,22 +50,15 @@ function moduleExists(repoRoot, modulePath) {
  * @param {Model} model
  * @param {string} repoRoot absolute path of the repository root
  * @param {RealisationRoot[]} [roots] realisation roots of the project; none keeps the repository-only check
- * @returns {{checkedModules: number, missingModules: {component: string, module: string, root?: string, reason?: string}[], unclaimedFiles: string[], claimedFiles: number, roots?: Record<string, any>}}
+ * @returns {{checkedModules: number, missingModules: {component: string, module: string, root?: string, reason?: string}[], unclaimedFiles: string[], claimedFiles: number, multipleOwners: {file: string, modules: {module: string, component: string}[]}[], errors: {code: string, severity: 'error', message: string, file: string, components: string[]}[], roots?: Record<string, any>}}
  */
 export function checkTraceability(model, repoRoot, roots = []) {
   const components = model.byKind.component ?? [];
   const declaring = components.filter((c) => c.data.implementation !== undefined && c.data.implementation !== null);
-  if (!declaring.length && !roots.length) return { checkedModules: 0, missingModules: [], unclaimedFiles: [], claimedFiles: 0 };
+  if (!declaring.length && !roots.length) return { checkedModules: 0, missingModules: [], unclaimedFiles: [], claimedFiles: 0, multipleOwners: [], errors: [] };
 
   /** @type {{component: string, module: string}[]} */
-  const declared = [];
-  for (const c of components) {
-    const modules = c.data.implementation?.modules;
-    if (!Array.isArray(modules)) continue;
-    for (const m of modules) {
-      if (typeof m === 'string' && m !== '') declared.push({ component: c.id, module: slash(m) });
-    }
-  }
+  const declared = moduleDeclarations(model).map((d) => ({ component: d.component, module: slash(d.path) }));
 
   if (roots.length) {
     const traced = traceRoots(declared, roots);
@@ -107,6 +68,8 @@ export function checkTraceability(model, repoRoot, roots = []) {
       missingModules,
       unclaimedFiles: traced.unclaimedFiles,
       claimedFiles: traced.claimedFiles,
+      multipleOwners: [],
+      errors: [],
       roots: traced.roots,
     };
   }
@@ -114,14 +77,40 @@ export function checkTraceability(model, repoRoot, roots = []) {
   const missingModules = declared.filter((d) => !moduleExists(repoRoot, d.module));
 
   const surface = scanSurface(repoRoot);
-  /** @param {string} file */
-  const claimedBy = (file) => declared.some((d) => (d.module.endsWith('/') ? file.startsWith(d.module) : file === d.module));
-  const unclaimedFiles = surface.filter((f) => !claimedBy(f));
+  /** @param {string} file the module elements covering a file, one per distinct (component, path) */
+  const coveringOf = (file) => {
+    const seen = new Set();
+    return declared.filter((d) => {
+      if (!(d.module.endsWith('/') ? file.startsWith(d.module) : file === d.module)) return false;
+      const key = `${d.component}\u0000${d.module}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+  /** @type {string[]} */
+  const unclaimedFiles = [];
+  /** @type {{file: string, modules: {module: string, component: string}[]}[]} */
+  const multipleOwners = [];
+  for (const f of surface) {
+    const covering = coveringOf(f);
+    if (!covering.length) unclaimedFiles.push(f);
+    else if (covering.length > 1) multipleOwners.push({ file: f, modules: covering.map((d) => ({ module: d.module, component: d.component })) });
+  }
+  const errors = multipleOwners.map((m) => {
+    const components = [...new Set(m.modules.map((x) => x.component))];
+    return {
+      code: 'traceability.multiple-owners', severity: /** @type {'error'} */ ('error'), file: m.file, components,
+      message: `${m.file} is covered by ${m.modules.length} module elements (${m.modules.map((x) => `${x.module} of ${x.component}`).join(', ')}); every file belongs to exactly one module element, so a file several elements share goes to one shared element at their lowest common ancestor.`,
+    };
+  });
 
   return {
     checkedModules: declared.length,
     missingModules,
     unclaimedFiles,
     claimedFiles: surface.length - unclaimedFiles.length,
+    multipleOwners,
+    errors,
   };
 }

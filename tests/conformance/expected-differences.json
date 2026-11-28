@@ -1,0 +1,13 @@
+{
+ "description": "Inputs for which tools/differential.js --calculus expects the calculus path, the legacy interpreter or the Rust engine to differ (WG-5681, criterion 21): the goldens of criterion 22 (b) to (d), whose inputs were edited for the calculus. A listed input is reported, not failed, when it differs; any other difference fails the check.",
+ "differences": {
+  "golden fixture/expression-showcase": "criterion 22 (b): the input was edited to integers; its pre-edit form computed fractions",
+  "golden fixture/error-type": "criterion 22 (c): ill-typed; the elaborator refuses it, the Rust engine runs it",
+  "golden fixture/error-guard-not-boolean": "criterion 22 (c): ill-typed; the elaborator refuses it, the Rust engine runs it",
+  "golden fixture/error-unknown-reference-guard": "criterion 22 (d): input re-recorded without calc-type and calc-guard",
+  "golden fixture/error-unknown-reference-effect": "criterion 22 (d): input re-recorded without calc-type and calc-guard",
+  "golden fixture/error-division-by-zero": "criterion 22 (d): input re-recorded without calc-type and calc-guard",
+  "golden fixture/error-modulo-by-zero": "criterion 22 (d): input re-recorded without calc-type and calc-guard",
+  "golden fixture/payload-field-present": "criterion 22 (d): input re-recorded without calc-type and calc-guard"
+ }
+}

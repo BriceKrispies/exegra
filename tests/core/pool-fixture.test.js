@@ -18,7 +18,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { REPO_ROOT } from '../../tools/conformance.js';
 import { LEAN_BIN, RUST_BIN, runBinary } from '../../tools/differential.js';
-import { evaluateMetricClaim } from '../../src/core/metric-claims.js';
+import { evaluateMetricClaim, metricVerdict } from '../../src/core/metric-claims.js';
 import { initEngine, runEngineText } from '../../src/core/engine.js';
 import { changed, lowerInput, withFaults } from '../fixtures/queueing/inputs.js';
 
@@ -51,13 +51,14 @@ test('pool under flood: the move leg holds in base and control, and every twin f
     const controlNegatives = c.controlNegatives.map((/** @type {{faults: string[]}} */ v) => withFaults(control, v.faults));
     const result = evaluateMetricClaim(run, { scenarios: [base, control], negatives, controlNegatives },
       { ...c, runs: fx.runs, fraction: fx.fraction, confidence: fx.confidence, seed: fx.seed });
-    t.diagnostic(`${c.id}: ${result.status} (${result.reason})`);
+    const verdict = metricVerdict(result);
+    t.diagnostic(`${c.id}: ${verdict.label} (${verdict.strength})`);
     result.scenarios.forEach((s, i) => t.diagnostic(show(i ? 'control' : 'base', s)));
     result.negatives.forEach((s, i) => t.diagnostic(show(`twin ${c.negatives[i].faults}`, s)));
     result.controlNegatives.forEach((s, i) => t.diagnostic(show(`control with ${c.controlNegatives[i].faults}`, s)));
     for (const s of result.scenarios) assert.equal(s.truncated, 0, `${c.id}: no truncated run`);
     for (const s of result.negatives) assert.equal(s.verdict, 'fails', `${c.id}: every twin fails`);
     for (const s of result.controlNegatives) assert.equal(s.verdict, 'holds', `${c.id}: every twin's fault holds on the control`);
-    assert.equal(result.status, 'model-holds', `${c.id}: ${result.reason}`);
+    assert.equal(verdict.label, 'model-holds', `${c.id}: ${verdict.strength}`);
   }
 });

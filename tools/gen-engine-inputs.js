@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-// Seeded generator of random valid engine inputs (format exegra-sim-input, version 1), for differential
-// checking of the Rust engine against the Lean formal semantics (tools/differential.js). Node-only when
-// run as a command; the generator itself is pure.
+// Seeded generator of random valid engine inputs (format exegra-sim-input, version 2), for differential
+// checking of the Rust engine against the Lean engine, and of the calculus path against the legacy
+// interpreter (tools/differential.js). Node-only when run as a command; the generator itself is pure.
 //
 //   node tools/gen-engine-inputs.js [--v2] [--seed <n>] [--count <n>] [--out <dir>]
 //
-// With --v2, version-2 inputs for the WG-4664 constructs (generateInputV2).
+// By default, inputs in the integer fragment of the behaviour calculus (generateInputsV2Int); with --v2,
+// inputs for every format-2 construct (generateInputV2). Format 1 is gone (WG-5681).
 //
 // Prints the construct coverage of the generated inputs; with --out, writes each input as
 // <dir>/input-<seed>-<i>.json.
@@ -199,12 +200,14 @@ function expressionGenerator(r, cov, scope) {
 }
 
 /**
- * Generate one engine input.
+ * The part every generated input starts from: events, behaviors, faults and a scenario, with times that
+ * may be fractional or negative. Not an input on its own: generateInputV2 picks the time unit and makes
+ * the times integers.
  * @param {Rng} r
  * @param {Coverage} [cov] construct counts, added to
  * @returns {any}
  */
-export function generateInput(r, cov = {}) {
+function baseInput(r, cov = {}) {
   count(cov, 'inputs');
   const eventIds = Array.from({ length: 2 + r.int(4) }, (_, i) => `ev-${String.fromCharCode(97 + i)}`);
   // Events declared but never delivered, and names that are not events (emitted: a run-time error).
@@ -380,7 +383,7 @@ export function generateInput(r, cov = {}) {
 
   return {
     format: 'exegra-sim-input',
-    version: 1,
+    version: 2,
     scenario,
     behaviors,
     events: [...eventIds, 'ev-unused'].map((id) => ({ id })),
@@ -409,14 +412,14 @@ function distribution(r, cov, what) {
  * Generate one version-2 engine input covering the WG-4664 constructs: integer time in a unit,
  * counted and keyed instances with routes, aggregates, resources with classes, bounds, overflow and
  * demand factors, use, acquire and release, sampled delays, demands and sets, replies, targeted steps
- * and seeds. It starts from a version-1 input of generateInput, with its times made integers.
+ * and seeds. It starts from baseInput, with its times made integers.
  * @param {Rng} r
  * @param {Coverage} [cov]
  * @returns {any}
  */
 export function generateInputV2(r, cov = {}) {
   // Hyphen-free behavior and state ids, so aggregates such as `bh0.count.b0s1` parse.
-  const input = JSON.parse(JSON.stringify(generateInput(r, cov)).replace(/bh-(\d)/g, 'bh$1').replace(/b(\d)-s(\d)/g, 'b$1s$2'));
+  const input = JSON.parse(JSON.stringify(baseInput(r, cov)).replace(/bh-(\d)/g, 'bh$1').replace(/b(\d)-s(\d)/g, 'b$1s$2'));
   count(cov, 'v2 inputs');
   input.version = 2;
   input.time = r.pick([{ unit: 'tick', perSecond: null }, { unit: 'us', perSecond: 1000000 }, { unit: 'ms', perSecond: 1000 }]);
@@ -497,7 +500,7 @@ export function generateInputV2(r, cov = {}) {
     }
   }
 
-  // Effects and expressions. The version-1 generator's run-time errors are thinned out, so that
+  // Effects and expressions. baseInput's run-time errors are thinned out, so that
   // runs reach the resource constructs.
   for (const b of input.behaviors) {
     for (const t of b.transitions) {
@@ -907,8 +910,8 @@ function generateFaultInput(r, cov) {
 
 /**
  * Generate `count` version-2 inputs from a seed, alternating generateInputV2 and the resource-centred
- * generateResourceInput (a stream of its own, so version-1 inputs of the same
- * seed are unchanged).
+ * generateResourceInput (a stream of its own, so the inputs of generateInputV2 of the same seed are
+ * unchanged).
  * @param {number} seed @param {number} n
  * @returns {{inputs: any[], coverage: Coverage}}
  */
@@ -934,16 +937,172 @@ export function generateInputsV2(seed, n) {
 }
 
 /**
- * Generate `count` inputs from a seed. The same seed and count always give the same inputs.
+ * An input of generateInputV2 brought into the integer fragment of the behaviour calculus
+ * (formal/Exegra/Elab.lean): no resources, routes, keyed instances, workloads, request classes or
+ * metrics, no resource effects or `sample` sets, no guards reading resources, and every number an
+ * integer of at most 5 digits (fractional literals in expressions and in JSON truncated). Most such
+ * inputs elaborate; those that do not (ill-typed expressions) are counted as refusals.
+ * @param {any} input
+ * @returns {any}
+ */
+export function toIntegerFragment(input) {
+  const out = JSON.parse(JSON.stringify(input));
+  for (const k of ['resources', 'routes', 'workloads', 'requests', 'metrics', 'links']) delete out[k];
+  if (out.scenario) { delete out.scenario.horizon; delete out.scenario.warmup; delete out.scenario.output; }
+  const intText = (/** @type {string} */ src) => src.replace(/ \/ /g, ' % ').replace(/\b(\d+)\.\d+/g, '$1').replace(/\d{6,}/g, (d) => d.slice(0, 5));
+  const fix = (/** @type {any} */ v) => {
+    if (typeof v === 'number') return Number.isInteger(v) && Math.abs(v) < 100000 ? v : Math.trunc(v) % 100000;
+    if (typeof v === 'string') return intText(v);
+    if (Array.isArray(v)) return v.map(fix);
+    if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, k === 'points' || k === 'seed' ? x : fix(x)]));
+    return v;
+  };
+  for (const b of out.behaviors ?? []) {
+    if (b.instances?.key) delete b.instances;
+    // `time` and `state` are reserved names in the calculus (WG-4688); a variable needs an initial value.
+    b.variables = (b.variables ?? []).filter((/** @type {any} */ v) => v && v.name !== 'time' && v.name !== 'state');
+    for (const v of b.variables) if (v.initial === undefined) v.initial = 0;
+    for (const t of b.transitions ?? []) {
+      if (typeof t.guard === 'string' && /\.(inUse|waiting)\b/.test(t.guard)) t.guard = null;
+      const vars = new Set(b.variables.map((/** @type {any} */ v) => v.name));
+      const events = new Set((out.events ?? []).map((/** @type {any} */ e) => e.id));
+      t.effects = (t.effects ?? []).filter((/** @type {any} */ fx) => fx && typeof fx === 'object' &&
+        !('use' in fx) && !('acquire' in fx) && !('release' in fx) && !(fx.to && typeof fx.to === 'object' && 'sample' in fx.to) &&
+        !('set' in fx && (!vars.has(fx.set) || fx.to === undefined || fx.to === null)) && !('emit' in fx && !events.has(fx.emit)));
+    }
+  }
+  const fixed = fix(out);
+  for (const st of fixed.scenario?.steps ?? []) if (st.target && typeof st.target.instance !== 'number') st.target.instance = 0;
+  // The step limit, times and delays are kept in range by the truncation above; the seed is a string.
+  if (input.scenario?.seed !== undefined) fixed.scenario.seed = input.scenario.seed;
+  return fixed;
+}
+
+/**
+ * A version-2 input in the integer fragment of the behaviour calculus with well-typed expressions
+ * (WG-5681): counted and single behaviours with integer, Boolean and string variables, guards and
+ * effects over own variables, other machines, control states, aggregates, payload fields and time;
+ * emits with fixed and sampled delays, replies, timers and cancels; targeted steps; drop, lose,
+ * delay, retry, duplicate, enable, disable and inject faults with occurrences and windows; stopAt.
+ * @param {Rng} r @param {Coverage} [cov]
+ * @returns {any}
+ */
+export function generateCalculusInput(r, cov = {}) {
+  count(cov, 'calculus inputs');
+  const events = ['go', 'ping', 'pong', 'tick', 'ask', 'ans'];
+  const nb = 1 + r.int(3);
+  /** @type {any[]} */
+  const behaviors = [];
+  for (let k = 0; k < nb; k++) {
+    const id = `m${k}`;
+    const counted = r.chance(0.3);
+    const states = ['s0', 's1'].concat(r.chance(0.3) ? ['s2'] : []);
+    behaviors.push({ id, counted, states, n: counted ? 1 + r.int(3) : 1 });
+  }
+  const intExpr = (/** @type {any} */ b, /** @type {number} */ d = 0) => {
+    const k = r.int(d > 1 ? 4 : 9);
+    if (k === 0) return String(r.int(10));
+    if (k === 1) return 'n';
+    if (k === 2) return 'time';
+    if (k === 3) return 'event.v';
+    if (k === 4) { const o = r.pick(behaviors.filter((x) => !x.counted)); if (o) { count(cov, 'calculus other read'); return `${o.id}.n`; } return 'n'; }
+    if (k === 5) { const o = r.pick(behaviors.filter((x) => x.counted)); if (o) { count(cov, 'calculus aggregate'); return `${o.id}.${r.pick(['sum', 'max', 'min'])}.n`; } return '1'; }
+    if (k === 6) { const o = r.pick(behaviors.filter((x) => x.counted)); if (o) { count(cov, 'calculus count'); return `${o.id}.count.${r.pick(o.states)}`; } return '2'; }
+    // No `/`: an untyped division with a remainder is the error inexact in the calculus and a
+    // fraction in the legacy interpreter, a difference by design (docs/semantics.md).
+    const op = r.pick(['+', '-', '*', '%']);
+    if (op === '%') count(cov, 'calculus %');
+    return `(${intExpr(b, d + 1)} ${op} ${intExpr(b, d + 1)})`;
+  };
+  const boolExpr = (/** @type {any} */ b, /** @type {number} */ d = 0) => {
+    const k = r.int(d > 1 ? 3 : 7);
+    if (k === 0) return `${intExpr(b, d + 1)} ${r.pick(['<', '<=', '>', '>=', '==', '!='])} ${intExpr(b, d + 1)}`;
+    if (k === 1) return 'flag';
+    if (k === 2) { const o = r.pick(behaviors.filter((x) => !x.counted)); return o ? `${o.id}.state == '${r.pick(o.states)}'` : 'true'; }
+    if (k === 3) return `label == '${r.pick(['a', 'b'])}'`;
+    return `${boolExpr(b, d + 1)} ${r.pick(['&&', '||', '=>'])} ${boolExpr(b, d + 1)}`;
+  };
+  const dist = () => {
+    const k = r.int(4);
+    if (k === 0) { count(cov, 'calculus after uniform'); return { kind: 'uniform', lo: r.int(3), hi: 3 + r.int(5) }; }
+    if (k === 1) { count(cov, 'calculus after choice'); return { kind: 'choice', values: [r.int(4), r.int(9)] }; }
+    if (k === 2) { count(cov, 'calculus after table'); return { kind: 'table', points: [[0, 1], [2 ** 31, 3 + r.int(4)], [2 ** 32, 8 + r.int(10)]] }; }
+    return r.int(4);
+  };
+  const out = behaviors.map((b) => {
+    /** @type {any[]} */
+    const transitions = [];
+    for (let t = 0; t < 2 + r.int(4); t++) {
+      const on = r.pick(events);
+      /** @type {any[]} */
+      const effects = [];
+      for (let e = r.int(4); e > 0; e--) {
+        const k = r.int(9);
+        if (k <= 2) effects.push({ set: 'n', to: intExpr(b) });
+        else if (k === 3) effects.push({ set: 'flag', to: boolExpr(b) });
+        else if (k === 4) effects.push({ set: 'label', to: r.chance(0.5) ? `'${r.pick(['a', 'b'])}'` : "label + 'x'" });
+        else if (k <= 6) {
+          const fx = { emit: r.pick(events), after: r.chance(0.3) ? dist() : r.int(4), payload: { v: intExpr(b) } };
+          if (r.chance(0.2)) { /** @type {any} */ (fx).target = 'reply'; count(cov, 'calculus reply'); }
+          effects.push(fx);
+        } else if (k === 7) { effects.push({ timer: r.pick(['t1', 't2']), after: 1 + r.int(5), emit: r.pick(events), payload: { v: '1' } }); count(cov, 'calculus timer'); }
+        else { effects.push({ cancel: r.pick(['t1', 't2']) }); count(cov, 'calculus cancel'); }
+      }
+      transitions.push({ id: `${b.id}-t${t}`, from: r.pick(b.states), to: r.pick(b.states), on,
+        guard: r.chance(0.5) ? boolExpr(b) : null, faultOnly: r.chance(0.1), effects });
+    }
+    /** @type {any} */
+    const beh = { id: b.id, initial: 's0', states: b.states,
+      variables: [{ name: 'n', initial: r.int(5) }, { name: 'flag', initial: r.chance(0.5) }, { name: 'label', initial: r.pick(['a', 'b']) }],
+      transitions };
+    if (b.counted) { beh.instances = { count: b.n }; count(cov, 'calculus counted'); }
+    return beh;
+  });
+  const steps = Array.from({ length: 1 + r.int(5) }, () => {
+    /** @type {any} */
+    const st = { at: r.int(6), event: r.pick(events), payload: { v: r.int(9) } };
+    if (r.chance(0.15)) { const b = r.pick(behaviors); st.target = { behavior: b.id, instance: r.int(b.n + 1) }; count(cov, 'calculus target'); }
+    return st;
+  });
+  /** @type {any[]} */
+  const faults = [];
+  const occ = () => (r.chance(0.5) ? 1 + r.int(3) : undefined);
+  const win = () => (r.chance(0.2) ? { at: r.int(4), ...(r.chance(0.5) ? { until: 4 + r.int(6) } : {}) } : undefined);
+  const allT = out.flatMap((b) => b.transitions.map((/** @type {any} */ t) => t.id));
+  for (let f = r.int(4); f > 0; f--) {
+    const kind = r.pick(['drop-event', 'lose-event', 'delay-event', 'retry-event', 'duplicate-event', 'enable-transition', 'disable-transition', 'inject-event']);
+    /** @type {any} */
+    const fault = { id: `f${f}`, kind };
+    if (kind.endsWith('-event')) fault.event = r.pick(events);
+    if (kind.endsWith('-transition')) fault.transition = r.pick(allT);
+    const o = occ(); if (o !== undefined && kind.endsWith('-event') && kind !== 'inject-event') fault.occurrence = o;
+    if (kind === 'delay-event' || kind === 'retry-event' || kind === 'duplicate-event') fault.by = r.int(5);
+    if (kind === 'inject-event') { fault.at = r.int(6); fault.payload = { v: r.int(9) }; }
+    const w = win(); if (w) fault.window = w;
+    faults.push(fault);
+    count(cov, `calculus fault ${kind}`);
+  }
+  /** @type {any} */
+  const scenario = { id: 'sc', steps, faults: faults.filter(() => r.chance(0.8)).map((f) => f.id), stepLimit: 10 + r.int(40), seed: r.pick(['42', '7', '1234567']) };
+  if (r.chance(0.2)) { scenario.stopAt = 3 + r.int(10); count(cov, 'calculus stopAt'); }
+  return {
+    format: 'exegra-sim-input', version: 2, time: { unit: 'tick', perSecond: null },
+    events: events.map((id) => ({ id })), behaviors: out, faults, scenario,
+  };
+}
+
+/**
+ * Generate `count` version-2 inputs in the integer fragment of the behaviour calculus
+ * (alternately generateCalculusInput and toIntegerFragment of generateInputV2), from a stream of their own.
  * @param {number} seed @param {number} n
  * @returns {{inputs: any[], coverage: Coverage}}
  */
-export function generateInputs(seed, n) {
-  const r = createRng(seed);
+export function generateInputsV2Int(seed, n) {
+  const r = createRng(seed ^ 0x5eed7);
   /** @type {Coverage} */
   const coverage = {};
   const inputs = [];
-  for (let i = 0; i < n; i++) inputs.push(generateInput(r, coverage));
+  for (let i = 0; i < n; i++) inputs.push(i % 2 ? toIntegerFragment(generateInputV2(r, coverage)) : generateCalculusInput(r, coverage));
   return { inputs, coverage };
 }
 
@@ -969,7 +1128,8 @@ function main(argv) {
     else { process.stderr.write('Usage: node tools/gen-engine-inputs.js [--v2] [--seed <n>] [--count <n>] [--out <dir>]\n'); return 2; }
   }
   if (!Number.isInteger(seed) || !Number.isInteger(n) || n < 0) { process.stderr.write('--seed and --count must be integers\n'); return 2; }
-  const { inputs, coverage } = v2 ? generateInputsV2(seed, n) : generateInputs(seed, n);
+  // Format 1 is gone (WG-5681): the default is the integer fragment of the behaviour calculus.
+  const { inputs, coverage } = v2 ? generateInputsV2(seed, n) : generateInputsV2Int(seed, n);
   if (out !== undefined) {
     fs.mkdirSync(out, { recursive: true });
     inputs.forEach((input, i) => fs.writeFileSync(path.join(/** @type {string} */ (out), `input-${seed}-${i}.json`), `${JSON.stringify(input, null, 1)}\n`));

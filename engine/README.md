@@ -1,10 +1,11 @@
 # Exegra simulation engine (Rust)
 
-Exegra's simulation engine, and its only one: the library crate `exegra-engine` with the native binary `exegra-sim`,
-and `exegra-engine-wasm`, the same library compiled to WebAssembly for the browser and Node. It reads one engine input
-(format `exegra-sim-input`, version 1) and returns one trace, and is judged only by the golden conformance suite in
-`tests/conformance/` (see `docs/simulation.md`, "Engine input and trace format"). The goldens were recorded with the
-JavaScript engine this crate replaced; they stay as committed and are the reference.
+The Rust oracle of Exegra's engine: the library crate `exegra-engine` with the native binary `exegra-sim`, and
+`exegra-engine-wasm`, the same library compiled to WebAssembly. Exegra runs the Lean engine (`formal/`); this crate is
+kept as an independent implementation that `tools/differential.js` compares with it. It reads one engine input
+(format `exegra-sim-input`, version 2) and returns one trace, and is judged by the golden conformance suite in
+`tests/conformance/` (see `docs/simulation.md`, "Engine input and trace format"). A version-1 input is refused:
+format 1 was removed (WG-5681).
 
 ## WebAssembly
 
@@ -59,21 +60,13 @@ run to goldens whose `<source>/<name>` contains the text.
 
 ## Layout
 
-The crate was ported from the JavaScript engine `src/core/sim.js`, since removed. The table maps what it had to what
-the crate has.
-
-| Former JavaScript | Rust | What |
-|---|---|---|
-| `src/core/expr.js`: `tokenize`, `parseExpr` | `src/expr.rs`: `tokenize`, `parse_expr` | Tokenizer and parser; the same grammar, precedence and parse error messages. |
-| `src/core/expr.js`: `evalExpr`, `requireType`, `evaluate`, `exprRefs` | `src/expr.rs`: `eval_expr`, `require_type`, `evaluate`, `expr_refs` | Evaluator with double arithmetic, strict equality, short-circuiting and the same error messages. |
-| `src/core/sim-input.js`: `sourceOf`, the input typedefs | `src/input.rs`: `SimInput::from_value`; `src/engine.rs`: `EngineSource` | The engine input, its format and version checks, and the entity view the engine reads. |
-| `runInput` (formerly in `src/core/sim-input.js`) | `src/lib.rs`: `run_input`; `src/engine.rs`: `run` | Run an input to completion. |
-| `src/core/sim.js`: `createSimulation` | `src/engine.rs`: `Simulation::new` | Creation checks, the initial configuration and the initial queue. |
-| `src/core/sim.js`: `step`, `commit`, `responsibleOf`, `insertPending`, `resolverFor`, `guardHolds`, `valueOf` | `src/engine.rs`: `Simulation::step`, `deliver`, `commit`, `responsible_of`, `insert_pending`, `resolve`, `guard_holds`, `value_of` | One step: drop, delay, or delivery in two phases. |
-| `src/core/sim.js`: `run`, `reset`, `trace` | `src/engine.rs`: `Simulation::run`, `reset`, `trace` | Run control and the trace. |
-| `src/core/sim.js`: `deepCopy` | `src/value.rs`: `Value::deep_copy`; `src/trace.rs`: `Configuration::deep_copy` | Copies at the same points as the reference engine. |
-| `src/core/sim.js`: `Configuration`, `TraceStep`, `Trace` typedefs | `src/trace.rs` | Trace records and their JSON form. |
-| JavaScript values, `JSON.parse`, `JSON.stringify` | `src/value.rs` | Doubles, property order, reference identity of arrays and objects, `undefined`. |
+| Module | What |
+|---|---|
+| `src/value.rs` | JSON-like values with JavaScript semantics: doubles, property order, reference identity, `undefined`. |
+| `src/expr.rs` | The expression language: tokenizer, parser, evaluator, and the integer rules of the behaviour calculus's fragment (`eval_expr_mode`). |
+| `src/random.rs`, `src/workload.rs` | Seeded streams and workloads of format 2. |
+| `src/v2.rs` | Format 2: decoding, instances, routes, resources, links, timers, faults, the run and the trace. Reads of other machines and aggregates see the start of the step; an input in the calculus's fragment computes with integers. |
+| `src/lib.rs` | `run_input`: the format and version check, then `v2::run`. |
 
 ## Matching JavaScript
 

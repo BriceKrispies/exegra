@@ -1,0 +1,2347 @@
+// Events and faults.
+{
+  // ---- Events (the vocabulary of Exegra's own edit flow) ---------------------------------
+  "events": [
+    {
+      "id": "edit-requested",
+      "name": "Edit requested",
+      "description": "A gesture in the scene, inspector or a dialog asks for a change; it becomes a typed operation.",
+      "producedBy": "browser-user"
+    },
+    { "id": "source-apply-requested", "name": "Source apply requested", "description": "The user applies the draft in the source editor; it becomes a ReplaceSource operation." },
+    { "id": "operation-submitted", "name": "Operation submitted", "description": "A typed operation reaches the transaction system through session.apply." },
+    { "id": "text-edits-computed", "name": "Text edits computed", "description": "Preconditions held and the operation's source-preserving text edits produced a candidate specification text." },
+    { "id": "model-parsed", "name": "Candidate model parsed", "description": "The candidate text was parsed into a candidate model." },
+    { "id": "validation-passed", "name": "Validation passed", "description": "The candidate model has no validation errors." },
+    { "id": "validation-failed", "name": "Validation failed", "description": "The candidate has validation errors; the transaction is refused." },
+    { "id": "transaction-committed", "name": "Transaction committed", "description": "The revision increased and a new model snapshot exists; the commit listener of the session runs.", "payload": [{ "name": "revision", "type": "number" }] },
+    { "id": "transaction-rejected", "name": "Transaction rejected", "description": "The transaction was refused; nothing changed." },
+    { "id": "refresh-requested", "name": "Refresh requested", "description": "The session re-evaluates claims, re-projects and re-lays-out the scene for the committed revision.", "payload": [{ "name": "revision", "type": "number" }] },
+    { "id": "projection-refreshed", "name": "Projection refreshed", "description": "The scene for the committed revision was derived and handed to the renderer.", "payload": [{ "name": "revision", "type": "number" }] },
+    { "id": "model-published", "name": "Model published", "description": "The session announced the commit to the inspector and the source editor.", "payload": [{ "name": "revision", "type": "number" }] },
+    { "id": "save-requested", "name": "Save requested", "description": "The session's asynchronous flush sends the committed text with its base hash to the file service, after the commit.", "payload": [{ "name": "revision", "type": "number" }] },
+    {
+      "id": "save-succeeded",
+      "name": "Save succeeded",
+      "description": "The file service replaced the file; its hash is the new base hash. Real run: recorded in the res.ok branch of flush in src/app/session.js (hashes[file] = res.hash, session.note save).",
+      "payload": [
+        {
+          "name": "file",
+          "type": "'spec' | 'layout'"
+        },
+        {
+          "name": "hash",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "save-conflicted",
+      "name": "Save conflicted",
+      "description": "The file on disk differed from the base hash; the file service returned a conflict and wrote nothing. Real run: recorded in the conflict branch of flush in src/app/session.js (conflict = {file, current}).",
+      "payload": [
+        {
+          "name": "file",
+          "type": "'spec' | 'layout'"
+        },
+        {
+          "name": "currentHash",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "write-intent",
+      "name": "Write intended",
+      "description": "The session decides to write the committed text of a project file to disk. Real run: recorded in the loop of flush (src/app/session.js) just before persist.writeFile(name, file, text, hashes[file], lastMeta, {requestId, textHash}); text is the sha-256 of the text.",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "file",
+          "type": "'spec' | 'layout'"
+        },
+        {
+          "name": "text",
+          "type": "string"
+        },
+        {
+          "name": "baseHash",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "write-file-request",
+      "name": "Write file",
+      "description": "The persistence client sends the text of a project file with the base hash it last read. Real run: recorded by src/persist/client.js writeFile() before POST /__exegra/write; text is recorded as its sha-256.",
+      "contract": "write-file",
+      "role": "request",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "file",
+          "type": "'spec' | 'layout'"
+        },
+        {
+          "name": "text",
+          "type": "string"
+        },
+        {
+          "name": "baseHash",
+          "type": "string | null"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "write-file-ok",
+      "name": "Write accepted",
+      "description": "The development server replaced the file and returns the hash of the text now on disk. Real run: produced by route() of tools/vite-plugin-exegra.js after tools/workspace.js write() returned ok, sent in the x-exegra-trace header of the 200 answer and appended by src/persist/client.js request().",
+      "contract": "write-file",
+      "role": "response",
+      "payload": [
+        {
+          "name": "ok",
+          "type": "true"
+        },
+        {
+          "name": "hash",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "correlation": "requestId"
+    },
+    {
+      "id": "write-file-conflict",
+      "name": "Write refused",
+      "description": "The file on disk differs from the base hash: nothing is written and the current hash is returned. Real run: produced by route() of tools/vite-plugin-exegra.js for the conflict tools/workspace.js write() returned before any write or journal line, sent with the 409 answer.",
+      "contract": "write-file",
+      "role": "error",
+      "payload": [
+        {
+          "name": "code",
+          "type": "'conflict'"
+        },
+        {
+          "name": "current",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "correlation": "requestId"
+    },
+    {
+      "id": "write-file-failed",
+      "name": "Write failed",
+      "description": "Any other answer to a write: the request guard, an invalid body or name, or a failure inside the write. Real run: produced by the catch of the middleware in tools/vite-plugin-exegra.js exegraDevServer (failed, with the error code), sent with the answer. A journal line that cannot be appended does not produce it: write() then returns ok with journal.written false.",
+      "payload": [
+        {
+          "name": "code",
+          "type": "'internal' | 'name.invalid' | 'body.invalid' | 'host.forbidden'"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "contract": "write-file",
+      "role": "error",
+      "correlation": "requestId"
+    },
+    {
+      "id": "read-project-request",
+      "name": "Read project",
+      "description": "The persistence client asks for a project's files. Real run: recorded by src/persist/client.js readProject() before GET /__exegra/project, called by session.open() and session.onExternalChange() (src/app/session.js).",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "contract": "read-project",
+      "role": "request"
+    },
+    {
+      "id": "read-project-ok",
+      "name": "Project read",
+      "description": "The files of the project with their hashes. Real run: produced by route() of tools/vite-plugin-exegra.js for GET /__exegra/project after tools/workspace.js read(); spec and layout are recorded as their hashes (layout null when there is none), recorded as the sha-256 of evidence/results.json or null.",
+      "payload": [
+        {
+          "name": "spec",
+          "type": "{text, hash, path}"
+        },
+        {
+          "name": "layout",
+          "type": "{text, hash} | null"
+        },
+        {
+          "name": "recorded",
+          "type": "object | null"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "contract": "read-project",
+      "role": "response",
+      "correlation": "requestId"
+    },
+    {
+      "id": "read-project-failed",
+      "name": "Project not read",
+      "description": "The read was refused. Real run: produced by the middleware catch of tools/vite-plugin-exegra.js for the WorkspaceError of tools/workspace.js read().",
+      "payload": [
+        {
+          "name": "code",
+          "type": "'not-found' | 'project.invalid'"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "contract": "read-project",
+      "role": "error",
+      "correlation": "requestId"
+    },
+    {
+      "id": "list-projects-request",
+      "name": "List projects",
+      "description": "Real run: recorded by src/persist/client.js listProjects() before GET /__exegra/projects, called by session.init() and session.refreshProjects().",
+      "payload": [
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "contract": "list-projects",
+      "role": "request"
+    },
+    {
+      "id": "list-projects-ok",
+      "name": "Projects listed",
+      "description": "Real run: produced by route() of tools/vite-plugin-exegra.js for GET /__exegra/projects; projects are recorded as the names.",
+      "payload": [
+        {
+          "name": "projects",
+          "type": "{name, title}[]"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "contract": "list-projects",
+      "role": "response",
+      "correlation": "requestId"
+    },
+    {
+      "id": "watch-project-request",
+      "name": "Subscribe to changes",
+      "description": "Real run: recorded by src/persist/client.js watchProject() before it opens the EventSource; called at the end of session.open().",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        }
+      ],
+      "contract": "watch-project",
+      "role": "request"
+    },
+    {
+      "id": "file-change-notice-sent",
+      "name": "File changed",
+      "description": "Real run: produced by openEvents of tools/vite-plugin-exegra.js from the onChange callback of tools/workspace.js watch() check(), sent as a trace message just before \"event: change\".",
+      "payload": [
+        {
+          "name": "file",
+          "type": "'spec' | 'layout' | 'recorded' | 'products'"
+        },
+        {
+          "name": "hash",
+          "type": "string"
+        }
+      ],
+      "contract": "file-change-notice",
+      "role": "request"
+    },
+    {
+      "id": "export-request",
+      "name": "Export project",
+      "description": "Real run: recorded by src/persist/client.js exportProject() before GET /__exegra/export, called by the Export button of src/ui/toolbar.js.",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "contract": "export-project",
+      "role": "request"
+    },
+    {
+      "id": "export-ok",
+      "name": "Bundle exported",
+      "description": "Real run: produced by route() of tools/vite-plugin-exegra.js for GET /__exegra/export after tools/workspace.js exportProject(); files is recorded as the sha-256 of the bundle's spec.jsonc.",
+      "payload": [
+        {
+          "name": "format",
+          "type": "'exegra-project'"
+        },
+        {
+          "name": "version",
+          "type": "1"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "files",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "contract": "export-project",
+      "role": "response",
+      "correlation": "requestId"
+    },
+    {
+      "id": "export-failed",
+      "name": "Export refused",
+      "description": "Real run: produced by the middleware catch of tools/vite-plugin-exegra.js (not-found).",
+      "payload": [
+        {
+          "name": "code",
+          "type": "'not-found'"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "contract": "export-project",
+      "role": "error",
+      "correlation": "requestId"
+    },
+    {
+      "id": "import-request",
+      "name": "Import bundle",
+      "description": "Real run: recorded by src/persist/client.js importProject() before POST /__exegra/import, called by the Import file input of src/ui/toolbar.js after its syntax check and the name prompt; bundle is recorded as the sha-256 of its spec.jsonc.",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "bundle",
+          "type": "object"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "contract": "import-project",
+      "role": "request"
+    },
+    {
+      "id": "import-ok",
+      "name": "Bundle imported",
+      "description": "Real run: produced by route() of tools/vite-plugin-exegra.js for POST /__exegra/import after tools/workspace.js importProject() overwrote the files.",
+      "payload": [
+        {
+          "name": "ok",
+          "type": "true"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "contract": "import-project",
+      "role": "response",
+      "correlation": "requestId"
+    },
+    {
+      "id": "import-refused",
+      "name": "Bundle refused",
+      "description": "Real run: produced by route() of tools/vite-plugin-exegra.js when importProject returns {ok: false, error} because validateBundle refuses the bundle, and by the middleware catch for other refusals.",
+      "payload": [
+        {
+          "name": "code",
+          "type": "'bundle.invalid'"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "contract": "import-project",
+      "role": "error",
+      "correlation": "requestId"
+    },
+    {
+      "id": "generated-write-request",
+      "name": "Write generated documents",
+      "description": "Real run: recorded by src/persist/client.js writeGenerated() before POST /__exegra/generated, called by generate() of src/ui/realisation-panel.js; files is recorded as the sha-256 of the files with sorted keys.",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "files",
+          "type": "object"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "contract": "write-generated",
+      "role": "request"
+    },
+    {
+      "id": "generated-write-ok",
+      "name": "Generated documents written",
+      "description": "Real run: produced by route() of tools/vite-plugin-exegra.js for POST /__exegra/generated.",
+      "payload": [
+        {
+          "name": "ok",
+          "type": "true"
+        },
+        {
+          "name": "written",
+          "type": "string[]"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "contract": "write-generated",
+      "role": "response",
+      "correlation": "requestId"
+    },
+    {
+      "id": "engine-run-posted",
+      "name": "Run posted to the worker",
+      "description": "Real run: run() of src/app/engine-runner.js records it just before w.postMessage({id, input}); input is recorded as the id of the scenario the engine input was derived from (the input text is not kept).",
+      "payload": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "input",
+          "type": "string"
+        }
+      ],
+      "contract": "engine-worker-run",
+      "role": "request"
+    },
+    {
+      "id": "engine-run-returned",
+      "name": "Trace returned by the worker",
+      "description": "Real run: self.postMessage({id, ok: true, trace}) in src/app/engine-worker.js, recorded by worker.onmessage of src/app/engine-runner.js; trace is recorded as the id of the scenario it is a trace of (the trace text is not kept).",
+      "payload": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "ok",
+          "type": "true"
+        },
+        {
+          "name": "trace",
+          "type": "string"
+        }
+      ],
+      "contract": "engine-worker-run",
+      "role": "response",
+      "correlation": "id"
+    },
+    {
+      "id": "engine-run-refused",
+      "name": "Run refused by the worker",
+      "description": "Real run: self.postMessage({id, ok: false, error}) in src/app/engine-worker.js, recorded by worker.onmessage of src/app/engine-runner.js.",
+      "payload": [
+        {
+          "name": "code",
+          "type": "'engine.refused'"
+        },
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "error",
+          "type": "string"
+        }
+      ],
+      "contract": "engine-worker-run",
+      "role": "error",
+      "correlation": "id"
+    },
+    {
+      "id": "cli-command-request",
+      "name": "Command invoked",
+      "description": "An agent or a person runs node cli/exegra.js <command>. Real run: main of cli/exegra.js, runCommand in cli/commands.js.",
+      "payload": [
+        {
+          "name": "command",
+          "type": "string"
+        },
+        {
+          "name": "options",
+          "type": "flags"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "contract": "agent-command",
+      "role": "request"
+    },
+    {
+      "id": "cli-command-ok",
+      "name": "Command succeeded",
+      "description": "Real run: runCommand returns {ok: true, ...}; cli/exegra.js writes it to stdout and exits 0.",
+      "payload": [
+        {
+          "name": "ok",
+          "type": "true"
+        },
+        {
+          "name": "command",
+          "type": "string"
+        },
+        {
+          "name": "project",
+          "type": "string"
+        },
+        {
+          "name": "semanticHash",
+          "type": "string"
+        },
+        {
+          "name": "result",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ],
+      "contract": "agent-command",
+      "role": "response",
+      "correlation": "requestId"
+    },
+    {
+      "id": "cli-command-failed",
+      "name": "Command failed",
+      "description": "Real run: failure() of cli/commands.js builds {ok: false, command, project, error {code, message}, diagnostics}; cli/exegra.js exits 1 (2 for usage).",
+      "payload": [
+        {
+          "name": "code",
+          "type": "'write.conflict' | 'simulate.failed' | 'verify.failed'"
+        },
+        {
+          "name": "command",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        },
+        {
+          "name": "specWritten",
+          "type": "boolean"
+        }
+      ],
+      "contract": "agent-command",
+      "role": "error",
+      "correlation": "requestId"
+    },
+    {
+      "id": "session-init-requested",
+      "name": "Session started",
+      "description": "main.js starts the session once the engine has loaded or failed to. Real run: recorded in both branches of initEngine().then(...) in src/app/main.js just before session.init(); project as for page-loaded.",
+      "payload": [
+        {
+          "name": "persistent",
+          "type": "boolean"
+        },
+        {
+          "name": "project",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "project-open-requested",
+      "name": "Project opened by the user",
+      "description": "A project is chosen: by session.init (the requested or exegra project), the toolbar's project picker, or the toolbar after an import. Real run: recorded at the entry of session.open(name) in src/app/session.js.",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "open-refused",
+      "name": "Project switch refused",
+      "description": "The switch is refused while a save is pending, in conflict or in error. Real run: recorded by the guard at the top of session.open (session.note error \"Resolve or wait for the pending save\").",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "read-intent",
+      "name": "Read requested",
+      "description": "The session asks the persistence client for the project files: to open it, after an external change or after a change of the recorded results. Real run: recorded just before persist.readProject(name, {requestId}) in session.open and onExternalChange.",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        },
+        {
+          "name": "purpose",
+          "type": "'open' | 'external' | 'recorded'"
+        }
+      ]
+    },
+    {
+      "id": "project-files-read",
+      "name": "Project files received",
+      "description": "readProject resolved with the files. Real run: recorded after the await of persist.readProject in session.open and onExternalChange (src/app/session.js); recorded is the version of the recorded results that the server reported in its read-project-ok for the same requestId.",
+      "payload": [
+        {
+          "name": "specHash",
+          "type": "string"
+        },
+        {
+          "name": "layoutHash",
+          "type": "string"
+        },
+        {
+          "name": "recorded",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "project-read-failed",
+      "name": "Project could not be read",
+      "description": "readProject threw (unwrap of a non-2xx answer). Real run: recorded in the catch of session.open, which keeps the current project fully functional.",
+      "payload": [
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "project-opened",
+      "name": "Project opened",
+      "description": "The new Project exists, with the hashes taken from the read and the stored preferences applied; claims are evaluated and the watcher started after it. Real run: recorded in session.open of src/app/session.js right after the Project is constructed and the preferences of store.perProject are applied, before evaluate(); specHash is the server's hash of the text read (or its sha-256 without persistence).",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "specHash",
+          "type": "string"
+        },
+        {
+          "name": "layoutHash",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "list-intent",
+      "name": "Project list requested",
+      "description": "Real run: recorded by session.init and session.refreshProjects (src/app/session.js) just before persist.listProjects({requestId}).",
+      "payload": [
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "projects-listed",
+      "name": "Project list received",
+      "description": "Real run: recorded by session.init and session.refreshProjects after session.projects is assigned; projects are the names.",
+      "payload": [
+        {
+          "name": "projects",
+          "type": "string[]"
+        }
+      ]
+    },
+    {
+      "id": "watch-intent",
+      "name": "Watch requested",
+      "description": "Real run: recorded just before persist.watchProject(name, onExternalChange) at the end of session.open.",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "external-change-received",
+      "name": "Change notice received",
+      "description": "Real run: recorded by the \"change\" listener of src/persist/client.js watchProject, which then calls session.onExternalChange(change).",
+      "payload": [
+        {
+          "name": "file",
+          "type": "'spec' | 'layout' | 'recorded' | 'products'"
+        },
+        {
+          "name": "hash",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "disk-edited-externally",
+      "name": "File replaced outside the session",
+      "description": "Another process replaces a project file: an editor, git, an agent's exegra apply, tools/import-markdown.js or tools/make-benchmark.js. No code observes the act itself; changeTrace of tools/vite-plugin-exegra.js infers it (marked inferred) when tools/workspace.js watch() reports a hash of the spec or layout that this server did not write.",
+      "payload": [
+        {
+          "name": "file",
+          "type": "'spec' | 'layout' | 'recorded' | 'products'"
+        },
+        {
+          "name": "hash",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "reload-requested",
+      "name": "Adopt the file on disk",
+      "description": "The session adopts text from disk with Project.reload (origin external): after an external change or when the user resolves a conflict by reloading. Real run: recorded just before session.project.reload(...) in onExternalChange and resolveConflict('reload'); text is the hash of the adopted text.",
+      "payload": [
+        {
+          "name": "file",
+          "type": "'spec' | 'layout'"
+        },
+        {
+          "name": "text",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "commit-notified",
+      "name": "Commit notified",
+      "description": "Project.#commit notifies its subscribers synchronously with {type: 'commit', result, entry}; the session's onCommit runs. Real run: recorded at the top of onCommit in src/app/session.js, after the commit's cause; file is spec when the specification text changed, else layout; text is the sha-256 of that text.",
+      "payload": [
+        {
+          "name": "origin",
+          "type": "'ui' | 'source' | 'cli' | 'external' | 'undo' | 'redo'"
+        },
+        {
+          "name": "file",
+          "type": "'spec' | 'layout'"
+        },
+        {
+          "name": "text",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "edit-applied",
+      "name": "Edit applied",
+      "description": "A valid edit of the specification commits through session.apply and Project.apply (the detailed path is the edit-flow model of visual-edit-flow). Real run: recorded by onCommit of src/app/session.js, which Project.#commit calls before Project.apply returns, for a commit whose origin is not undo, redo or external and that changed the specification text; specHash is the sha-256 of the new text, origin the commit's origin.",
+      "payload": [
+        {
+          "name": "specHash",
+          "type": "string"
+        },
+        {
+          "name": "origin",
+          "type": "'ui' | 'source' | 'cli' | 'import'"
+        }
+      ]
+    },
+    {
+      "id": "node-moved",
+      "name": "Node dragged",
+      "description": "A drag in the scene ends and becomes a MovePresentationNode operation. Real run: recorded by onCommit of src/app/session.js for a commit (origin not undo, redo or external) that changed only the layout text; layoutHash is the sha-256 of the new layout text. The gesture starts in onMoveEnd of src/app/main.js.",
+      "payload": [
+        {
+          "name": "layoutHash",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "undo-requested",
+      "name": "Undo requested",
+      "description": "Real run: recorded by session.undo() (src/app/session.js), called by the Undo button of src/ui/toolbar.js and the keyboard shortcut of src/ui/shell.js, before Project.undo()."
+    },
+    {
+      "id": "redo-requested",
+      "name": "Redo requested",
+      "description": "Real run: recorded by session.redo(), called by the Redo button of src/ui/toolbar.js and the keyboard shortcut of src/ui/shell.js, before Project.redo()."
+    },
+    {
+      "id": "conflict-resolution-chosen",
+      "name": "Conflict resolution chosen",
+      "description": "The user chooses \"Reload from disk\" or \"Overwrite disk\". Real run: recorded by session.resolveConflict(how) (src/app/session.js), from the conflict menu items of src/ui/toolbar.js.",
+      "payload": [
+        {
+          "name": "how",
+          "type": "'reload' | 'overwrite'"
+        }
+      ]
+    },
+    {
+      "id": "save-failed",
+      "name": "Save failed",
+      "description": "The write was answered with an error other than a conflict; the pending flag stays set and nothing is retried until the next commit. Real run: recorded in the else branch of flush in src/app/session.js (setSaveState error).",
+      "payload": [
+        {
+          "name": "file",
+          "type": "'spec' | 'layout'"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "claims-evaluation-requested",
+      "name": "Claims re-evaluated",
+      "description": "The session re-evaluates every claim: on open, on a commit that changed the semantics and when the recorded results changed. Real run: recorded at the top of evaluate() in src/app/session.js, which calls evaluateClaims synchronously on the main thread; modelHash is the sha-256 of the specification text evaluated.",
+      "payload": [
+        {
+          "name": "modelHash",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "claim-scenarios-run",
+      "name": "Claim scenarios run on the main thread",
+      "description": "Trace and metric claims run their scenarios and negatives through the engine inside evaluateClaims, on the main thread, not in the engine worker. Real run: recorded by evaluate() in src/app/session.js when evaluateClaims returns, which has run them (the trace and metric-bound evaluators of src/core/claims.js, runScenario, runEngineText).",
+      "payload": [
+        {
+          "name": "modelHash",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "claims-evaluated",
+      "name": "Claim results ready",
+      "description": "session.claimResults is replaced; each result carries the semantic hash it was evaluated at. Real run: recorded by evaluate() in src/app/session.js after the assignment; modelHash as for claims-evaluation-requested.",
+      "payload": [
+        {
+          "name": "modelHash",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "recorded-results-adopted",
+      "name": "Recorded results adopted",
+      "description": "The session replaced session.recorded after a change notice of file recorded. Real run: recorded in onExternalChange, branch change.file === 'recorded' (src/app/session.js), after the read.",
+      "payload": [
+        {
+          "name": "version",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "export-clicked",
+      "name": "Export clicked",
+      "description": "Real run: recorded by the Export button handler of src/ui/toolbar.js."
+    },
+    {
+      "id": "export-intent",
+      "name": "Export requested",
+      "description": "Real run: recorded by the Export handler of src/ui/toolbar.js before exportProject(name, {requestId}) (with persistence; without it the bundle is built from memory).",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "bundle-received",
+      "name": "Bundle received",
+      "description": "Real run: recorded after the await of exportProject in the Export handler; files is the sha-256 of the bundle's spec.jsonc.",
+      "payload": [
+        {
+          "name": "files",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "export-refused-received",
+      "name": "Export failed",
+      "description": "Real run: recorded in the catch of the Export handler (session.note error \"Export failed\").",
+      "payload": [
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "bundle-downloaded",
+      "name": "Bundle downloaded",
+      "description": "The bundle becomes a .exegra.json download. Real run: recorded by the Export handler of src/ui/toolbar.js before URL.createObjectURL and the hidden link click.",
+      "payload": [
+        {
+          "name": "specHash",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "import-file-chosen",
+      "name": "Bundle file chosen",
+      "description": "The user picks a .exegra.json file; the toolbar parses it and checks its specification for syntax errors only. Real run: recorded by the change handler of the import file input in src/ui/toolbar.js: after askProjectName when the syntax is fine, before the refusal otherwise; specHash is the sha-256 of its spec.jsonc.",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "specHash",
+          "type": "string"
+        },
+        {
+          "name": "syntaxOk",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "id": "import-intent",
+      "name": "Import requested",
+      "description": "Real run: recorded by the import handler of src/ui/toolbar.js before importProject(name, bundle, {requestId}).",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "bundle",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "import-done",
+      "name": "Import finished",
+      "description": "Real run: recorded on res.ok in the import handler, before session.refreshProjects() and session.open(name).",
+      "payload": [
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "import-refused-received",
+      "name": "Import failed",
+      "description": "Real run: recorded on !res.ok in the import handler (session.note error \"Import failed\").",
+      "payload": [
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "generate-clicked",
+      "name": "Generate clicked",
+      "description": "Real run: recorded by generate() of src/ui/realisation-panel.js, the Generate button (disabled while the model has validation errors)."
+    },
+    {
+      "id": "generated-intent",
+      "name": "Generated documents to write",
+      "description": "generateAll derives the five documents from the session's model and claim results, then the panel writes them. Real run: recorded by generate() in src/ui/realisation-panel.js before writeGenerated; files is the sha-256 of the generated files with sorted keys.",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "files",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "generated-saved",
+      "name": "Generated documents saved",
+      "description": "Real run: recorded by generate() of src/ui/realisation-panel.js when writeGenerated answered ok.",
+      "payload": [
+        {
+          "name": "written",
+          "type": "string[]"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ws-read",
+      "name": "Workspace read",
+      "description": "The workspace call: tools/workspace.js read(name), called by the GET /__exegra/project route and by loadProject of cli/commands.js. Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "caller",
+          "type": "'http' | 'cli'"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ws-read-done",
+      "name": "Workspace read returned",
+      "description": "The workspace call: the return of tools/workspace.js read() with {spec {text, hash, path}, layout, recorded}. Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
+      "payload": [
+        {
+          "name": "spec",
+          "type": "string"
+        },
+        {
+          "name": "layout",
+          "type": "string"
+        },
+        {
+          "name": "recorded",
+          "type": "string"
+        },
+        {
+          "name": "caller",
+          "type": "'http' | 'cli'"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ws-read-missing",
+      "name": "Workspace read refused",
+      "description": "The workspace call: WorkspaceError not-found thrown by tools/workspace.js read(). Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
+      "payload": [
+        {
+          "name": "caller",
+          "type": "'http' | 'cli'"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ws-list",
+      "name": "Workspace list",
+      "description": "The workspace call: tools/workspace.js listProjects(). Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
+      "payload": [
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ws-list-done",
+      "name": "Workspace list returned",
+      "description": "The workspace call: the return of tools/workspace.js listProjects(). Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
+      "payload": [
+        {
+          "name": "projects",
+          "type": "string[]"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ws-write",
+      "name": "Workspace write",
+      "description": "The workspace call: tools/workspace.js write(name, file, text, baseHash, meta), called by the POST /__exegra/write route and by the apply command of cli/commands.js. Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "file",
+          "type": "'spec' | 'layout'"
+        },
+        {
+          "name": "text",
+          "type": "string"
+        },
+        {
+          "name": "baseHash",
+          "type": "string"
+        },
+        {
+          "name": "caller",
+          "type": "'http' | 'cli'"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ws-write-done",
+      "name": "Workspace write accepted",
+      "description": "The workspace call: write() returns {ok: true, hash} after atomicWrite and the journal append. Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
+      "payload": [
+        {
+          "name": "file",
+          "type": "'spec' | 'layout'"
+        },
+        {
+          "name": "hash",
+          "type": "string"
+        },
+        {
+          "name": "caller",
+          "type": "'http' | 'cli'"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ws-write-conflict",
+      "name": "Workspace write refused",
+      "description": "The workspace call: write() returns {ok: false, conflict: true, current} when the current hash differs from the base hash, before writing anything. Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
+      "payload": [
+        {
+          "name": "file",
+          "type": "'spec' | 'layout'"
+        },
+        {
+          "name": "current",
+          "type": "string"
+        },
+        {
+          "name": "caller",
+          "type": "'http' | 'cli'"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ws-write-error",
+      "name": "Workspace write failed after the replace",
+      "description": "Real run: fs.appendFile of the journal throws in write() after atomicWrite replaced the file. tools/workspace.js write() catches it and returns ok with journal.written false, so no real run produces this event: the development server records ws-write-done and write-file-ok instead.",
+      "payload": [
+        {
+          "name": "file",
+          "type": "'spec' | 'layout'"
+        },
+        {
+          "name": "caller",
+          "type": "'http' | 'cli'"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "disk-file-replaced",
+      "name": "Project file replaced on disk",
+      "description": "A tracked project file now has new content, whoever wrote it. Real run: produced by route() of tools/vite-plugin-exegra.js after an accepted write or import (the rename of atomicWrite in tools/workspace.js), and inferred (marked inferred) by changeTrace in the same file for a change notice whose hash the server did not write.",
+      "payload": [
+        {
+          "name": "file",
+          "type": "'spec' | 'layout' | 'recorded' | 'products'"
+        },
+        {
+          "name": "hash",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "ws-watch",
+      "name": "Workspace watch started",
+      "description": "Real run: tools/workspace.js watch(name, onChange), called by openEvents of tools/vite-plugin-exegra.js; the current hashes become the baseline. Produced by openEvents as the first trace message of the change stream.",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "ws-change",
+      "name": "Workspace change detected",
+      "description": "Real run: check() in tools/workspace.js watch() after the 80 ms debounce, when the hash differs from the last one this subscription saw (own writes included). Produced by changeTrace in openEvents of tools/vite-plugin-exegra.js, sent as a trace message before \"event: change\".",
+      "payload": [
+        {
+          "name": "file",
+          "type": "'spec' | 'layout' | 'recorded' | 'products'"
+        },
+        {
+          "name": "hash",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "ws-write-recorded",
+      "name": "Recorded results written",
+      "description": "Real run: tools/workspace.js writeRecorded(), called by runVerify of cli/commands.js; atomic, no base-hash check, no journal line. The command line records nothing; changeTrace of tools/vite-plugin-exegra.js infers it (marked inferred) from a change notice of evidence/results.json, with the file's hash as version.",
+      "payload": [
+        {
+          "name": "version",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "ws-recorded-done",
+      "name": "Recorded results on disk",
+      "description": "Real run: writeRecorded returns {ok: true}. Inferred (marked inferred) by changeTrace of tools/vite-plugin-exegra.js together with ws-write-recorded.",
+      "payload": [
+        {
+          "name": "version",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "ws-write-generated",
+      "name": "Generated documents written by the workspace",
+      "description": "The workspace call: tools/workspace.js writeGenerated(name, files), from POST /__exegra/generated or exegra generate --write. Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "files",
+          "type": "string"
+        },
+        {
+          "name": "caller",
+          "type": "'http' | 'cli'"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ws-generated-done",
+      "name": "Generated documents on disk",
+      "description": "The workspace call: writeGenerated returns {ok: true, written}, the files whose content changed. Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
+      "payload": [
+        {
+          "name": "written",
+          "type": "string[]"
+        },
+        {
+          "name": "caller",
+          "type": "'http' | 'cli'"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ws-export",
+      "name": "Workspace export",
+      "description": "The workspace call: tools/workspace.js exportProject(name). Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ws-export-done",
+      "name": "Workspace export returned",
+      "description": "The workspace call: the return of exportProject with the files read from disk. Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "files",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ws-export-missing",
+      "name": "Workspace export refused",
+      "description": "The workspace call: WorkspaceError not-found in exportProject. Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
+      "payload": [
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ws-import",
+      "name": "Workspace import",
+      "description": "The workspace call: tools/workspace.js importProject(name, bundle). Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
+      "payload": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "bundle",
+          "type": "string"
+        },
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ws-import-done",
+      "name": "Workspace import finished",
+      "description": "The workspace call: importProject returns {ok: true} after overwriting the files of the bundle. Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
+      "payload": [
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ws-import-refused",
+      "name": "Workspace import refused",
+      "description": "The workspace call: importProject returns {ok: false, error} when validateBundle refuses the bundle. Real run: produced by route() of tools/vite-plugin-exegra.js around the call of tools/workspace.js (not inside workspace.js), returned to the browser with the answer; texts as their sha-256.",
+      "payload": [
+        {
+          "name": "requestId",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "verify-tests-run",
+      "name": "Test evidence executed",
+      "description": "Real run: the loop over test evidence in runVerify (cli/commands.js), each through runTestReference: node --test or npx playwright test in a subprocess.",
+      "payload": [
+        {
+          "name": "count",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "verify-tests-finished",
+      "name": "Test evidence finished",
+      "description": "Real run: the end of that loop, with {outcome, detail, ranAt} per executed test.",
+      "payload": [
+        {
+          "name": "passed",
+          "type": "number"
+        },
+        {
+          "name": "failed",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "verify-claims-evaluated",
+      "name": "Claims evaluated after verify",
+      "description": "Real run: evaluateClaims(model, {recorded: {results}, stamps}) in runVerify, after writeRecorded. A run that then passes writes the claim statuses into the same file as claimBaseline, a second writeRecorded that this machine does not model."
+    },
+    {
+      "id": "engine-not-built",
+      "name": "Engine not built",
+      "description": "The WebAssembly module is missing (npm run build:engine has not run); initEngine and runEngine throw. Environment, not code."
+    },
+    {
+      "id": "engine-run-called",
+      "name": "Engine run in process",
+      "description": "Real run: runTrace in cli/commands.js calls runScenario (src/core/engine.js) on the main thread of the command.",
+      "payload": [
+        {
+          "name": "scenario",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "engine-run-finished",
+      "name": "Engine run finished",
+      "description": "Real run: runScenario returns the trace.",
+      "payload": [
+        {
+          "name": "steps",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "engine-run-failed",
+      "name": "Engine run refused",
+      "description": "Real run: runScenario throws; runTrace maps it to the command error simulate.failed."
+    },
+    {
+      "id": "trace-file-written",
+      "name": "Trace file written",
+      "description": "Real run: fs.writeFileSync of the stable JSON trace in the trace command of cli/commands.js (--out).",
+      "payload": [
+        {
+          "name": "path",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "prove-requested",
+      "name": "Proof requested",
+      "description": "Real run: the prove command of cli/commands.js calling proveScenario (tools/prove.js).",
+      "payload": [
+        {
+          "name": "scenario",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "lake-build-requested",
+      "name": "Lake build",
+      "description": "Real run: lake build in formal/ (tools/prove.js)."
+    },
+    {
+      "id": "lake-build-finished",
+      "name": "Lake build finished",
+      "description": "Real run: the lake build subprocess exits."
+    },
+    {
+      "id": "explorer-request-sent",
+      "name": "Exploration requested",
+      "description": "Real run: tools/prove.js writes the exploreRequest of src/core/proof-export.js to exegra-lean explore on stdin.",
+      "payload": [
+        {
+          "name": "bound",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "explorer-result-returned",
+      "name": "Exploration result",
+      "description": "Real run: the JSON result of exegra-lean explore on stdout (tools/prove.js).",
+      "payload": [
+        {
+          "name": "result",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "lean-file-written",
+      "name": "Proof file written",
+      "description": "Real run: fs.writeFileSync of formal/generated/<scenario>.lean in tools/prove.js.",
+      "payload": [
+        {
+          "name": "scenario",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "lean-check-requested",
+      "name": "Lean check",
+      "description": "Real run: lake env lean on the proof file (tools/prove.js)."
+    },
+    {
+      "id": "lean-check-finished",
+      "name": "Lean check finished",
+      "description": "Real run: the axioms read from #print axioms; a theorem Lean did not accept has none.",
+      "payload": [
+        {
+          "name": "accepted",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "id": "lean-rejects-proof",
+      "name": "Lean refuses the proof file",
+      "description": "Environment: the Lean check of the proof file fails (a theorem does not check, or the toolchain is broken)."
+    },
+    {
+      "id": "prove-finished",
+      "name": "Proof results",
+      "description": "Real run: proveScenario returns its result, one entry per claim Lean accepted.",
+      "payload": [
+        {
+          "name": "claims",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "markdown-import-run",
+      "name": "Markdown import run",
+      "description": "Real run: main of tools/import-markdown.js (reads import-map.jsonc, the source tree and its git HEAD, builds the specification)."
+    },
+    {
+      "id": "markdown-source-unmapped",
+      "name": "Source content the map does not cover",
+      "description": "Environment: the Markdown tree holds content the import map does not map, so the coverage gate fails."
+    },
+    {
+      "id": "markdown-spec-built",
+      "name": "Specification built from Markdown",
+      "description": "Real run: buildSpec and the coverage check in tools/import-markdown.js main.",
+      "payload": [
+        {
+          "name": "coverage",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "id": "markdown-report-printed",
+      "name": "Import report printed",
+      "description": "Real run: the coverage and loss report on standard output and standard error of tools/import-markdown.js."
+    },
+    {
+      "id": "conformance-run",
+      "name": "Conformance run",
+      "description": "Real run: node tools/conformance.js (or tests/core/conformance.test.js)."
+    },
+    {
+      "id": "golden-replayed",
+      "name": "Golden input replayed",
+      "description": "Real run: tools/conformance.js runs the engine on a golden input."
+    },
+    {
+      "id": "golden-compared",
+      "name": "Golden trace compared",
+      "description": "Real run: tools/conformance.js compares the engine's trace with the golden one and finds the first differing step and field.",
+      "payload": [
+        {
+          "name": "matches",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "id": "engine-diverges",
+      "name": "Engine output differs",
+      "description": "Environment: the engine under test returns a trace that differs from a golden one."
+    },
+    {
+      "id": "conformance-reported",
+      "name": "Conformance reported",
+      "description": "Real run: tools/conformance.js prints its result and exits 0 or non-zero.",
+      "payload": [
+        {
+          "name": "ok",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "id": "differential-run",
+      "name": "Differential run",
+      "description": "Real run: node tools/differential.js, the native Rust engine and exegra-lean on golden and generated inputs."
+    },
+    {
+      "id": "differential-mismatch-saved",
+      "name": "Mismatch saved",
+      "description": "Real run: tools/differential.js writes the mismatching input and its result under test-results/differential/."
+    },
+    {
+      "id": "sim-load-requested",
+      "name": "Scenario loaded in the panel",
+      "description": "Real run: recorded by loadSim of src/app/session.js when a scenario's engine input was derived (from session.simLoad and simSetFaults of src/ui/sim-panel.js, a remembered scenario on open, and a semantic commit while a scenario is loaded).",
+      "payload": [
+        {
+          "name": "scenario",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "engine-run-intent",
+      "name": "Run handed to the runner",
+      "description": "Real run: recorded by loadSim (src/app/session.js) just before runner.run(input); token is the session's simToken of the run.",
+      "payload": [
+        {
+          "name": "token",
+          "type": "number"
+        },
+        {
+          "name": "scenario",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "worker-terminated",
+      "name": "Worker terminated",
+      "description": "A new run while one is waiting stops the worker. Real run: recorded by stop() of src/app/engine-runner.js when a worker exists (worker.terminate(), waiting.clear())."
+    },
+    {
+      "id": "worker-run-done",
+      "name": "Worker finished the run",
+      "description": "Stands for the time the worker spends in runEngineText (src/app/engine-worker.js onmessage). Real run: recorded by worker.onmessage of src/app/engine-runner.js when the reply arrives, just before the reply itself; generation counts the workers the runner terminated.",
+      "payload": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "input",
+          "type": "string"
+        },
+        {
+          "name": "generation",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "worker-load-failed",
+      "name": "Worker could not load",
+      "description": "Real run: recorded by worker.onerror in src/app/engine-runner.js; the waiting jobs rerun on the main thread from then on."
+    },
+    {
+      "id": "sim-trace-ready",
+      "name": "Trace handed to the session",
+      "description": "Real run: recorded when the promise of runner.run resolves in loadSim, before the token check; steps is the length of the trace. The session keeps it only if its token is still current.",
+      "payload": [
+        {
+          "name": "token",
+          "type": "number"
+        },
+        {
+          "name": "steps",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "sim-run-failed",
+      "name": "Run failed",
+      "description": "Real run: recorded in the rejection branch of runner.run in loadSim, before the token check (session.note error).",
+      "payload": [
+        {
+          "name": "token",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "sim-step-requested",
+      "name": "Step",
+      "description": "Real run: recorded by session.simStep (src/app/session.js) from the panel, the transport or the play timer, outside Live mode."
+    },
+    {
+      "id": "sim-back-requested",
+      "name": "Step back",
+      "description": "Real run: recorded by session.simBack outside Live mode."
+    },
+    {
+      "id": "sim-run-to-end-requested",
+      "name": "Run to end",
+      "description": "Real run: recorded by session.simRunToEnd outside Live mode."
+    },
+    {
+      "id": "sim-step-shown",
+      "name": "Step shown",
+      "description": "Real run: recorded by session.simStep when it revealed or moved to a step, before simChanged(true) emits sim with pulse true.",
+      "payload": [
+        {
+          "name": "stepIndex",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "step-pulsed",
+      "name": "Step pulsed in the scene",
+      "description": "Real run: recorded by the sim listener of src/app/main.js when it pulses the responsible entities of a simulated step and draws its message flow (view.pulse, view.flow); not in Live mode, where the pulses show recorded events.",
+      "payload": [
+        {
+          "name": "stepIndex",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "page-loaded",
+      "name": "Page loaded",
+      "description": "The application module starts. Real run: the first statement of src/app/main.js records it; persistent is PERSISTENCE_AVAILABLE (import.meta.env.DEV) of src/persist/client.js, project is the project the page asks for (requestedProject of src/app/session.js: ?project=, else the one remembered in localStorage, else exegra).",
+      "payload": [
+        {
+          "name": "persistent",
+          "type": "boolean"
+        },
+        {
+          "name": "project",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "engine-load-requested",
+      "name": "Engine load",
+      "description": "Real run: initEngine() in src/app/main.js (src/core/engine.js loads the .wasm)."
+    },
+    {
+      "id": "engine-load-settled",
+      "name": "Engine loaded or failed",
+      "description": "Real run: the then of initEngine() in src/app/main.js (success, or the error noted and the session started anyway).",
+      "payload": [
+        {
+          "name": "ok",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "id": "entity-selected",
+      "name": "Entity selected",
+      "description": "Real run: recorded by session.select(id) when the selection changes, from the scene, explorer, search or a link; id is none for a cleared selection.",
+      "payload": [
+        {
+          "name": "id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "view-selected",
+      "name": "View selected",
+      "description": "Real run: recorded by session.setView(viewId) from the toolbar when the view changes. The switch itself is view-switched; this model reads that one.",
+      "payload": [
+        {
+          "name": "view",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "preferences-written",
+      "name": "Session preferences written",
+      "description": "Real run: persistUi in src/app/session.js, localStorage.setItem(\"exegra.session\", ...). Recorded only when the selection or the view of the open project differs from the last one written: a write that leaves both unchanged is a stutter step of this model.",
+      "payload": [
+        {
+          "name": "selection",
+          "type": "string"
+        },
+        {
+          "name": "viewId",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "page-reloaded",
+      "name": "Page reloaded",
+      "description": "The tab is (re)loaded; in-memory state is gone and session.open restores what the store remembers. Real run: recorded at the start of createSession in src/app/session.js, once per page load."
+    },
+    {
+      "id": "preferences-read",
+      "name": "Session preferences read",
+      "description": "Real run: recorded at the start of createSession in src/app/session.js, just before loadStore reads localStorage.getItem(\"exegra.session\")."
+    },
+    {
+      "id": "preferences-loaded",
+      "name": "Session preferences loaded",
+      "description": "Real run: recorded by session.open (src/app/session.js) after it applied store.perProject[name] (selection, view, collapsed, ...), on every open; selection is the restored selection or none.",
+      "payload": [
+        {
+          "name": "selection",
+          "type": "string"
+        },
+        {
+          "name": "viewId",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "panel-toggled",
+      "name": "Panel opened or closed",
+      "description": "Real run: recorded by persist() of src/ui/layout.js when the explorer's open state it is about to store differs from the last stored one (the responsive layout opened or closed the explorer).",
+      "payload": [
+        {
+          "name": "open",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "id": "layout-preferences-written",
+      "name": "Layout preferences written",
+      "description": "Real run: persist() in src/ui/layout.js, localStorage.setItem(\"exegra.layout\", ...). Recorded only when explorerOpen changes; a write that leaves it unchanged (a resize, another panel) is a stutter step of this model.",
+      "payload": [
+        {
+          "name": "explorerOpen",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "id": "camera-moved",
+      "name": "Camera moved",
+      "description": "Pointer or wheel input on the scene ends. Real run: cameraMoved, the pointerup and wheel listener of src/app/main.js, records it with the camera (JSON of view.getCamera()) and calls saveCamera.",
+      "payload": [
+        {
+          "name": "camera",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "view-switched",
+      "name": "View switched (camera)",
+      "description": "The view the scene shows changes. Real run: recorded by recompute() of src/app/session.js just before the scene is projected, once per change: after session.setView, after session.open (the opened project's view), and when the session replaces a view the specification does not declare with the first declared one. pushScene in src/app/main.js then restores the camera stored for the view, and the view listener calls saveCamera.",
+      "payload": [
+        {
+          "name": "view",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "camera-saved",
+      "name": "Camera stored",
+      "description": "Real run: saveCamera in src/app/main.js records it just before sessionStorage.setItem(\"exegra.camera.<project>.<view>\", ...); camera is the JSON of view.getCamera().",
+      "payload": [
+        {
+          "name": "view",
+          "type": "string"
+        },
+        {
+          "name": "camera",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "camera-restore-requested",
+      "name": "Stored camera read",
+      "description": "Real run: recorded by pushScene (src/app/main.js) before sessionStorage.getItem(cameraKey()), once per project and view.",
+      "payload": [
+        {
+          "name": "view",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "camera-restored",
+      "name": "Stored camera applied",
+      "description": "Real run: recorded by pushScene after view.setCamera(JSON.parse(saved)); camera is the stored text.",
+      "payload": [
+        {
+          "name": "view",
+          "type": "string"
+        },
+        {
+          "name": "camera",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "camera-none",
+      "name": "No stored camera",
+      "description": "Real run: recorded by pushScene when nothing is stored for the view; the current camera is kept.",
+      "payload": [
+        {
+          "name": "view",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "traffic-step-recorded",
+      "name": "Traffic step recorded",
+      "description": "The traffic recorder appends one event of a real run (src/app/traffic-recorder.js record). Not itself recorded: it stands for the append.",
+      "payload": [
+        {
+          "name": "event",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "sim-reset-requested",
+      "name": "Simulation reset requested",
+      "description": "Real run: recorded by session.simReset (src/app/session.js) outside Live mode; the cursor hides every step again.",
+      "payload": []
+    },
+    {
+      "id": "sim-seek-requested",
+      "name": "Simulation seek requested",
+      "description": "Real run: recorded by session.simSeek (src/app/session.js) outside Live mode, from a row of the timeline, a request line or a check's jump; stepIndex is the step asked for.",
+      "payload": [
+        {
+          "name": "stepIndex",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "two-session-write",
+      "name": "One conditional edit",
+      "description": "A conditional write of value against base, tagged with an attempt id.",
+      "payload": [
+        {
+          "name": "attempt",
+          "type": "string"
+        },
+        {
+          "name": "base",
+          "type": "string"
+        },
+        {
+          "name": "value",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  // ---- Faults ----------------------------------------------------------------------------
+  "faults": [
+    { "id": "validation-fails", "name": "Candidate fails validation", "kind": "enable-transition", "transition": "validator-reject", "description": "The operation produces a specification with validation errors, so the validator rejects the candidate." },
+    {
+      "id": "disk-changed-externally",
+      "name": "File changed on disk since it was read",
+      "kind": "enable-transition",
+      "transition": "workspace-detect-conflict",
+      "description": "Another process changed spec.jsonc after the session last read or wrote it, so the base hash no longer matches.",
+      "realises": "fm-concurrent-spec-edit"
+    },
+    {
+      "id": "publish-lost",
+      "name": "Model publication lost",
+      "kind": "drop-event",
+      "event": "model-published",
+      "description": "The session never publishes the refreshed model, so the inspector and the source editor keep showing the old revision. A defect the edit flow must not have."
+    },
+    {
+      "id": "refresh-before-commit",
+      "name": "Refresh not caused by a commit",
+      "kind": "inject-event",
+      "event": "refresh-requested",
+      "at": 0,
+      "payload": {
+        "revision": 2
+      },
+      "description": "The projection is refreshed from an uncommitted model. A defect the edit flow must not have."
+    },
+    {
+      "id": "save-before-refresh",
+      "name": "Write not caused by a refresh",
+      "kind": "inject-event",
+      "event": "save-requested",
+      "at": 0,
+      "payload": {
+        "revision": 2
+      },
+      "description": "The file is written before the views were refreshed from the committed model. A defect the edit flow must not have."
+    },
+    {
+      "id": "commit-skips-validation",
+      "name": "Commit without validation",
+      "kind": "enable-transition",
+      "transition": "tx-commit-unvalidated",
+      "description": "The transaction commits as soon as the candidate is parsed, before the validator has passed it. A defect the edit flow must not have."
+    },
+    {
+      "id": "reject-partially-applied",
+      "name": "Rejected operation partially applied",
+      "kind": "enable-transition",
+      "transition": "tx-reject-partially-applied",
+      "description": "A rejected operation still advances the revision. A defect the edit flow must not have."
+    },
+    {
+      "id": "rejection-refreshes",
+      "name": "Rejection treated as a commit",
+      "kind": "enable-transition",
+      "transition": "session-refresh-on-rejection",
+      "description": "The session refreshes, and then saves, after a rejected transaction. A defect the edit flow must not have."
+    },
+    {
+      "id": "conflict-overwrites",
+      "name": "Write despite a conflict",
+      "kind": "enable-transition",
+      "transition": "workspace-overwrite-on-conflict",
+      "description": "The workspace detects the conflict but writes the file anyway. A defect the edit flow must not have."
+    },
+    {
+      "id": "conflict-swallowed",
+      "name": "Conflict reported as saved",
+      "kind": "enable-transition",
+      "transition": "session-swallow-conflict",
+      "description": "The session receives the conflict and reports the edit as saved. A defect the edit flow must not have."
+    },
+    {
+      "id": "session-reload-keeps-text",
+      "name": "Reload from disk keeps the in-memory text",
+      "kind": "enable-transition",
+      "transition": "session-resolve-reload-keeps-text",
+      "description": "A defect the code must not have. resolveConflict('reload') clears the conflict without adopting the disk text."
+    },
+    {
+      "id": "session-overwrite-keeps-stale-base",
+      "name": "Overwrite keeps the stale base hash",
+      "kind": "enable-transition",
+      "transition": "session-overwrite-stale-base",
+      "description": "A defect the code must not have. resolveConflict('overwrite') writes with the base hash that just conflicted."
+    },
+    {
+      "id": "session-reloads-own-write",
+      "name": "Own write reloaded as an external change",
+      "kind": "enable-transition",
+      "transition": "session-reload-own-write",
+      "description": "A defect the code must not have. onExternalChange treats the notice of the session's own write as an external change."
+    },
+    {
+      "id": "session-writes-back-external-change",
+      "name": "Adopted change written back",
+      "kind": "enable-transition",
+      "transition": "session-flush-external-reload",
+      "description": "A defect the code must not have. a commit with origin external is flushed to disk."
+    },
+    {
+      "id": "session-skips-flush-on-undo",
+      "name": "Undo not saved",
+      "kind": "enable-transition",
+      "transition": "session-skip-flush-on-undo",
+      "description": "A defect the code must not have. a commit with origin undo is not written, so the file keeps the undone text."
+    },
+    {
+      "id": "undo-keeps-text",
+      "name": "Undo does not restore the text",
+      "kind": "enable-transition",
+      "transition": "history-undo-keeps-text",
+      "description": "A defect the code must not have. Project.undo records a step without restoring the earlier text."
+    },
+    {
+      "id": "move-edits-spec",
+      "name": "Layout move edits the specification",
+      "kind": "enable-transition",
+      "transition": "history-move-edits-spec",
+      "description": "A defect the code must not have. MovePresentationNode changes the specification text."
+    },
+    {
+      "id": "toolbar-import-skips-syntax-check",
+      "name": "Import sends unparseable text",
+      "kind": "enable-transition",
+      "transition": "toolbar-import-unchecked",
+      "description": "A defect the code must not have. the import handler sends a bundle whose specification has syntax errors."
+    },
+    {
+      "id": "toolbar-import-skips-reopen",
+      "name": "Imported project not reopened",
+      "kind": "enable-transition",
+      "transition": "toolbar-import-skip-reopen",
+      "description": "A defect the code must not have. the toolbar does not reopen the project after an import."
+    },
+    {
+      "id": "generate-from-stale-model",
+      "name": "Documents generated from an earlier model",
+      "kind": "enable-transition",
+      "transition": "realisation-generate-stale",
+      "description": "A defect the code must not have. the Realisation panel writes documents derived from an earlier model."
+    },
+    {
+      "id": "readonly-build-writes",
+      "name": "Production build tries to write",
+      "kind": "enable-transition",
+      "transition": "session-readonly-flush",
+      "description": "A defect the code must not have. a read-only build flushes a commit."
+    },
+    {
+      "id": "session-started-before-engine",
+      "name": "Session started before the engine settled",
+      "kind": "enable-transition",
+      "transition": "app-init-before-engine",
+      "description": "A defect the code must not have. main.js starts the session before initEngine has settled."
+    },
+    {
+      "id": "open-ignores-read-hashes",
+      "name": "Open drops the hashes of the read",
+      "kind": "enable-transition",
+      "transition": "session-opened-without-base",
+      "description": "A defect the code must not have. session.open does not keep the hashes it read as base hashes."
+    },
+    {
+      "id": "journal-append-fails",
+      "name": "Journal append fails after the replace",
+      "kind": "enable-transition",
+      "transition": "ws-write-journal-append-fails",
+      "description": "The disk fills (or the journal cannot be written) after atomicWrite replaced the file: the file holds the new text, no journal line is written and the write is answered as a failure. Read from the code (tools/workspace.js write()); not run.",
+      "realises": "fm-disk-full"
+    },
+    {
+      "id": "change-notice-lost",
+      "name": "Change notice lost",
+      "kind": "drop-event",
+      "event": "file-change-notice-sent",
+      "description": "A change notice never reaches the session: the event stream was down, and a stream reopened afterwards takes its baseline from disk, so the change is not notified again. Read from the code (tools/workspace.js watch()); not run.",
+      "realises": "fm-dev-server-stops"
+    },
+    {
+      "id": "save-lands-after-export",
+      "name": "Save lands after the export",
+      "kind": "delay-event",
+      "event": "write-intent",
+      "description": "The write of a committed edit reaches the server only after an export has read the files.",
+      "by": 5
+    },
+    {
+      "id": "claims-reevaluation-skipped",
+      "name": "Re-evaluation after a commit skipped",
+      "kind": "drop-event",
+      "event": "claims-evaluation-requested",
+      "description": "A defect the code must not have. the commit does not re-evaluate the claims (the second request of the run, the first being the open's).",
+      "occurrence": 2
+    },
+    {
+      "id": "sim-steps-past-end",
+      "name": "Step past the end of the trace",
+      "kind": "enable-transition",
+      "transition": "sim-step-past-end",
+      "description": "A defect the code must not have. simStep moves beyond the last recorded step."
+    },
+    {
+      "id": "sim-adopts-stale-trace",
+      "name": "Stale trace adopted",
+      "kind": "enable-transition",
+      "transition": "sim-adopt-stale",
+      "description": "A defect the code must not have. loadSim adopts a trace without checking its token."
+    },
+    {
+      "id": "runner-keeps-stale-job",
+      "name": "Replaced job still answered",
+      "kind": "enable-transition",
+      "transition": "runner-keep-stale-job",
+      "description": "A defect the code must not have. a new run neither terminates the worker nor drops the replaced job."
+    },
+    {
+      "id": "runner-forwards-stale-reply",
+      "name": "Reply of a replaced job forwarded",
+      "kind": "enable-transition",
+      "transition": "runner-forward-stale",
+      "description": "A defect the code must not have. the runner hands the reply of a replaced job to the session."
+    },
+    {
+      "id": "pulse-without-step",
+      "name": "Pulse not caused by a step",
+      "kind": "inject-event",
+      "event": "step-pulsed",
+      "description": "A defect the code must not have. the scene pulses a step the session did not show.",
+      "at": 0,
+      "payload": {
+        "stepIndex": 0
+      }
+    },
+    {
+      "id": "preferences-not-stored",
+      "name": "Preferences not stored",
+      "kind": "drop-event",
+      "event": "preferences-written",
+      "description": "localStorage refuses the write (private window, quota, storage disabled); persistUi catches the error and nothing is remembered."
+    },
+    {
+      "id": "camera-save-lost",
+      "name": "Camera not stored",
+      "kind": "drop-event",
+      "event": "camera-saved",
+      "description": "sessionStorage refuses the first camera write; saveCamera catches the error and the camera is not remembered.",
+      "occurrence": 1
+    },
+    {
+      "id": "apply-reports-ok-after-layout-conflict",
+      "name": "Apply reports success after a layout conflict",
+      "kind": "enable-transition",
+      "transition": "cli-apply-ok-after-layout-conflict",
+      "description": "A defect the code must not have. exegra apply reports ok although the layout write conflicted."
+    },
+    {
+      "id": "cli-failure-omits-partial-write",
+      "name": "Failure hides the partial write",
+      "kind": "enable-transition",
+      "transition": "cli-apply-failure-omits-spec",
+      "description": "A defect the code must not have. the write.conflict failure does not say that spec.jsonc was already written."
+    },
+    {
+      "id": "verify-reports-before-recording",
+      "name": "Verify reports before recording",
+      "kind": "enable-transition",
+      "transition": "cli-verify-report-early",
+      "description": "A defect the code must not have. exegra verify prints its envelope before evidence/results.json is written."
+    },
+    {
+      "id": "trace-written-on-refusal",
+      "name": "Trace file written on refusal",
+      "kind": "enable-transition",
+      "transition": "cli-trace-written-on-refusal",
+      "description": "A defect the code must not have. exegra trace --out writes a file although the engine refused the run."
+    },
+    {
+      "id": "prove-reports-unchecked",
+      "name": "Unchecked exploration reported",
+      "kind": "enable-transition",
+      "transition": "prove-report-unchecked",
+      "description": "A defect the code must not have. exegra prove reports a claim result that Lean did not accept."
+    },
+    {
+      "id": "markdown-writes-despite-gate",
+      "name": "Import written past the coverage gate",
+      "kind": "enable-transition",
+      "transition": "md-write-despite-gate",
+      "description": "A defect the code must not have. tools/import-markdown.js writes the specification although its coverage check failed."
+    },
+    {
+      "id": "conformance-ignores-mismatch",
+      "name": "Mismatch reported as agreement",
+      "kind": "enable-transition",
+      "transition": "conformance-ignore-mismatch",
+      "description": "A defect the code must not have. tools/conformance.js reports agreement for a differing trace."
+    },
+    {
+      "id": "stale-write-accepted",
+      "name": "A stale write is accepted",
+      "kind": "enable-transition",
+      "transition": "shared-edit-accept-unchecked",
+      "description": "The conditional write skips its base check, so the second write from the same initial revision commits too."
+    }
+  ]
+}

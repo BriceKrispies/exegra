@@ -1,6 +1,13 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "gateway-machine": 0,
+   "ledger-machine": 0
+  },
+  "links": {},
   "machines": {
    "gateway-machine": {
     "state": "gw-idle",
@@ -18,10 +25,23 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 2
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 2,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "gateway-machine": 0,
+   "ledger-machine": 0
+  },
+  "links": {},
   "machines": {
    "gateway-machine": {
     "state": "gw-idle",
@@ -39,10 +59,12 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "noise",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -53,6 +75,7 @@
    {
     "event": "noise",
     "payload": {},
+    "scheduledAt": 2,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -61,13 +84,27 @@
     "time": 2
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "unhandled-event",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "gateway-machine": 0,
+     "ledger-machine": 0
+    },
+    "links": {},
     "machines": {
      "gateway-machine": {
       "state": "gw-idle",
@@ -85,10 +122,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "noise",
       "payload": {},
+      "scheduledAt": 2,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -97,11 +136,18 @@
       "time": 2
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "noise",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -114,16 +160,20 @@
     {
      "behavior": "gateway-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "ledger-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "noise"
    ],
@@ -131,6 +181,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "gateway-machine": 0,
+     "ledger-machine": 0
+    },
+    "links": {},
     "machines": {
      "gateway-machine": {
       "state": "gw-idle",
@@ -148,12 +205,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "noise",
     "payload": {},
+    "scheduledAt": 2,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -166,20 +231,28 @@
     {
      "behavior": "gateway-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "ledger-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "noise"
    ],
    "time": 2
   }
- ]
+ ],
+ "stepsTaken": 2,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

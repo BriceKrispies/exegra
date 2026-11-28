@@ -1,6 +1,17 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "dev-server-flow": 0,
+   "persistence-client-flow": 0,
+   "project-history-flow": 0,
+   "project-session-flow": 0,
+   "realisation-generate-flow": 0,
+   "workspace-disk-flow": 0
+  },
+  "links": {},
   "machines": {
    "dev-server-flow": {
     "state": "dev-ready",
@@ -72,10 +83,27 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 4
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 4,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "dev-server-flow": 0,
+   "persistence-client-flow": 0,
+   "project-history-flow": 0,
+   "project-session-flow": 0,
+   "realisation-generate-flow": 0,
+   "workspace-disk-flow": 0
+  },
+  "links": {},
   "machines": {
    "dev-server-flow": {
     "state": "dev-ready",
@@ -147,12 +175,14 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "project-open-requested",
     "payload": {
      "name": "exegra"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -166,6 +196,7 @@
      "origin": "ui",
      "specHash": "h2"
     },
+    "scheduledAt": 2,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -176,6 +207,7 @@
    {
     "event": "generate-clicked",
     "payload": {},
+    "scheduledAt": 4,
     "seq": 2,
     "source": {
      "kind": "scenario",
@@ -184,13 +216,31 @@
     "time": 4
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "generate-from-panel",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -262,14 +312,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "read-intent",
+      "from": {
+       "behavior": "project-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "name": "exegra",
        "purpose": "open",
        "requestId": 1
       },
+      "scheduledAt": 0,
       "seq": 3,
       "source": {
        "behavior": "project-session-flow",
@@ -284,6 +341,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 2,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -294,6 +352,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -302,13 +361,20 @@
       "time": 4
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "project-open-requested",
     "payload": {
      "name": "exegra"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -333,6 +399,7 @@
      ],
      "from": "session-closed",
      "guard": "persistent",
+     "instance": 0,
      "sets": [
       {
        "after": "exegra",
@@ -358,31 +425,38 @@
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "project-open-requested",
     "session-open-read",
@@ -393,6 +467,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -464,13 +549,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "read-project-request",
+      "from": {
+       "behavior": "persistence-client-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "name": "exegra",
        "requestId": 1
       },
+      "scheduledAt": 0,
       "seq": 4,
       "source": {
        "behavior": "persistence-client-flow",
@@ -485,6 +577,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 2,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -495,6 +588,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -503,15 +597,27 @@
       "time": 4
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "project-session-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "read-intent",
     "payload": {
      "name": "exegra",
      "purpose": "open",
      "requestId": 1
     },
+    "scheduledAt": 0,
     "seq": 3,
     "source": {
      "behavior": "project-session-flow",
@@ -536,6 +642,7 @@
      ],
      "from": "client-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -551,31 +658,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "read-intent",
     "client-read",
@@ -586,6 +700,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -657,14 +782,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-read",
+      "from": {
+       "behavior": "dev-server-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "http",
        "name": "exegra",
        "requestId": 1
       },
+      "scheduledAt": 0,
       "seq": 5,
       "source": {
        "behavior": "dev-server-flow",
@@ -679,6 +811,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 2,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -689,6 +822,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -697,14 +831,26 @@
       "time": 4
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "persistence-client-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "read-project-request",
     "payload": {
      "name": "exegra",
      "requestId": 1
     },
+    "scheduledAt": 0,
     "seq": 4,
     "source": {
      "behavior": "persistence-client-flow",
@@ -730,6 +876,7 @@
      ],
      "from": "dev-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -745,31 +892,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "read-project-request",
     "dev-read",
@@ -780,6 +934,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -851,9 +1016,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-read-done",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "http",
        "layout": "L1",
@@ -861,6 +1032,7 @@
        "requestId": 1,
        "spec": "h1"
       },
+      "scheduledAt": 0,
       "seq": 6,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -875,6 +1047,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 2,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -885,6 +1058,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -893,15 +1067,27 @@
       "time": 4
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "dev-server-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-read",
     "payload": {
      "caller": "http",
      "name": "exegra",
      "requestId": 1
     },
+    "scheduledAt": 0,
     "seq": 5,
     "source": {
      "behavior": "dev-server-flow",
@@ -929,6 +1115,7 @@
      ],
      "from": "ws-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "ws-ready",
      "transition": "ws-read-files"
@@ -938,31 +1125,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-read",
     "ws-read-files",
@@ -973,6 +1167,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -1044,15 +1249,22 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "read-project-ok",
+      "from": {
+       "behavior": "dev-server-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "layout": "L1",
        "recorded": "r1",
        "requestId": 1,
        "spec": "h1"
       },
+      "scheduledAt": 0,
       "seq": 7,
       "source": {
        "behavior": "dev-server-flow",
@@ -1067,6 +1279,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 2,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -1077,6 +1290,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -1085,9 +1299,20 @@
       "time": 4
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "workspace-disk-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-read-done",
     "payload": {
      "caller": "http",
@@ -1096,6 +1321,7 @@
      "requestId": 1,
      "spec": "h1"
     },
+    "scheduledAt": 0,
     "seq": 6,
     "source": {
      "behavior": "workspace-disk-flow",
@@ -1122,6 +1348,7 @@
      ],
      "from": "dev-ready",
      "guard": "event.caller == 'http'",
+     "instance": 0,
      "sets": [],
      "to": "dev-ready",
      "transition": "dev-read-ok"
@@ -1131,31 +1358,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-read-done",
     "dev-read-ok",
@@ -1166,6 +1400,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -1237,15 +1482,22 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "project-files-read",
+      "from": {
+       "behavior": "persistence-client-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "layoutHash": "L1",
        "recorded": "r1",
        "requestId": 1,
        "specHash": "h1"
       },
+      "scheduledAt": 0,
       "seq": 8,
       "source": {
        "behavior": "persistence-client-flow",
@@ -1260,6 +1512,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 2,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -1270,6 +1523,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -1278,9 +1532,20 @@
       "time": 4
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "dev-server-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "read-project-ok",
     "payload": {
      "layout": "L1",
@@ -1288,6 +1553,7 @@
      "requestId": 1,
      "spec": "h1"
     },
+    "scheduledAt": 0,
     "seq": 7,
     "source": {
      "behavior": "dev-server-flow",
@@ -1314,6 +1580,7 @@
      ],
      "from": "client-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "client-ready",
      "transition": "client-read-ok"
@@ -1323,31 +1590,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 5,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "read-project-ok",
     "client-read-ok",
@@ -1358,6 +1632,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -1429,14 +1714,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "project-opened",
+      "from": {
+       "behavior": "project-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "layoutHash": "L1",
        "name": "exegra",
        "specHash": "h1"
       },
+      "scheduledAt": 0,
       "seq": 9,
       "source": {
        "behavior": "project-session-flow",
@@ -1447,9 +1739,15 @@
      },
      {
       "event": "watch-intent",
+      "from": {
+       "behavior": "project-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "name": "exegra"
       },
+      "scheduledAt": 0,
       "seq": 10,
       "source": {
        "behavior": "project-session-flow",
@@ -1464,6 +1762,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 2,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -1474,6 +1773,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -1482,9 +1782,20 @@
       "time": 4
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "persistence-client-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "project-files-read",
     "payload": {
      "layoutHash": "L1",
@@ -1492,6 +1803,7 @@
      "requestId": 1,
      "specHash": "h1"
     },
+    "scheduledAt": 0,
     "seq": 8,
     "source": {
      "behavior": "persistence-client-flow",
@@ -1525,6 +1837,7 @@
      ],
      "from": "session-opening",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "exegra",
@@ -1580,31 +1893,38 @@
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 6,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "project-files-read",
     "session-opened",
@@ -1615,6 +1935,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -1686,12 +2017,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "watch-intent",
+      "from": {
+       "behavior": "project-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "name": "exegra"
       },
+      "scheduledAt": 0,
       "seq": 10,
       "source": {
        "behavior": "project-session-flow",
@@ -1706,6 +2044,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 2,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -1716,6 +2055,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -1724,15 +2064,27 @@
       "time": 4
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "project-session-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "project-opened",
     "payload": {
      "layoutHash": "L1",
      "name": "exegra",
      "specHash": "h1"
     },
+    "scheduledAt": 0,
     "seq": 9,
     "source": {
      "behavior": "project-session-flow",
@@ -1747,6 +2099,7 @@
      "emitted": [],
      "from": "history-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "h1",
@@ -1782,31 +2135,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 7,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "project-opened",
     "history-open",
@@ -1817,6 +2177,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -1888,12 +2259,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "watch-project-request",
+      "from": {
+       "behavior": "persistence-client-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "name": "exegra"
       },
+      "scheduledAt": 0,
       "seq": 11,
       "source": {
        "behavior": "persistence-client-flow",
@@ -1908,6 +2286,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 2,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -1918,6 +2297,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -1926,13 +2306,25 @@
       "time": 4
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "project-session-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "watch-intent",
     "payload": {
      "name": "exegra"
     },
+    "scheduledAt": 0,
     "seq": 10,
     "source": {
      "behavior": "project-session-flow",
@@ -1956,6 +2348,7 @@
      ],
      "from": "client-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "client-ready",
      "transition": "client-watch"
@@ -1965,31 +2358,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 8,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "watch-intent",
     "client-watch",
@@ -2000,6 +2400,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -2071,12 +2482,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-watch",
+      "from": {
+       "behavior": "dev-server-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "name": "exegra"
       },
+      "scheduledAt": 0,
       "seq": 12,
       "source": {
        "behavior": "dev-server-flow",
@@ -2091,6 +2509,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 2,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -2101,6 +2520,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -2109,13 +2529,25 @@
       "time": 4
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "persistence-client-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "watch-project-request",
     "payload": {
      "name": "exegra"
     },
+    "scheduledAt": 0,
     "seq": 11,
     "source": {
      "behavior": "persistence-client-flow",
@@ -2139,6 +2571,7 @@
      ],
      "from": "dev-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "dev-ready",
      "transition": "dev-watch"
@@ -2148,31 +2581,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 9,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "watch-project-request",
     "dev-watch",
@@ -2183,6 +2623,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -2254,6 +2705,7 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "edit-applied",
@@ -2261,6 +2713,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 2,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -2271,6 +2724,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -2279,13 +2733,25 @@
       "time": 4
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "dev-server-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-watch",
     "payload": {
      "name": "exegra"
     },
+    "scheduledAt": 0,
     "seq": 12,
     "source": {
      "behavior": "dev-server-flow",
@@ -2299,36 +2765,44 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 10,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-watch"
    ],
@@ -2336,6 +2810,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -2407,14 +2892,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "commit-notified",
+      "from": {
+       "behavior": "project-history-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "file": "spec",
        "origin": "ui",
        "text": "h2"
       },
+      "scheduledAt": 2,
       "seq": 13,
       "source": {
        "behavior": "project-history-flow",
@@ -2426,6 +2918,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -2434,14 +2927,21 @@
       "time": 4
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "edit-applied",
     "payload": {
      "origin": "ui",
      "specHash": "h2"
     },
+    "scheduledAt": 2,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -2466,6 +2966,7 @@
      ],
      "from": "history-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "h1",
@@ -2501,31 +3002,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 11,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "edit-applied",
     "history-edit",
@@ -2536,6 +3044,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -2607,9 +3126,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "write-intent",
+      "from": {
+       "behavior": "project-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "baseHash": "h1",
        "file": "spec",
@@ -2617,6 +3142,7 @@
        "requestId": 2,
        "text": "h2"
       },
+      "scheduledAt": 2,
       "seq": 14,
       "source": {
        "behavior": "project-session-flow",
@@ -2628,6 +3154,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -2636,15 +3163,27 @@
       "time": 4
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "project-history-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "commit-notified",
     "payload": {
      "file": "spec",
      "origin": "ui",
      "text": "h2"
     },
+    "scheduledAt": 2,
     "seq": 13,
     "source": {
      "behavior": "project-history-flow",
@@ -2672,6 +3211,7 @@
      ],
      "from": "session-open",
      "guard": "event.file == 'spec'",
+     "instance": 0,
      "sets": [
       {
        "after": "h2",
@@ -2697,31 +3237,38 @@
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 12,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "commit-notified",
     "session-commit-spec",
@@ -2732,6 +3279,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -2803,9 +3361,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "write-file-request",
+      "from": {
+       "behavior": "persistence-client-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "baseHash": "h1",
        "file": "spec",
@@ -2813,6 +3377,7 @@
        "requestId": 2,
        "text": "h2"
       },
+      "scheduledAt": 2,
       "seq": 15,
       "source": {
        "behavior": "persistence-client-flow",
@@ -2824,6 +3389,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -2832,9 +3398,20 @@
       "time": 4
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "project-session-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "write-intent",
     "payload": {
      "baseHash": "h1",
@@ -2843,6 +3420,7 @@
      "requestId": 2,
      "text": "h2"
     },
+    "scheduledAt": 2,
     "seq": 14,
     "source": {
      "behavior": "project-session-flow",
@@ -2870,6 +3448,7 @@
      ],
      "from": "client-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 2,
@@ -2890,31 +3469,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 13,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "write-intent",
     "client-write",
@@ -2925,6 +3511,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -2996,9 +3593,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-write",
+      "from": {
+       "behavior": "dev-server-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "baseHash": "h1",
        "caller": "http",
@@ -3007,6 +3610,7 @@
        "requestId": 2,
        "text": "h2"
       },
+      "scheduledAt": 2,
       "seq": 16,
       "source": {
        "behavior": "dev-server-flow",
@@ -3018,6 +3622,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -3026,9 +3631,20 @@
       "time": 4
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "persistence-client-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "write-file-request",
     "payload": {
      "baseHash": "h1",
@@ -3037,6 +3653,7 @@
      "requestId": 2,
      "text": "h2"
     },
+    "scheduledAt": 2,
     "seq": 15,
     "source": {
      "behavior": "persistence-client-flow",
@@ -3065,6 +3682,7 @@
      ],
      "from": "dev-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 2,
@@ -3080,31 +3698,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 14,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "write-file-request",
     "dev-write",
@@ -3115,6 +3740,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -3186,13 +3822,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "disk-file-replaced",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "file": "spec",
        "hash": "h2"
       },
+      "scheduledAt": 2,
       "seq": 17,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -3203,12 +3846,18 @@
      },
      {
       "event": "ws-write-done",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "http",
        "file": "spec",
        "hash": "h2",
        "requestId": 2
       },
+      "scheduledAt": 2,
       "seq": 18,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -3220,6 +3869,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -3228,9 +3878,20 @@
       "time": 4
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "dev-server-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-write",
     "payload": {
      "baseHash": "h1",
@@ -3240,6 +3901,7 @@
      "requestId": 2,
      "text": "h2"
     },
+    "scheduledAt": 2,
     "seq": 16,
     "source": {
      "behavior": "dev-server-flow",
@@ -3275,6 +3937,7 @@
      ],
      "from": "ws-ready",
      "guard": "event.file == 'spec' && event.baseHash == diskSpec",
+     "instance": 0,
      "sets": [
       {
        "after": "h2",
@@ -3300,31 +3963,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 15,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-write",
     "ws-write-spec",
@@ -3335,6 +4005,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -3406,15 +4087,22 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-write-done",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "http",
        "file": "spec",
        "hash": "h2",
        "requestId": 2
       },
+      "scheduledAt": 2,
       "seq": 18,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -3426,6 +4114,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -3434,14 +4123,26 @@
       "time": 4
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "workspace-disk-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "disk-file-replaced",
     "payload": {
      "file": "spec",
      "hash": "h2"
     },
+    "scheduledAt": 2,
     "seq": 17,
     "source": {
      "behavior": "workspace-disk-flow",
@@ -3455,36 +4156,44 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 16,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "disk-file-replaced"
    ],
@@ -3492,6 +4201,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -3563,14 +4283,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "write-file-ok",
+      "from": {
+       "behavior": "dev-server-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "hash": "h2",
        "ok": true,
        "requestId": 2
       },
+      "scheduledAt": 2,
       "seq": 19,
       "source": {
        "behavior": "dev-server-flow",
@@ -3582,6 +4309,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -3590,9 +4318,20 @@
       "time": 4
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "workspace-disk-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-write-done",
     "payload": {
      "caller": "http",
@@ -3600,6 +4339,7 @@
      "hash": "h2",
      "requestId": 2
     },
+    "scheduledAt": 2,
     "seq": 18,
     "source": {
      "behavior": "workspace-disk-flow",
@@ -3625,6 +4365,7 @@
      ],
      "from": "dev-ready",
      "guard": "event.caller == 'http'",
+     "instance": 0,
      "sets": [],
      "to": "dev-ready",
      "transition": "dev-write-ok"
@@ -3634,31 +4375,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 17,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-write-done",
     "dev-write-ok",
@@ -3669,6 +4417,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -3740,14 +4499,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "save-succeeded",
+      "from": {
+       "behavior": "persistence-client-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "file": "spec",
        "hash": "h2",
        "requestId": 2
       },
+      "scheduledAt": 2,
       "seq": 20,
       "source": {
        "behavior": "persistence-client-flow",
@@ -3759,6 +4525,7 @@
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -3767,15 +4534,27 @@
       "time": 4
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "dev-server-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "write-file-ok",
     "payload": {
      "hash": "h2",
      "ok": true,
      "requestId": 2
     },
+    "scheduledAt": 2,
     "seq": 19,
     "source": {
      "behavior": "dev-server-flow",
@@ -3801,6 +4580,7 @@
      ],
      "from": "client-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "client-ready",
      "transition": "client-write-ok"
@@ -3810,31 +4590,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 18,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "write-file-ok",
     "client-write-ok",
@@ -3845,6 +4632,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -3916,10 +4714,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "generate-clicked",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -3928,15 +4728,27 @@
       "time": 4
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "persistence-client-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "save-succeeded",
     "payload": {
      "file": "spec",
      "hash": "h2",
      "requestId": 2
     },
+    "scheduledAt": 2,
     "seq": 20,
     "source": {
      "behavior": "persistence-client-flow",
@@ -3951,6 +4763,7 @@
      "emitted": [],
      "from": "session-saving",
      "guard": "event.file == 'spec'",
+     "instance": 0,
      "sets": [
       {
        "after": "h2",
@@ -3971,31 +4784,38 @@
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 19,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "save-succeeded",
     "session-saved",
@@ -4006,6 +4826,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -4077,14 +4908,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "generated-intent",
+      "from": {
+       "behavior": "realisation-generate-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "files": "h2",
        "name": "exegra",
        "requestId": 201
       },
+      "scheduledAt": 4,
       "seq": 21,
       "source": {
        "behavior": "realisation-generate-flow",
@@ -4094,11 +4932,18 @@
       "time": 4
      }
     ],
-    "time": 4
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 4,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "generate-clicked",
     "payload": {},
+    "scheduledAt": 4,
     "seq": 2,
     "source": {
      "kind": "scenario",
@@ -4123,6 +4968,7 @@
      ],
      "from": "realisation-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 201,
@@ -4143,31 +4989,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 20,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "generate-clicked",
     "realisation-generate",
@@ -4178,6 +5031,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -4249,14 +5113,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "generated-write-request",
+      "from": {
+       "behavior": "persistence-client-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "files": "h2",
        "name": "exegra",
        "requestId": 201
       },
+      "scheduledAt": 4,
       "seq": 22,
       "source": {
        "behavior": "persistence-client-flow",
@@ -4266,15 +5137,27 @@
       "time": 4
      }
     ],
-    "time": 4
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 4,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "realisation-generate-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "generated-intent",
     "payload": {
      "files": "h2",
      "name": "exegra",
      "requestId": 201
     },
+    "scheduledAt": 4,
     "seq": 21,
     "source": {
      "behavior": "realisation-generate-flow",
@@ -4300,6 +5183,7 @@
      ],
      "from": "client-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 3,
@@ -4315,31 +5199,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 21,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "generated-intent",
     "client-generated",
@@ -4350,6 +5241,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -4421,15 +5323,22 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-write-generated",
+      "from": {
+       "behavior": "dev-server-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "http",
        "files": "h2",
        "name": "exegra",
        "requestId": 201
       },
+      "scheduledAt": 4,
       "seq": 23,
       "source": {
        "behavior": "dev-server-flow",
@@ -4439,15 +5348,27 @@
       "time": 4
      }
     ],
-    "time": 4
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 4,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "persistence-client-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "generated-write-request",
     "payload": {
      "files": "h2",
      "name": "exegra",
      "requestId": 201
     },
+    "scheduledAt": 4,
     "seq": 22,
     "source": {
      "behavior": "persistence-client-flow",
@@ -4474,6 +5395,7 @@
      ],
      "from": "dev-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 3,
@@ -4489,31 +5411,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 22,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "generated-write-request",
     "dev-generated",
@@ -4524,6 +5453,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -4595,9 +5535,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-generated-done",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "http",
        "requestId": 201,
@@ -4609,6 +5555,7 @@
         "tasks.json"
        ]
       },
+      "scheduledAt": 4,
       "seq": 24,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -4618,9 +5565,20 @@
       "time": 4
      }
     ],
-    "time": 4
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 4,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "dev-server-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-write-generated",
     "payload": {
      "caller": "http",
@@ -4628,6 +5586,7 @@
      "name": "exegra",
      "requestId": 201
     },
+    "scheduledAt": 4,
     "seq": 23,
     "source": {
      "behavior": "dev-server-flow",
@@ -4659,6 +5618,7 @@
      ],
      "from": "ws-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "h2",
@@ -4674,31 +5634,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 23,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-write-generated",
     "ws-generated",
@@ -4709,6 +5676,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -4780,9 +5758,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "generated-write-ok",
+      "from": {
+       "behavior": "dev-server-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "ok": true,
        "requestId": 201,
@@ -4794,6 +5778,7 @@
         "tasks.json"
        ]
       },
+      "scheduledAt": 4,
       "seq": 25,
       "source": {
        "behavior": "dev-server-flow",
@@ -4803,9 +5788,20 @@
       "time": 4
      }
     ],
-    "time": 4
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 4,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "workspace-disk-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-generated-done",
     "payload": {
      "caller": "http",
@@ -4818,6 +5814,7 @@
       "tasks.json"
      ]
     },
+    "scheduledAt": 4,
     "seq": 24,
     "source": {
      "behavior": "workspace-disk-flow",
@@ -4849,6 +5846,7 @@
      ],
      "from": "dev-ready",
      "guard": "event.caller == 'http'",
+     "instance": 0,
      "sets": [],
      "to": "dev-ready",
      "transition": "dev-generated-ok"
@@ -4858,31 +5856,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 24,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-generated-done",
     "dev-generated-ok",
@@ -4893,6 +5898,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -4964,9 +5980,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "generated-saved",
+      "from": {
+       "behavior": "persistence-client-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "requestId": 201,
        "written": [
@@ -4977,6 +5999,7 @@
         "tasks.json"
        ]
       },
+      "scheduledAt": 4,
       "seq": 26,
       "source": {
        "behavior": "persistence-client-flow",
@@ -4986,9 +6009,20 @@
       "time": 4
      }
     ],
-    "time": 4
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 4,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "dev-server-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "generated-write-ok",
     "payload": {
      "ok": true,
@@ -5001,6 +6035,7 @@
       "tasks.json"
      ]
     },
+    "scheduledAt": 4,
     "seq": 25,
     "source": {
      "behavior": "dev-server-flow",
@@ -5031,6 +6066,7 @@
      ],
      "from": "client-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "client-ready",
      "transition": "client-generated-ok"
@@ -5040,31 +6076,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "realisation-generate-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 25,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "generated-write-ok",
     "client-generated-ok",
@@ -5075,6 +6118,17 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0,
+     "realisation-generate-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -5146,10 +6200,22 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 4
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 4,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "persistence-client-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "generated-saved",
     "payload": {
      "requestId": 201,
@@ -5161,6 +6227,7 @@
       "tasks.json"
      ]
     },
+    "scheduledAt": 4,
     "seq": 26,
     "source": {
      "behavior": "persistence-client-flow",
@@ -5175,6 +6242,7 @@
      "emitted": [],
      "from": "realisation-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -5190,31 +6258,38 @@
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 26,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "generated-saved",
     "realisation-saved",
@@ -5223,5 +6298,9 @@
    ],
    "time": 4
   }
- ]
+ ],
+ "stepsTaken": 27,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

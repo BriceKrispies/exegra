@@ -1,0 +1,10 @@
+{
+  "about": "A recorded session of the traffic recorder (src/app/traffic-recorder.js): the events a running Exegra produced, by the event ids of its specification, as {seq, id, payload}. A small committed fixture: no live recording is kept in the repository.",
+  "events": [
+    { "seq": 1, "id": "page-loaded" },
+    { "seq": 2, "id": "read-intent" },
+    { "seq": 3, "id": "project-files-read" },
+    { "seq": 4, "id": "read-intent" },
+    { "seq": 5, "id": "project-files-read" }
+  ]
+}

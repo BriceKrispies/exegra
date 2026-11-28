@@ -12,6 +12,7 @@
 // scenario only to decide restated-scenario.
 
 import { parseExpr, exprRefs, valueEquals } from './expr.js';
+import { claimBasis } from './extraction.js';
 import { parseRule } from './integrity.js';
 import { runScenario as engineRunScenario } from './engine.js';
 
@@ -23,7 +24,8 @@ import { runScenario as engineRunScenario } from './engine.js';
  *   check: string, grounding: string,
  *   variables?: {variable: string, nominal: string, faultTransitions: string[]}[],
  *   transitions?: string[], blocked?: string[],
- *   reads?: string[], free?: string[], scenarios?: string[]
+ *   reads?: string[], free?: string[], scenarios?: string[],
+ *   witnesses?: Record<string, number>, basis?: string
  * }} StrengthDetails
  *   check and grounding: one sentence each saying why; variables: for holds-by-construction of a state
  *   invariant, each variable read with what nominal transitions can do to it and the fault transitions
@@ -49,7 +51,7 @@ export const GROUNDINGS = /** @type {const} */ (['bound', 'partly-bound', 'self-
 export const VACUOUS_CHECKS = new Set(['holds-by-construction', 'restated-scenario']);
 
 const TRACE_METHODS = new Set(['state-invariant', 'precedes', 'eventually', 'never']);
-const STRUCTURAL_METHODS = new Set(['no-relationship', 'reachable', 'only-via', 'has-port', 'property-defined', 'acyclic', 'implementation-language']);
+const STRUCTURAL_METHODS = new Set(['no-relationship', 'reachable', 'only-via', 'has-port', 'property-defined', 'acyclic', 'implementation-language', 'abstraction-well-formed', 'abstraction-invariants', 'extraction-reconciled']);
 /** Most combinations of values the value analysis enumerates before it gives up. */
 const MAX_COMBINATIONS = 4096;
 
@@ -151,6 +153,12 @@ function claimEntry(ctx, claim) {
     return entry(check, check === 'test' ? 'The status comes from attached test evidence.' : 'The status comes from attached evidence that is not a test.', notApplicable('The status rests on evidence outside the model.'));
   }
   if (STRUCTURAL_METHODS.has(method)) {
+    const basis = claimBasis(ctx.model, ev);
+    if (basis && basis.basis !== 'declared-only' && basis.basis !== 'none') {
+      return entry('structural', `Decided over the whole component graph by "${method}"; part of the graph is ${basis.basis === 'observed' ? 'observed' : 'extracted from the code'}.`, { grounding: 'bound', why: basis.text, reads: [`relationships (${Object.entries(basis.counts).map(([k, n]) => `${n} ${k}`).join(', ')})`] }, { witnesses: basis.counts, basis: basis.basis });
+    }
+    if (basis) return entry('structural', `Decided over the whole declared component graph by "${method}".`, { grounding: 'bound', why: basis.text, reads: ['components and relationships'] }, { witnesses: basis.counts, basis: basis.basis });
+    if (method === 'extraction-reconciled') return entry('structural', 'Decided by reconciling the declared relationships with the facts extracted from the implementation.', { grounding: 'bound', why: 'Reads the declared relationships and the extracted facts (static imports only).', reads: ['declared relationships', 'extracted facts'] }, { basis: 'extracted' });
     return entry('structural', `Decided over the whole declared component graph by "${method}".`, { grounding: 'bound', why: 'Reads the declared components and relationships of the model.', reads: ['components and relationships'] });
   }
   if (method === 'data-model') return entry('data-model', 'Decided over the records and copies of the model by the data rules.', dataModelGrounding(ctx, ev));

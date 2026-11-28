@@ -1,6 +1,6 @@
 // Fault models as specification entities, and which faults the generated runtime can produce.
 //
-import { durationIn, needsFormat2 } from './sim-input.js';
+import { durationIn, needsTimedInput } from './sim-input.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Entity} Entity */
@@ -183,13 +183,13 @@ export function isRetryDelay(model, by, unit) {
 const EVENT_FAULTS = ['drop-event', 'lose-event', 'delay-event', 'retry-event', 'duplicate-event', 'inject-event'];
 
 /**
- * The time unit of a scenario's numbers: its timeUnit, `us` for a format-2 scenario that names
- * none, or undefined for a format-1 scenario in logical ticks.
+ * The time unit of a scenario's numbers: its timeUnit, `us` for a timed scenario that names none,
+ * or undefined for a scenario in logical ticks.
  * @param {Model} model @param {any} sdata
  */
 function scenarioUnit(model, sdata) {
   if (typeof sdata.timeUnit === 'string') return sdata.timeUnit;
-  return needsFormat2(model, sdata) ? 'us' : undefined;
+  return needsTimedInput(model, sdata) ? 'us' : undefined;
 }
 
 /**

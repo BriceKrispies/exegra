@@ -8,6 +8,7 @@ import { analyzeSpec } from '../../src/core/analyze.js';
 import { initEngine, runScenario } from '../../src/core/engine.js';
 import { checkTrace } from '../../src/core/claims.js';
 import { requestLog } from '../../src/core/contract-trace.js';
+import { readSpecFile } from '../../tools/spec-manifest.js';
 
 initEngine();
 
@@ -104,7 +105,7 @@ test('simulate checks values error codes and request response pairing', () => {
   assert.deepEqual(fails([['say', { text: 'a', mode: 'loud', id: 1 }, 'drop']]), [], 'a dropped request was never delivered');
 
   // Exegra's own scenario conforms, and every claim check it had before is unchanged in kind.
-  const own = analyzeSpec(fs.readFileSync(new URL('../../specs/exegra/spec.jsonc', import.meta.url), 'utf8')).model;
+  const own = analyzeSpec(readSpecFile(new URL('../../specs/exegra/spec.jsonc', import.meta.url))).model;
   assert.ok(own);
   const checks = checkTrace(own, runScenario(own, 'write-with-stale-base-hash'));
   assert.deepEqual(checks.filter((c) => !c.holds), []);
@@ -113,7 +114,7 @@ test('simulate checks values error codes and request response pairing', () => {
 });
 
 test('the request log renders contract events with binding and outcome', () => {
-  const own = analyzeSpec(fs.readFileSync(new URL('../../specs/exegra/spec.jsonc', import.meta.url), 'utf8')).model;
+  const own = analyzeSpec(readSpecFile(new URL('../../specs/exegra/spec.jsonc', import.meta.url))).model;
   assert.ok(own);
   const lines = requestLog(own, runScenario(own, 'write-with-stale-base-hash')).map((e) => e.text);
   assert.deepEqual(lines, [

@@ -1,0 +1,857 @@
+// Components and relationships of the semantic core: claim verdicts, simulation, the formal core and generation.
+{
+  "components": [
+    {
+      "id": "simulation-engine",
+      "name": "Simulation engine",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Executes the state machines of a scenario as a deterministic discrete-event simulation over logical time.",
+      "responsibilities": [
+        "Order events by logical time and scheduling sequence, deliver each to every behavior of the scenario",
+        "Fire at most one transition per behavior and event, evaluating guards against the configuration at the start of the step",
+        "Apply faults (drop, delay, enable or disable a transition, inject an event; in format 2 also duplicate, lose and retry an event as the generated runtime would) and record them in the trace",
+        "End a run as quiescent, step-limit (default 1000) or error",
+        "Run as one engine everywhere: the Lean core (formal/), called as engine.run through the Lean call boundary and loaded only through src/core/engine.js in the browser and in Node (the Simulation tab runs it in a Web Worker so a long run never blocks the page), and as the native binary exegra-lean compiled from the same C"
+      ],
+      "ports": [
+        {
+          "id": "simulation-run-in",
+          "name": "Run scenario",
+          "direction": "provides",
+          "contract": "run-scenario",
+          "protocol": "in-process call",
+          "description": "Run a scenario to completion (runScenario, runEngine), or step through a finished trace (createTraceCursor, createSimulation)."
+        }
+      ],
+      "unknowns": [
+        "Format 2 (integer time units, instances, routes, resources and resource faults, workloads, links, timers, request classes and seeded randomness) runs in the Lean engine (formal/Exegra/Format2.lean, Api/Engine.lean); the Rust engine implements the same format as the differential oracle. crash-instance, meters and the cost metric are not built yet (planned: WG-4741).",
+        "One configuration copy per step dominates the cost of large format-2 runs (about 10 to 40 us per step); the queueing fixtures (about 7 and 15 minutes) are gated by EXEGRA_FIXTURES=1 (planned: WG-4741).",
+        "Behaviors are flat: a component cannot yet be simulated at a chosen depth, as its abstract behavior or as its children (planned: WG-4666)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/engine.js",
+          "src/app/engine-worker.js",
+          "src/app/engine-runner.js"
+        ],
+        "notes": "engine/ holds the library and native binary (exegra-engine) and the WebAssembly crate (exegra-engine-wasm). npm run build:engine (tools/build-engine.js) compiles the WebAssembly crate and binds it with wasm-bindgen into src/engine/pkg/, which is generated, not committed, and left out of the traceability surface. src/core/engine.js is the only module that loads an engine, and it loads the Lean core through the call boundary (src/core/lean.js); the Rust engine in src/engine/pkg/ is loaded only by tools/rust-engine.js, the differential oracle. src/app/engine-runner.js and src/app/engine-worker.js run the Simulation tab's runs off the main thread.",
+        "trusts": [
+          "trusted-js-glue",
+          "trusted-js-shell"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "simulation-aspect-registry",
+      "name": "Simulation aspect registry",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Registers simulation aspects (chaos, load, cost and others) and runs their hooks inside the simulation core; a specification names the aspects it uses, with versions and parameters, as data.",
+      "responsibilities": [
+        "Load aspects from the registry and from a plugins directory, by name and version",
+        "Validate the simulation section of a specification against each aspect's declared vocabulary; never evaluate specification text as code",
+        "Call aspect hooks at schedule, deliver, step and end, and record aspect metrics in the trace"
+      ],
+      "implementation": {
+        "status": "not-implemented",
+        "modules": [],
+        "notes": "Planned: WG-4665. Not built yet; its claims stay not evaluated until recorded evidence supports them."
+      }
+    },
+    {
+      "id": "refinement-checker",
+      "name": "Refinement checker",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Checks that a component's abstract behavior and the behaviors of its children agree at its boundary, so a simulation can go deeper region by region without drifting from the shallower model.",
+      "responsibilities": [
+        "Run the refined behaviors, project their trace onto the component's boundary and check that the abstract behavior allows it",
+        "Report the first diverging boundary event as a violated claim",
+        "Choose per component whether a run uses the abstract behavior or its children, following the collapse state of the view"
+      ],
+      "implementation": {
+        "status": "not-implemented",
+        "modules": [],
+        "notes": "Planned: WG-4666. Not built yet; its claims stay not evaluated until recorded evidence supports them."
+      }
+    },
+    {
+      "id": "chaos-aspect",
+      "name": "Chaos aspect",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Seeded fault campaigns: kill instances, partition relationships, skew clocks, slow resources, across many runs of a scenario, each run evaluating the specification's checks.",
+      "responsibilities": [
+        "Draw failures from declared kinds, targets, rates and windows with a seed",
+        "Record every injected failure in the trace",
+        "Report each run's check results"
+      ],
+      "implementation": {
+        "status": "not-implemented",
+        "modules": [],
+        "notes": "Planned: WG-4667. Not built yet; its claims stay not evaluated until recorded evidence supports them."
+      }
+    },
+    {
+      "id": "load-aspect",
+      "name": "Load aspect",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Drives scenarios with arrival processes over instances and resources and records utilisation, queue depth, latency percentiles, saturation and backpressure; validated against queueing theory.",
+      "responsibilities": [
+        "Generate constant, Poisson, burst and ramp arrivals with a seed",
+        "Record utilisation, queue depth and latency percentiles per component",
+        "Require a source (requirement, measurement or assumption) for every load parameter"
+      ],
+      "implementation": {
+        "status": "not-implemented",
+        "modules": [],
+        "notes": "Planned: WG-4668. Not built yet; its claims stay not evaluated until recorded evidence supports them."
+      }
+    },
+    {
+      "id": "cost-aspect",
+      "name": "Cost aspect",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Turns recorded resource usage into money with a price profile kept apart from components: cost per scenario run, per active user and per month at a stated load.",
+      "responsibilities": [
+        "Multiply recorded usage by sourced, dated prices, line by line",
+        "Report a cost as not computed when any price it needs has no source"
+      ],
+      "implementation": {
+        "status": "not-implemented",
+        "modules": [],
+        "notes": "Planned: WG-4669. Not built yet; its claims stay not evaluated until recorded evidence supports them."
+      }
+    },
+    {
+      "id": "simulation-contract",
+      "name": "Simulation contract",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "What a simulation engine is judged by: the engine input Exegra derives from the validated model for one scenario and fault set, and the trace format the engine must produce. A golden conformance suite holds an input and a reference trace for every shipped scenario.",
+      "responsibilities": [
+        "Derive the engine input from the model: the scenario, its behaviors with variables, states and transitions, the events and the faults, with expressions as strings, so an engine needs no knowledge of JSONC, the meta-model or validation",
+        "Define the trace format field by field, with a format version",
+        "Run any engine against the golden suite, in-process or as a command reading an input on stdin and writing a trace on stdout, and report the first differing step and field",
+        "Give an implementation-level behavior the declared types of the references its expressions read (behaviorTypes: time as i64, each variable repr, each received payload field, lowered so a timestamp is i64, a duration u64, a declared id or scalar its representation, an option or optional field option), and name the time unit of a machine (machineTimeUnit)",
+        "Derive the machines a quota pool runs as (src/core/pools.js, WG-5278): one per pooled limit and modelled member, <pool>-<limit>-m<k>, with subject the pool's holder, states normal and throttled and the pool variables; usage is admitted on headroom, or within the fair share when throttled; a window end throttles a member over its share for the stated consecutive windows unless its exemption applies from that window, releases after the stated windows under, resets a rate and advances the window; an exemption is recorded the first time it is set, and lifts a throttle only when retroactive. simulationInput adds the machines of the pools a scenario lists after its behaviors, and the trace check and the proof plan count them among the scenario's machines"
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/sim-input.js",
+          "tests/conformance/",
+          "src/core/pools.js"
+        ],
+        "notes": "tests/conformance/ holds the fixture specification, the committed goldens and the README that lists what the fixture covers.",
+        "language": "js"
+      },
+      "unknowns": [
+        "Engine input and trace format 2 (contracts engine-input-v2 and trace-v2) are derived by simulationInput whenever a specification uses a format-2 construct (needsFormat2, simulationInputV2 in src/core/sim-input.js) and run by the engine's version-2 semantics (engine/exegra-engine/src/lib.rs dispatches on the version). Not yet: format-2 goldens (tests/conformance/goldens holds version 1 only), and the WG-4741 items: crash-instance, meters and the cost metric in the engine, and calibration, sensitivity, the operating envelope and revision binding of metric claims. A specification that uses no format-2 construct still derives version 1, unchanged.",
+        "The machines a quota pool runs as are derived, not entities: renaming a pool does not rewrite claim expressions that name them, and the simulator panel and inspector list only declared behaviors (WG-5281)."
+      ],
+      "tags": [
+        "verdict-kernel"
+      ]
+    },
+    {
+      "id": "fault-model",
+      "name": "Fault model and environment",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Makes what can fail and what the environment guarantees part of the specification: environments, failure modes with sourced rates and durations, and fault models with concurrency bounds; every behavioral and reliability claim is evaluated under a named fault model.",
+      "responsibilities": [
+        "Define the environment, failureMode and faultModel kinds and validate them, including a source for every rate, duration, guarantee and bound",
+        "State the fault model in the scope of every claim evaluated under it",
+        "Relate scenario faults to the failure modes they realise",
+        "Report claims that name no fault model while the specification declares one (gap.no-fault-model)"
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/fault-model.js"
+        ],
+        "notes": "The environment, failureMode and faultModel kinds, the faultModel and realises properties and the any-kind reference (\"ref\": [\"*\"]) are declared in the meta-model and checked by the generic parser; fault-model.js holds the specific rules (missing sources, bounds, realises outside the model) and the scope text of a claim result.",
+        "language": "js"
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
+    },
+    {
+      "id": "exhaustive-explorer",
+      "name": "Exhaustive explorer",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Explores every configuration of a scenario reachable within a bound, over every order of delivery of simultaneous events and every subset of the scenario's faults, with state deduplication. It reports that a state invariant holds in all N of them or returns a counterexample run, and it checks the temporal claims never, precedes and eventually on every complete run (a run ends at quiescence, at the step limit or in a failed step) by searching the product of the explorer's state with a small monitor. The explorer is defined in the Lean semantics and proved sound there; a faster explorer in the Rust engine (WG-4650) is to be checked differentially against it.",
+      "responsibilities": [
+        "Define the nondeterminism a scenario admits as the successor function of the behaviour calculus (Exec.successors): which ready entry is delivered next, which draw of each sampled delay is taken, and which subset of the scenario's faults acts in the run; it is sound and complete for the calculus's step relation (successors_sound, successors_complete)",
+        "Explore breadth-first with a visited set under a bound on steps and a budget of states (exploreB over Exec.gen), and return holds with the number N of distinct calculus states visited, a counterexample (picks into the successor lists), or incomplete when the budget runs out",
+        "Prove that holds, returned only on an empty frontier, means the invariant holds in every reachable state of the calculus with no bound (explore_holds_invariant), and that a counterexample replays through the successor function to a state where the property fails (explore_cex_real), with only Lean's standard axioms",
+        "Report \"verified by Lean for all N configurations\" distinctly from trace-level checks",
+        "Define the temporal forms never, precedes, eventually and response within a time bound over finite runs of the calculus (BehavCheck.lean: FinSat, monitor), and check them with the generic breadth-first search over the product of the calculus with a monitor (ProveB.lean: tsysB, tcheckB)",
+        "Prove the monitor agrees with the definition of each form on every finite run (monitor_sound), that a holds of the temporal check covers every reachable product node (tcheckB_holds) and that a counterexample is a real path of the product to a violating node (tcheckB_cex); paths cut off by the bound or the state budget are reported incomplete, never holds"
+      ],
+      "unknowns": [
+        "The engine input (format version 1) carries no bound of a scenario's fault model, so every subset of the scenario's faults is explored; the concurrency bounds of fault models are not applied yet.",
+        "A fault acts for the whole run or not at all: a fault without an occurrence cannot act on some deliveries of its event and not on others.",
+        "Breadth-first order makes a counterexample one of the fewest steps, but that is not proved.",
+        "The Rust explorer for large state spaces is not built yet (planned: WG-4650); it will be checked differentially against this one.",
+        "Evaluation errors and failed steps end a path without being reported as such: a configuration whose invariant cannot be evaluated counts as a violation, and a failed step has no successor.",
+        "Format 2 inputs are not explored yet (planned: WG-4664, WG-4715). The specified relation adds internal entries to the simultaneous-order choice, the new fault kinds to the mask, and one successor per choice value and per instance of an any route; sampled draws are fixed by a seed named first in the result, and a result is shown as verified only when the scenario has no sampled site. Scenarios with workloads need a short horizon and maxArrivals, and keyed populations of thousands of clients are beyond reach. When a timed fault acts is not explored (WG-4704).",
+        "Temporal claims are checked without the claim's negatives and without the trace check's vacuity rules (a never whose matcher cannot occur in the scenario holds here without a note).",
+        "A violating prefix of a never or precedes claim is reported as the counterexample, not extended to a complete run; any extension violates it too, but that is not a theorem."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "formal/Exegra/Core/BehavCheck.lean",
+          "formal/Exegra/Search.lean"
+        ],
+        "notes": "formal/Exegra/Core/BehavCheck.lean: exploreB over the calculus scheduler's successor function, explore_holds_invariant and explore_cex_real, runs (IsRun), the temporal forms (TForm, FinSat), the monitor and monitor_sound. formal/Exegra/Search.lean: the generic breadth-first search over a node type with search_sound and search_counterexample_real. formal/Exegra/ProveB.lean: the claim invariants of a format-2 input over the calculus state (claimInvB), the product with a monitor (tsysB), tcheckB, tcheckB_holds, tcheckB_cex, the verdicts a generated proof file states (verdictOf, verdictOf_holds, tverdictOf) and the exegra-lean explore and temporal protocols. Axioms pinned with #guard_msgs. Format 1, and with it Explore.lean and Temporal.lean, was removed (WG-5681).",
+        "language": "lean"
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
+    },
+    {
+      "id": "deployment-model",
+      "name": "Deployment model",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Environments, deployable versions, blue and green slots, health gates, cutover, rollback and expand/contract migrations as entities and behaviors, model-checked under the fault model.",
+      "responsibilities": [
+        "Define the deployment kinds and their validation",
+        "Check cutover, rollback and migration claims exhaustively within bounds"
+      ],
+      "unknowns": [
+        "Not built yet (planned: WG-4677)."
+      ],
+      "implementation": {
+        "status": "not-implemented",
+        "modules": [],
+        "notes": "Planned: WG-4677."
+      }
+    },
+    {
+      "id": "implementation-refinement",
+      "name": "Implementation refinement checker",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Checks traces of a system's real code, run in its own deterministic simulator with faults from the fault model, against the model: every implementation trace projected onto boundary events must be one the model allows.",
+      "responsibilities": [
+        "Read implementation traces and project them onto the model's boundary events",
+        "Report the first boundary event the model does not allow, and evaluate claims on implementation traces"
+      ],
+      "unknowns": [
+        "Not built yet (planned: WG-4679)."
+      ],
+      "implementation": {
+        "status": "not-implemented",
+        "modules": [],
+        "notes": "Planned: WG-4679."
+      }
+    },
+    {
+      "id": "formal-semantics",
+      "name": "Formal semantics (Lean 4)",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "The definition of the behavior language: the engine input, configurations, the expression language and the step relation, written in Lean 4 as an executable reference that the Rust engine is checked against, with its basic properties proved.",
+      "responsibilities": [
+        "Evaluate a run to a trace in the documented format",
+        "Prove determinism of the step function, at most one fired transition per behavior per step, and termination under the step limit",
+        "Serve as the reference for differential checking of the Rust engine on goldens and generated inputs",
+        "Run, as the engine of the application (engine.run and exegra-lean), the implementation Exegra.Impl (formal/Exegra/Impl/): expressions parsed at most once per run, arithmetic evaluated on unboxed floats, a step counter instead of measuring the list of steps, and an in-place JSON writer; Exegra.Impl.runAnyValue_eq proves it equal to the definition Exegra.runAnyValue on every input, so the theorems about the definition hold of what runs"
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "formal/lakefile.toml",
+          "formal/lake-manifest.json",
+          "formal/lean-toolchain",
+          "formal/Exegra/Expr.lean",
+          "formal/Exegra/Impl/Json.lean",
+          "formal/Exegra/Impl/Refinement.lean",
+          "formal/Exegra/Impl/Semantics.lean",
+          "formal/Exegra/Input.lean",
+          "formal/Exegra/Json.lean",
+          "formal/Exegra/Number.lean",
+          "formal/Exegra/Trace.lean",
+          "formal/Exegra/Value.lean",
+          "formal/Exegra/Format2B.lean",
+          "tools/gen-engine-inputs.js"
+        ],
+        "notes": "A Lake project (Lean 4, toolchain pinned in formal/lean-toolchain, standard library only). Exegra/Core/ is the behaviour calculus and its scheduler (Behav, BehavExec, BehavRename, BehavCheck); Exegra/Elab.lean elaborates a format-2 input into it; Exegra/Format2.lean is the legacy format-2 interpreter for inputs outside the fragment; Exegra/Format2B.lean dispatches (V2.runInput: traceOfB for elaborated inputs, the legacy traceOf otherwise, marked \"semantics\": \"legacy\") and is the entry point Exegra.runAnyValue, which refuses version 1; Value, Json, Number, Expr, Input and Trace are the shared parts. Main is the exegra-lean executable (engine input JSON on stdin, trace JSON on stdout; --legacy runs the legacy interpreter, for the differential check). npm run build:formal runs lake build in formal/; formal/.lake/ is build output, ignored by git and outside the traceability surface. tools/differential.js compares the native Rust engine with exegra-lean on the goldens and on seeded inputs from tools/gen-engine-inputs.js, and with --calculus the calculus path with the legacy interpreter. Exegra/Impl/ is what the application runs: Impl/Json.lean (the in-place writer, write'_eq), Impl/Semantics.lean (the definition with that writer) and Impl/Refinement.lean (runAnyValue_eq and runAny_eq, axioms pinned with #guard_msgs). Format 1 (Semantics, Properties, Lift, Explore, Prove, Temporal, Impl/Expr) was removed (WG-5681).",
+        "trusts": [
+          "trusted-lean-kernel",
+          "trusted-lean-compiler-runtime",
+          "trusted-emscripten-toolchain",
+          "trusted-wasm-engine"
+        ],
+        "language": "lean"
+      },
+      "unknowns": [
+        "Format 2 is defined in formal/Exegra/Format2.lean for the constructs built so far (instances, routes, resources and resource faults, windows, workloads, links, timers, request lifecycle and measured outputs); formal/Exegra/Resource.lean proves the held-units and queue-bound invariants of a settled resource, the strict FIFO queue of a collapse included. Not defined yet: crash-instance with incarnations, meters and cost (planned: WG-4741).",
+        "The determinism property over seeds is not stated as a theorem for format 2 yet (planned: WG-4741).",
+        "Exegra.Json.parse is a partial definition, shared by the definition and the implementation, so it is outside every theorem (planned: WG-4797). Inputs outside the behaviour calculus run the legacy format-2 interpreter, which parses each expression at every evaluation (planned: WG-4798)."
+      ],
+      "tags": [
+        "verdict-kernel"
+      ]
+    },
+    {
+      "id": "lts-foundation",
+      "name": "Transition-system foundation (Lean 4)",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "The mathematical object every guarantee is a proposition about (docs/foundations.md, section 3 and milestones M1 and M2): labelled transition systems as relations, reachability, invariants with no bound on runs, inductive invariants, vacuity, bounded reachability, closed-set certificates, the bridge from the generic search to transition-system invariants, a minimal well-scoped guarded-command calculus over Int whose semantics is a transition system, and the typed behaviour calculus (machines, events, guards, effects) whose semantics is a transition system with snapshot reads and an explicit error state.",
+      "responsibilities": [
+        "Prove unbounded safety from an inductive invariant (Exegra.Core.LTS.safe_of_inductive) and from a closed-set certificate checked by kernel evaluation (checkClosed_sound)",
+        "State vacuity explicitly: with no initial state every predicate is an invariant (invariant_of_no_init), so an invariant result is only meaningful together with NonVacuous",
+        "Distinguish bounded from unbounded results: an invariant is a bounded invariant at every depth (invariant_iff_all_bounds) and no single depth suffices (Exegra.Core.Examples.bounded_not_unbounded)",
+        "Carry results of the generic search to transition systems: a holds result is an unbounded invariant of every system the search covers (invariant_of_search) and a counterexample refutes the invariant of every system it is sound for (not_invariant_of_search)",
+        "Give the guarded-command calculus a semantics in which out-of-range variables cannot be written, updates read the state before the step (Cmd.exec_get) and steps are labelled by command",
+        "Give Exegra's behaviours (machines with control states and typed variables, events with payloads, guards, effects that set the machine's own variables, emit events and set or cancel the machine's own timers, and the scenario's event and transition faults) a typed calculus over Int, Bool and String whose semantics is a transition system (Exegra.Core.Behav.Sys.lts): references scoped by Fin, so a missing variable or machine cannot be written; integer arithmetic as format 2 computes it, each arithmetic node checked against the declared integer type format 2's staticTy gives it, % truncated and typed / truncating; faults all-or-nothing per fault through a mask chosen in the initial state and kept (mask_const), with drop, lose, delay, retry, duplicate, enable, disable and inject faults, occurrences counted per event and windows; times at or beyond 2^53 as the error timeBound and no delivery after stopAt; division by zero, inexact untyped division, out-of-range operands and results and reads past the end of a state as errors, never default values or other values; a failing delivery leads to an explicit error state with no successor (err_deadlocked), and every system has an initial state (lts_nonVacuous)",
+        "Prove that under snapshot reads a delivery does not depend on the order in which its winners fire: the machines after phase 2 (Exegra.Core.Behav.phase2_perm), the emitted blocks up to permutation (phase2_perm_emitted), the winners of every step on distinct machines (winners_nodup), and the whole successor configuration, pending list included, equal in every order (deliver_perm), emitted entries being inserted by time in machine-index order as format 2's insertE inserts them; and show on the [a, b] / [b, a] example that snapshot reads give one verdict (f4_ab_safe, f4_ba_safe) where the calculus's model of today's next-configuration reads gives two (f4_next_reads_differ)",
+        "Prove that the shape of a configuration (one state per machine, a control state of the machine, one value of the declared sort per variable) is invariant from a shaped initial configuration (Exegra.Core.Behav.shaped_invariant) and that no step from a reachable configuration then fails with shape (shape_unreachable), and that the static sort of an expression is sound for evaluation (Expr.eval_fits)",
+        "Define a decidable well-formedness of systems (Exegra.Core.Behav.Sys.WF) and prove that no step of a well-formed system fails with sort from a reachable state (sort_unreachable), that times stay in order and below 2^53 (time_invariant) and that the queue stays sorted by time (sorted_invariant)",
+        "Give the calculus an executable scheduler (Exegra.Core.Behav.Exec.step, Exec.run) computed with the executable delivery, which deliver_iff_step proves equal to the declarative relation Step, and prove it is one scheduler of the relation: every committed step is a step of Sys.lts labelled by the delivered entry and its draws (Exec.step_sound), a failed step leads to the error state (Exec.step_failed), it stops only where the relation has no step on a sorted queue (Exec.idle_deadlocked, Exec.stopped_deadlocked) and every state of a run is reachable (run_reach); and give it a successor function equal to the relation's steps (successors_complete, successors_sound), whose search system covers and is sound for the relation (Exec.covers, Exec.sound), so Gen.search results are theorems about the calculus (Exec.holds_invariant, Exec.cex_refutes)",
+        "Cover counted instances, targets and replies (machines are instances; aggregates count, sum, min and max over instances read from the start-of-step snapshot; entries carry their sender and a reply addresses it), and prove that the verdict of a safety property does not depend on the order in which machines are listed (Exegra.Core.Behav.invariant_rename)",
+        "Elaborate format-2 engine input into the calculus (Exegra.V2.Elab.elab), refusing inputs outside the fragment, ill-typed or with non-integer numbers, with every accepted input well-formed (elab_wf) and every state of its calculus run reachable (Exegra.V2.runB_reach); explore the calculus with unbounded holds results and real counterexamples (explore_holds_invariant, explore_cex_real) and monitor finite runs for eventually, never, precedes and bounded response (monitor_sound)"
+      ],
+      "unknowns": [
+        "The guarded-command calculus (Calculus.lean) is single-sorted (Int) with no events, timers, faults or time.",
+        "The behaviour calculus (Behav.lean, BehavExec.lean, BehavRename.lean, BehavCheck.lean) does not cover resources, links, workloads, keyed instances or routes, sample effects (a variable set from a draw; only delays are drawn), option types, measured outputs or resource faults. Elab.elab refuses inputs that use them as outOfFragment; they keep running on the legacy format-2 interpreter (Exegra.V2.traceOf), which computes with Float, their trace says \"semantics\": \"legacy\", and no theorem is about them (milestone M2b).",
+        "The calculus explorer's temporal check reads the format-2 encoding of each step (ProveB.lean, Occ) to match occurrences; that encoding is shared with traceOfB but no theorem relates a matched occurrence to the calculus label of the step.",
+        "Some format-2 values are errors in the calculus: untyped arithmetic with an operand or result outside 2^53 - 1 and untyped / with a remainder, == and != across sorts (refused as ill-typed), mixed string and number +, and a payload field read at a sort it does not fit; > and >= are encoded as swapped < and <= (which error is reported can change), and the error reported can depend on the order of the winners. The legacy interpreter and the Rust oracle report the same errors for elaborated inputs (differential.js --calculus).",
+        "Faults are chosen all-or-nothing per fault (one mask per run), not per occurrence. There are no traces, observations, fairness or composition yet (milestones M5 and M6), and no k-induction (M4).",
+        "The calculus explorer that exegra prove runs uses Gen.search, whose visited set hashes with an opaque hash, so a generated proof file discharges its verdict with native_decide and trusts the compiler. The list-based Gen.searchL returns the same result (search_eq_searchL) and reduces in the kernel (Exec.cex_refutesL, Exec.holds_invariantL), but its membership test is linear in the visited states, so generated proof files do not use it.",
+        "Semantic completeness (invariant_iff_exists_inductive) is over arbitrary predicates; inductive invariants expressible in the calculus's expressions need not exist."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "formal/Exegra/Core/Behav.lean",
+          "formal/Exegra/Core/BehavExamples.lean",
+          "formal/Exegra/Core/BehavExec.lean",
+          "formal/Exegra/Core/BehavRename.lean",
+          "formal/Exegra/Core/Calculus.lean",
+          "formal/Exegra/Core/Examples.lean",
+          "formal/Exegra/Core/LTS.lean",
+          "formal/Exegra/Core/Search.lean",
+          "formal/Exegra/Elab.lean"
+        ],
+        "notes": "formal/Exegra/Core/LTS.lean (the theory), Calculus.lean (the guarded-command calculus), Search.lean (the bridge from Exegra.Gen.search), Examples.lean (positive and adversarial examples: counter_le, ne_neg_one_not_inductive, ne_neg_one_invariant, bounded_not_unbounded, vacuous_false, mod3_in_range), Behav.lean (the behaviour calculus of M2.1 and M2.2: typed values, arithmetic sorts and expressions, transitions, timers, faults, Sys.lts, Sys.WF, phase2_perm, phase2_perm_emitted, winners_nodup, deliver_perm, mask_const, deliver_ok_form, deliver_error_form, shaped_invariant, shape_unreachable, time_invariant, sorted_invariant, Expr.eval_fits, Expr.eval_ne_sort, sort_unreachable), BehavExec.lean (the scheduler of M2.3: Exec.step, Exec.run, Exec.successors, Exec.enum, Exec.gen, Exec.step_sound, Exec.step_failed, Exec.idle_deadlocked, Exec.stopped_deadlocked, Exec.step_live, run_reach, successors_complete, successors_sound, Exec.covers, Exec.sound, Exec.holds_invariant, Exec.cex_refutes), BehavRename.lean (machine renaming: invariant_rename, step_rename, step_unrename), BehavCheck.lean (exploreB, explore_holds_invariant, explore_cex_real, TForm, FinSat, monitor, monitor_sound), BehavExamples.lean (agg_last_safe, agg_first_safe, agg_next_reads_differ, reply_reaches_requester, reply_without_sender_fails, ctr_le, choice_safe, f4_ab_safe, f4_ba_safe, f4_ab_safe_closed, f4_wf, f4_exec_same_machines, f4_next_reads_differ, f4_nonVacuous, f4Init_shaped, f4_ab_no_shape, divZero_counterexample, mod_truncates, typed_div_truncates, untyped_div_inexact, u8_overflow, emitted_inserted_by_time, emission_order_irrelevant, timer_then_cancel, timer_reset, drop_second_delivery, drop_fault_optional); axioms pinned with #guard_msgs. The files sit inside formal/, which formal-semantics also declares. Checked by lake build in .github/workflows/check.yml. formal/Exegra/Elab.lean (Elab.elab, elab_wf, runB_reach) elaborates format-2 input into the calculus.",
+        "trusts": [
+          "trusted-lean-kernel"
+        ],
+        "language": "lean"
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
+    },
+    {
+      "id": "proof-export",
+      "name": "Proof export",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Exports a scenario's engine input and its state-invariant and temporal (never, precedes, eventually) claims to a Lean file whose theorems state the verified explorer's result per claim, checks the file with Lean and reports each claim as verified (for all N configurations within the bound, or on every complete run), a counterexample run, or incomplete, with the axioms the proof uses. Proving invariants for every reachable configuration at every depth, by induction, is planned (WG-4686).",
+      "responsibilities": [
+        "Build the scenario's engine input exactly as simulate does and collect the state-invariant and temporal claims that list the scenario and apply to it; a claim that names behaviors or an expression outside the scenario is reported not evaluable",
+        "Write formal/generated/<scenario>.lean: the engine input text, its decoded Lean term checked against it (input_decodes), and per claim a theorem explore env (claimInv expr) bound maxStates = result, discharged by native_decide",
+        "Check the file with Lake, loading the modules' compiled code, and report per claim the method lean-exhaustive, the bound, N, the theorem, the file, the axioms and what is trusted",
+        "Render a counterexample as simulate shows a run: the step list with the delivery choices, the active faults, and the request-log lines of contract events",
+        "For a temporal claim write the theorem tverdict form env bound maxStates = result (from the exegra-lean temporal protocol), whose meaning is tverdict_sound and tverdict_real, and render a violating run with the reason in the trace check's words"
+      ],
+      "unknowns": [
+        "Results are established by native_decide, so each theorem depends on an auxiliary axiom that trusts the Lean compiler and runtime. Kernel reduction (decide) is not feasible: the expression language's number literals go through Float.scaleB and the visited set hashes strings with String.hash, both opaque to the kernel.",
+        "The unbounded proof of an invariant (by induction over the step relation, with the explorer supplying counterexamples to induction) is not built yet (planned: WG-4686).",
+        "Claim results are reported by exegra prove only; evaluate and verify do not show them yet.",
+        "Negatives of a claim are not explored in Lean: prove checks that a claim holds on every configuration of its scenarios, not that its negatives violate it (WG-4711)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/proof-export.js",
+          "tools/prove.js",
+          "formal/Exegra/ProveB.lean"
+        ],
+        "notes": "src/core/proof-export.js (pure) builds the exploration request, the Lean proof file and the per-claim results; tools/prove.js runs lake build, the exegra-lean explore and temporal protocols and lake env lean on the generated file (formal/generated/, ignored by git), with the modules' shared libraries (precompileModules) loaded; formal/Exegra/ProveB.lean holds prepare (the input elaborated into the calculus; an input outside the fragment is reported as not covered), claimInvB, the verdicts and the protocols. The generated file states each verdict as verdictOf or tverdictOf applied to the input text. The command is exegra prove (cli/commands.js).",
+        "language": "mixed"
+      }
+    },
+    {
+      "id": "resource-model",
+      "name": "Resource model",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Resources with capacity, request classes, queue disciplines and bounds, and the service demand of transitions: the part of format 2 that makes a pool, a connection limit or a CPU a queueing station.",
+      "responsibilities": [
+        "Hold per resource its capacity, discipline (fifo or priority), request classes with priority, reserved units (at most the class limit), limit, queue bound and maximum wait, the overflow rule (refuse, drop, shed-oldest) and an optional load-dependent demand factor: a step table (the last row holds beyond it) or exact USL parameters evaluated at each grant",
+        "Record the use, acquire and release effects in phase 2 and apply them when the step settles: release, enqueue, grant by discipline and eligibility, then class bounds in declaration order and the resource bound; holdings are tracked per instance, resource and class, and release names its class",
+        "Draw service demand at the grant from the stream demand:<behavior>:<transition>:<effect> (effect index from 0), against the faults active at that time, and scale it once, rounding up, by the demand factor of the occupancy at the grant and by the combined scale-demand factor reduced to lowest terms (a part of 2^32 or more, or a service time of 2^53 or more, is a failed step); the service time is fixed at the grant",
+        "Delete a request's wait-timeout entry on every path that removes it (grant, bound refusal or drop, shed, crash), so a wait-timeout step always finds its request",
+        "Refuse statically a request whose units can never be granted, also after the fault mask is applied",
+        "Apply scale-demand, set-capacity, set-class-limit, collapse-classes and replace-demand, untimed or within windows through fault-edge steps, the value in effect being a function of the active set (last in the input's faults order, product for scale-demand, any for collapse), without preempting held units; return waiting requests to their own classes when a collapse ends",
+        "Apply crash-instance: an incarnation per instance, recorded on targeted, routed and from fields and on the instance's service-done and wait-timeout entries; at the crash remove timers, waiting requests with their timeouts and in-service requests with their service-done entries, release holdings, draw the restart time, broadcast notify; drop stale entries per behavior; restart edges restore only their own incarnation; a crash of a missing or down instance does nothing",
+        "Keep held units within class limits and capacity, and waiting requests within their bounds, as invariants proved of the step; deadlock freedom is not guaranteed and is left to claims and the explorer"
+      ],
+      "unknowns": [
+        "Built (WG-4664, WG-4729) in the Lean semantics and the Rust engine, resource faults included (set-capacity, set-class-limit, collapse-classes, scale-demand, replace-demand; untimed, or windowed through fault-edge steps), and derived from a specification's resources by simulationInput. crash-instance with incarnations is refused by both engines, and the grantable-units check is not repeated after the untimed fault mask (planned: WG-4741).",
+        "Processor sharing is not part of format 2; CPU is a FCFS multi-server station (planned: WG-4719).",
+        "Credit-based backpressure between components is not represented (planned: WG-4722); autoscaling and cold start are not represented (planned: WG-4720)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "formal/Exegra/Resource.lean",
+          "formal/Exegra/Random.lean",
+          "formal/Exegra/Format2.lean"
+        ],
+        "notes": "WG-4664 part of format 2: defined in Lean (Resource, Random, Format2), ported to Rust (v2.rs, random.rs), and checked differentially on generated version-2 inputs (tools/gen-engine-inputs.js --v2, tools/differential.js). Resources are outside the behaviour calculus, so an input that uses them runs on the legacy format-2 interpreter. Its claims stay not evaluated until recorded evidence supports them.",
+        "language": "lean"
+      }
+    },
+    {
+      "id": "workload-model",
+      "name": "Workload model",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Workloads that drive a scenario from outside its behaviors: open arrival processes (constant, Poisson, ramp, step, on/off, attack floods) with client and address identities and payload generators, closed populations with think time, populations of client behaviors, links with bandwidth, latency, ordering and fan-out, and timers.",
+      "responsibilities": [
+        "Generate open arrivals as instants of b entries, one future instant per workload in the queue, computed from the scheduled time of the previous instant when its original first entry is taken (a delayed copy is never first, and a per-workload count of created instants creates each instant once); draw, in this order, the instant time (Poisson, spent draws included), the batch size, then per entry the client and the payload fields; stop at the horizon",
+        "Validate phases (from < until, sorted, non-overlapping, repeat at least the last until; rates count instants) and schedule constant phases exactly, with j reset per phase and repetition, and Poisson phases (constant or ramp) by inverting the integrated rate against a unit exponential sample, with exact integer square roots and rounding to the nearest base unit: one draw per instant, no thinning and no rejection loop; refuse a phase whose mean interarrival is below 100 base units",
+        "Attach the request id, the client and the address; group users onto addresses by a drawn group-size distribution (sizes below 1 count as 1)",
+        "Run closed populations (issue with a workload-wide request counter, wait for the matching reply, think; a timeout ends the request with outcome timeout and a late reply is ignored) and population workloads whose clients are keyed instances of a behavior created at the start of the run",
+        "Send emits over links: FIFO transfer with time ceil(size * perSecond / bandwidth), then at link-done the latency draw, the delivery entry and the next transfer; ordered links deliver in send order; fan-out keeps one bounded queue per receiver at the link's full bandwidth and drops its oldest waiting message, never the one in transfer",
+        "Set, replace and cancel named timers by their stable id, so that a delayed timer is still cancelled",
+        "Lower specification-level rates, durations and distributions to integers and tables on unbounded BigInt: the exponential and normal quantile tables defined by integer algorithms (exp and ln in 96-bit fixed point, a 192-bit fixed-point normal CDF with bisection), equal to the correctly rounded values and pinned by the SHA-256 a23cd2a9566c106701375d5cf75ef982b8db6f3e52c199c47e6239649c840950 of their canonical text; log-normal sigma at most 8; a lowered value of 2^53 base units or more is a lowering error"
+      ],
+      "unknowns": [
+        "Built (WG-4715, WG-4729): open, closed and population workloads, address groups, links (bandwidth, ordering, queue bounds, fan-out, latency) and timers in both engines, derived from a specification's workloads and links by simulationInput (src/core/sim-input.js).",
+        "Packet-level networking and packet-rate floods are not represented: a link is a FIFO byte pipe with a latency distribution, one step per message (aggregated mode planned: WG-4718).",
+        "Matchmaking gather is writable only as a hand-written behavior (primitive planned: WG-4721)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/distributions.js",
+          "formal/Exegra/Workload.lean"
+        ],
+        "notes": "WG-4715, in progress. Built: the integer lowering of distributions (src/core/distributions.js; every reference output of docs/simulation.md and the pinned SHA-256 reproduced, tests/core/distributions.test.js); open workloads (constant and Poisson by inversion of the integrated rate with exact integer square roots, phases, ramps, repetition, batches, clients picked uniformly or round-robin, payload literals, samples, weighted choices and counters, maxArrivals, the first-entry rule with a per-workload count of created instants) defined in formal/Exegra/Workload.lean and Format2.lean, ported to the Rust engine (workload.rs, v2.rs) and checked differentially on generated workload inputs (tools/gen-engine-inputs.js, tools/differential.js). Proved: an instant is always before the horizon (nextTime_lt_horizon) and a workload never creates more arrival entries than maxArrivals (makeInstant_arrivals_le).",
+        "language": "mixed"
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
+    },
+    {
+      "id": "performance-metrics",
+      "name": "Performance metrics",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "The measured outputs of a run as a pure function of its steps: throughput, outcomes, utilisation, queue length, waiting time, response-time percentiles, false positives, transition counts, link use and cost, per resource, class, link and boundary, over a declared window and in time series, all as integers; and meters, windowed measurements that behaviors read.",
+      "responsibilities": [
+        "Follow the request lifecycle of docs/simulation.md: a request starts when its start entry is first taken as head, ends as error at once when that entry is dropped, crashed, stale or handled by no transition, ends at the first delivered end event with its key (delivered: head of a deliver step that does not fail), ends as timeout on a closed-client timeout, and is otherwise censored; count unkeyed starts, duplicate starts and late ends",
+        "Give ok requests the sample end - start and every other outcome and censored request +infinity; count samples as measured requests started, so a lost or refused request still counts; waiting time is one sample per request enqueued, +infinity when removed without a grant",
+        "Treat underpowered statistics by who starts the class: for open-started classes an underpowered run is left out and a null bucket skipped; otherwise both do not satisfy; time-to-recover always needs every bucket of its hold range non-null and satisfying",
+        "Integrate piecewise-constant signals over [warmup, horizon), with the value in effect at warmup and the last value held to the horizon, and the utilisation denominator the integral of the capacity in effect",
+        "Report nearest-rank percentiles, bucketed series on a grid that divides the window exactly, time-to-first and time-to-recover as durations t - after, and series aggregates max, min and mean; claims scoped to a phase or sub-window",
+        "Compute meters over (t - window, t] from the start-of-step configuration, with null for an empty window or a zero denominator and +infinity samples counted in quantile meters",
+        "Compute cost as counted quantities times exact rational prices, per price, in total and per bucket, for the cost aspect (WG-4669) to report",
+        "Mark a run truncated when it ended at the step limit, in error, or stopped with a measured request open"
+      ],
+      "unknowns": [
+        "Built (WG-4715, WG-4729): resource metrics; request classes with the request lifecycle, response time, outcomes, throughput, legitimate refusals (false positives) and transition firings, over the window and per series bucket, in both engines. Not built: link and cost metrics, waiting time per class, resource signals per bucket, time-to-first and time-to-recover, meters, and truncation by an open measured request (planned: WG-4741). Warm-up is declared, not detected."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "WG-4715, in progress. Built: the resource metrics of format 2 (utilisation as busy and capacity integrals and max held, queue length as integral and max, waiting time per request enqueued in the window with +infinity for a request removed without a grant or still waiting, nearest-rank quantiles at the input's exact decimals), defined over the step sequence in formal/Exegra/Format2.lean (Measured outputs), accumulated step by step in the Rust engine (v2.rs, Measure), output with the trace or alone with output metrics, and checked differentially on generated workload inputs. The request lifecycle, response time, throughput, outcomes, series, time-to metrics, meters and cost are not built.",
+        "language": "mixed"
+      }
+    },
+    {
+      "id": "lean-call-boundary",
+      "name": "Lean call boundary",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "The one way the JavaScript shell calls the Lean core: a JSON request {fn, args} to a JSON reply {ok} or {error}, through the Lean core compiled to WebAssembly.",
+      "responsibilities": [
+        "Keep the registry of callable Lean functions (Exegra.Api.registry): each module port lists its functions in its own file under formal/Exegra/Api/ and appends the list; the C glue, the exported symbol and the JS binding never change",
+        "Answer every request with a reply: an unknown function, a malformed request, a refusal and a trap are errors as values, and a trap discards the instance",
+        "Load the module synchronously in Node and after an awaited fetch in the browser or a worker (src/core/lean.js)",
+        "Build the module reproducibly from pinned inputs (npm run build:formal-wasm): emscripten 7.0.0, the Lean runtime at the toolchain tag with the committed patch, libuv v1.48.0, Init/Std C from the toolchain, Exegra C from lake; wasm64 only"
+      ],
+      "unknowns": [
+        "Stable Safari does not support Memory64, so the Lean core, and with it the engine, does not run there until Safari ships it (decision 2026-11-18). A wasm32 build would need its C from a 32-bit Lean compiler (spike/lean-wasm/README.md, wasm32 caveats).",
+        "The Lean engine is still slower than the Rust engine it replaced on the goldens, now mostly in reading JSON. Measured 2026-11-18 in Node 24 on Windows 10 (wasm64, best of 10 runs): live-session 17.0 ms (was 21.5 ms; Rust 1.95 ms), app-start-and-open 14.1 ms (was 24.1 ms; Rust 2.4 ms). Natively about two thirds of that is Exegra.Json.parse, a partial definition nothing can be proved about yet; a fast parser proved equal to a total definitional parser is WG-4797. Format 2 runs the definition's step semantics, with its expressions parsed at every evaluation (WG-4798). Loading and initializing the module takes about 119 ms once per process."
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "lean",
+        "trusts": [
+          "trusted-lean-kernel",
+          "trusted-lean-compiler-runtime",
+          "trusted-emscripten-toolchain",
+          "trusted-libuv",
+          "trusted-js-glue",
+          "trusted-wasm-engine"
+        ],
+        "modules": [
+          "formal/Exegra/Api/Basic.lean",
+          "formal/Exegra/Api/Engine.lean",
+          "formal/wasm/",
+          "src/core/lean.js",
+          "tools/build-formal-wasm.js"
+        ],
+        "notes": "The Lean side (formal/Exegra/Api.lean, formal/Exegra/Api/) is the logic; src/core/lean.js and formal/wasm/glue.c are glue in the trusted base. Built into src/engine/lean/ (generated, not committed); downloads and checkout-independent objects are cached under %LOCALAPPDATA%\\exegra\\cache\\formal-wasm (EXEGRA_CACHE_DIR overrides)."
+      }
+    },
+    {
+      "id": "generation-readiness",
+      "name": "Generation readiness",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "owner": "semantic-core",
+      "purpose": "Says what a code generator needs to know about data and interfaces (declared types, record constraints and schema versions, contract details and hand-written holes, the realisation of every requirement) and about the cross-cutting patterns requirements repeat (policies, validations, retentions, quotas, retries, audits) and about the user interface and its journeys (screens, forms, actions, live bindings, user journeys), and checks it: consistency rules that always apply, and readiness rules that are errors only when the specification sets system.generation.",
+      "responsibilities": [
+        "Check the type entities (representation, enum values, struct fields), the record constraints (set-null needs optional, unique and index fields are declared, changes list versions 1 to schemaVersion) and that a construction requirement is named in the models property of some claim or names a construct in realisedBy, always as errors",
+        "Compute the readiness gaps (codes ready.*) of records, contracts, events, requirements and cross-cutting constructs, report them as validation errors when system.generation is set and list them for the readiness command otherwise",
+        "Give each type name the class an expression can use it as (bool, number, string, bytes, struct, list) and type an expression from the classes of its references, with the operator rules the evaluator applies",
+        "Check the cross-cutting constructs (policy, validation, retention, quota, retry, audit): exactly one target, references that resolve to declared inputs, outputs, payload and record fields, expressions that parse, stay in scope and type against the declared fields, durations, positive limits and attempts, rule parameters that fit the rule and the target",
+        "Check the user interface constructs (screen, form, action, liveBinding, uiScenario): route patterns that are well formed and unique, view-model inputs supplied by route parameters, form fields and action arguments that fill declared contract inputs with fitting controls and well-typed expressions over route parameters, view-model outputs and the principal, navigations that give exactly the target route parameters, refresh paths into the view model, and journey steps of one known kind each that name existing screens, forms, fields, events and browsers and select by WAI-ARIA role and non-empty accessible name only",
+        "Check the journey steps of user journeys and per-row actions: element selectors by role, exact or patterned accessible name, heading level and within; page title, attribute, count and absent-text expectations; raw-path and tenant-host navigation, reload, back and no-reload markers; request logs, direct API calls, cookie checks and replays; captured values defined before every ${name} use and captured once; emulation, overflow and placement checks; timeouts; and per-row actions over a view-model list of a declared struct, whose labels read only fields of the rows",
+        "Check the third set of user interface constructs: select and radio options taken from a view-model list (optionsFrom), at most one catch-all screen with no address of its own, navigation addresses and parameters that read query.<param> and form.<field>, live-binding conditions over the event payload and the view model (expressions, {value, in} membership, any and all), toast placeholders that read names in scope shown as text, derived form fields (derive, until edited, slug transform, no cycles), and action results kept in declared screen-local values of the same type instead of navigating",
+        "Check telemetry: the services of system.telemetry, each event's logging (an allowlist of payload fields that exist, are scalars, are neither marked sensitive nor of a sensitive type, and are written under names of their own, by a declared service under a unique log name, or not logged with a reason), that every domain event states its logging when system.generation is set, and that a journey's expectLog step names a logged event, its service and members of its line only",
+        "Check the fourth set of user interface constructs: request encoding on contract inputs (trim, split, as, empty), form initial values (a path, or the first item of a list whose field equals an expression), field normalization, second calls (then), view-model overlays on success, refusal prefixes and announcements, action confirmation announcements, alsoOn on every screen of one authentication, and error messages (by check kind or error code, placeholders that fit their kind, no two messages wording the same thing for the same forms and actions), with the default refusal message as a readiness gap when generation is set",
+        "Check that every value a scenario feeds a machine (a step payload, an inject-event fault payload) has the type its event declares: uuid format, integer bounds, enum values, required and undeclared fields, option fields (scenario.input-type, an error when system.generation is set, a warning otherwise)",
+        "Check the metadata model (src/core/tenant-data.js): once a type has metamodel tenant-schema every record states its scope, platform or tenant-meta (record.scope-missing); a record that names a tenant object type or carries tenant field values (an object-id or values type, or a map keyed by a field-id type) is a tenant-meta record and never a fixed platform record for tenant domain data (record.tenant-data-fixed); a tenant-meta record, and only it, is described by the tenant-schema type (record.described-by)",
+        "Check the language entities (src/core/language.js), and evaluate, check and print their expressions for function examples with the kernel's results, error texts and Display (src/core/language-eval.js, pinned by the shared case table tests/fixtures/language/kernel-cases.json): an expression language users of the specified system write, stated as an AST union, a value union, shapes, scopes and operators each bound to a primitive of the fixed catalogue pinned to the Strata kernel; operator names unique (language.operator-duplicate), no word or symbol claimed twice (language.token-clash), tokens of the right lexical class for their form and forms the primitive is written in (language.syntax), precedence and associativity on binary and prefix operators only, one associativity per level (language.precedence), primitives from the catalogue (language.primitive-unknown), operands agreeing with the primitive arity and the AST variant (language.arity), shapes declared (language.shape-unknown), null handling equal to the primitive's (language.nulls), operators naming variants and cases of the AST with at most one per variant or case (language.variant), scopes well formed and read (language.scope); with system.generation every AST variant and case has an operator and every operator a primitive (ready.language-variant-uncovered, ready.language-primitive-missing)",
+        "Check the function entities (src/core/function.js, src/core/function-syntax.js, src/core/function-value.js, src/core/language-eval.js): pure functions with typed parameters, a return type (the built-in unit for a function that gives nothing), an optional error union, lets and a body in the function body language (the guard language with field access, if, let, match, struct and union constructors, list literals, the unit value (), the JSON null where json is expected, variants and fields named like keywords written after a dot, as patterns and before a colon, map, filter, find, any, all, fold, sortBy (by a number, string, bool, enum value or a list, option, struct or union of those, ordered as Rust's derived Ord: lists item by item), take, concat, keys, values, get, insert, remove, format with the {} (Display), {:?} (Rust's derived Debug) and {:json} (serde_json text) placeholders, eval (with an optional lookup that following a reference reads), check and print of a declared language, the string operations startsWith, endsWith, length, trim, chars, snakeCase, parseTime and the ASCII character classes, call, fail and try); bodies parse (function.expr-syntax), name what exists (function.expr-reference) and type against the declared types (function.expr-type), matches are exhaustive (function.match-exhaustive), the call graph is acyclic but for structural self-recursion on a strict sub-value of a union parameter (function.recursion), fail and try use the declared error union (function.error-unknown), parameters, returns and lets are well formed (function.param), and every example is evaluated in JavaScript and gives its result or error (function.example-failed); with system.generation every function has a success example and one per error variant it can fail with (ready.function-example-missing)",
+        "Hold the built-in representation types (unit among them, the type of one value, which no id or scalar represents) and decide when a type name resolves: a built-in, a declared type, list<T>, set<T> or option<T> of a name that resolves, or map<K, V> of a key and a value that resolve, with type texts split at the comma outside angle brackets so generic types nest (map<K, map<K2, V>>, list<map<K, V>>)",
+        "Check the capability model (src/core/capabilities.js): every capability that a contract requires (auth.requires), a plan entitles, a role or grant confers, a delegation or token scope passes on and a feature flag gates is a capability (capability.unknown); with system.generation every contract that is not local requires one (capability.required); every capability is conferred by a role or grant and is core or entitled by a plan (capability.unreachable); a delegation passes on only what its source holds and a grant confers only what its issuer role holds (delegation.exceeds); grant and delegation durations are durations (capability.duration)",
+        "Check example fixtures (src/core/function.js, src/core/function-fixtures.js): exampleFixture entities declare a value of a type once, and a function example's argument, result or error may be {fixture: id} or {fixture: id, with: {dotted path: value}}, resolved before the example is evaluated; an undeclared fixture is refused (example.fixture-unknown), a fixture whose value is not its type or that, with its overrides, is not the type it stands for (example.fixture-type), and an override path that does not lead into the value (example.fixture-override)",
+        "Measure the branch coverage of function examples (src/core/function-coverage.js, WG-4965): with the evaluator's branch recorder attached, every example is evaluated and each branch it takes is recorded (both branches of if, each match arm, the value and error paths of try, fail); with system.generation every branch of every function is taken by some example (ready.function-branch-uncovered, one gap per function naming each branch with its line and column; not for a function that misses an example or has one that fails, nor while any function has a finding; severity info when system.generation.functionBranches is gap)",
+        "Check union, map, set and constraint types (src/core/type-shapes.js): a union has named variants whose fields resolve (type.union-variants, type.union-field), a newtype variant has one field and a tuple variant two or more positional fields, none optional, its wire encoding (external, internal, adjacent or untagged tag, tagField, contentField, variantCase) agrees with its variants, an internal tag writing no newtype or tuple variant, an untagged union with no tag field, content field or variant case, no two variants written as one JSON shape and a json newtype last (type.encoding), a map key is a string, an integer or an id or scalar over one, also inside a list, set, option or another map (type.map-key), a struct does not contain itself through struct fields alone (type.recursion), and constraints (pattern, minLength, maxLength) sit only on an id or scalar whose representation takes them (type.constraints); a union or map value has the opaque class of json and a set the class list in guard expressions, and a scenario value of a set type repeats no item",
+        "Check derived and facade contracts (src/core/derivation.js): a derivation exactly on a contract with realisation derived, of kind pure, read (optionally with a need loop, insufficient and needRounds together) or command with the fields of its kind, and optionally header: true, the load with no needs first, whose outputs the needs function reads, then the needs loaded in one round no need round counts (derivation.kind); functions whose parameters are inputs (or load outputs) of the same name and type, whose results are the outputs and whose error variants are errors of the contract, an insufficient-state variant carrying one need, a fault error without payload (derivation.signature); a load contract that is not a target and whose inputs are filled from the inputs and the needs and whose outputs and errors fit (derivation.load); a commit contract that is not a target and whose inputs are filled, whose conflict error exists and whose outputs and errors fit (derivation.commit); need rounds and conflict retries as non-negative integers (derivation.bounds); a facade with no implementing component whose bffRoute method, path and shape exactly one served contract (not a facade or a target) states (contract.facade-route); with system.generation every function a derivation names is declared (ready.derived-function-missing)",
+        "Check supplied inputs (src/core/supplied-inputs.js, src/core/ui.js): binding.suppliedBy names declared inputs of a contract and says each comes from the route or the session (contract.supplied-by), never from the body, so no form field or argument and no action argument fills one (form.supplied-input, action.supplied-input), and a form or action need not fill it",
+        "Write and read the wire form of values (src/core/wire.js): every union tag (external, internal, adjacent, untagged), newtype and tuple variants, variant case and wire-cased field names, so a value round-trips through its JSON; and run a read or command derivation against a store (runDerivation in src/core/derivation.js), reporting the loads, need rounds and conflict retries"
+      ],
+      "unknowns": [
+        "Only the data and interface rules exist here; the rules for implementation-level machines and refinement are added by their own tasks under WG-4838.",
+        "The cross-cutting constructs are checked, but no generator turns them into code yet (WG-4838).",
+        "The user interface constructs are checked, but no generator builds the frontend kernel or end-to-end browser tests from them yet (WG-4838).",
+        "A language entity is checked here but not mirrored in Lean: its claims are checked by tests, not proved. Generating its parser, printer, checker and evaluator is specc's work (WG-4931); stating the Strata kernel language in Strata's specification is WG-4930.",
+        "Derived contracts are checked by shape, names and types here; whether a derivation means what the contract's postconditions say is not checked by Exegra but by tests of the generated code. Emitting their implementations is specc's work (WG-4935, Strata side).",
+        "A function is checked and its examples are evaluated here in JavaScript, but functions are not mirrored in Lean: their claims are checked by examples and tests, not proved. Compiling functions into a pure crate is specc's work (WG-4934). The JavaScript evaluator of a language follows a reference (through) only through a lookup an example supplies, which keys a reference by its field name alone; the case table states what the kernel does without one."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/builtin-types.js",
+          "src/core/codegen-model.js",
+          "src/core/readiness.js",
+          "src/core/constructs.js",
+          "src/core/ui.js",
+          "src/core/ui-steps.js",
+          "src/core/telemetry.js",
+          "src/core/scenario-input.js",
+          "src/core/type-shapes.js",
+          "src/core/language.js",
+          "src/core/function.js",
+          "src/core/function-syntax.js",
+          "src/core/function-value.js",
+          "src/core/language-eval.js",
+          "src/core/tenant-data.js",
+          "src/core/access.js",
+          "src/core/derivation.js",
+          "src/core/capabilities.js",
+          "src/core/function-fixtures.js",
+          "src/core/function-coverage.js",
+          "src/core/supplied-inputs.js",
+          "src/core/wire.js"
+        ],
+        "notes": "Hand-written; run from validate.js and from the readiness command of cli/commands.js.",
+        "language": "js"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "id": "simulation-engine-calls-simulation-aspect-registry",
+      "kind": "invokes",
+      "from": "simulation-engine",
+      "to": "simulation-aspect-registry",
+      "description": "Runs the hooks of the aspects a specification enables (planned, WG-4665)."
+    },
+    {
+      "id": "simulation-aspect-registry-calls-chaos-aspect",
+      "kind": "composes",
+      "from": "simulation-aspect-registry",
+      "to": "chaos-aspect",
+      "description": "Registered aspect."
+    },
+    {
+      "id": "simulation-aspect-registry-calls-load-aspect",
+      "kind": "composes",
+      "from": "simulation-aspect-registry",
+      "to": "load-aspect",
+      "description": "Registered aspect."
+    },
+    {
+      "id": "simulation-aspect-registry-calls-cost-aspect",
+      "kind": "composes",
+      "from": "simulation-aspect-registry",
+      "to": "cost-aspect",
+      "description": "Registered aspect."
+    },
+    {
+      "id": "cost-aspect-depends-on-load-aspect",
+      "kind": "depends-on",
+      "from": "cost-aspect",
+      "to": "load-aspect",
+      "description": "Prices the resource usage the load aspect records."
+    },
+    {
+      "id": "refinement-checker-calls-simulation-engine",
+      "kind": "invokes",
+      "from": "refinement-checker",
+      "to": "simulation-engine",
+      "description": "Runs the abstract and the refined behaviors of a component (planned, WG-4666)."
+    },
+    {
+      "id": "exhaustive-explorer-calls-simulation-engine",
+      "kind": "invokes",
+      "from": "exhaustive-explorer",
+      "to": "simulation-engine",
+      "description": "A Rust explorer with the same semantics as simulation, for state spaces too large for the Lean one, checked differentially against it (planned, WG-4650)."
+    },
+    {
+      "id": "exhaustive-explorer-depends-on-fault-model",
+      "kind": "reads",
+      "from": "exhaustive-explorer",
+      "to": "fault-model",
+      "description": "Explores every subset of the scenario's faults; the concurrency bounds of its fault model are to be applied once the engine input carries them."
+    },
+    {
+      "id": "deployment-model-depends-on-exhaustive-explorer",
+      "kind": "depends-on",
+      "from": "deployment-model",
+      "to": "exhaustive-explorer",
+      "description": "Cutover, rollback and migration claims are checked exhaustively."
+    },
+    {
+      "id": "implementation-refinement-depends-on-fault-model",
+      "kind": "depends-on",
+      "from": "implementation-refinement",
+      "to": "fault-model",
+      "description": "Implementation runs draw faults from the fault model."
+    },
+    {
+      "id": "simulation-engine-depends-on-formal-semantics",
+      "kind": "exercises",
+      "from": "simulation-engine",
+      "to": "formal-semantics",
+      "description": "The engine is checked against the formal semantics, which defines what it must compute (planned, WG-4685)."
+    },
+    {
+      "id": "proof-export-calls-simulation-contract",
+      "kind": "invokes",
+      "from": "proof-export",
+      "to": "simulation-contract",
+      "description": "Builds the scenario's engine input with simulationInput, exactly as simulate does."
+    },
+    {
+      "id": "proof-export-calls-expression-language",
+      "kind": "invokes",
+      "from": "proof-export",
+      "to": "expression-language",
+      "description": "Parses claim expressions and evaluates them on a counterexample's last configuration to explain it."
+    },
+    {
+      "id": "proof-export-calls-contract-conformance",
+      "kind": "invokes",
+      "from": "proof-export",
+      "to": "contract-conformance",
+      "description": "Renders a counterexample's contract events as request-log lines."
+    },
+    {
+      "id": "simulation-engine-calls-resource-model",
+      "kind": "invokes",
+      "from": "simulation-engine",
+      "to": "resource-model",
+      "description": "Settles resources after each step and runs service-done and wait-timeout entries (planned, WG-4664, WG-4715)."
+    },
+    {
+      "id": "simulation-engine-calls-workload-model",
+      "kind": "invokes",
+      "from": "simulation-engine",
+      "to": "workload-model",
+      "description": "Queues the next arrival of a workload when one is taken, runs link transfers and timers (planned, WG-4715)."
+    },
+    {
+      "id": "simulation-engine-calls-performance-metrics",
+      "kind": "invokes",
+      "from": "simulation-engine",
+      "to": "performance-metrics",
+      "description": "Accumulates the measured outputs of a run, in trace and metrics output modes (planned, WG-4715).",
+      "contract": "trace-v2"
+    },
+    {
+      "id": "workload-model-depends-on-formal-semantics",
+      "kind": "reads",
+      "from": "workload-model",
+      "to": "formal-semantics",
+      "description": "Arrivals, links, latency, timers and the SplitMix64 streams are defined in Lean first (planned, WG-4715)."
+    },
+    {
+      "id": "performance-metrics-depends-on-formal-semantics",
+      "kind": "depends-on",
+      "from": "performance-metrics",
+      "to": "formal-semantics",
+      "description": "Metrics are defined in Lean as a function of the run (planned, WG-4715)."
+    },
+    {
+      "id": "simulation-contract-calls-resource-model",
+      "kind": "invokes",
+      "from": "simulation-contract",
+      "to": "resource-model",
+      "description": "Lowers resources, classes and service demand into the version-2 engine input (planned).",
+      "contract": "engine-input-v2"
+    },
+    {
+      "id": "simulation-contract-calls-workload-model",
+      "kind": "invokes",
+      "from": "simulation-contract",
+      "to": "workload-model",
+      "description": "Lowers workloads, rates, durations, distributions and links into the version-2 engine input (planned).",
+      "contract": "engine-input-v2"
+    },
+    {
+      "id": "load-aspect-depends-on-workload-model",
+      "kind": "depends-on",
+      "from": "load-aspect",
+      "to": "workload-model",
+      "description": "The load aspect drives scenarios with the workloads of format 2 (planned, WG-4668 on WG-4715)."
+    },
+    {
+      "id": "load-aspect-depends-on-resource-model",
+      "kind": "depends-on",
+      "from": "load-aspect",
+      "to": "resource-model",
+      "description": "Saturation and backpressure are those of the resources of format 2."
+    },
+    {
+      "id": "cost-aspect-reads-performance-metrics",
+      "kind": "reads",
+      "from": "cost-aspect",
+      "to": "performance-metrics",
+      "description": "Prices the counted quantities and reports cost per run, per bucket and per month (planned, WG-4669 on WG-4715)."
+    },
+    {
+      "id": "simulation-engine-calls-lean-call-boundary",
+      "kind": "invokes",
+      "from": "simulation-engine",
+      "to": "lean-call-boundary",
+      "description": "Runs every engine input as the Lean function engine.run."
+    },
+    {
+      "id": "lean-call-boundary-calls-formal-semantics",
+      "kind": "invokes",
+      "from": "lean-call-boundary",
+      "to": "formal-semantics",
+      "description": "Dispatches engine.run, engine.explore and engine.temporal to runAnyValue, exploreValue and temporalValue of the Lean core."
+    },
+    {
+      "id": "lean-call-boundary-calls-model-derivation",
+      "kind": "invokes",
+      "from": "lean-call-boundary",
+      "to": "model-derivation",
+      "description": "Dispatches model.derive to Exegra.Model.deriveValue."
+    },
+    {
+      "id": "lean-call-boundary-calls-model-hash",
+      "kind": "invokes",
+      "from": "lean-call-boundary",
+      "to": "model-hash",
+      "description": "Dispatches hash.semantic and hash.normalize to the semantic hash and the normal form."
+    },
+    {
+      "id": "simulation-contract-calls-stable-serialization",
+      "kind": "invokes",
+      "from": "simulation-contract",
+      "to": "stable-serialization",
+      "description": "Writes the goldens with sorted keys (tools/record-goldens.js)."
+    },
+    {
+      "id": "simulation-engine-calls-simulation-contract",
+      "kind": "invokes",
+      "from": "simulation-engine",
+      "to": "simulation-contract",
+      "description": "Takes the engine input that simulation-contract derives (sim-input.js) and checks the input before it runs."
+    },
+    {
+      "id": "generation-readiness-calls-data-model",
+      "kind": "invokes",
+      "from": "generation-readiness",
+      "to": "data-model",
+      "description": "Reads the well-formed field declarations of a record."
+    },
+    {
+      "id": "generation-readiness-reads-metamodel",
+      "kind": "reads",
+      "from": "generation-readiness",
+      "to": "metamodel",
+      "description": "The type kind, the record and contract properties and the requirement realisation are declared in the meta-model."
+    },
+    {
+      "id": "generation-readiness-calls-expression-language",
+      "kind": "invokes",
+      "from": "generation-readiness",
+      "to": "expression-language",
+      "description": "Parses the conditions, custom validation rules and audit captures of the cross-cutting constructs, and the arguments and navigation parameters of forms and actions, and lists their references."
+    },
+    {
+      "id": "lean-call-boundary-depends-on-javascript-runtime",
+      "kind": "depends-on",
+      "from": "lean-call-boundary",
+      "to": "javascript-runtime",
+      "description": "Instantiates the Lean core compiled to WebAssembly through the WebAssembly support of whichever JavaScript runtime hosts it, the browser or Node.js."
+    },
+    {
+      "id": "lean-call-boundary-calls-claim-verdict",
+      "kind": "invokes",
+      "from": "lean-call-boundary",
+      "to": "claim-verdict",
+      "description": "Dispatches claims.status, verdict.isRegression, facts.decode, impact.claims and theorem.weakening to Exegra.Verdict and Exegra.Impact."
+    }
+  ]
+}

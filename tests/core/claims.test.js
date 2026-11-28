@@ -5,6 +5,7 @@ import { evaluateClaims, evaluateClaim, checkTrace } from '../../src/core/claims
 import { initEngine, runScenario } from '../../src/core/engine.js';
 import { Project } from '../../src/core/project.js';
 import { readFileSync } from 'node:fs';
+import { readSpecFile } from '../../tools/spec-manifest.js';
 
 initEngine();
 
@@ -223,9 +224,11 @@ test('external-evidence: no evidence is not-evaluated', () => {
   assert.deepEqual(r.evidence, []);
 });
 
-test('external-evidence: an author-entered document is supported, and says nothing was executed', () => {
+test('external-evidence: an author-entered document is asserted, not supported, and says nothing was executed', () => {
   const r = claim('c-ev-doc');
-  assert.equal(r.status, 'supported');
+  assert.equal(r.status, 'asserted');
+  assert.equal(r.verdict?.strength, 'asserted');
+  assert.equal(r.verdict?.established, false);
   assert.match(r.explanation, /author-entered/);
   assert.match(r.explanation, /did not execute/);
   assert.deepEqual(r.evidence, [{ id: 'e-doc', kind: 'document', ref: 'docs/sla.pdf', supports: true, recorded: 'none' }]);
@@ -240,7 +243,7 @@ test('external-evidence: a test with no recorded result is inconclusive', () => 
 });
 
 test('external-evidence: a recorded pass is supported and says Exegra holds an execution result', () => {
-  const r = claim('c-ev-test', { recorded: { results: { 'e-test': { outcome: 'pass', detail: '12 passed', ranAt: 'recorded' } } } });
+  const r = claim('c-ev-test', { recorded: { results: { 'e-test': { outcome: 'pass', detail: '12 passed', ranAt: 'recorded', stamp: 'T' } } }, stamps: { tree: 'T', formal: 'F' } });
   assert.equal(r.status, 'supported');
   assert.equal(r.evidence[0].recorded, 'pass');
   assert.equal(r.evidence[0].detail, '12 passed');
@@ -558,7 +561,7 @@ test('negatives: malformed negatives are validation errors and follow renames', 
 });
 
 test('negatives: every behavioral claim of the exegra specification is verified with a violating negative', () => {
-  const model = load(readFileSync(new URL('../../specs/exegra/spec.jsonc', import.meta.url), 'utf8'));
+  const model = load(readSpecFile(new URL('../../specs/exegra/spec.jsonc', import.meta.url)));
   const trace = evaluateClaims(model).filter((r) => r.evaluator === 'exegra.trace/0.1');
   assert.ok(trace.length >= 10, `expected the edit-flow claims, found ${trace.length}`);
   for (const r of trace) {

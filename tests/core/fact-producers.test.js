@@ -6,8 +6,9 @@
 //   - the lean-theorem rule refusing an empty `about`, an opaque constant and code that is not the definition;
 //   - open-startedness of a metric claim's class computed from the workloads, never assumed;
 //   - admit and verify treating any fall from a positive status, a removal and a changed counterexample as a regression.
-// None of these needs Lean: claims are evaluated on hand-built models (evaluateClaims reads only entities,
-// byKind, meta and a precomputed semanticHash) and the CLI pieces are pure functions.
+// Claims are evaluated on hand-built models (evaluateClaims reads only entities, byKind, meta and a precomputed
+// semanticHash); their statuses, and admit's and verify's regressions, are decided by the Lean core
+// (formal/Exegra/Verdict.lean), which these tests load.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -21,8 +22,8 @@ import { tapTests, countPassingTests, mergeRecordedResults } from '../../cli/com
 import { nodeOutcome, testsVerdict } from '../../cli/outcomes.js';
 import { compare, claimBaseline, verifyRegressions, counterexampleFingerprint } from '../../cli/admit.js';
 import { recordsStamp, treeStamp, formalSourcesHash, currentStamps } from '../../tools/tree-stamp.js';
-import { evaluateMetricClaim, openStartedClass } from '../../src/core/metric-claims.js';
-import { evaluateRuns, rat, parseRational, claimStatus } from '../../src/core/metric-stats.js';
+import { evaluateMetricClaim, openStartedClass, metricVerdict } from '../../src/core/metric-claims.js';
+import { evaluateRuns, rat, parseRational } from '../../src/core/metric-stats.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const FIXTURE = 'tests/fixtures/skipped-tests/demo.test.js';
@@ -134,9 +135,12 @@ test('a recorded result whose stamp is not the current stamp leaves its claim no
   assert.equal(failed.status, 'violated');
 });
 
-test('without a current stamp recorded results are reported with unverifiable freshness', () => {
+test('without a current stamp recorded results are reported with unverifiable freshness and establish nothing', () => {
   const r = byId(EVIDENCE_MODEL(), { recorded: { results: { 'ev-tested': { outcome: 'pass', stamp: 'ANY' } } }, stamps: null })['c-tested'];
-  assert.equal(r.status, 'supported', 'the browser bundle keeps displaying the recorded result');
+  // Only fresh facts give strength (Exegra.Verdict.strength_le_kind): a result whose freshness cannot be checked
+  // is shown, but does not support the claim.
+  assert.equal(r.status, 'inconclusive');
+  assert.equal(r.verdict?.strength, 'undecided');
   assert.equal(r.freshness, 'unverifiable');
   assert.match(r.explanation, /Freshness unverifiable/);
   assert.deepEqual(r.diagnostics?.map((d) => [d.code, d.severity]), [['claim.freshness-unverifiable', 'info']]);
@@ -266,7 +270,7 @@ test('a closed-workload class whose runs collapse reads violated: underpowered r
   const closed = metricInput({ id: 'clients', kind: 'closed', event: 'ask', population: 50 });
   assert.equal(openStartedClass(closed, P99_CLAIM.metric), false);
   const res = evaluateMetricClaim(collapsingEngine(), { scenarios: [closed] }, P99_CLAIM);
-  assert.equal(res.status, 'violated');
+  assert.equal(metricVerdict(res).label, 'violated');
   assert.equal(res.scenarios[0].kept, 100);
   assert.equal(res.scenarios[0].leftOut, 0);
   // metric-demo1 as written: the statistics alone, with openStarted not stated, also fail.
@@ -276,7 +280,7 @@ test('a closed-workload class whose runs collapse reads violated: underpowered r
   ];
   const unstated = evaluateRuns(runs, { op: '<=', bound: rat(30000n), fraction: parseRational('0.95'), confidence: parseRational('0.95') });
   assert.equal(unstated.verdict, 'fails');
-  assert.equal(claimStatus([unstated]).status, 'violated');
+  assert.equal(metricVerdict({ scenarios: [unstated], negatives: [], controlNegatives: [] }).label, 'violated');
 });
 
 test('open-startedness is computed from the workloads that can start the class', () => {
@@ -300,9 +304,15 @@ test('open-startedness is computed from the workloads that can start the class',
 // ---------------------------------------------------------------------------------------------------------
 // 5. Regression gating
 
-/** An admit snapshot by hand: claim statuses only, over an empty model. @param {Record<string, string>} statuses */
+/** The status tuple a status word stands for in these tests. @param {string} status */
+function verdictOf(status) {
+  const strength = { proved: 'proved', verified: 'exploredToBound', supported: 'checkedOnInstances', 'model-holds': 'checkedOnInstances', violated: 'refuted' }[status] ?? 'undecided';
+  return { strength, subject: status === 'verified' ? 'model' : 'implementation', openAssumptions: [], freshness: 'fresh' };
+}
+
+/** An admit snapshot by hand: claim statuses and their tuples, over an empty model. @param {Record<string, string>} statuses */
 function side(statuses) {
-  const claims = new Map(Object.entries(statuses).map(([id, status]) => [id, { id, status, explanation: '' }]));
+  const claims = new Map(Object.entries(statuses).map(([id, status]) => [id, { id, status, explanation: '', verdict: verdictOf(status) }]));
   return /** @type {any} */ ({ claims, errors: new Map(), warnings: new Map(), gaps: new Map(), violations: new Map(), model: modelOf([]) });
 }
 
@@ -320,16 +330,18 @@ test('admit rejects a claim that falls to not evaluated and a positive claim tha
 
 test('verify fails on a fall from a positive status a removal and a changed counterexample of an expected violation', () => {
   const cx = (/** @type {string[]} */ entities) => ({ summary: `Components not in Lean: ${entities.join(', ')}.`, entities });
+  /** @param {string} claimId @param {string} status @param {any} [extra] */
+  const row = (claimId, status, extra = {}) => ({ claimId, status, verdict: verdictOf(status), ...extra });
   const before = claimBaseline([
-    { claimId: 'p', status: 'proved' }, { claimId: 's', status: 'supported' }, { claimId: 'v', status: 'verified' },
-    { claimId: 'gone', status: 'supported' }, { claimId: 'known', status: 'violated', counterexample: cx(['claim-evaluator']) },
-    { claimId: 'weak', status: 'inconclusive' },
+    row('p', 'proved'), row('s', 'supported'), row('v', 'verified'),
+    row('gone', 'supported'), row('known', 'violated', { counterexample: cx(['claim-evaluator']) }),
+    row('weak', 'inconclusive'),
   ]);
   assert.equal(before.known.counterexample, counterexampleFingerprint(cx(['claim-evaluator'])));
   const after = claimBaseline([
-    { claimId: 'p', status: 'not-evaluated' }, { claimId: 's', status: 'inconclusive' }, { claimId: 'v', status: 'verified' },
-    { claimId: 'known', status: 'violated', counterexample: cx(['claim-evaluator', 'new-js-kernel']) },
-    { claimId: 'weak', status: 'not-evaluated' },
+    row('p', 'not-evaluated'), row('s', 'inconclusive'), row('v', 'verified'),
+    row('known', 'violated', { counterexample: cx(['claim-evaluator', 'new-js-kernel']) }),
+    row('weak', 'not-evaluated'),
   ]);
   const found = verifyRegressions(before, after, { expectViolated: ['known'] });
   assert.deepEqual(found.map((x) => [x.code, x.id]), [

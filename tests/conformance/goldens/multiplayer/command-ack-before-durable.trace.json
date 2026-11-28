@@ -3,6 +3,15 @@
   "early-ack"
  ],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "api-flow": 0,
+   "client-flow": 0,
+   "database-flow": 0,
+   "worker-flow": 0
+  },
+  "links": {},
   "machines": {
    "api-flow": {
     "state": "api-responded",
@@ -31,10 +40,25 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 1
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 1,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "api-flow": 0,
+   "client-flow": 0,
+   "database-flow": 0,
+   "worker-flow": 0
+  },
+  "links": {},
   "machines": {
    "api-flow": {
     "state": "api-idle",
@@ -63,12 +87,14 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "command-submitted",
     "payload": {
      "token": "valid-token"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -77,13 +103,29 @@
     "time": 0
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "command-ack-before-durable",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "api-flow": 0,
+     "client-flow": 0,
+     "database-flow": 0,
+     "worker-flow": 0
+    },
+    "links": {},
     "machines": {
      "api-flow": {
       "state": "api-idle",
@@ -112,12 +154,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "command-received",
+      "from": {
+       "behavior": "client-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "token": "valid-token"
       },
+      "scheduledAt": 0,
       "seq": 1,
       "source": {
        "behavior": "client-flow",
@@ -127,13 +176,20 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "command-submitted",
     "payload": {
      "token": "valid-token"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -156,6 +212,7 @@
      ],
      "from": "client-idle",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "client-awaiting",
      "transition": "client-submit"
@@ -165,21 +222,26 @@
     {
      "behavior": "api-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "database-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "command-submitted",
     "client-submit",
@@ -190,6 +252,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "api-flow": 0,
+     "client-flow": 0,
+     "database-flow": 0,
+     "worker-flow": 0
+    },
+    "links": {},
     "machines": {
      "api-flow": {
       "state": "api-routing",
@@ -218,10 +289,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "command-routed",
+      "from": {
+       "behavior": "api-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 2,
       "source": {
        "behavior": "api-flow",
@@ -231,13 +309,25 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "client-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "command-received",
     "payload": {
      "token": "valid-token"
     },
+    "scheduledAt": 0,
     "seq": 1,
     "source": {
      "behavior": "client-flow",
@@ -259,6 +349,7 @@
      ],
      "from": "api-idle",
      "guard": "event.token == 'valid-token'",
+     "instance": 0,
      "sets": [
       {
        "after": true,
@@ -274,21 +365,26 @@
     {
      "behavior": "client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "database-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "command-received",
     "api-route-command",
@@ -299,6 +395,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "api-flow": 0,
+     "client-flow": 0,
+     "database-flow": 0,
+     "worker-flow": 0
+    },
+    "links": {},
     "machines": {
      "api-flow": {
       "state": "api-routing",
@@ -327,10 +432,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "command-accepted",
+      "from": {
+       "behavior": "worker-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 3,
       "source": {
        "behavior": "worker-flow",
@@ -340,11 +452,23 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "api-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "command-routed",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 2,
     "source": {
      "behavior": "api-flow",
@@ -366,6 +490,7 @@
      ],
      "from": "worker-idle",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": true,
@@ -381,21 +506,26 @@
     {
      "behavior": "client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "api-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "database-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "command-routed",
     "worker-accept-command",
@@ -406,6 +536,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "api-flow": 0,
+     "client-flow": 0,
+     "database-flow": 0,
+     "worker-flow": 0
+    },
+    "links": {},
     "machines": {
      "api-flow": {
       "state": "api-routing",
@@ -434,10 +573,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "acknowledgement-sent",
+      "from": {
+       "behavior": "worker-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 4,
       "source": {
        "behavior": "worker-flow",
@@ -448,7 +594,13 @@
      },
      {
       "event": "persist-requested",
+      "from": {
+       "behavior": "worker-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 1,
       "seq": 5,
       "source": {
        "behavior": "worker-flow",
@@ -458,11 +610,23 @@
       "time": 1
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "worker-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "command-accepted",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 3,
     "source": {
      "behavior": "worker-flow",
@@ -495,6 +659,7 @@
      ],
      "from": "worker-accepted",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": true,
@@ -510,21 +675,26 @@
     {
      "behavior": "client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "api-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "database-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "command-accepted",
     "worker-ack-early",
@@ -536,6 +706,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "api-flow": 0,
+     "client-flow": 0,
+     "database-flow": 0,
+     "worker-flow": 0
+    },
+    "links": {},
     "machines": {
      "api-flow": {
       "state": "api-responded",
@@ -564,10 +743,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "response-delivered",
+      "from": {
+       "behavior": "api-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 6,
       "source": {
        "behavior": "api-flow",
@@ -578,7 +764,13 @@
      },
      {
       "event": "persist-requested",
+      "from": {
+       "behavior": "worker-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 1,
       "seq": 5,
       "source": {
        "behavior": "worker-flow",
@@ -588,11 +780,23 @@
       "time": 1
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "worker-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "acknowledgement-sent",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 4,
     "source": {
      "behavior": "worker-flow",
@@ -614,6 +818,7 @@
      ],
      "from": "api-routing",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "api-responded",
      "transition": "api-deliver-response"
@@ -623,21 +828,26 @@
     {
      "behavior": "client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "database-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "acknowledgement-sent",
     "api-deliver-response",
@@ -648,6 +858,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "api-flow": 0,
+     "client-flow": 0,
+     "database-flow": 0,
+     "worker-flow": 0
+    },
+    "links": {},
     "machines": {
      "api-flow": {
       "state": "api-responded",
@@ -676,10 +895,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "persist-requested",
+      "from": {
+       "behavior": "worker-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 1,
       "seq": 5,
       "source": {
        "behavior": "worker-flow",
@@ -689,11 +915,23 @@
       "time": 1
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "api-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "response-delivered",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 6,
     "source": {
      "behavior": "api-flow",
@@ -708,6 +946,7 @@
      "emitted": [],
      "from": "client-awaiting",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": true,
@@ -723,21 +962,26 @@
     {
      "behavior": "api-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "database-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 5,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "response-delivered",
     "client-receive-response",
@@ -748,6 +992,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "api-flow": 0,
+     "client-flow": 0,
+     "database-flow": 0,
+     "worker-flow": 0
+    },
+    "links": {},
     "machines": {
      "api-flow": {
       "state": "api-responded",
@@ -776,10 +1029,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "persist-committed",
+      "from": {
+       "behavior": "database-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 1,
       "seq": 7,
       "source": {
        "behavior": "database-flow",
@@ -789,11 +1049,23 @@
       "time": 1
      }
     ],
-    "time": 1
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 1,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "worker-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "persist-requested",
     "payload": {},
+    "scheduledAt": 1,
     "seq": 5,
     "source": {
      "behavior": "worker-flow",
@@ -815,6 +1087,7 @@
      ],
      "from": "database-idle",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": true,
@@ -830,21 +1103,26 @@
     {
      "behavior": "client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "api-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 6,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "persist-requested",
     "database-commit",
@@ -855,6 +1133,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "api-flow": 0,
+     "client-flow": 0,
+     "database-flow": 0,
+     "worker-flow": 0
+    },
+    "links": {},
     "machines": {
      "api-flow": {
       "state": "api-responded",
@@ -883,12 +1170,25 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 1
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 1,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "database-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "persist-committed",
     "payload": {},
+    "scheduledAt": 1,
     "seq": 7,
     "source": {
      "behavior": "database-flow",
@@ -902,30 +1202,40 @@
     {
      "behavior": "client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "api-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "database-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 7,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "persist-committed"
    ],
    "time": 1
   }
- ]
+ ],
+ "stepsTaken": 8,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

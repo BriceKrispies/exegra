@@ -24,11 +24,13 @@ export function createLabelParts(entityId) {
 /**
  * Update label text; returns true when the content changed (size must be re-measured).
  * @param {ReturnType<typeof createLabelParts>} parts
- * @param {{label?:string, sublabel?:string, badges?:string[]}} node
+ * @param {{label?:string, sublabel?:string, badges?:string[], marks?:{kind:string, text:string, title?:string}[]}} node
  */
 export function setLabelText(parts, node) {
-  const badges = node.badges ?? [];
-  const text = `${node.label ?? ''}\u0001${node.sublabel ?? ''}\u0001${badges.join('\u0002')}`;
+  // Marks (what is known or missing about a block) follow the badges, each with a class naming its kind.
+  const marks = node.marks ?? [];
+  const badges = [...(node.badges ?? []), ...marks.map((m) => m.text)];
+  const text = `${node.label ?? ''}\u0001${node.sublabel ?? ''}\u0001${badges.join('\u0002')}\u0001${marks.map((m) => m.kind).join('\u0002')}`;
   if (text === parts.text) return false;
   parts.text = text;
   parts.nameEl.textContent = node.label ?? '';
@@ -41,7 +43,15 @@ export function setLabelText(parts, node) {
     parts.el.append(b);
     parts.badgeEls.push(b);
   }
-  badges.forEach((t, i) => { parts.badgeEls[i].textContent = t; });
+  const plain = badges.length - marks.length;
+  badges.forEach((t, i) => {
+    const el = parts.badgeEls[i];
+    el.textContent = t;
+    const m = i >= plain ? marks[i - plain] : null;
+    el.className = m ? `scene-label__badge scene-label__mark scene-label__mark--${m.kind}` : 'scene-label__badge';
+    if (m?.title) el.title = m.title; else el.removeAttribute('title');
+    if (m) el.dataset.mark = m.kind; else delete el.dataset.mark;
+  });
   return true;
 }
 

@@ -1,6 +1,13 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "gateway-machine": 0,
+   "ledger-machine": 0
+  },
+  "links": {},
   "machines": {
    "gateway-machine": {
     "state": "gw-idle",
@@ -18,10 +25,23 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "gateway-machine": 0,
+   "ledger-machine": 0
+  },
+  "links": {},
   "machines": {
    "gateway-machine": {
     "state": "gw-idle",
@@ -39,10 +59,22 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "empty-run",
- "steps": []
+ "seed": null,
+ "steps": [],
+ "stepsTaken": 0,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

@@ -106,10 +106,35 @@ node cli/exegra.js show semantic-core
 {"ok":true,"command":"show","project":"exegra","semanticHash":"…","result":{"id":"server","kind":"component","data":{"name":"Server","category":"logical"},"ownedEntities":["server-api"],"referencedBy":[{"from":"client-calls-server","via":"to"}],"relationships":[{"id":"client-calls-server","kind":"calls","direction":"in","other":"client"}],"children":[],"ancestors":[]}}
 ```
 
+### `get <id> [<id> ...]`
+Targeted read. Prints the named entities, in the order given, so an agent never has to open the specification text.
+```
+node cli/exegra.js get core-independent-of-ui transactions
+```
+Each result is `{id, kind, owner, label, source: {file, line, column}, data, refersTo: [{path, target, line}], referencedBy: [{from, path, line}]}`. `data` is the declaration as written; `refersTo` lists the entity's outbound references by property path, `referencedBy` the inbound ones; both come from `model.refs`. An unknown id fails with `entity.unknown`. The example above, on the Exegra specification, prints 11,022 bytes, against a specification of 1.33 MB.
+
+### `find [--kind K] [--where prop=value]... [--refers-to ID] [--referenced-by ID] [--text "..."] [--fields a,b] [--limit N]`
+Targeted search. Every filter given must hold.
+- `--kind`: entity kind. `--where prop=value` (repeatable): a property of the declaration, dotted paths allowed (`implementation.status=manual`), equal to the value as text; for an array, any element.
+- `--refers-to ID`: entities holding a reference to ID. `--referenced-by ID`: entities that ID refers to.
+- `--text`: case-insensitive substring of any string in the declaration.
+- `--fields a,b`: data fields (dotted paths) to print; without it only id, kind, label and source are printed. `--limit N` defaults to 100.
+
+Result: `{total, returned, truncated, entities: [{id, kind, label, source, fields?}]}`.
+
+### `refs <id>`
+The references of one entity: `{id, outbound: [{path, target, line}], inbound: [{from, path, line}]}`, exactly what `model.refs` holds.
+
+### The guard
+`tools/spec-guard.js` is a Claude Code PreToolUse hook, wired in `.claude/settings.json` with the matcher `Read|Edit|Write|MultiEdit|Grep|Glob|Bash`. It reads the hook JSON on stdin, exits 2 with the reason on stderr to refuse and 0 silently to allow.
+- Refused: Read, Edit, Write and MultiEdit of a specification file or a part file of a manifest specification; a Grep whose path or glob names one; shell commands that print or edit one (`cat`, `type`, `Get-Content`, `head`, `tail`, `less`, `sed`, `grep`, redirections).
+- Allowed: a Read of at most 60 lines from the top (the header comment), any other file, a repository-wide Grep, `node cli/exegra.js ...`, and scripts that use `jsonc-parser`.
+- Every refusal names `get`, `find` and `refs` for reading and `apply --dry-run`, then `apply`, for editing.
+
 ### `deps <id> [--direction out|in] [--transitive] [--kinds a,b]`
 Dependencies of a component. Default: `out` (what it depends on), direct only. Without `--kinds`, only relationship kinds flagged as dependencies are followed.
 ```
-node cli/exegra.js deps visual-interaction --transitive
+node cli/exegra.js deps composition-root --transitive
 ```
 ```json
 {"ok":true,"command":"deps","project":"exegra","semanticHash":"…","result":[{"id":"server","via":"client-calls-server","depth":1}]}
@@ -190,7 +215,7 @@ The envelope is `ok: true` with exit 0 when admitted. When rejected it is `ok: f
 
 Result fields: `verdict` (`admitted` or `rejected`), `reasons`, `transaction` (`accepted`; `code`, `message` and `diagnostics` when refused), `diff` (null when the transaction was refused), `counts` (`before` and `after` per side, and the number of changed, regressed, added and removed claims and of new and resolved validation errors, warnings, readiness gaps and integrity violations), `acknowledged`, `pendingRealisation`, `semanticHashBefore`, `semanticHashAfter`, `written`. The diff has `claims` (`changed` with `before`, `after`, `direction` and the evaluator's explanation after; `added` with status; `removed`), `validation` (`errors` and `warnings`, each `new` and `resolved`), `readiness` and `integrity` (each `new` and `resolved`; a violation is the rule id, its severity and the counterexample bindings) and `privilege` (`added`: each capability a role, grant, delegation or token scope gained; `removed`: each capability taken away, informational). Every list is sorted by id. Claims are evaluated exactly as `evaluate` does, with the project's recorded results.
 
-Ranking of claim statuses, best first: `proved` > `verified` > `supported` = `model-holds` > `inconclusive` = `not-evaluated` > `violated`. A claim whose status moves down this ranking has regressed, so a fall from a positive status to `not-evaluated` (a stale or missing fact, a check that no longer runs) is `admit.claim-regressed`. A claim that was positive and that the change removes is `admit.claim-removed`. Both sides read the recorded results against the same current stamps ([claims-and-evidence.md](claims-and-evidence.md#freshness-of-recorded-facts)).
+Whether a claim regressed is decided in Lean (`Exegra.Verdict.isRegression`, formal/Exegra/Verdict.lean) over the status tuple each claim carries (`verdict`: strength, subject, open assumptions, freshness): a move is a regression unless the new status is at least the old one in the status order, so a fall to a lower or incomparable strength, a new open assumption, a change of subject or a loss of freshness is `admit.claim-regressed`. Every claim the change removes is `admit.claim-removed`. Both sides read the recorded results against the same current stamps ([claims-and-evidence.md](claims-and-evidence.md#freshness-of-recorded-facts)).
 
 Admitted only when all of these hold; every failing one is listed in `reasons`, not only the first:
 
@@ -208,12 +233,21 @@ Admitted only when all of these hold; every failing one is listed in `reasons`, 
 | `admit.claim-vacuous` | A claim the change creates cannot fail on a correct model: its check is `holds-by-construction` or `restated-scenario` (`id`, `check`, `grounding`, `acknowledgeable: true`). |
 | `admit.claim-single-trace` | A claim the change creates is decided only by running hand-written scenarios, with no exploration and no refinement: check `single-trace` (`acknowledgeable: true`). |
 | `admit.claim-self-contained` | A claim the change creates reads nothing of the platform: grounding `self-contained`, its behaviors anchored to no refined behavior, record, contract event or anchored behavior (`acknowledgeable: true`). |
+| `admit.theorem-weakened` | The change weakens the theorem of a `lean-theorem` claim, decided in Lean (`Exegra.Impact.weakening`) between the check recorded before the change and the check after it: the theorem is gone, its axioms gained a member, its `about` set changed, or its statement hash changed and the claim names no `supersedes` theorem of type new statement → old statement that passes the Lean gate (`weakening`: `removed`, `axioms-gained`, `about-changed`, `statement-changed`). Acknowledged only by `--accept <claim id>`, never by its code. |
 
 The last three come from the strength of the claim ([claims-and-evidence.md](claims-and-evidence.md#check-strength-and-grounding)) and are raised for claims the change creates only; one claim can have several. They are acknowledgeable like the reasons above.
 
 Reasons that carry `acknowledgeable: true` are decisions, not failures. `--accept <code>` (repeatable, or comma separated) acknowledges every reason with that code: it no longer blocks admission and is listed in `result.acknowledged`. A code that no reason carries is ignored. Accepting a code whose reason is not acknowledgeable (`admit.claim-regressed`, `admit.new-error`, `admit.new-violation`, `admit.new-claim-weak`, `admit.requirement-without-milestone`, `admit.transaction-refused`) fails with `admit.not-acknowledgeable` and exit 1; fix the change instead.
 
 **Pending realisation.** `admit.new-claim-weak` applies to claims Exegra can decide when they are written: those of a method in `CLAIM_METHODS` other than `external-evidence` (structural, data-model, integrity, lean-theorem, state, temporal, metric and refinement methods). A new claim realised by code, which only executed evidence or a tool such as Concordance can settle, is a requirement whose method Exegra does not evaluate, a claim whose method the vocabulary declares in `verificationMethods`, or one of `external-evidence`. Such a claim that names a `milestone` and is `not-evaluated` or `inconclusive` for lack of evidence is admitted and listed in `pendingRealisation` (`id`, `kind`, `method`, `milestone`, `status`). Without a milestone, a requirement is `admit.requirement-without-milestone` and another code-realised claim stays `admit.new-claim-weak`. A code-realised claim already `supported` is admitted without being listed.
+
+**Change sets.** `--change <file>` takes a change set `{ops, files}` instead of `--ops`: the operations, and the repository files the change touches (Lean sources, tests, measurement files). The result then also has `impact.remark` (the claims the change re-marks, as `impact` computes them) and, as for every admission, `guaranteeChanges`: each change of what a claim guarantees, apart from the diff (`claim`, `change`: `statement`, `evaluate`, `added`, `removed` or `theorem-statement`, with `before` and `after`).
+
+### `impact --change <change.json>`
+The claims a change set re-marks: those that depend on an entity its `ops` add, change or remove, on an entity it names in `entities`, or on a file it names in `files`, through the dependency graph of src/core/impact.js (a claim depends on the assumptions it cites, an assumption on the claim that `discharges` it, a claim on the entities its `evaluate` names, on its evidence, test evidence on its test file and the files its run covered, a `lean-theorem` claim on its theorem, the theorem on the declarations its statement uses and their files, measurement evidence on its files). Decided in Lean (`Exegra.Impact.impacted`). `result`: `remark`, `guaranteeChanges` (as in admit) and `changed` (the changed nodes). Changes nothing.
+```
+node cli/exegra.js impact --project exegra --change change.json
+```
 
 ### `plan-delete <id>`
 What a cascade delete would remove (`entities`), repair (`repairs`) and what depends on it (`dependents`). Changes nothing.
@@ -223,6 +257,36 @@ node cli/exegra.js plan-delete hash-binding
 ```json
 {"ok":true,"command":"plan-delete","project":"exegra","semanticHash":"…","result":{"entities":["client","client-calls-server"],"repairs":[],"dependents":[]}}
 ```
+
+### `replay-edits --file <capture.json>`
+
+Check the replies to two overlapping conditional edits of one record and an independent read of the stored value after both decisions. Run from the Exegra checkout:
+
+```sh
+node cli/exegra.js replay-edits --project exegra --file capture.json
+```
+
+The selected specification supplies the `two-session-edit-race` scenario. The checker runs its simultaneous requests in both serial orders. The first scenario payload represents the first submission in `attempts`, and the second represents the second submission. Each payload supplies a distinct symbolic value. This capture matches the order `["alice", "bob"]`.
+
+```json
+{
+  "format": "exegra-edit-history", "version": 1, "complete": true,
+  "scope": {"tenant": "news", "record": "article-1"}, "base": "7",
+  "attempts": [
+    {"id":"alice","tenant":"news","record":"article-1","base":"7","value":"Spring"},
+    {"id":"bob","tenant":"news","record":"article-1","base":"7","value":"Summer"}
+  ],
+  "observations": [
+    {"kind":"reply","attempt":"bob","outcome":"conflict"},
+    {"kind":"reply","attempt":"alice","outcome":"accepted"},
+    {"kind":"stored","tenant":"news","record":"article-1","revision":"8","value":"Spring"}
+  ]
+}
+```
+
+The collector identifies each browser's own attempt and reads the record after both decisions. It supplies observations in capture order and sets `complete` only if observation covered the whole run. A witnessed transport loss can supply `{"kind":"reply-lost","attempt":"alice"}`. The stored revision and base are opaque strings. A successful write changes the revision. Product-specific revision arithmetic, isolation and external effects require their own observations and checks.
+
+`result.verdict` is `compatible` when an order explains the observations, `incompatible` when the observations eliminate both orders, and `inconclusive` when evidence is incomplete. On a divergence `observationIndex` identifies the first unexplained observation, starting at zero. Only `compatible` exits successfully. The result is conditional on both edits being eligible, aiming at the same base, overlapping and being the only writers during capture.
 
 ### `simulate <scenarioId> [--faults a,b] [--steps]`
 Runs a scenario and checks the claims that apply to its trace. `--faults` replaces the scenario's own fault list. `--steps` includes the full `steps` array. When the scenario has contract events (events with a `contract` and a `role`), `checks` also holds their automatic conformance checks and `requestLog` lists them as request-log lines (see [simulation.md](simulation.md#contract-events-in-a-trace)).
@@ -252,12 +316,34 @@ node cli/exegra.js generate
 ```
 
 ### `traceability`
-Compares each component's declared `implementation.modules` with the files on disk. Returns `{checkedModules, missingModules, unclaimedFiles, claimedFiles}`. A module ending in `/` claims every file beneath it. The surface is `src/`, `cli/` and `tools/` (`.js`, `.json`, `.css`, `.html`), plus `index.html` and `vite.config.js`.
+Compares each component's declared `implementation.modules` with the files on disk. Returns `{checkedModules, missingModules, unclaimedFiles, claimedFiles, multipleOwners, errors}`. A module ending in `/` claims every file beneath it. The surface is `src/`, `cli/` and `tools/` (`.js`, `.json`, `.css`, `.html`), the Lean sources under `formal/` (`.lean`), the Rust sources under `engine/` (`.rs`), plus `index.html` and `vite.config.js` (`tools/surface.js`). Each declared module path is a module element; a surface file covered by two module elements (two components declaring it, or a directory and a file inside it) is the error `traceability.multiple-owners`, and the command fails.
 ```
 node cli/exegra.js traceability
 ```
 ```json
-{"ok":true,"command":"traceability","project":"exegra","semanticHash":"…","result":{"checkedModules":12,"missingModules":[],"unclaimedFiles":["tools/old.js"],"claimedFiles":40}}
+{"ok":true,"command":"traceability","project":"exegra","semanticHash":"…","result":{"checkedModules":12,"missingModules":[],"unclaimedFiles":["tools/old.js"],"claimedFiles":40,"multipleOwners":[],"errors":[]}}
+```
+
+### `extract [--check]`
+Runs the static extractor (`tools/extract.js`) over the implementation surface and writes `specs/<project>/extracted/facts.json`: per file its sha-256 digest and its imports (JavaScript static imports, re-exports, dynamic imports marked `dynamic`, `require` and builtins; Lean `import` lines; Rust `mod` and `use`), each resolved to the file it names or marked external, with the extractor's `id` and `version`. A fact is a function of the file bytes (line endings normalised) and the extractor version. The project reads the file as data: the model carries one `imports` relationship per pair of module elements the extracted imports connect, with provenance `extracted`, so extracted imports are witnesses of the derived interactions at every cut. With `--check` nothing is written and the command exits 1 when the file does not describe the tree (`extract.stale`). Static structure only.
+
+### `reconcile [--observed <facts file>]`
+Reconciles the declared relationships with the extracted facts (`reconcile.static-declared-redundant`, `reconcile.static-declared-unwitnessed`, `reconcile.static-direction`, `reconcile.static-kind`, all warnings: inside the surface a static dependency is derived from the code, not declared; an extracted dependency with no declared counterpart is not reported) and, with `--observed` naming a fact file written by `node tools/observe.js <recording.json>`, with a recorded session: `reconcile.observed-undeclared` (an observed interaction between components with no declared relationship) and `reconcile.not-observed` (a declared runtime interaction the recording does not show; not observed is not false). Runtime wiring is never flagged for being unextracted.
+
+### `derive [--cut <id>] [--hierarchy <id>] [--depth N | --expand a,b | --finest] [--coarsen <kinds>|all]`
+The derived architectural model at a cut ([model-and-format.md](model-and-format.md#elements-hierarchies-facets-and-cuts), "The derived model at a cut"): `blocks` (with `implicit` blocks for the facts of opened elements), `interactions` (key, from, to, kind, class, lifted, sorted `witnesses`, `summary`, `footprint`), `fibres`, `boundaries`, `interfaces` (derived groups and the declared ports they match), `connectors`, `contracts` (realisation paths with flagged hops), `realisations` and `diagnostics`. `--coarsen` relabels each kind to its nearest listed ancestor kind, or with `all` to the kinds directly under `interacts-with`. An ill-formed cut fails with `cut.invalid`. No renderer code is loaded.
+
+```sh
+node cli/exegra.js derive --project exegra --cut l1
+```
+
+### `cut [--cut <id>] [--hierarchy <id>] [--depth N | --expand a,b | --finest]`
+A cut of a hierarchy (docs/model-and-format.md, "Elements, hierarchies, facets and cuts"): its blocks, the elements it opens, and its abstraction map, every element at or below the cut to its block. `--cut` names a declared cut; otherwise `--hierarchy` (default `logical`) with `--depth`, `--expand` or `--finest` gives an ad hoc one. With no option it lists the hierarchies and the declared cuts. An ill-formed cut fails with `cut.invalid`.
+```
+node cli/exegra.js cut --cut l1
+```
+```json
+{"ok":true,"command":"cut","project":"exegra","semanticHash":"…","result":{"cut":"l1","hierarchy":"logical","blocks":[{"id":"semantic-core","kind":"subsystem","elements":60}],"expanded":["exegra"],"map":{"semantic-core":"semantic-core","parser":"semantic-core","module:src/core/parse.js":"semantic-core"}}}
 ```
 
 ### `verify [--skip-browser] [--ingest-only] [--fresh] [--expect-violated a,b] [--accept-change a,b]`

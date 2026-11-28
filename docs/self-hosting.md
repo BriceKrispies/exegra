@@ -8,12 +8,15 @@ Exegra specifies itself in `specs/exegra/spec.jsonc`: components, ports and cont
 
 Implementation status as declared by the self-specification (`component.implementation.status`):
 
+The counts of components, relationships, behaviors, scenarios and claims, and of claims by status, are generated
+from the specification in `specs/exegra/generated/capabilities.md` (`node cli/exegra.js generate --write`).
+
 | Status | Components | Meaning |
 |---|---|---|
 | `model-configured` | `projection-system`, `scene-renderer`, `inspector`, `property-controls` | Behaviour driven by data read at runtime, but the code that reads it is hand-written. (`parser` is `manual`.) |
-| `manual` | 66 components, six subsystems included (validator, expression language, transactions, claim evaluator, simulation engine, layout engine, session, shell, toolbar, dialogs, source editor, workspace service, CLI, generators, ...) | Hand-written. |
-| `not-implemented` | 10 components (simulation aspect registry, refinement checker, chaos, load and cost aspects, simulation overlays, deployment model, infrastructure generator, implementation refinement, reality loop) | Planned, not built. |
-| undeclared | 9 external actors and libraries (Three.js, Vite, the browser platform, browser storage, the file system, `jsonc-parser`, Playwright, the Markdown specification source, and the person or agent who edits code) | Outside the system; `implementation.status` is not applicable and the *Realisation* panel lists them as undeclared. |
+| `manual` | Most components, subsystems included (validator, expression language, transactions, claim evaluator, simulation engine, layout engine, session, shell, toolbar, dialogs, source editor, workspace service, CLI, generators, ...) | Hand-written. |
+| `not-implemented` | The planned components (simulation aspect registry, refinement checker, chaos, load and cost aspects, simulation overlays, deployment model, infrastructure generator, implementation refinement, reality loop) | Planned, not built. |
+| undeclared | The external actors and libraries (Three.js, Vite, the browser platform, browser storage, the file system, `jsonc-parser`, Playwright, the Markdown specification source, and the person or agent who edits code) | Outside the system; `implementation.status` is not applicable and the *Realisation* panel lists them as undeclared. |
 
 What "model-configured" covers, concretely:
 
@@ -38,7 +41,7 @@ These are documents and reports. No generator emits code or any part of Exegra's
 
 ## Traceability
 
-`implementation.modules` on a component lists the files that implement it. `exegra traceability` (and every `verify`) compares them with disk: declared modules must exist and every file in `src/`, `cli/` and `tools/` (plus `index.html`, `vite.config.js`) must be claimed by some component. A linked project realised in other repositories declares them as realisation roots in its `project.jsonc` and addresses modules and test evidence as `<alias>:<path>` ([verification.md](verification.md#realisation-roots-code-and-tests-in-other-repositories)). This is a path-level check. It does not show that a module does what its component says, and the declared relationships are maintained by hand, so the structural claims about the code rest on the assumption `relationships-match-imports`.
+`implementation.modules` on a component lists the files that implement it. `exegra traceability` (and every `verify`) compares them with disk: declared modules must exist and every file in `src/`, `cli/` and `tools/` (plus `index.html`, `vite.config.js`) must be claimed by some component. A linked project realised in other repositories declares them as realisation roots in its `project.jsonc` and addresses modules and test evidence as `<alias>:<path>` ([verification.md](verification.md#realisation-roots-code-and-tests-in-other-repositories)). The surface includes the Lean sources under `formal/` and the Rust sources under `engine/`. Beyond paths, `exegra extract` (tools/extract.js) reads the imports of every surface file into `specs/<project>/extracted/facts.json` (digest per file, extractor identity and version), the model carries them as `imports` relationships with provenance `extracted` (so inside the surface static dependencies are derived from the code, not declared), and `exegra reconcile` reports where declarations and facts disagree. Runtime wiring stays declared. Static extraction is static structure only; the structural claims rest on the assumptions `static-extractor-sound` and `extracted-facts-current`.
 
 ## The bootstrap boundary
 

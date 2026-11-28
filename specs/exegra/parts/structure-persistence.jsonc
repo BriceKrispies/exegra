@@ -1,0 +1,314 @@
+// Part of the specification: components, relationships.
+{
+  "components": [
+    {
+      "id": "persistence",
+      "name": "Persistence",
+      "kind": "subsystem",
+      "category": "logical",
+      "purpose": "Moves project files between the browser and the disk: browser client, development-server middleware, workspace service and the project files themselves.",
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "Grouping only; the code lives in the child components.",
+        "language": "js"
+      },
+      "parent": "exegra",
+      "responsibilities": [
+        "Carry project files between the browser and the disk: the browser client, the development-server middleware and the workspace service, with conflict detection by content hash.",
+        "Be the only path by which the specification, layout, recorded results and generated artifacts of a project are read, written, exported, imported and watched.",
+        "Hold a specification in its SQLite store with an exact round trip to the JSONC text (spec-store).",
+        "Hold the project files themselves: the specification text, the presentation layout, the recorded results and the generated artifacts."
+      ]
+    },
+    // ======== Persistence ==========================================================================
+    {
+      "id": "persistence-client",
+      "name": "Persistence client",
+      "parent": "persistence",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "The browser side of the persistence boundary: HTTP requests to the development-server middleware and a server-sent-events subscription to file changes.",
+      "responsibilities": [
+        "List, read, write (with base hash), export and import projects and write generated artifacts",
+        "Report unavailable persistence instead of pretending to save when the application is not served by the development server",
+        "Subscribe to spec, layout and recorded-result changes of a project"
+      ],
+      "ports": [
+        { "id": "client-write-out", "name": "Write file", "direction": "requires", "contract": "write-file", "protocol": "HTTP POST /__exegra/write", "description": "Sends spec or layout text with its base hash." }
+      ],
+      "unknowns": ["No retry, queue or offline buffer: a failed request is reported once to the caller."],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/persist/client.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "dev-server-plugin",
+      "name": "Development-server plugin",
+      "parent": "persistence",
+      "category": "computational",
+      "runsIn": "node",
+      "purpose": "Vite middleware that exposes the workspace service over HTTP and server-sent events; development only.",
+      "responsibilities": [
+        "Accept requests only from loopback hosts and origins carrying the x-exegra-client header (events excepted)",
+        "Route projects, project, write, generated, export, import and events; map errors to JSON with an HTTP status, answering 409 for a write conflict",
+        "Limit request bodies to 20 MB and keep event streams alive with periodic pings"
+      ],
+      "ports": [
+        { "id": "plugin-write-in", "name": "Write file", "direction": "provides", "contract": "write-file", "protocol": "HTTP POST /__exegra/write", "description": "Receives a write and answers 200, 409 conflict or an error." },
+        { "id": "plugin-write-out", "name": "Write file to workspace", "direction": "requires", "contract": "write-file", "protocol": "in-process call", "description": "Delegates to the workspace service." }
+      ],
+      "unknowns": ["Protection rests on loopback host, loopback origin and a custom header only; any local process can read and write projects while the development server runs."],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/vite-plugin-exegra.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "workspace-service",
+      "name": "Workspace service",
+      "parent": "persistence",
+      "category": "computational",
+      "runsIn": "node",
+      "purpose": "The Node filesystem boundary for projects under specs/: every read, write, export, import and watch of project files goes through it.",
+      "responsibilities": [
+        "Validate project names and refuse any path that leaves the project directory",
+        "Write spec or layout text only if the base hash equals the current file's hash, replacing the file atomically, serialized per project, appending a line to .history/journal.jsonl",
+        "Read a project with the hashes of its files and its recorded results",
+        "Read project.jsonc: the specification it links to, the realisation roots it declares and the product files it layers on the specification (\"products\": files or directories of *.jsonc, read in order, each with whether its product.imports.spec resolves to the specification), without ever writing it",
+        "Write generated artifacts only under generated/, and record verification results",
+        "Export and import project bundles, and watch a project's files for external changes",
+        "Report a changed, added or removed product file (or a changed products list in project.jsonc) as a change of the file products, and read a project given inline as a specification file and product files with no registration (readInline)"
+      ],
+      "ports": [
+        {
+          "id": "workspace-write-in",
+          "name": "Write file",
+          "direction": "provides",
+          "contract": "write-file",
+          "protocol": "in-process call",
+          "description": "Guarded write of spec or layout text."
+        }
+      ],
+      "unknowns": [
+        "On Windows the atomic rename is retried and then replaced by an in-place write, which is not atomic.",
+        "Import and recording of results write without a base-hash check, and import writes its files one after another, not as one atomic unit.",
+        "The journal is read in full on every write to number its next line and is never truncated."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/workspace.js",
+          "tools/spec-manifest.js",
+          "tools/split-spec.js",
+          "tools/compare-spec.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "specification-file",
+      "name": "Specification file",
+      "parent": "persistence",
+      "category": "storage",
+      "owner": "transactions",
+      "purpose": "specs/<project>/spec.jsonc: the JSONC text that is the serialized authority of a project's semantic model.",
+      "unknowns": [
+        "Four paths change project files without a transaction or a journal line (WG-4775, finding F05): the bundle import (tools/workspace.js importProject, scenario import-bundle), tools/import-markdown.js (scenario markdown-import), tools/make-benchmark.js (specs/benchmark/spec.jsonc), and exegra apply when its layout write conflicts after the specification was written (scenario cli-apply-partial-write: the spec write has its journal line, but the transaction's two files are no longer written together). The first three write directly with node:fs or atomicWrite."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "A data file, not code.",
+        "language": "json"
+      }
+    },
+    {
+      "id": "layout-file",
+      "name": "Layout file",
+      "parent": "persistence",
+      "category": "storage",
+      "owner": "transactions",
+      "purpose": "specs/<project>/layout.jsonc: presentation-only pins of leaf nodes per view; nothing in it carries architectural meaning.",
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "A data file, not code.",
+        "language": "json"
+      }
+    },
+    {
+      "id": "recorded-results-file",
+      "name": "Recorded results file",
+      "parent": "persistence",
+      "category": "storage",
+      "owner": "verification-pipeline",
+      "purpose": "specs/<project>/evidence/results.json: outcomes of executed test evidence, each with the records stamp of the tree it was recorded on, the Lean theorem checks with the formal/ hash they ran on, the claim statuses and counterexample fingerprints of the last passing run (claimBaseline) and the last traceability result, written by `exegra verify`.",
+      "unknowns": [
+        "Results are tied to the tree by the records stamp, which covers every stamped file: a result is read as stale after any edit, not only an edit of what its test depends on. Results recorded before the stamp existed carry none and read as stale.",
+        "The claims key (record external-claim-outcomes) is read by claim evaluation and kept by exegra verify, but nothing in this repository writes it; only an external tool could (WG-4775, finding F03). An outcome there counts only when it carries the current records stamp.",
+        "The browser bundle cannot stamp the tree, so there the results are shown with unverifiable freshness."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "A data file, not code.",
+        "language": "json"
+      }
+    },
+    {
+      "id": "generated-artifacts",
+      "name": "Generated artifacts",
+      "parent": "persistence",
+      "category": "storage",
+      "owner": "generators",
+      "purpose": "specs/<project>/generated/: manifest.json, ARCHITECTURE.md, claims-report.md, claims-report.json and tasks.json derived from the model.",
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "Derived data files, not code and not read back by Exegra.",
+        "language": "json"
+      }
+    },
+    {
+      "id": "specification-store-file",
+      "name": "Specification store",
+      "parent": "persistence",
+      "category": "storage",
+      "owner": "spec-store",
+      "purpose": "<spec>.sqlite beside a project's specification: the SQLite store of that specification (tables entity, trivia, ref and meta), rebuilt from the committed JSONC and never committed (.gitignore).",
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "A data file, not code.",
+        "language": "json"
+      }
+    },
+    {
+      "id": "spec-store",
+      "name": "Specification store service",
+      "parent": "persistence",
+      "category": "computational",
+      "runsIn": "node",
+      "purpose": "Holds a project's specification in SQLite with an exact round trip: the JSONC text is cut into verbatim rows, one per entity and one per stretch of text between entities, and the rows in position order are the text again, byte for byte.",
+      "responsibilities": [
+        "Import: parse the text once with jsonc-parser and cut it into rows: one entity row per item of an entity section (the meta-model's sections and those a vocabulary's entityKinds declare), one row per other top-level value stored whole (system, exegra, vocabulary, a section with no entity kind), and trivia rows for everything between them (keys, brackets, commas, comments, whitespace, line endings, the text before the root and after it), so every code unit belongs to exactly one row",
+        "Index each entity row by section, id, kind and component, and record its JSON value, the sha-256 of that value, and the ids it references (also in table ref, indexed by target), from the model the parser derives",
+        "Record in meta the store format and version, the project, the semantic hash, the unit positions count (UTF-16 code units of the imported text) and the sha-256 of the text last synchronised",
+        "Refuse, with a StoreError and nothing stored, a text that does not parse, is not well-formed Unicode, or is not valid UTF-8, and any import whose rows would not export to the same text, which is checked inside the import transaction",
+        "Export: concatenate the rows in position order; write a file atomically, and refuse to overwrite the specification when it changed since the store last synchronised with it",
+        "Give the model, diagnostics and semantic hash of the stored specification by the same analysis as its text (loadModelFromStore)",
+        "Open every database in WAL mode, so several processes can read while one writes"
+      ],
+      "unknowns": [
+        "apply does not go through the store yet: a transaction edits the JSONC text and the store is imported again; edits as SQLite transactions that re-render only the edited rows wait for the batched transactions of WG-4974 (WG-4979, phase 2).",
+        "The model is derived from the exported text by the Lean kernel, not assembled from the rows, and validation is not incremental by entity hash yet (WG-4979).",
+        "Positions are the code-unit offsets of the imported text; inserting rows between existing ones needs a renumbering or fractional scheme, to be chosen in phase 2 (WG-4979).",
+        "A leading byte order mark is stored and given back, but the parser reports it as a syntax error, so such a specification does not validate, from the text or from the store alike.",
+        "specc, Concordance and the application do not read the store yet; they read the JSONC text (WG-4979)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/spec-store.js"
+        ],
+        "language": "js"
+      }
+    }
+  ],
+  "relationships": [
+    { "id": "persistence-client-data-flow-session", "kind": "data-flow", "from": "persistence-client", "to": "session", "description": "Project files, recorded results and change notifications arrive at the session." },
+    // -- Persistence: specification file <-> workspace <-> dev-server plugin <-> client <-> session
+    { "id": "persistence-client-calls-dev-server-plugin", "kind": "invokes", "from": "persistence-client", "to": "dev-server-plugin", "description": "Sends HTTP requests to /__exegra/* and opens the events stream.", "contract": "write-file" },
+    { "id": "persistence-client-data-flow-dev-server-plugin", "kind": "data-flow", "from": "persistence-client", "to": "dev-server-plugin", "description": "Spec and layout text with the base hash, generated files and import bundles travel in request bodies." },
+    { "id": "persistence-client-depends-on-browser-platform", "kind": "depends-on", "from": "persistence-client", "to": "browser-platform", "description": "Uses fetch and EventSource." },
+    { "id": "dev-server-plugin-calls-workspace-service", "kind": "invokes", "from": "dev-server-plugin", "to": "workspace-service", "description": "Delegates every route to the workspace service.", "contract": "write-file" },
+    { "id": "dev-server-plugin-data-flow-workspace-service", "kind": "data-flow", "from": "dev-server-plugin", "to": "workspace-service", "description": "Request bodies pass to the workspace service." },
+    { "id": "workspace-service-data-flow-dev-server-plugin", "kind": "data-flow", "from": "workspace-service", "to": "dev-server-plugin", "description": "File change notifications (name and hash) pass to the plugin, which streams them as server-sent events." },
+    { "id": "dev-server-plugin-data-flow-persistence-client", "kind": "data-flow", "from": "dev-server-plugin", "to": "persistence-client", "description": "Responses (file texts and hashes, write results, conflicts) and change events return to the client." },
+    { "id": "dev-server-plugin-depends-on-vite", "kind": "depends-on", "from": "dev-server-plugin", "to": "vite-dev-server", "description": "Runs as middleware of the Vite development server and closes its streams when the server closes." },
+    { "id": "workspace-service-writes-specification-file", "kind": "writes", "from": "workspace-service", "to": "specification-file", "description": "Replaces spec.jsonc atomically after a base-hash check, or on import." },
+    { "id": "workspace-service-writes-layout-file", "kind": "writes", "from": "workspace-service", "to": "layout-file", "description": "Replaces layout.jsonc atomically after a base-hash check, or on import." },
+    { "id": "workspace-service-writes-recorded-results-file", "kind": "writes", "from": "workspace-service", "to": "recorded-results-file", "description": "Replaces evidence/results.json when verification records results, or on import." },
+    { "id": "workspace-service-writes-generated-artifacts", "kind": "writes", "from": "workspace-service", "to": "generated-artifacts", "description": "Writes generated files under generated/ only, skipping files whose content is unchanged." },
+    { "id": "workspace-service-calls-filesystem", "kind": "invokes", "from": "workspace-service", "to": "filesystem", "description": "Reads, writes, renames, appends to the journal and watches directories with node:fs." },
+    { "id": "workspace-service-depends-on-jsonc-parser", "kind": "depends-on", "from": "workspace-service", "to": "jsonc-parser-library", "description": "Reads a project's title from its specification." },
+    {
+      "id": "specification-file-data-flow-generated-artifacts",
+      "kind": "data-flow",
+      "from": "specification-file",
+      "to": "generated-artifacts",
+      "description": "The generated documents are derived from the specification text (through the generators, run by the command line or the realisation panel). Declared when the data-model rule holder-reaches-owner found no path between the two stores."
+    },
+    {
+      "id": "recorded-results-file-data-flow-generated-artifacts",
+      "kind": "data-flow",
+      "from": "recorded-results-file",
+      "to": "generated-artifacts",
+      "description": "exegra generate and the Realisation panel derive the claims report and task list from claim results evaluated with the recorded results."
+    },
+    {
+      "id": "spec-store-calls-parser",
+      "kind": "invokes",
+      "from": "spec-store",
+      "to": "parser",
+      "description": "Derives the model of an imported text for the references and the semantic hash of its rows."
+    },
+    {
+      "id": "spec-store-calls-validator",
+      "kind": "invokes",
+      "from": "spec-store",
+      "to": "validator",
+      "description": "loadModelFromStore analyzes the exported text with analyzeSpec."
+    },
+    {
+      "id": "spec-store-reads-metamodel",
+      "kind": "reads",
+      "from": "spec-store",
+      "to": "metamodel",
+      "description": "Takes the entity sections and their kinds from metamodel.json."
+    },
+    {
+      "id": "spec-store-depends-on-jsonc-parser",
+      "kind": "depends-on",
+      "from": "spec-store",
+      "to": "jsonc-parser-library",
+      "description": "Parses the text into a tree whose offsets cut the rows."
+    },
+    {
+      "id": "spec-store-calls-sqlite-engine",
+      "kind": "invokes",
+      "from": "spec-store",
+      "to": "sqlite-engine",
+      "description": "Holds the rows in a database opened with DatabaseSync in WAL mode."
+    },
+    {
+      "id": "spec-store-writes-specification-store-file",
+      "kind": "writes",
+      "from": "spec-store",
+      "to": "specification-store-file",
+      "description": "Replaces every row of the store in one transaction on import."
+    },
+    {
+      "id": "spec-store-reads-specification-file",
+      "kind": "reads",
+      "from": "spec-store",
+      "to": "specification-file",
+      "description": "Reads the specification's bytes on import."
+    },
+    {
+      "id": "spec-store-writes-specification-file",
+      "kind": "writes",
+      "from": "spec-store",
+      "to": "specification-file",
+      "description": "export writes the stored text back to the specification, atomically, unless it changed since the store last synchronised with it."
+    }
+  ]
+}

@@ -125,4 +125,20 @@
     border-radius: var(--r-1);
     text-shadow: none;
   }
+
+  /* Marks of what is known or missing about a block or a fact (WG-5695): each kind its own colour, and the text
+     says it too. Opaque and external are dashed, planned is dashed in its own colour, unknown is dotted
+     one; coherence failures (no purpose, disagreeing interface, unwitnessed facts) are in the warning colour. */
+  .scene-label__mark { font-weight: 600; text-transform: lowercase; }
+  .scene-label__mark--opaque, .scene-label__mark--external { color: var(--text-2); border-style: dashed; }
+  .scene-label__mark--planned { color: var(--ok-proof); border-color: var(--ok-proof); border-style: dashed; }
+  .scene-label__mark--unknown { color: var(--text-3); border-style: dotted; }
+  .scene-label__mark--no-purpose,
+  .scene-label__mark--interface-disagrees,
+  .scene-label__mark--unwitnessed,
+  .scene-label__mark--kind-not-coarsening { color: var(--warn); border-color: var(--warn); }
+  .scene-label__mark--not-declared { color: var(--ok-external); border-color: var(--ok-external); }
+  .scene-label__mark--hidden-inside { color: var(--text-3); border-style: dashed; }
+  .scene-label--knowledge-unknown .scene-label__name { font-style: italic; }
+  .scene-label--planned .scene-label__name { opacity: 0.8; }
 }

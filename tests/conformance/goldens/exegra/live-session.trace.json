@@ -1,6 +1,32 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "app-start-flow": 0,
+   "camera-memory-flow": 0,
+   "claim-evaluation-flow": 0,
+   "dev-server-flow": 0,
+   "engine-module-flow": 0,
+   "engine-runner-flow": 0,
+   "engine-worker-flow": 0,
+   "interaction-prefs-flow": 0,
+   "local-storage-flow": 0,
+   "persistence-client-flow": 0,
+   "project-history-flow": 0,
+   "project-session-flow": 0,
+   "realisation-generate-flow": 0,
+   "responsive-layout-flow": 0,
+   "scene-pulse-flow": 0,
+   "session-claims-flow": 0,
+   "session-storage-flow": 0,
+   "sim-session-flow": 0,
+   "toolbar-exchange-flow": 0,
+   "workspace-disk-flow": 0,
+   "workspace-watcher-flow": 0
+  },
+  "links": {},
   "machines": {
    "app-start-flow": {
     "state": "app-loading",
@@ -195,10 +221,42 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "app-start-flow": 0,
+   "camera-memory-flow": 0,
+   "claim-evaluation-flow": 0,
+   "dev-server-flow": 0,
+   "engine-module-flow": 0,
+   "engine-runner-flow": 0,
+   "engine-worker-flow": 0,
+   "interaction-prefs-flow": 0,
+   "local-storage-flow": 0,
+   "persistence-client-flow": 0,
+   "project-history-flow": 0,
+   "project-session-flow": 0,
+   "realisation-generate-flow": 0,
+   "responsive-layout-flow": 0,
+   "scene-pulse-flow": 0,
+   "session-claims-flow": 0,
+   "session-storage-flow": 0,
+   "sim-session-flow": 0,
+   "toolbar-exchange-flow": 0,
+   "workspace-disk-flow": 0,
+   "workspace-watcher-flow": 0
+  },
+  "links": {},
   "machines": {
    "app-start-flow": {
     "state": "app-loading",
@@ -393,10 +451,22 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "live-session",
- "steps": []
+ "seed": null,
+ "steps": [],
+ "stepsTaken": 0,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

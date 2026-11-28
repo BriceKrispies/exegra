@@ -1,0 +1,5649 @@
+{
+ "format": "exegra-extracted-facts/1",
+ "provenance": "extracted",
+ "extractor": {
+  "id": "exegra-static-extractor",
+  "version": "1"
+ },
+ "files": [
+  {
+   "path": "cli/admit.js",
+   "language": "js",
+   "digest": "sha256:7f2ce048189d5401efe25e34b5f5ed5606aa9b23c4304c224eff9f02e34c58cf",
+   "imports": [
+    {
+     "spec": "../src/core/integrity.js",
+     "how": "static",
+     "resolved": "src/core/integrity.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/readiness.js",
+     "how": "static",
+     "resolved": "src/core/readiness.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/claim-methods.js",
+     "how": "static",
+     "resolved": "src/core/claim-methods.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/constructs.js",
+     "how": "static",
+     "resolved": "src/core/constructs.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/claim-strength.js",
+     "how": "static",
+     "resolved": "src/core/claim-strength.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/verdict.js",
+     "how": "static",
+     "resolved": "src/core/verdict.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/lean.js",
+     "how": "static",
+     "resolved": "src/core/lean.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/impact.js",
+     "how": "static",
+     "resolved": "src/core/impact.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "cli/commands.js",
+   "language": "js",
+   "digest": "sha256:b18f53df2ab8b468c50e68b39f1683bf688c6e2b782230e807375ce5a09e441a",
+   "imports": [
+    {
+     "spec": "node:crypto",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:child_process",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:os",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:util",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "../tools/workspace.js",
+     "how": "static",
+     "resolved": "tools/workspace.js",
+     "external": false
+    },
+    {
+     "spec": "../tools/traceability.js",
+     "how": "static",
+     "resolved": "tools/traceability.js",
+     "external": false
+    },
+    {
+     "spec": "../tools/extract.js",
+     "how": "static",
+     "resolved": "tools/extract.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/extraction.js",
+     "how": "static",
+     "resolved": "src/core/extraction.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/readiness.js",
+     "how": "static",
+     "resolved": "src/core/readiness.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/machine-coverage.js",
+     "how": "static",
+     "resolved": "src/core/machine-coverage.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/function-coverage.js",
+     "how": "static",
+     "resolved": "src/core/function-coverage.js",
+     "external": false
+    },
+    {
+     "spec": "../tools/realisation-roots.js",
+     "how": "static",
+     "resolved": "tools/realisation-roots.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/project.js",
+     "how": "static",
+     "resolved": "src/core/project.js",
+     "external": false
+    },
+    {
+     "spec": "./locations.js",
+     "how": "static",
+     "resolved": "cli/locations.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/operations.js",
+     "how": "static",
+     "resolved": "src/core/operations.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/analyze.js",
+     "how": "static",
+     "resolved": "src/core/analyze.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/layers.js",
+     "how": "static",
+     "resolved": "src/core/layers.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/integrity.js",
+     "how": "static",
+     "resolved": "src/core/integrity.js",
+     "external": false
+    },
+    {
+     "spec": "../tools/prove-integrity.js",
+     "how": "static",
+     "resolved": "tools/prove-integrity.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/claims.js",
+     "how": "static",
+     "resolved": "src/core/claims.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/concordance.js",
+     "how": "static",
+     "resolved": "src/core/concordance.js",
+     "external": false
+    },
+    {
+     "spec": "../tools/lean-theorems.js",
+     "how": "static",
+     "resolved": "tools/lean-theorems.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/contract-trace.js",
+     "how": "static",
+     "resolved": "src/core/contract-trace.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/engine.js",
+     "how": "static",
+     "resolved": "src/core/engine.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/edit-history.js",
+     "how": "static",
+     "resolved": "src/core/edit-history.js",
+     "external": false
+    },
+    {
+     "spec": "../tools/prove.js",
+     "how": "static",
+     "resolved": "tools/prove.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/claim-methods.js",
+     "how": "static",
+     "resolved": "src/core/claim-methods.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/stable-json.js",
+     "how": "static",
+     "resolved": "src/core/stable-json.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/evidence-ref.js",
+     "how": "static",
+     "resolved": "src/core/evidence-ref.js",
+     "external": false
+    },
+    {
+     "spec": "../tools/tree-stamp.js",
+     "how": "static",
+     "resolved": "tools/tree-stamp.js",
+     "external": false
+    },
+    {
+     "spec": "../tools/import-scan.js",
+     "how": "static",
+     "resolved": "tools/import-scan.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/impact.js",
+     "how": "static",
+     "resolved": "src/core/impact.js",
+     "external": false
+    },
+    {
+     "spec": "./evidence-run.js",
+     "how": "static",
+     "resolved": "cli/evidence-run.js",
+     "external": false
+    },
+    {
+     "spec": "./outcomes.js",
+     "how": "static",
+     "resolved": "cli/outcomes.js",
+     "external": false
+    },
+    {
+     "spec": "./admit.js",
+     "how": "static",
+     "resolved": "cli/admit.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/claim-strength.js",
+     "how": "static",
+     "resolved": "src/core/claim-strength.js",
+     "external": false
+    },
+    {
+     "spec": "./read-commands.js",
+     "how": "static",
+     "resolved": "cli/read-commands.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/abstraction.js",
+     "how": "static",
+     "resolved": "src/core/abstraction.js",
+     "external": false
+    },
+    {
+     "spec": "jsonc-parser",
+     "how": "dynamic",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "../tools/import-markdown.js",
+     "how": "dynamic",
+     "resolved": "tools/import-markdown.js",
+     "external": false
+    },
+    {
+     "spec": "../tools/spec-store.js",
+     "how": "dynamic",
+     "resolved": "tools/spec-store.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "cli/evidence-run.js",
+   "language": "js",
+   "digest": "sha256:0c134d623edc386dc4d7625f0b302e0c8ffcf9bfdf60460827e39f7200a5c482",
+   "imports": []
+  },
+  {
+   "path": "cli/exegra.js",
+   "language": "js",
+   "digest": "sha256:0261c0366b6b50150677a883bc58873ebc35e8d58e64d478641bfb4157c592f9",
+   "imports": [
+    {
+     "spec": "./commands.js",
+     "how": "static",
+     "resolved": "cli/commands.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "cli/locations.js",
+   "language": "js",
+   "digest": "sha256:053cd13a5c92c570c60a89c455a2375103ae748d2cc3a73e3009008b1dca7815",
+   "imports": []
+  },
+  {
+   "path": "cli/outcomes.js",
+   "language": "js",
+   "digest": "sha256:8ab5a269cc8411a213434c3279c2279671351483236971c594772ce1b827cbe3",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "../src/core/facts.js",
+     "how": "static",
+     "resolved": "src/core/facts.js",
+     "external": false
+    },
+    {
+     "spec": "../tools/tree-stamp.js",
+     "how": "static",
+     "resolved": "tools/tree-stamp.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "cli/read-commands.js",
+   "language": "js",
+   "digest": "sha256:c241a845478f78cd99981310466a6de11bd69f349b7c5cdca0cff0e08e836d98",
+   "imports": [
+    {
+     "spec": "./locations.js",
+     "how": "static",
+     "resolved": "cli/locations.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "engine/exegra-engine-wasm/src/lib.rs",
+   "language": "rust",
+   "digest": "sha256:235d0623a82da5f17d3dd32910f944d5d171b7fc0fde19c61bdd2678e317b033",
+   "imports": [
+    {
+     "spec": "wasm_bindgen::prelude",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "engine/exegra-engine/src/expr.rs",
+   "language": "rust",
+   "digest": "sha256:e50237059dad7e8e9df419e932594631e5343e3940a2e02743969066b59c1393",
+   "imports": [
+    {
+     "spec": "std::fmt",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "crate::value::js_number_to_string",
+     "how": "use",
+     "resolved": "engine/exegra-engine/src/value.rs",
+     "external": false
+    },
+    {
+     "spec": "crate::value::Value",
+     "how": "use",
+     "resolved": "engine/exegra-engine/src/value.rs",
+     "external": false
+    },
+    {
+     "spec": "super",
+     "how": "use",
+     "resolved": null,
+     "external": false
+    },
+    {
+     "spec": "crate::value::JsObject",
+     "how": "use",
+     "resolved": "engine/exegra-engine/src/value.rs",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "engine/exegra-engine/src/lib.rs",
+   "language": "rust",
+   "digest": "sha256:0b9138e24f98e05c28e1f35253f40f78834a913609b8ec4e549d4d0327ea6667",
+   "imports": [
+    {
+     "spec": "expr",
+     "how": "mod",
+     "resolved": "engine/exegra-engine/src/expr.rs",
+     "external": false
+    },
+    {
+     "spec": "random",
+     "how": "mod",
+     "resolved": "engine/exegra-engine/src/random.rs",
+     "external": false
+    },
+    {
+     "spec": "v2",
+     "how": "mod",
+     "resolved": "engine/exegra-engine/src/v2.rs",
+     "external": false
+    },
+    {
+     "spec": "value",
+     "how": "mod",
+     "resolved": "engine/exegra-engine/src/value.rs",
+     "external": false
+    },
+    {
+     "spec": "workload",
+     "how": "mod",
+     "resolved": "engine/exegra-engine/src/workload.rs",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "engine/exegra-engine/src/main.rs",
+   "language": "rust",
+   "digest": "sha256:6e36936f8d03d4668d5419a92abfc216c15068b2977c743cf283505b519209f1",
+   "imports": [
+    {
+     "spec": "std::io::Read",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "std::io::Write",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "std::process::ExitCode",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "engine/exegra-engine/src/random.rs",
+   "language": "rust",
+   "digest": "sha256:21fa123058aead9cbe2966f48190e9c2cf4b07f849dbf4bf1013723a5f4409f7",
+   "imports": [
+    {
+     "spec": "super",
+     "how": "use",
+     "resolved": null,
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "engine/exegra-engine/src/v2.rs",
+   "language": "rust",
+   "digest": "sha256:3c94e8c62c412072fd55f6d046b989130d639572467038b3da0d1a2b4eff9f8d",
+   "imports": [
+    {
+     "spec": "std::cell::RefCell",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "std::collections::HashMap",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "std::rc::Rc",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "crate::expr::eval_expr_mode",
+     "how": "use",
+     "resolved": "engine/exegra-engine/src/expr.rs",
+     "external": false
+    },
+    {
+     "spec": "crate::expr::expr_refs",
+     "how": "use",
+     "resolved": "engine/exegra-engine/src/expr.rs",
+     "external": false
+    },
+    {
+     "spec": "crate::expr::parse_expr",
+     "how": "use",
+     "resolved": "engine/exegra-engine/src/expr.rs",
+     "external": false
+    },
+    {
+     "spec": "crate::expr::Ast",
+     "how": "use",
+     "resolved": "engine/exegra-engine/src/expr.rs",
+     "external": false
+    },
+    {
+     "spec": "crate::random",
+     "how": "use",
+     "resolved": "engine/exegra-engine/src/random.rs",
+     "external": false
+    },
+    {
+     "spec": "crate::value::JsObject",
+     "how": "use",
+     "resolved": "engine/exegra-engine/src/value.rs",
+     "external": false
+    },
+    {
+     "spec": "crate::value::Value",
+     "how": "use",
+     "resolved": "engine/exegra-engine/src/value.rs",
+     "external": false
+    },
+    {
+     "spec": "crate::workload::selfaswork",
+     "how": "use",
+     "resolved": "engine/exegra-engine/src/workload.rs",
+     "external": false
+    },
+    {
+     "spec": "crate::workload::Cursor",
+     "how": "use",
+     "resolved": "engine/exegra-engine/src/workload.rs",
+     "external": false
+    },
+    {
+     "spec": "crate::workload::Phase",
+     "how": "use",
+     "resolved": "engine/exegra-engine/src/workload.rs",
+     "external": false
+    },
+    {
+     "spec": "crate::workload::Rate",
+     "how": "use",
+     "resolved": "engine/exegra-engine/src/workload.rs",
+     "external": false
+    },
+    {
+     "spec": "num_bigint::BigUint",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "std::borrow::Cow",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "engine/exegra-engine/src/value.rs",
+   "language": "rust",
+   "digest": "sha256:ebe4c3c7f8b50a09cb10bc2d91511b8c1e7564df4782111c1b2cadd2699e4bae",
+   "imports": [
+    {
+     "spec": "std::fmt",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "std::rc::Rc",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "serde::de::Deserialize",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "serde::de::Deserializer",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "serde::de::MapAccess",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "serde::de::SeqAccess",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "serde::de::Visitor",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "super",
+     "how": "use",
+     "resolved": null,
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "engine/exegra-engine/src/workload.rs",
+   "language": "rust",
+   "digest": "sha256:e62ccdd1ddd8a8d9cce284e3d80c8458deed6fa8451469e0625e656b3c696b1a",
+   "imports": [
+    {
+     "spec": "num_bigint::BigInt",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "num_bigint::BigUint",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "num_bigint::Sign",
+     "how": "use",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "super",
+     "how": "use",
+     "resolved": null,
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra.lean",
+   "language": "lean",
+   "digest": "sha256:c469340e0682c4bad8feb2fbc8a0899608865be1e04e14de9f1d7b75b470c80a",
+   "imports": [
+    {
+     "spec": "Exegra.Number",
+     "how": "import",
+     "resolved": "formal/Exegra/Number.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Random",
+     "how": "import",
+     "resolved": "formal/Exegra/Random.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Resource",
+     "how": "import",
+     "resolved": "formal/Exegra/Resource.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Value",
+     "how": "import",
+     "resolved": "formal/Exegra/Value.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Json",
+     "how": "import",
+     "resolved": "formal/Exegra/Json.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Expr",
+     "how": "import",
+     "resolved": "formal/Exegra/Expr.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Input",
+     "how": "import",
+     "resolved": "formal/Exegra/Input.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Trace",
+     "how": "import",
+     "resolved": "formal/Exegra/Trace.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Search",
+     "how": "import",
+     "resolved": "formal/Exegra/Search.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Format2",
+     "how": "import",
+     "resolved": "formal/Exegra/Format2.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Integrity",
+     "how": "import",
+     "resolved": "formal/Exegra/Integrity.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Impl.Semantics",
+     "how": "import",
+     "resolved": "formal/Exegra/Impl/Semantics.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Impl.Refinement",
+     "how": "import",
+     "resolved": "formal/Exegra/Impl/Refinement.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Hash",
+     "how": "import",
+     "resolved": "formal/Exegra/Hash.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Model",
+     "how": "import",
+     "resolved": "formal/Exegra/Model.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.HashProps",
+     "how": "import",
+     "resolved": "formal/Exegra/HashProps.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.ModelProps",
+     "how": "import",
+     "resolved": "formal/Exegra/ModelProps.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Verdict",
+     "how": "import",
+     "resolved": "formal/Exegra/Verdict.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Impact",
+     "how": "import",
+     "resolved": "formal/Exegra/Impact.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Api",
+     "how": "import",
+     "resolved": "formal/Exegra/Api.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.LTS",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/LTS.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.Calculus",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Calculus.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.Search",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Search.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.Examples",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Examples.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.Behav",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Behav.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.BehavExec",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/BehavExec.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.BehavExamples",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/BehavExamples.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.BehavRename",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/BehavRename.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Elab",
+     "how": "import",
+     "resolved": "formal/Exegra/Elab.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.BehavCheck",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/BehavCheck.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Format2B",
+     "how": "import",
+     "resolved": "formal/Exegra/Format2B.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.ProveB",
+     "how": "import",
+     "resolved": "formal/Exegra/ProveB.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Api.lean",
+   "language": "lean",
+   "digest": "sha256:da34121a508e44b0959ce780fd9e7483e27923176d9d4127edda33a914f387be",
+   "imports": [
+    {
+     "spec": "Exegra.Api.Basic",
+     "how": "import",
+     "resolved": "formal/Exegra/Api/Basic.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Api.Engine",
+     "how": "import",
+     "resolved": "formal/Exegra/Api/Engine.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Api.Model",
+     "how": "import",
+     "resolved": "formal/Exegra/Api/Model.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Api.Verdict",
+     "how": "import",
+     "resolved": "formal/Exegra/Api/Verdict.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Api/Basic.lean",
+   "language": "lean",
+   "digest": "sha256:e5c7da9e8dce6105bb0d1a1fb31fb526c9c5a3559d13f2c35c0747191d09e705",
+   "imports": [
+    {
+     "spec": "Exegra.Json",
+     "how": "import",
+     "resolved": "formal/Exegra/Json.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Api/Engine.lean",
+   "language": "lean",
+   "digest": "sha256:2f275c6cdfcff84630ebb5a840a9460863fd1c04059573516153f754b659508e",
+   "imports": [
+    {
+     "spec": "Exegra.Api.Basic",
+     "how": "import",
+     "resolved": "formal/Exegra/Api/Basic.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Format2",
+     "how": "import",
+     "resolved": "formal/Exegra/Format2.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Impl.Refinement",
+     "how": "import",
+     "resolved": "formal/Exegra/Impl/Refinement.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Elab",
+     "how": "import",
+     "resolved": "formal/Exegra/Elab.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.ProveB",
+     "how": "import",
+     "resolved": "formal/Exegra/ProveB.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Api/Model.lean",
+   "language": "lean",
+   "digest": "sha256:f04a511deaa77c3254877c49b96c860f3d1221b65f0b6fe39883f53d93d38046",
+   "imports": [
+    {
+     "spec": "Exegra.Api.Basic",
+     "how": "import",
+     "resolved": "formal/Exegra/Api/Basic.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Model",
+     "how": "import",
+     "resolved": "formal/Exegra/Model.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Api/Verdict.lean",
+   "language": "lean",
+   "digest": "sha256:fb7850f03a96a781499b665f45327736e981b75f272335ae8cffe7ec79f97f42",
+   "imports": [
+    {
+     "spec": "Exegra.Api.Basic",
+     "how": "import",
+     "resolved": "formal/Exegra/Api/Basic.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Verdict",
+     "how": "import",
+     "resolved": "formal/Exegra/Verdict.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Impact",
+     "how": "import",
+     "resolved": "formal/Exegra/Impact.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Core/Behav.lean",
+   "language": "lean",
+   "digest": "sha256:1b3826e08e45ebfe93ff8e4c721ad301bb601f672e2cfe03d13123b4d8479b3d",
+   "imports": [
+    {
+     "spec": "Exegra.Core.LTS",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/LTS.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Core/BehavCheck.lean",
+   "language": "lean",
+   "digest": "sha256:5b3f96293492bffc68406445b322e5b4aed51585db7d65d04e83d00a64a01ed8",
+   "imports": [
+    {
+     "spec": "Exegra.Core.BehavExec",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/BehavExec.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Core/BehavExamples.lean",
+   "language": "lean",
+   "digest": "sha256:baaec8cfd9afc7218d32c37a20694b1f3aff082cb154b20ca9e71326c6877315",
+   "imports": [
+    {
+     "spec": "Exegra.Core.BehavExec",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/BehavExec.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Core/BehavExec.lean",
+   "language": "lean",
+   "digest": "sha256:5d9e5c12db5ee6ef2c4cec5b7f316b9ad709e4c4e5ba631dbb7c481e1c8ee99b",
+   "imports": [
+    {
+     "spec": "Exegra.Core.Behav",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Behav.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.Search",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Search.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Random",
+     "how": "import",
+     "resolved": "formal/Exegra/Random.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Core/BehavRename.lean",
+   "language": "lean",
+   "digest": "sha256:20937a496e57d5fe002b769a007074ccf1e43472d8d051b9a5f2ca8c09bc1d29",
+   "imports": [
+    {
+     "spec": "Exegra.Core.Behav",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Behav.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Core/Calculus.lean",
+   "language": "lean",
+   "digest": "sha256:a50ea93f42ca752dac0e5566ba0ac42735cb5457c08c4290658626aa4bbfb793",
+   "imports": [
+    {
+     "spec": "Exegra.Core.LTS",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/LTS.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Core/Examples.lean",
+   "language": "lean",
+   "digest": "sha256:fc5692edd88aba8214e1a157f0ed0da8a0dbe0d157fd8c53123b38b03eca650b",
+   "imports": [
+    {
+     "spec": "Exegra.Core.Calculus",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Calculus.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.Search",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/Search.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Core/LTS.lean",
+   "language": "lean",
+   "digest": "sha256:2848d94c43cc17122828b4554447c25cfba94f4800819cc1305532ad44809d61",
+   "imports": []
+  },
+  {
+   "path": "formal/Exegra/Core/Search.lean",
+   "language": "lean",
+   "digest": "sha256:0af70b09a61aff76c5319c0994b038301108f775244491c483a0a26395cfcae9",
+   "imports": [
+    {
+     "spec": "Exegra.Core.LTS",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/LTS.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Search",
+     "how": "import",
+     "resolved": "formal/Exegra/Search.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Elab.lean",
+   "language": "lean",
+   "digest": "sha256:96db6aa70dca7f84fb9fc5a83301716e920c94544c101413094cb31556f22ffb",
+   "imports": [
+    {
+     "spec": "Exegra.Format2",
+     "how": "import",
+     "resolved": "formal/Exegra/Format2.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.BehavExec",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/BehavExec.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Expr.lean",
+   "language": "lean",
+   "digest": "sha256:7ea1d725b14f9676cee8cfd1ff8bbafa7d11cd460fdba02b647ee136075a21cd",
+   "imports": [
+    {
+     "spec": "Exegra.Value",
+     "how": "import",
+     "resolved": "formal/Exegra/Value.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Format2.lean",
+   "language": "lean",
+   "digest": "sha256:fa64ef554c8994262ff9b8323851ac263a1c92e7ea924bb5c0f6cac16d836c72",
+   "imports": [
+    {
+     "spec": "Exegra.Expr",
+     "how": "import",
+     "resolved": "formal/Exegra/Expr.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Input",
+     "how": "import",
+     "resolved": "formal/Exegra/Input.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Trace",
+     "how": "import",
+     "resolved": "formal/Exegra/Trace.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Random",
+     "how": "import",
+     "resolved": "formal/Exegra/Random.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Resource",
+     "how": "import",
+     "resolved": "formal/Exegra/Resource.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Workload",
+     "how": "import",
+     "resolved": "formal/Exegra/Workload.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Format2B.lean",
+   "language": "lean",
+   "digest": "sha256:f2a9b24f03daa6d1b7607c505f9705c469b85408849d8163f891b72f57ef76fa",
+   "imports": [
+    {
+     "spec": "Exegra.Elab",
+     "how": "import",
+     "resolved": "formal/Exegra/Elab.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Hash.lean",
+   "language": "lean",
+   "digest": "sha256:5654587d87186a63f227ed9760c7d6090b097c8f8e236575d3f4c028576f102f",
+   "imports": [
+    {
+     "spec": "Exegra.Json",
+     "how": "import",
+     "resolved": "formal/Exegra/Json.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Impl.Json",
+     "how": "import",
+     "resolved": "formal/Exegra/Impl/Json.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/HashProps.lean",
+   "language": "lean",
+   "digest": "sha256:8d9357587be732701cef53c6aafe05ea53ce54cc6ec2966aeab2da38b62f1306",
+   "imports": [
+    {
+     "spec": "Exegra.Hash",
+     "how": "import",
+     "resolved": "formal/Exegra/Hash.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Impact.lean",
+   "language": "lean",
+   "digest": "sha256:2c6a87f6f1e38e083623ee15e7a1ae06f492c0cfc2e627621afdf8dedd1d6c62",
+   "imports": [
+    {
+     "spec": "Exegra.Verdict",
+     "how": "import",
+     "resolved": "formal/Exegra/Verdict.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Impl/Json.lean",
+   "language": "lean",
+   "digest": "sha256:2b66cdcbdf019c254483a01059631a3b1556a1d7c8dd8e4e0895a8d7db41c613",
+   "imports": [
+    {
+     "spec": "Exegra.Json",
+     "how": "import",
+     "resolved": "formal/Exegra/Json.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Impl/Refinement.lean",
+   "language": "lean",
+   "digest": "sha256:d9badfe74a184a0614ef498c7d9ac6918dacd3f1fc06a5872652735bfa5d3360",
+   "imports": [
+    {
+     "spec": "Exegra.Impl.Semantics",
+     "how": "import",
+     "resolved": "formal/Exegra/Impl/Semantics.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Impl/Semantics.lean",
+   "language": "lean",
+   "digest": "sha256:a9416d23929731a141e515b6fb86411eebb04db2e58d7e776e1e84c467953d61",
+   "imports": [
+    {
+     "spec": "Exegra.Format2B",
+     "how": "import",
+     "resolved": "formal/Exegra/Format2B.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Impl.Json",
+     "how": "import",
+     "resolved": "formal/Exegra/Impl/Json.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Input.lean",
+   "language": "lean",
+   "digest": "sha256:62dfc00f90a5df87cae2334cc886a4c0d1b9b84055adda411848b8d53f802f99",
+   "imports": [
+    {
+     "spec": "Exegra.Json",
+     "how": "import",
+     "resolved": "formal/Exegra/Json.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Integrity.lean",
+   "language": "lean",
+   "digest": "sha256:346f042e57f9c953ccddd6e8797fd4294dd6a71760c41acbfcf5039f21b29a30",
+   "imports": [
+    {
+     "spec": "Exegra.Json",
+     "how": "import",
+     "resolved": "formal/Exegra/Json.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Json.lean",
+   "language": "lean",
+   "digest": "sha256:4bd9076cd3f8897895d7e7260ec61f0840e96eb8c2bc93424d42b809db5d6cc0",
+   "imports": [
+    {
+     "spec": "Exegra.Value",
+     "how": "import",
+     "resolved": "formal/Exegra/Value.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Model.lean",
+   "language": "lean",
+   "digest": "sha256:781e01876970eed3e1545cd2684ff8e0124166988935e48ea58883544fe05191",
+   "imports": [
+    {
+     "spec": "Std.Data.HashMap",
+     "how": "import",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "Exegra.Hash",
+     "how": "import",
+     "resolved": "formal/Exegra/Hash.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/ModelProps.lean",
+   "language": "lean",
+   "digest": "sha256:b902db668439a9c94b043720965ac0bed1b3db01d364e112c36db62fe6c856a4",
+   "imports": [
+    {
+     "spec": "Exegra.Model",
+     "how": "import",
+     "resolved": "formal/Exegra/Model.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.HashProps",
+     "how": "import",
+     "resolved": "formal/Exegra/HashProps.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Number.lean",
+   "language": "lean",
+   "digest": "sha256:a75ba037f5cad1f7dbc1e6881e7b12ba12aa104bb3df084a7f733584b58ef9ab",
+   "imports": []
+  },
+  {
+   "path": "formal/Exegra/ProveB.lean",
+   "language": "lean",
+   "digest": "sha256:3cdbaa59e2a3d8b427f161d689b2c0ff3db1750f2abbf79a8014d57121ec1e6b",
+   "imports": [
+    {
+     "spec": "Exegra.Format2B",
+     "how": "import",
+     "resolved": "formal/Exegra/Format2B.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Core.BehavCheck",
+     "how": "import",
+     "resolved": "formal/Exegra/Core/BehavCheck.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Random.lean",
+   "language": "lean",
+   "digest": "sha256:d1f74477b9da4d9aa9f8b3c441349e25458f26bde4890a74aa383ab6d362218d",
+   "imports": []
+  },
+  {
+   "path": "formal/Exegra/Resource.lean",
+   "language": "lean",
+   "digest": "sha256:3b053367e338cab8552f65a29d89acad9d12634ee312c4dc7e93cd41c23c72d9",
+   "imports": []
+  },
+  {
+   "path": "formal/Exegra/Search.lean",
+   "language": "lean",
+   "digest": "sha256:c3757e0619d7855330a3d83665c77bf3b41a1606e82920083180b2d638469a5f",
+   "imports": [
+    {
+     "spec": "Std.Data.HashSet",
+     "how": "import",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Trace.lean",
+   "language": "lean",
+   "digest": "sha256:42848e75dd2116f49396be7b9445ab5a145302c4eeb0c1d0167446ca007e44ce",
+   "imports": [
+    {
+     "spec": "Exegra.Json",
+     "how": "import",
+     "resolved": "formal/Exegra/Json.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Value.lean",
+   "language": "lean",
+   "digest": "sha256:ac7765acfa37327172a433ab972e680668fa5ee051e5983f4943d1b43c53f193",
+   "imports": [
+    {
+     "spec": "Exegra.Number",
+     "how": "import",
+     "resolved": "formal/Exegra/Number.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Verdict.lean",
+   "language": "lean",
+   "digest": "sha256:2426ed90e1812552ecc5b45f99782d50f6277aa2acdd6b07ee6b155bb76669b3",
+   "imports": [
+    {
+     "spec": "Exegra.Json",
+     "how": "import",
+     "resolved": "formal/Exegra/Json.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "formal/Exegra/Workload.lean",
+   "language": "lean",
+   "digest": "sha256:da7ed61a2d2a7773052e0ac3beff242dd167e9a0cb5e2ee6e84ccc91e2128510",
+   "imports": []
+  },
+  {
+   "path": "formal/Main.lean",
+   "language": "lean",
+   "digest": "sha256:3285c406a314944fea1df7f7996a7887a08aca83f40c6ba1d9102cdee3ae0850",
+   "imports": [
+    {
+     "spec": "Exegra.Format2",
+     "how": "import",
+     "resolved": "formal/Exegra/Format2.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Integrity",
+     "how": "import",
+     "resolved": "formal/Exegra/Integrity.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Impl.Semantics",
+     "how": "import",
+     "resolved": "formal/Exegra/Impl/Semantics.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.Elab",
+     "how": "import",
+     "resolved": "formal/Exegra/Elab.lean",
+     "external": false
+    },
+    {
+     "spec": "Exegra.ProveB",
+     "how": "import",
+     "resolved": "formal/Exegra/ProveB.lean",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "index.html",
+   "language": "html",
+   "digest": "sha256:21a2e9c20e903b3786514bb94539f328a8896f98f4867d8eb9528361833e83b1",
+   "imports": []
+  },
+  {
+   "path": "src/app/disk-reload.js",
+   "language": "js",
+   "digest": "sha256:9e328413fdcf63e4417e849bab6649ba11dfccb1ee71ae7460f50609770c7f4a",
+   "imports": []
+  },
+  {
+   "path": "src/app/engine-runner.js",
+   "language": "js",
+   "digest": "sha256:c438944e7f3007fc2fd4959521cba05d6113b7d3cc2c4594dd9564f37658f27e",
+   "imports": [
+    {
+     "spec": "../core/engine.js",
+     "how": "static",
+     "resolved": "src/core/engine.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/app/engine-worker.js",
+   "language": "js",
+   "digest": "sha256:1a7af3b5b6de4426ca60ef66de941c6df09ff33e420c8cfa481f2fee5c24fbef",
+   "imports": [
+    {
+     "spec": "../core/engine.js",
+     "how": "static",
+     "resolved": "src/core/engine.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/app/main.js",
+   "language": "js",
+   "digest": "sha256:100b8a88824c2911a0d4f2040a0e32fac1edb8d055d9e6b64f9f6862990963c0",
+   "imports": [
+    {
+     "spec": "./session.js",
+     "how": "static",
+     "resolved": "src/app/session.js",
+     "external": false
+    },
+    {
+     "spec": "../core/engine.js",
+     "how": "static",
+     "resolved": "src/core/engine.js",
+     "external": false
+    },
+    {
+     "spec": "./traffic-recorder.js",
+     "how": "static",
+     "resolved": "src/app/traffic-recorder.js",
+     "external": false
+    },
+    {
+     "spec": "../persist/client.js",
+     "how": "static",
+     "resolved": "src/persist/client.js",
+     "external": false
+    },
+    {
+     "spec": "../ui/shell.js",
+     "how": "static",
+     "resolved": "src/ui/shell.js",
+     "external": false
+    },
+    {
+     "spec": "../ui/inspector.js",
+     "how": "static",
+     "resolved": "src/ui/inspector.js",
+     "external": false
+    },
+    {
+     "spec": "../ui/source-editor.js",
+     "how": "static",
+     "resolved": "src/ui/source-editor.js",
+     "external": false
+    },
+    {
+     "spec": "../ui/dialogs.js",
+     "how": "static",
+     "resolved": "src/ui/dialogs.js",
+     "external": false
+    },
+    {
+     "spec": "../ui/sim-panel.js",
+     "how": "static",
+     "resolved": "src/ui/sim-panel.js",
+     "external": false
+    },
+    {
+     "spec": "../ui/verification-panel.js",
+     "how": "static",
+     "resolved": "src/ui/verification-panel.js",
+     "external": false
+    },
+    {
+     "spec": "../ui/realisation-panel.js",
+     "how": "static",
+     "resolved": "src/ui/realisation-panel.js",
+     "external": false
+    },
+    {
+     "spec": "../ui/reader.js",
+     "how": "static",
+     "resolved": "src/ui/reader.js",
+     "external": false
+    },
+    {
+     "spec": "../render/scene-view.js",
+     "how": "static",
+     "resolved": "src/render/scene-view.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/app/session.js",
+   "language": "js",
+   "digest": "sha256:af1c2c2d4ee9baa1cf743dfac4fc57cac044dc121952edf44991e894712c71fa",
+   "imports": [
+    {
+     "spec": "../core/project.js",
+     "how": "static",
+     "resolved": "src/core/project.js",
+     "external": false
+    },
+    {
+     "spec": "../core/projections.js",
+     "how": "static",
+     "resolved": "src/core/projections.js",
+     "external": false
+    },
+    {
+     "spec": "../core/abstraction.js",
+     "how": "static",
+     "resolved": "src/core/abstraction.js",
+     "external": false
+    },
+    {
+     "spec": "../core/layout.js",
+     "how": "static",
+     "resolved": "src/core/layout.js",
+     "external": false
+    },
+    {
+     "spec": "../core/claims.js",
+     "how": "static",
+     "resolved": "src/core/claims.js",
+     "external": false
+    },
+    {
+     "spec": "../core/concordance.js",
+     "how": "static",
+     "resolved": "src/core/concordance.js",
+     "external": false
+    },
+    {
+     "spec": "../core/engine.js",
+     "how": "static",
+     "resolved": "src/core/engine.js",
+     "external": false
+    },
+    {
+     "spec": "../core/sim-input.js",
+     "how": "static",
+     "resolved": "src/core/sim-input.js",
+     "external": false
+    },
+    {
+     "spec": "./engine-runner.js",
+     "how": "static",
+     "resolved": "src/app/engine-runner.js",
+     "external": false
+    },
+    {
+     "spec": "../core/flows.js",
+     "how": "static",
+     "resolved": "src/core/flows.js",
+     "external": false
+    },
+    {
+     "spec": "../core/query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "../core/contract-trace.js",
+     "how": "static",
+     "resolved": "src/core/contract-trace.js",
+     "external": false
+    },
+    {
+     "spec": "../persist/client.js",
+     "how": "static",
+     "resolved": "src/persist/client.js",
+     "external": false
+    },
+    {
+     "spec": "./disk-reload.js",
+     "how": "static",
+     "resolved": "src/app/disk-reload.js",
+     "external": false
+    },
+    {
+     "spec": "./traffic-recorder.js",
+     "how": "static",
+     "resolved": "src/app/traffic-recorder.js",
+     "external": false
+    },
+    {
+     "spec": "../core/sha256.js",
+     "how": "static",
+     "resolved": "src/core/sha256.js",
+     "external": false
+    },
+    {
+     "spec": "../core/replay.js",
+     "how": "static",
+     "resolved": "src/core/replay.js",
+     "external": false
+    },
+    {
+     "spec": "virtual:exegra-linked-specs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "src/app/traffic-recorder.js",
+   "language": "js",
+   "digest": "sha256:237c151ad4cc9fde53e93cb9950e4645547f1075c388bc6cd014263d51fd0867",
+   "imports": []
+  },
+  {
+   "path": "src/core/abstraction.js",
+   "language": "js",
+   "digest": "sha256:0968b56314312d46a61f18d619f7478b116336e643af6dcd7519e34efaf94078",
+   "imports": [
+    {
+     "spec": "./own.js",
+     "how": "static",
+     "resolved": "src/core/own.js",
+     "external": false
+    },
+    {
+     "spec": "./interactions.js",
+     "how": "static",
+     "resolved": "src/core/interactions.js",
+     "external": false
+    },
+    {
+     "spec": "./query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/access.js",
+   "language": "js",
+   "digest": "sha256:8f21fbf2bb812513382d6a76e7108d4ebe503b47442f740ec4612fea9c549339",
+   "imports": [
+    {
+     "spec": "./constructs.js",
+     "how": "static",
+     "resolved": "src/core/constructs.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/analyze.js",
+   "language": "js",
+   "digest": "sha256:055417d54b09612ae2e3ccbd5b6ac01d44e9e9012f09b99711228b0f39b5b5e9",
+   "imports": [
+    {
+     "spec": "./parse.js",
+     "how": "static",
+     "resolved": "src/core/parse.js",
+     "external": false
+    },
+    {
+     "spec": "./derivation-cache.js",
+     "how": "static",
+     "resolved": "src/core/derivation-cache.js",
+     "external": false
+    },
+    {
+     "spec": "./validate.js",
+     "how": "static",
+     "resolved": "src/core/validate.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/builtin-types.js",
+   "language": "js",
+   "digest": "sha256:efb64ad5e86be0e486448fa60d7b791d3b10b0db80144edc8591bf4a26a0db3b",
+   "imports": []
+  },
+  {
+   "path": "src/core/capabilities.js",
+   "language": "js",
+   "digest": "sha256:80ee6412a4bb8beda638dca95f89bd09b01b8f1f2fa88ec28402e091186cc27e",
+   "imports": [
+    {
+     "spec": "./constructs.js",
+     "how": "static",
+     "resolved": "src/core/constructs.js",
+     "external": false
+    },
+    {
+     "spec": "./access.js",
+     "how": "static",
+     "resolved": "src/core/access.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/claim-methods.js",
+   "language": "js",
+   "digest": "sha256:dbea2e2093decebb665c93b926fd2f12f23d8e38c03fa267579796cbabfa9ac8",
+   "imports": []
+  },
+  {
+   "path": "src/core/claim-strength.js",
+   "language": "js",
+   "digest": "sha256:6052644f29267fbd81a3ced9263008581998c0254387e2f77a37d4e8b0306bc0",
+   "imports": [
+    {
+     "spec": "./expr.js",
+     "how": "static",
+     "resolved": "src/core/expr.js",
+     "external": false
+    },
+    {
+     "spec": "./extraction.js",
+     "how": "static",
+     "resolved": "src/core/extraction.js",
+     "external": false
+    },
+    {
+     "spec": "./integrity.js",
+     "how": "static",
+     "resolved": "src/core/integrity.js",
+     "external": false
+    },
+    {
+     "spec": "./engine.js",
+     "how": "static",
+     "resolved": "src/core/engine.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/claims.js",
+   "language": "js",
+   "digest": "sha256:1bf1c3a706084c7c61bf00ee46f73976f770b5add79640f09ef71b73811d0a2a",
+   "imports": [
+    {
+     "spec": "./fault-model.js",
+     "how": "static",
+     "resolved": "src/core/fault-model.js",
+     "external": false
+    },
+    {
+     "spec": "./claim-methods.js",
+     "how": "static",
+     "resolved": "src/core/claim-methods.js",
+     "external": false
+    },
+    {
+     "spec": "./own.js",
+     "how": "static",
+     "resolved": "src/core/own.js",
+     "external": false
+    },
+    {
+     "spec": "./interactions.js",
+     "how": "static",
+     "resolved": "src/core/interactions.js",
+     "external": false
+    },
+    {
+     "spec": "./query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "./abstraction.js",
+     "how": "static",
+     "resolved": "src/core/abstraction.js",
+     "external": false
+    },
+    {
+     "spec": "./expr.js",
+     "how": "static",
+     "resolved": "src/core/expr.js",
+     "external": false
+    },
+    {
+     "spec": "./hash.js",
+     "how": "static",
+     "resolved": "src/core/hash.js",
+     "external": false
+    },
+    {
+     "spec": "./engine.js",
+     "how": "static",
+     "resolved": "src/core/engine.js",
+     "external": false
+    },
+    {
+     "spec": "./metric-claims.js",
+     "how": "static",
+     "resolved": "src/core/metric-claims.js",
+     "external": false
+    },
+    {
+     "spec": "./verdict.js",
+     "how": "static",
+     "resolved": "src/core/verdict.js",
+     "external": false
+    },
+    {
+     "spec": "./extraction.js",
+     "how": "static",
+     "resolved": "src/core/extraction.js",
+     "external": false
+    },
+    {
+     "spec": "./facts.js",
+     "how": "static",
+     "resolved": "src/core/facts.js",
+     "external": false
+    },
+    {
+     "spec": "./sim-input.js",
+     "how": "static",
+     "resolved": "src/core/sim-input.js",
+     "external": false
+    },
+    {
+     "spec": "./contract-trace.js",
+     "how": "static",
+     "resolved": "src/core/contract-trace.js",
+     "external": false
+    },
+    {
+     "spec": "./data-model.js",
+     "how": "static",
+     "resolved": "src/core/data-model.js",
+     "external": false
+    },
+    {
+     "spec": "./refinement.js",
+     "how": "static",
+     "resolved": "src/core/refinement.js",
+     "external": false
+    },
+    {
+     "spec": "./pools.js",
+     "how": "static",
+     "resolved": "src/core/pools.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/codegen-model.js",
+   "language": "js",
+   "digest": "sha256:de2959884b2aa6ddb04dabafdc834175e8847e91b7464f6fdb36b7e6f077091f",
+   "imports": [
+    {
+     "spec": "./builtin-types.js",
+     "how": "static",
+     "resolved": "src/core/builtin-types.js",
+     "external": false
+    },
+    {
+     "spec": "./data-model.js",
+     "how": "static",
+     "resolved": "src/core/data-model.js",
+     "external": false
+    },
+    {
+     "spec": "./type-expr.js",
+     "how": "static",
+     "resolved": "src/core/type-expr.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/concordance.js",
+   "language": "js",
+   "digest": "sha256:4059d307c8f4521043c50f7db6eb04dd86664009777353ce0fd0059f28247f3e",
+   "imports": []
+  },
+  {
+   "path": "src/core/constructs.js",
+   "language": "js",
+   "digest": "sha256:db29d535771b7a5813926b171bca44788889578b35e5784ba37c3ffa63d9c244",
+   "imports": [
+    {
+     "spec": "./expr.js",
+     "how": "static",
+     "resolved": "src/core/expr.js",
+     "external": false
+    },
+    {
+     "spec": "./codegen-model.js",
+     "how": "static",
+     "resolved": "src/core/codegen-model.js",
+     "external": false
+    },
+    {
+     "spec": "./data-model.js",
+     "how": "static",
+     "resolved": "src/core/data-model.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/contract-trace.js",
+   "language": "js",
+   "digest": "sha256:7ceebd2e0e4079d48020cc5f569ce07114f7dfb0caf8312916fee196e1221fa1",
+   "imports": [
+    {
+     "spec": "./type-expr.js",
+     "how": "static",
+     "resolved": "src/core/type-expr.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/data-model.js",
+   "language": "js",
+   "digest": "sha256:c2a0fdb1a6bb8acb9a932847327dd6e00aceb8813bd428b080e6cb4c531cf49e",
+   "imports": [
+    {
+     "spec": "./query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/derivation-cache.js",
+   "language": "js",
+   "digest": "sha256:77137b01fa94d48f4886592e25c1a6bf422d898e593aa3ebfad820507266a658",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "builtin",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "builtin",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:crypto",
+     "how": "builtin",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:os",
+     "how": "builtin",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "builtin",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "src/core/derivation.js",
+   "language": "js",
+   "digest": "sha256:72b1520b91743d3b6e7c440b8bbb98116c33195df231017138502c456cb6d662",
+   "imports": [
+    {
+     "spec": "./function.js",
+     "how": "static",
+     "resolved": "src/core/function.js",
+     "external": false
+    },
+    {
+     "spec": "./function-value.js",
+     "how": "static",
+     "resolved": "src/core/function-value.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/distributions.js",
+   "language": "js",
+   "digest": "sha256:5239975a5e4105d092ed1ace1af122774d6ae3d3e0db4c9d990481a7575dcbd5",
+   "imports": []
+  },
+  {
+   "path": "src/core/edit-history.js",
+   "language": "js",
+   "digest": "sha256:670e02babfccf478b7abe3da51fc5a74bf0a715fe568c3d5e0d255147c13a8a4",
+   "imports": [
+    {
+     "spec": "./sim-input.js",
+     "how": "static",
+     "resolved": "src/core/sim-input.js",
+     "external": false
+    },
+    {
+     "spec": "./engine.js",
+     "how": "static",
+     "resolved": "src/core/engine.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/engine.js",
+   "language": "js",
+   "digest": "sha256:405969abfd9d6a88f26dec42400413956c445d37f85d8dc23f6d565a4528ee79",
+   "imports": [
+    {
+     "spec": "./sim-input.js",
+     "how": "static",
+     "resolved": "src/core/sim-input.js",
+     "external": false
+    },
+    {
+     "spec": "./lean.js",
+     "how": "static",
+     "resolved": "src/core/lean.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/evidence-ref.js",
+   "language": "js",
+   "digest": "sha256:8888e5ed67c4e6929f4588f625d26f503ff0778145a7cb498224d882cfa53e0c",
+   "imports": []
+  },
+  {
+   "path": "src/core/expr.js",
+   "language": "js",
+   "digest": "sha256:72dc3135daab8370b10de2358ba8e4492a0872df4aec1184ee95f5d5aa6c026f",
+   "imports": []
+  },
+  {
+   "path": "src/core/extraction.js",
+   "language": "js",
+   "digest": "sha256:a01aa7e9d99bece85a5c3274249711a72507bcd83ea18c70ebf1f6fe2ceb5de0",
+   "imports": [
+    {
+     "spec": "./query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "./interactions.js",
+     "how": "static",
+     "resolved": "src/core/interactions.js",
+     "external": false
+    },
+    {
+     "spec": "./abstraction.js",
+     "how": "static",
+     "resolved": "src/core/abstraction.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/facts.js",
+   "language": "js",
+   "digest": "sha256:50872290fccb748efdb8f27c0758f7488fc413dd63db33e475b8143e5c976c3b",
+   "imports": []
+  },
+  {
+   "path": "src/core/fault-model.js",
+   "language": "js",
+   "digest": "sha256:ed912e287c6a6d2a55958aa420d0af125c4a89ebab438b21dd7598c97c793c0d",
+   "imports": [
+    {
+     "spec": "./sim-input.js",
+     "how": "static",
+     "resolved": "src/core/sim-input.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/flows.js",
+   "language": "js",
+   "digest": "sha256:fe696428dc68aeae7929e449aaeaf7d63a4d29443801e2c7f9b3310f38ca2ce6",
+   "imports": [
+    {
+     "spec": "./query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "./abstraction.js",
+     "how": "static",
+     "resolved": "src/core/abstraction.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/footprints.js",
+   "language": "js",
+   "digest": "sha256:85415cf86308a0cf7a60b346e41c02f91ca302c0deda637d4375bcf01889aad1",
+   "imports": [
+    {
+     "spec": "./own.js",
+     "how": "static",
+     "resolved": "src/core/own.js",
+     "external": false
+    },
+    {
+     "spec": "./interactions.js",
+     "how": "static",
+     "resolved": "src/core/interactions.js",
+     "external": false
+    },
+    {
+     "spec": "./query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "./abstraction.js",
+     "how": "static",
+     "resolved": "src/core/abstraction.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/function-coverage.js",
+   "language": "js",
+   "digest": "sha256:db4d786abf0d64ab0a098ef53544fef071885c11424b2dbf6ef83d4a83e61714",
+   "imports": [
+    {
+     "spec": "./function.js",
+     "how": "static",
+     "resolved": "src/core/function.js",
+     "external": false
+    },
+    {
+     "spec": "./function-value.js",
+     "how": "static",
+     "resolved": "src/core/function-value.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/function-fixtures.js",
+   "language": "js",
+   "digest": "sha256:74775d6eecd4af27748d3e34df0ca2372c5f7e2e4e5b6fbd1212d085a56a9c3e",
+   "imports": []
+  },
+  {
+   "path": "src/core/function-syntax.js",
+   "language": "js",
+   "digest": "sha256:eec9b6ca0175007011e243fbbba53cf78f3608798762ccf8bd28653157e1e596",
+   "imports": []
+  },
+  {
+   "path": "src/core/function-value.js",
+   "language": "js",
+   "digest": "sha256:415b9a152e9edb47c5ee717ffbc64c9e6f365afa4461cc7f1940ca352aa48971",
+   "imports": [
+    {
+     "spec": "./expr.js",
+     "how": "static",
+     "resolved": "src/core/expr.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/function.js",
+   "language": "js",
+   "digest": "sha256:79db53254214e11caef4c25b0515351c7b649802ca9e27c536f84fe069987317",
+   "imports": [
+    {
+     "spec": "./codegen-model.js",
+     "how": "static",
+     "resolved": "src/core/codegen-model.js",
+     "external": false
+    },
+    {
+     "spec": "./type-expr.js",
+     "how": "static",
+     "resolved": "src/core/type-expr.js",
+     "external": false
+    },
+    {
+     "spec": "./expr.js",
+     "how": "static",
+     "resolved": "src/core/expr.js",
+     "external": false
+    },
+    {
+     "spec": "./function-syntax.js",
+     "how": "static",
+     "resolved": "src/core/function-syntax.js",
+     "external": false
+    },
+    {
+     "spec": "./function-value.js",
+     "how": "static",
+     "resolved": "src/core/function-value.js",
+     "external": false
+    },
+    {
+     "spec": "./language-eval.js",
+     "how": "static",
+     "resolved": "src/core/language-eval.js",
+     "external": false
+    },
+    {
+     "spec": "./function-fixtures.js",
+     "how": "static",
+     "resolved": "src/core/function-fixtures.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/generate/architecture-doc.js",
+   "language": "js",
+   "digest": "sha256:fa0fa4e0da794aea836abbdc9ac36af84288ed23f865bda8c7b23fbe8b77f593",
+   "imports": [
+    {
+     "spec": "../query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "../hash.js",
+     "how": "static",
+     "resolved": "src/core/hash.js",
+     "external": false
+    },
+    {
+     "spec": "../stable-json.js",
+     "how": "static",
+     "resolved": "src/core/stable-json.js",
+     "external": false
+    },
+    {
+     "spec": "./manifest.js",
+     "how": "static",
+     "resolved": "src/core/generate/manifest.js",
+     "external": false
+    },
+    {
+     "spec": "./claims-report.js",
+     "how": "static",
+     "resolved": "src/core/generate/claims-report.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/generate/capabilities.js",
+   "language": "js",
+   "digest": "sha256:b88ca0e3f6450474f7889478f8eb3a1e311495d18eaac64e3959e587e8361dfb",
+   "imports": []
+  },
+  {
+   "path": "src/core/generate/claims-report.js",
+   "language": "js",
+   "digest": "sha256:f5ebd08ed4c5ece2a01db22423463997c459190f8ad921c2db11adbe2cc2fcc2",
+   "imports": [
+    {
+     "spec": "../hash.js",
+     "how": "static",
+     "resolved": "src/core/hash.js",
+     "external": false
+    },
+    {
+     "spec": "../claim-strength.js",
+     "how": "static",
+     "resolved": "src/core/claim-strength.js",
+     "external": false
+    },
+    {
+     "spec": "./manifest.js",
+     "how": "static",
+     "resolved": "src/core/generate/manifest.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/generate/index.js",
+   "language": "js",
+   "digest": "sha256:e52e9dbbc0aba5a5660fdffc2797458414453b5c33975d819b88c1694a3bc44a",
+   "imports": [
+    {
+     "spec": "./manifest.js",
+     "how": "static",
+     "resolved": "src/core/generate/manifest.js",
+     "external": false
+    },
+    {
+     "spec": "./architecture-doc.js",
+     "how": "static",
+     "resolved": "src/core/generate/architecture-doc.js",
+     "external": false
+    },
+    {
+     "spec": "./claims-report.js",
+     "how": "static",
+     "resolved": "src/core/generate/claims-report.js",
+     "external": false
+    },
+    {
+     "spec": "../claim-strength.js",
+     "how": "static",
+     "resolved": "src/core/claim-strength.js",
+     "external": false
+    },
+    {
+     "spec": "./task-manifest.js",
+     "how": "static",
+     "resolved": "src/core/generate/task-manifest.js",
+     "external": false
+    },
+    {
+     "spec": "./capabilities.js",
+     "how": "static",
+     "resolved": "src/core/generate/capabilities.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/generate/manifest.js",
+   "language": "js",
+   "digest": "sha256:9f1267d5984f01ff5d596ad8682a8ed49ad59af74a76b06943b43dfd5b5475c7",
+   "imports": [
+    {
+     "spec": "../hash.js",
+     "how": "static",
+     "resolved": "src/core/hash.js",
+     "external": false
+    },
+    {
+     "spec": "../stable-json.js",
+     "how": "static",
+     "resolved": "src/core/stable-json.js",
+     "external": false
+    },
+    {
+     "spec": "../query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "../claim-methods.js",
+     "how": "static",
+     "resolved": "src/core/claim-methods.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/generate/task-manifest.js",
+   "language": "js",
+   "digest": "sha256:6f8b6fb40f436a48c7ad5b05f697a860fbc3698293c7e3604ffacc14a7b3b900",
+   "imports": [
+    {
+     "spec": "../query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "../hash.js",
+     "how": "static",
+     "resolved": "src/core/hash.js",
+     "external": false
+    },
+    {
+     "spec": "./manifest.js",
+     "how": "static",
+     "resolved": "src/core/generate/manifest.js",
+     "external": false
+    },
+    {
+     "spec": "./claims-report.js",
+     "how": "static",
+     "resolved": "src/core/generate/claims-report.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/hash.js",
+   "language": "js",
+   "digest": "sha256:e70aab78f9f83396fd501cae1e16ef1e21a432f98792827248aaf5753a71a14e",
+   "imports": [
+    {
+     "spec": "./lean.js",
+     "how": "static",
+     "resolved": "src/core/lean.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/impact.js",
+   "language": "js",
+   "digest": "sha256:46c814c1c20a47d32f6b30d0e3b7ec1bb3536e53cde7e1a1362bb9d52200de2d",
+   "imports": [
+    {
+     "spec": "./lean.js",
+     "how": "static",
+     "resolved": "src/core/lean.js",
+     "external": false
+    },
+    {
+     "spec": "./stable-json.js",
+     "how": "static",
+     "resolved": "src/core/stable-json.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/integrity-export.js",
+   "language": "js",
+   "digest": "sha256:bc80b73e496b9565aedee2180571d133e487b745ea720356e9b3a48fc2ad9257",
+   "imports": [
+    {
+     "spec": "./integrity.js",
+     "how": "static",
+     "resolved": "src/core/integrity.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/integrity.js",
+   "language": "js",
+   "digest": "sha256:4fdd28dcb50354042764966b1abd60a958e0f169adca24aa02a4285dd203d729",
+   "imports": []
+  },
+  {
+   "path": "src/core/interactions.js",
+   "language": "js",
+   "digest": "sha256:1170f54296675edd5df6a9d45d385034e9f2b10396dc2861265c4b577599edec",
+   "imports": [
+    {
+     "spec": "./own.js",
+     "how": "static",
+     "resolved": "src/core/own.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/language-eval.js",
+   "language": "js",
+   "digest": "sha256:b603dc4c16d99928639fe6d9f9fac06d114ba82365fe370108b34526b7ab1d5d",
+   "imports": [
+    {
+     "spec": "./language.js",
+     "how": "static",
+     "resolved": "src/core/language.js",
+     "external": false
+    },
+    {
+     "spec": "./codegen-model.js",
+     "how": "static",
+     "resolved": "src/core/codegen-model.js",
+     "external": false
+    },
+    {
+     "spec": "./function-value.js",
+     "how": "static",
+     "resolved": "src/core/function-value.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/language.js",
+   "language": "js",
+   "digest": "sha256:66482ccf397f00b71c4fbb345731cebbcd6634a46c9f23977530873a66eb2712",
+   "imports": []
+  },
+  {
+   "path": "src/core/layer-expr.js",
+   "language": "js",
+   "digest": "sha256:91f5221dbaefefff270a297129886022a8311de783fddcce10bd8e1eac139c45",
+   "imports": []
+  },
+  {
+   "path": "src/core/layer-values.js",
+   "language": "js",
+   "digest": "sha256:200447753c695752332b96f13d73b584a3dace2ad39e82ff7031747ea116b72d",
+   "imports": [
+    {
+     "spec": "./codegen-model.js",
+     "how": "static",
+     "resolved": "src/core/codegen-model.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/layers.js",
+   "language": "js",
+   "digest": "sha256:0744417d7276ff1e75773ca372d390b926e9a57a487beb9ef07ca7a1cf5ed942",
+   "imports": [
+    {
+     "spec": "jsonc-parser",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./metamodel.json",
+     "how": "static",
+     "resolved": "src/core/metamodel.json",
+     "external": false
+    },
+    {
+     "spec": "./parse.js",
+     "how": "static",
+     "resolved": "src/core/parse.js",
+     "external": false
+    },
+    {
+     "spec": "./analyze.js",
+     "how": "static",
+     "resolved": "src/core/analyze.js",
+     "external": false
+    },
+    {
+     "spec": "./codegen-model.js",
+     "how": "static",
+     "resolved": "src/core/codegen-model.js",
+     "external": false
+    },
+    {
+     "spec": "./layer-values.js",
+     "how": "static",
+     "resolved": "src/core/layer-values.js",
+     "external": false
+    },
+    {
+     "spec": "./layer-expr.js",
+     "how": "static",
+     "resolved": "src/core/layer-expr.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/layout.js",
+   "language": "js",
+   "digest": "sha256:c5bb9e2de65d6b6681abc32dbed4b215df231952b233a18352bd99e8ad2057ac",
+   "imports": []
+  },
+  {
+   "path": "src/core/layout/constants.js",
+   "language": "js",
+   "digest": "sha256:ff5769f86cca814763df94332b6e937e1c6bb567261b39fecd1635c827eb3d21",
+   "imports": []
+  },
+  {
+   "path": "src/core/layout/layered.js",
+   "language": "js",
+   "digest": "sha256:62a9b2461ae2589df3723a28020a13a78a0f1aab67ba31291baf4afa51b5ade5",
+   "imports": [
+    {
+     "spec": "./constants.js",
+     "how": "static",
+     "resolved": "src/core/layout/constants.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/layout/model.js",
+   "language": "js",
+   "digest": "sha256:bc064a6bc0b09f9f9eaabedff29deb5e70cbe135aa8b4500b50a4920abf38abb",
+   "imports": []
+  },
+  {
+   "path": "src/core/layout/packed.js",
+   "language": "js",
+   "digest": "sha256:cc82c2ef0dddff6ffcfbccb36af6a25d55078d273d6f27284bfb42a04582d0bf",
+   "imports": [
+    {
+     "spec": "./constants.js",
+     "how": "static",
+     "resolved": "src/core/layout/constants.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/layout/radial.js",
+   "language": "js",
+   "digest": "sha256:39cb651de861d94fea0bead982f05dc0251b11e5c5891b60365aa16a7805e2a1",
+   "imports": [
+    {
+     "spec": "./constants.js",
+     "how": "static",
+     "resolved": "src/core/layout/constants.js",
+     "external": false
+    },
+    {
+     "spec": "./packed.js",
+     "how": "static",
+     "resolved": "src/core/layout/packed.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/layout/refine.js",
+   "language": "js",
+   "digest": "sha256:79f9ce061db38c44a83dd89a740bdd85ee27bf47a399694aa61165b92544ae89",
+   "imports": [
+    {
+     "spec": "./model.js",
+     "how": "static",
+     "resolved": "src/core/layout/model.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/layout/score.js",
+   "language": "js",
+   "digest": "sha256:6f2bdff4425b15323803402817461aca24a49947b2bd6bf7e34de2af4618bc89",
+   "imports": [
+    {
+     "spec": "./constants.js",
+     "how": "static",
+     "resolved": "src/core/layout/constants.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/layout/solve.js",
+   "language": "js",
+   "digest": "sha256:3a170d6273bf8b06a888f36d384ba0e639632a8add422225a493507d0adb38ca",
+   "imports": [
+    {
+     "spec": "./constants.js",
+     "how": "static",
+     "resolved": "src/core/layout/constants.js",
+     "external": false
+    },
+    {
+     "spec": "./model.js",
+     "how": "static",
+     "resolved": "src/core/layout/model.js",
+     "external": false
+    },
+    {
+     "spec": "./refine.js",
+     "how": "static",
+     "resolved": "src/core/layout/refine.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/lean.js",
+   "language": "js",
+   "digest": "sha256:77cd230833ef9fd0e81c080d21f48a00cc4ad83babfc9549cd1e835f727d15fc",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "builtin",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:module",
+     "how": "builtin",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "../engine/lean/exegra-lean.mjs",
+     "how": "dynamic",
+     "resolved": "src/engine/lean/exegra-lean.mjs",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/machine-coverage.js",
+   "language": "js",
+   "digest": "sha256:44d6c6880c153934768ed8c2ded546fa251c24ebeb3045b265b5ad03dc914fba",
+   "imports": [
+    {
+     "spec": "./realisation.js",
+     "how": "static",
+     "resolved": "src/core/realisation.js",
+     "external": false
+    },
+    {
+     "spec": "./sim-input.js",
+     "how": "static",
+     "resolved": "src/core/sim-input.js",
+     "external": false
+    },
+    {
+     "spec": "./engine.js",
+     "how": "static",
+     "resolved": "src/core/engine.js",
+     "external": false
+    },
+    {
+     "spec": "./expr.js",
+     "how": "static",
+     "resolved": "src/core/expr.js",
+     "external": false
+    },
+    {
+     "spec": "./codegen-model.js",
+     "how": "static",
+     "resolved": "src/core/codegen-model.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/metamodel.json",
+   "language": "json",
+   "digest": "sha256:17a0012a846cada99237103ddf3f9db17a680b2dfecf487b923980fe1e02530f",
+   "imports": []
+  },
+  {
+   "path": "src/core/metric-claims.js",
+   "language": "js",
+   "digest": "sha256:3a1cf9571e9be7d7ca36fa5d8caa5fd13c7f31bac53deb31183e14a766ce5cb6",
+   "imports": [
+    {
+     "spec": "./verdict.js",
+     "how": "static",
+     "resolved": "src/core/verdict.js",
+     "external": false
+    },
+    {
+     "spec": "./metric-stats.js",
+     "how": "static",
+     "resolved": "src/core/metric-stats.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/metric-stats.js",
+   "language": "js",
+   "digest": "sha256:31aa5fafaad7a94ba4be4501d87ca8187445cfe2bd58c88970d5cf1218fd287d",
+   "imports": []
+  },
+  {
+   "path": "src/core/operations.js",
+   "language": "js",
+   "digest": "sha256:0a2324dfd5c7c41eaaa9126ab1e6e633aba46c8b9f833142c72ba24058aa0815",
+   "imports": [
+    {
+     "spec": "jsonc-parser",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./parse.js",
+     "how": "static",
+     "resolved": "src/core/parse.js",
+     "external": false
+    },
+    {
+     "spec": "./expr.js",
+     "how": "static",
+     "resolved": "src/core/expr.js",
+     "external": false
+    },
+    {
+     "spec": "./text-edit.js",
+     "how": "static",
+     "resolved": "src/core/text-edit.js",
+     "external": false
+    },
+    {
+     "spec": "./query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "./metamodel.json",
+     "how": "static",
+     "resolved": "src/core/metamodel.json",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/own.js",
+   "language": "js",
+   "digest": "sha256:68ebc49c874a2ae9c5b0cc9a5b57042d02a2f1665bc0512fa90219f9971fbe97",
+   "imports": []
+  },
+  {
+   "path": "src/core/parse.js",
+   "language": "js",
+   "digest": "sha256:7d8412b4ac33863d84450c4e10d420d404a9b61c1812c5a22f21491c7b100e04",
+   "imports": [
+    {
+     "spec": "jsonc-parser",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./derivation-cache.js",
+     "how": "static",
+     "resolved": "src/core/derivation-cache.js",
+     "external": false
+    },
+    {
+     "spec": "./metamodel.json",
+     "how": "static",
+     "resolved": "src/core/metamodel.json",
+     "external": false
+    },
+    {
+     "spec": "./claim-methods.js",
+     "how": "static",
+     "resolved": "src/core/claim-methods.js",
+     "external": false
+    },
+    {
+     "spec": "./lean.js",
+     "how": "static",
+     "resolved": "src/core/lean.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/pools.js",
+   "language": "js",
+   "digest": "sha256:30b3c190ae7fe1135368aaaf1112cfd8786643235c23e7f5c228fc5f8439e7e3",
+   "imports": [
+    {
+     "spec": "./constructs.js",
+     "how": "static",
+     "resolved": "src/core/constructs.js",
+     "external": false
+    },
+    {
+     "spec": "./capabilities.js",
+     "how": "static",
+     "resolved": "src/core/capabilities.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/project.js",
+   "language": "js",
+   "digest": "sha256:096235e3af05b563c9e8c0d79d19ed14f38eb39d403f2a14e6ee547c1e0dc58c",
+   "imports": [
+    {
+     "spec": "./analyze.js",
+     "how": "static",
+     "resolved": "src/core/analyze.js",
+     "external": false
+    },
+    {
+     "spec": "./layers.js",
+     "how": "static",
+     "resolved": "src/core/layers.js",
+     "external": false
+    },
+    {
+     "spec": "./hash.js",
+     "how": "static",
+     "resolved": "src/core/hash.js",
+     "external": false
+    },
+    {
+     "spec": "./operations.js",
+     "how": "static",
+     "resolved": "src/core/operations.js",
+     "external": false
+    },
+    {
+     "spec": "./own.js",
+     "how": "static",
+     "resolved": "src/core/own.js",
+     "external": false
+    },
+    {
+     "spec": "./integrity.js",
+     "how": "static",
+     "resolved": "src/core/integrity.js",
+     "external": false
+    },
+    {
+     "spec": "./extraction.js",
+     "how": "static",
+     "resolved": "src/core/extraction.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/projections.js",
+   "language": "js",
+   "digest": "sha256:7100c9f16ca669f224812c51adcccd88450787b70603e148063a47c8cc6bd846",
+   "imports": [
+    {
+     "spec": "./query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "./abstraction.js",
+     "how": "static",
+     "resolved": "src/core/abstraction.js",
+     "external": false
+    },
+    {
+     "spec": "./own.js",
+     "how": "static",
+     "resolved": "src/core/own.js",
+     "external": false
+    },
+    {
+     "spec": "./interactions.js",
+     "how": "static",
+     "resolved": "src/core/interactions.js",
+     "external": false
+    },
+    {
+     "spec": "./data-model.js",
+     "how": "static",
+     "resolved": "src/core/data-model.js",
+     "external": false
+    },
+    {
+     "spec": "node:record",
+     "how": "builtin",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "src/core/proof-export.js",
+   "language": "js",
+   "digest": "sha256:f34d0a70342e88f3e7c47bb9971fc40943ead79a9c761f50c9c78eb872e102ed",
+   "imports": [
+    {
+     "spec": "./sim-input.js",
+     "how": "static",
+     "resolved": "src/core/sim-input.js",
+     "external": false
+    },
+    {
+     "spec": "./expr.js",
+     "how": "static",
+     "resolved": "src/core/expr.js",
+     "external": false
+    },
+    {
+     "spec": "./contract-trace.js",
+     "how": "static",
+     "resolved": "src/core/contract-trace.js",
+     "external": false
+    },
+    {
+     "spec": "./pools.js",
+     "how": "static",
+     "resolved": "src/core/pools.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/query.js",
+   "language": "js",
+   "digest": "sha256:cc99e3128fa3facf273b9af670e595f68c0d7cfaccb1489e537f82baa8ef2bc2",
+   "imports": [
+    {
+     "spec": "./own.js",
+     "how": "static",
+     "resolved": "src/core/own.js",
+     "external": false
+    },
+    {
+     "spec": "./interactions.js",
+     "how": "static",
+     "resolved": "src/core/interactions.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/reader.js",
+   "language": "js",
+   "digest": "sha256:f36091e4bd9505ffde22bfca094472d8ce20e5ce085ed72eea7ee23c7eaea940",
+   "imports": [
+    {
+     "spec": "./own.js",
+     "how": "static",
+     "resolved": "src/core/own.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/readiness-machines.js",
+   "language": "js",
+   "digest": "sha256:ff308d9bc0d8cc395a4c18ab4b4bb94b19392406bbb9c29b823d1402c6c6bf4d",
+   "imports": [
+    {
+     "spec": "./codegen-model.js",
+     "how": "static",
+     "resolved": "src/core/codegen-model.js",
+     "external": false
+    },
+    {
+     "spec": "./expr.js",
+     "how": "static",
+     "resolved": "src/core/expr.js",
+     "external": false
+    },
+    {
+     "spec": "./readiness-time.js",
+     "how": "static",
+     "resolved": "src/core/readiness-time.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/readiness-time.js",
+   "language": "js",
+   "digest": "sha256:b83834640893e486258e5f633ca3f9938757b2147367abe2999a95f6c9266bb9",
+   "imports": [
+    {
+     "spec": "./expr.js",
+     "how": "static",
+     "resolved": "src/core/expr.js",
+     "external": false
+    },
+    {
+     "spec": "./sim-input.js",
+     "how": "static",
+     "resolved": "src/core/sim-input.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/readiness.js",
+   "language": "js",
+   "digest": "sha256:a0c5bb5665db70209ec02a3aa0b3af8a64ebf98484307ab13b129cba437cc2f2",
+   "imports": [
+    {
+     "spec": "./codegen-model.js",
+     "how": "static",
+     "resolved": "src/core/codegen-model.js",
+     "external": false
+    },
+    {
+     "spec": "./readiness-machines.js",
+     "how": "static",
+     "resolved": "src/core/readiness-machines.js",
+     "external": false
+    },
+    {
+     "spec": "./constructs.js",
+     "how": "static",
+     "resolved": "src/core/constructs.js",
+     "external": false
+    },
+    {
+     "spec": "./ui.js",
+     "how": "static",
+     "resolved": "src/core/ui.js",
+     "external": false
+    },
+    {
+     "spec": "./telemetry.js",
+     "how": "static",
+     "resolved": "src/core/telemetry.js",
+     "external": false
+    },
+    {
+     "spec": "./language.js",
+     "how": "static",
+     "resolved": "src/core/language.js",
+     "external": false
+    },
+    {
+     "spec": "./function.js",
+     "how": "static",
+     "resolved": "src/core/function.js",
+     "external": false
+    },
+    {
+     "spec": "./derivation.js",
+     "how": "static",
+     "resolved": "src/core/derivation.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/realisation.js",
+   "language": "js",
+   "digest": "sha256:2b44f78454ff1d1f5fa3e1be5b0afbd3e9fa09b85f7fe770ee88a8aa3a168a75",
+   "imports": []
+  },
+  {
+   "path": "src/core/refinement.js",
+   "language": "js",
+   "digest": "sha256:76538f55eedde2c84e960a8de5a8c34863aa42f03ad1dec8c9a84327f15eaf61",
+   "imports": [
+    {
+     "spec": "./expr.js",
+     "how": "static",
+     "resolved": "src/core/expr.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/replay.js",
+   "language": "js",
+   "digest": "sha256:91c8e281e521a63aab4ea8c22b757dc57a55e2c1ad7b0da1c09f24f70875a622",
+   "imports": [
+    {
+     "spec": "./sim-input.js",
+     "how": "static",
+     "resolved": "src/core/sim-input.js",
+     "external": false
+    },
+    {
+     "spec": "./expr.js",
+     "how": "static",
+     "resolved": "src/core/expr.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/residency.js",
+   "language": "js",
+   "digest": "sha256:4da6c69c2c40bc59ca85712aed36a673f8e843d4ba214b64926f1e17376d45d8",
+   "imports": [
+    {
+     "spec": "./constructs.js",
+     "how": "static",
+     "resolved": "src/core/constructs.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/scenario-input.js",
+   "language": "js",
+   "digest": "sha256:b2383484c55544efa409571a87eeeecca7caed9666bcd0097b52e81c30088ad7",
+   "imports": [
+    {
+     "spec": "./builtin-types.js",
+     "how": "static",
+     "resolved": "src/core/builtin-types.js",
+     "external": false
+    },
+    {
+     "spec": "./type-expr.js",
+     "how": "static",
+     "resolved": "src/core/type-expr.js",
+     "external": false
+    },
+    {
+     "spec": "./codegen-model.js",
+     "how": "static",
+     "resolved": "src/core/codegen-model.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/sha256.js",
+   "language": "js",
+   "digest": "sha256:2127f3aa23fee7f0fb3c6daf920c39ef39812313460a7e4e985560d3ba328496",
+   "imports": []
+  },
+  {
+   "path": "src/core/sim-input.js",
+   "language": "js",
+   "digest": "sha256:f978ee56e23ec4f0ff3a74b3973f442b3d2806fe32721ab24b851305eae401f9",
+   "imports": [
+    {
+     "spec": "./distributions.js",
+     "how": "static",
+     "resolved": "src/core/distributions.js",
+     "external": false
+    },
+    {
+     "spec": "./codegen-model.js",
+     "how": "static",
+     "resolved": "src/core/codegen-model.js",
+     "external": false
+    },
+    {
+     "spec": "./fault-model.js",
+     "how": "static",
+     "resolved": "src/core/fault-model.js",
+     "external": false
+    },
+    {
+     "spec": "./pools.js",
+     "how": "static",
+     "resolved": "src/core/pools.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/stable-json.js",
+   "language": "js",
+   "digest": "sha256:d75d013ea8edbe892c1daf9b03daf5212a401b5b4c5446df902ae597046ce33c",
+   "imports": []
+  },
+  {
+   "path": "src/core/supplied-inputs.js",
+   "language": "js",
+   "digest": "sha256:c20e8b469b94fefbe34d72d3cd4d437415926935f5dfd64b3e8f110d6b7861b0",
+   "imports": []
+  },
+  {
+   "path": "src/core/telemetry.js",
+   "language": "js",
+   "digest": "sha256:ce3164cf8dcb79c52fa99130fbe2bf7268cb1d412b98938f3f06176a02aa1306",
+   "imports": [
+    {
+     "spec": "./codegen-model.js",
+     "how": "static",
+     "resolved": "src/core/codegen-model.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/tenant-data.js",
+   "language": "js",
+   "digest": "sha256:1beee59998bdf531eea1b1e895ffaaea9223cb2b8a162ad63afcaaf60a2dd071",
+   "imports": [
+    {
+     "spec": "./codegen-model.js",
+     "how": "static",
+     "resolved": "src/core/codegen-model.js",
+     "external": false
+    },
+    {
+     "spec": "./data-model.js",
+     "how": "static",
+     "resolved": "src/core/data-model.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/text-edit.js",
+   "language": "js",
+   "digest": "sha256:4f35116b20e6390be554676b2aec153a8d7b9905820cc5d164a3cea1770de5a1",
+   "imports": []
+  },
+  {
+   "path": "src/core/type-expr.js",
+   "language": "js",
+   "digest": "sha256:3145181bd057298cfd158188800b3e0c993bb775abf292b614e6ec0b3da7be7b",
+   "imports": []
+  },
+  {
+   "path": "src/core/type-shapes.js",
+   "language": "js",
+   "digest": "sha256:cb1285cd49a093d6f12d9ee2d4ca253f49e583d89bbb99a9ac1fdb0fc6881ec2",
+   "imports": [
+    {
+     "spec": "./codegen-model.js",
+     "how": "static",
+     "resolved": "src/core/codegen-model.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/types.js",
+   "language": "js",
+   "digest": "sha256:b3820d55a3ddb36ec44772c125760a8330a59d40bcac060c7fbc6d8462ba0620",
+   "imports": []
+  },
+  {
+   "path": "src/core/ui-steps.js",
+   "language": "js",
+   "digest": "sha256:3b43fd5219eed07de43ac35cd0844281e6efe0f24a9f8a50cfc7ba2c273cd7e5",
+   "imports": [
+    {
+     "spec": "./telemetry.js",
+     "how": "static",
+     "resolved": "src/core/telemetry.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/ui.js",
+   "language": "js",
+   "digest": "sha256:44352e3544afb8075cccfca3a211103073f2d172ce2d013929897252ace12810",
+   "imports": [
+    {
+     "spec": "./expr.js",
+     "how": "static",
+     "resolved": "src/core/expr.js",
+     "external": false
+    },
+    {
+     "spec": "./codegen-model.js",
+     "how": "static",
+     "resolved": "src/core/codegen-model.js",
+     "external": false
+    },
+    {
+     "spec": "./ui-steps.js",
+     "how": "static",
+     "resolved": "src/core/ui-steps.js",
+     "external": false
+    },
+    {
+     "spec": "./supplied-inputs.js",
+     "how": "static",
+     "resolved": "src/core/supplied-inputs.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/validate.js",
+   "language": "js",
+   "digest": "sha256:1853ada9797ba8124fc88e95b550098087f1ab2cf1ebdc2ad8e55755a94a1e50",
+   "imports": [
+    {
+     "spec": "./expr.js",
+     "how": "static",
+     "resolved": "src/core/expr.js",
+     "external": false
+    },
+    {
+     "spec": "./claim-methods.js",
+     "how": "static",
+     "resolved": "src/core/claim-methods.js",
+     "external": false
+    },
+    {
+     "spec": "./own.js",
+     "how": "static",
+     "resolved": "src/core/own.js",
+     "external": false
+    },
+    {
+     "spec": "./interactions.js",
+     "how": "static",
+     "resolved": "src/core/interactions.js",
+     "external": false
+    },
+    {
+     "spec": "./fault-model.js",
+     "how": "static",
+     "resolved": "src/core/fault-model.js",
+     "external": false
+    },
+    {
+     "spec": "./scenario-input.js",
+     "how": "static",
+     "resolved": "src/core/scenario-input.js",
+     "external": false
+    },
+    {
+     "spec": "./codegen-model.js",
+     "how": "static",
+     "resolved": "src/core/codegen-model.js",
+     "external": false
+    },
+    {
+     "spec": "./type-shapes.js",
+     "how": "static",
+     "resolved": "src/core/type-shapes.js",
+     "external": false
+    },
+    {
+     "spec": "./language.js",
+     "how": "static",
+     "resolved": "src/core/language.js",
+     "external": false
+    },
+    {
+     "spec": "./function.js",
+     "how": "static",
+     "resolved": "src/core/function.js",
+     "external": false
+    },
+    {
+     "spec": "./tenant-data.js",
+     "how": "static",
+     "resolved": "src/core/tenant-data.js",
+     "external": false
+    },
+    {
+     "spec": "./derivation.js",
+     "how": "static",
+     "resolved": "src/core/derivation.js",
+     "external": false
+    },
+    {
+     "spec": "./supplied-inputs.js",
+     "how": "static",
+     "resolved": "src/core/supplied-inputs.js",
+     "external": false
+    },
+    {
+     "spec": "./constructs.js",
+     "how": "static",
+     "resolved": "src/core/constructs.js",
+     "external": false
+    },
+    {
+     "spec": "./ui.js",
+     "how": "static",
+     "resolved": "src/core/ui.js",
+     "external": false
+    },
+    {
+     "spec": "./telemetry.js",
+     "how": "static",
+     "resolved": "src/core/telemetry.js",
+     "external": false
+    },
+    {
+     "spec": "./access.js",
+     "how": "static",
+     "resolved": "src/core/access.js",
+     "external": false
+    },
+    {
+     "spec": "./capabilities.js",
+     "how": "static",
+     "resolved": "src/core/capabilities.js",
+     "external": false
+    },
+    {
+     "spec": "./residency.js",
+     "how": "static",
+     "resolved": "src/core/residency.js",
+     "external": false
+    },
+    {
+     "spec": "./pools.js",
+     "how": "static",
+     "resolved": "src/core/pools.js",
+     "external": false
+    },
+    {
+     "spec": "./readiness.js",
+     "how": "static",
+     "resolved": "src/core/readiness.js",
+     "external": false
+    },
+    {
+     "spec": "./realisation.js",
+     "how": "static",
+     "resolved": "src/core/realisation.js",
+     "external": false
+    },
+    {
+     "spec": "./data-model.js",
+     "how": "static",
+     "resolved": "src/core/data-model.js",
+     "external": false
+    },
+    {
+     "spec": "./contract-trace.js",
+     "how": "static",
+     "resolved": "src/core/contract-trace.js",
+     "external": false
+    },
+    {
+     "spec": "./type-expr.js",
+     "how": "static",
+     "resolved": "src/core/type-expr.js",
+     "external": false
+    },
+    {
+     "spec": "./integrity.js",
+     "how": "static",
+     "resolved": "src/core/integrity.js",
+     "external": false
+    },
+    {
+     "spec": "./metric-stats.js",
+     "how": "static",
+     "resolved": "src/core/metric-stats.js",
+     "external": false
+    },
+    {
+     "spec": "./readiness-machines.js",
+     "how": "static",
+     "resolved": "src/core/readiness-machines.js",
+     "external": false
+    },
+    {
+     "spec": "./evidence-ref.js",
+     "how": "static",
+     "resolved": "src/core/evidence-ref.js",
+     "external": false
+    },
+    {
+     "spec": "./query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "./abstraction.js",
+     "how": "static",
+     "resolved": "src/core/abstraction.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/verdict.js",
+   "language": "js",
+   "digest": "sha256:15b4fe1f03f48c2620ed700d210ea6ef66b16db60b0a7cee3fddf6e357e9d09c",
+   "imports": [
+    {
+     "spec": "./lean.js",
+     "how": "static",
+     "resolved": "src/core/lean.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/core/wire.js",
+   "language": "js",
+   "digest": "sha256:f9f7a627c8bf7d03320a45b5961d30a59a608751adfaef3abb8ace37f3821b23",
+   "imports": [
+    {
+     "spec": "./function-value.js",
+     "how": "static",
+     "resolved": "src/core/function-value.js",
+     "external": false
+    },
+    {
+     "spec": "./type-shapes.js",
+     "how": "static",
+     "resolved": "src/core/type-shapes.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/persist/client.js",
+   "language": "js",
+   "digest": "sha256:c9d3be640c9f5bbad54c39462e7d78e48f52906b536722c399b10a5fc43db458",
+   "imports": []
+  },
+  {
+   "path": "src/render/camera-rig.js",
+   "language": "js",
+   "digest": "sha256:ab40b8cc3837f5e253d3160482904876e852c1a9bae40952379ee31f03abaa4d",
+   "imports": [
+    {
+     "spec": "three",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "three/addons/controls/OrbitControls.js",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "src/render/curves.js",
+   "language": "js",
+   "digest": "sha256:56403e2e90ac9f16f0d43f8961420597d5401fc6bf82ab1f9478c45ffe1500af",
+   "imports": []
+  },
+  {
+   "path": "src/render/geometry.js",
+   "language": "js",
+   "digest": "sha256:56fcc12cbf901f4be7f80f7daa2f2ed599fc45679f77d2c4fb8fc1198f4720ad",
+   "imports": [
+    {
+     "spec": "three",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "three/addons/lines/LineGeometry.js",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "src/render/labels.js",
+   "language": "js",
+   "digest": "sha256:2c04ea82bade917490231ae0517e63c6226e6c819ed10e2394981dd0692582eb",
+   "imports": [
+    {
+     "spec": "three",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "src/render/palette.js",
+   "language": "js",
+   "digest": "sha256:e08077023d0e6bae33f5d1698f866b1266ad14a3ce32ae395ce3b3b2b2fdc725",
+   "imports": [
+    {
+     "spec": "three",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "src/render/scene-view.js",
+   "language": "js",
+   "digest": "sha256:477af2881bf4f7e5c82409ec0a5066230f81bf924f6d2979970d50b46e62ccdb",
+   "imports": [
+    {
+     "spec": "three",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "three/addons/renderers/CSS2DRenderer.js",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "three/addons/lines/Line2.js",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "three/addons/lines/LineMaterial.js",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "three/addons/lines/LineGeometry.js",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./palette.js",
+     "how": "static",
+     "resolved": "src/render/palette.js",
+     "external": false
+    },
+    {
+     "spec": "./geometry.js",
+     "how": "static",
+     "resolved": "src/render/geometry.js",
+     "external": false
+    },
+    {
+     "spec": "./curves.js",
+     "how": "static",
+     "resolved": "src/render/curves.js",
+     "external": false
+    },
+    {
+     "spec": "./camera-rig.js",
+     "how": "static",
+     "resolved": "src/render/camera-rig.js",
+     "external": false
+    },
+    {
+     "spec": "./labels.js",
+     "how": "static",
+     "resolved": "src/render/labels.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/styles/activity.css",
+   "language": "css",
+   "digest": "sha256:b9d4b47220f88d6c94f0a686cec553cc4036446dca1b2d475b998a8cd59e7126",
+   "imports": []
+  },
+  {
+   "path": "src/styles/base.css",
+   "language": "css",
+   "digest": "sha256:95ef621d1a14c857a7d6df5317c4dabea915f366789d3d33c06745fef25841f0",
+   "imports": []
+  },
+  {
+   "path": "src/styles/dialogs.css",
+   "language": "css",
+   "digest": "sha256:a6cb0c00800e378358c0f146356d92c0539d20b4b0129233cbdcc32d9fa60e3c",
+   "imports": []
+  },
+  {
+   "path": "src/styles/explorer.css",
+   "language": "css",
+   "digest": "sha256:d392d0c9c218685721306667aefda6c944259e305cf4d2983403d7e1e23ae3b5",
+   "imports": []
+  },
+  {
+   "path": "src/styles/inspector.css",
+   "language": "css",
+   "digest": "sha256:2560776049342d09401e21a4740fddee8ae62fb07feb7324dd59a321d196b709",
+   "imports": []
+  },
+  {
+   "path": "src/styles/layout.css",
+   "language": "css",
+   "digest": "sha256:c07fad34d1e84bebb4bad308ca233a0d5892dcb65e316a8136159be7427f0d70",
+   "imports": []
+  },
+  {
+   "path": "src/styles/main.css",
+   "language": "css",
+   "digest": "sha256:aaf20a56069e0705f022e3584de04d1e71c42b622bee236122a7274bf06d5823",
+   "imports": []
+  },
+  {
+   "path": "src/styles/overlay.css",
+   "language": "css",
+   "digest": "sha256:358172caaa1c850112bbe7ccc9c9179dde7c43e977ac2dfaebdb3cba5ad3ed57",
+   "imports": []
+  },
+  {
+   "path": "src/styles/panels.css",
+   "language": "css",
+   "digest": "sha256:76680f1667a973852abffa74c9644fed62c7078ab219835c8cbe13c2a495bf94",
+   "imports": []
+  },
+  {
+   "path": "src/styles/reader.css",
+   "language": "css",
+   "digest": "sha256:636bc77a21442383de5b595655a5125912260e499ce243ac112ff2de6a4f3920",
+   "imports": []
+  },
+  {
+   "path": "src/styles/realisation.css",
+   "language": "css",
+   "digest": "sha256:1791da46251de588be799c5c4a93a069175f3ca5412cb31f51e10fd965bedb44",
+   "imports": []
+  },
+  {
+   "path": "src/styles/reset.css",
+   "language": "css",
+   "digest": "sha256:dc88f3786a438de423df76ce4caa458f933fca8cdbe591482212128eac9bef88",
+   "imports": []
+  },
+  {
+   "path": "src/styles/scene.css",
+   "language": "css",
+   "digest": "sha256:3abbcaddc27a1a1e186bbff1a9bc22c6cdc45dd777735e5d09424611feee993c",
+   "imports": []
+  },
+  {
+   "path": "src/styles/sim.css",
+   "language": "css",
+   "digest": "sha256:767de9b6f56a125348c54e2787e8097891800db03846d408df6f02b5c2d0b769",
+   "imports": []
+  },
+  {
+   "path": "src/styles/source-editor.css",
+   "language": "css",
+   "digest": "sha256:e0c343bb172fb2e17f110be3d239bf36753b95cc8d258e8e4828faaa18566d72",
+   "imports": []
+  },
+  {
+   "path": "src/styles/states.css",
+   "language": "css",
+   "digest": "sha256:d9d93bd54d707dcc9bbebeb3ffadbe290a3f3c7b051e75be49317cda12768a42",
+   "imports": []
+  },
+  {
+   "path": "src/styles/tokens.css",
+   "language": "css",
+   "digest": "sha256:43d776a5812326f2a0cf7e9e44f32cdca0021b126c093e7cdf1aa8adc65f6e8f",
+   "imports": []
+  },
+  {
+   "path": "src/styles/toolbar.css",
+   "language": "css",
+   "digest": "sha256:39252c2b520ac4f813dd61c178cf7e72ed6927b3e312e081d1dedcceaad04190",
+   "imports": []
+  },
+  {
+   "path": "src/styles/utilities.css",
+   "language": "css",
+   "digest": "sha256:cf5c2b45c8981472805651610ab1cf17cad391ccf2678a06184106511c22a88a",
+   "imports": []
+  },
+  {
+   "path": "src/styles/verification.css",
+   "language": "css",
+   "digest": "sha256:e2476bac177e9b0230d769bfa92de2e2e49a8b45865b931226e5f591a1317cf3",
+   "imports": []
+  },
+  {
+   "path": "src/ui/activity.js",
+   "language": "js",
+   "digest": "sha256:717562262388d6a5ffe712b6ca3c178155aebaf81ef14704309a0f32e9757fb4",
+   "imports": [
+    {
+     "spec": "./dom.js",
+     "how": "static",
+     "resolved": "src/ui/dom.js",
+     "external": false
+    },
+    {
+     "spec": "./detail.js",
+     "how": "static",
+     "resolved": "src/ui/detail.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/ui/detail.js",
+   "language": "js",
+   "digest": "sha256:e3d54dc8705434280688f99f380fe3fb22e9173b6a5ee9a4404ff68f49fabf99",
+   "imports": []
+  },
+  {
+   "path": "src/ui/dialogs.js",
+   "language": "js",
+   "digest": "sha256:9882d85af7ac8e86a6728da548f2fbf66bde3ba77688de1c4973e213bedbc567",
+   "imports": [
+    {
+     "spec": "./dom.js",
+     "how": "static",
+     "resolved": "src/ui/dom.js",
+     "external": false
+    },
+    {
+     "spec": "../core/query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "../core/operations.js",
+     "how": "static",
+     "resolved": "src/core/operations.js",
+     "external": false
+    },
+    {
+     "spec": "../core/metamodel.json",
+     "how": "static",
+     "resolved": "src/core/metamodel.json",
+     "external": false
+    },
+    {
+     "spec": "./property-controls.js",
+     "how": "static",
+     "resolved": "src/ui/property-controls.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/ui/dom.js",
+   "language": "js",
+   "digest": "sha256:258b55f3045476bc37379df52be9621885b9d8e7cbd886c053f62f71fbdf856c",
+   "imports": []
+  },
+  {
+   "path": "src/ui/explorer.js",
+   "language": "js",
+   "digest": "sha256:e397114c40b996d50d45397631abc53b458995e9153bd1fe855991c853159700",
+   "imports": [
+    {
+     "spec": "./dom.js",
+     "how": "static",
+     "resolved": "src/ui/dom.js",
+     "external": false
+    },
+    {
+     "spec": "../core/query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "../core/projections.js",
+     "how": "static",
+     "resolved": "src/core/projections.js",
+     "external": false
+    },
+    {
+     "spec": "../core/claim-methods.js",
+     "how": "static",
+     "resolved": "src/core/claim-methods.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/ui/inspector.js",
+   "language": "js",
+   "digest": "sha256:22ee1073cfd4c8835435c69f3ce0581da91a8a6e84a202eb9721657c4a802cbe",
+   "imports": [
+    {
+     "spec": "./dom.js",
+     "how": "static",
+     "resolved": "src/ui/dom.js",
+     "external": false
+    },
+    {
+     "spec": "../core/query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "../core/abstraction.js",
+     "how": "static",
+     "resolved": "src/core/abstraction.js",
+     "external": false
+    },
+    {
+     "spec": "../core/claim-methods.js",
+     "how": "static",
+     "resolved": "src/core/claim-methods.js",
+     "external": false
+    },
+    {
+     "spec": "../core/data-model.js",
+     "how": "static",
+     "resolved": "src/core/data-model.js",
+     "external": false
+    },
+    {
+     "spec": "./property-controls.js",
+     "how": "static",
+     "resolved": "src/ui/property-controls.js",
+     "external": false
+    },
+    {
+     "spec": "./dialogs.js",
+     "how": "static",
+     "resolved": "src/ui/dialogs.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/ui/layout.js",
+   "language": "js",
+   "digest": "sha256:6c5ac43e39943be798da5c8dfcd0de881926301acfe3a2d6a6d758ce007a2a2d",
+   "imports": [
+    {
+     "spec": "./dom.js",
+     "how": "static",
+     "resolved": "src/ui/dom.js",
+     "external": false
+    },
+    {
+     "spec": "./sheet.js",
+     "how": "static",
+     "resolved": "src/ui/sheet.js",
+     "external": false
+    },
+    {
+     "spec": "./menu.js",
+     "how": "static",
+     "resolved": "src/ui/menu.js",
+     "external": false
+    },
+    {
+     "spec": "../app/traffic-recorder.js",
+     "how": "static",
+     "resolved": "src/app/traffic-recorder.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/ui/menu.js",
+   "language": "js",
+   "digest": "sha256:eefd9a1252208aad544d959b4d71b379b1648ec70d35952e3bdd9815fc88c02c",
+   "imports": []
+  },
+  {
+   "path": "src/ui/overlay.js",
+   "language": "js",
+   "digest": "sha256:86cf7318e1f3969e19afb19277c56a2446b921b4814e6886539fa151b98819db",
+   "imports": [
+    {
+     "spec": "./dom.js",
+     "how": "static",
+     "resolved": "src/ui/dom.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/ui/property-controls.js",
+   "language": "js",
+   "digest": "sha256:03d1316cdd0c7a8f9fce5d507a284e02b5d1de5b8b32a0479db1d80741de9c43",
+   "imports": [
+    {
+     "spec": "./dom.js",
+     "how": "static",
+     "resolved": "src/ui/dom.js",
+     "external": false
+    },
+    {
+     "spec": "../core/claim-methods.js",
+     "how": "static",
+     "resolved": "src/core/claim-methods.js",
+     "external": false
+    },
+    {
+     "spec": "../core/query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "./dialogs.js",
+     "how": "static",
+     "resolved": "src/ui/dialogs.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/ui/reader.js",
+   "language": "js",
+   "digest": "sha256:1693c2bb44138931bc04581e411e3f1d19394bba4994355e6a461723e47de9de",
+   "imports": [
+    {
+     "spec": "./dom.js",
+     "how": "static",
+     "resolved": "src/ui/dom.js",
+     "external": false
+    },
+    {
+     "spec": "../core/reader.js",
+     "how": "static",
+     "resolved": "src/core/reader.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/ui/realisation-panel.js",
+   "language": "js",
+   "digest": "sha256:684115d723dca68d086ed05793dc746faf741235ef3389e3f5433110007f3669",
+   "imports": [
+    {
+     "spec": "./dom.js",
+     "how": "static",
+     "resolved": "src/ui/dom.js",
+     "external": false
+    },
+    {
+     "spec": "../core/query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "../core/generate/index.js",
+     "how": "static",
+     "resolved": "src/core/generate/index.js",
+     "external": false
+    },
+    {
+     "spec": "../persist/client.js",
+     "how": "static",
+     "resolved": "src/persist/client.js",
+     "external": false
+    },
+    {
+     "spec": "../core/sha256.js",
+     "how": "static",
+     "resolved": "src/core/sha256.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/ui/sheet.js",
+   "language": "js",
+   "digest": "sha256:4d4a9734c0b29382288b45f20339d26a8e112fc50574dc69c2188413416867c8",
+   "imports": []
+  },
+  {
+   "path": "src/ui/shell.js",
+   "language": "js",
+   "digest": "sha256:99019300c3add0ac12a47c850b4549f35b449dca2b565e86dd795e37a0e6811f",
+   "imports": [
+    {
+     "spec": "./dom.js",
+     "how": "static",
+     "resolved": "src/ui/dom.js",
+     "external": false
+    },
+    {
+     "spec": "./detail.js",
+     "how": "static",
+     "resolved": "src/ui/detail.js",
+     "external": false
+    },
+    {
+     "spec": "../core/query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "../core/claim-methods.js",
+     "how": "static",
+     "resolved": "src/core/claim-methods.js",
+     "external": false
+    },
+    {
+     "spec": "./toolbar.js",
+     "how": "static",
+     "resolved": "src/ui/toolbar.js",
+     "external": false
+    },
+    {
+     "spec": "./explorer.js",
+     "how": "static",
+     "resolved": "src/ui/explorer.js",
+     "external": false
+    },
+    {
+     "spec": "./activity.js",
+     "how": "static",
+     "resolved": "src/ui/activity.js",
+     "external": false
+    },
+    {
+     "spec": "./overlay.js",
+     "how": "static",
+     "resolved": "src/ui/overlay.js",
+     "external": false
+    },
+    {
+     "spec": "./sim-transport.js",
+     "how": "static",
+     "resolved": "src/ui/sim-transport.js",
+     "external": false
+    },
+    {
+     "spec": "./dialogs.js",
+     "how": "static",
+     "resolved": "src/ui/dialogs.js",
+     "external": false
+    },
+    {
+     "spec": "./layout.js",
+     "how": "static",
+     "resolved": "src/ui/layout.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/ui/sim-panel.js",
+   "language": "js",
+   "digest": "sha256:37ea7eddf414b474b7d602c232fe3510e54653ea1fb80dd6927b705d652dcfaf",
+   "imports": [
+    {
+     "spec": "./dom.js",
+     "how": "static",
+     "resolved": "src/ui/dom.js",
+     "external": false
+    },
+    {
+     "spec": "../core/query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/ui/sim-transport.js",
+   "language": "js",
+   "digest": "sha256:b3b7fcb5f59c3f59301711a6226519bce8188e702eb6d9c54982737a78ad3f04",
+   "imports": [
+    {
+     "spec": "./dom.js",
+     "how": "static",
+     "resolved": "src/ui/dom.js",
+     "external": false
+    },
+    {
+     "spec": "../core/query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/ui/source-editor.js",
+   "language": "js",
+   "digest": "sha256:330f3a70c490e48a09aae52205038f1774f3b9176cbc540da7319cd065c00a0d",
+   "imports": [
+    {
+     "spec": "./dom.js",
+     "how": "static",
+     "resolved": "src/ui/dom.js",
+     "external": false
+    },
+    {
+     "spec": "../core/analyze.js",
+     "how": "static",
+     "resolved": "src/core/analyze.js",
+     "external": false
+    },
+    {
+     "spec": "../core/parse.js",
+     "how": "static",
+     "resolved": "src/core/parse.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/ui/toolbar.js",
+   "language": "js",
+   "digest": "sha256:efada301c0ff6b5db3c563234b3570c620d3b43cc7a547cc3da8f573fbe8274c",
+   "imports": [
+    {
+     "spec": "./dom.js",
+     "how": "static",
+     "resolved": "src/ui/dom.js",
+     "external": false
+    },
+    {
+     "spec": "../core/query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "./dialogs.js",
+     "how": "static",
+     "resolved": "src/ui/dialogs.js",
+     "external": false
+    },
+    {
+     "spec": "../persist/client.js",
+     "how": "static",
+     "resolved": "src/persist/client.js",
+     "external": false
+    },
+    {
+     "spec": "../core/analyze.js",
+     "how": "static",
+     "resolved": "src/core/analyze.js",
+     "external": false
+    },
+    {
+     "spec": "../core/sha256.js",
+     "how": "static",
+     "resolved": "src/core/sha256.js",
+     "external": false
+    },
+    {
+     "spec": "./menu.js",
+     "how": "static",
+     "resolved": "src/ui/menu.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "src/ui/verification-panel.js",
+   "language": "js",
+   "digest": "sha256:d9c1b9063cdbf39d43ff2f35b9135fc63bf9d26319fca7e4c1081a09c57fe408",
+   "imports": [
+    {
+     "spec": "./dom.js",
+     "how": "static",
+     "resolved": "src/ui/dom.js",
+     "external": false
+    },
+    {
+     "spec": "../core/query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "../core/claim-methods.js",
+     "how": "static",
+     "resolved": "src/core/claim-methods.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/build-engine.js",
+   "language": "js",
+   "digest": "sha256:cd50d369d7a1cd6f05e7ae28b67edc3e2da3958639c04ea1c5d6bfb352284a47",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:child_process",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "tools/build-formal-wasm.js",
+   "language": "js",
+   "digest": "sha256:6c50647395fbe64599039c1ab33fbccaf862d1c725c976ea620ff9e67ca1fa61",
+   "imports": []
+  },
+  {
+   "path": "tools/check-spec.js",
+   "language": "js",
+   "digest": "sha256:35986c28d75661b3ca724f48fca7cb90af91eb5fa2a72cb004ad473751a2cc8f",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "../src/core/analyze.js",
+     "how": "static",
+     "resolved": "src/core/analyze.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/claims.js",
+     "how": "static",
+     "resolved": "src/core/claims.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/engine.js",
+     "how": "static",
+     "resolved": "src/core/engine.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/hash.js",
+     "how": "static",
+     "resolved": "src/core/hash.js",
+     "external": false
+    },
+    {
+     "spec": "./spec-manifest.js",
+     "how": "static",
+     "resolved": "tools/spec-manifest.js",
+     "external": false
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "tools/compare-spec.js",
+   "language": "js",
+   "digest": "sha256:63d4aba78b512caec29a14b72bddb559dc03b39ca7488bab72cd9ec719068142",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "jsonc-parser",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./spec-manifest.js",
+     "how": "static",
+     "resolved": "tools/spec-manifest.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/conformance.js",
+   "language": "js",
+   "digest": "sha256:8656c39fa07c2fd929717e91d82a0d7f78c08901486819bcc51d263aa91afd45",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:child_process",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:util",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "../src/core/engine.js",
+     "how": "static",
+     "resolved": "src/core/engine.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/differential.js",
+   "language": "js",
+   "digest": "sha256:67196e978efa596da65f43843f63d52834ff15a01e21c3a861f87c54cbb3aaae",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:child_process",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./conformance.js",
+     "how": "static",
+     "resolved": "tools/conformance.js",
+     "external": false
+    },
+    {
+     "spec": "./gen-engine-inputs.js",
+     "how": "static",
+     "resolved": "tools/gen-engine-inputs.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/extract.js",
+   "language": "js",
+   "digest": "sha256:b7151fb8dc84d3e0d36fb69160ef17d04f1578aed5d857681d54eab71fe41d5a",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:crypto",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./surface.js",
+     "how": "static",
+     "resolved": "tools/surface.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/gen-engine-inputs.js",
+   "language": "js",
+   "digest": "sha256:f3cdcfbd8581a18ff1a8d61ea970540662fbae1a0deebffcaa6d7459ae4f4094",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "tools/import-markdown.js",
+   "language": "js",
+   "digest": "sha256:14ec20a6112ab52d0901fbafb8860e0e8cef5d85a558e6cc8d6a8028ed5cda04",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "jsonc-parser",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./workspace.js",
+     "how": "static",
+     "resolved": "tools/workspace.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/import-register.js",
+   "language": "js",
+   "digest": "sha256:8a933440386f88b4552fc1e453bf0eb7a76dad908bdccc3b27e0eb5638176c84",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "jsonc-parser",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./spec-manifest.js",
+     "how": "static",
+     "resolved": "tools/spec-manifest.js",
+     "external": false
+    },
+    {
+     "spec": "./import-markdown.js",
+     "how": "static",
+     "resolved": "tools/import-markdown.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/import-scan.js",
+   "language": "js",
+   "digest": "sha256:eda8e364afbe7bb684bc86177a725eef782f88d0dc135027e9740fdbd68ab2c3",
+   "imports": [
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "../src/core/facts.js",
+     "how": "static",
+     "resolved": "src/core/facts.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "./tree-stamp.js",
+     "how": "static",
+     "resolved": "tools/tree-stamp.js",
+     "external": false
+    },
+    {
+     "spec": "./extract.js",
+     "how": "static",
+     "resolved": "tools/extract.js",
+     "external": false
+    },
+    {
+     "spec": "node:fs",
+     "how": "builtin",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:fs/promises",
+     "how": "builtin",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "tools/junit.js",
+   "language": "js",
+   "digest": "sha256:c162a5243df79caa4ccddc8ebcb43b1ecc9f30befc6fce560af6591f3ab8f7e7",
+   "imports": []
+  },
+  {
+   "path": "tools/lean-theorems.js",
+   "language": "js",
+   "digest": "sha256:3bd24bf22e9f7cc1691e9d45098b836f1d540a076b63ec66f52cc6ed19ad030f",
+   "imports": [
+    {
+     "spec": "node:crypto",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:os",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:child_process",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./tree-stamp.js",
+     "how": "static",
+     "resolved": "tools/tree-stamp.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/facts.js",
+     "how": "static",
+     "resolved": "src/core/facts.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/make-benchmark.js",
+   "language": "js",
+   "digest": "sha256:04d77a2b50e1a6eebb4f6d5e4186d588bfabeaa04e333ed644f07789f8039af6",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "../src/core/analyze.js",
+     "how": "static",
+     "resolved": "src/core/analyze.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/observe.js",
+   "language": "js",
+   "digest": "sha256:4640507105f93fa3212dda09541bcf510393abe867d5ce599101ab456eee841d",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./extract.js",
+     "how": "static",
+     "resolved": "tools/extract.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/extraction.js",
+     "how": "static",
+     "resolved": "src/core/extraction.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/outcomes-node-reporter.js",
+   "language": "js",
+   "digest": "sha256:b122d7f78ed10aca57c0a9df906584b9f1c52b7af54ed9377710cee9fe4a3220",
+   "imports": [
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./tree-stamp.js",
+     "how": "static",
+     "resolved": "tools/tree-stamp.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/outcomes-playwright-reporter.js",
+   "language": "js",
+   "digest": "sha256:6cb788219c7a33e5ac5e8df56a79cb0af50c967aa7fc1760c525d3ed3ffa8dde",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./tree-stamp.js",
+     "how": "static",
+     "resolved": "tools/tree-stamp.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/prove-integrity.js",
+   "language": "js",
+   "digest": "sha256:ec392ecbc7215f6bc563de65251bb7fdc4e7046a34d8b56706c29b81e6c2ac2b",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:child_process",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "../src/core/integrity.js",
+     "how": "static",
+     "resolved": "src/core/integrity.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/integrity-export.js",
+     "how": "static",
+     "resolved": "src/core/integrity-export.js",
+     "external": false
+    },
+    {
+     "spec": "./prove.js",
+     "how": "static",
+     "resolved": "tools/prove.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/prove.js",
+   "language": "js",
+   "digest": "sha256:0b26ff40378954b30d4aad27ae2f18fc8d50747022729ed9d8420b2172e2cd2a",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:child_process",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "../src/core/proof-export.js",
+     "how": "static",
+     "resolved": "src/core/proof-export.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/realisation-roots.js",
+   "language": "js",
+   "digest": "sha256:23e877b5d991ac5c486c3890a90e0be99764e3a044e0f5ae78f467482ac1525c",
+   "imports": []
+  },
+  {
+   "path": "tools/record-goldens.js",
+   "language": "js",
+   "digest": "sha256:3e08dfc3e64f56aef9dc424dea9f8f503887c82637e4fe15222443124c8c9fb7",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "../src/core/analyze.js",
+     "how": "static",
+     "resolved": "src/core/analyze.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/stable-json.js",
+     "how": "static",
+     "resolved": "src/core/stable-json.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/engine.js",
+     "how": "static",
+     "resolved": "src/core/engine.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/sim-input.js",
+     "how": "static",
+     "resolved": "src/core/sim-input.js",
+     "external": false
+    },
+    {
+     "spec": "./conformance.js",
+     "how": "static",
+     "resolved": "tools/conformance.js",
+     "external": false
+    },
+    {
+     "spec": "./spec-manifest.js",
+     "how": "static",
+     "resolved": "tools/spec-manifest.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/run-unit-tests.js",
+   "language": "js",
+   "digest": "sha256:c58e66ff0760721276764983591a2b14234a83d5ac19fd67b42ddcc524f391d6",
+   "imports": [
+    {
+     "spec": "node:child_process",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "tools/rust-engine.js",
+   "language": "js",
+   "digest": "sha256:33de40333412cfa0c1cafca7d4d1df59b8339c6ad086b62de069f7e70c3c7ca4",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:module",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "tools/spec-guard.js",
+   "language": "js",
+   "digest": "sha256:de8605b3d76f92eefcc1482c703ff288209443f25458e70445b8d4b9fee289c1",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "jsonc-parser",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./spec-manifest.js",
+     "how": "static",
+     "resolved": "tools/spec-manifest.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/spec-manifest.js",
+   "language": "js",
+   "digest": "sha256:724fefd17c4efcfb2cdce2822ef67be664f11db0f44e3df60bf725b5e50b8c4f",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "jsonc-parser",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "tools/spec-store.js",
+   "language": "js",
+   "digest": "sha256:e1800f8142857ccb4223548eda8dcf07be5e6a25b1311fc92f6f4dc7bcbb0740",
+   "imports": [
+    {
+     "spec": "node:crypto",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:sqlite",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "jsonc-parser",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "../src/core/metamodel.json",
+     "how": "static",
+     "resolved": "src/core/metamodel.json",
+     "external": false
+    },
+    {
+     "spec": "../src/core/parse.js",
+     "how": "static",
+     "resolved": "src/core/parse.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/analyze.js",
+     "how": "static",
+     "resolved": "src/core/analyze.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/hash.js",
+     "how": "static",
+     "resolved": "src/core/hash.js",
+     "external": false
+    },
+    {
+     "spec": "./spec-manifest.js",
+     "how": "static",
+     "resolved": "tools/spec-manifest.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/split-spec.js",
+   "language": "js",
+   "digest": "sha256:3543f72d0c48ade6bbbbcb4c274622ecfa9f9ba0f0ed3da980682aca91ac7156",
+   "imports": []
+  },
+  {
+   "path": "tools/surface.js",
+   "language": "js",
+   "digest": "sha256:12103bc722200d620ddf6fcb96a718e726a8a9d84438da8123084abf53b605d0",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "tools/traceability.js",
+   "language": "js",
+   "digest": "sha256:e18abe9c6141f0cd59096b32f781ff837ae92c860f24f0fec91f3f144e477cde",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./realisation-roots.js",
+     "how": "static",
+     "resolved": "tools/realisation-roots.js",
+     "external": false
+    },
+    {
+     "spec": "../src/core/query.js",
+     "how": "static",
+     "resolved": "src/core/query.js",
+     "external": false
+    },
+    {
+     "spec": "./surface.js",
+     "how": "static",
+     "resolved": "tools/surface.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/tree-stamp.js",
+   "language": "js",
+   "digest": "sha256:e3a2ca90ff4d81cedac48e3e9ee1912d30f085ee7bee3ddaebd6c9459110b811",
+   "imports": [
+    {
+     "spec": "node:crypto",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "../src/core/facts.js",
+     "how": "static",
+     "resolved": "src/core/facts.js",
+     "external": false
+    },
+    {
+     "spec": "node:child_process",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    }
+   ]
+  },
+  {
+   "path": "tools/vite-plugin-exegra.js",
+   "language": "js",
+   "digest": "sha256:a061ae833b6f103d08d4f2c0de27e39001cb58f0c759c18f3be3e17491205688",
+   "imports": [
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./spec-manifest.js",
+     "how": "static",
+     "resolved": "tools/spec-manifest.js",
+     "external": false
+    },
+    {
+     "spec": "./workspace.js",
+     "how": "static",
+     "resolved": "tools/workspace.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "tools/workspace.js",
+   "language": "js",
+   "digest": "sha256:42285632e152f56c76be408290fc6c6ebc75eb1daf5cc0a1d3cbab4555673786",
+   "imports": [
+    {
+     "spec": "node:crypto",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:fs",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "jsonc-parser",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./spec-manifest.js",
+     "how": "static",
+     "resolved": "tools/spec-manifest.js",
+     "external": false
+    }
+   ]
+  },
+  {
+   "path": "vite.config.js",
+   "language": "js",
+   "digest": "sha256:d9087ddd3abb0d414d6524688213c22f88ee47d2c6b9499fee6b54c563aa5358",
+   "imports": [
+    {
+     "spec": "node:path",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "node:url",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "vite",
+     "how": "static",
+     "resolved": null,
+     "external": true
+    },
+    {
+     "spec": "./tools/vite-plugin-exegra.js",
+     "how": "static",
+     "resolved": "tools/vite-plugin-exegra.js",
+     "external": false
+    }
+   ]
+  }
+ ]
+}

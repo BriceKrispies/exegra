@@ -1,0 +1,1662 @@
+// Part of the specification: claims, evidence.
+{
+  "claims": [
+    {
+      "id": "storage-has-owner",
+      "kind": "structural",
+      "statement": "Every data store (meta-model, claim method registry and the project files) declares an owner.",
+      "subjects": ["metamodel", "claim-method-registry", "specification-file", "layout-file", "recorded-results-file", "generated-artifacts"],
+      "assumptions": [
+        "static-extractor-sound",
+        "extracted-facts-current"
+      ],
+      "evaluate": { "method": "property-defined", "select": { "category": "storage" }, "property": "owner" }
+    },
+    {
+      "id": "unsupported-constructs-are-diagnosed",
+      "kind": "invariant",
+      "statement": "A specification construct the meta-model does not describe (an unknown section, entity property, vocabulary field or claim parameter) is reported as a diagnostic and never silently dropped.",
+      "subjects": ["parser", "validator"],
+      "assumptions": ["tests-exercise-shipped-modules", "recorded-results-reflect-current-code"],
+      "evaluate": { "method": "external-evidence" }
+    },
+    {
+      "id": "data-model-rules-computed",
+      "kind": "invariant",
+      "statement": "Records and copies are validated with positions, and the six data rules (erasure point, record erasure point, no principal data in a shared copy, party fields by principal id, freshness bound, holder related to owner) are computed from the model and reported per copy, record and field, both as validation warnings and as the result of a data-model claim.",
+      "rationale": "Evidence is the core test over a fixture modelling a slice of a multi-tenant platform, in which the rules find a deliberately missing erasure point. The claim is supported, not verified, because Exegra does not check its own validation rules.",
+      "subjects": [
+        "data-model",
+        "validator",
+        "claim-evaluator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "personal-records-state-erasure",
+      "kind": "invariant",
+      "statement": "Every record with a field that is personal data or a credential states an erasure point or a bounded retention; a record that states neither is a finding of the record-erasure-point rule, and a data-model claim naming that rule is violated with the record as its counterexample.",
+      "rationale": "Checked by the tests in tests/core/data-model.test.js over constructed records and the data-model fixture, where every personal record states its erasure. Supported, not verified: Exegra stores no personal data itself, so the rule holds vacuously on its own records and is not listed in any claim of this specification.",
+      "subjects": [
+        "data-model",
+        "validator",
+        "claim-evaluator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "classification-validated",
+      "kind": "invariant",
+      "statement": "A field's optional classification is one of public, internal, personal or credential; personal is stated through the personal-data class and classification personal needs that class; an unknown classification is a validation error, and a specification without classifications validates unchanged.",
+      "subjects": [
+        "data-model",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "specification-copies-fresh-and-related",
+      "kind": "structural",
+      "statement": "Every copy of a project's specification text that Exegra declares (the session model, the command line's project, the generated documents) states a freshness bound, and its holder is related to the specification file through declared relationships; the shared copy holds no principal data.",
+      "rationale": "Checked by the data-model method on Exegra's own records and copies. The erasure-point and party-by-id rules are not listed: Exegra stores no personal data, so they would hold only vacuously.",
+      "subjects": [
+        "data-model",
+        "specification-text",
+        "session-model",
+        "cli-project",
+        "generated-documents"
+      ],
+      "assumptions": [
+        "static-extractor-sound",
+        "extracted-facts-current"
+      ],
+      "evaluate": {
+        "method": "data-model",
+        "rules": [
+          "freshness-bound",
+          "holder-reaches-owner",
+          "no-principal-in-shared"
+        ]
+      }
+    },
+    {
+      "id": "negatives-are-validated",
+      "kind": "invariant",
+      "statement": "A negative whose scenario is not one of its claim's scenarios, whose fault list is missing or empty, or that names an undeclared fault or one its scenario already activates, is a validation error; renaming a fault rewrites the negatives that name it.",
+      "subjects": [
+        "validator",
+        "parser"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "claim-parameters-always-validated",
+      "kind": "invariant",
+      "statement": "The checks of claims (parameters, scenarios, negatives, models) run even when another reference of the specification is unresolved, so one error does not hide the others; a negative whose fault targets a transition of a behavior its scenario does not run, and two unguarded transitions on one event and state, are warnings.",
+      "rationale": "Supported by tests/core/claim-diagnostics.test.js (ev-validate-*). Only transition faults are checked for being inert in a negative: a drop or delay of an event the scenario never delivers is not.",
+      "subjects": ["validator"],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "runtime-data-copies-fresh-and-related",
+      "kind": "structural",
+      "statement": "Every copy of Exegra's runtime data that this specification declares (session model and claim results, scene, simulation run, browser preferences and camera memory, command-line outputs, generated documents, bundles, proof outputs and the production bundle's embedded specifications) states a freshness bound, its holder is related through declared relationships to the owner of every record it copies, and no shared copy holds principal data.",
+      "rationale": "Checked by the data-model method over all records and copies. erasure-point and party-by-id are not listed: Exegra stores no personal data, so they would hold only vacuously.",
+      "subjects": [
+        "data-model",
+        "specification-text",
+        "interaction-state",
+        "recorded-results",
+        "session-claim-results",
+        "session-preferences",
+        "shipped-specifications"
+      ],
+      "assumptions": [
+        "static-extractor-sound",
+        "extracted-facts-current"
+      ],
+      "evaluate": {
+        "method": "data-model",
+        "rules": [
+          "freshness-bound",
+          "holder-reaches-owner",
+          "no-principal-in-shared"
+        ]
+      }
+    },
+    {
+      "id": "runtime-stores-modelled",
+      "kind": "invariant",
+      "statement": "Every durable store Exegra's code writes (the project files and journal of the workspace service, evidence/results.json, generated/, the localStorage keys exegra.session and exegra.layout, the sessionStorage keys exegra.camera.<project>.<view>, the bundle download, and the files the command line and the tools write) is named by a record or a copy of this specification.",
+      "rationale": "WG-4775. The evidence finds write sites by pattern in src/, cli/ and tools/ and resolves storage keys and workspace files from the code. It cannot see writes made by subprocesses the tools start (lake, cargo, Playwright, npm and Vite, except the --out-dir build-engine hands to wasm-bindgen), writes inside dependencies, writes through an alias of fs or of a storage object, keys computed without a literal prefix, or in-memory state; and it matches a site to its store by a needle or the enclosing function, so the store named is the author's statement. Supported, not verified: Exegra does not check its own code.",
+      "subjects": [
+        "data-model",
+        "workspace-service",
+        "session",
+        "agent-cli",
+        "specification-text",
+        "recorded-results",
+        "write-journal",
+        "session-preferences",
+        "camera-memory"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "evidence-refs-validated-before-verify",
+      "kind": "invariant",
+      "statement": "A test evidence reference that exegra verify would refuse as unsafe is reported by validate as an error (evidence.ref-unsafe) with its evidence id and position, so an author learns of it before verify runs. Validate and verify use the same rule.",
+      "subjects": [
+        "validator",
+        "agent-cli"
+      ],
+      "assumptions": [],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "integrity-rules-evaluated",
+      "kind": "invariant",
+      "statement": "Integrity rules are part of the specification and are evaluated on every model: each holds with the number of instances checked, or is violated with its counterexamples (bindings, entity ids, lines); an invalid rule is a validation error, a rule over nothing is reported vacuous, and every rule of the fixture can be made to fail by a stated mutation.",
+      "rationale": "Evidence is the core test over tests/fixtures/integrity, whose five rules hold and whose mutations.json gives each rule an edit after which it must fail with a stated counterexample; a rule without one fails the test. Supported, not verified: Exegra does not check its own evaluator.",
+      "subjects": [
+        "integrity-rules",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "integrity-ratchet-on-apply",
+      "kind": "invariant",
+      "statement": "A transaction that adds a violation of an integrity rule of severity error is refused with the counterexamples and changes nothing; violations the project already had do not block unrelated edits, a fix is accepted, and violations of warning rules are only reported.",
+      "rationale": "Evidence is the core test of the ratchet on the integrity fixture.",
+      "subjects": [
+        "integrity-rules",
+        "transactions"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "integrity-proved-in-lean",
+      "kind": "invariant",
+      "statement": "exegra prove-integrity establishes a rule that holds by a kernel-checked proof by reflection (eval_iff, decide +kernel) and a violated rule by a kernel-checked refutation from each concrete witness (refutes_sound), with Lean's standard axioms only, and reports a rule incomplete when the Lean checker and the JavaScript evaluator disagree.",
+      "rationale": "Evidence is the formal test on the integrity fixture: every rule proved, every mutation refuted from its stated counterexample, and Lean and JavaScript agreeing on every rule of seeded random mutations. The test is skipped, with a message, without Lake.",
+      "subjects": [
+        "integrity-rules",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "reader-pages-come-from-model",
+      "kind": "invariant",
+      "statement": "A reader page is derived from the model and its view alone: every row, count and section it shows is an entity of the model selected by the view's kind and conditions, grouped, classified and faceted by the view's rules, and a view without blocks reads the system, an index of its kinds and its first document.",
+      "subjects": [
+        "reader-pages",
+        "projection-system"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "reader-blocks-validated",
+      "kind": "invariant",
+      "statement": "A reader block carrying a field the meta-model does not define is refused with an error, so a page cannot silently ignore part of its definition.",
+      "subjects": [
+        "reader-pages",
+        "metamodel",
+        "parser"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "semantic-hash-ignores-presentation",
+      "kind": "invariant",
+      "statement": "The semantic hash of a model depends only on its schema version, its vocabulary and its top-level declarations (id, kind, data) up to order: source positions, JSON paths, nested declarations' records, references, expressions, the effective meta-model and the order of declarations do not change it.",
+      "subjects": [
+        "model-hash",
+        "model-derivation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "Theorem of formal/Exegra/ModelProps.lean (WG-4799), from Exegra.Hash.semanticHash_perm: sorting by id with an order proved total and antisymmetric makes permutations with distinct ids equal.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Model.Model.semanticHash_presentation",
+        "about": [
+          "Exegra.Model.Model.semanticHash"
+        ]
+      }
+    },
+    {
+      "id": "semantic-hash-ignores-key-order",
+      "kind": "invariant",
+      "statement": "Reordering the members of objects, at every depth, in the vocabulary and in the data of every declaration, does not change the semantic hash (for values with distinct keys in every object).",
+      "subjects": [
+        "model-hash"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "Theorem of formal/Exegra/HashProps.lean (WG-4799), for any reordering function that returns a permutation of each member list.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Hash.semanticHash_key_order",
+        "about": [
+          "Exegra.Hash.semanticHash"
+        ]
+      }
+    },
+    {
+      "id": "semantic-hash-runs-definition",
+      "kind": "invariant",
+      "statement": "The semantic hash that runs (Exegra.Hash.semanticHash': keys converted once for sorting, the in-place JSON writer) equals the definition Exegra.Hash.semanticHash on every input.",
+      "subjects": [
+        "model-hash"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "Theorem of formal/Exegra/Hash.lean (WG-4799), from sortKeys'_eq (List.map_mergeSort) and Exegra.Impl.JsonOut.write'_eq.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Hash.semanticHash'_eq",
+        "about": [
+          "Exegra.Hash.semanticHash'",
+          "Exegra.Hash.semanticHash"
+        ]
+      }
+    },
+    {
+      "id": "implementation-machine-readiness-rules",
+      "kind": "invariant",
+      "statement": "A behavior declared with level \"implementation\" is reported with an error for each rule it breaks, and for none when it breaks none: every variable has a resolving repr; instances are {key, storedIn} with key a key field of that record; the machine says which record holds it (storage {record, key} with key a key field of the record, or instances.storedIn, and the two agree when both are present); every variable is held in a field of that record (storage.fields, default the field of its name) whose type fits its repr, every storage.fields entry names a variable and a field of the record, and no field holds two things; a stored state has a required string or enum field (storage.state, default \"state\") whose values, through storage.stateValues when given, distinctly cover every state; a machine with storage.creates true fills every required field of its record, while a non-creating machine is not held to this; every event field read is a declared payload field and every payload type resolves; every emit names its receiver and its event a delivery; a transaction is declared; no transition is faultOnly; every elapsed event is emitted by a timer; transitions with the same state and event are explicitly ordered (guard or otherwise on the last, otherwise only on the last); every non-terminal state has an outcome or an ignore for every event of the machine. The rules are the ready.* codes of docs/semantics.md; a machine is keyed by the whole key of its record, every key field in order, in storage.key and in instances.key (storage.key-whole, WG-4907).",
+      "rationale": "The rules are checked by machineReadiness (src/core/readiness-machines.js), called by validate, so a generator can rely on an implementation-level machine being complete. Evidence is the core test: one fixture that breaks each rule once and gives exactly that one ready.* error, a fixed version with none, and the exegra and strata projects, which have no implementation-level behavior and so report none. Supported, not verified: Exegra does not check its own validation rules.",
+      "subjects": [
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "refinement-mappings-validated",
+      "kind": "structural",
+      "statement": "Validation refuses a refines that names a non-behavior, a refines on a model-level behavior, a refinement of a behavior that itself refines, and a refinement mapping that names an unknown state, transition or variable of either side or leaves an implementation state or transition or a model variable unmapped.",
+      "rationale": "Supported by tests/core/refinement.test.js.",
+      "subjects": [
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "retention-erases-records",
+      "kind": "invariant",
+      "statement": "A retention construct that deletes a record, or anonymises every personal and credential field of it, satisfies the record-erasure-point data rule for that record; one that anonymises only some of those fields does not.",
+      "rationale": "The retention is the structured form of the record's prose retention and does not duplicate its erasure; the data rule reads it (src/core/data-model.js). Supported by a core test over the construct fixture.",
+      "subjects": [
+        "data-model",
+        "generation-readiness"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "run-time-timer-delays",
+      "kind": "invariant",
+      "statement": "A timer delay read at run time, {expr, simulate}, appears only on an implementation-level machine, its expr is an expression of a number over the machine's variables, time and the event payload, and it states the delay a simulated run uses; simulation and refines run the timer with that simulated delay, so refines compares the timer's event and payload and a model's numeric delay against the simulated one.",
+      "rationale": "Evidence is the core tests that break the delay rules once each and the refinement test that runs such a timer against a tick-based model. Supported, not verified.",
+      "subjects": [
+        "validator",
+        "generation-readiness"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "expression-semantics-shared",
+      "kind": "invariant",
+      "statement": "The JavaScript evaluator (src/core/expr.js) and the Lean core (Exegra.eval, called as expr.eval) give every outcome of the shared case table tests/fixtures/expr-cases.json: checked integer arithmetic within u8, u16, u32, i32 and u64 and i64 limited to +-(2^53 - 1), integer division truncating toward zero, remainder with the sign of the dividend, division by zero an error, structural equality of lists, structs and json with 1 equal to 1.0, an absent option read as null and any other absent value an error, and signed time differences. Strata runs a byte-identical copy of the table on its generated Rust and JavaScript.",
+      "rationale": "WG-4902: generated code should behave as the simulator does, so both follow one set of rules (docs/semantics.md, Values, numbers and time), and one table states them. Supported by the core test, which runs every case on both evaluators; the agreement with generated code is checked on the Strata side.",
+      "subjects": [
+        "expression-language",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "machine-time-integer-readiness",
+      "kind": "invariant",
+      "statement": "An implementation-level machine is reported with ready.time-epoch when it compares time with a variable that can still hold its literal initial value, ready.time-difference when it reads time - x without first establishing x <= time, ready.delay-unit when its scenarios disagree on a time unit, a fixed delay is not a whole number of milliseconds or it reads time in another unit than ms, and ready.number-bound when a literal, an integer initial value or a scenario payload value is outside its integer range; and with none of these when it breaks none.",
+      "rationale": "WG-4902: the simulator clock starts at 0 and counts the scenario unit, generated code counts milliseconds from the Unix epoch, and all three hold integers exactly only up to 2^53 - 1; these rules keep a machine meaning the same on both. Evidence is the core test: a fixed fixture with no error and one negative fixture per rule (WG-4948) giving exactly the named error. Supported, not verified: Exegra does not check its own validation rules.",
+      "subjects": [
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "machine-realisation-and-durability",
+      "kind": "invariant",
+      "statement": "A machine and a contract say whether they model code that exists or the enterprise target, and a machine says where it lives: behavior.realisation (contract.deployment for a contract) is shipped or target, defaulting to target when the subject (implementedBy) component is not-implemented and to shipped otherwise, and an explicit shipped on a not-implemented component is an error (behavior.realisation-subject, contract.deployment-subject); storage.durability is record (default) or memory, a memory machine names no record, key, fields, state, creates, instances.storedIn or transaction and is held to no storage or transaction readiness rule, and an invalid combination is the error storage.durability.",
+      "rationale": "Generators and Concordance must tell shipped code from target models (28 of 37 of Strata's first implementation machines model the enterprise target, WG-4895 NC-6) and let a connection-scoped machine live in memory (NC-7). Evidence is the core test: a fixed fixture without error or readiness diagnostic, the defaults, and a negative fixture per rule that gives exactly that one error. Supported, not verified: Exegra does not check its own validation rules.",
+      "subjects": [
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "faults-realisable-by-runtime",
+      "kind": "invariant",
+      "statement": "In a scenario that runs an implementation-level machine, a fault the generated runtime cannot produce is reported with fault.unrealisable: any event fault on an event a timer of the scenario fires (or an elapsed event); drop-event, lose-event or a delay-event by other than a sum of retry backoff waits on an at-least-once event; delay-event, retry-event or duplicate-event on an at-most-once event; lose-event or retry-event on an event that declares no delivery; enable-transition or disable-transition on a transition of an implementation-level machine. A scenario whose faults the runtime can all produce has none.",
+      "rationale": "WG-4903: the simulator must model what the runtime can do. Strata's runtime (crates/runtime host.rs and system.rs) fires a timer exactly once at its deadline, retries an at-least-once message with backoff (system.generation.retry, by default 1 s, 2 s, 4 s, ... up to 300 s) and may dispatch it again after a stop between dispatch and acknowledgement, and dispatches an at-most-once message once, losing it on a failed dispatch or a stop between commit and dispatch (docs/semantics.md, \"Faults the runtime can produce\"). Evidence is the core test: a fixed fixture with no error and one negative fixture per case (WG-4948) giving exactly fault.unrealisable. Supported, not verified: Exegra does not check its own validation rules.",
+      "subjects": [
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "machine-initial-state-reachable",
+      "kind": "invariant",
+      "statement": "A shipped implementation-level machine (its subject states an implementation status other than not-implemented and is not a client) that a scenario runs, and that neither creates its records (storage.creates) nor names a contract that writes them (storage.createdBy), is reported with machine.initial-unreachable; a machine that does either, or of a component not built yet, is not.",
+      "rationale": "WG-4903: Exegra starts every instance in its initial state, but the runtime does so only for a machine that creates its records and otherwise refuses its events (RecordMissing) until someone else wrote the record. Evidence is the core test: the fixed fixture has no error, its machine without creates gives exactly machine.initial-unreachable, and createdBy or a not-implemented subject clears it. Supported, not verified.",
+      "subjects": [
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "integrity-relations-least-model",
+      "kind": "invariant",
+      "statement": "For a program of derived relations that the Lean stratification check wf accepts and the checker solve solves, the solved table is exactly the least-model meaning Least: a tuple is in it iff it is in every interpretation that agrees with the lower strata and is closed under the clauses of its stratum.",
+      "rationale": "The theorem Exegra.Integrity.least_eq_table of formal/Exegra/Integrity.lean. Least is defined impredicatively and does not mention the checker. The proof has two halves per stratum: stratum_closed (the fixpoint table is closed under the clauses) and stratum_le_closed (every iterate is contained in every closed interpretation, by sat_mono: a formula whose stratum atoms occur only positively is monotone in them). A run of solve that runs out of fuel returns none, so it can make no proof wrong. Proved, not tested: it covers every program and every specification.",
+      "subjects": [
+        "integrity-rules",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Integrity.least_eq_table",
+        "about": [
+          "Exegra.Integrity.Least",
+          "Exegra.Integrity.solve",
+          "Exegra.Integrity.wf"
+        ]
+      }
+    },
+    {
+      "id": "integrity-relations-holds-by-reflection",
+      "kind": "invariant",
+      "statement": "A rule that the Lean checker eval accepts over the solved table of a stratified program holds under the least-model meaning: Sat u (Least u prog) [] rule.",
+      "rationale": "The theorem Exegra.Integrity.holds_of_eval of formal/Exegra/Integrity.lean, from eval_iff and least_eq_table; every proof file of exegra prove-integrity states holds through it (and violated_<n> through violated_of_refutes), so what a proof file establishes is about the meaning, not the checker.",
+      "subjects": [
+        "integrity-rules",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Integrity.holds_of_eval",
+        "about": [
+          "Exegra.Integrity.Least",
+          "Exegra.Integrity.eval",
+          "Exegra.Integrity.solve"
+        ]
+      }
+    },
+    {
+      "id": "integrity-relations-evaluated",
+      "kind": "invariant",
+      "statement": "Derived relations are evaluated to their least models, recursion and mutual recursion included, with negation only of lower strata; negative recursion, arity mismatches, unknown relations, unbound clause variables and unknown parameter kinds are named errors that make the relation and every rule using it invalid; and every relation rule of the fixture can be made to fail by a stated mutation that the ratchet refuses.",
+      "rationale": "Evidence is the core test over tests/fixtures/integrity/relations.jsonc, whose relation tables are compared with the least models written out by hand, and whose relations-mutations.json gives every rule an edit after which it must fail. Supported, not verified: Exegra does not check its own evaluator.",
+      "subjects": [
+        "integrity-rules",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "integrity-relations-agree-with-lean-and-nemo",
+      "kind": "invariant",
+      "statement": "The JavaScript relation tables equal the tables of the Lean checker and the relations Nemo derives: exegra prove-integrity proves every relation rule of the fixture under Least and refutes every mutation, and on seeded random graphs and programs the Lean tables and the Nemo relations equal the JavaScript tables.",
+      "rationale": "Evidence is the formal test (Lean, skipped with a message without Lake) and the Nemo test (an independent Datalog engine, skipped with a message without nmo). The Nemo translation covers the fragment Nemo expresses directly; the test says which relations it could not translate.",
+      "subjects": [
+        "integrity-rules",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "residency-rules-checked",
+      "kind": "invariant",
+      "statement": "Region, tenantClass and residencyException are entity kinds, components state a placement and relationships the records they carry; for every tenant class whose confinement is not none, every owner of a bound record, holder of a copy of one and end of a relationship carrying one keeps a tenant of the class in its permitted regions, or validation reports residency.record-outside, residency.copy-outside or residency.flow-outside, except where an active residency exception of the class names that copy or flow; the placement, region, tenant class and exception rules are reported at their positions; and integrity rules, recursive relations included, read the residency properties.",
+      "rationale": "Evidence is the core tests of WG-5277 (tests/core/residency.test.js): the Harbourline fixture of BR-04 and BR-05 validates clean with no scenario, each rule is reported once at its position by a mutation that breaks only it, and an integrity rule over a recursive relation that follows carried data finds the one component outside. Supported, not verified, because Exegra does not check its own validation rules. The decision is dec-residency.",
+      "subjects": [
+        "validator",
+        "metamodel"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "machine-singleton-key",
+      "kind": "invariant",
+      "statement": "An implementation-level machine that creates its records (storage.creates), has no instances.key and is run by a scenario is reported with machine.singleton-key when a key field of its record has a type with no fixed value for the one instance the runtime creates at the start: only string, uuid or an integer, or an id or scalar over one, in a field that is not optional, has one. A machine keyed by instances.key, or whose key field has such a type, is not.",
+      "rationale": "WG-5090: the runtime creates the one instance of an unkeyed creating machine under a key derived from the machine id (Machine::SINGLETON_KEY) and specc refuses a key without a fixed value with specc.singleton-key; this is the same refusal over the model, so a specification fails validation before generation. Evidence is the core test over the runtime-faults fixture: breaking the key type gives exactly machine.singleton-key. Supported, not verified.",
+      "subjects": [
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "abstraction-structure-well-formed",
+      "kind": "structural",
+      "statement": "Every hierarchy of Exegra's specification (logical, from exegra down to the module elements, and runtime placement) is laminar and acyclic, every module element has exactly one owner, and every declared cut is an antichain covering every element, so its abstraction map sends each element at or below it to exactly one block.",
+      "subjects": [
+        "queries",
+        "validator"
+      ],
+      "assumptions": [],
+      "rationale": "Decided over the model by abstraction-well-formed (query.js), module elements derived from implementation.modules. The same checks are validation errors (module.multiple-owners, hierarchy.*, cut.*), so a transaction cannot introduce a violation.",
+      "evaluate": {
+        "method": "abstraction-well-formed"
+      }
+    },
+    {
+      "id": "abstraction-diagnostics-name-offenders",
+      "kind": "structural",
+      "statement": "Validation refuses, with a distinct code that names the offending ids, an element with two parents in one hierarchy (hierarchy.multiple-parents, module.multiple-owners), a containment cycle (hierarchy.cycle, component.parent-cycle), a cut that omits an element (cut.uncovered), a cut holding an element and its ancestor (cut.not-antichain), an expansion of a leaf or inside an unexpanded ancestor, a facet used as a contraction (facet.contraction) and a selector naming no facet.",
+      "subjects": [
+        "validator",
+        "queries"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by one negative fixture per code in tests/core/multiscale.test.js (the ev-ms-diag-* evidence entries); a file claimed by two components is the traceability error of module-to-element-map-is-a-function.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "cut-maps-compose",
+      "kind": "structural",
+      "statement": "For cuts C finer than D of one hierarchy, the abstraction map of D equals the map from C to D composed with the abstraction map of C, so zooming through an intermediate level agrees with zooming directly; C refines D exactly when D opens nothing C does not, and the cut command prints a cut's blocks and element-to-block map.",
+      "subjects": [
+        "queries",
+        "agent-cli"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by a property check over generated laminar hierarchies with every comparable pair of their depth, finest and random ancestor-closed cuts, by the chain module-level, semantic-core-expanded, l1, l0 of the self-specification, and by the cut command (the ev-ms-cut-* evidence entries). Checked empirically, not proved (WG-5699).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "facets-selected-never-contracted",
+      "kind": "structural",
+      "statement": "A facet (a declared facet, or a component tag as an implicit one) is selectable by claim selectors and may overlap other groupings, and it is never used as a contraction: a facet as a cut's hierarchy, a hierarchy parent or a cut block is refused.",
+      "subjects": [
+        "queries",
+        "validator",
+        "claim-evaluator"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/multiscale.test.js; core-logic-in-lean selects the facet verdict-kernel with its verdict unchanged.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "knowledge-status-derived",
+      "kind": "structural",
+      "statement": "Every element has a derived knowledge status: transparent when it has members, opaque when it has none and is not implemented, declared opaque or external, unknown when declared so; every not-implemented component of Exegra's specification is opaque, and adding a member to an opaque element makes it transparent.",
+      "subjects": [
+        "queries"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/multiscale.test.js (knowledgeOf in query.js).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "runtime-hierarchy-from-runs-in",
+      "kind": "structural",
+      "statement": "The runtime placement hierarchy places each element by its runsIn property (browser code in the browser platform, Node.js code in the Node.js runtime, code that runs in both in the JavaScript runtime, which contains the two platforms) over the same elements as the logical hierarchy, and has its own valid cuts.",
+      "subjects": [
+        "queries",
+        "javascript-runtime",
+        "browser-platform",
+        "nodejs-runtime"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/multiscale.test.js; its well-formedness is also decided by abstraction-structure-well-formed.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "specs-keep-meaning-without-new-constructs",
+      "kind": "structural",
+      "statement": "A specification that declares none of the new constructs means what it meant before: the projects under specs/ keep their diagnostics and the statuses of the claims the model decides, and the benchmark, which declares none of them, keeps its semantic hash.",
+      "subjects": [
+        "validator",
+        "parser"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/multiscale.test.js against tests/fixtures/multiscale/baseline.json, recorded before the change. Exegra's own specification changed on purpose; the two diagnostics that differ are listed there with the reason.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "interaction-kinds-declare-taxonomy",
+      "kind": "structural",
+      "statement": "Every relationship kind, built in or declared in a vocabulary, states a dependency class (static, runtime or none), a direction (control and data, each with, against, both or none) and one coarsening parent; a vocabulary kind with a partial taxonomy or a parent that does not exist is an error, and the kind tree has no cycle.",
+      "rationale": "The taxonomy is data (src/core/metamodel.json, vocabulary.relationshipKinds) checked by checkTaxonomy (src/core/interactions.js). A vocabulary kind written before the taxonomy still works and draws a warning, so that older specifications load; the exegra specification declares all of its kinds.",
+      "subjects": [
+        "queries"
+      ],
+      "assumptions": [],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "legacy-calls-behaves-as-invokes",
+      "kind": "structural",
+      "statement": "A specification that uses the legacy kind calls keeps its meaning: every analysis treats calls as invokes, a warning names the unclassified kind, and no verdict changes.",
+      "rationale": "The warning is relationship.legacy-kind, once per kind with the number of relationships that use it. The same graph with calls and with invokes gives the same verdicts for no-relationship, acyclic, reachable and only-via.",
+      "subjects": [
+        "queries"
+      ],
+      "assumptions": [],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "relationships-state-provenance-and-carried-data",
+      "kind": "structural",
+      "statement": "A relationship may state its provenance (declared, extracted, observed, derived or assumed; declared when absent), queries expose it, and carries may name records, types and events and refuses anything else.",
+      "rationale": "Only declared is populated by hand in the exegra specification; the slot admits the other four for facts that tools produce.",
+      "subjects": [
+        "queries"
+      ],
+      "assumptions": [],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "structural-methods-select-by-dependency-class",
+      "kind": "structural",
+      "statement": "no-relationship, reachable, only-via and acyclic accept a classes filter (static, runtime, none) that combines with kinds as an intersection; acyclic restricted to one class reports cycles of that class only, and a misspelt class is inconclusive.",
+      "rationale": "componentGraph and dependencies take the same filter, so every consumer selects edges by class the same way.",
+      "subjects": [
+        "queries"
+      ],
+      "assumptions": [],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "connector-contracts-to-notifies",
+      "kind": "structural",
+      "statement": "A publishes to a connector element and a subscribes to it contract to a producer-to-consumer notifies naming the connector; nothing is contracted without a declared connector element, and no direct edge is invented.",
+      "rationale": "mediatedInteractions (src/core/interactions.js) and the contractConnectors option of componentGraph. The fixture declares a connector as a component of kind connector.",
+      "subjects": [
+        "queries"
+      ],
+      "assumptions": [],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "layout-follows-dependency-classes",
+      "kind": "structural",
+      "statement": "The layout orders components only by relationship edges whose kind has the class static or runtime; data-flow, notification, composition, claim and evidence edges do not give the flow direction.",
+      "rationale": "The structural, claims and references projections mark each relationship edge with dependencyClass; src/core/layout/model.js keeps only flow edges.",
+      "subjects": [
+        "queries"
+      ],
+      "assumptions": [],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "self-spec-relationships-classified",
+      "kind": "structural",
+      "statement": "No relationship of the exegra specification uses the legacy kind calls, and every vocabulary kind it declares states class, direction and parent: validating it gives no relationship.legacy-kind and no vocabulary.kind-unclassified warning.",
+      "rationale": "The migration table of WG-5693 records each reclassified relationship with its old and new kind. The import-like relationships (imports) are to be replaced by extracted facts in M5 (WG-5696); until then they are declared.",
+      "subjects": [
+        "queries"
+      ],
+      "assumptions": [],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    }
+  ],
+  "evidence": [
+    { "id": "ev-validate-inert-negative", "claim": "claim-parameters-always-validated", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#a negative whose fault targets a transition the scenario does not run is a warning", "description": "A negative that enables a transition of a behavior its scenario does not run is warned about." },
+    { "id": "ev-validate-not-staged", "claim": "claim-parameters-always-validated", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#claim-parameter errors are reported although another reference is unresolved", "description": "A claim parameter error is reported together with an unresolved reference elsewhere." },
+    { "id": "ev-data-declared-markers", "claim": "data-model-rules-computed", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#no-principal-in-shared says it reads only declared personal markers", "description": "The scope of a no-principal-in-shared result states that only declared personal markers are read." },
+    { "id": "ev-model-unsupported", "claim": "unsupported-constructs-are-diagnosed", "kind": "test", "ref": "tests/core/model.test.js#unsupported constructs", "description": "Unsupported constructs are diagnosed, never silently dropped." },
+    {
+      "id": "ev-data-model-core",
+      "claim": "data-model-rules-computed",
+      "kind": "test",
+      "ref": "tests/core/data-model.test.js",
+      "description": "The data-model fixture validates with exactly one data-rule finding, the missing erasure point; a wrong enum and an unknown key field are errors with their positions; each rule reports its entity and field on a constructed violation; a data-model claim is violated, verified or inconclusive as the findings say; the Data projection draws records, copies and their edges."
+    },
+    {
+      "id": "ev-record-erasure-core",
+      "claim": "personal-records-state-erasure",
+      "kind": "test",
+      "ref": "tests/core/data-model.test.js",
+      "description": "A record with a personal field and no erasure is a record-erasure-point finding, and a data-model claim over it is violated with the record as counterexample; a record that states an erasure point or a bounded erasure passes."
+    },
+    {
+      "id": "ev-classification-core",
+      "claim": "classification-validated",
+      "kind": "test",
+      "ref": "tests/core/data-model.test.js",
+      "description": "A classification is accepted when it is in the closed set and consistent with the personal class, rejected otherwise; the data-model fixture, which carries no classifications, validates unchanged."
+    },
+    {
+      "id": "ev-negatives-validated",
+      "claim": "negatives-are-validated",
+      "kind": "test",
+      "ref": "tests/core/claims.test.js#negatives: malformed negatives are validation errors and follow renames",
+      "description": "Each malformed negative is reported with its own diagnostic code; renaming a fault rewrites the negative."
+    },
+    {
+      "id": "ev-runtime-data-complete",
+      "claim": "runtime-stores-modelled",
+      "kind": "test",
+      "ref": "tests/core/runtime-data-complete.test.js",
+      "description": "Every write site found by pattern in src/, cli/ and tools/ belongs to exactly one listed store and every listed store still has a site; each store's locator, every browser storage key the code writes and every workspace project file appear in a record or a copy of specs/exegra/spec.jsonc. A new write site, key or project file fails it until its store is modelled."
+    },
+    {
+      "id": "ev-evidence-ref-rule",
+      "claim": "evidence-refs-validated-before-verify",
+      "kind": "test",
+      "ref": "tests/core/model.test.js#test evidence references: an unsafe one is a validation error",
+      "description": "An unsafe test reference is a validation error and a plain one is not; validate and verify share one rule."
+    },
+    {
+      "id": "ev-integrity-core",
+      "claim": "integrity-rules-evaluated",
+      "kind": "test",
+      "ref": "tests/core/integrity.test.js",
+      "description": "The rule language parses and reports syntax errors with positions; every fixture rule holds with its instance count; every mutation makes its rule fail with the stated counterexample; a decision resting on the gap it resolves holds; diagnostics carry the rule severity and the first entity; invalid and vacuous rules; the integrity command and --rules."
+    },
+    {
+      "id": "ev-integrity-ratchet",
+      "claim": "integrity-ratchet-on-apply",
+      "kind": "test",
+      "ref": "tests/core/integrity.test.js#the ratchet",
+      "description": "From a fixture with one existing violation: an unrelated edit is accepted, a second violation is refused, the fix is accepted, a warning rule never blocks, promoting it keeps its old violations and stops new ones, and a new error rule that is already violated cannot be added."
+    },
+    {
+      "id": "ev-integrity-lean",
+      "claim": "integrity-proved-in-lean",
+      "kind": "test",
+      "ref": "tests/proofs/formal-integrity.test.js",
+      "description": "Every fixture rule holds with a proof by reflection checked by the kernel with standard axioms only; every mutation is refuted from its stated witness; on 25 seeded random mutations the Lean checker and the JavaScript evaluator give the same verdict and counterexamples for every rule, each seen holding and failing. Skipped, with a message, without Lake."
+    },
+    {
+      "id": "ev-reader-counts",
+      "claim": "reader-pages-come-from-model",
+      "kind": "test",
+      "ref": "tests/core/reader.test.js#counts classify text and group by a reference",
+      "description": "Counts classify a text property and group by a referenced entity."
+    },
+    {
+      "id": "ev-reader-table",
+      "claim": "reader-pages-come-from-model",
+      "kind": "test",
+      "ref": "tests/core/reader.test.js#a table groups and classifies rows with links and facets",
+      "description": "A table groups, classifies, links references and offers facets."
+    },
+    {
+      "id": "ev-reader-list",
+      "claim": "reader-pages-come-from-model",
+      "kind": "test",
+      "ref": "tests/core/reader.test.js#a list honours where and marks rows hidden until asked",
+      "description": "A list keeps only rows that meet its conditions and marks the hidden ones."
+    },
+    {
+      "id": "ev-reader-sections",
+      "claim": "reader-pages-come-from-model",
+      "kind": "test",
+      "ref": "tests/core/reader.test.js#section bodies split into prose and the tables their markers place",
+      "description": "Section bodies split into prose and tables; the outline follows reading order."
+    },
+    {
+      "id": "ev-reader-default",
+      "claim": "reader-pages-come-from-model",
+      "kind": "test",
+      "ref": "tests/core/reader.test.js#a view without blocks reads the system and its kinds and its document",
+      "description": "A view without blocks gives the default page and a page per kind."
+    },
+    {
+      "id": "ev-reader-unknown-field",
+      "claim": "reader-blocks-validated",
+      "kind": "test",
+      "ref": "tests/core/reader.test.js#unknown fields in a reader block are refused",
+      "description": "An unknown block field is an error."
+    },
+    {
+      "id": "ev-readiness-rules",
+      "claim": "implementation-machine-readiness-rules",
+      "kind": "test",
+      "ref": "tests/core/readiness-machines.test.js#readiness rule ready",
+      "description": "Twenty-one tests, one per ready.* code: the fixture machines with one deliberate break give exactly that one error."
+    },
+    {
+      "id": "ev-readiness-fixed",
+      "claim": "implementation-machine-readiness-rules",
+      "kind": "test",
+      "ref": "tests/core/readiness-machines.test.js#the fixed implementation-level machine has no readiness diagnostic and no error",
+      "description": "The fixed fixture machine has no error and no readiness diagnostic."
+    },
+    {
+      "id": "ev-readiness-model-level",
+      "claim": "implementation-machine-readiness-rules",
+      "kind": "test",
+      "ref": "tests/core/readiness-machines.test.js#a model-level behavior is not held to the machine rules",
+      "description": "The same machine at level model reports no readiness diagnostic."
+    },
+    {
+      "id": "ev-readiness-shipped-projects",
+      "claim": "implementation-machine-readiness-rules",
+      "kind": "test",
+      "ref": "tests/core/readiness-machines.test.js#the exegra and strata projects have no implementation-level machine and so no readiness diagnostic",
+      "description": "The exegra and strata projects report no ready.* diagnostic."
+    },
+    {
+      "id": "ev-refinement-refines-rules",
+      "claim": "refinement-mappings-validated",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#validation refuses a refines that names a non-behavior",
+      "description": "A refines naming a state, a refines on a model-level machine and a refinement chain are errors (ref.kind, behavior.refines-model-level, behavior.refines-chain)."
+    },
+    {
+      "id": "ev-refinement-mapping-rules",
+      "claim": "refinement-mappings-validated",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#validation refuses mappings with unknown or missing states",
+      "description": "Unknown states, transitions and variables on either side, and unmapped implementation states, transitions and model variables, are errors."
+    },
+    {
+      "id": "ev-readiness-storage-alone",
+      "claim": "implementation-machine-readiness-rules",
+      "kind": "test",
+      "ref": "tests/core/readiness-machines.test.js#storage alone",
+      "description": "An unkeyed implementation machine with storage and no instances has no readiness error."
+    },
+    {
+      "id": "ev-readiness-storedin-alone",
+      "claim": "implementation-machine-readiness-rules",
+      "kind": "test",
+      "ref": "tests/core/readiness-machines.test.js#instances.storedIn alone still says where a keyed implementation machine is held",
+      "description": "A keyed implementation machine with instances.storedIn and no storage has no readiness error."
+    },
+    {
+      "id": "ev-readiness-stateless-exempt",
+      "claim": "implementation-machine-readiness-rules",
+      "kind": "test",
+      "ref": "tests/core/readiness-machines.test.js#a stateless implementation machine with one state and no variables needs no storage and one with two states does",
+      "description": "A machine with one state and no variables needs no storage; with a second state it does."
+    },
+    {
+      "id": "ev-retention-erases-records",
+      "claim": "retention-erases-records",
+      "kind": "test",
+      "ref": "tests/core/constructs.test.js#a retention that deletes a record",
+      "description": "Anonymising every personal field or deleting satisfies record-erasure-point; anonymising some does not."
+    },
+    {
+      "id": "ev-refinement-time-scale-rule",
+      "claim": "refinement-mappings-validated",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#validation refuses a time scale that is not a positive number",
+      "description": "A timeScale of 0 or below is the error refinement.time-scale."
+    },
+    {
+      "id": "ev-readiness-non-creating",
+      "claim": "implementation-machine-readiness-rules",
+      "kind": "test",
+      "ref": "tests/core/readiness-machines.test.js#a non-creating machine leaves the required fields it does not hold to whoever creates the record",
+      "description": "A machine that does not create records reports nothing for a required record field it does not hold; creating, it reports nothing once that field is optional."
+    },
+    {
+      "id": "ev-readiness-storage-defaults",
+      "claim": "implementation-machine-readiness-rules",
+      "kind": "test",
+      "ref": "tests/core/readiness-machines.test.js#storage fields default to the field of the variable name",
+      "description": "Without storage.fields a variable is held in the field of its name, the state in field \"state\"; an enum whose values are the state ids needs no stateValues."
+    },
+    {
+      "id": "ev-readiness-field-fit",
+      "claim": "implementation-machine-readiness-rules",
+      "kind": "test",
+      "ref": "tests/core/readiness-machines.test.js#a variable fits a field of its repr",
+      "description": "A variable fits an optional field of its repr and a declared id type over its repr; mapping a variable to the key field is refused."
+    },
+    {
+      "id": "ev-timer-delay-type",
+      "claim": "run-time-timer-delays",
+      "kind": "test",
+      "ref": "tests/core/ui.test.js#ui consistency: a run-time timer delay that is not a number",
+      "description": "A run-time delay that is a boolean is exactly effect.after."
+    },
+    {
+      "id": "ev-timer-delay-simulate",
+      "claim": "run-time-timer-delays",
+      "kind": "test",
+      "ref": "tests/core/ui.test.js#ui consistency: a run-time timer delay without its simulated delay",
+      "description": "A run-time delay without simulate is exactly effect.after."
+    },
+    {
+      "id": "ev-timer-delay-level",
+      "claim": "run-time-timer-delays",
+      "kind": "test",
+      "ref": "tests/core/ui.test.js#a run-time timer delay is allowed only on an implementation-level machine",
+      "description": "A run-time delay on a model-level machine is exactly effect.after."
+    },
+    {
+      "id": "ev-timer-delay-refines",
+      "claim": "run-time-timer-delays",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#an implementation timer whose delay is read at run time is simulated with its simulate delay",
+      "description": "An implementation timer with a run-time delay refines a tick-based model with a matching simulated delay and is violated with a disagreeing one."
+    },
+    {
+      "id": "ev-expr-cases-js",
+      "claim": "expression-semantics-shared",
+      "kind": "test",
+      "ref": "tests/core/expr-cases.test.js#expression case on the JavaScript evaluator",
+      "description": "One test per case of the shared table on the JavaScript evaluator."
+    },
+    {
+      "id": "ev-expr-cases-lean",
+      "claim": "expression-semantics-shared",
+      "kind": "test",
+      "ref": "tests/core/expr-cases.test.js#expression cases on the Lean core: every case gives the expected outcome",
+      "description": "Every case of the shared table on the Lean core through expr.eval."
+    },
+    {
+      "id": "ev-time-readiness-negative",
+      "claim": "machine-time-integer-readiness",
+      "kind": "test",
+      "ref": "tests/core/readiness-time.test.js#readiness rule ready",
+      "description": "Seven negative fixtures, each the fixed machine with one thing missing, each giving exactly its ready.* error."
+    },
+    {
+      "id": "ev-time-readiness-fixed",
+      "claim": "machine-time-integer-readiness",
+      "kind": "test",
+      "ref": "tests/core/readiness-time.test.js#the fixed machine has no error",
+      "description": "The fixed time fixture has no error."
+    },
+    {
+      "id": "ev-machine-realisation-1",
+      "claim": "machine-realisation-and-durability",
+      "kind": "test",
+      "ref": "tests/core/realisation.test.js#realisation defaults from the implementation status of the subject and an explicit value wins",
+      "description": "The default from the component's status and the explicit override."
+    },
+    {
+      "id": "ev-machine-realisation-2",
+      "claim": "machine-realisation-and-durability",
+      "kind": "test",
+      "ref": "tests/core/realisation.test.js#rule behavior.realisation-subject: a machine declared shipped on a not-implemented component gives exactly that one error",
+      "description": "The negative fixture for behavior.realisation-subject."
+    },
+    {
+      "id": "ev-machine-realisation-3",
+      "claim": "machine-realisation-and-durability",
+      "kind": "test",
+      "ref": "tests/core/realisation.test.js#rule storage.durability: a memory machine that names a record gives exactly that one error",
+      "description": "The negative fixture for storage.durability: a memory machine naming a record."
+    },
+    {
+      "id": "ev-machine-realisation-4",
+      "claim": "machine-realisation-and-durability",
+      "kind": "test",
+      "ref": "tests/core/realisation.test.js#a memory machine is held to no storage or transaction readiness rule and a record machine still is",
+      "description": "A memory machine is exempt from the storage and transaction readiness rules."
+    },
+    {
+      "id": "ev-faults-realisable-negative",
+      "claim": "faults-realisable-by-runtime",
+      "kind": "test",
+      "ref": "tests/core/runtime-faults.test.js#rule fault.unrealisable",
+      "description": "Nine negative fixtures, each the fixed relay with one fault the runtime cannot produce, each giving exactly fault.unrealisable."
+    },
+    {
+      "id": "ev-faults-realisable-fixed",
+      "claim": "faults-realisable-by-runtime",
+      "kind": "test",
+      "ref": "tests/core/runtime-faults.test.js#the fixed specification has no error",
+      "description": "The fixed relay, whose scenario injects only faults the runtime can produce, has no error."
+    },
+    {
+      "id": "ev-faults-retry-policy",
+      "claim": "faults-realisable-by-runtime",
+      "kind": "test",
+      "ref": "tests/core/runtime-faults.test.js#a stated retry policy decides which delays of an at-least-once event are realisable",
+      "description": "system.generation.retry changes the backoff sums, and so which delays of an at-least-once event are realisable."
+    },
+    {
+      "id": "ev-initial-state-negative",
+      "claim": "machine-initial-state-reachable",
+      "kind": "test",
+      "ref": "tests/core/runtime-faults.test.js#rule machine.initial-unreachable",
+      "description": "The fixed relay without storage.creates gives exactly machine.initial-unreachable."
+    },
+    {
+      "id": "ev-initial-state-cleared",
+      "claim": "machine-initial-state-reachable",
+      "kind": "test",
+      "ref": "tests/core/runtime-faults.test.js#a machine whose records a named contract writes or of a component not built yet reaches its initial state",
+      "description": "storage.createdBy naming a contract, or a not-implemented subject, clears the rule."
+    },
+    {
+      "id": "ev-storage-key-whole",
+      "claim": "implementation-machine-readiness-rules",
+      "kind": "test",
+      "ref": "tests/core/readiness-machines.test.js#rule storage.key-whole",
+      "description": "Negative fixture (WG-4907): a machine keyed by one field of a two-field record key gets storage.key-whole for storage.key and for instances.key, and nothing else."
+    },
+    {
+      "id": "ev-storage-key-whole-list",
+      "claim": "implementation-machine-readiness-rules",
+      "kind": "test",
+      "ref": "tests/core/readiness-machines.test.js#storage.key-whole accepts the list",
+      "description": "The list of every key field in the record's order is accepted; another order, a short list or a single field of a composite key is refused."
+    },
+    {
+      "id": "ev-integrity-relations-atoms",
+      "claim": "integrity-relations-evaluated",
+      "kind": "test",
+      "ref": "tests/core/integrity-relations.test.js#relation atoms parse with term arguments and their polarity follows negation and implication and filters",
+      "description": "Atoms parse with term arguments; their polarity flips under !, the left side of => and a forall filter, not an exists filter."
+    },
+    {
+      "id": "ev-integrity-relations-least",
+      "claim": "integrity-relations-evaluated",
+      "kind": "test",
+      "ref": "tests/core/integrity-relations.test.js#the relations of the fixture are their least models: reachability and mutual recursion and stratified negation",
+      "description": "The fixture tables equal the least models written out by hand; strata are ordered; a cycle and a deprecation give exactly the expected tuples."
+    },
+    {
+      "id": "ev-integrity-relations-mutations",
+      "claim": "integrity-relations-evaluated",
+      "kind": "test",
+      "ref": "tests/core/integrity-relations.test.js#every relation rule can be made to fail: each mutation gives its stated counterexample and apply refuses it",
+      "description": "Each relation rule fails after its mutation with the stated counterexample, and Project.apply refuses the mutation."
+    },
+    {
+      "id": "ev-integrity-relations-diagnostics",
+      "claim": "integrity-relations-evaluated",
+      "kind": "test",
+      "ref": "tests/core/integrity-relations.test.js#invalid relations: each problem is a named diagnostic that makes the relation and every rule using it invalid",
+      "description": "Each integrity.relation-* problem is an error on the relation and on the rule using it; invalidity propagates to relations that use it; negation of a lower stratum is accepted."
+    },
+    {
+      "id": "ev-integrity-relations-atom-choice",
+      "claim": "integrity-relations-evaluated",
+      "kind": "test",
+      "ref": "tests/core/integrity-relations.test.js#an atom holds when some choice of one value per argument is a tuple and a parameter over every kind ranges over every entity",
+      "description": "Set-valued arguments hold when some choice is a tuple; a parameter over * covers every entity."
+    },
+    {
+      "id": "ev-integrity-relations-lean-proved",
+      "claim": "integrity-relations-agree-with-lean-and-nemo",
+      "kind": "test",
+      "ref": "tests/proofs/formal-integrity.test.js#derived relations: every rule of the relations fixture is proved under the least-model meaning with standard axioms only",
+      "description": "Every relation rule of the fixture proved: prog_wf, prog_solved and holds, kernel-checked with standard axioms only."
+    },
+    {
+      "id": "ev-integrity-relations-lean-refuted",
+      "claim": "integrity-relations-agree-with-lean-and-nemo",
+      "kind": "test",
+      "ref": "tests/proofs/formal-integrity.test.js#derived relations: every mutation is refuted in Lean under the least-model meaning from its stated counterexample",
+      "description": "Every mutation of relations-mutations.json refuted under Least from its stated witness."
+    },
+    {
+      "id": "ev-integrity-relations-lean-differential",
+      "claim": "integrity-relations-agree-with-lean-and-nemo",
+      "kind": "test",
+      "ref": "tests/proofs/formal-integrity.test.js#differential: Lean and JavaScript agree on relation tables and verdicts and counterexamples of seeded random module graphs",
+      "description": "On 25 seeded random module graphs the Lean tables, verdicts and counterexamples equal the JavaScript ones; every rule is seen holding and failing."
+    },
+    {
+      "id": "ev-integrity-relations-nemo-fixture",
+      "claim": "integrity-relations-agree-with-lean-and-nemo",
+      "kind": "test",
+      "ref": "tests/proofs/integrity-nemo.test.js#Nemo derives the same relations as the JavaScript evaluator on the relations fixture",
+      "description": "Every relation of the fixture translated to Nemo rules; nmo derives the JavaScript tables."
+    },
+    {
+      "id": "ev-integrity-relations-nemo-random",
+      "claim": "integrity-relations-agree-with-lean-and-nemo",
+      "kind": "test",
+      "ref": "tests/proofs/integrity-nemo.test.js#Nemo derives the same relations as the JavaScript evaluator on seeded random graphs and stratified programs",
+      "description": "On 40 seeded random graphs with random stratified programs (closures, mutual recursion, negation of lower strata) nmo derives the JavaScript tables."
+    },
+    {
+      "id": "ev-residency-1",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#regions tenant classes and residency exceptions are entities of the metamodel with sections of their own",
+      "description": "Regions tenant classes and residency exceptions are entities of the metamodel with sections of their own."
+    },
+    {
+      "id": "ev-residency-2",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#the Harbourline fixture states BR-04 and BR-05 on the structure and validates with no errors and no warnings",
+      "description": "The Harbourline fixture states BR-04 and BR-05 on the structure and validates with no errors and no warnings."
+    },
+    {
+      "id": "ev-residency-3",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#a fixed holder inside the provisioned regions is accepted for provisioned-regions confinement and refused for home",
+      "description": "A fixed holder inside the provisioned regions is accepted for provisioned-regions confinement and refused for home."
+    },
+    {
+      "id": "ev-residency-4",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#a tenant class with confinement none confines nothing",
+      "description": "A tenant class with confinement none confines nothing."
+    },
+    {
+      "id": "ev-residency-5",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#integrity rules read regions and placements and follow carried data through a recursive relation",
+      "description": "Integrity rules read regions and placements and follow carried data through a recursive relation."
+    },
+    {
+      "id": "ev-residency-6",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a copy on a global holder with no exception is reported once as residency.copy-outside at copies.3.heldBy",
+      "description": "Residency: a copy on a global holder with no exception is reported once as residency.copy-outside at copies.3.heldBy."
+    },
+    {
+      "id": "ev-residency-7",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a copy whose exception has expired is reported once as residency.copy-outside at copies.3.heldBy",
+      "description": "Residency: a copy whose exception has expired is reported once as residency.copy-outside at copies.3.heldBy."
+    },
+    {
+      "id": "ev-residency-8",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a copy whose exception allows only a region its global holder is not confined to is reported once as residency.copy-outside at copies.3.heldBy",
+      "description": "Residency: a copy whose exception allows only a region its global holder is not confined to is reported once as residency.copy-outside at copies.3.heldBy."
+    },
+    {
+      "id": "ev-residency-9",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a bound record owned by a global component is reported once as residency.record-outside at records.2.owner",
+      "description": "Residency: a bound record owned by a global component is reported once as residency.record-outside at records.2.owner."
+    },
+    {
+      "id": "ev-residency-10",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a flow of attachments to a sandbox fixed in one region is reported once as residency.flow-outside at relationships.0.to",
+      "description": "Residency: a flow of attachments to a sandbox fixed in one region is reported once as residency.flow-outside at relationships.0.to."
+    },
+    {
+      "id": "ev-residency-11",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a holder of bound data with no placement is reported once as residency.placement-missing at components.2.placement",
+      "description": "Residency: a holder of bound data with no placement is reported once as residency.placement-missing at components.2.placement."
+    },
+    {
+      "id": "ev-residency-12",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a per-region holder with no instance in a provisioned region is reported once as residency.region-uncovered at components.6.regions",
+      "description": "Residency: a per-region holder with no instance in a provisioned region is reported once as residency.region-uncovered at components.6.regions."
+    },
+    {
+      "id": "ev-residency-13",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a global component that names regions is reported once as component.placement-regions at components.5.regions",
+      "description": "Residency: a global component that names regions is reported once as component.placement-regions at components.5.regions."
+    },
+    {
+      "id": "ev-residency-14",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a tenant class selected by both a flag and a plan is reported once as tenant-class.selector at tenantClasses.0.plan",
+      "description": "Residency: a tenant class selected by both a flag and a plan is reported once as tenant-class.selector at tenantClasses.0.plan."
+    },
+    {
+      "id": "ev-residency-15",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a tenant class provisioned in no region is reported once as tenant-class.provisioned-in at tenantClasses.0.provisionedIn",
+      "description": "Residency: a tenant class provisioned in no region is reported once as tenant-class.provisioned-in at tenantClasses.0.provisionedIn."
+    },
+    {
+      "id": "ev-residency-16",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: an exception naming both a copy and a flow is reported once as residency.exception-target at residencyExceptions.0",
+      "description": "Residency: an exception naming both a copy and a flow is reported once as residency.exception-target at residencyExceptions.0."
+    },
+    {
+      "id": "ev-residency-17",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: an exception for a copy of no bound record is reported once as residency.exception-target at residencyExceptions.0.copy",
+      "description": "Residency: an exception for a copy of no bound record is reported once as residency.exception-target at residencyExceptions.0.copy."
+    },
+    {
+      "id": "ev-residency-18",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a bounded exception with no purge obligation is reported once as residency.exception-purge at residencyExceptions.0",
+      "description": "Residency: a bounded exception with no purge obligation is reported once as residency.exception-purge at residencyExceptions.0."
+    },
+    {
+      "id": "ev-residency-19",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: an exception whose longest duration is not a duration is reported once as residency.exception-duration at residencyExceptions.0.maxDuration",
+      "description": "Residency: an exception whose longest duration is not a duration is reported once as residency.exception-duration at residencyExceptions.0.maxDuration."
+    },
+    {
+      "id": "ev-residency-20",
+      "claim": "residency-rules-checked",
+      "kind": "test",
+      "ref": "tests/core/residency.test.js#residency: a renewal window not shorter than the longest duration is reported once as residency.exception-renewal at residencyExceptions.0.renewalWindow",
+      "description": "Residency: a renewal window not shorter than the longest duration is reported once as residency.exception-renewal at residencyExceptions.0.renewalWindow."
+    },
+    {
+      "id": "ev-singleton-key-negative",
+      "claim": "machine-singleton-key",
+      "kind": "test",
+      "ref": "tests/core/runtime-faults.test.js#rule machine.singleton-key",
+      "description": "The fixed relay over a key of type f64 gives exactly machine.singleton-key."
+    },
+    {
+      "id": "ev-ms-diag-valid",
+      "claim": "abstraction-diagnostics-name-offenders",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#a fixture with a declared hierarchy and a facet and every form of cut validates with no errors",
+      "description": "The well-formed fixture every negative fixture mutates validates with no errors, and its cuts have the expected blocks."
+    },
+    {
+      "id": "ev-ms-diag-owners",
+      "claim": "abstraction-diagnostics-name-offenders",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#a module declared by two components is module.multiple-owners naming both",
+      "description": "module.multiple-owners names both components."
+    },
+    {
+      "id": "ev-ms-diag-parents",
+      "claim": "abstraction-diagnostics-name-offenders",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#an element with two parents in one hierarchy is hierarchy.multiple-parents naming the element and both parents",
+      "description": "hierarchy.multiple-parents names the element and both parents."
+    },
+    {
+      "id": "ev-ms-diag-cycle",
+      "claim": "abstraction-diagnostics-name-offenders",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#a cycle in a declared hierarchy is hierarchy.cycle and in the logical one component.parent-cycle",
+      "description": "Both cycle codes, naming the elements on the cycle."
+    },
+    {
+      "id": "ev-ms-diag-groupby",
+      "claim": "abstraction-diagnostics-name-offenders",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#a groupBy value that maps to no element is hierarchy.unknown-parent and the id logical is reserved",
+      "description": "hierarchy.unknown-parent and hierarchy.reserved-id."
+    },
+    {
+      "id": "ev-ms-diag-facet",
+      "claim": "abstraction-diagnostics-name-offenders",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#a facet used where a contraction is required is facet.contraction",
+      "description": "facet.contraction for a facet as a cut's hierarchy, as a hierarchy parent and as an expanded block."
+    },
+    {
+      "id": "ev-ms-diag-expand",
+      "claim": "abstraction-diagnostics-name-offenders",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#expanding a leaf is cut.not-composite and expanding inside an unexpanded ancestor is cut.ancestor-not-expanded",
+      "description": "cut.not-composite and cut.ancestor-not-expanded."
+    },
+    {
+      "id": "ev-ms-diag-cover",
+      "claim": "abstraction-diagnostics-name-offenders",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#a cut that omits an element is cut.uncovered and one with an element and its ancestor is cut.not-antichain",
+      "description": "cut.uncovered, cut.not-antichain and cut.form."
+    },
+    {
+      "id": "ev-ms-diag-wf",
+      "claim": "abstraction-diagnostics-name-offenders",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#abstraction-well-formed is verified on well-formed hierarchies and cuts and violated with the offending element",
+      "description": "The claim method agrees with the diagnostics: verified on the fixture, violated with the element that has two parents."
+    },
+    {
+      "id": "ev-ms-cut-property",
+      "claim": "cut-maps-compose",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#property: for comparable cuts C finer than D of generated laminar hierarchies alpha_D is alpha_C-D composed with alpha_C",
+      "description": "Generated forests; every comparable pair of cuts composes, and comparability is exactly inclusion of the opened sets."
+    },
+    {
+      "id": "ev-ms-cut-self-total",
+      "claim": "cut-maps-compose",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#every element maps to exactly one block of each declared cut of the self-specification or is opened by it",
+      "description": "Every declared cut of Exegra's specification maps each element to exactly one ancestor-or-self block, or opens it."
+    },
+    {
+      "id": "ev-ms-cut-self-chain",
+      "claim": "cut-maps-compose",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#cut maps compose along the chain of cuts of the self-specification and incomparable cuts have no map",
+      "description": "module-level, semantic-core-expanded, l1 and l0 compose pairwise; persistence-expanded and semantic-core-expanded are incomparable."
+    },
+    {
+      "id": "ev-ms-cut-command",
+      "claim": "cut-maps-compose",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#the cut command prints the blocks and the element-to-block map of a declared or an ad hoc cut",
+      "description": "exegra cut on a declared cut, an ad hoc cut of the runtime hierarchy, an invalid one, and the listing."
+    },
+    {
+      "id": "ev-ms-facet-select",
+      "claim": "facets-selected-never-contracted",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#a selector naming no facet or tag is claim.selector.facet and a facet selects its members with a tag as an implicit facet",
+      "description": "A facet with members and a tag selects both; a tag no facet declares selects its carriers; an unknown facet is refused."
+    },
+    {
+      "id": "ev-ms-facet-contraction",
+      "claim": "facets-selected-never-contracted",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#a facet used where a contraction is required is facet.contraction",
+      "description": "facet.contraction for every place a contraction is required."
+    },
+    {
+      "id": "ev-ms-knowledge",
+      "claim": "knowledge-status-derived",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#knowledge status: planned elements are opaque and a member makes an element transparent and unknown is declared",
+      "description": "Planned components opaque, a member makes one transparent, declared unknown, actors opaque, module elements transparent leaves."
+    },
+    {
+      "id": "ev-ms-runtime",
+      "claim": "runtime-hierarchy-from-runs-in",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#the runtime placement hierarchy of the self-specification follows runsIn and has its own valid cuts",
+      "description": "Every placed component under the host its runsIn names; the runtime cuts refine each other; cuts of different hierarchies are incomparable."
+    },
+    {
+      "id": "ev-ms-baseline",
+      "claim": "specs-keep-meaning-without-new-constructs",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#the projects under specs/ keep the diagnostics and claim statuses they had before the element model",
+      "description": "Benchmark: same hash, diagnostics and claim statuses. Exegra: same diagnostics apart from the listed ones, same statuses for every model-decided claim."
+    },
+    {
+      "id": "ev-interaction-kinds-declare-taxonomy-1",
+      "claim": "interaction-kinds-declare-taxonomy",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#every built-in relationship kind states a class a direction and a parent and the kind tree is rooted at interacts-with",
+      "description": "Every built-in relationship kind states a class a direction and a parent and the kind tree is rooted at interacts-with."
+    },
+    {
+      "id": "ev-interaction-kinds-declare-taxonomy-2",
+      "claim": "interaction-kinds-declare-taxonomy",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#the built-in kinds keep the dependency flag they had and classify as designed",
+      "description": "The built-in kinds keep the dependency flag they had and classify as designed."
+    },
+    {
+      "id": "ev-interaction-kinds-declare-taxonomy-3",
+      "claim": "interaction-kinds-declare-taxonomy",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#coarsening a kind relabels it to an ancestor and never changes what analyses read",
+      "description": "Coarsening a kind relabels it to an ancestor and never changes what analyses read."
+    },
+    {
+      "id": "ev-interaction-kinds-declare-taxonomy-4",
+      "claim": "interaction-kinds-declare-taxonomy",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#a vocabulary kind that states class direction and parent is accepted and its dependency flag is derived",
+      "description": "A vocabulary kind that states class direction and parent is accepted and its dependency flag is derived."
+    },
+    {
+      "id": "ev-interaction-kinds-declare-taxonomy-5",
+      "claim": "interaction-kinds-declare-taxonomy",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#a vocabulary kind with a partial taxonomy an unknown parent a bad class or a contradicting flag is an error",
+      "description": "A vocabulary kind with a partial taxonomy an unknown parent a bad class or a contradicting flag is an error."
+    },
+    {
+      "id": "ev-interaction-kinds-declare-taxonomy-6",
+      "claim": "interaction-kinds-declare-taxonomy",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#a cycle in the vocabulary kind tree is an error that names the cycle",
+      "description": "A cycle in the vocabulary kind tree is an error that names the cycle."
+    },
+    {
+      "id": "ev-interaction-kinds-declare-taxonomy-7",
+      "claim": "interaction-kinds-declare-taxonomy",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#a vocabulary kind written before the taxonomy still works and is warned about not refused",
+      "description": "A vocabulary kind written before the taxonomy still works and is warned about not refused."
+    },
+    {
+      "id": "ev-legacy-calls-behaves-as-invokes-1",
+      "claim": "legacy-calls-behaves-as-invokes",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#calls is a legacy kind: one warning names it there is no error and every verdict equals the one with invokes",
+      "description": "Calls is a legacy kind: one warning names it there is no error and every verdict equals the one with invokes."
+    },
+    {
+      "id": "ev-relationships-state-provenance-and-carried-data-1",
+      "claim": "relationships-state-provenance-and-carried-data",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#a relationship states its provenance declared by default and queries expose it",
+      "description": "A relationship states its provenance declared by default and queries expose it."
+    },
+    {
+      "id": "ev-relationships-state-provenance-and-carried-data-2",
+      "claim": "relationships-state-provenance-and-carried-data",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#a provenance outside the five values is an error",
+      "description": "A provenance outside the five values is an error."
+    },
+    {
+      "id": "ev-relationships-state-provenance-and-carried-data-3",
+      "claim": "relationships-state-provenance-and-carried-data",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#carries may name records types and events",
+      "description": "Carries may name records types and events."
+    },
+    {
+      "id": "ev-relationships-state-provenance-and-carried-data-4",
+      "claim": "relationships-state-provenance-and-carried-data",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#carries that names a component or nothing is an error",
+      "description": "Carries that names a component or nothing is an error."
+    },
+    {
+      "id": "ev-structural-methods-select-by-dependency-class-1",
+      "claim": "structural-methods-select-by-dependency-class",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#the class filter selects the edges of componentGraph and of dependencies",
+      "description": "The class filter selects the edges of componentGraph and of dependencies."
+    },
+    {
+      "id": "ev-structural-methods-select-by-dependency-class-2",
+      "claim": "structural-methods-select-by-dependency-class",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#acyclic restricted to one class reports cycles of that class only and the kind-based behaviour is unchanged",
+      "description": "Acyclic restricted to one class reports cycles of that class only and the kind-based behaviour is unchanged."
+    },
+    {
+      "id": "ev-structural-methods-select-by-dependency-class-3",
+      "claim": "structural-methods-select-by-dependency-class",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#classes combine with kinds as an intersection and a misspelt class cannot pass vacuously",
+      "description": "Classes combine with kinds as an intersection and a misspelt class cannot pass vacuously."
+    },
+    {
+      "id": "ev-structural-methods-select-by-dependency-class-4",
+      "claim": "structural-methods-select-by-dependency-class",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#no-relationship and reachable accept a class filter",
+      "description": "No-relationship and reachable accept a class filter."
+    },
+    {
+      "id": "ev-structural-methods-select-by-dependency-class-5",
+      "claim": "structural-methods-select-by-dependency-class",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#a misspelt class is inconclusive never verified",
+      "description": "A misspelt class is inconclusive never verified."
+    },
+    {
+      "id": "ev-connector-contracts-to-notifies-1",
+      "claim": "connector-contracts-to-notifies",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#a producer a connector and two consumers contract to producer-to-consumer notifies naming the connector",
+      "description": "A producer a connector and two consumers contract to producer-to-consumer notifies naming the connector."
+    },
+    {
+      "id": "ev-connector-contracts-to-notifies-2",
+      "claim": "connector-contracts-to-notifies",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#the contracted graph hides the connector and shows notifies edges the uncontracted graph is unchanged",
+      "description": "The contracted graph hides the connector and shows notifies edges the uncontracted graph is unchanged."
+    },
+    {
+      "id": "ev-connector-contracts-to-notifies-3",
+      "claim": "connector-contracts-to-notifies",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#no mediated interaction exists without a declared connector element",
+      "description": "No mediated interaction exists without a declared connector element."
+    },
+    {
+      "id": "ev-connector-contracts-to-notifies-4",
+      "claim": "connector-contracts-to-notifies",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#a publisher with no subscriber through the same connector is paired with nobody",
+      "description": "A publisher with no subscriber through the same connector is paired with nobody."
+    },
+    {
+      "id": "ev-layout-follows-dependency-classes-1",
+      "claim": "layout-follows-dependency-classes",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#layout orders components by static and runtime edges only",
+      "description": "Layout orders components by static and runtime edges only."
+    },
+    {
+      "id": "ev-layout-follows-dependency-classes-2",
+      "claim": "layout-follows-dependency-classes",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#an edge of class none against the dependency direction no longer changes the layered order",
+      "description": "An edge of class none against the dependency direction no longer changes the layered order."
+    },
+    {
+      "id": "ev-layout-follows-dependency-classes-3",
+      "claim": "layout-follows-dependency-classes",
+      "kind": "test",
+      "ref": "tests/core/interactions.test.js#the structural projection marks each relationship edge with the class of its kind",
+      "description": "The structural projection marks each relationship edge with the class of its kind."
+    },
+    {
+      "id": "ev-self-spec-relationships-classified-1",
+      "claim": "self-spec-relationships-classified",
+      "kind": "test",
+      "ref": "tests/core/codegen-readiness.test.js#the exegra and strata specifications that do not set the switch validate with no errors and no warnings",
+      "description": "The exegra and strata specifications that do not set the switch validate with no errors and no warnings."
+    }
+  ]
+}

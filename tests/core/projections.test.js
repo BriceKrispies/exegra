@@ -74,13 +74,16 @@ test('collapsed subsystem lifts edges and drops internal ones', () => {
   assert.equal(edges.get('r1').to, 'api');
   assert.equal(edges.get('r1').lifted, true);
   assert.equal(edges.get('r3').from, 'api');
-  assert.ok(scene.notes.some((s) => /drawn to a collapsed subsystem/.test(s)));
+  assert.ok(scene.notes.some((s) => /drawn to a collapsed block/.test(s)));
 });
 
-test('hidden removes components with their descendants and touching edges', () => {
+test('hidden removes components with their descendants and a connection through them becomes a labelled path summary', () => {
   const scene = project(build(), 'structural', { hidden: new Set(['api']) });
   assert.deepEqual(scene.nodes.map((n) => n.id).sort(), ['db', 'lone', 'web']);
-  assert.equal(scene.edges.length, 0);
+  // web -> svc1 -> svc2 -> db runs through the hidden subsystem's blocks: one dotted may-path, carrying every relationship along it.
+  assert.deepEqual(scene.edges.map((e) => [e.id, e.from, e.to, e.line, e.pathSummary?.via, e.witnesses]), [['summary:web->db', 'web', 'db', 'dotted', ['svc1', 'svc2'], ['r1', 'r2', 'r3', 'r4']]]);
+  assert.match(scene.edges[0].label ?? '', /^may reach via 2 hidden/);
+  assert.ok(scene.notes.some((n) => /1 element is hidden \(Api\); 4 derived interactions touch hidden blocks, and 1 connection through them is drawn as dotted path summary/.test(n)), scene.notes.join(' | '));
 });
 
 test('isolate shows only the subsystem and its descendants', () => {
@@ -216,4 +219,17 @@ test('generated and partially generated implementations are not drawn green or t
   assert.equal(nodes.get('web').color, 'amber');
   assert.equal(nodes.get('lone').color, 'violet');
   assert.ok(scene.nodes.every((n) => n.color !== 'green' && n.color !== 'teal'));
+});
+
+test('a bundle edge carries every relationship it stands for, sorted, and is backed by the first declared', () => {
+  const text = SPEC.replace('{ "id": "r4", "kind": "calls", "from": "svc1", "to": "db" }', '{ "id": "r4", "kind": "calls", "from": "svc1", "to": "db" },\n    { "id": "r0", "kind": "calls", "from": "svc2", "to": "db" }');
+  const scene = project(build(text), 'structural', { collapsed: new Set(['api']) });
+  const bundle = scene.edges.find((e) => e.from === 'api' && e.to === 'db' && e.kind === 'calls');
+  assert.ok(bundle);
+  assert.deepEqual(bundle.witnesses, ['r0', 'r4']);
+  assert.equal(bundle.entityId, 'r4');
+  assert.match(bundle.label ?? '', /×2$/);
+  assert.deepEqual(scene.abstraction?.blocks.includes('api'), true);
+  const expanded = project(build(text), 'structural', {});
+  assert.deepEqual(expanded.edges.filter((e) => e.to === 'db').map((e) => [e.id, e.witnesses]), [['r3', ['r3']], ['r4', ['r4']], ['r0', ['r0']]]);
 });

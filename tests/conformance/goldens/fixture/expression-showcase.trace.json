@@ -1,6 +1,12 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "ops-machine": 0
+  },
+  "links": {},
   "machines": {
    "ops-machine": {
     "state": "ops-done",
@@ -18,11 +24,9 @@
      "imp1": false,
      "imp2": true,
      "imp3": true,
-     "inexact": 0.30000000000000004,
      "le": true,
      "lt": false,
      "mix": true,
-     "mixed": false,
      "ne": false,
      "neg": -7,
      "negneg": 9,
@@ -32,7 +36,7 @@
      "paren": 9,
      "prec": 5,
      "prod": 14,
-     "quo": 3.5,
+     "quo": 3,
      "rem": 1,
      "s": "ab",
      "short_and": false,
@@ -44,10 +48,22 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 4
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 4,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "ops-machine": 0
+  },
+  "links": {},
   "machines": {
    "ops-machine": {
     "state": "ops-ready",
@@ -65,11 +81,9 @@
      "imp1": true,
      "imp2": false,
      "imp3": false,
-     "inexact": 0,
      "le": false,
      "lt": false,
      "mix": false,
-     "mixed": true,
      "ne": false,
      "neg": 0,
      "negneg": 0,
@@ -91,10 +105,12 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "ops-run",
     "payload": {},
+    "scheduledAt": 3,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -105,6 +121,7 @@
    {
     "event": "ops-second",
     "payload": {},
+    "scheduledAt": 4,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -113,13 +130,26 @@
     "time": 4
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "expression-showcase",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "ops-machine": 0
+    },
+    "links": {},
     "machines": {
      "ops-machine": {
       "state": "ops-done",
@@ -137,11 +167,9 @@
        "imp1": false,
        "imp2": true,
        "imp3": true,
-       "inexact": 0.30000000000000004,
        "le": true,
        "lt": false,
        "mix": true,
-       "mixed": false,
        "ne": false,
        "neg": -7,
        "negneg": 9,
@@ -151,7 +179,7 @@
        "paren": 9,
        "prec": 5,
        "prod": 14,
-       "quo": 3.5,
+       "quo": 3,
        "rem": 1,
        "s": "ab",
        "short_and": false,
@@ -163,10 +191,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ops-second",
       "payload": {},
+      "scheduledAt": 4,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -175,11 +205,18 @@
       "time": 4
      }
     ],
-    "time": 3
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 3,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "ops-run",
     "payload": {},
+    "scheduledAt": 3,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -193,6 +230,7 @@
      "emitted": [],
      "from": "ops-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 9,
@@ -210,7 +248,7 @@
        "variable": "prod"
       },
       {
-       "after": 3.5,
+       "after": 3,
        "before": 0,
        "variable": "quo"
       },
@@ -238,11 +276,6 @@
        "after": 9,
        "before": 0,
        "variable": "paren"
-      },
-      {
-       "after": 0.30000000000000004,
-       "before": 0,
-       "variable": "inexact"
       },
       {
        "after": "abcdef",
@@ -283,11 +316,6 @@
        "after": true,
        "before": false,
        "variable": "eqs"
-      },
-      {
-       "after": false,
-       "before": true,
-       "variable": "mixed"
       },
       {
        "after": true,
@@ -362,6 +390,8 @@
    "ignored": [],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ops-run",
     "ops-eval",
@@ -372,6 +402,12 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "ops-machine": 0
+    },
+    "links": {},
     "machines": {
      "ops-machine": {
       "state": "ops-done",
@@ -389,11 +425,9 @@
        "imp1": false,
        "imp2": true,
        "imp3": true,
-       "inexact": 0.30000000000000004,
        "le": true,
        "lt": false,
        "mix": true,
-       "mixed": false,
        "ne": false,
        "neg": -7,
        "negneg": 9,
@@ -403,7 +437,7 @@
        "paren": 9,
        "prec": 5,
        "prod": 14,
-       "quo": 3.5,
+       "quo": 3,
        "rem": 1,
        "s": "ab",
        "short_and": false,
@@ -415,12 +449,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 4
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 4,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "ops-second",
     "payload": {},
+    "scheduledAt": 4,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -433,7 +475,8 @@
      "behavior": "ops-machine",
      "emitted": [],
      "from": "ops-done",
-     "guard": "sum == 9 && cat == 'abcdef' && inexact > 0.3 && !eq == false",
+     "guard": "sum == 9 && cat == 'abcdef' && !eq == false",
+     "instance": 0,
      "sets": [
       {
        "after": 12,
@@ -453,6 +496,8 @@
    "ignored": [],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ops-second",
     "ops-again",
@@ -461,5 +506,9 @@
    ],
    "time": 4
   }
- ]
+ ],
+ "stepsTaken": 2,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

@@ -14,7 +14,7 @@ import {
 /** @typedef {Map<string, import('../claim-strength.js').Strength>} StrengthMap */
 
 /** Summary order of claim statuses (also the order of the summary table). */
-export const STATUS_ORDER = ['proved', 'verified', 'supported', 'violated', 'inconclusive', 'not-evaluated'];
+export const STATUS_ORDER = ['proved', 'verified', 'supported', 'model-holds', 'asserted', 'violated', 'inconclusive', 'not-evaluated'];
 
 /**
  * One row per claim in declaration order. `result` is the supplied ClaimResult,

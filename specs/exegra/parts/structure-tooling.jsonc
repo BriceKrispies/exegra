@@ -1,0 +1,629 @@
+// Part of the specification: components, relationships.
+{
+  "components": [
+    {
+      "id": "tooling",
+      "name": "Tooling",
+      "kind": "subsystem",
+      "category": "infrastructure",
+      "purpose": "Build and development system, verification pipeline, artifact generators, tests and development utilities.",
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "Grouping only; the code lives in the child components.",
+        "language": "js"
+      },
+      "parent": "exegra",
+      "responsibilities": [
+        "Build and serve the application and its engines (build system, Rust oracle build).",
+        "Execute the evidence the claims name and record the outcomes with the stamp of the tree they ran on, and compare declared modules with the files on disk (verification pipeline).",
+        "Generate the derived artifacts of a project deterministically from its model (generators).",
+        "Test the semantic core, the command line and the running application, and capture screenshots of it (test suites, screenshot tool).",
+        "Import specifications kept as Markdown, generate synthetic benchmarks, and realise projects whose code lives in other repositories."
+      ]
+    },
+    // ======== Tooling ========================================================================
+    {
+      "id": "build-system",
+      "name": "Build and development system",
+      "parent": "tooling",
+      "category": "infrastructure",
+      "runsIn": "node",
+      "purpose": "Vite configuration: serves the application on 127.0.0.1 with the development-server plugin, builds a static bundle with relative asset URLs, and keeps saved specifications from triggering page reloads. The Pages workflow, triggered by a push to main, publishes that bundle, which opens Exegra's own specification first, to the repository's GitHub Pages site.",
+      "responsibilities": [
+        "Build a static bundle whose asset URLs are relative, so it loads at a domain root or under the repository's GitHub Pages sub-path",
+        "Declare the Pages workflow (.github/workflows/pages.yml): triggered by a push to main, it builds the Lean core to WebAssembly, validates Exegra's own specification, builds and uploads the bundle and deploys it to GitHub Pages; in a run whose specification does not validate nothing is published"
+      ],
+      "unknowns": [
+        "Only the workflow file is checked (tests/core/pages-site.test.js): that GitHub runs it, and that every push to main is published, are not. Under the workflow's concurrency group a queued run is replaced when a newer push arrives, so an intermediate push may never be deployed; a disabled workflow, Pages not set to GitHub Actions or a push marked to skip CI publish nothing.",
+        "The GitHub Pages site is the production build: read-only, it shows the specifications as of the last push to main with the evidence results recorded in specs/exegra/evidence/results.json, and, the Lean core being wasm64, it does not run in stable Safari.",
+        "The production build contains no persistence service: it bundles the shipped specs and is read-only.",
+        "dist/ embeds as text the specification, layout and recorded results of every shipped project and the specification of every linked project whose specification lives outside specs/ (copy shipped-specifications); a linked project's specification, which is not in this repository, therefore ends up in the build output (WG-4775, finding F11)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "vite.config.js",
+          ".github/workflows/pages.yml",
+          ".github/workflows/check.yml"
+        ],
+        "notes": "package.json scripts (dev, build, test, test:browser, typecheck, exegra, generate, verify) are not a scanned source file.",
+        "language": "js"
+      }
+    },
+    {
+      "id": "generators",
+      "name": "Artifact generators",
+      "parent": "tooling",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Deterministic pure functions from the model, claim results and diagnostics to five artifacts: manifest.json, ARCHITECTURE.md, claims-report.md, claims-report.json and tasks.json.",
+      "responsibilities": [
+        "Derive each artifact byte-identically from the same inputs, without reading the file system, the clock or the environment",
+        "Report a claim without a result as not evaluated, never as verified",
+        "Derive a task list from violated and unevaluated claims, validation errors, not-implemented components, traceability findings, unknowns and gaps",
+        "Generate the capability matrix (capabilities.md): per guarantee class the claims Lean shows established (proved, fresh, no open assumption) and the others with their status, and the counts of the specification"
+      ],
+      "unknowns": ["No generator emits code or any part of Exegra's own runtime; Exegra generates reports about the model, not the software it describes."],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/generate/architecture-doc.js",
+          "src/core/generate/capabilities.js",
+          "src/core/generate/claims-report.js",
+          "src/core/generate/index.js",
+          "src/core/generate/manifest.js",
+          "src/core/generate/task-manifest.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "verification-pipeline",
+      "name": "Verification pipeline",
+      "parent": "tooling",
+      "category": "logical",
+      "runsIn": "node",
+      "purpose": "Compares the implementation modules that components declare with the files on disk and, driven by `exegra verify`, executes test evidence and records the results.",
+      "responsibilities": [
+        "Report declared modules missing on disk and files under src, cli and tools (.js, .json, .css, .html) plus index.html and vite.config.js that no component claims, leaving out generated build output (src/engine/pkg/) and files whose name starts with local- (local data, ignored by git)",
+        "Through `verify`: validate, check traceability, execute each evidence of kind test with node --test or Playwright and record outcomes and the traceability result in results.json, then re-evaluate claims with them",
+        "Refuse an evidence reference with characters outside letters, digits, underscore, dot, slash, hyphen, space, hash and colon, and time a test run out after ten minutes",
+        "Reuse the outcomes that `npm test` and `npm run test:browser` already recorded (reporters in tools/ writing .outcomes/, each stamped with a hash over the tracked files, the untracked files git does not ignore and the generated engine builds) instead of running the same test again: an evidence reference is answered from the recorded run only when the run was complete, the tree did not change during it and its stamp equals the stamp of the tree verify runs on; a reference that matches no recorded test, a failure, or a skipped browser test is run as before, and a unit test that skipped itself is recorded as skipped. results.json says for each outcome whether it was run or reused; `verify --fresh` reuses nothing",
+        "Decide what a reference's matched tests establish with one function on the fresh path (node's TAP output, Playwright's summary) and the reuse path (the recorded outcomes) alike: only leaf tests count, a describe block is not a test, todo tests are recorded as todo, and a reference passes only when at least one matched test executed and passed and none failed, skipped or is a todo",
+        "Stamp what it records: the records stamp (the tree stamp without specs/<project>/evidence/results.json and specs/<project>/generated/) on every evidence result, and on every Lean theorem check the hash of the formal/ sources checked, the records stamp and the sha256 of the theorem statement as Lean printed it",
+        "Scan the imports of every module a component claims (tools/import-scan.js) and record the outcome for the assumption relationships-match-imports: refuted when an import between components, or a module reaching the file system, has no declared dependency relationship",
+        "Record the repository files each node test run executed (NODE_V8_COVERAGE) with its result, for change impact",
+        "With a change set (verify --change), run only the evidence of the claims the change re-marks and reuse the results the last verification recorded fresh (cli/evidence-run.js)",
+        "Report for each theorem check the defining file, the Exegra declarations its statement uses with their files, the statement hash with binder names erased, and, for a claim's supersedes theorem, whether it is a kernel-checked implication from the new statement whose conclusion hash is recorded",
+        "Extract the static structure of the implementation (tools/extract.js, over the surface of tools/surface.js): per file its digest and its imports, re-exports and dynamic imports (JavaScript), import lines (Lean) and module-level mod and use (Rust), resolved to files, with the extractor identity and version, into specs/<project>/extracted/facts.json; and the observed facts of a recorded session (tools/observe.js). Static extraction establishes static structure only and is never presented as runtime behavioural fidelity"
+      ],
+      "unknowns": [
+        "Only evidence of kind test is executed; measurement, document and review evidence stay author-entered.",
+        "The traceability check compares paths only: it does not check that a module implements what its component claims, nor that relationships match imports. Its surface is src/, cli/ and tools/ with the extensions .js, .json, .css and .html, plus index.html and vite.config.js: a .mjs file is outside it (tools/bench-mm1.mjs was unclaimed until this correction), and formal/ and engine/ are outside it too, so an unclaimed Lean or Rust file is not reported.",
+        "Browser tests need Chrome and the Vite development server; `verify --skip-browser` skips them and records their evidence as not run, unless its earlier result was recorded on the same tree stamp.",
+        "A whole-file evidence reference to a test file with a test that skips itself where a tool is missing (Lean, a native binary) is not a pass in such an environment; the reference passes only where every matched test runs.",
+        "The Lean checker does not yet report implemented_by, extern or partial for a definition (tools/lean-theorems.js reports kind, axioms, the kernel check, the constants in the statement and the statement text), so only opaque constants are refused for that reason today."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/traceability.js",
+          "tools/lean-theorems.js",
+          "tools/tree-stamp.js",
+          "tools/outcomes-node-reporter.js",
+          "tools/outcomes-playwright-reporter.js",
+          "tools/run-unit-tests.js",
+          "cli/outcomes.js",
+          "tools/import-scan.js",
+          "cli/evidence-run.js",
+          "tools/extract.js",
+          "tools/surface.js",
+          "tools/observe.js"
+        ],
+        "notes": "Orchestrated by the verify command in cli/commands.js (claimed by agent-cli).",
+        "language": "js",
+        "trusts": [
+          "trusted-lean-kernel"
+        ]
+      }
+    },
+    {
+      "id": "spec-checker",
+      "name": "Specification checker",
+      "parent": "tooling",
+      "category": "infrastructure",
+      "runsIn": "node",
+      "purpose": "A read-only command that prints a specification file's diagnostics, scenario outcomes and claim results, and optionally a trace.",
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/check-spec.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "benchmark-generator",
+      "name": "Benchmark generator",
+      "parent": "tooling",
+      "category": "infrastructure",
+      "runsIn": "node",
+      "purpose": "Writes specs/benchmark/spec.jsonc, a deterministic synthetic specification (396 components and 507 relationships by default) for measuring layout and rendering.",
+      "unknowns": ["It writes the benchmark specification directly with node:fs, not through the workspace service or the transaction system."],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/make-benchmark.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "markdown-importer",
+      "name": "Markdown importer",
+      "parent": "tooling",
+      "category": "infrastructure",
+      "runsIn": "node",
+      "purpose": "A command line tool that converts a Markdown specification, structured Markdown kept in another repository, into the specification file of a linked project, a specification that declares its own entity kinds and verification methods.",
+      "responsibilities": [
+        "Read the Markdown (white paper, roadmap, the specification documents and the verification document) and the git commit of that repository, plus the project's import map (specs/<project>/import-map.jsonc), which supplies what Exegra requires and the Markdown does not state (the project's name and title, where those documents are, and a category per component); fail with a message naming a component that has no entry in the map",
+        "Work one way and deterministically: the same input gives the same bytes, it never writes to the Markdown repository and it states nothing the Markdown does not; the Markdown stays the authority and the generated file says it must not be edited by hand",
+        "Record what it recognised but could not map: each kind of loss with a count and examples is printed and also written into the generated specification's system notes",
+        "With --check, compare the generated text with the file on disk and exit 1 when it is out of date; usage errors exit 2"
+      ],
+      "unknowns": [
+        "It does not analyze, validate or evaluate what it writes (it imports only the jsonc-parser library); that the output analyzes without errors is checked by the tests, not by the tool.",
+        "It writes the project's specification file directly with node:fs, not through the workspace service or the transaction system, and an edit made to that file through Exegra is overwritten by the next import.",
+        "It reads no default source: the source directory is given with --source or as \"source\" in the import map, and the project with --project or with --map and --out."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/import-markdown.js"
+        ],
+        "notes": "Not part of the running application or the agent command line, except that the markdown command renders documents with its functions; it is run by hand when the Markdown specification changes.",
+        "language": "js"
+      }
+    },
+    {
+      "id": "screenshot-tool",
+      "name": "Screenshot tool",
+      "parent": "tooling",
+      "category": "infrastructure",
+      "runsIn": "node",
+      "purpose": "A development aid that loads the running application in Chrome, optionally runs a snippet, saves a screenshot and prints console errors.",
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/shot.mjs",
+          "tools/walk-shots.mjs"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "test-suites",
+      "name": "Test suites",
+      "parent": "tooling",
+      "category": "infrastructure",
+      "runsIn": "node",
+      "purpose": "Core tests (node:test) over the semantic core, generators, workspace and agent command line, and Playwright browser tests of the running application: against scratch copies of this specification and of the multiplayer test fixture, and, when a project is linked locally, read-only against it (local-*.spec.js files, which are not tracked); the older browser tests run at desktop size and tests/browser/mobile.spec.js runs at phone and tablet size by touch. The browser tests run on two Playwright workers by default (EXEGRA_TEST_WORKERS overrides); each worker slot has its own pair of scratch projects (zz-test-exegra-wN, zz-test-multiplayer-wN), so edits, saves and change notices never cross workers.",
+      "unknowns": [
+        "Tests are evidence only through `exegra verify`; recorded results carry the records stamp of the tree and read as stale on any later edit, until verify runs again.",
+        "No test measures performance, so no claim about frame rate or load time has evidence."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "playwright.config.js",
+          "tests/browser/exegra.spec.js",
+          "tests/browser/global-setup.js",
+          "tests/browser/global-teardown.js",
+          "tests/browser/interaction.spec.js",
+          "tests/browser/live.spec.js",
+          "tests/browser/mobile.spec.js",
+          "tests/browser/scratch.js",
+          "tests/browser/simulation-worker.spec.js",
+          "tests/core/claims.test.js",
+          "tests/core/claim-diagnostics.test.js",
+          "tests/core/concordance.test.js",
+          "tests/core/cli.test.js",
+          "tests/core/data-model.test.js",
+          "tests/core/fact-producers.test.js",
+          "tests/core/fault-model.test.js",
+          "tests/core/generate.test.js",
+          "tests/core/import-markdown.test.js",
+          "tests/core/import-register.test.js",
+          "tests/core/layout.test.js",
+          "tests/core/model-kernel.test.js",
+          "tests/core/model.test.js",
+          "tests/core/outcome-reuse.test.js",
+          "tests/core/projections.test.js",
+          "tests/core/references.test.js",
+          "tests/core/replay.test.js",
+          "tests/core/roundtrip.test.js",
+          "tests/core/runtime-data-complete.test.js",
+          "tests/core/sim.test.js",
+          "tests/core/traffic.test.js",
+          "tests/core/vocabulary.test.js",
+          "tests/core/workspace.test.js",
+          "tests/fixtures/live/open-edit-save.json",
+          "tests/fixtures/parse-corpus/cases.json.gz",
+          "tests/oracle/parse-reference.js",
+          "tools/record-goldens.js",
+          "tools/conformance.js",
+          "tools/bench-mm1.mjs",
+          "tests/core/conformance.test.js",
+          "tools/differential.js",
+          "tests/core/readiness-machines.test.js",
+          "tests/fixtures/readiness-machines/spec.jsonc",
+          "tests/core/spec-store.test.js",
+          "tests/core/multiscale.test.js",
+          "tests/fixtures/multiscale/baseline.json",
+          "tests/core/abstraction.test.js",
+          "tests/fixtures/abstraction/",
+          "tests/browser/navigation.spec.js",
+          "tests/core/navigation.test.js",
+          "tests/core/edit-history.test.js",
+          "tests/browser/edit-history.spec.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "infrastructure-generator",
+      "name": "Infrastructure generator",
+      "parent": "tooling",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Generates infrastructure definitions per provider profile, the deployment pipeline's state machine and boundary contract tests from the specification, and verifies the output against the deployment model.",
+      "responsibilities": [
+        "Emit deterministic infrastructure and pipeline definitions for a provider profile",
+        "Check the generated output realises exactly the modeled environments, slots, gates and transitions"
+      ],
+      "unknowns": [
+        "Not built yet (planned: WG-4678)."
+      ],
+      "implementation": {
+        "status": "not-implemented",
+        "modules": [],
+        "notes": "Planned: WG-4678."
+      }
+    },
+    {
+      "id": "reality-loop",
+      "name": "Game days and runtime monitors",
+      "parent": "tooling",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Generates game-day experiments from the fault model and claims and runtime monitors from claims, records their results as evidence, and feeds observed failure rates back into the fault model.",
+      "responsibilities": [
+        "Plan experiments that name the failure injected, the claim tested and the deciding measurement",
+        "Generate monitors with declared observables and thresholds; a firing monitor violates its claim",
+        "Replace assumed failure rates with measured ones, citing the measurement"
+      ],
+      "unknowns": [
+        "Not built yet (planned: WG-4680)."
+      ],
+      "implementation": {
+        "status": "not-implemented",
+        "modules": [],
+        "notes": "Planned: WG-4680."
+      }
+    },
+    {
+      "id": "rust-engine-oracle",
+      "name": "Rust engine (differential oracle)",
+      "parent": "tooling",
+      "category": "logical",
+      "runsIn": "node",
+      "purpose": "The former simulation engine, the Rust crate engine/exegra-engine, kept as an independent implementation the Lean engine is compared against: as WebAssembly in the conformance tests and as the native exegra-sim in the differential check.",
+      "responsibilities": [
+        "Reproduce every golden trace, as WebAssembly (tools/rust-engine.js) and as the native binary",
+        "Give byte-identical traces to the Lean engine on the goldens and on generated inputs (tests/core/conformance.test.js, tests/core/formal-semantics.test.js)"
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "rust",
+        "modules": [
+          "engine/Cargo.toml",
+          "engine/Cargo.lock",
+          "engine/README.md",
+          "engine/exegra-engine/Cargo.toml",
+          "engine/exegra-engine-wasm/Cargo.toml",
+          "engine/exegra-engine-wasm/src/lib.rs",
+          "engine/exegra-engine/src/expr.rs",
+          "engine/exegra-engine/src/lib.rs",
+          "engine/exegra-engine/src/main.rs",
+          "engine/exegra-engine/src/value.rs",
+          "tools/build-engine.js",
+          "tools/rust-engine.js",
+          "engine/exegra-engine/src/v2.rs",
+          "engine/exegra-engine/src/random.rs",
+          "engine/exegra-engine/src/workload.rs"
+        ]
+      }
+    },
+    {
+      "id": "register-importer",
+      "name": "Register importer",
+      "parent": "tooling",
+      "category": "infrastructure",
+      "runsIn": "node",
+      "purpose": "A command line tool that converts one large Markdown specification file, written as headings, prose and register tables, into the specification file of a linked project: every table row becomes an entity of a kind the import map declares (or a generic table row), and every entity names the line it came from.",
+      "responsibilities": [
+        "Read one Markdown file and the project's import map (specs/<project>/import-map.jsonc with \"format\": \"register\"), which declares the entity kinds, the table rules (header cells, optional heading scope, the id column or id prefix, a property per column, reference columns), component categories and aliases, and which identifier patterns count as mentions",
+        "Hold every line: headings become sections whose bodies keep prose verbatim, and each imported table row and table header is replaced in its section body by one {{entity:<id>}} marker line; write nothing unless the file rebuilds line for line with each marker expanded to the lines it came from",
+        "Make every row entity render back to its cells: a row rendered from its properties must give the same cells as the source row, or the import fails naming the entity",
+        "Give every imported entity a source property (path:line in the source repository) and, when the row carries an identifier, a ref property with the identifier as written; identifiers and citations named in a row become its mentions (references to imported entities) and citations (as written)",
+        "Record what it recognised but could not map (a row whose cell count differs from its header, an unresolved mention, a duplicate identifier, a reference column naming no entity) as losses with counts and examples, printed and written into the generated specification's system notes",
+        "Merge the draft fragments the map lists (\"drafts\"): authored entities that are not from the Markdown, each given origin \"draft\" and the file and line of its declaration as source, citing in basis the imported entities it answers; drafts never change the Markdown the sections render"
+      ],
+      "unknowns": [
+        "It writes the project's specification file directly with node:fs, not through the workspace service or the transaction system, like the Markdown importer; once a map says \"authority\": \"jsonc\" it refuses to import over that file (only --out writes elsewhere), so edits made in Exegra are not overwritten.",
+        "It does not analyze or validate what it writes; that the output analyzes without errors is checked by the tests and by exegra validate."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/import-register.js"
+        ],
+        "notes": "Run by hand when the Markdown file changes; one way, as the Markdown importer."
+      }
+    },
+    {
+      "id": "external-realisation",
+      "name": "External realisation",
+      "parent": "tooling",
+      "category": "logical",
+      "runsIn": "node",
+      "purpose": "Lets a project be realised in other repositories: reads the realisation roots a project's project.jsonc names, checks modules declared in a root against that root, and turns a root's JUnit reports into pass, fail or not-run results for test evidence that points into it.",
+      "responsibilities": [
+        "Resolve the roots of project.jsonc (alias, path relative to the project directory or absolute, include and exclude globs, test runs, environmental patterns) and refuse a malformed declaration",
+        "Check a module written <alias>:<path> against that root, report a module naming an undeclared alias as missing, and report unclaimed files only for a root that declares include globs",
+        "Through `verify`: run each test command a root declares (unless --ingest-only), then read its JUnit report, and record each external test evidence as pass, fail or not-run by matching file, describe path and test name",
+        "Record a test as not-run, never as failed, when it is absent from the report, skipped, reported as an error, or failed with a message matching the root's environmental patterns"
+      ],
+      "unknowns": [
+        "Only JUnit XML is read; a root whose runner cannot write JUnit cannot provide test evidence.",
+        "Results are not tied to the commit of the root they were recorded from (WK-393 follow-up)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/realisation-roots.js",
+          "tools/junit.js"
+        ]
+      }
+    }
+  ],
+  "relationships": [
+    { "id": "build-system-depends-on-vite", "kind": "depends-on", "from": "build-system", "to": "vite-dev-server", "description": "Configures the server (127.0.0.1, specs not watched) and the build." },
+    { "id": "build-system-calls-dev-server-plugin", "kind": "composes", "from": "build-system", "to": "dev-server-plugin", "description": "Registers the plugin with the specs directory." },
+    { "id": "generators-calls-queries", "kind": "invokes", "from": "generators", "to": "queries", "description": "Lists children, relationships and contracts for the architecture document." },
+    {
+      "id": "generators-reads-claim-method-registry",
+      "kind": "reads",
+      "from": "generators",
+      "to": "claim-method-registry",
+      "description": "Reads claim status labels."
+    },
+    { "id": "generators-generates-generated-artifacts", "kind": "generates", "from": "generators", "to": "generated-artifacts", "description": "Produces the text of the five generated files; the workspace service writes them." },
+    { "id": "verification-pipeline-calls-filesystem", "kind": "invokes", "from": "verification-pipeline", "to": "filesystem", "description": "Scans src, cli, tools and the root files and checks that declared modules exist." },
+    { "id": "spec-checker-calls-validator", "kind": "invokes", "from": "spec-checker", "to": "validator", "description": "Analyzes the file with analyzeSpec." },
+    { "id": "spec-checker-calls-claim-evaluator", "kind": "invokes", "from": "spec-checker", "to": "claim-evaluator", "description": "Prints the status of every claim." },
+    { "id": "spec-checker-calls-simulation-engine", "kind": "invokes", "from": "spec-checker", "to": "simulation-engine", "description": "Runs every scenario and optionally prints a trace." },
+    {
+      "id": "spec-checker-reads-specification-file",
+      "kind": "reads",
+      "from": "spec-checker",
+      "to": "specification-file",
+      "description": "Reads the file given on the command line directly with node:fs."
+    },
+    { "id": "benchmark-generator-calls-validator", "kind": "invokes", "from": "benchmark-generator", "to": "validator", "description": "Checks that the generated specification analyzes." },
+    { "id": "benchmark-generator-writes-specification-file", "kind": "writes", "from": "benchmark-generator", "to": "specification-file", "description": "Writes specs/benchmark/spec.jsonc directly with node:fs." },
+    { "id": "markdown-importer-reads-markdown-specification-source", "kind": "reads", "from": "markdown-importer", "to": "markdown-specification-source", "description": "Reads the Markdown documents and the repository's git commit; it never writes there." },
+    { "id": "markdown-importer-data-flow-specification-file", "kind": "data-flow", "from": "markdown-importer", "to": "specification-file", "description": "The generated text of the project's specification file travels to the file, deterministically, with the losses recorded in its system notes." },
+    { "id": "markdown-importer-writes-specification-file", "kind": "writes", "from": "markdown-importer", "to": "specification-file", "description": "Writes the project's specification file directly with node:fs, bypassing the transaction system." },
+    { "id": "markdown-importer-depends-on-jsonc-parser", "kind": "depends-on", "from": "markdown-importer", "to": "jsonc-parser-library", "description": "Reads the project's import map with the library." },
+    { "id": "markdown-importer-calls-filesystem", "kind": "invokes", "from": "markdown-importer", "to": "filesystem", "description": "Reads the Markdown tree and the import map, and writes or compares the generated file, with node:fs." },
+    { "id": "screenshot-tool-depends-on-playwright", "kind": "depends-on", "from": "screenshot-tool", "to": "playwright-runner", "description": "Drives Chrome to load the page and capture it." },
+    { "id": "screenshot-tool-observes-vite", "kind": "observes", "from": "screenshot-tool", "to": "vite-dev-server", "description": "Loads the application served by the development server and reports console errors." },
+    { "id": "test-suites-depends-on-playwright", "kind": "depends-on", "from": "test-suites", "to": "playwright-runner", "description": "Browser tests run under Playwright." },
+    { "id": "test-suites-depends-on-vite", "kind": "depends-on", "from": "test-suites", "to": "vite-dev-server", "description": "Playwright starts the Vite development server for the browser tests." },
+    { "id": "test-suites-calls-transactions", "kind": "exercises", "from": "test-suites", "to": "transactions", "description": "Core tests exercise Project and the operations." },
+    { "id": "test-suites-calls-parser", "kind": "exercises", "from": "test-suites", "to": "parser", "description": "Core tests exercise parsing and normalization." },
+    { "id": "test-suites-calls-validator", "kind": "exercises", "from": "test-suites", "to": "validator", "description": "Core tests exercise the validation rules." },
+    { "id": "test-suites-calls-claim-evaluator", "kind": "exercises", "from": "test-suites", "to": "claim-evaluator", "description": "Core tests exercise claim evaluation." },
+    { "id": "test-suites-calls-simulation-engine", "kind": "exercises", "from": "test-suites", "to": "simulation-engine", "description": "Core tests exercise the simulation." },
+    { "id": "test-suites-calls-projection-system", "kind": "exercises", "from": "test-suites", "to": "projection-system", "description": "Core tests exercise projections." },
+    { "id": "test-suites-calls-layout-engine", "kind": "exercises", "from": "test-suites", "to": "layout-engine", "description": "Core tests exercise the layout." },
+    { "id": "test-suites-calls-generators", "kind": "exercises", "from": "test-suites", "to": "generators", "description": "Core tests exercise the generators." },
+    { "id": "test-suites-calls-workspace-service", "kind": "exercises", "from": "test-suites", "to": "workspace-service", "description": "Core tests exercise the workspace service on temporary directories." },
+    { "id": "test-suites-calls-markdown-importer", "kind": "exercises", "from": "test-suites", "to": "markdown-importer", "description": "Core tests exercise the importer on fixture Markdown and analyze its output." },
+    { "id": "test-suites-calls-agent-cli", "kind": "exercises", "from": "test-suites", "to": "agent-cli", "description": "Core tests run commands of the agent command line." },
+    {
+      "id": "infrastructure-generator-depends-on-deployment-model",
+      "kind": "depends-on",
+      "from": "infrastructure-generator",
+      "to": "deployment-model",
+      "description": "Generates from, and verifies against, the deployment model (planned, WG-4678)."
+    },
+    {
+      "id": "reality-loop-depends-on-infrastructure-generator",
+      "kind": "depends-on",
+      "from": "reality-loop",
+      "to": "infrastructure-generator",
+      "description": "Game days run on the generated infrastructure (planned, WG-4680)."
+    },
+    {
+      "id": "reality-loop-writes-recorded-results-file",
+      "kind": "writes",
+      "from": "reality-loop",
+      "to": "recorded-results-file",
+      "description": "Game-day and monitor results recorded as evidence."
+    },
+    {
+      "id": "test-suites-calls-contract-conformance",
+      "kind": "exercises",
+      "from": "test-suites",
+      "to": "contract-conformance",
+      "description": "Core tests exercise the static and trace checks and the request log."
+    },
+    {
+      "id": "test-suites-calls-rust-engine-oracle",
+      "kind": "exercises",
+      "from": "test-suites",
+      "to": "rust-engine-oracle",
+      "description": "The conformance and differential tests compare the Lean engine with the Rust engine."
+    },
+    {
+      "id": "register-importer-reads-markdown-specification-source",
+      "kind": "reads",
+      "from": "register-importer",
+      "to": "markdown-specification-source",
+      "description": "Reads the Markdown file and the repository's git commit; it never writes there."
+    },
+    {
+      "id": "register-importer-data-flow-specification-file",
+      "kind": "data-flow",
+      "from": "register-importer",
+      "to": "specification-file",
+      "description": "The generated text of the project's specification file travels to the file, deterministically, with the losses recorded in its system notes."
+    },
+    {
+      "id": "register-importer-writes-specification-file",
+      "kind": "writes",
+      "from": "register-importer",
+      "to": "specification-file",
+      "description": "Writes the project's specification file directly with node:fs, bypassing the transaction system."
+    },
+    {
+      "id": "register-importer-depends-on-jsonc-parser-library",
+      "kind": "depends-on",
+      "from": "register-importer",
+      "to": "jsonc-parser-library",
+      "description": "Reads the import map and re-reads the generated text with the library."
+    },
+    {
+      "id": "register-importer-calls-filesystem",
+      "kind": "invokes",
+      "from": "register-importer",
+      "to": "filesystem",
+      "description": "Reads the Markdown file and the import map, and writes or compares the generated file, with node:fs."
+    },
+    {
+      "id": "test-suites-calls-register-importer",
+      "kind": "exercises",
+      "from": "test-suites",
+      "to": "register-importer",
+      "description": "Core tests exercise the register importer on a fixture and analyze its output."
+    },
+    {
+      "id": "verification-pipeline-calls-external-realisation",
+      "kind": "invokes",
+      "from": "verification-pipeline",
+      "to": "external-realisation",
+      "description": "The traceability check delegates modules that name a root, and the scan of a root's include globs."
+    },
+    {
+      "id": "external-realisation-calls-filesystem",
+      "kind": "invokes",
+      "from": "external-realisation",
+      "to": "filesystem",
+      "description": "Checks modules and scans files in a root; reads JUnit reports."
+    },
+    {
+      "id": "external-realisation-calls-external-test-runner",
+      "kind": "invokes",
+      "from": "external-realisation",
+      "to": "external-test-runner",
+      "description": "verify spawns the test command a root declares, without a shell, unless --ingest-only."
+    },
+    {
+      "id": "generators-calls-stable-serialization",
+      "kind": "invokes",
+      "from": "generators",
+      "to": "stable-serialization",
+      "description": "Writes generated files with sorted keys."
+    },
+    {
+      "id": "test-suites-calls-formal-semantics",
+      "kind": "exercises",
+      "from": "test-suites",
+      "to": "formal-semantics",
+      "description": "The differential tool (tools/differential.js) runs the Lean executable and the Rust engine on the goldens and on generated inputs."
+    },
+    {
+      "id": "test-suites-calls-simulation-contract",
+      "kind": "exercises",
+      "from": "test-suites",
+      "to": "simulation-contract",
+      "description": "The conformance test and the golden runner read the engine input derived by sim-input.js and the goldens of the contract."
+    },
+    {
+      "id": "test-suites-calls-stable-serialization",
+      "kind": "exercises",
+      "from": "test-suites",
+      "to": "stable-serialization",
+      "description": "The golden recorder writes its traces with the stable JSON serializer."
+    },
+    {
+      "id": "markdown-importer-calls-workspace-service",
+      "kind": "invokes",
+      "from": "markdown-importer",
+      "to": "workspace-service",
+      "description": "Writes the converted specification and its import map through the workspace service (tools/workspace.js)."
+    },
+    {
+      "id": "generators-calls-hash-binding",
+      "kind": "invokes",
+      "from": "generators",
+      "to": "hash-binding",
+      "description": "Stamps artifacts with the semantic hash."
+    },
+    {
+      "id": "spec-checker-calls-hash-binding",
+      "kind": "invokes",
+      "from": "spec-checker",
+      "to": "hash-binding",
+      "description": "Prints the semantic hash."
+    },
+    {
+      "id": "test-suites-calls-spec-store",
+      "kind": "exercises",
+      "from": "test-suites",
+      "to": "spec-store",
+      "description": "Core tests round-trip every specification and fixture through the store."
+    },
+    {
+      "id": "generators-calls-claim-strength",
+      "kind": "invokes",
+      "from": "generators",
+      "to": "claim-strength",
+      "description": "Shows the check and grounding of each claim in the claims report."
+    },
+    {
+      "id": "test-suites-calls-claim-strength",
+      "kind": "exercises",
+      "from": "test-suites",
+      "to": "claim-strength",
+      "description": "Core tests exercise the check and grounding on fixtures from the Harbourline fold."
+    },
+    {
+      "id": "verification-pipeline-calls-verdict-boundary",
+      "kind": "invokes",
+      "from": "verification-pipeline",
+      "to": "verdict-boundary",
+      "description": "The test-runner adapters, the tree stamp, the theorem checker and the import scan write their facts with the fact constructors."
+    },
+    {
+      "id": "screenshot-tool-invokes-agent-cli",
+      "kind": "invokes",
+      "from": "screenshot-tool",
+      "to": "agent-cli",
+      "description": "tools/walk-shots.mjs compares every step of the navigation walk with exegra derive and exegra evaluate --cut for the same cut."
+    }
+  ]
+}

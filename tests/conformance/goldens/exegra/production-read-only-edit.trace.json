@@ -1,6 +1,15 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "app-start-flow": 0,
+   "engine-module-flow": 0,
+   "project-history-flow": 0,
+   "project-session-flow": 0
+  },
+  "links": {},
   "machines": {
    "app-start-flow": {
     "state": "app-started",
@@ -51,10 +60,25 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 3
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 3,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "app-start-flow": 0,
+   "engine-module-flow": 0,
+   "project-history-flow": 0,
+   "project-session-flow": 0
+  },
+  "links": {},
   "machines": {
    "app-start-flow": {
     "state": "app-loading",
@@ -105,6 +129,7 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "page-loaded",
@@ -112,6 +137,7 @@
      "persistent": false,
      "project": "exegra"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -125,6 +151,7 @@
      "origin": "ui",
      "specHash": "h2"
     },
+    "scheduledAt": 3,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -133,13 +160,29 @@
     "time": 3
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "production-read-only-edit",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "app-start-flow": 0,
+     "engine-module-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "app-start-flow": {
       "state": "app-waiting-engine",
@@ -190,10 +233,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "engine-load-requested",
+      "from": {
+       "behavior": "app-start-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 2,
       "source": {
        "behavior": "app-start-flow",
@@ -208,6 +258,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 3,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -216,14 +267,21 @@
       "time": 3
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "page-loaded",
     "payload": {
      "persistent": false,
      "project": "exegra"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -244,6 +302,7 @@
      ],
      "from": "app-loading",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": false,
@@ -264,31 +323,45 @@
     {
      "behavior": "engine-module-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "page-loaded",
     "app-load-engine",
     "app-start-flow",
-    "visual-interaction"
+    "composition-root"
    ],
    "time": 0
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "app-start-flow": 0,
+     "engine-module-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "app-start-flow": {
       "state": "app-waiting-engine",
@@ -339,12 +412,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "engine-load-settled",
+      "from": {
+       "behavior": "engine-module-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "ok": true
       },
+      "scheduledAt": 0,
       "seq": 3,
       "source": {
        "behavior": "engine-module-flow",
@@ -359,6 +439,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 3,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -367,11 +448,23 @@
       "time": 3
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "app-start-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "engine-load-requested",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 2,
     "source": {
      "behavior": "app-start-flow",
@@ -395,6 +488,7 @@
      ],
      "from": "engine-unloaded",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": true,
@@ -410,21 +504,26 @@
     {
      "behavior": "app-start-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "engine-load-requested",
     "engine-module-load",
@@ -435,6 +534,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "app-start-flow": 0,
+     "engine-module-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "app-start-flow": {
       "state": "app-started",
@@ -485,13 +593,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "session-init-requested",
+      "from": {
+       "behavior": "app-start-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "persistent": false,
        "project": "exegra"
       },
+      "scheduledAt": 0,
       "seq": 4,
       "source": {
        "behavior": "app-start-flow",
@@ -506,6 +621,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 3,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -514,13 +630,25 @@
       "time": 3
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "engine-module-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "engine-load-settled",
     "payload": {
      "ok": true
     },
+    "scheduledAt": 0,
     "seq": 3,
     "source": {
      "behavior": "engine-module-flow",
@@ -545,6 +673,7 @@
      ],
      "from": "app-waiting-engine",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "app-started",
      "transition": "app-start-session"
@@ -554,31 +683,45 @@
     {
      "behavior": "engine-module-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "engine-load-settled",
     "app-start-session",
     "app-start-flow",
-    "visual-interaction"
+    "composition-root"
    ],
    "time": 0
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "app-start-flow": 0,
+     "engine-module-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "app-start-flow": {
       "state": "app-started",
@@ -629,12 +772,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "project-open-requested",
+      "from": {
+       "behavior": "project-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "name": "exegra"
       },
+      "scheduledAt": 0,
       "seq": 5,
       "source": {
        "behavior": "project-session-flow",
@@ -649,6 +799,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 3,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -657,14 +808,26 @@
       "time": 3
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "app-start-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "session-init-requested",
     "payload": {
      "persistent": false,
      "project": "exegra"
     },
+    "scheduledAt": 0,
     "seq": 4,
     "source": {
      "behavior": "app-start-flow",
@@ -688,6 +851,7 @@
      ],
      "from": "session-closed",
      "guard": "!event.persistent",
+     "instance": 0,
      "sets": [
       {
        "after": false,
@@ -703,21 +867,26 @@
     {
      "behavior": "app-start-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-module-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "session-init-requested",
     "session-init-readonly",
@@ -728,6 +897,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "app-start-flow": 0,
+     "engine-module-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "app-start-flow": {
       "state": "app-started",
@@ -778,14 +956,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "project-opened",
+      "from": {
+       "behavior": "project-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "layoutHash": "shipped-layout",
        "name": "exegra",
        "specHash": "shipped"
       },
+      "scheduledAt": 0,
       "seq": 6,
       "source": {
        "behavior": "project-session-flow",
@@ -800,6 +985,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 3,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -808,13 +994,25 @@
       "time": 3
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "project-session-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "project-open-requested",
     "payload": {
      "name": "exegra"
     },
+    "scheduledAt": 0,
     "seq": 5,
     "source": {
      "behavior": "project-session-flow",
@@ -840,6 +1038,7 @@
      ],
      "from": "session-closed",
      "guard": "!persistent",
+     "instance": 0,
      "sets": [
       {
        "after": "exegra",
@@ -865,21 +1064,26 @@
     {
      "behavior": "app-start-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-module-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "project-open-requested",
     "session-open-shipped",
@@ -890,6 +1094,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "app-start-flow": 0,
+     "engine-module-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "app-start-flow": {
       "state": "app-started",
@@ -940,6 +1153,7 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "edit-applied",
@@ -947,6 +1161,7 @@
        "origin": "ui",
        "specHash": "h2"
       },
+      "scheduledAt": 3,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -955,15 +1170,27 @@
       "time": 3
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "project-session-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "project-opened",
     "payload": {
      "layoutHash": "shipped-layout",
      "name": "exegra",
      "specHash": "shipped"
     },
+    "scheduledAt": 0,
     "seq": 6,
     "source": {
      "behavior": "project-session-flow",
@@ -978,6 +1205,7 @@
      "emitted": [],
      "from": "history-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "shipped",
@@ -1013,21 +1241,26 @@
     {
      "behavior": "app-start-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-module-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 5,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "project-opened",
     "history-open",
@@ -1038,6 +1271,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "app-start-flow": 0,
+     "engine-module-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "app-start-flow": {
       "state": "app-started",
@@ -1088,14 +1330,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "commit-notified",
+      "from": {
+       "behavior": "project-history-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "file": "spec",
        "origin": "ui",
        "text": "h2"
       },
+      "scheduledAt": 3,
       "seq": 7,
       "source": {
        "behavior": "project-history-flow",
@@ -1105,14 +1354,21 @@
       "time": 3
      }
     ],
-    "time": 3
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 3,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "edit-applied",
     "payload": {
      "origin": "ui",
      "specHash": "h2"
     },
+    "scheduledAt": 3,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -1137,6 +1393,7 @@
      ],
      "from": "history-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "shipped",
@@ -1172,21 +1429,26 @@
     {
      "behavior": "app-start-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-module-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 6,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "edit-applied",
     "history-edit",
@@ -1197,6 +1459,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "app-start-flow": 0,
+     "engine-module-flow": 0,
+     "project-history-flow": 0,
+     "project-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "app-start-flow": {
       "state": "app-started",
@@ -1247,16 +1518,29 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 3
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 3,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "project-history-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "commit-notified",
     "payload": {
      "file": "spec",
      "origin": "ui",
      "text": "h2"
     },
+    "scheduledAt": 3,
     "seq": 7,
     "source": {
      "behavior": "project-history-flow",
@@ -1271,6 +1555,7 @@
      "emitted": [],
      "from": "session-readonly",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "h2",
@@ -1286,21 +1571,26 @@
     {
      "behavior": "app-start-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-module-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "project-history-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 7,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "commit-notified",
     "session-readonly-commit",
@@ -1309,5 +1599,9 @@
    ],
    "time": 3
   }
- ]
+ ],
+ "stepsTaken": 8,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

@@ -233,22 +233,6 @@ export function evaluateRuns(runs, spec) {
   return { ...base, verdict, passes: k, margin, decideAt: verdict === 'inconclusive' ? runsToDecide(kept.length, k, spec.fraction, spec.confidence) : null };
 }
 
-/**
- * Combine the per-scenario results with the negatives into the claim's result: holds only when
- * every scenario holds, every negative fails and every control negative holds; a scenario that
- * fails makes the claim violated. Never `verified` or `supported`.
- * @param {{verdict: string}[]} scenarios
- * @param {{verdict: string}[]} negatives
- * @param {{verdict: string}[]} controlNegatives
- * @returns {{status: 'model-holds'|'violated'|'inconclusive', reason: string}}
- */
-export function claimStatus(scenarios, negatives = [], controlNegatives = []) {
-  if (scenarios.some((s) => s.verdict === 'fails')) return { status: 'violated', reason: 'a scenario fails' };
-  if (scenarios.some((s) => s.verdict !== 'holds')) return { status: 'inconclusive', reason: 'a scenario is inconclusive' };
-  if (negatives.some((n) => n.verdict !== 'fails')) return { status: 'inconclusive', reason: 'a negative does not fail (vacuous)' };
-  if (controlNegatives.some((n) => n.verdict !== 'holds')) return { status: 'inconclusive', reason: 'a control negative does not hold (fails for another reason)' };
-  return { status: 'model-holds', reason: 'model only; parameters as stated' };
-}
 
 /**
  * Whether a statistic is underpowered: a quantile q with n·(1 − q) < 30, a mean with n < 30, a

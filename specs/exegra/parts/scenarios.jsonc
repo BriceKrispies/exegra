@@ -1,0 +1,1071 @@
+// Scenarios.
+{
+  // ---- Scenarios -------------------------------------------------------------------------
+  "scenarios": [
+    {
+      "id": "visual-edit-flow",
+      "name": "A valid visual edit",
+      "description": "A valid edit made visually: it is submitted, validated and committed (revision 2), then the projection is refreshed and shown by the renderer, inspector and source editor, and only then the file is written, asynchronously one tick later. Real order: refresh at commit, write afterwards. Ends quiescent with every representation at revision 2 and the file persisted.",
+      "behaviors": ["interaction-flow", "source-editor-flow", "transaction-flow", "parser-flow", "validator-flow", "session-flow", "projection-flow", "renderer-flow", "inspector-flow", "workspace-flow"],
+      "steps": [
+        {
+          "at": 0,
+          "event": "edit-requested",
+          "note": "An inspector property change, a dragged node or a dialog submission."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "source-edit-flow",
+      "name": "A valid source edit",
+      "description": "The same pipeline entered from the source editor as a ReplaceSource operation. The refresh and the asynchronous write follow the commit in the same order as for a visual edit.",
+      "behaviors": ["interaction-flow", "source-editor-flow", "transaction-flow", "parser-flow", "validator-flow", "session-flow", "projection-flow", "renderer-flow", "inspector-flow", "workspace-flow"],
+      "steps": [
+        {
+          "at": 0,
+          "event": "source-apply-requested",
+          "note": "The user applies a valid draft."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "rejected-edit",
+      "name": "An edit that fails validation",
+      "description": "The operation fails validation: the transaction is rejected, nothing commits, nothing refreshes and nothing is written; the interaction layer shows the rejection.",
+      "behaviors": ["interaction-flow", "source-editor-flow", "transaction-flow", "parser-flow", "validator-flow", "session-flow", "projection-flow", "renderer-flow", "inspector-flow", "workspace-flow"],
+      "faults": ["validation-fails"],
+      "steps": [
+        {
+          "at": 0,
+          "event": "edit-requested",
+          "note": "An edit whose result would have validation errors."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "edit-with-disk-conflict",
+      "name": "A valid edit whose write conflicts with the disk",
+      "description": "The edit commits and every view shows revision 2, but the file on disk changed since it was read: the write reports a conflict, the file is not overwritten and the session flags the conflict.",
+      "behaviors": ["interaction-flow", "source-editor-flow", "transaction-flow", "parser-flow", "validator-flow", "session-flow", "projection-flow", "renderer-flow", "inspector-flow", "workspace-flow"],
+      "faults": ["disk-changed-externally"],
+      "steps": [
+        {
+          "at": 0,
+          "event": "edit-requested",
+          "note": "A valid edit while the file on disk has changed."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "write-with-stale-base-hash",
+      "name": "A write with a stale base hash is refused and retried",
+      "description": "Contract events between the persistence client and the development server's write endpoint (contract write-file): the first request carries a stale base hash and is refused with a conflict; the client retries with the current hash and the write is accepted. The trace reads as a request log: a request, a refused write and a retry.",
+      "behaviors": [
+        "write-client-flow",
+        "write-endpoint-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "write-intent",
+          "payload": {
+            "name": "exegra",
+            "file": "spec",
+            "text": "9b2f1c0e",
+            "baseHash": "stale",
+            "requestId": 1
+          },
+          "note": "The session writes the committed text; the client's base hash is out of date."
+        }
+      ]
+    },
+    {
+      "id": "app-start-and-open",
+      "name": "Start the application and open a project",
+      "description": "main.js loads the engine, then the session lists the projects, opens exegra by reading its files (GET /__exegra/projects, GET /__exegra/project), takes their hashes as base hashes, evaluates the claims and subscribes to changes (GET /__exegra/events). Pipelines P25 and P10.",
+      "behaviors": [
+        "app-start-flow",
+        "engine-module-flow",
+        "project-session-flow",
+        "persistence-client-flow",
+        "dev-server-flow",
+        "workspace-disk-flow",
+        "workspace-watcher-flow",
+        "project-history-flow",
+        "session-claims-flow",
+        "claim-evaluation-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "page-loaded",
+          "payload": {
+            "persistent": true,
+            "project": "exegra"
+          },
+          "note": "Served by the development server."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "production-read-only-edit",
+      "name": "An edit in a production build is never saved",
+      "description": "A production build (PERSISTENCE_AVAILABLE false) opens the shipped specification bundled in dist/ (copy shipped-specifications), reports the save state read-only, and an edit commits in memory without any write. Pipeline P26.",
+      "behaviors": [
+        "app-start-flow",
+        "engine-module-flow",
+        "project-session-flow",
+        "project-history-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "page-loaded",
+          "payload": {
+            "persistent": false,
+            "project": "exegra"
+          },
+          "note": "A static build."
+        },
+        {
+          "at": 3,
+          "event": "edit-applied",
+          "payload": {
+            "specHash": "h2",
+            "origin": "ui"
+          },
+          "note": "A valid edit."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "conflict-resolved-by-reload",
+      "name": "A save conflict resolved by reloading from disk",
+      "description": "Another process replaces spec.jsonc while the session commits an edit: the write is refused as a conflict (nothing overwritten, no journal line), the change notice that follows is ignored because the save is in conflict, and the user chooses \"Reload from disk\": the disk text is adopted with Project.reload, the in-memory edit is dropped and nothing is written. Pipelines P04 and P05.",
+      "behaviors": [
+        "project-session-flow",
+        "persistence-client-flow",
+        "dev-server-flow",
+        "workspace-disk-flow",
+        "workspace-watcher-flow",
+        "project-history-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "project-open-requested",
+          "payload": {
+            "name": "exegra"
+          },
+          "note": "The session opens the project and subscribes to its changes."
+        },
+        {
+          "at": 3,
+          "event": "disk-edited-externally",
+          "payload": {
+            "file": "spec",
+            "hash": "hx"
+          },
+          "note": "An editor or an agent replaces the file."
+        },
+        {
+          "at": 3,
+          "event": "edit-applied",
+          "payload": {
+            "specHash": "h2",
+            "origin": "ui"
+          },
+          "note": "The session commits an edit at the same moment."
+        },
+        {
+          "at": 6,
+          "event": "conflict-resolution-chosen",
+          "payload": {
+            "how": "reload"
+          },
+          "note": "The user chooses Reload from disk."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "conflict-resolved-by-overwrite",
+      "name": "A save conflict resolved by overwriting disk",
+      "description": "As conflict-resolved-by-reload, but the user chooses \"Overwrite disk\": the disk hash becomes the base hash and the in-memory text is written over the other process's change. Pipelines P04 and P05.",
+      "behaviors": [
+        "project-session-flow",
+        "persistence-client-flow",
+        "dev-server-flow",
+        "workspace-disk-flow",
+        "workspace-watcher-flow",
+        "project-history-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "project-open-requested",
+          "payload": {
+            "name": "exegra"
+          },
+          "note": "The session opens the project and subscribes to its changes."
+        },
+        {
+          "at": 3,
+          "event": "disk-edited-externally",
+          "payload": {
+            "file": "spec",
+            "hash": "hx"
+          },
+          "note": "An editor or an agent replaces the file."
+        },
+        {
+          "at": 3,
+          "event": "edit-applied",
+          "payload": {
+            "specHash": "h2",
+            "origin": "ui"
+          },
+          "note": "The session commits an edit at the same moment."
+        },
+        {
+          "at": 6,
+          "event": "conflict-resolution-chosen",
+          "payload": {
+            "how": "overwrite"
+          },
+          "note": "The user chooses Overwrite disk."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "external-change-adopted",
+      "name": "A change made outside the session is adopted",
+      "description": "With the project open and nothing pending, another process replaces spec.jsonc: the watcher notices the new hash after its debounce, the session re-reads the project and adopts the text with Project.reload (origin external, undo history cleared) and writes nothing. Pipeline P06.",
+      "behaviors": [
+        "project-session-flow",
+        "persistence-client-flow",
+        "dev-server-flow",
+        "workspace-disk-flow",
+        "workspace-watcher-flow",
+        "project-history-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "project-open-requested",
+          "payload": {
+            "name": "exegra"
+          },
+          "note": "The session opens the project and subscribes to its changes."
+        },
+        {
+          "at": 3,
+          "event": "disk-edited-externally",
+          "payload": {
+            "file": "spec",
+            "hash": "hx"
+          },
+          "note": "git checkout, an editor or an agent."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "own-write-notice-ignored",
+      "name": "The notice of the session's own write is ignored",
+      "description": "An edit is saved; the watcher then notifies the change of spec.jsonc, which is the session's own write: its hash equals the base hash just acknowledged, so nothing is re-read or reloaded. Pipelines P01 and P06.",
+      "behaviors": [
+        "project-session-flow",
+        "persistence-client-flow",
+        "dev-server-flow",
+        "workspace-disk-flow",
+        "workspace-watcher-flow",
+        "project-history-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "project-open-requested",
+          "payload": {
+            "name": "exegra"
+          },
+          "note": "The session opens the project and subscribes to its changes."
+        },
+        {
+          "at": 3,
+          "event": "edit-applied",
+          "payload": {
+            "specHash": "h2",
+            "origin": "ui"
+          },
+          "note": "A valid edit."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "undo-restores-and-saves",
+      "name": "Undo restores the earlier text and saves it",
+      "description": "An edit is committed and saved, then undone: Project.undo restores the whole earlier text by a commit with origin undo, which the session writes like any edit, so the file holds the original text again and the journal has one line per accepted write. Pipeline P07.",
+      "behaviors": [
+        "project-session-flow",
+        "persistence-client-flow",
+        "dev-server-flow",
+        "workspace-disk-flow",
+        "project-history-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "project-open-requested",
+          "payload": {
+            "name": "exegra"
+          },
+          "note": "The session opens the project and subscribes to its changes."
+        },
+        {
+          "at": 3,
+          "event": "edit-applied",
+          "payload": {
+            "specHash": "h2",
+            "origin": "ui"
+          },
+          "note": "A valid edit."
+        },
+        {
+          "at": 6,
+          "event": "undo-requested",
+          "note": "Undo from the toolbar or the keyboard."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "layout-move-saved",
+      "name": "A dragged node is saved to the layout file only",
+      "description": "A node dragged in the scene becomes MovePresentationNode: a layout-only commit (no claim re-evaluation, semantic hash unchanged), written to layout.jsonc with its own base hash; spec.jsonc is not written. Pipeline P14.",
+      "behaviors": [
+        "project-session-flow",
+        "persistence-client-flow",
+        "dev-server-flow",
+        "workspace-disk-flow",
+        "project-history-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "project-open-requested",
+          "payload": {
+            "name": "exegra"
+          },
+          "note": "The session opens the project and subscribes to its changes."
+        },
+        {
+          "at": 3,
+          "event": "node-moved",
+          "payload": {
+            "layoutHash": "L2"
+          },
+          "note": "The drag ends in the scene."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "commit-reevaluates-claims",
+      "name": "A semantic commit re-evaluates the claims",
+      "description": "After the open's evaluation, a valid edit commits and onCommit re-evaluates every claim synchronously on the main thread (trace and metric claims run engine scenarios there), so the claim results are stamped with the new model. Pipeline P11.",
+      "behaviors": [
+        "project-session-flow",
+        "persistence-client-flow",
+        "dev-server-flow",
+        "workspace-disk-flow",
+        "project-history-flow",
+        "session-claims-flow",
+        "claim-evaluation-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "project-open-requested",
+          "payload": {
+            "name": "exegra"
+          },
+          "note": "The session opens the project and subscribes to its changes."
+        },
+        {
+          "at": 3,
+          "event": "edit-applied",
+          "payload": {
+            "specHash": "h2",
+            "origin": "ui"
+          },
+          "note": "A valid edit."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "export-after-save",
+      "name": "Export a project after its edit was saved",
+      "description": "An edit is committed and saved, then the toolbar exports the project: GET /__exegra/export reads the files on disk and the bundle is downloaded. Pipeline P09.",
+      "behaviors": [
+        "project-session-flow",
+        "persistence-client-flow",
+        "dev-server-flow",
+        "workspace-disk-flow",
+        "project-history-flow",
+        "toolbar-exchange-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "project-open-requested",
+          "payload": {
+            "name": "exegra"
+          },
+          "note": "The session opens the project and subscribes to its changes."
+        },
+        {
+          "at": 2,
+          "event": "edit-applied",
+          "payload": {
+            "specHash": "h2",
+            "origin": "ui"
+          },
+          "note": "A valid edit."
+        },
+        {
+          "at": 4,
+          "event": "export-clicked",
+          "note": "Export."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "import-bundle",
+      "name": "Import a project bundle over the open project",
+      "description": "The user imports a bundle into the open project's name: the toolbar checks its syntax, POST /__exegra/import overwrites spec.jsonc without a transaction, a base-hash check or a journal line (claim edits-only-via-transactions is violated by this path), the watcher notices the change, and the toolbar refreshes the project list and reopens the project, which then shows the imported text. Pipeline P08.",
+      "behaviors": [
+        "project-session-flow",
+        "persistence-client-flow",
+        "dev-server-flow",
+        "workspace-disk-flow",
+        "workspace-watcher-flow",
+        "project-history-flow",
+        "toolbar-exchange-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "project-open-requested",
+          "payload": {
+            "name": "exegra"
+          },
+          "note": "The session opens the project and subscribes to its changes."
+        },
+        {
+          "at": 3,
+          "event": "import-file-chosen",
+          "payload": {
+            "name": "exegra",
+            "specHash": "hb",
+            "syntaxOk": true
+          },
+          "note": "A bundle whose specification parses."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "import-unparseable-bundle",
+      "name": "A bundle with syntax errors is refused before it is sent",
+      "description": "The toolbar's analyzeSpec finds syntax errors in the bundle's spec.jsonc and refuses it; nothing is sent and nothing on disk changes. A bundle with validation errors only would be sent. Pipeline P08.",
+      "behaviors": [
+        "project-session-flow",
+        "persistence-client-flow",
+        "dev-server-flow",
+        "workspace-disk-flow",
+        "project-history-flow",
+        "toolbar-exchange-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "project-open-requested",
+          "payload": {
+            "name": "exegra"
+          },
+          "note": "The session opens the project and subscribes to its changes."
+        },
+        {
+          "at": 3,
+          "event": "import-file-chosen",
+          "payload": {
+            "name": "exegra",
+            "specHash": "hbad",
+            "syntaxOk": false
+          },
+          "note": "A bundle whose specification does not parse."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "generate-from-panel",
+      "name": "Generate the documents from the Realisation panel",
+      "description": "After an edit is saved, the Realisation panel derives the five documents from the session's current model and writes them with POST /__exegra/generated; the workspace rewrites the changed files under generated/, with no journal line and no change notice. Pipeline P23.",
+      "behaviors": [
+        "project-session-flow",
+        "persistence-client-flow",
+        "dev-server-flow",
+        "workspace-disk-flow",
+        "project-history-flow",
+        "realisation-generate-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "project-open-requested",
+          "payload": {
+            "name": "exegra"
+          },
+          "note": "The session opens the project and subscribes to its changes."
+        },
+        {
+          "at": 2,
+          "event": "edit-applied",
+          "payload": {
+            "specHash": "h2",
+            "origin": "ui"
+          },
+          "note": "A valid edit."
+        },
+        {
+          "at": 4,
+          "event": "generate-clicked",
+          "note": "Generate."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "real-write-recorded",
+      "name": "A real write recorded for replay",
+      "description": "The traffic recorder counts the request and the answer of one write with their requestId (traffic-recorder-flow counts them; the real recorder appends them to its stream, src/app/traffic-recorder.js). Pipeline P28. Live mode replays the stream itself through live-session.",
+      "behaviors": [
+        "persistence-client-flow",
+        "dev-server-flow",
+        "workspace-disk-flow",
+        "traffic-recorder-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "write-intent",
+          "payload": {
+            "name": "exegra",
+            "file": "spec",
+            "text": "h2",
+            "baseHash": "h1",
+            "requestId": 1
+          },
+          "note": "The session flushes a commit."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "simulation-panel-run",
+      "name": "Run a scenario in the Simulation panel and step through it",
+      "description": "The panel loads a scenario: the engine input is posted to the worker, the trace comes back by id and becomes the cursor; the user steps four times through a three-step trace (the fourth press changes nothing), steps back and runs to the end. Each step taken forward is pulsed in the scene. Pipelines P12 and P13.",
+      "behaviors": [
+        "sim-session-flow",
+        "engine-runner-flow",
+        "engine-worker-flow",
+        "scene-pulse-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "sim-load-requested",
+          "payload": {
+            "scenario": "visual-edit-flow"
+          },
+          "note": "Load a scenario."
+        },
+        {
+          "at": 4,
+          "event": "sim-step-requested"
+        },
+        {
+          "at": 5,
+          "event": "sim-step-requested"
+        },
+        {
+          "at": 6,
+          "event": "sim-step-requested"
+        },
+        {
+          "at": 7,
+          "event": "sim-step-requested",
+          "note": "One press more than the trace has steps."
+        },
+        {
+          "at": 8,
+          "event": "sim-back-requested"
+        },
+        {
+          "at": 9,
+          "event": "sim-run-to-end-requested"
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "simulation-reload-cancels-run",
+      "name": "A second load replaces a run in progress",
+      "description": "A scenario is loaded and, before its trace arrives, another is loaded: the runner terminates the worker, so the first run is never answered, and the session would discard it anyway because its token is stale. Only the second trace is adopted. Pipeline P12.",
+      "behaviors": [
+        "sim-session-flow",
+        "engine-runner-flow",
+        "engine-worker-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "sim-load-requested",
+          "payload": {
+            "scenario": "visual-edit-flow"
+          },
+          "note": "First load."
+        },
+        {
+          "at": 1,
+          "event": "sim-load-requested",
+          "payload": {
+            "scenario": "rejected-edit"
+          },
+          "note": "Second load while the first is running."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "preferences-remembered",
+      "name": "Interaction state survives a reload",
+      "description": "The user selects an entity and switches to the Data view, opens a panel, then reloads the page: the session restores the selection and the view from localStorage exegra.session (and the responsive layout its arrangement from exegra.layout). Pipeline P16.",
+      "behaviors": [
+        "interaction-prefs-flow",
+        "responsive-layout-flow",
+        "local-storage-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "entity-selected",
+          "payload": {
+            "id": "session"
+          }
+        },
+        {
+          "at": 1,
+          "event": "view-switched",
+          "payload": {
+            "view": "data"
+          },
+          "note": "The user picks the data view; the scene switches to it."
+        },
+        {
+          "at": 2,
+          "event": "panel-toggled",
+          "payload": {
+            "open": false
+          }
+        },
+        {
+          "at": 3,
+          "event": "page-reloaded"
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "camera-remembered",
+      "name": "The camera of a view is restored when the user comes back to it",
+      "description": "The user moves the camera in the structural view, switches to the Data view (which has no stored camera, so it keeps and stores the structural camera), moves the camera there and switches back: the structural camera is restored from sessionStorage. Pipeline P17.",
+      "behaviors": [
+        "camera-memory-flow",
+        "session-storage-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "camera-moved",
+          "payload": {
+            "camera": "cA"
+          },
+          "note": "Orbit in the structural view."
+        },
+        {
+          "at": 2,
+          "event": "view-switched",
+          "payload": {
+            "view": "data"
+          }
+        },
+        {
+          "at": 3,
+          "event": "camera-moved",
+          "payload": {
+            "camera": "cB"
+          }
+        },
+        {
+          "at": 5,
+          "event": "view-switched",
+          "payload": {
+            "view": "structural"
+          }
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "cli-apply",
+      "name": "exegra apply writes the specification and the layout",
+      "description": "An agent applies operations that change both files: the command reads the project, applies the transaction in process, writes spec.jsonc and then layout.jsonc with the hashes it read (two journal lines) and prints a success envelope. Pipelines P18 and P19.",
+      "behaviors": [
+        "cli-process-flow",
+        "workspace-disk-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "cli-command-request",
+          "payload": {
+            "command": "apply",
+            "options": "--file ops.json",
+            "requestId": 1
+          },
+          "note": "node cli/exegra.js apply --file ops.json"
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "cli-apply-partial-write",
+      "name": "exegra apply after the layout changed on disk: a partial write",
+      "description": "As cli-apply, but another process replaces layout.jsonc after the command read it: spec.jsonc is written (with its journal line), the layout write conflicts, and the command fails with write.conflict saying that the specification was already written. The files now hold the new specification and the other process's layout: a change that bypasses the transaction's atomicity (finding F05). Pipeline P19.",
+      "behaviors": [
+        "cli-process-flow",
+        "workspace-disk-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "cli-command-request",
+          "payload": {
+            "command": "apply",
+            "options": "--file ops.json",
+            "requestId": 1
+          },
+          "note": "node cli/exegra.js apply --file ops.json"
+        },
+        {
+          "at": 1,
+          "event": "disk-edited-externally",
+          "payload": {
+            "file": "layout",
+            "hash": "Lx"
+          },
+          "note": "The application saves a dragged node meanwhile."
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "cli-verify-with-open-session",
+      "name": "exegra verify while the application has the project open",
+      "description": "The application has the project open and watches it; an agent runs exegra verify, which reads the project, runs the test evidence, replaces evidence/results.json (no journal line) and re-evaluates the claims before printing its envelope. The watcher notices the recorded results; the session re-reads them and re-evaluates its claims. Pipelines P20 and P11.",
+      "behaviors": [
+        "cli-process-flow",
+        "test-runner-flow",
+        "workspace-disk-flow",
+        "workspace-watcher-flow",
+        "dev-server-flow",
+        "persistence-client-flow",
+        "project-session-flow",
+        "session-claims-flow",
+        "claim-evaluation-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "project-open-requested",
+          "payload": {
+            "name": "exegra"
+          },
+          "note": "The application opens the project."
+        },
+        {
+          "at": 3,
+          "event": "cli-command-request",
+          "payload": {
+            "command": "verify",
+            "options": "--skip-browser",
+            "requestId": 1
+          },
+          "note": "node cli/exegra.js verify"
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "cli-trace-written",
+      "name": "exegra trace --out writes the trace",
+      "description": "The command reads the project, runs the scenario in process (main thread of the command), writes the stable-JSON trace to the --out file and prints {written, stepCount}. Pipelines P18 and P21.",
+      "behaviors": [
+        "cli-process-flow",
+        "workspace-disk-flow",
+        "engine-call-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "cli-command-request",
+          "payload": {
+            "command": "trace",
+            "options": "visual-edit-flow",
+            "requestId": 1
+          },
+          "note": "node cli/exegra.js trace visual-edit-flow --out trace.json"
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "cli-trace-refused",
+      "name": "exegra trace when the engine is not built",
+      "description": "The WebAssembly module is missing, runScenario throws and the command fails with simulate.failed; no trace file is written. Pipeline P21.",
+      "behaviors": [
+        "cli-process-flow",
+        "workspace-disk-flow",
+        "engine-call-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "engine-not-built",
+          "note": "npm run build:engine has not run."
+        },
+        {
+          "at": 0,
+          "event": "cli-command-request",
+          "payload": {
+            "command": "trace",
+            "options": "visual-edit-flow",
+            "requestId": 1
+          },
+          "note": "node cli/exegra.js trace visual-edit-flow --out trace.json"
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "prove-accepted",
+      "name": "exegra prove: Lean accepts the theorems",
+      "description": "A scenario's state invariants are explored in Lean within the bound; the proof file is written to formal/generated/ and checked, and each claim Lean accepted is reported with its axioms. Pipeline P22.",
+      "behaviors": [
+        "prove-flow",
+        "lean-toolchain-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "prove-requested",
+          "payload": {
+            "scenario": "lost-update-race"
+          },
+          "note": "node cli/exegra.js prove lost-update-race"
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "prove-lean-rejects",
+      "name": "exegra prove: Lean refuses the proof file",
+      "description": "The proof file does not check, so no claim result is reported. Pipeline P22.",
+      "behaviors": [
+        "prove-flow",
+        "lean-toolchain-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "lean-rejects-proof"
+        },
+        {
+          "at": 0,
+          "event": "prove-requested",
+          "payload": {
+            "scenario": "lost-update-race"
+          },
+          "note": "node cli/exegra.js prove lost-update-race"
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "markdown-import",
+      "name": "Import a Markdown specification",
+      "description": "The importer builds a linked project's specification from its Markdown source; the coverage gate passes and spec.jsonc is written directly: the workspace sees a change made outside Exegra (no transaction, no base-hash check, no journal line; finding F05). Pipeline P24.",
+      "behaviors": [
+        "markdown-import-flow",
+        "workspace-disk-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "markdown-import-run",
+          "note": "node tools/import-markdown.js"
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "markdown-import-coverage-fails",
+      "name": "A Markdown import whose coverage gate fails",
+      "description": "The source holds content the import map does not cover: the report lists it and nothing is written. Pipeline P24.",
+      "behaviors": [
+        "markdown-import-flow",
+        "workspace-disk-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "markdown-source-unmapped"
+        },
+        {
+          "at": 0,
+          "event": "markdown-import-run",
+          "note": "node tools/import-markdown.js"
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "engine-conformance-agrees",
+      "name": "The engine reproduces the goldens",
+      "description": "Conformance and differential runs on an engine that agrees: conformance reports success and nothing is saved under test-results/differential/. Pipeline P27.",
+      "behaviors": [
+        "conformance-flow",
+        "engine-under-test-flow",
+        "differential-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "conformance-run"
+        },
+        {
+          "at": 0,
+          "event": "differential-run"
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "engine-conformance-diverges",
+      "name": "The engine differs from a golden trace",
+      "description": "The engine returns a trace that differs from a golden one: conformance reports the mismatch and the differential run saves the input and its result. Pipeline P27.",
+      "behaviors": [
+        "conformance-flow",
+        "engine-under-test-flow",
+        "differential-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "engine-diverges"
+        },
+        {
+          "at": 0,
+          "event": "conformance-run"
+        },
+        {
+          "at": 0,
+          "event": "differential-run"
+        }
+      ],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "live-session",
+      "name": "Live: this running Exegra, replayed",
+      "description": "The behaviors that the simulator panel's Live mode replays the running application's own recorded events through (src/core/replay.js, component self-model-replay). It has no input steps: its input is the stream of the traffic recorder, from page load on. Run as an ordinary scenario it does nothing.",
+      "behaviors": [
+        "app-start-flow",
+        "engine-module-flow",
+        "project-session-flow",
+        "persistence-client-flow",
+        "dev-server-flow",
+        "workspace-disk-flow",
+        "workspace-watcher-flow",
+        "project-history-flow",
+        "session-claims-flow",
+        "claim-evaluation-flow",
+        "toolbar-exchange-flow",
+        "realisation-generate-flow",
+        "sim-session-flow",
+        "engine-runner-flow",
+        "engine-worker-flow",
+        "scene-pulse-flow",
+        "interaction-prefs-flow",
+        "responsive-layout-flow",
+        "local-storage-flow",
+        "camera-memory-flow",
+        "session-storage-flow"
+      ],
+      "steps": [],
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "two-session-edit-race",
+      "name": "Two editors save from the same base",
+      "description": "Two sessions read one revision and submit different edits before either receives a reply. The checker permutes these two simultaneous requests when explaining a measured history.",
+      "behaviors": [
+        "shared-base-write-flow"
+      ],
+      "steps": [
+        {
+          "at": 0,
+          "event": "two-session-write",
+          "payload": {
+            "attempt": "a",
+            "base": "initial",
+            "value": "edit-a"
+          }
+        },
+        {
+          "at": 0,
+          "event": "two-session-write",
+          "payload": {
+            "attempt": "b",
+            "base": "initial",
+            "value": "edit-b"
+          }
+        }
+      ],
+      "faultModel": "local-workstation"
+    }
+  ]
+}

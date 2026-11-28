@@ -154,7 +154,8 @@ test('invalid operations are rejected atomically and leave the committed model u
     [{ type: 'SetProperty', id: 'api', property: 'category', value: 'wizard' }, 'validation.failed'],
     [{ type: 'CreateEntity', kind: 'component', data: { id: 'api', name: 'Dup', category: 'logical' } }, 'id.duplicate'],
     [{ type: 'CreateRelationship', kind: 'calls', from: 'api', to: 'ghost' }, 'validation.failed'],
-    [{ type: 'SetProperty', id: 'api', property: 'parent', value: 'db' }, 'validation.failed'],
+    // any element may contain others now (WG-5692); a component that contains itself is still refused
+    [{ type: 'SetProperty', id: 'api', property: 'parent', value: 'api' }, 'validation.failed'],
     [{ type: 'Teleport', id: 'api' }, 'op.unknown'],
     // second op fails: the first must not survive
     [[{ type: 'SetProperty', id: 'api', property: 'name', value: 'X' }, { type: 'DeleteEntity', id: 'nope' }], 'entity.unknown'],

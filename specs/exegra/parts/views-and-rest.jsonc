@@ -1,0 +1,312 @@
+// Views, environments, failure modes, fault models, integrity rules, hierarchies, facets and cuts.
+{
+  // ---- Views -----------------------------------------------------------------------------
+  // The first declared view is the default one.
+  "views": [
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "projection": "structural",
+      "description": "Every component and relationship of Exegra, grouped by subsystem.",
+      "display": {
+        "showPorts": true
+      },
+      "cut": "l1"
+    },
+    {
+      "id": "realisation",
+      "name": "Realisation",
+      "projection": "structural",
+      "description": "Components coloured by how they are realised: manual, model-configured, generated, not implemented.",
+      "display": {
+        "colorBy": "implementation"
+      },
+      "cut": "l1"
+    },
+    {
+      "id": "data-and-edit-flow",
+      "name": "Data and edit flow",
+      "projection": "structural",
+      "description": "Only relationships that carry data, edits or derived content: data-flow, submits-edits, reads, writes, projects, generates.",
+      "filter": {
+        "relationshipKinds": [
+          "data-flow",
+          "submits-edits",
+          "reads",
+          "writes",
+          "projects",
+          "generates"
+        ]
+      },
+      "cut": "l1"
+    },
+    {
+      "id": "semantic-core-only",
+      "name": "Semantic core",
+      "projection": "structural",
+      "description": "Only the components inside the semantic core and the relationships among them.",
+      "filter": {
+        "within": "semantic-core"
+      },
+      "cut": "semantic-core-expanded"
+    },
+    { "id": "claims", "name": "Claims", "projection": "claims", "description": "Claims, their subjects, assumptions and evidence, coloured by evaluation status." },
+    { "id": "behavior", "name": "Edit flow behavior", "projection": "behavior", "description": "The state machines of Exegra's own edit flow and the scenarios that run them." },
+    { "id": "references", "name": "References", "projection": "references", "description": "The selected entity and everything within one reference hop of it, in either direction, whatever its kind.", "display": { "depth": 1 } }
+  ],
+  "environments": [
+    {
+      "id": "local-workstation-env",
+      "name": "Local workstation",
+      "description": "A developer workstation running the Vite development server in Node, the application in one browser tab and the project files on the local file system.",
+      "guarantees": [
+        {
+          "aspect": "zone-count",
+          "value": 1,
+          "source": "single-workstation"
+        },
+        {
+          "aspect": "region-count",
+          "value": 1,
+          "source": "single-workstation"
+        },
+        {
+          "aspect": "clock-skew",
+          "value": 0,
+          "unit": "ms",
+          "source": "single-workstation"
+        },
+        {
+          "aspect": "message-loss",
+          "value": "none on loopback while both ends run",
+          "source": "single-workstation"
+        },
+        {
+          "aspect": "storage-durability",
+          "value": "local disk; a rename over the target is atomic only where the file system honours it",
+          "source": "filesystem-honours-atomic-rename"
+        }
+      ]
+    }
+  ],
+  "failureModes": [
+    {
+      "id": "fm-tab-reload-during-save",
+      "name": "Tab crash or reload during a save",
+      "kind": "restart",
+      "target": "session",
+      "scope": "process",
+      "description": "The browser tab crashes or is reloaded while a committed edit is being written: the in-memory model is lost and the write may or may not have reached the server.",
+      "rate": {
+        "value": 12,
+        "per": "year",
+        "source": "workstation-rates-assumed"
+      },
+      "duration": {
+        "typical": 1,
+        "max": 10,
+        "unit": "second",
+        "source": "workstation-rates-assumed"
+      }
+    },
+    {
+      "id": "fm-rename-not-atomic",
+      "name": "Rename over the target is not atomic",
+      "kind": "partial-apply",
+      "target": "workspace-service",
+      "scope": "host",
+      "description": "On Windows the replacing rename can be blocked; the workspace service retries and finally writes in place, so a crash at that moment can leave a partly written file.",
+      "rate": {
+        "value": 1,
+        "per": "month",
+        "source": "filesystem-honours-atomic-rename"
+      }
+    },
+    {
+      "id": "fm-concurrent-spec-edit",
+      "name": "Concurrent external edit of the specification",
+      "kind": "concurrent-change",
+      "target": "specification-file",
+      "scope": "host",
+      "description": "Another process (an editor, an agent command, git) changes spec.jsonc after the session last read or wrote it.",
+      "rate": {
+        "value": 1,
+        "per": "day",
+        "source": "workstation-rates-assumed"
+      }
+    },
+    {
+      "id": "fm-dev-server-stops",
+      "name": "Development server stops",
+      "kind": "dependency-outage",
+      "target": "persistence-client-calls-dev-server-plugin",
+      "scope": "process",
+      "description": "The Vite development server exits or is restarted; the persistence client's requests and event stream fail until it is back.",
+      "rate": {
+        "value": 4,
+        "per": "week",
+        "source": "workstation-rates-assumed"
+      },
+      "duration": {
+        "typical": 5,
+        "max": 120,
+        "unit": "second",
+        "source": "workstation-rates-assumed"
+      }
+    },
+    {
+      "id": "fm-disk-full",
+      "name": "Write fails because the disk is full",
+      "kind": "other",
+      "target": "workspace-service",
+      "scope": "host",
+      "description": "Writing the temporary file or renaming it fails for lack of space; the write is reported as failed and the target is not replaced. If space runs out after the rename, the journal append fails instead: the target is replaced, the write is reported as failed and it has no journal line (fault journal-append-fails).",
+      "rate": {
+        "value": 1,
+        "per": "year",
+        "source": "workstation-rates-assumed"
+      },
+      "duration": {
+        "typical": 600,
+        "max": 86400,
+        "unit": "second",
+        "source": "workstation-rates-assumed"
+      }
+    }
+  ],
+  "faultModels": [
+    {
+      "id": "local-workstation",
+      "name": "Local workstation",
+      "environment": "local-workstation-env",
+      "description": "The failures of an ordinary development session: the tab, the development server, the file system and other processes touching the specification. One at a time.",
+      "modes": [
+        "fm-tab-reload-during-save",
+        "fm-rename-not-atomic",
+        "fm-concurrent-spec-edit",
+        "fm-dev-server-stops",
+        "fm-disk-full"
+      ],
+      "bounds": [
+        {
+          "maxConcurrent": 1,
+          "source": "one-fault-at-a-time"
+        }
+      ]
+    }
+  ],
+  "integrityRules": [
+    {
+      "id": "subsystems-contain-components",
+      "severity": "error",
+      "statement": "Every subsystem contains at least one component.",
+      "rule": "forall s : component where s.kind == \"subsystem\", exists c : component, c.parent == s",
+      "rationale": "An empty subsystem draws a container with nothing in it and makes containment claims hold vacuously."
+    },
+    {
+      "id": "components-state-purpose",
+      "severity": "error",
+      "statement": "Every component states its purpose.",
+      "rule": "forall c : component, nonempty c.purpose",
+      "rationale": "A component is specified by what it is for; traceability and the generated architecture document read the purpose."
+    },
+    {
+      "id": "tested-claims-name-subjects",
+      "severity": "error",
+      "statement": "Every claim that test evidence supports names what it is about.",
+      "rule": "forall e : evidence where e.kind == \"test\", forall c in e.claim, nonempty c.subjects",
+      "rationale": "Selecting a claim highlights its subjects; a tested claim with none cannot be found from the scene."
+    }
+  ],
+  "hierarchies": [
+    {
+      "id": "runtime",
+      "name": "Runtime placement",
+      "description": "Where each element's code runs, from its runsIn property: browser code inside the browser platform, Node.js code inside the Node.js runtime, and code that runs in both directly inside the JavaScript runtime, which contains the two platforms. Elements that state no runsIn (the system, subsystems whose members run in different places, stores, people) are roots. Module elements follow their component.",
+      "groups": [
+        {
+          "parent": "javascript-runtime",
+          "members": [
+            "browser-platform",
+            "nodejs-runtime"
+          ]
+        }
+      ],
+      "groupBy": {
+        "property": "runsIn",
+        "parents": {
+          "browser": "browser-platform",
+          "node": "nodejs-runtime",
+          "both": "javascript-runtime"
+        }
+      }
+    }
+  ],
+  "facets": [
+    {
+      "id": "verdict-kernel",
+      "name": "Verdict kernel",
+      "description": "The code that decides whether a claim holds: model derivation, the semantic hash, engine-input derivation, the engine, the explorer and temporal checker, claim verdicts and their helpers, and transactions. A cross-cutting concern over several components of the semantic core, so a facet: selected and claimed over, never contracted.",
+      "tag": "verdict-kernel"
+    }
+  ],
+  "cuts": [
+    {
+      "id": "l0",
+      "name": "L0: Exegra in its environment",
+      "description": "The roots of the logical hierarchy: the system exegra, the people and agents that use it, and the external systems and libraries it relies on.",
+      "expand": []
+    },
+    {
+      "id": "l1",
+      "name": "L1: subsystems",
+      "description": "Exegra opened once: its six subsystems and the composition root, with the environment unchanged.",
+      "depth": 1
+    },
+    {
+      "id": "persistence-expanded",
+      "name": "Persistence expanded",
+      "description": "L1 with persistence opened into its components: a mixed-scale cut.",
+      "depth": 1,
+      "expand": [
+        "persistence"
+      ]
+    },
+    {
+      "id": "semantic-core-expanded",
+      "name": "Semantic core expanded",
+      "description": "L1 with the semantic core opened into its components: a mixed-scale cut.",
+      "depth": 1,
+      "expand": [
+        "semantic-core"
+      ]
+    },
+    {
+      "id": "module-level",
+      "name": "Module level",
+      "description": "Every composite opened: the module elements (one per declared implementation file or directory) and the elements with nothing finer declared.",
+      "finest": true
+    },
+    {
+      "id": "runtime-hosts",
+      "name": "Runtime: hosts",
+      "description": "The roots of the runtime placement hierarchy: the JavaScript runtime with everything placed in it, and the elements that state no runtime.",
+      "hierarchy": "runtime",
+      "expand": []
+    },
+    {
+      "id": "runtime-platforms",
+      "name": "Runtime: platforms",
+      "description": "The JavaScript runtime opened: the browser platform, the Node.js runtime and the code that runs in both.",
+      "hierarchy": "runtime",
+      "depth": 1
+    },
+    {
+      "id": "runtime-placed",
+      "name": "Runtime: placed components",
+      "description": "The two platforms opened as well: every component placed in the runtime that hosts its code.",
+      "hierarchy": "runtime",
+      "depth": 2
+    }
+  ]
+}

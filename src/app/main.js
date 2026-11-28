@@ -22,22 +22,27 @@ const session = createSession();
 const shell = mountShell(session);
 
 const view = createSceneView(shell.sceneHost, {
-  onSelect: (id) => {
-    session.select(id, { source: 'scene' });
+  onSelect: (id, hit) => {
+    // A node selects the element it draws (a module element has no entity of its own); an edge selects its first
+    // witness and remembers the edge, so the inspector lists every witness of that derived interaction.
+    const node = hit?.kind === 'node' ? session.scene.nodes.find((n) => n.id === hit.sceneId) : null;
+    if (node?.elementKind === 'module') session.select(node.id, { source: 'scene', edge: null });
+    else session.select(id, { source: 'scene', edge: hit?.kind === 'edge' ? hit.sceneId : null });
     // A tap in the scene brings the inspector forward: at peek on a phone (name, kind, status).
     if (id) shell.revealInspector();
     else shell.dismissInspectorPeek();
   },
   onHover: (id) => session.setHover(id),
-  onActivate: (id) => {
-    const e = session.model?.entities.get(id);
-    if (e?.kind === 'component' && e.data.kind === 'subsystem') session.toggleCollapsed(id);
-    else session.requestFit([id]);
+  onActivate: (id, hit) => {
+    // Double-click on a block with members expands it, on an opened element collapses it (the cut changes).
+    const node = hit?.kind === 'node' ? session.scene.nodes.find((n) => n.id === hit.sceneId) : null;
+    if (node && (node.collapsed || node.container) && session.currentCut()) session.toggleCollapsed(node.id);
+    else session.requestFit([node?.id ?? id]);
   },
   onMoveEnd: (moves) => {
     const ops = moves
       .filter((m) => session.model?.entities.has(m.id))
-      .map((m) => ({ type: 'MovePresentationNode', view: session.viewId, id: m.id, x: m.x, z: m.z }));
+      .map((m) => ({ type: 'MovePresentationNode', view: session.layoutKey(), id: m.id, x: m.x, z: m.z }));
     if (ops.length) session.apply(ops, { label: ops.length === 1 ? `Move ${ops[0].id}` : `Move ${ops.length} nodes` });
   },
   onConnect: (fromId, toId) => {
@@ -59,6 +64,12 @@ function selectionIds() {
   const id = session.selection;
   if (!id) return [];
   const e = session.model?.entities.get(id);
+  // A relationship is shown on the edge it was selected on, or else on the derived interaction it is a witness of.
+  if (e?.kind === 'relationship') {
+    const on = session.selectedEdge ? session.scene.edges.find((x) => x.id === session.selectedEdge && (x.witnesses ?? []).includes(id)) : null;
+    const edge = on ?? session.scene.edges.find((x) => !x.pathSummary && (x.witnesses ?? []).includes(id));
+    return edge ? [id, edge.id] : [id];
+  }
   // A nested entity that has no node of its own is shown on its owner.
   return e?.owner && !session.scene.nodes.some((n) => n.id === id) && !session.scene.edges.some((x) => x.id === id) ? [id, e.owner] : [id];
 }

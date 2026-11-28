@@ -23,15 +23,15 @@
     { "id": "cdn", "name": "CDN", "category": "infrastructure", "purpose": "Holds public page variants for at most 60 seconds (CLX-105)." }
   ],
   "relationships": [
-    { "id": "kernel-calls-page-tier", "kind": "calls", "from": "frontend-kernel", "to": "page-tier", "description": "Requests pages and fragments." },
+    { "id": "kernel-calls-page-tier", "kind": "invokes", "from": "frontend-kernel", "to": "page-tier", "description": "Requests pages and fragments." },
     { "id": "kernel-subscribes-stream", "kind": "subscribes", "from": "frontend-kernel", "to": "event-stream", "description": "Receives key-changed and principal notices." },
-    { "id": "page-tier-calls-identity", "kind": "calls", "from": "page-tier", "to": "identity-unit", "description": "Reads sessions, principals and display names." },
-    { "id": "page-tier-calls-commerce", "kind": "calls", "from": "page-tier", "to": "commerce-unit", "description": "Reads receipts and trades." },
-    { "id": "page-tier-calls-platform", "kind": "calls", "from": "page-tier", "to": "platform-unit", "description": "Reads games and leaderboard views." },
+    { "id": "page-tier-calls-identity", "kind": "invokes", "from": "page-tier", "to": "identity-unit", "description": "Reads sessions, principals and display names." },
+    { "id": "page-tier-calls-commerce", "kind": "invokes", "from": "page-tier", "to": "commerce-unit", "description": "Reads receipts and trades." },
+    { "id": "page-tier-calls-platform", "kind": "invokes", "from": "page-tier", "to": "platform-unit", "description": "Reads games and leaderboard views." },
     { "id": "identity-publishes-stream", "kind": "publishes", "from": "identity-unit", "to": "event-stream", "description": "Key-changed, signed-out and revoked notices." },
     { "id": "commerce-reads-identity", "kind": "reads", "from": "commerce-unit", "to": "identity-unit", "description": "Reads the counterpart's display name for a snapshot at the time of the act." },
     { "id": "platform-reads-identity", "kind": "reads", "from": "platform-unit", "to": "identity-unit", "description": "Reads standing, privacy and age band for the derived views." },
-    { "id": "cdn-calls-page-tier", "kind": "calls", "from": "cdn", "to": "page-tier", "description": "Fetches a missing public page variant from the origin (INF-031)." }
+    { "id": "cdn-calls-page-tier", "kind": "invokes", "from": "cdn", "to": "page-tier", "description": "Fetches a missing public page variant from the origin (INF-031)." }
   ],
   "records": [
     {

@@ -3,6 +3,7 @@
 
 import { LEAF_W, LEAF_D, SMALL_W, SMALL_D, PAD, LABEL_EXTRA, SMALL_KINDS } from './constants.js';
 import { buildModel } from './model.js';
+import { refineSlots } from './refine.js';
 
 /** @typedef {import('../types.js').SceneModel} SceneModel */
 /** @typedef {import('../types.js').Placement} Placement */
@@ -25,7 +26,7 @@ import { buildModel } from './model.js';
  * @returns {Placement}
  */
 export function solveLayout(scene, pinned, arrange, opts) {
-  const { nodes, byId, children, depth, edgesAt } = buildModel(scene);
+  const { nodes, byId, par, children, depth, edgesAt } = buildModel(scene);
 
   /** @type {Map<string, [number, number]>} */
   const size = new Map();
@@ -78,6 +79,9 @@ export function solveLayout(scene, pinned, arrange, opts) {
     }
   };
   place(null, 0, 0);
+
+  // Interchangeable leaves take the slots that make edges leaving containers cross least (./refine.js).
+  refineSlots(scene, rect, par, children, new Set(Object.keys(pinned ?? {})));
 
   // Pins: leaves only.
   let pinnedAny = false;

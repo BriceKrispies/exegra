@@ -28,6 +28,7 @@
 
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parse as parseJsonc } from 'jsonc-parser';
 
 export const MANIFEST_KEY = 'specParts';
@@ -207,10 +208,10 @@ function idOf(src, item) {
 /**
  * Assembles parts given in manifest order as {file, text}.
  * @param {{file: string, text: string}[]} parts
- * @returns {{text: string}}
+ * @returns {{text: string, segments: {start: number, length: number, file: string, offset: number}[]}}
  */
 export function assembleParts(parts) {
-  /** @type {Map<string, {array: boolean, items: string[], files: string[]}>} */
+  /** @type {Map<string, {array: boolean, items: string[], files: string[], where: {file: string, offset: number}[]}>} */
   const sections = new Map();
   const tops = new Map();
   for (const part of parts) {
@@ -227,12 +228,19 @@ export function assembleParts(parts) {
         throw new SpecManifestError('duplicate-section', `the section "${m.key}" is in both ${s.files[0]} and ${part.file}; only an array section may be in more than one part`);
       }
       if (!s) {
-        s = { array, items: [], files: [] };
+        s = { array, items: [], files: [], where: [] };
         sections.set(m.key, s);
       }
       s.files.push(part.file);
-      if (m.items === null) s.items.push(top.src.slice(m.start, m.end));
-      else for (const item of m.items) s.items.push(top.src.slice(item.start, item.end));
+      if (m.items === null) {
+        s.items.push(top.src.slice(m.start, m.end));
+        s.where.push({ file: part.file, offset: m.start });
+      } else {
+        for (const item of m.items) {
+          s.items.push(top.src.slice(item.start, item.end));
+          s.where.push({ file: part.file, offset: item.start });
+        }
+      }
     }
   }
   for (const [key, s] of sections) {
@@ -252,13 +260,32 @@ export function assembleParts(parts) {
       }
     }
   }
-  const out = [];
+  // The assembled text, and where each item of it came from: its offset there, its length and its place in a part.
+  /** @type {{start: number, length: number, file: string, offset: number}[]} */
+  const segments = [];
+  let text = '{\n';
+  let first = true;
   for (const [key, s] of sections) {
+    if (!first) text += ',\n';
+    first = false;
     const q = JSON.stringify(key);
-    if (s.array) out.push(s.items.length ? `  ${q}: [\n${s.items.map((t) => `    ${t}`).join(',\n')}\n  ]` : `  ${q}: []`);
-    else out.push(`  ${q}: ${s.items[0]}`);
+    if (!s.array) {
+      text += `  ${q}: `;
+      segments.push({ start: text.length, length: s.items[0].length, file: s.where[0].file, offset: s.where[0].offset });
+      text += s.items[0];
+    } else if (s.items.length === 0) {
+      text += `  ${q}: []`;
+    } else {
+      text += `  ${q}: [\n`;
+      s.items.forEach((item, i) => {
+        text += '    ';
+        segments.push({ start: text.length, length: item.length, file: s.where[i].file, offset: s.where[i].offset });
+        text += i < s.items.length - 1 ? `${item},\n` : item;
+      });
+      text += '\n  ]';
+    }
   }
-  return { text: `{\n${out.join(',\n')}\n}\n` };
+  return { text: `${text}\n}\n`, segments };
 }
 
 /**
@@ -268,6 +295,7 @@ export function assembleParts(parts) {
  * @property {string} file        the absolute path of the file
  * @property {{file: string, text: string}[]} parts  the part files as read (none when not a manifest)
  * @property {Record<string, any>} placement  the manifest's placement table
+ * @property {(offset: number) => {file: string, line: number, column: number} | null} locate  where an offset of `text` is in the part files; null for a file that is not a manifest, or an offset outside every entity
  */
 
 /**
@@ -276,7 +304,7 @@ export function assembleParts(parts) {
  * @returns {ResolvedSpec}
  */
 export function resolveSpecText(file, text, read = (p) => readFileSync(p, 'utf8')) {
-  if (!isManifest(text)) return { manifest: false, text, file, parts: [], placement: {} };
+  if (!isManifest(text)) return { manifest: false, text, file, parts: [], placement: {}, locate: () => null };
   const { parts: names, placement } = readManifest(text, file);
   const dir = path.dirname(file);
   const parts = names.map((name) => {
@@ -289,20 +317,79 @@ export function resolveSpecText(file, text, read = (p) => readFileSync(p, 'utf8'
       throw err;
     }
   });
-  return { manifest: true, text: assembleParts(parts).text, file, parts, placement };
+  const assembled = assembleParts(parts);
+  const textOf = new Map(parts.map((p) => [p.file, p.text]));
+  /** @type {Map<string, number[]>} */
+  const lineStarts = new Map();
+  /** @param {number} offset */
+  const locate = (offset) => {
+    const { segments } = assembled;
+    let lo = 0;
+    let hi = segments.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (segments[mid].start <= offset) lo = mid; else hi = mid - 1;
+    }
+    const seg = segments[lo];
+    if (!seg || offset < seg.start || offset >= seg.start + seg.length) return null;
+    const at = seg.offset + (offset - seg.start);
+    let starts = lineStarts.get(seg.file);
+    if (!starts) {
+      starts = [0];
+      const t = /** @type {string} */ (textOf.get(seg.file));
+      for (let i = t.indexOf('\n'); i >= 0; i = t.indexOf('\n', i + 1)) starts.push(i + 1);
+      lineStarts.set(seg.file, starts);
+    }
+    let a = 0;
+    let b = starts.length - 1;
+    while (a < b) {
+      const mid = (a + b + 1) >> 1;
+      if (starts[mid] <= at) a = mid; else b = mid - 1;
+    }
+    return { file: seg.file, line: a + 1, column: at - starts[a] + 1 };
+  };
+  return { manifest: true, text: assembled.text, file, parts, placement, locate };
 }
 
 /**
- * The part for an entity or a section that no part holds yet.
+ * The part a placement rule names for an entity.
+ *
+ * A rule is a part name, or {"by": "<field>", "values": {<value>: <part>}, "default": <part>, "via": [...]}.
+ * The field of the entity (a string, or the items of a list, tried in order) is looked up in `values`. With
+ * `via`, a value that `values` does not name is followed to the entity it identifies: each hop is
+ * {"section": "<section>", "field": "<field>", "repeat": <bool>}, the entity with that id in that section, whose
+ * `field` gives the next values (`repeat` follows the same hop again, up the chain of a `parent` field). So a
+ * claim whose `subjects` are components is placed by the first subject, or ancestor of one, that `values` names,
+ * and an evidence record by the `subjects` of its `claim`. `index(section)` gives the entities of a section by id.
  * @param {Record<string, any>} placement @param {string[]} names @param {string} section @param {any} item the entity, or undefined for a whole section
+ * @param {(section: string) => Map<string, any>} [index]
  * @returns {string|null} a part name from the manifest, or null when the table says nothing
  */
-function placedBy(placement, names, section, item) {
+export function placeEntity(placement, names, section, item, index) {
   const rule = placement[section];
   if (typeof rule === 'string') return rule;
   if (rule && typeof rule === 'object') {
-    const v = item && typeof item === 'object' ? item[rule.by] : undefined;
-    return (typeof v === 'string' && rule.values?.[v]) || rule.default || names[0] || null;
+    const raw = item && typeof item === 'object' ? item[rule.by] : undefined;
+    const via = Array.isArray(rule.via) ? rule.via : [];
+    const values = rule.values ?? {};
+    /** @param {any} v @param {number} hop @param {Set<string>} seen @returns {string|undefined} */
+    const walk = (v, hop, seen) => {
+      for (const one of Array.isArray(v) ? v : [v]) {
+        if (typeof one !== 'string') continue;
+        if (Object.prototype.hasOwnProperty.call(values, one)) return values[one];
+        const step = via[hop];
+        if (!step || !index) continue;
+        const key = `${hop} ${one}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const entity = index(step.section).get(one);
+        if (!entity) continue;
+        const found = walk(entity[step.field], step.repeat ? hop : hop + 1, seen);
+        if (found !== undefined) return found;
+      }
+      return undefined;
+    };
+    return walk(raw, 0, new Set()) || rule.default || names[0] || null;
   }
   return null;
 }
@@ -341,6 +428,22 @@ export function planWrite(resolved, newText) {
 
   // Where each member of the new text goes.
   const next = scanTopLevel(newText, 'the edited specification');
+  /** @type {Map<string, Map<string, any>>} */
+  const indexes = new Map();
+  const index = (/** @type {string} */ section) => {
+    let found = indexes.get(section);
+    if (!found) {
+      found = new Map();
+      const m = next.members.find((x) => x.key === section);
+      for (const it of m?.items ?? []) {
+        let entity;
+        try { entity = parseJsonc(next.src.slice(it.start, it.end)); } catch { entity = undefined; }
+        if (entity && typeof entity.id === 'string') found.set(entity.id, entity);
+      }
+      indexes.set(section, found);
+    }
+    return found;
+  };
   /** @type {Map<string, Map<string, {array: boolean, items: string[], ids: (string|null)[]}>>} part -> section -> desired */
   const want = new Map(names.map((n) => [n, new Map()]));
   const slot = (/** @type {string} */ file, /** @type {string} */ key, /** @type {boolean} */ array) => {
@@ -350,7 +453,7 @@ export function planWrite(resolved, newText) {
   };
   for (const m of next.members) {
     if (m.items === null) {
-      const file = holder.get(m.key) ?? placedBy(placement, names, m.key, undefined) ?? holders.get(m.key)?.[0] ?? names[0];
+      const file = holder.get(m.key) ?? placeEntity(placement, names, m.key, undefined, index) ?? holders.get(m.key)?.[0] ?? names[0];
       slot(file, m.key, false).items.push(next.src.slice(m.start, m.end));
       continue;
     }
@@ -361,7 +464,7 @@ export function planWrite(resolved, newText) {
       if (file === undefined) {
         let entity;
         try { entity = parseJsonc(text); } catch { entity = undefined; }
-        file = placedBy(placement, names, m.key, entity) ?? holders.get(m.key)?.[0] ?? names[0];
+        file = placeEntity(placement, names, m.key, entity, index) ?? holders.get(m.key)?.[0] ?? names[0];
         if (!placement[m.key] && (holders.get(m.key)?.length ?? 0) > 1 && entity && typeof entity.kind === 'string') {
           // No table: beside the entities of this section that have the same kind.
           const same = (holders.get(m.key) ?? []).find((f) => {
@@ -404,7 +507,24 @@ export function planWrite(resolved, newText) {
       } else {
         const original = m.items.map((i) => src.slice(i.start, i.end));
         if (original.length === d.items.length && original.every((t, i) => t === d.items[i])) continue;
-        edits.push({ start: m.start, end: m.end, text: d.items.length ? `[\n${d.items.map((/** @type {string} */ t) => `    ${t}`).join(',\n')}\n  ]` : '[]' });
+        // The list changed (an entity was added, removed or moved here): write it again, keeping the comments that stand
+        // between its items, each with the entity it precedes (and any after the last one).
+        const lead = (/** @type {number} */ from, /** @type {number} */ to) => {
+          const gap = src.slice(from, to).replace(/^\s*,/, '');
+          return /\/\/|\/\*/.test(gap) ? gap.split('\n').map((l) => l.trim()).filter(Boolean).join('\n    ') : '';
+        };
+        /** @type {Map<string, string>} */
+        const before = new Map();
+        const items = m.items;
+        items.forEach((item, i) => {
+          const id = ids[i];
+          const text = lead(i === 0 ? m.start + 1 : items[i - 1].end, item.start);
+          if (id !== null && text) before.set(id, text);
+        });
+        const last = items[items.length - 1];
+        const after = last ? lead(last.end, m.end - 1) : '';
+        const lines = d.items.map((/** @type {string} */ t, /** @type {number} */ i) => `${before.get(d.ids[i]) ? `    ${before.get(d.ids[i])}\n` : ''}    ${t}`);
+        edits.push({ start: m.start, end: m.end, text: d.items.length ? `[\n${lines.join(',\n')}${after ? `\n    ${after}` : ''}\n  ]` : '[]' });
       }
     }
     const added = [...desired.keys()].filter((k) => !top.members.some((m) => m.key === k));
@@ -432,4 +552,13 @@ export function planWrite(resolved, newText) {
     if (text !== original) changed.push({ file, text });
   }
   return changed;
+}
+
+/**
+ * The text of the specification at `file`: assembled when it is a manifest, the file's own text otherwise.
+ * @param {string | URL} file @returns {string}
+ */
+export function readSpecFile(file) {
+  const abs = path.resolve(file instanceof URL ? fileURLToPath(file) : file);
+  return resolveSpecText(abs, readFileSync(abs, 'utf8')).text;
 }

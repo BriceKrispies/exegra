@@ -73,11 +73,32 @@ test('self-specification renders in 3D', async ({ page }) => {
   const first = /** @type {any} */ (await ex(page, `const n = session.scene.nodes[0]; return { id: n.id, name: session.model.entities.get(n.entityId).data.name };`));
   await expect(page.locator(`.scene-label[data-entity-id="${first.id}"]`)).toContainText(first.name, { ignoreCase: true });
   await page.screenshot({ path: path.join(SHOTS, 'test-self-spec.png') });
-  // Opening every subsystem shows every component: nothing exists only in the overview or only in the detail.
+  // Opening every subsystem shows every component, inside the system drawn as the container of its subsystems:
+  // nothing exists only in the overview or only in the detail. A file a subsystem declares itself (not through one of
+  // its components) is a module element member of that subsystem, so it is a block of its own once the subsystem is open.
   await ex(page, `for (const id of [...session.ui.collapsed]) session.toggleCollapsed(id);`);
-  const expanded = /** @type {any} */ (await ex(page, `return { nodes: session.scene.nodes.length, components: session.model.byKind.component.length, edges: session.scene.edges.length, relationships: session.model.byKind.relationship.length };`));
-  expect(expanded.nodes).toBe(expanded.components);
-  expect(expanded.edges).toBe(expanded.relationships);
+  const expanded = /** @type {any} */ (await ex(page, `
+    const modules = session.scene.nodes.filter((n) => n.elementKind === 'module');
+    return { nodes: session.scene.nodes.length, components: session.model.byKind.component.length, edges: session.scene.edges.length, relationships: session.model.byKind.relationship.length,
+      system: session.scene.nodes.filter((n) => n.elementKind === 'system').length, modules: modules.length,
+      modulesOfOpened: modules.every((n) => session.model.entities.get(n.parent)?.data.kind === 'subsystem' && (session.model.entities.get(n.parent).data.implementation?.modules ?? []).includes(n.id.slice('module:'.length))) };`));
+  expect(expanded.system).toBe(1);
+  expect(expanded.modulesOfOpened, 'every module element drawn is a file an opened subsystem declares itself').toBe(true);
+  expect(expanded.nodes).toBe(expanded.components + expanded.system + expanded.modules);
+  // Every declared relationship is drawn, as one edge or bundled into one; an extracted import (M5) is drawn too, or
+  // lies inside one closed component (both its files are that component's modules) and is counted in the notes.
+  const drawn = /** @type {any} */ (await ex(page, `
+    const witnesses = new Set(session.scene.edges.flatMap((e) => e.witnesses ?? []));
+    const ownerOf = (m) => session.model.byKind.component.find((c) => (c.data.implementation?.modules ?? []).some((p) => 'module:' + p === m))?.id;
+    const rels = session.model.byKind.relationship;
+    return {
+      declaredMissing: rels.filter((r) => (r.data.provenance ?? 'declared') === 'declared' && !witnesses.has(r.id)).map((r) => r.id),
+      extractedOutside: rels.filter((r) => r.data.provenance === 'extracted' && !witnesses.has(r.id) && ownerOf(r.data.from) !== ownerOf(r.data.to)).map((r) => r.id),
+      edges: session.scene.edges.length,
+    };`));
+  expect(drawn.declaredMissing, 'every declared relationship is drawn').toEqual([]);
+  expect(drawn.extractedOutside, 'an extracted import not drawn lies inside one component').toEqual([]);
+  expect(drawn.edges).toBe(expanded.edges);
   await page.waitForTimeout(700);
   await page.screenshot({ path: path.join(SHOTS, 'test-self-spec-expanded.png') });
 });

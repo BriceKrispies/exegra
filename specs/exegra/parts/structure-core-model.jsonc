@@ -1,0 +1,1262 @@
+// Components and relationships of the semantic core: validation, the model, transactions, layers and derivation.
+{
+  // ---- Components ------------------------------------------------------------------
+  "components": [
+    // ======== Subsystems ==============================================================
+    {
+      "id": "semantic-core",
+      "name": "Semantic core",
+      "kind": "subsystem",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Owns the canonical semantic model and every rule about it; runs unchanged in the browser and in Node.",
+      "responsibilities": [
+        "Derive the model from specification text and validate it",
+        "Apply typed operations atomically as source-preserving text edits",
+        "Evaluate claims and simulate state machines on the model"
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/types.js"
+        ],
+        "notes": "types.js holds JSDoc typedefs only. The directory src/core also contains projections.js, layout.js with the modules under layout/, and generate/, which this file classifies under visualization and tooling by responsibility, and own.js, claimed by queries; they import nothing outside src/core.",
+        "language": "mixed"
+      },
+      "parent": "exegra"
+    },
+    // ======== Semantic core =============================================================
+    {
+      "id": "metamodel",
+      "name": "Meta-model",
+      "parent": "semantic-core",
+      "category": "storage",
+      "runsIn": "both",
+      "owner": "semantic-core",
+      "purpose": "Describes entity kinds, their properties, the built-in categories and relationship kinds and the top-level sections of a specification as data.",
+      "responsibilities": [
+        "Define which properties each entity kind accepts and their types",
+        "Define the built-in vocabulary (categories, relationship kinds, shapes, colours, projections) that a specification may extend",
+        "Define the id pattern and the schema version (0.1)",
+        "Define the claim kinds (structural, invariant, temporal, measured, requirement) and the view definition: filter (categories, relationship kinds, within, tags, entity kinds) and display (ports, colour by, reference depth, layout method)",
+        "Define the record and copy kinds of the data model: field types, personal-data classes, roles, copy scopes (shared, per-session, per-principal, internal) and the units of freshness and erasure bounds"
+      ],
+      "unknowns": ["The built-in entity kinds, claim kinds, claim evaluation methods and projections are fixed per build. A specification can add entity kinds, properties of any kind, categories, relationship kinds and verification methods (carried out outside Exegra) through its vocabulary, but it cannot add an evaluation method that Exegra itself runs."],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/metamodel.json"
+        ],
+        "notes": "Hand-written data file.",
+        "language": "json"
+      }
+    },
+    {
+      "id": "claim-method-registry",
+      "name": "Claim method registry",
+      "parent": "semantic-core",
+      "category": "storage",
+      "runsIn": "both",
+      "owner": "semantic-core",
+      "purpose": "Declares the supported claim evaluation methods with their parameters, and the five claim statuses.",
+      "responsibilities": [
+        "List each method, the claim kinds it can evaluate and its typed parameters",
+        "Define the claim status labels and tones that every consumer shows",
+        "Declare `negatives` as a parameter of every trace method (state-invariant, precedes, eventually, never): a list of {scenario, faults}, each one of the claim's scenarios run with extra faults",
+        "Declare the refines method: one implementation behavior and optionally the scenarios whose traces are checked"
+      ],
+      "unknowns": ["The registry declares methods but the evaluator implements them separately; adding an entry without code leaves the claim not evaluated."],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/claim-methods.js"
+        ],
+        "notes": "Hand-written data module used by the parser, validator, evaluator and inspector.",
+        "language": "js"
+      }
+    },
+    {
+      "id": "parser",
+      "name": "Parser",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "The text layer of the specification: parses the JSONC source (comments, trailing commas, syntax errors with locations), hands the document to the model derivation in the Lean kernel and maps the raw paths it reports to lines and columns.",
+      "responsibilities": [
+        "Parse JSONC with comments and trailing commas, reporting syntax errors with locations",
+        "Encode the document for the kernel with every object's members in source order and repeated keys kept, and pass the meta-model and the claim method registry as data",
+        "Map every raw path and part the kernel reports (node, key of a member, first character) to an offset, length, line and column, and put the line of the earlier declaration into an id.duplicate message",
+        "Rebuild the model the rest of the shell reads (entities by id and kind, references, expressions, effective meta-model, vocabulary, semantic hash) from the kernel's reply, with prototype-free data objects as jsonc-parser builds them"
+      ],
+      "unknowns": [
+        "The whole text is re-parsed on every commit and on every source-editor analysis; there is no incremental parsing. Measured 2026-11-18 in Node 24 on Windows 10 (wasm64, median of 10 warm runs, parse and hash): specs/exegra (788 KB) 243 ms through the Lean kernel against 35 ms for the JavaScript it replaced; specs/benchmark (134 KB) 67 ms against 9 ms. Of the 243 ms about 95 ms is Exegra.Json.parse reading the request (WG-4797), 27 ms the derivation, 10 ms reference resolution, 33 ms the hash and 45 ms writing the reply. In Chromium (Playwright, tests/browser/lean-core.spec.js) the same parse and hash take 312 ms (median of 7).",
+        "The schema.version error message tells the user to run an `exegra migrate` command that does not exist."
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "js",
+        "modules": [
+          "src/core/parse.js"
+        ],
+        "notes": "Outside the verdict path: it only parses text and maps locations; the model is derived by model-derivation in Lean."
+      }
+    },
+    {
+      "id": "validator",
+      "name": "Validator",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Applies whole-model semantic rules to a parsed model and reports errors, warnings and specification gaps; analyzeSpec composes parser and validator.",
+      "responsibilities": [
+        "Check containment, behaviors, transitions, effects, faults, scenarios, claim parameters and views",
+        "Accept an evaluation method the specification declares as a verification method (it takes no parameters), and report any other method this build does not run as unsupported",
+        "Check every expression's references against the scope it is used in",
+        "Report gaps (missing purpose, unconnected component, unused event, claim that can only rest on external evidence and has none) as info diagnostics; a requirement claim is not reported for lacking evidence",
+        "Provide analyzeSpec: parse, then validate only when the structure is sound",
+        "Check events that name a contract: a role is required, the payload fields are among the inputs (request) or outputs (response), every input that is not optional is present, an error carries a code among the contract's errors, and declared field types are assignable to the contract's; an unknown contract is a reference error",
+        "Run the data model's consistency checks (record keys and copy fields name declared fields, bounds have units) as errors and its six data rules as warnings, each naming the record or copy and the field",
+        "Check each negative of a trace claim: its scenario is one of the claim's scenarios, and its faults are a non-empty list of declared faults none of which that scenario already activates",
+        "Report integrity rules: an invalid rule as an error, a vacuous rule as a warning, and each violation with the rule severity (integrity.violated), left out of analyzeSpec's blocking error count",
+        "Check refinement declarations: only an implementation-level behavior refines, the refined behavior does not refine in turn, refines comes with a refinement mapping, the mapping names only states and transitions of the right sides and variables of the model, its expressions read only the implementation's variables, and every implementation state and transition and every model variable is mapped; a refines claim names one refining behavior and only scenarios that run it",
+        "Check timer delays read at run time ({expr, simulate}): only on an implementation-level machine, expr an expression of a number over the machine variables, time and the event payload, and simulate the delay a simulated run uses (simulationInputV2 lowers the timer with it)",
+        "Check time and integers in implementation-level machines (src/core/readiness-time.js, WG-4902): a variable compared with time holds a value set from time wherever it is read (ready.time-epoch); time - x is read only after x <= time (ready.time-difference); the scenarios running the machine agree on a time unit, fixed delays are whole milliseconds and a machine reading time runs in ms (ready.delay-unit); literals, integer initial values and scenario payload values are within their integer range, at most 2^53 - 1 (ready.number-bound)",
+        "Check the realisation and durability of machines (src/core/realisation.js, WG-4922): behavior.realisation and contract.deployment (shipped or target, defaulting from the component's implementation status; an explicit shipped on a not-implemented component is behavior.realisation-subject or contract.deployment-subject) and storage.durability (record or memory; a memory machine names no record, creates none and declares no transaction, or storage.durability)",
+        "Check residency (src/core/residency.js): follow each record a tenant class binds to its owner, the holder of each copy and both ends of each relationship that carries it, and report a component that cannot keep a tenant of the class in its permitted regions (residency.record-outside, residency.copy-outside, residency.flow-outside) unless an active residency exception names that copy or flow; a holder of bound data states its placement (residency.placement-missing) and a per-region one has an instance in every provisioned region (residency.region-uncovered); placement and regions agree (component.placement-regions); a tenant class has one selector and at least one region (tenant-class.selector, tenant-class.provisioned-in); an exception names one copy or flow of bound data, its durations are durations, a bounded one states its purge and a renewal window is shorter than its longest duration (residency.exception-target, residency.exception-duration, residency.exception-purge, residency.exception-renewal)",
+        "Check quota pools (src/core/pools.js): at least one pooled limit with a unique lower-case name (pool.limits), exactly one of quota and a positive perMember (pool.limit-contribution), a pooled quota counted per tenant over the pool's window as a rate (pool.quota-scope, pool.quota-window, pool.limit-kind) and held by the pool's component (pool.held-by), usage and exemption events with the payload fields the pool reads (pool.usage-event, pool.event-payload), the window, over-share count and release (pool.window, pool.over-share, pool.release), 1 to 4 modelled members (pool.model-members), an exemption role that confers its capability (pool.exemption-capability) and machine ids no entity takes (pool.machine-id); a scenario runs a behavior or a pool (scenario.empty), and a claim expression reads only variables of the machines of pools every listed scenario runs (expr.reference)"
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/validate.js",
+          "src/core/analyze.js",
+          "src/core/evidence-ref.js",
+          "src/core/readiness-machines.js",
+          "src/core/readiness-time.js",
+          "src/core/realisation.js",
+          "src/core/residency.js"
+        ],
+        "notes": "The rules are hard-coded. Claim parameter checks read the claim method registry, the gap rules read `expected` flags of the effective meta-model and view filters are checked against the effective vocabulary.",
+        "language": "js"
+      },
+      "unknowns": [
+        "A residency exception's expiry, continuous renewal and purge are recorded and shape-checked but not executed, so claims about them are not decided by exploration (WG-5282)."
+      ]
+    },
+    {
+      "id": "expression-language",
+      "name": "Expression language",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "A small side-effect-free expression language for guards, effect values and claim expressions; no host-language evaluation is involved.",
+      "responsibilities": [
+        "Tokenize and parse expressions (implication, boolean and arithmetic operators, comparisons, string and number literals, dotted references with hyphenated ids)",
+        "Evaluate an expression against a caller-supplied reference resolver",
+        "List the references an expression uses so the validator can check scope",
+        "Evaluate with the declared types of references when the caller gives them (WG-4902): checked integer arithmetic in u8, u16, u32, i32 and in u64 and i64 limited to +-(2^53 - 1), integer division truncating toward zero and remainder with the sign of the dividend, an absent option read as null; structural equality of lists and objects always; the same rules as eval in formal/Exegra/Expr.lean and the generated code (docs/semantics.md, Values, numbers and time)"
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/expr.js"
+        ],
+        "notes": "The validator and the claim evaluator use src/core/expr.js. The simulation engine has its own implementation of the same language in Rust (engine/exegra-engine/src/expr.rs), held to the same parse and evaluation semantics and error messages by the conformance goldens.",
+        "language": "js"
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
+    },
+    {
+      "id": "model-hash",
+      "name": "Normal form and hash",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Produces the deterministic normal form of a model (independent of comments, whitespace, key order, top-level declaration order and source positions) and its 53-bit semantic hash, in the verified kernel.",
+      "responsibilities": [
+        "Normal form: schema version, vocabulary and the top-level declarations sorted by id with every object's keys sorted as JavaScript sorts strings (UTF-16 code units)",
+        "Semantic hash: cyrb53 over the UTF-16 code units of the normal form's JSON text, bit-identical to the JavaScript it replaced; used for revision identity, optimistic concurrency of transactions and claim results",
+        "Prove that the hash depends only on semantic content: declaration order and presentation (Exegra.Model.Model.semanticHash_presentation) and key order at every depth (Exegra.Hash.semanticHash_key_order); what runs is the definition (Exegra.Hash.semanticHash'_eq)"
+      ],
+      "unknowns": [
+        "The hash is not cryptographic (cyrb53); it identifies revisions and detects change, it does not resist collisions.",
+        "The key-order theorem assumes distinct keys in every object; the derivation produces such values (it assigns members like JavaScript), but that is not itself stated as a theorem yet."
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "lean",
+        "modules": [
+          "formal/Exegra/Hash.lean",
+          "formal/Exegra/HashProps.lean"
+        ],
+        "trusts": [
+          "trusted-lean-kernel",
+          "trusted-lean-compiler-runtime",
+          "trusted-emscripten-toolchain",
+          "trusted-libuv",
+          "trusted-js-glue",
+          "trusted-wasm-engine"
+        ],
+        "notes": "The Lean kernel of the hash only. The JavaScript that calls it is hash-binding (src/core/hash.js), a separate component, so this component's dependencies are only the Lean definitions it uses. Stable JSON output and SHA-256 are stable-serialization."
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
+    },
+    {
+      "id": "queries",
+      "name": "Model queries",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Answers containment, dependency, selection, reference and contract questions about a model for every consumer.",
+      "responsibilities": [
+        "Resolve ports to components, list children, ancestors, descendants and owned entities",
+        "Build the directed component graph and traverse dependencies",
+        "Select components by id, category, kind, tag, trust zone or containment",
+        "Find the declaration site of an entity kind",
+        "Provide own(), the own-property lookup that the parser, validator, claim evaluator, queries and Project use for every spec-supplied key"
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/query.js",
+          "src/core/own.js",
+          "src/core/interactions.js"
+        ],
+        "notes": "own.js is a one-function helper; it is claimed here because the lookup it provides is imported by the other core modules that read spec-supplied keys.",
+        "language": "js"
+      },
+      "tags": [
+        "verdict-kernel"
+      ],
+      "unknowns": [
+        "Hierarchies, cuts and facets are declared and queried (cutMap, blockOf, cutToCut, facetMembers, knowledgeOf); quotients over cuts and level-aware claims use them (semantic-abstraction), but views that adopt a declared cut are WG-5695.",
+        "Module elements are derived from the declared implementation.modules, not extracted from the code, so the module-to-element map is only as true as those declarations (WG-5696).",
+        "Hierarchy, cut and facet well-formedness is checked in JavaScript (validate.js and query.js); the Lean derivation accepts the sections as data but does not check them, and laminar families and cut maps have no Lean definitions or theorems yet (WG-5699)."
+      ]
+    },
+    {
+      "id": "transactions",
+      "name": "Transaction system",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Applies typed operations atomically as source-preserving text edits, with revisions, undo, redo, reload and commit notification; it is the only place where a project's state changes.",
+      "responsibilities": [
+        "Check operation preconditions and compute JSONC edits that keep comments and formatting",
+        "Reject any transaction whose resulting specification has validation errors (violations of integrity rules excepted) or whose layout would be unreadable; nothing changes on rejection",
+        "Keep presentation edits (layout) out of the specification text",
+        "Record history sufficient for undo and redo and increment a revision on every commit",
+        "Adopt text that changed outside the process (reload): text with syntax errors is refused, any text that parses is adopted, including text with validation errors; the adoption clears the undo and redo stacks and is itself not undoable",
+        "Leave the model and its semantic hash as they were when a commit changes only presentation text",
+        "Notify subscribers synchronously after each commit",
+        "Reject a transaction that adds a violation of an integrity rule of severity error that the project did not have before (the ratchet), with the counterexamples; existing violations do not block unrelated edits",
+        "Re-derive the model once per transaction, not once per operation: keep an index of where every entity is declared that follows creations, property edits, removals, replacements of nested declarations and id changes, re-derive only for an operation that reads references, expressions or entity data (deletion, rename, source replacement) or after an edit the index cannot follow, and splice the edits of each declaration's lines into the text once; the resulting text, failures and verdict are those of re-deriving after every edit, and a transaction whose index is found not to match its model is replayed that way"
+      ],
+      "ports": [
+        {
+          "id": "transactions-apply-in",
+          "name": "Apply transaction",
+          "direction": "provides",
+          "contract": "apply-transaction",
+          "protocol": "in-process call (Project.apply)",
+          "description": "Submit one operation or an array of operations as one transaction."
+        }
+      ],
+      "unknowns": [
+        "History, undo and redo stacks are unbounded in memory and are not persisted: undo is lost on reload and per CLI invocation.",
+        "Only operation transactions and replacement sources are validated before they commit. Undo and redo restore text that was committed before and do not validate again, and reload commits any text that parses, so the model after a reload can carry validation errors.",
+        "The session never passes expectRevision or expectHash; only the CLI uses the optimistic checks (--expect-hash).",
+        "A deletion or a rename re-derives the model of the current text before it plans its edits, because references and expressions of entities edited earlier in the transaction are known only to a derivation: about 2.6 s each on a 7 MB specification (WG-4980).",
+        "The validation of a transaction's result is a full validation: rule and example results are not cached per entity (WG-4974). Measured on a 7 MB specification, validation is about 0.9 s of a single-property apply; the model derivation is about 2.6 s."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/operations.js",
+          "src/core/project.js",
+          "src/core/text-edit.js"
+        ],
+        "notes": "The operation table is hand-written; CreateEntity looks up declaration sites in the meta-model. Tx keeps the index of declarations, the windows over edited declarations and the pending appends; Project.apply's perOperation option runs the reference path that re-derives after every edit.",
+        "language": "js"
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
+    },
+    {
+      "id": "claim-evaluator",
+      "name": "Claim evaluator",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Evaluates claims against a model and recorded evidence results, reporting a status, scope and counterexample that never overstate what was checked.",
+      "responsibilities": [
+        "Evaluate structural claims (no-relationship, reachable, only-via, has-port, property-defined, acyclic) on the component graph; report a selector that selects nothing as inconclusive, never verified; reachable needs a path of at least one relationship (a target that is also a source does not count); only-via is inconclusive when no directed path of the kinds leads from any source to any target at all, and when every source is itself a via component (both hold by construction, not by the model)",
+        "Evaluate invariant and temporal claims on traces of the listed scenarios (state-invariant, precedes, eventually, never), stating that only those traces were checked; never report a vacuous trace check as verified: an implication whose antecedent is never true, a never whose event cannot occur, a precedes whose then-event never happens and traces with zero steps are inconclusive; an eventually whose occurrence is only the scenario's own scripted input is inconclusive, because the input is not a reaction of the system",
+        "Turn every check it runs over the model, every recorded evidence result, theorem check, external outcome and assumption fact into a fact in the Lean schema, encode each claim as a part or a conjunction of parts (one per piece of test evidence for an evidence-based claim), and take every status from the Lean verdict; it words the result and decides no status",
+        "Pass each recorded fact with the stamp it was recorded on and the current stamp the caller gives (tools/tree-stamp.js); the freshness of each fact and its effect on the status are decided by Lean: a stale positive fact never makes a claim positive (an explanation starting with Stale and the diagnostic claim.stale-evidence or claim.stale-theorem), a stale contradicting fact still counts, and without current stamps a recorded fact is unverifiable and establishes nothing (diagnostic claim.freshness-unverifiable)",
+        "Hand each recorded Lean theorem check to the Lean verdict with the claim's about constants, and word a refusal from the reason Lean gives",
+        "Report a claim whose method is a verification method declared by the specification with evaluator external:<method>: Exegra runs nothing and the status comes only from evidence",
+        "Check a trace step by step for the simulator panel (checkTrace)",
+        "Add the automatic contract-conformance checks of a trace to the checks of checkTrace (src/core/contract-trace.js), as failed checks with the step",
+        "Evaluate data-model claims (method data-model, a list of rules) on the records and copies of the model: violated with the first finding as counterexample, verified when every listed rule had something to check and found nothing, inconclusive when a listed rule had nothing to check",
+        "Run every declared negative of a trace claim (its scenario with the scenario's own faults plus the negative's) and report the claim verified only when it holds on its scenarios and each negative, at least one, violates it; a trace claim with no negative, or with a negative that does not definitely violate it, is inconclusive and the explanation says which",
+        "Evaluate refines claims (src/core/refinement.js): in the trace of each scenario that runs the implementation behavior, check that its initial configurations and every transition it fires map through its refinement mapping to the transition its model would fire (from, to, event, guard true and first in declaration order, effects giving the mapped post-variables, the same emitted events) or to a stutter that changes no mapped state or variable and emits nothing; violated at the first failing step with the steps up to it as a trace and a reason; inconclusive when a run ends in an error, a model expression reads what the mapping does not define, or no step matched a model transition",
+        "In refines claims, tell a transition's queued entries apart into emits and timers by its effects, compare timers only with a model transition that sets timers, and read other behaviors named by model expressions from the same trace configuration, through the machine that refines them when they do not run themselves"
+      ],
+      "ports": [
+        {
+          "id": "claims-evaluate-in",
+          "name": "Evaluate claims",
+          "direction": "provides",
+          "contract": "evaluate-claims",
+          "protocol": "in-process call",
+          "description": "Evaluate every claim or one claim of a model."
+        }
+      ],
+      "unknowns": [
+        "Behavioral results hold for the listed scenario traces only; there is no exhaustive state-space exploration and no probabilistic evaluation.",
+        "Claim evaluation runs on the caller's thread. In the application session.evaluate runs it on the main thread inside every semantic commit, and trace and metric claims run engine scenarios there (src/core/claims.js), unlike the Simulation tab, which runs its scenario in the engine worker. The cost on large models is not measured (WG-4775, finding F06).",
+        "Refines claims are checked on the deterministic trace of each scenario with its own faults, not over every delivery order and fault subset the explorer enumerates: the explorer returns state-invariant verdicts, not steps (WG-4852).",
+        "The tree stamp is coarse: any edit of a stamped file makes every evidence result stale until verify runs again, not only the results that depend on it.",
+        "The application evaluates claims without current stamps, so every recorded fact is unverifiable there and the claims resting on them read undecided in the application (WG-5688).",
+        "A lean-theorem claim is not bound to what its statement says: a theorem that mentions the named code but states nothing about it is still proved; a change of its statement is refused by admit unless a superseding implication exists, but the claim does not pin the statement it expects (WG-5690)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/claims.js",
+          "src/core/concordance.js",
+          "src/core/refinement.js"
+        ],
+        "language": "js"
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
+    },
+    {
+      "id": "contract-conformance",
+      "name": "Contract conformance",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Lets an event be a request, a response or an error of a contract at a boundary, so that a simulated trace is checked and reads like a request log. Holds the type-string parser shared by the static and the trace checks.",
+      "responsibilities": [
+        "Parse the type strings of payload fields and contract inputs and outputs (string, number, boolean, null, literals, unions, arrays); a type it cannot read is opaque and every value fits it",
+        "Derive from a contract the fields and error codes it allows for a request, a response and an error",
+        "Check a trace: for each step whose event is a contract event, the payload values fit the declared types, a request carries every input that is not optional, an error code is among the contract's errors, and a response or error answers an earlier unanswered request of the same contract (matched by the correlation field when the event declares one, otherwise by count); each violation is a failed automatic check carrying the step",
+        "Render a trace as request-log lines (src/core/contract-trace.js, requestLog): the contract's binding (method and path, or operation) or else the event name for a request, 'ok' for a response and 'refused <code>' for an error; steps that are not contract events give no line",
+        "Read traces and models only: the engine, its Lean semantics and the engine input format are untouched"
+      ],
+      "unknowns": [
+        "Object and generic types (for example {text, hash} or Operation[]) are opaque to the type check: their values are accepted unchecked.",
+        "A response is paired with its request by one correlation field or by count; there is no timeout or ordering rule for unanswered requests at the end of a run."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/type-expr.js",
+          "src/core/contract-trace.js"
+        ],
+        "language": "js"
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
+    },
+    {
+      "id": "data-model",
+      "name": "Data model",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Makes records, their fields, owning component, personal-data class, keys and the copies of them part of the specification, so that erasure, identity keying, shared-copy and freshness rules are computed over the model instead of read from hand-maintained tables.",
+      "responsibilities": [
+        "Define the record kind (owner, key, fields with type, personal class, refersTo a record or the principal, role, retention) and the copy kind (of, fields, heldBy, scope, freshness, erasure, dependsOnAuthority), validated by the generic parser with positions",
+        "Check that a record's key and a copy's fields name declared fields, and that a numeric freshness or erasure bound has a unit",
+        "Compute the six data rules per copy, record and field: an erasure point on every copy holding a personal field or a principal reference; an erasure point or a bounded retention on every record holding a personal or credential field; no shared copy holding a principal reference, a personal field or authority-dependent data; party fields that refer to the principal by a non-name type; a freshness bound on every copy; a relationship path between a copy's holder and the owner of each record it copies",
+        "Report every finding as a validation warning naming the entity and the field, and evaluate the data-model claim method from the same findings",
+        "Answer the copies of a record and the fields a copy holds for the inspector and the Data projection"
+      ],
+      "unknowns": [
+        "A field counts as a name when its type text contains the word name or handle; there is no type system for field types, so a party field typed as an opaque string passes rule party-by-id (WG-4697).",
+        "Retention is free text: nothing checks that a record's retention and its copies' erasure points agree, and a copy of a copy cannot be declared, since of names records only (WG-4697)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/data-model.js"
+        ],
+        "notes": "The record and copy kinds are built-in meta-model kinds; the rules are hand-written in data-model.js and run from validate.js and claims.js.",
+        "language": "js"
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
+    },
+    {
+      "id": "metric-claims",
+      "name": "Metric claims",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Claims over measured outputs, evaluated over many seeded runs with exact binomial and sign tests, reported with their sample count, seeds and confidence as model results (model-holds), never as verified or supported, and validated against recorded load runs.",
+      "responsibilities": [
+        "Declare the claim method metric-bound: scenarios, metric (kind, subject, statistic, outcomes, window, series aggregate), op and bound, approx, or relativeTo another metric with its own window, fraction, confidence, runs, base seed, negatives (on the claim's scenarios or on variants declaring variantOf), control negatives and calibratedBy",
+        "Run the scenario once per seed, run r using the r-th SplitMix64 output of the base seed (mod 2^64), in metrics mode, and take one statistic per run; a truncated run does not satisfy the bound; an underpowered run is left out only when the engine input shows that open workloads alone start the class (computed from the workloads, behaviors, scenario steps and faults, never assumed) and the run had no duplicate starts, and counts as not satisfying otherwise; the test uses the thresholds of the N' runs kept",
+        "Decide model-holds, fails or inconclusive by exact rational binomial tails with N fixed in advance (the minimum N is the smallest with beta^N <= alpha, compared exactly); for approx, use the sign-test order-statistic interval of the median of the per-run statistic, which needs at least 6 runs at 95%",
+        "Report model-holds (never supported or verified) with the scope \"model only; parameters as stated\", runs, seeds, passes, N', fraction, confidence, the spread of the per-run statistic and the underpowered and truncated runs",
+        "Require each negative to fail and each control negative to hold before reporting model-holds; a base scenario that fails makes the claim violated; fixture results test the engine and method and are not evidence about any system",
+        "Check calibrations on hold-out load runs distinct from the fitting runs, with equal workload, capacities and window, a band widened over repeats, at least 6 kept runs and no truncated run, tolerance no wider than the margin computed from the beta-quantile of the per-run statistic, evidence not expired at the recorded asOf date and bound to the current component revisions; report unvalidated otherwise, and extrapolated outside the convex hull (exact rational linear programming) of the tested points with the same fault set",
+        "Vary every assumed and to-be-measured parameter over its declared range, one at a time and then pairwise among the flagged ones, and list first what flips the verdict",
+        "Refuse at validation a run count that could never hold, and a quantile or mean claim whose expected samples from declared open-workload rates are fewer than 30, per bucket for series claims"
+      ],
+      "unknowns": [
+        "Built (WG-4715, WG-4729): the metric-bound method is registered and evaluated on format-2 scenarios derived from a specification, reporting model-holds, violated or inconclusive with N, the passes, the fraction and the confidence, with negatives and control negatives. Not built: calibration, sensitivity, the operating envelope and revision binding (asOf is only recorded) (planned: WG-4741).",
+        "The status model-holds is implemented: it is a ClaimResult status of src/core/claims.js and the verdict of src/core/metric-stats.js, and metric-bound claims report it. Its final name and display follow WG-4703."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/metric-stats.js",
+          "src/core/metric-claims.js"
+        ],
+        "notes": "Built: the statistics (src/core/metric-stats.js: exact binomial tails and verdicts, the minimum run count, passes to hold and to fail, runs to decide, the sign-test interval, underpowered statistics, the margin, run seeds and the claim status with negatives; tests/core/metric-stats.test.js) and the metric-bound runner over engine inputs (src/core/metric-claims.js: one metrics-mode run per run seed through runEngineText, on the thread that evaluates claims, which in the application is the main thread). The method is registered and simulationInput derives format 2 for it. Calibration, sensitivity, asOf and revision binding are not built (WG-4741).",
+        "language": "js"
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
+    },
+    {
+      "id": "self-model-replay",
+      "name": "Self-model replay",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Replays a recorded stream of real events through the behaviors of a scenario of this specification (live-session), one event at a time, and reports every divergence between what the running application did and what the self-model allows.",
+      "responsibilities": [
+        "Execute the behaviors of the scenario with the step semantics of the engine (phase 1 choice reading the configuration before the step, phase 2 effects in scenario order, the expression language of src/core/expr.js, the engine input of src/core/sim-input.js), delivering the recorded events in recorded order with their recorded payloads; logical time is the recorded sequence number",
+        "Keep the events the model emits as predictions instead of queueing them: a recorded event that some transition of the scenario emits must match a pending prediction of the same event (by its correlation field or requestId when both carry it, else the oldest); any interleaving of predictions that respects causality is accepted, because a real run interleaves independent chains (a network answer, a file-watch notice, a claim evaluation) in whatever order they happen",
+        "Report divergences under the claim real-runs-replay-through-self-model: an event that is not an event of the specification (unknown-event), an event the model emits but did not predict here (unpredicted), a predicted event that no behavior consuming it accepts in its current state (not-allowed), a recorded payload value that differs from the predicted one (payload; correlation fields and values the transition gives as number literals, which stand for counts the model does not track, are not compared; nor are arrays and objects), a prediction not matched within 200 recorded events or by the end of a closed stream (missing), and an expression of the model that fails on the recorded payload (error)",
+        "Calibrate instead of diverging when a predicted value reads a variable that no transition has written since the start of the stream: its declared initial value stands for the environment when the stream started (a file hash on disk, a stored preference), so it takes the recorded value; the step lists the calibration",
+        "Return the replay as a trace (steps with fired, ignored, responsible, configuration, the pending predictions and the divergences of each step) that checkTrace, requestLog, the simulator panel and the scene read like a simulated one",
+        "Check complete independently observed histories of two distinct same-base edits against both serial orders of two-session-edit-race. Compare replies per attempt and the post-decision stored value and changed revision; explicit transport loss leaves an outcome unknown, missing observations give an inconclusive verdict, and the first incompatible observation identifies the divergence. Captures cover exactly one write per editor, the same tenant and record, two distinct values, no intervening writes and no rollback."
+      ],
+      "unknowns": [
+        "The engine itself is not driven: it runs a scenario to quiescence and delivers simultaneous events in queue order, so the replay reimplements one engine step in JavaScript without faults. Agreement with the engine is by construction from the same engine input and expression language, not checked against the Rust engine.",
+        "A stream that starts mid-session (after the recorder dropped events, past 5000) is replayed from the declared initial configuration; divergences near its start can come from the missing prefix.",
+        "Divergences a longer real session still shows (WG-4782): the camera saved after a view switch with nothing stored is the camera the fit animation produced, not the last camera the model tracked (camera-keep); a restored camera is saved again with its last digit changed by the view's round trip (camera-apply); a commit that changes only comments or formatting re-evaluates no claims, while claims-on-commit predicts an evaluation for every change of the specification text (missing claims-evaluation-requested); a terminated engine worker never finishes its run, while engine-worker-flow still emits worker-run-done for it (missing)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/replay.js",
+          "src/core/edit-history.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "integrity-rules",
+      "name": "Integrity rules",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Declarative consistency rules over a whole specification (the built-in integrityRule kind), with derived relations defined by recursive clauses (the built-in integrityRelation kind, stratified Datalog with a least-model meaning), evaluated on every edit with counterexamples, enforced by the transaction system as a ratchet, and proved or refuted in Lean with kernel-checked proofs.",
+      "responsibilities": [
+        "Parse a rule of the rule language: forall and exists over the entities of some kinds, all entities, or the values of a term, with an optional where filter; property access that follows references through lists; kindof; ==, !=, in, not in, nonempty; !, &&, || and =>; string, number and boolean literals and literal sets; and atoms rel(t1, ..., tn) of derived relations. No arithmetic, and relations range over finite candidate tuples, so evaluation is total",
+        "Check a rule statically: every variable bound, every kind declared, every property declared on some kind; an invalid rule is a validation error",
+        "Check the derived relations (the built-in integrityRelation kind: params ranging over entity kinds, clauses in the rule language) and stratify them: the strata are the strongly connected components of the dependency graph in topological order, and within a component every atom of the component occurs positively (! flips, the left side of => flips, a forall filter flips, an exists filter does not). Negative recursion (integrity.relation-unstratified), a wrong number of arguments (integrity.relation-arity), an unknown relation (integrity.relation-unknown), a free variable that is not a parameter (integrity.relation-unbound), a parameter kind that does not exist (integrity.relation-kind), a clause that does not parse (integrity.relation-syntax), malformed parameters (integrity.relation-params) and more than 100000 candidate tuples (integrity.relation-size) are errors that make the relation, every relation that uses it and every rule that uses it invalid",
+        "Compute each valid relation as its least model over the product of its parameter domains: stratum by stratum, lowest first, iterating the clauses from the empty table until nothing is added; only the strata of the relations the rules use are computed, each at most once per model; an atom holds when some choice of one value from each argument term is a tuple of the relation",
+        "Evaluate every rule of a model once (memoized per model): holds with the number of instances checked under its leading universal quantifiers, or violated with every counterexample as variable bindings with entity ids and lines; a rule whose quantifier ranges over nothing is reported vacuous",
+        "Report each violation as a diagnostic of the rule severity at the first entity it names (integrity.violated), left out of the blocking error count",
+        "Tell the transaction system which violations of error rules a transaction adds (the ratchet): a violation is identified by its rule and its bindings",
+        "Export a rule to Lean: only the entities it can reach and the properties it reads (through the clauses of the relations it uses, and the domains of their parameters), every value interned to a natural number, the entities whose ids are the kinds of exported entities when a formula takes kindof, the entities as a balanced search tree, the program of the relations it uses in stratum order and their tables; write formal/generated/integrity/<rule>.lean with prog_wf (stratified), prog_solved (the checker reaches this table) and holds (proof by reflection) or one refutation per witness, each by decide +kernel and each about Sat under the least-model meaning Least",
+        "Run exegra prove-integrity: the Lean checker (exegra-lean integrity) must find the program stratified and solved, its relation tables must equal the JavaScript tables, and it must agree with the JavaScript evaluator on the verdict and every counterexample; Lean must accept the file, and every theorem may depend on the standard axioms only; each Lean process runs under a time limit (--timeout, default 300 s) and a rule whose relations have more than --max-candidates candidate tuples (default 500) is not sent to the kernel; otherwise, or past a limit, the rule is incomplete"
+      ],
+      "unknowns": [
+        "Property access reads top-level properties of entities only: a nested object property such as implementation.status or evaluate.method cannot be addressed (follow-up of WK-396).",
+        "Entity ids written as literals in a rule are not references: a rename does not rewrite them and a delete does not see them (follow-up of WK-396).",
+        "Undo, redo and reload are not checked by the ratchet: they restore or adopt text that was valid before, and may bring back a violation.",
+        "The Lean facts are exported by JavaScript: that they are the specification is checked differentially (exegra-lean integrity against the evaluator), not proved.",
+        "Derived relations are evaluated by naive iteration: every candidate tuple of the product of the parameter domains, each clause through the general formula evaluator, with no semi-naive evaluation and no indexing of atoms. Relations above 100000 candidates are refused, and a relation over Exegra's own relationships and components would slow every edit, so Exegra's own specification declares none yet; the examples are in tests/fixtures/integrity/relations.jsonc (WG-5267)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/integrity.js",
+          "src/core/integrity-export.js",
+          "tools/prove-integrity.js",
+          "formal/Exegra/Integrity.lean"
+        ],
+        "notes": "formal/Exegra/Integrity.lean: Facts (a search tree), Term, Formula (with relation atoms), Sat under an interpretation (the meaning), eval and eval_iff, refutes and refutes_sound, Facts.find_complete, cex; derived relations: Program, Least (the impredicative least-model meaning, stratum by stratum), solve (the fixpoint checker with fuel), wf and posF (stratification, decided by the kernel), sat_mono, stratum_closed, stratum_le_closed, least_eq_table, holds_of_eval and violated_of_refutes; the exegra-lean integrity protocol; axioms pinned with #guard_msgs. The commands are exegra integrity and exegra prove-integrity (cli/commands.js).",
+        "language": "js"
+      }
+    },
+    {
+      "id": "reader-pages",
+      "name": "Reader pages",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Derives the page of a reader view from the model and the view's reader blocks: text, counts by a classified property, tables and lists with grouping, facets and conditions, document sections with the tables their markers place, and an index of kinds. Knows no particular specification.",
+      "responsibilities": [
+        "Resolve each block of view.reader.blocks into plain page data whose every row, count and section is an entity of the model",
+        "Classify a text property by the block's rules (first matching pattern wins) into a value, a label and a tone",
+        "Follow dotted paths through references and nested objects for grouping, columns, facets and conditions",
+        "Split a section body into prose and the tables its {{entity:id}} markers place, and list a document's sections in reading order",
+        "Give a view without blocks the system's description, an index of its kinds and the outline of its first document, and give each kind a page of its own"
+      ],
+      "unknowns": [
+        "Pages are derived in full on every scene change; a very large kind is cut to the first 300 matching rows on the surface, not paged."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/reader.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "model-derivation",
+      "name": "Model derivation",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Derives the semantic model from the specification's JSON document, in the verified kernel: the effective meta-model, the entities by kind with their data, every reference and expression, references resolved against the entities, and the meta-model's structural checks, with the diagnostic codes and messages of the JavaScript parser it replaced. Every location is a raw path into the document, which the parser maps to a source position.",
+      "responsibilities": [
+        "Build the effective meta-model from the built-in meta-model and the vocabulary section (categories, relationship kinds, entity kinds with their sections and properties, properties on existing kinds, verification methods), reporting malformed, unknown and duplicate definitions",
+        "Check every section, entity and property against the effective meta-model and report each violation with its code, message, JSON path and raw path",
+        "Index every reference (properties of type ref, effects, claim evaluation parameters) and every expression with its JSON path, and resolve the references against the entities by id and kind",
+        "Follow the JavaScript semantics the parser had exactly: a map of members per object read on every access (property.duplicate each time), getNodeValue for entity data and the vocabulary, String() and template text of arbitrary JSON values",
+        "Prove what the model guarantees: with no reference diagnostic every reference names an entity of an allowed kind (Exegra.Model.derive_refs_resolve), and model.derive answers every argument (Exegra.Api.call_model_derive_total)"
+      ],
+      "tags": [
+        "verdict-kernel"
+      ],
+      "unknowns": [
+        "Two differences from the JavaScript parser where Lean strings cannot follow: a lone surrogate in a string becomes U+FFFD before the call, and the label of a declared entity kind is lower-cased in ASCII only in the entity.type and id.missing messages. The JSON reply carries -0 as 0 and a number beyond the double range as null; the parser then takes entity data and the vocabulary from the syntax tree.",
+        "Recursion over the document is bounded by fuel (twice the document depth plus 8); no theorem states that the bound is never reached, the differential test (tests/core/model-kernel.test.js) is the evidence that it is not.",
+        "The id check implements the pattern ^[a-z][a-z0-9_]*(-[a-z0-9_]+)*$ of src/core/metamodel.json in Lean; it does not read idPattern from the meta-model it is given (it only quotes it in the message)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "lean",
+        "modules": [
+          "formal/Exegra/Model.lean",
+          "formal/Exegra/ModelProps.lean",
+          "formal/Exegra/Api/Model.lean"
+        ],
+        "trusts": [
+          "trusted-lean-kernel",
+          "trusted-lean-compiler-runtime",
+          "trusted-emscripten-toolchain",
+          "trusted-libuv",
+          "trusted-js-glue",
+          "trusted-wasm-engine"
+        ],
+        "notes": "Called by the parser (src/core/parse.js) as model.derive with {spec, metamodel, methods}: the document with every object as {\"o\": [[key, value], ...]} (members in source order, repeated keys kept), the meta-model and the claim method registry as data. The reply carries diagnostics and the model with raw paths (\"3.0.12\") and parts (node, key, start) for every location, and the semantic hash of the model. Differential evidence against the JavaScript it replaced: tests/core/model-kernel.test.js with tests/oracle/parse-reference.js."
+      }
+    },
+    {
+      "id": "stable-serialization",
+      "name": "Stable serialization and text digests",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Deterministic JSON text for written files and command results (object keys sorted at every level) and SHA-256 of texts for recorded events. Output presentation, outside the verdict path.",
+      "responsibilities": [
+        "Stable JSON stringification with sorted keys for generated files, traces and command results",
+        "SHA-256 of a text as lowercase hex, equal to the workspace's hash of the UTF-8 bytes"
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "js",
+        "modules": [
+          "src/core/stable-json.js",
+          "src/core/sha256.js"
+        ]
+      }
+    },
+    {
+      "id": "hash-binding",
+      "name": "Semantic hash binding",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "The JavaScript side of the semantic hash: passes a model that does not carry its hash to the Lean hash function through the call boundary, and returns the hash and the normal form to the callers of src/core/hash.js.",
+      "responsibilities": [
+        "Call hash.semantic and hash.normalize at the Lean call boundary with the top-level declarations of a model that was not derived by parseSpec",
+        "Return the hash Lean computed with the model for a model derived by parseSpec, without recomputing it"
+      ],
+      "unknowns": [
+        "Not in the verdict path in the strict sense: a claim's result is stamped with this binding's hash, so a binding error would misstamp a result without changing a verdict. The stamp is compared with the Lean-derived hash only by the callers that use it (for example transactions' expectHash checks)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "js",
+        "modules": [
+          "src/core/hash.js"
+        ],
+        "trusts": [
+          "trusted-js-glue",
+          "trusted-js-shell"
+        ],
+        "notes": "src/core/hash.js is the binding only; it holds no hash logic. It imports the call boundary (src/core/lean.js) and nothing else from src/core."
+      }
+    },
+    {
+      "id": "machine-coverage",
+      "name": "Machine coverage",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Measures which transitions and guard outcomes of each shipped implementation machine the specification's scenarios exercise, searches for event sequences that reach the rest, and reports a transition nothing reaches (docs/coverage.md, WG-4965).",
+      "responsibilities": [
+        "Select the implementation-level behaviors whose realisation is shipped (src/core/realisation.js) and list their items: each transition that is not faultOnly, and the true and false outcome of each guard",
+        "Read the items a trace exercises: a fired transition and its guard true; the guarded transitions of the same state and event declared before it, false; every considered guard of an event ignored with reason guard-false, false",
+        "Run the scenarios that list each machine and record which scenario covers each item",
+        "Search, for the items left open, a bounded breadth-first space of action sequences on the machine alone: deliveries of its input events (not those it emits itself) with representative payloads from the declared types (scenario values, guard literals and their neighbours, both bools, enum values, null for optional fields; one instance for an instanced machine), and waits past the time thresholds of time-reading expressions or to the next pending event; a coarse round first (control state, guard variables, pending event ids), then the full state with widening payload choice; bounded by actions and by engine runs per machine",
+        "Keep a greedy cover of the runs that covered something new as generated scenarios cover-<machine>-<n>, and turn them into CreateEntity operations of kind scenario tagged generated-coverage",
+        "Report a transition no scenario and no searched sequence reaches as machine.transition-unreachable (a warning, an error with system.generation), saying whether its source state is entered by no transition, the search exhausted its states, or it stopped at a bound"
+      ],
+      "unknowns": [
+        "The search is bounded and its payloads are representative, not exhaustive: a transition reported unreachable within the bound may be reached by a longer sequence or another payload; only the structural case (a source state nothing enters) is certain (WG-4965).",
+        "A guard outcome nothing reaches is listed as open in the report, not as a finding; deciding that the outcome is impossible (complementary guards) is left to the reader (WG-4965).",
+        "The verified explorer of formal/ (engine.explore) explores the interleavings and fault subsets of one scenario, not sequences of inputs, so the search runs the engine once per sequence instead (WG-4965)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "js",
+        "modules": [
+          "src/core/machine-coverage.js"
+        ],
+        "notes": "Run by the cover-machines command of cli/commands.js."
+      }
+    },
+    {
+      "id": "spec-layers",
+      "name": "Specification layers",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Reads a layered specification (WG-4989): the platform specification plus product files that import the platform's entities by id and add tenant metadata of their own, checked ahead of the verified kernel and analysed as one model with every location in its own file.",
+      "responsibilities": [
+        "Read each product file on its own: syntax, the product header (id, name, imports.spec naming the platform specification, imports.entities naming the platform entities it uses) and its sections",
+        "Allow a product to declare only tenant metadata (ARC-113 of the platform): the entity sections records, types, screens, forms, actions, liveBindings, errorMessages, behaviors, events, contracts, roles, scenarios, uiScenarios, claims, evidence and capabilities (the one platform section a product adds to, D-6590), and the typed sections objects, policies, segments, settings, ledgerUnits, ledgerPools, ledgerLimits, mailTemplates, noticeTemplates, tokens, triggers, automations and operations; refuse every other section with layer.kind-not-allowed",
+        "Splice the product entities of the entity sections into the platform text at the end of their sections, keeping the platform text byte for byte, and have analyzeSpec derive and validate the combined model; the typed sections are not spliced",
+        "Map every location and JSON path the analysis reports back to the file it is in (loc.file names a product file) and restate the diagnostics a layered specification gives a meaning: an id the platform or another product declares (layer.redefines-entity), a reference no layer declares (layer.reference-unknown)",
+        "Check the imports: an imported id the platform does not declare (layer.import-unknown), a platform entity used by a reference, a type text or a capability list without being imported (layer.import-missing), a reference into another product file (layer.cross-product-reference), an imports.spec that is not the project's platform file (layer.import-mismatch); every refusal says what is wrong and what to do",
+        "Keep the platform's semantic hash the hash of the platform text parsed alone, so adding a product file changes neither it nor anything generated from the platform; report the combined model's hash as the layered hash",
+        "Refuse a product entity that claims what only the platform may have (layer.platform-power): a role at platform level or with anonymous, service or external holders, a contract that is public with the anonymous scheme, is implemented by a platform component or carries a realisation of generated, hand or derived, a behavior at implementation level, an event that is a domain event, an elapsed-time event or states a delivery guarantee, a capability that is core, a setting that is set at or locked by the platform level",
+        "Refuse two product files with one product id (layer.product-id-duplicate), a product entity id that fails the id pattern (layer.entity-id-invalid) and a section item with no id (layer.entity-id-missing)",
+        "Refuse a platform entity that names a product entity, by a typed reference, a type text or a capability list (layer.platform-references-product), so the platform never depends on a product",
+        "Take the product files as they are on disk when a project reloads (Project.reload), so a long-lived session shows the layered model of the current product files",
+        "Check each value of a typed section against the platform type its section maps to (src/core/layer-values.js, one table and one generic check: struct fields required and optional, union variants by tag, enums, lists, maps, ids by pattern and length, scalars by representation, the authoring text of an expression): a value of the wrong shape is refused with layer.value-invalid and a union value the platform union lacks with layer.outside-catalogue (the published catalogue of INT-153: trigger-event, automation-step, tenant-operation-step)",
+        "Refuse an entity id that is not in the namespace of its product, the product id with each hyphen replaced by an underscore and two underscores (layer.namespace-missing, D-6582), and resolve the names the typed values hold against what the product files declare: an undeclared name in the product namespace is layer.reference-unknown and a name another product declares is layer.cross-product-reference, which also confines a product capability to its product",
+        "Report a product capability as unreachable only when no role or grant confers it: installing the product entitles it, and a product file cannot add a plan (D-6590)",
+        "Parse and check the expression text of every typed value whose platform type is expr or expression (src/core/layer-expr.js: the grammar and static check of the tenant rule language, in the scope the value is written in: the fields of the object type it belongs to, the params an operation or an event binds, the roles of the platform and of the product, and what a reference hop may follow): a text that does not parse is layer.expr-syntax, a field the object type lacks layer.expr-unknown-field, a role nobody declares layer.expr-unknown-role, a param the scope does not bind layer.expr-unknown-param and a shape the operator does not accept layer.expr-type, each naming the product entity and the position in the text. The grammar and typing include the nine operators of the language: checked + - * on integers (a timestamp plus or minus an integer is a timestamp; Time + Time is refused, ms_between gives the difference), ms_between, days, hours, minutes, concat and text, with a - before a digit a sign only where no operand ends before it, and an operand of the wrong shape is layer.expr-type with the message \"<op> does not accept a <Shape> operand\". A step of an operation reads the id of an earlier create step as a param (D-6548). tests/core/layer-expr-drift.test.js probes every operator a language entity declares against this parser and compares it with the language checker on the shared case table, so an operator added to the language fails a test until layer-expr.js handles it (WG-5120)",
+        "Refuse an object type that has a field with a personal declaration and no retention rule (layer.retention-missing, D-6584)",
+        "Accept the product header members version (three whole numbers joined by dots) and platform ({min, below?}: a platform release, and a later release from which the product is not supported), and refuse a malformed one with layer.header-invalid, as specc does (WG-5174)"
+      ],
+      "unknowns": [
+        "The browser application opens a project without its product files: src/app/session.js builds the Project from the specification alone, and the workspace watcher does not watch product files (follow-up of WG-4989).",
+        "Whether a product's claims and scenarios are about its own entities is not checked; any claim or scenario may be declared in a product file.",
+        "The product sections are a fixed list in src/core/layers.js and src/core/layer-values.js; nothing yet generates the tenant bundle a product installs through the platform's install-bundle contract. The check does not parse the block text of a template. The scope of an automation's expressions is not known here (the params come from the triggers that start it and the outputs of its steps), so its fields and params are accepted and only its syntax, shapes and roles are checked."
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "js",
+        "modules": [
+          "src/core/layers.js",
+          "src/core/layer-values.js",
+          "src/core/layer-expr.js"
+        ],
+        "notes": "Outside the verdict path, like the parser: it composes and checks texts before the model derivation in Lean, whose sources and build are unchanged."
+      }
+    },
+    {
+      "id": "derivation-cache",
+      "name": "Derivation cache",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "A persistent, on-disk cache of the stages of model derivation that run in the Lean kernel, so that repeated Exegra processes over the same specification skip them (WG-5636). It wraps derivation from outside: the cached value is what parseSpec and analyzeSpec compute, and a hit is observably identical to a miss.",
+      "responsibilities": [
+        "Key every entry by the SHA-256 of the entry format, the package version, the content hash of Exegra's derivation sources (every file of src/core and of the Lean build in src/engine/lean, by path and bytes), the stage name and the stage's inputs: the specification text (for a layered project the text that already holds every product file's entities) and the options that change the result (claimsOnly). No modification time is read, so editing a specification, a product file, the file project.jsonc names or Exegra itself is a miss",
+        "Cache two stages: parseSpec (the model and its diagnostics, only when the text is usable) and the semantic diagnostics of analyzeSpec (only when analyzeSpec parsed the text itself, never for a caller's own parsed model)",
+        "Encode a stage's value faithfully as tagged JSON (Maps, Sets, objects without a prototype, -0, infinities, undefined, shared references and cycles) or refuse it and cache nothing: a value the encoding cannot reproduce exactly (a function, a class instance, a hole, an accessor) is computed every time",
+        "Store each entry in one file under the cache directory (EXEGRA_MODEL_CACHE_DIR, else model/ under EXEGRA_CACHE_DIR, else the user cache directory: %LOCALAPPDATA%/exegra/cache/model, $XDG_CACHE_HOME/exegra/model or ~/.cache/exegra/model), with a header that repeats the key, the byte count and the SHA-256 of the body",
+        "Write through a temporary sibling and a rename, so a concurrent reader sees a whole entry or none and two writers of one key leave one valid entry; a failed write is ignored",
+        "Treat an entry that is missing, truncated, altered, of another format or under another key as a miss and replace it, never as an error",
+        "Bound the directory: past EXEGRA_MODEL_CACHE_MAX_BYTES (default 512 MiB) delete the least recently used entries down to three quarters of the bound, and delete temporary files a dead writer left more than an hour ago; a hit refreshes the entry's recency",
+        "Do nothing when EXEGRA_NO_CACHE is set (to anything but empty, 0 or false), when the sources cannot be read or outside Node; EXEGRA_CACHE_TRACE=1 reports each hit, miss and store on stderr"
+      ],
+      "unknowns": [
+        "The evaluation of claims is not cached: it runs the verified engine, and a claims run still takes the time of its scenarios after the derivation stages hit. Measured on the Strata specification (about 10,000 entities): validate 13.9 s cold, 1.0 s warm; claims 16.4 s cold, 7.8 s warm.",
+        "The diagnostics of a validate hit are rebuilt as copies: their loc objects are equal to the entities' but no longer the same objects. Nothing reads the identity."
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "js",
+        "modules": [
+          "src/core/derivation-cache.js"
+        ],
+        "notes": "Outside the verdict path: it stores and returns the values of the derivation without changing them; the derivation itself (Lean and the shell code around it) is untouched."
+      }
+    },
+    {
+      "id": "claim-strength",
+      "name": "Claim strength",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Says how strong the check behind each claim status is and whether what it reads is the platform's own entities: a static, deterministic analysis of the model that never changes a status (decision dec-claim-check-and-grounding).",
+      "responsibilities": [
+        "Classify the check of every claim: holds-by-construction (a never, state-invariant or precedes claim that every value nominal transitions can give its references satisfies, or whose occurrence only fault transitions or guards that can never hold produce; naming the variables and the fault transitions), restated-scenario (a counter compared with a literal equal to the extreme its one scenario reaches), single-trace, explored (from supplied exploration results), refined, and the method-based checks structural, data-model, lean-theorem, sampled, test, evidence and none",
+        "Classify the grounding of every claim and integrity rule: bound, partly-bound, self-contained or not-applicable, from what the behaviors it reads are anchored to (a refined existing behavior, a record, a contract event, an anchored behavior) and the payload fields of contract-less events they branch on, or the kinds an integrity rule quantifies over; under a baseline an entity the change adds anchors nothing",
+        "Count claims by check and grounding, and integrity rules by grounding"
+      ],
+      "unknowns": [
+        "Exhaustive exploration results (exegra prove) are not recorded in a project, so a trace claim is reported as explored only when the caller passes them; claims, evaluate, the claims report and admit never do yet (WG-5280).",
+        "The value analysis ignores guards when it collects the values and states nominal runs reach and does not follow arithmetic or keyed instances, so vacuity that depends on them is not found; restated-scenario examines only a plain comparison with a literal.",
+        "Grounding is structural: an anchored behavior may still branch on a field that means nothing, and the expression language cannot read roles, capabilities or grants, so the access model reaches a behavior only through a contract's auth.requires."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/claim-strength.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "claim-verdict",
+      "name": "Claim verdict (Lean)",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Decides the status of every claim from the facts recorded about it, and the change impact and theorem weakening of a change, in the verified kernel.",
+      "responsibilities": [
+        "Status: a tuple of strength (refuted < {undecided, asserted} < checkedOnInstances < exploredToBound < proved, undecided and asserted incomparable), subject (model, implementation, reality), open assumptions and freshness (stale < unverifiable < fresh), with the decidable partial order Status.le (Exegra.Verdict.Status.le_antisymm)",
+        "Fact schema: kind, subject, target (a part of a claim or an assumption), stamps (recorded, current) and outcome; a fact that does not decode is refused with its index and reason (facts.decode, claims.status)",
+        "Decide Verdict.status : Claim -> List Fact -> Status and prove its rules: a conjunction takes the meet of its parts (status_conj), a contradicting fact never raises (contradict_lowers), staleness never raises (stale_never_raises), a refuted assumption leaves a claim undecided (refuted_assumption_undecided), only a fresh proved status with no open assumption is shown established (established_iff), the strength never exceeds what the kinds of the fresh facts used can establish (strength_le_kind), and a regression is a removal or a move that is not upward (regression_iff)",
+        "Apply the lean-theorem rule to a recorded theorem check: found, a theorem, accepted by the kernel again, standard axioms only, an about list whose every constant is a definition named in the statement and not implemented_by, extern or partial",
+        "Decide which claims a change re-marks over the dependency graph the shell builds (Exegra.Impact.impacted), and whether a change of a lean-theorem claim's theorem weakens it (Exegra.Impact.weakening)"
+      ],
+      "unknowns": [
+        "The partial order compares open assumptions as a sublist in declaration order: reordering a claim's assumptions is a move that is not upward, so it is a regression.",
+        "The meet of undecided and asserted is refuted, as the order of criterion 1 of WG-5684 forces: a conjunction of an untested part and a part only asserted by a document reads refuted (shown as violated when a fact failed, otherwise not-evaluated), and a part whose only positive fact is stale reads refuted with freshness stale, so that staleness never raises a status and strength only comes from fresh facts."
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "lean",
+        "modules": [
+          "formal/Exegra/Verdict.lean",
+          "formal/Exegra/Impact.lean",
+          "formal/Exegra/Api/Verdict.lean"
+        ],
+        "trusts": [
+          "trusted-lean-kernel",
+          "trusted-lean-compiler-runtime",
+          "trusted-emscripten-toolchain",
+          "trusted-libuv",
+          "trusted-js-glue",
+          "trusted-wasm-engine"
+        ],
+        "notes": "The Lean side of claim verdicts (WG-5684). The JavaScript that produces the facts and words the result is claim-evaluator; the transport is verdict-boundary."
+      },
+      "tags": [
+        "verdict-kernel"
+      ]
+    },
+    {
+      "id": "verdict-boundary",
+      "name": "Verdict boundary",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Carries claims and their facts to the Lean verdict and the verdict back, and writes facts in the Lean schema for every trusted producer.",
+      "responsibilities": [
+        "Send every claim of an evaluation with its facts to the Lean function claims.status in one call, and regressions to verdict.isRegression (src/core/verdict.js); compute no status itself",
+        "Construct facts in the schema of Exegra.Verdict.Fact for the claim evaluator, the test-runner adapters, the tree stamp, the Lean theorem checker and the import scan (src/core/facts.js)"
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "js",
+        "modules": [
+          "src/core/verdict.js",
+          "src/core/facts.js"
+        ]
+      }
+    },
+    {
+      "id": "change-impact",
+      "name": "Change impact",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Builds the dependency graph of a specification's claims and computes which claims a change set re-marks and which guarantees it changes.",
+      "responsibilities": [
+        "Build the dependency graph: a claim depends on the assumptions it cites and the entities its evaluate names, an assumption on the claim that discharges it, a claim on its evidence, test evidence on its test file and the files its run covered, measurement evidence on its files, a lean-theorem claim on its theorem, the theorem on the declarations its statement uses and their files",
+        "Turn a change set into changed nodes: the entities its operations add, change or remove, and the files it names; list the guarantee changes among them (a claim's statement or evaluate changed, a claim added or removed)",
+        "Ask the Lean function impact.claims which claims the changed nodes re-mark"
+      ],
+      "unknowns": [
+        "Test evidence depends on the files its run covered only when verify ran the node test itself; reused outcomes and browser tests record no coverage, a theorem depends on the Exegra constants its statement uses one level deep, and verify --change trusts the entities and files the change set names (WG-5689)."
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "js",
+        "modules": [
+          "src/core/impact.js"
+        ]
+      }
+    },
+    {
+      "id": "semantic-abstraction",
+      "name": "Semantic abstraction engine",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Derives the architectural model at any cut of any hierarchy from the relationships: blocks, lifted interactions with complete witness sets and homomorphic summaries, fibres, boundaries, derived interfaces checked against declared ports, connector contractions, contract realisation paths, realisation maps between hierarchies and the diagnostics of the abstraction; and says which derived facts and claim results an edit can change.",
+      "responsibilities": [
+        "Lift the relationships through a cut's abstraction map per kind or coarsened kind, each derived interaction carrying every relationship it stands for (sorted) and a summary that is a monoid homomorphism: count, kinds, contracts, carried data, delivery guarantees, provenance mix and ports",
+        "Keep each block's fibre (its internal relationships), boundary and derived interface, and compare the interface with the ports the block declares (encapsulation and realisation); an opaque block's declared interface is authoritative",
+        "Attach the facts of an element a cut opens to that element as an implicit block, so every relationship lies in exactly one fibre or witness set",
+        "Check relationships that end at ports (requires to provides, one contract), declared coarse facts at transparent composites (witnessed, kind preserved), and realisation maps between hierarchies",
+        "Report the realisation path of every contract hop by hop, flagging hops whose events carry no contract",
+        "Check its own invariants on a model: witness completeness, boundary accounting, recoverability, interfaces from boundaries, functoriality, kind preservation and determinism",
+        "Record footprints on derived facts and claim results, and re-derive after an edit only the facts whose footprint the edit touches",
+        "Read extracted and observed facts as data (src/core/extraction.js) and keep them beside the declared relationships with their own provenance: one imports relationship per pair of module elements the extracted imports connect, so that an extracted import is a witness of the derived interaction at every cut; reconcile the declarations with them (a declared static dependency inside the surface is redundant; a declared runtime interaction no recording shows is not observed, never false); report what a check rests on (declared, extracted or observed)"
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/abstraction.js",
+          "src/core/footprints.js",
+          "src/core/extraction.js"
+        ],
+        "language": "js",
+        "notes": "Pure functions of a model snapshot, memoised per snapshot and cut. The lifting rule is a small function rather than an integrity relation: the rule language ranges over entities, and blocks, module elements and witness sets are not entities."
+      },
+      "unknowns": [
+        "Integrity rules cannot read derived interactions yet: the rule language quantifies over entities and stores no witnesses, so the derived tuples are read by claims, views and the command line only (WG-5709).",
+        "The invariants (lift functoriality with coarsening, absence transfer, boundary characterisation, reachability and acyclicity transfer, recoverability, incremental equals full re-derivation) are checked by property tests and by the abstraction-invariants claims on this model, not proved in Lean (WG-5710).",
+        "Level-bound claim verdicts are decided here in JavaScript, outside the verified kernel of tag verdict-kernel; whether the derivation joins that kernel is part of WG-4785's scope."
+      ]
+    },
+    {
+      "id": "formal-root",
+      "name": "Lean library root",
+      "parent": "semantic-core",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "The entry points of the Lean library: the root module that imports every module so that one build checks them all, the executable that runs the engine from the command line, and the registry module that lists every callable function. Nothing in the library imports them, so they sit above the components whose modules they gather (extraction, WG-5696, found the cycles that sharing them with those components made).",
+      "responsibilities": [
+        "Import every module of the Lean library, so that building the root checks every proof (formal/Exegra.lean)",
+        "Run the engine from the command line (formal/Main.lean)",
+        "Gather the callable functions of the Lean call boundary into Exegra.Api.registry (formal/Exegra/Api.lean)"
+      ],
+      "implementation": {
+        "status": "manual",
+        "language": "lean",
+        "modules": [
+          "formal/Exegra.lean",
+          "formal/Main.lean",
+          "formal/Exegra/Api.lean"
+        ]
+      }
+    }
+  ],
+  // ---- Relationships -----------------------------------------------------------------
+  // Taken from the real imports and calls (module imports unless stated). The semantic
+  // core imports nothing from src/app, src/render, src/ui or src/persist; the only
+  // outward dependency of any core module is jsonc-parser.
+  "relationships": [
+    // -- Semantic core (acyclic by construction)
+    { "id": "parser-calls-derivation-cache", "kind": "invokes", "from": "parser", "to": "derivation-cache", "description": "parseSpec asks the cache for the derived model of a text before deriving it." },
+    { "id": "validator-calls-derivation-cache", "kind": "invokes", "from": "validator", "to": "derivation-cache", "description": "analyzeSpec asks the cache for the semantic diagnostics of a text before validating it." },
+    { "id": "parser-reads-metamodel", "kind": "reads", "from": "parser", "to": "metamodel", "description": "Checks structure and property types against the entity definitions in metamodel.json." },
+    { "id": "parser-reads-claim-method-registry", "kind": "reads", "from": "parser", "to": "claim-method-registry", "description": "Imports CLAIM_METHODS to check evaluation parameters." },
+    { "id": "parser-depends-on-jsonc-parser", "kind": "depends-on", "from": "parser", "to": "jsonc-parser-library", "description": "Builds the syntax tree and reports syntax errors with the library." },
+    { "id": "validator-calls-parser", "kind": "invokes", "from": "validator", "to": "parser", "description": "analyzeSpec calls parseSpec, then validates the model." },
+    { "id": "validator-calls-expression-language", "kind": "invokes", "from": "validator", "to": "expression-language", "description": "Parses guards, effect values and claim expressions and lists their references." },
+    { "id": "validator-reads-claim-method-registry", "kind": "reads", "from": "validator", "to": "claim-method-registry", "description": "Checks each claim's method and parameters against the registry." },
+    { "id": "transactions-calls-parser", "kind": "invokes", "from": "transactions", "to": "parser", "description": "Re-derives the model after every text edit and parses a replacement source." },
+    { "id": "transactions-calls-validator", "kind": "invokes", "from": "transactions", "to": "validator", "description": "Project calls analyzeSpec on every candidate specification and refuses results with errors." },
+    { "id": "transactions-calls-expression-language", "kind": "invokes", "from": "transactions", "to": "expression-language", "description": "Operations parse expressions when renaming ids that expressions mention." },
+    { "id": "transactions-calls-queries", "kind": "invokes", "from": "transactions", "to": "queries", "description": "Finds declaration sites and owned entities when creating and deleting." },
+    { "id": "transactions-reads-metamodel", "kind": "reads", "from": "transactions", "to": "metamodel", "description": "Reads the id pattern." },
+    {
+      "id": "transactions-depends-on-jsonc-parser",
+      "kind": "depends-on",
+      "from": "transactions",
+      "to": "jsonc-parser-library",
+      "description": "Computes and applies the minimal text edits that keep comments and formatting."
+    },
+    { "id": "claim-evaluator-reads-claim-method-registry", "kind": "reads", "from": "claim-evaluator", "to": "claim-method-registry", "description": "Dispatches only on registered methods; an unregistered method stays not evaluated." },
+    { "id": "claim-evaluator-calls-queries", "kind": "invokes", "from": "claim-evaluator", "to": "queries", "description": "Builds the component graph and selects components for structural claims." },
+    { "id": "claim-evaluator-calls-expression-language", "kind": "invokes", "from": "claim-evaluator", "to": "expression-language", "description": "Evaluates claim expressions against trace configurations." },
+    {
+      "id": "claim-evaluator-calls-simulation-engine",
+      "kind": "invokes",
+      "from": "claim-evaluator",
+      "to": "simulation-engine",
+      "description": "Runs the listed scenarios for invariant and temporal claims.",
+      "contract": "run-scenario"
+    },
+    { "id": "transactions-data-flow-session", "kind": "data-flow", "from": "transactions", "to": "session", "description": "Each commit delivers its TransactionResult and history entry to the listener the session subscribed." },
+    {
+      "id": "claim-evaluator-calls-refinement-checker",
+      "kind": "invokes",
+      "from": "claim-evaluator",
+      "to": "refinement-checker",
+      "description": "Refinement checks are claims."
+    },
+    {
+      "id": "claim-evaluator-calls-exhaustive-explorer",
+      "kind": "invokes",
+      "from": "claim-evaluator",
+      "to": "exhaustive-explorer",
+      "description": "Claims evaluated exhaustively within bounds (planned, WG-4650)."
+    },
+    {
+      "id": "claim-evaluator-calls-implementation-refinement",
+      "kind": "invokes",
+      "from": "claim-evaluator",
+      "to": "implementation-refinement",
+      "description": "Refinement of implementation traces is a claim (planned, WG-4679)."
+    },
+    {
+      "id": "validator-calls-fault-model",
+      "kind": "invokes",
+      "from": "validator",
+      "to": "fault-model",
+      "description": "Runs the fault model rules (missing sources, bounds, realises outside the model) as part of validation."
+    },
+    {
+      "id": "claim-evaluator-calls-proof-export",
+      "kind": "invokes",
+      "from": "claim-evaluator",
+      "to": "proof-export",
+      "description": "Claims proved in Lean are reported as verified by proof (planned, WG-4686)."
+    },
+    {
+      "id": "validator-calls-contract-conformance",
+      "kind": "invokes",
+      "from": "validator",
+      "to": "contract-conformance",
+      "description": "Checks the payload of every contract event against the fields, types and errors of its contract."
+    },
+    {
+      "id": "claim-evaluator-calls-contract-conformance",
+      "kind": "invokes",
+      "from": "claim-evaluator",
+      "to": "contract-conformance",
+      "description": "checkTrace adds the automatic checks of the contract events of a trace."
+    },
+    {
+      "id": "validator-calls-data-model",
+      "kind": "invokes",
+      "from": "validator",
+      "to": "data-model",
+      "description": "Runs the data rules and the record and copy consistency checks as part of validation."
+    },
+    {
+      "id": "claim-evaluator-calls-data-model",
+      "kind": "invokes",
+      "from": "claim-evaluator",
+      "to": "data-model",
+      "description": "Evaluates data-model claims from the findings of the data rules."
+    },
+    {
+      "id": "data-model-calls-queries",
+      "kind": "invokes",
+      "from": "data-model",
+      "to": "queries",
+      "description": "Builds the component graph to find a path between a copy's holder and a record's owner."
+    },
+    {
+      "id": "data-model-reads-metamodel",
+      "kind": "reads",
+      "from": "data-model",
+      "to": "metamodel",
+      "description": "The record and copy kinds and their enums are declared in the meta-model."
+    },
+    {
+      "id": "metric-claims-calls-simulation-engine",
+      "kind": "invokes",
+      "from": "metric-claims",
+      "to": "simulation-engine",
+      "description": "Runs the claim's scenarios once per seed in metrics mode (planned, WG-4715).",
+      "contract": "run-scenario"
+    },
+    {
+      "id": "metric-claims-reads-performance-metrics",
+      "kind": "reads",
+      "from": "metric-claims",
+      "to": "performance-metrics",
+      "description": "Takes one statistic per run from the measured outputs (planned)."
+    },
+    {
+      "id": "claim-evaluator-calls-metric-claims",
+      "kind": "invokes",
+      "from": "claim-evaluator",
+      "to": "metric-claims",
+      "description": "Metric-bound claims are evaluated by the metric claims component (planned, WG-4715)."
+    },
+    {
+      "id": "self-model-replay-calls-simulation-contract",
+      "kind": "invokes",
+      "from": "self-model-replay",
+      "to": "simulation-contract",
+      "description": "Reads the behaviors of the scenario from the engine input (simulationInput)."
+    },
+    {
+      "id": "self-model-replay-calls-expression-language",
+      "kind": "invokes",
+      "from": "self-model-replay",
+      "to": "expression-language",
+      "description": "Evaluates guards, effect values and emitted payloads."
+    },
+    {
+      "id": "validator-calls-integrity-rules",
+      "kind": "invokes",
+      "from": "validator",
+      "to": "integrity-rules",
+      "description": "Reports invalid rules, vacuous rules and every current violation as diagnostics."
+    },
+    {
+      "id": "transactions-calls-integrity-rules",
+      "kind": "invokes",
+      "from": "transactions",
+      "to": "integrity-rules",
+      "description": "Project.apply refuses a transaction that adds a violation of an error rule (the ratchet)."
+    },
+    {
+      "id": "integrity-rules-calls-proof-export",
+      "kind": "invokes",
+      "from": "integrity-rules",
+      "to": "proof-export",
+      "description": "prove-integrity uses the Lake runner of exegra prove (lakeAvailable, the exegra-lean binary)."
+    },
+    {
+      "id": "parser-calls-lean-call-boundary",
+      "kind": "invokes",
+      "from": "parser",
+      "to": "lean-call-boundary",
+      "description": "Derives every model with the Lean function model.derive."
+    },
+    {
+      "id": "model-derivation-calls-model-hash",
+      "kind": "invokes",
+      "from": "model-derivation",
+      "to": "model-hash",
+      "description": "Computes the semantic hash of every derived model."
+    },
+    {
+      "id": "claim-evaluator-calls-simulation-contract",
+      "kind": "invokes",
+      "from": "claim-evaluator",
+      "to": "simulation-contract",
+      "description": "Derives the engine input of a scenario from the model before a trace claim runs it."
+    },
+    {
+      "id": "validator-calls-metric-claims",
+      "kind": "invokes",
+      "from": "validator",
+      "to": "metric-claims",
+      "description": "Validates metric-bound claims with the statistics of src/core/metric-stats.js."
+    },
+    {
+      "id": "transactions-calls-hash-binding",
+      "kind": "invokes",
+      "from": "transactions",
+      "to": "hash-binding",
+      "description": "Computes the semantic hash of each committed model and the text hash of a project."
+    },
+    {
+      "id": "claim-evaluator-calls-hash-binding",
+      "kind": "invokes",
+      "from": "claim-evaluator",
+      "to": "hash-binding",
+      "description": "Stamps every result with the semantic hash it was computed from."
+    },
+    {
+      "id": "hash-binding-calls-lean-call-boundary",
+      "kind": "invokes",
+      "from": "hash-binding",
+      "to": "lean-call-boundary",
+      "description": "Hashes and normalizes a model that does not carry its hash with hash.semantic and hash.normalize."
+    },
+    {
+      "id": "validator-calls-generation-readiness",
+      "kind": "invokes",
+      "from": "validator",
+      "to": "generation-readiness",
+      "description": "Runs the type, record and realisation consistency checks, and the readiness rules when system.generation is set."
+    },
+    {
+      "id": "machine-coverage-calls-simulation-engine",
+      "kind": "invokes",
+      "from": "machine-coverage",
+      "to": "simulation-engine",
+      "description": "Runs each scenario of a shipped machine, and each searched sequence, through runEngine."
+    },
+    {
+      "id": "machine-coverage-calls-simulation-contract",
+      "kind": "invokes",
+      "from": "machine-coverage",
+      "to": "simulation-contract",
+      "description": "Derives the engine input of a scenario, and of the machine alone with its routes, with simulationInput."
+    },
+    {
+      "id": "machine-coverage-calls-validator",
+      "kind": "invokes",
+      "from": "machine-coverage",
+      "to": "validator",
+      "description": "Reads whether a machine is shipped (effectiveRealisation)."
+    },
+    {
+      "id": "machine-coverage-calls-expression-language",
+      "kind": "invokes",
+      "from": "machine-coverage",
+      "to": "expression-language",
+      "description": "Parses guards and effect values for their literals, their references to time and the variables guards read."
+    },
+    {
+      "id": "machine-coverage-calls-generation-readiness",
+      "kind": "invokes",
+      "from": "machine-coverage",
+      "to": "generation-readiness",
+      "description": "Resolves the declared type of a payload field (typeStructure) to choose representative values."
+    },
+    {
+      "id": "spec-layers-calls-parser",
+      "kind": "invokes",
+      "from": "spec-layers",
+      "to": "parser",
+      "description": "Parses the platform text alone for its model and semantic hash."
+    },
+    {
+      "id": "spec-layers-calls-validator",
+      "kind": "invokes",
+      "from": "spec-layers",
+      "to": "validator",
+      "description": "analyzeSpec derives and validates the combined text."
+    },
+    {
+      "id": "spec-layers-calls-generation-readiness",
+      "kind": "invokes",
+      "from": "spec-layers",
+      "to": "generation-readiness",
+      "description": "Reads type texts with parseTypeName to find the platform types a product names."
+    },
+    {
+      "id": "spec-layers-reads-metamodel",
+      "kind": "reads",
+      "from": "spec-layers",
+      "to": "metamodel",
+      "description": "Reads the id pattern and the sections of the specification format."
+    },
+    {
+      "id": "spec-layers-depends-on-jsonc-parser",
+      "kind": "depends-on",
+      "from": "spec-layers",
+      "to": "jsonc-parser-library",
+      "description": "Parses product files and the platform's syntax tree with the library."
+    },
+    {
+      "id": "transactions-calls-spec-layers",
+      "kind": "invokes",
+      "from": "transactions",
+      "to": "spec-layers",
+      "description": "A Project with product files analyses every candidate platform text with its product files layered on it."
+    },
+    {
+      "id": "claim-strength-calls-simulation-engine",
+      "kind": "invokes",
+      "from": "claim-strength",
+      "to": "simulation-engine",
+      "description": "Runs the one scenario of a counter bound to decide restated-scenario."
+    },
+    {
+      "id": "claim-strength-calls-expression-language",
+      "kind": "invokes",
+      "from": "claim-strength",
+      "to": "expression-language",
+      "description": "Parses claim expressions, guards and effect values for the value analysis and the grounding."
+    },
+    {
+      "id": "claim-strength-calls-integrity-rules",
+      "kind": "invokes",
+      "from": "claim-strength",
+      "to": "integrity-rules",
+      "description": "Parses integrity rules to find the kinds they quantify over."
+    },
+    {
+      "id": "claim-evaluator-calls-verdict-boundary",
+      "kind": "invokes",
+      "from": "claim-evaluator",
+      "to": "verdict-boundary",
+      "description": "Sends every claim with its facts for the Lean verdict and builds the facts with the fact constructors."
+    },
+    {
+      "id": "metric-claims-calls-verdict-boundary",
+      "kind": "invokes",
+      "from": "metric-claims",
+      "to": "verdict-boundary",
+      "description": "Turns the statistical results of a metric claim into facts and asks the Lean verdict (metricVerdict)."
+    },
+    {
+      "id": "verdict-boundary-calls-lean-call-boundary",
+      "kind": "invokes",
+      "from": "verdict-boundary",
+      "to": "lean-call-boundary",
+      "description": "Calls claims.status, verdict.isRegression and facts.decode."
+    },
+    {
+      "id": "change-impact-calls-lean-call-boundary",
+      "kind": "invokes",
+      "from": "change-impact",
+      "to": "lean-call-boundary",
+      "description": "Calls impact.claims."
+    },
+    {
+      "id": "semantic-abstraction-invokes-queries",
+      "kind": "invokes",
+      "from": "semantic-abstraction",
+      "to": "queries",
+      "description": "Reads elements, hierarchies, cuts and their abstraction maps, knowledge status, the interaction taxonomy and connector pairs."
+    },
+    {
+      "id": "claim-evaluator-invokes-semantic-abstraction",
+      "kind": "invokes",
+      "from": "claim-evaluator",
+      "to": "semantic-abstraction",
+      "description": "Evaluates graph claims stated at a cut on the derived model of that cut, and checks the abstraction invariants."
+    },
+    {
+      "id": "validator-invokes-semantic-abstraction",
+      "kind": "invokes",
+      "from": "validator",
+      "to": "semantic-abstraction",
+      "description": "Reports incompatible port connections and broken realisation maps on every transaction."
+    },
+    {
+      "id": "self-model-replay-runs-edit-orders",
+      "kind": "invokes",
+      "from": "self-model-replay",
+      "to": "simulation-engine",
+      "description": "Run both serial orders of the specified shared-base write protocol."
+    }
+  ]
+}

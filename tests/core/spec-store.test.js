@@ -16,6 +16,7 @@ import { analyzeSpec } from '../../src/core/analyze.js';
 import { semanticHash } from '../../src/core/hash.js';
 import { createWorkspace } from '../../tools/workspace.js';
 import { runCommand } from '../../cli/commands.js';
+import { readSpecFile } from '../../tools/spec-manifest.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const FIXTURES = path.join(ROOT, 'tests/fixtures');
@@ -125,7 +126,7 @@ test('round trip of every parse corpus case and refusal of a case that does not 
 
 test('reimporting an export gives the same rows', () => {
   for (const file of [path.join(ROOT, 'specs/exegra/spec.jsonc'), path.join(FIXTURES, 'multiplayer/spec.jsonc'), path.join(FIXTURES, 'register-import/repo/draft.jsonc')]) {
-    const d = stored(fs.readFileSync(file, 'utf8'));
+    const d = stored(readSpecFile(file));
     const again = stored(exportText(d));
     assert.deepEqual(storeRows(again), storeRows(d));
     d.close();
@@ -177,7 +178,7 @@ test('entity sections are cut per item, other sections are stored whole', () => 
 });
 
 test('the index columns: kind, component and references', () => {
-  const db = stored(fs.readFileSync(path.join(ROOT, 'specs/exegra/spec.jsonc'), 'utf8'));
+  const db = stored(readSpecFile(path.join(ROOT, 'specs/exegra/spec.jsonc')));
   const component = /** @type {any} */ (db.prepare("SELECT * FROM entity WHERE kind = 'component' AND id = 'workspace-service'").get());
   assert.equal(component.component, 'workspace-service');
   const inbound = db.prepare('SELECT e.id FROM ref r JOIN entity e ON e.position = r.position WHERE r.target = ?').all('workspace-service').map((r) => r.id);
@@ -205,7 +206,7 @@ test('a text that does not parse is refused and the store keeps what it held', (
 
 test('the model read from the store is the model of the text: semantic hash and diagnostics', () => {
   const texts = [
-    fs.readFileSync(path.join(ROOT, 'specs/exegra/spec.jsonc'), 'utf8'),
+    readSpecFile(path.join(ROOT, 'specs/exegra/spec.jsonc')),
     fs.readFileSync(path.join(FIXTURES, 'register-import/repo/draft.jsonc'), 'utf8'),
     EDGE_CASES.bom,
     '{\n  "exegra": "0.1",\n  "system": { "id": "s", "name": "S" },\n  "components": [ { "id": "a", "name": "A", "category": "logical", "parent": "missing" } ]\n}\n',

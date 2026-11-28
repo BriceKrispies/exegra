@@ -1,4 +1,7 @@
-import { evaluateRuns, rat, parseRational, claimStatus } from '../../../../src/core/metric-stats.js';
+import { evaluateRuns, rat, parseRational } from '../../../../src/core/metric-stats.js';
+import { metricVerdict } from '../../../../src/core/metric-claims.js';
+// The claim status is decided in Lean since WG-5684 (metric-stats.js no longer has claimStatus).
+const claimStatus = (scenarios) => ({ status: metricVerdict({ scenarios, negatives: [], controlNegatives: [] }).label });
 // 100 runs of a closed-workload class: 60 normal runs pass (p99 = 20 ms <= 30 ms),
 // 40 runs collapse: the client population stalls, only 12 requests are measured, p99 = +inf.
 const runs = [];

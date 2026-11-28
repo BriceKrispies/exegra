@@ -227,3 +227,24 @@ test('performance: 400 nodes / 500 edges', () => {
   assert.ok(chooseMs < 150, `chooseLayout took ${chooseMs} ms`);
   assert.ok(oneMs < 30, `layoutScene took ${oneMs} ms`);
 });
+
+test('a hub with fourteen neighbours is drawn with its spokes clear of other nodes on a wide and a tall view', () => {
+  // The system in its environment (level 0): three sources and eleven sinks around one block. A tight grid has no
+  // crossings (every spoke shares the hub) but draws most spokes through other nodes; the overlap term counts that.
+  const scene = generated(15, 0, Array.from({ length: 14 }, (_, i) => (i < 3 ? [i + 1, 0] : [0, i + 1])));
+  for (const aspect of [1.6, 0.6]) {
+    const r = chooseLayout(scene, {}, { aspect });
+    assert.equal(r.method, 'radial', `aspect ${aspect}`);
+    assert.ok(r.scores.packed.overlaps > r.scores.radial.overlaps, 'the packed grid draws more spokes through nodes');
+  }
+});
+
+test('scorePlacement counts a line through an unrelated node and counts parallel edges between two nodes once', () => {
+  const scene = generated(3, 0, [[0, 2], [0, 2]]);
+  const through = {
+    n0: { x: 0, z: 0, w: 2.6, d: 1.6, level: 0 }, n1: { x: 5, z: 0, w: 2.6, d: 1.6, level: 0 }, n2: { x: 10, z: 0, w: 2.6, d: 1.6, level: 0 },
+  };
+  const clear = { ...through, n1: { x: 5, z: 6, w: 2.6, d: 1.6, level: 0 } };
+  assert.equal(scorePlacement(scene, through).overlaps, 1, 'one segment (two parallel edges), through one node');
+  assert.equal(scorePlacement(scene, clear).overlaps, 0);
+});

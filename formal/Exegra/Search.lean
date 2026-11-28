@@ -3,9 +3,9 @@ import Std.Data.HashSet
 /-
 A generic breadth-first search of a finite transition system, and its soundness.
 
-`Exegra.Explore` searches the states of a scenario for a violated invariant. Temporal claims
-need the same search over a product of that state with a small monitor state, so the search is
-stated here once, over any node type `N` with decidable equality and a hash.
+The calculus explorer (`Exegra.Core.Behav.exploreB`) searches the states of a scenario for a
+violated invariant. Temporal claims need the same search over a product of that state with a small
+monitor state (`Exegra.V2.ProveB.tsysB`), so the search is stated here once, over any node type `N` with decidable equality and a hash.
 
 A system `Sys N` has initial nodes, and a successor of a node for each pick `k < width n` for
 which `next n k` is `some`. `search S ok bound cap` visits nodes breadth first, deduplicated by
@@ -447,5 +447,158 @@ theorem search_counterexample_real {S : Sys N} {ok : N → Bool} {bound cap : Na
     obtain ⟨m, hm, hi, rfl⟩ := addAll_cex _ _ _ _ hc
     exact ⟨hm, by simp [initCex], m, by simp [initCex, greplay], by simpa [initItem] using hi⟩
   · cases h
+
+/-! ## A list-based search, equal in result
+
+`search` keeps its visited set in a `Std.HashSet`, whose hash (`String.hash`, `mixHash`) the
+kernel cannot evaluate, so a result of `search` can only be established by compiled evaluation
+(`native_decide`). `searchL` is the same search with the visited set kept as a list: it visits the
+same nodes in the same order and returns the same result (`search_eq_searchL`), and it reduces in
+the kernel whenever the system does, so a result of it can be established by `decide`. -/
+
+inductive OutL (N : Type) where
+  | ok (V : List N) (next : List (Item N))
+  | cex (p : Path N)
+  | full (states : Nat)
+
+def addAllL (ok : N → Bool) (cap : Nat) (mk : α → Item N) (cexOf : α → Path N) :
+    List α → List N → List (Item N) → OutL N
+  | [], V, nx => .ok V nx
+  | a :: as, V, nx =>
+    if V.contains (mk a).n then addAllL ok cap mk cexOf as V nx
+    else if ok (mk a).n then
+      if cap ≤ V.length then .full V.length
+      else addAllL ok cap mk cexOf as ((mk a).n :: V) (mk a :: nx)
+    else .cex (cexOf a)
+
+def layerL (S : Sys N) (ok : N → Bool) (cap : Nat) :
+    List (Item N) → List N → List (Item N) → OutL N
+  | [], V, nx => .ok V nx
+  | it :: its, V, nx =>
+    match addAllL ok cap (succItem it) (succCex it) (succs S it.n) V nx with
+    | .ok V nx => layerL S ok cap its V nx
+    | o => o
+
+def bfsL (S : Sys N) (ok : N → Bool) (cap : Nat) : Nat → List (Item N) → List N → Result N
+  | _, [], V => .holds V.length
+  | 0, _ :: _, V => .incomplete V.length
+  | d + 1, F@(_ :: _), V =>
+    match layerL S ok cap F V [] with
+    | .ok V' F' => bfsL S ok cap d F' V'
+    | .cex p => .counterexample p
+    | .full n => .incomplete n
+
+def searchL (S : Sys N) (ok : N → Bool) (bound cap : Nat) : Result N :=
+  match addAllL ok cap initItem initCex S.init [] [] with
+  | .ok V F => bfsL S ok cap bound F V
+  | .cex p => .counterexample p
+  | .full n => .incomplete n
+
+/-- A hash set and a list that hold the same nodes, the list without repeats. -/
+def Agree (V : Visited N) (L : List N) : Prop := (∀ x, V.contains x = L.contains x) ∧ V.size = L.length
+
+theorem Agree.insert {V : Visited N} {L : List N} {k : N} (h : Agree V L) (hk : V.contains k = false) :
+    Agree (V.insert k) (k :: L) := by
+  refine ⟨fun x => ?_, ?_⟩
+  · rw [Std.HashSet.contains_insert, List.contains_cons, h.1 x]
+    by_cases hx : x = k
+    · subst hx; simp
+    · have : (k == x) = false := by simpa [beq_iff_eq] using fun e => hx e.symm
+      have : (x == k) = false := by simpa [beq_iff_eq] using hx
+      simp [*]
+  · rw [Std.HashSet.size_insert, List.length_cons, ← h.2]
+    have : k ∉ V := by rw [Std.HashSet.mem_iff_contains, hk]; simp
+    simp [this]
+
+/-- The results of the two searches' steps correspond. -/
+def OutRel : Out N → OutL N → Prop
+  | .ok V nx, .ok L nx' => Agree V L ∧ nx = nx'
+  | .cex p, .cex p' => p = p'
+  | .full n, .full n' => n = n'
+  | _, _ => False
+
+theorem addAll_agree {ok : N → Bool} {cap : Nat} {mk : α → Item N} {cexOf : α → Path N} :
+    ∀ (as : List α) (V : Visited N) (L : List N) (nx : List (Item N)), Agree V L →
+      OutRel (addAll ok cap mk cexOf as V nx) (addAllL ok cap mk cexOf as L nx)
+  | [], V, L, nx, h => ⟨h, rfl⟩
+  | a :: as, V, L, nx, h => by
+    simp only [addAll, addAllL]
+    rw [h.1, h.2]
+    split
+    · exact addAll_agree as V L nx h
+    · rename_i hc
+      split
+      · split
+        · exact rfl
+        · exact addAll_agree as _ _ _ (h.insert (by rw [h.1]; simpa using hc))
+      · exact rfl
+
+theorem layer_agree {S : Sys N} {ok : N → Bool} {cap : Nat} :
+    ∀ (its : List (Item N)) (V : Visited N) (L : List N) (nx : List (Item N)), Agree V L →
+      OutRel (layer S ok cap its V nx) (layerL S ok cap its L nx)
+  | [], V, L, nx, h => ⟨h, rfl⟩
+  | it :: its, V, L, nx, h => by
+    have ha := addAll_agree (ok := ok) (cap := cap) (mk := succItem it) (cexOf := succCex it)
+      (succs S it.n) V L nx h
+    simp only [layer, layerL]
+    revert ha
+    generalize addAll ok cap (succItem it) (succCex it) (succs S it.n) V nx = o
+    generalize addAllL ok cap (succItem it) (succCex it) (succs S it.n) L nx = o'
+    intro ha
+    cases o <;> cases o' <;> simp only [OutRel] at ha
+    · obtain ⟨h1, rfl⟩ := ha
+      exact layer_agree its _ _ _ h1
+    · subst ha; exact rfl
+    · subst ha; exact rfl
+
+theorem bfs_agree {S : Sys N} {ok : N → Bool} {cap : Nat} :
+    ∀ (d : Nat) (F : List (Item N)) (V : Visited N) (L : List N), Agree V L →
+      bfs S ok cap d F V = bfsL S ok cap d F L
+  | _, [], V, L, h => by simp only [bfs, bfsL, h.2]
+  | 0, _ :: _, V, L, h => by simp only [bfs, bfsL, h.2]
+  | d + 1, it :: its, V, L, h => by
+    have ha := layer_agree (S := S) (ok := ok) (cap := cap) (it :: its) V L [] h
+    simp only [bfs, bfsL]
+    revert ha
+    generalize layer S ok cap (it :: its) V [] = o
+    generalize layerL S ok cap (it :: its) L [] = o'
+    intro ha
+    cases o <;> cases o' <;> simp only [OutRel] at ha
+    · obtain ⟨h1, rfl⟩ := ha
+      exact bfs_agree d _ _ _ h1
+    · subst ha; rfl
+    · subst ha; rfl
+
+/-- **The list-based search returns exactly what the search returns.** -/
+theorem search_eq_searchL (S : Sys N) (ok : N → Bool) (bound cap : Nat) :
+    search S ok bound cap = searchL S ok bound cap := by
+  have h0 : Agree (∅ : Visited N) ([] : List N) := ⟨fun x => by simp, by simp⟩
+  have ha := addAll_agree (ok := ok) (cap := cap) (mk := initItem) (cexOf := initCex) S.init _ _ [] h0
+  unfold search searchL
+  revert ha
+  generalize addAll ok cap initItem initCex S.init ∅ [] = o
+  generalize addAllL ok cap initItem initCex S.init [] [] = o'
+  intro ha
+  cases o <;> cases o' <;> simp only [OutRel] at ha
+  · obtain ⟨h1, rfl⟩ := ha
+    exact bfs_agree _ _ _ _ h1
+  · subst ha; rfl
+  · subst ha; rfl
+
+/-- Whether a result is a counterexample. -/
+def Result.isCex : Result N → Bool
+  | .counterexample _ => true
+  | _ => false
+
+/-- Whether a result is `holds`. -/
+def Result.isHolds : Result N → Bool
+  | .holds _ => true
+  | _ => false
+
+theorem Result.isCex_iff {r : Result N} : r.isCex = true ↔ ∃ p, r = .counterexample p := by
+  cases r <;> simp [Result.isCex]
+
+theorem Result.isHolds_iff {r : Result N} : r.isHolds = true ↔ ∃ n, r = .holds n := by
+  cases r <;> simp [Result.isHolds]
 
 end Exegra.Gen

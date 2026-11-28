@@ -7,6 +7,7 @@ import { generateArchitectureDoc } from './architecture-doc.js';
 import { generateClaimsReport, generateClaimsReportJson } from './claims-report.js';
 import { claimStrength } from '../claim-strength.js';
 import { generateTaskManifest } from './task-manifest.js';
+import { generateCapabilities } from './capabilities.js';
 
 /** @typedef {import('../types.js').Model} Model */
 /** @typedef {import('../types.js').Diagnostic} Diagnostic */
@@ -22,6 +23,7 @@ export { generateManifest } from './manifest.js';
 export { generateArchitectureDoc } from './architecture-doc.js';
 export { generateClaimsReport, generateClaimsReportJson } from './claims-report.js';
 export { generateTaskManifest } from './task-manifest.js';
+export { generateCapabilities } from './capabilities.js';
 
 /**
  * All generated artifacts, keyed by file name.
@@ -42,5 +44,6 @@ export function generateAll(model, opts = {}) {
     'claims-report.md': generateClaimsReport(model, o),
     'claims-report.json': generateClaimsReportJson(model, o),
     'tasks.json': generateTaskManifest(model, o),
+    'capabilities.md': generateCapabilities(model, o),
   };
 }

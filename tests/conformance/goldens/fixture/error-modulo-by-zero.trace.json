@@ -1,6 +1,12 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "calc-machine": 0
+  },
+  "links": {},
   "machines": {
    "calc-machine": {
     "state": "calc-ready",
@@ -11,10 +17,12 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "calc-mod-op",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -23,9 +31,20 @@
     "time": 0
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "calc-machine": 0
+  },
+  "links": {},
   "machines": {
    "calc-machine": {
     "state": "calc-ready",
@@ -36,10 +55,12 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "calc-mod-op",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -48,13 +69,26 @@
     "time": 0
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "error",
  "scenarioId": "error-modulo-by-zero",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "calc-machine": 0
+    },
+    "links": {},
     "machines": {
      "calc-machine": {
       "state": "calc-ready",
@@ -65,10 +99,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "calc-mod-op",
       "payload": {},
+      "scheduledAt": 0,
       "seq": 0,
       "source": {
        "kind": "scenario",
@@ -77,14 +113,21 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "error": {
     "message": "Division by zero"
    },
    "event": {
     "id": "calc-mod-op",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -96,10 +139,16 @@
    "ignored": [],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "calc-mod-op"
    ],
    "time": 0
   }
- ]
+ ],
+ "stepsTaken": 1,
+ "timeUnit": "tick",
+ "truncated": true,
+ "version": 2
 }

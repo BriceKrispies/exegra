@@ -242,7 +242,8 @@ export function mountExplorer(el, session) {
 
       if (kind === 'component') {
         const byParent = new Map();
-        for (const c of all) { const k = c.data.parent ?? null; if (!byParent.has(k)) byParent.set(k, []); byParent.get(k).push(c); }
+        // The system is the root element; components whose parent it is are listed at the top level.
+        for (const c of all) { const k = c.data.parent && c.data.parent !== model.system?.id ? c.data.parent : null; if (!byParent.has(k)) byParent.set(k, []); byParent.get(k).push(c); }
         const passes = (/** @type {any} */ c) => textMatch(c) && (!state.cats.size || state.cats.has(c.data.category));
         const visible = new Set();
         const mark = (/** @type {any} */ c, /** @type {Set<string>} */ seen) => {

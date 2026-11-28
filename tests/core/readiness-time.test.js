@@ -36,6 +36,8 @@ const NEGATIVE = [
   ['ready.number-bound', 'a number literal beyond 2^53 - 1', 'time - checkedAt < 5000', 'time - checkedAt < 9007199254740992'],
   ['ready.number-bound', 'an integer variable whose initial value is outside its type', '{ "name": "hits", "type": "number", "initial": 0', '{ "name": "hits", "type": "number", "initial": -1'],
   ['ready.number-bound', 'a scenario payload value outside its integer type', '"payload": { "n": 1 }', '"payload": { "n": 4294967296 }'],
+  // WG-5681: a simulated behaviour computes on integers; 0.5 in an effect is reported at validate.
+  ['ready.number-bound', 'a number that is not an integer in an effect of a simulated behaviour', '"effects": [ { "set": "hits", "to": "hits + 1" }', '"effects": [ { "set": "hits", "to": "hits + 0.5" }'],
 ];
 
 for (const [code, what, from, to] of NEGATIVE) {

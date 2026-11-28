@@ -1,0 +1,19 @@
+{
+ "description": "The inputs Elab.elab (formal/Exegra/Elab.lean) refuses among the goldens (all version 2) and the version-2 fixtures under tests/, with the kind of each refusal (WG-5681, criterion 16); `undecoded` marks a fixture the format-2 decoder itself refuses (its distribution kinds are the JavaScript sampler's), which no engine runs. tests/core/formal-elab.test.js checks that exactly these are refused. The non-integer literals of fixture/expression-showcase before its edit (criterion 22 b) are refused as notInteger; the test checks that refusal on the pre-edit expressions.",
+ "refused": {
+  "goldens/fixture/error-type": {
+   "kind": "illTyped"
+  },
+  "goldens/fixture/error-guard-not-boolean": {
+   "kind": "illTyped"
+  },
+  "fixtures/queueing/mm1": {
+   "kind": "undecoded",
+   "error": "unknown kind"
+  },
+  "fixtures/queueing/pool-flood": {
+   "kind": "undecoded",
+   "error": "unknown kind"
+  }
+ }
+}

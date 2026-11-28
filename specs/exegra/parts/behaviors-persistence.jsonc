@@ -1,0 +1,1926 @@
+// Part of the specification: behaviors.
+{
+  "behaviors": [
+    {
+      "id": "workspace-flow",
+      "name": "File service: replace the file or report a conflict",
+      "subject": "workspace-service",
+      "description": "The HTTP hop between the persistence client, the plugin and the workspace service is abstracted. persistedRevision is the revision whose text the file on disk holds; conflict records that the last write was refused because the file on disk differed from the base hash.",
+      "initial": "workspace-clean",
+      "variables": [
+        { "name": "persistedRevision", "type": "number", "initial": 1 },
+        { "name": "conflict", "type": "boolean", "initial": false }
+      ],
+      "states": [
+        { "id": "workspace-clean", "name": "File matches the base hash" },
+        { "id": "workspace-conflicted", "name": "Write refused as a conflict", "terminal": true }
+      ],
+      "transitions": [
+        {
+          "id": "workspace-overwrite-on-conflict",
+          "from": "workspace-clean",
+          "to": "workspace-conflicted",
+          "on": "save-requested",
+          "faultOnly": true,
+          "effects": [
+            {
+              "set": "conflict",
+              "to": "true"
+            },
+            {
+              "set": "persistedRevision",
+              "to": "event.revision"
+            },
+            {
+              "emit": "save-conflicted"
+            }
+          ]
+        },
+        { "id": "workspace-detect-conflict", "from": "workspace-clean", "to": "workspace-conflicted", "on": "save-requested", "faultOnly": true, "description": "The file's hash differs from the base hash: nothing is written and the current content is returned.", "effects": [{ "set": "conflict", "to": true }, { "emit": "save-conflicted" }] },
+        { "id": "workspace-write", "from": "workspace-clean", "to": "workspace-clean", "on": "save-requested", "description": "The hashes match: the file is replaced atomically.", "effects": [{ "set": "persistedRevision", "to": "event.revision" }, { "emit": "save-succeeded" }] }
+      ]
+    },
+    {
+      "id": "write-client-flow",
+      "name": "Persistence client: write a file, retry after a conflict",
+      "subject": "persistence-client",
+      "description": "Sends the text with the base hash it last read. A conflict returns the current hash, which becomes the new base hash for one more request; an accepted write ends the flow. The retry abstracts the user's \"Overwrite disk\" (session.resolveConflict('overwrite'), which takes the conflict's hash as base hash and flushes again): the real persistence client and the session never retry on their own. project-session-flow models that resolution as it is.",
+      "initial": "write-client-idle",
+      "variables": [
+        {
+          "name": "attempts",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "baseHash",
+          "type": "string",
+          "initial": "h1"
+        },
+        {
+          "name": "saved",
+          "type": "boolean",
+          "initial": false
+        }
+      ],
+      "states": [
+        {
+          "id": "write-client-idle",
+          "name": "Idle"
+        },
+        {
+          "id": "write-client-awaiting",
+          "name": "Awaiting the answer"
+        },
+        {
+          "id": "write-client-saved",
+          "name": "Written",
+          "terminal": true
+        }
+      ],
+      "transitions": [
+        {
+          "id": "write-client-send",
+          "from": "write-client-idle",
+          "to": "write-client-awaiting",
+          "on": "write-intent",
+          "effects": [
+            {
+              "set": "attempts",
+              "to": "attempts + 1"
+            },
+            {
+              "emit": "write-file-request",
+              "payload": {
+                "name": "'exegra'",
+                "file": "'spec'",
+                "text": "'spec text of revision 2'",
+                "baseHash": "baseHash"
+              }
+            }
+          ]
+        },
+        {
+          "id": "write-client-retry",
+          "from": "write-client-awaiting",
+          "to": "write-client-awaiting",
+          "on": "write-file-conflict",
+          "guard": "attempts < 3",
+          "description": "The base hash was stale: adopt the current hash and send the same text again.",
+          "effects": [
+            {
+              "set": "attempts",
+              "to": "attempts + 1"
+            },
+            {
+              "set": "baseHash",
+              "to": "event.current"
+            },
+            {
+              "emit": "write-file-request",
+              "payload": {
+                "name": "'exegra'",
+                "file": "'spec'",
+                "text": "'spec text of revision 2'",
+                "baseHash": "event.current"
+              }
+            }
+          ]
+        },
+        {
+          "id": "write-client-done",
+          "from": "write-client-awaiting",
+          "to": "write-client-saved",
+          "on": "write-file-ok",
+          "effects": [
+            {
+              "set": "saved",
+              "to": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "write-endpoint-flow",
+      "name": "Development server: accept a write or refuse it as a conflict",
+      "subject": "dev-server-plugin",
+      "description": "POST /__exegra/write: the file is replaced only when the base hash equals the hash of the text on disk; otherwise it is left untouched and the conflict carries the current hash.",
+      "initial": "write-endpoint-ready",
+      "variables": [
+        {
+          "name": "diskHash",
+          "type": "string",
+          "initial": "h2"
+        },
+        {
+          "name": "writes",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "conflicts",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "write-endpoint-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "write-endpoint-conflict",
+          "from": "write-endpoint-ready",
+          "to": "write-endpoint-ready",
+          "on": "write-file-request",
+          "guard": "event.baseHash != diskHash",
+          "effects": [
+            {
+              "set": "conflicts",
+              "to": "conflicts + 1"
+            },
+            {
+              "emit": "write-file-conflict",
+              "payload": {
+                "code": "'conflict'",
+                "current": "diskHash"
+              }
+            }
+          ]
+        },
+        {
+          "id": "write-endpoint-accept",
+          "from": "write-endpoint-ready",
+          "to": "write-endpoint-ready",
+          "on": "write-file-request",
+          "guard": "event.baseHash == diskHash",
+          "effects": [
+            {
+              "set": "diskHash",
+              "to": "'h3'"
+            },
+            {
+              "set": "writes",
+              "to": "writes + 1"
+            },
+            {
+              "emit": "write-file-ok",
+              "payload": {
+                "ok": "true",
+                "hash": "'h3'"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "persistence-client-flow",
+      "name": "Persistence client: one HTTP call per request",
+      "subject": "persistence-client",
+      "description": "src/persist/client.js: each call is one fetch (request()) or the EventSource of watchProject, and each answer is handed back to its caller once, with no retry, queue or buffer. lastFile stands for the file variable of the session's flush loop, which knows which file a write answers.",
+      "initial": "client-ready",
+      "variables": [
+        {
+          "name": "lastFile",
+          "type": "string",
+          "initial": "spec"
+        },
+        {
+          "name": "calls",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "client-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "client-read",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "read-intent",
+          "effects": [
+            {
+              "set": "calls",
+              "to": "calls + 1"
+            },
+            {
+              "emit": "read-project-request",
+              "payload": {
+                "name": "event.name",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-read-ok",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "read-project-ok",
+          "effects": [
+            {
+              "emit": "project-files-read",
+              "payload": {
+                "specHash": "event.spec",
+                "layoutHash": "event.layout",
+                "recorded": "event.recorded",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-read-failed",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "read-project-failed",
+          "effects": [
+            {
+              "emit": "project-read-failed",
+              "payload": {
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-list",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "list-intent",
+          "effects": [
+            {
+              "set": "calls",
+              "to": "calls + 1"
+            },
+            {
+              "emit": "list-projects-request",
+              "payload": {
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-listed",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "list-projects-ok",
+          "effects": [
+            {
+              "emit": "projects-listed",
+              "payload": {
+                "projects": "event.projects"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-write",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "write-intent",
+          "effects": [
+            {
+              "set": "calls",
+              "to": "calls + 1"
+            },
+            {
+              "set": "lastFile",
+              "to": "event.file"
+            },
+            {
+              "emit": "write-file-request",
+              "payload": {
+                "name": "event.name",
+                "file": "event.file",
+                "text": "event.text",
+                "baseHash": "event.baseHash",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-write-ok",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "write-file-ok",
+          "effects": [
+            {
+              "emit": "save-succeeded",
+              "payload": {
+                "file": "lastFile",
+                "hash": "event.hash",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-write-conflict",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "write-file-conflict",
+          "effects": [
+            {
+              "emit": "save-conflicted",
+              "payload": {
+                "file": "lastFile",
+                "currentHash": "event.current",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-write-failed",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "write-file-failed",
+          "effects": [
+            {
+              "emit": "save-failed",
+              "payload": {
+                "file": "lastFile",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-watch",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "watch-intent",
+          "effects": [
+            {
+              "emit": "watch-project-request",
+              "payload": {
+                "name": "event.name"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-notice",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "file-change-notice-sent",
+          "effects": [
+            {
+              "emit": "external-change-received",
+              "payload": {
+                "file": "event.file",
+                "hash": "event.hash"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-export",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "export-intent",
+          "effects": [
+            {
+              "set": "calls",
+              "to": "calls + 1"
+            },
+            {
+              "emit": "export-request",
+              "payload": {
+                "name": "event.name",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-export-ok",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "export-ok",
+          "effects": [
+            {
+              "emit": "bundle-received",
+              "payload": {
+                "files": "event.files",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-export-failed",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "export-failed",
+          "effects": [
+            {
+              "emit": "export-refused-received",
+              "payload": {
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-import",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "import-intent",
+          "effects": [
+            {
+              "set": "calls",
+              "to": "calls + 1"
+            },
+            {
+              "emit": "import-request",
+              "payload": {
+                "name": "event.name",
+                "bundle": "event.bundle",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-import-ok",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "import-ok",
+          "effects": [
+            {
+              "emit": "import-done",
+              "payload": {
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-import-refused",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "import-refused",
+          "effects": [
+            {
+              "emit": "import-refused-received",
+              "payload": {
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-generated",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "generated-intent",
+          "effects": [
+            {
+              "set": "calls",
+              "to": "calls + 1"
+            },
+            {
+              "emit": "generated-write-request",
+              "payload": {
+                "name": "event.name",
+                "files": "event.files",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "client-generated-ok",
+          "from": "client-ready",
+          "to": "client-ready",
+          "on": "generated-write-ok",
+          "effects": [
+            {
+              "emit": "generated-saved",
+              "payload": {
+                "written": "event.written",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dev-server-flow",
+      "name": "Development server: route each endpoint to the workspace service",
+      "subject": "dev-server-plugin",
+      "description": "route() of tools/vite-plugin-exegra.js: each request becomes one call of tools/workspace.js and its result one answer (200, 409 for a write conflict, 400 for a workspace refusal); openEvents subscribes to watch() and writes each change as a server-sent event. The request guard (checkRequest) is not modelled as transitions; its refusals are errors of the contracts.",
+      "initial": "dev-ready",
+      "variables": [
+        {
+          "name": "requests",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "dev-ready",
+          "name": "Listening"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "dev-read",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "read-project-request",
+          "effects": [
+            {
+              "set": "requests",
+              "to": "requests + 1"
+            },
+            {
+              "emit": "ws-read",
+              "payload": {
+                "name": "event.name",
+                "caller": "'http'",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-read-ok",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "ws-read-done",
+          "guard": "event.caller == 'http'",
+          "effects": [
+            {
+              "emit": "read-project-ok",
+              "payload": {
+                "spec": "event.spec",
+                "layout": "event.layout",
+                "recorded": "event.recorded",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-read-missing",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "ws-read-missing",
+          "guard": "event.caller == 'http'",
+          "effects": [
+            {
+              "emit": "read-project-failed",
+              "payload": {
+                "code": "'not-found'",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-list",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "list-projects-request",
+          "effects": [
+            {
+              "set": "requests",
+              "to": "requests + 1"
+            },
+            {
+              "emit": "ws-list",
+              "payload": {
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-listed",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "ws-list-done",
+          "effects": [
+            {
+              "emit": "list-projects-ok",
+              "payload": {
+                "projects": "event.projects",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-write",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "write-file-request",
+          "effects": [
+            {
+              "set": "requests",
+              "to": "requests + 1"
+            },
+            {
+              "emit": "ws-write",
+              "payload": {
+                "name": "event.name",
+                "file": "event.file",
+                "text": "event.text",
+                "baseHash": "event.baseHash",
+                "caller": "'http'",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-write-ok",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "ws-write-done",
+          "guard": "event.caller == 'http'",
+          "effects": [
+            {
+              "emit": "write-file-ok",
+              "payload": {
+                "ok": true,
+                "hash": "event.hash",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-write-conflict",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "ws-write-conflict",
+          "guard": "event.caller == 'http'",
+          "description": "Answered with HTTP 409.",
+          "effects": [
+            {
+              "emit": "write-file-conflict",
+              "payload": {
+                "code": "'conflict'",
+                "current": "event.current",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-write-error",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "ws-write-error",
+          "guard": "event.caller == 'http'",
+          "description": "The exception reaches the middleware catch: HTTP 500 internal.",
+          "effects": [
+            {
+              "emit": "write-file-failed",
+              "payload": {
+                "code": "'internal'",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-watch",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "watch-project-request",
+          "effects": [
+            {
+              "emit": "ws-watch",
+              "payload": {
+                "name": "event.name"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-change",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "ws-change",
+          "effects": [
+            {
+              "emit": "file-change-notice-sent",
+              "payload": {
+                "file": "event.file",
+                "hash": "event.hash"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-export",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "export-request",
+          "effects": [
+            {
+              "set": "requests",
+              "to": "requests + 1"
+            },
+            {
+              "emit": "ws-export",
+              "payload": {
+                "name": "event.name",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-export-ok",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "ws-export-done",
+          "effects": [
+            {
+              "emit": "export-ok",
+              "payload": {
+                "format": "'exegra-project'",
+                "version": 1,
+                "name": "event.name",
+                "files": "event.files",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-export-missing",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "ws-export-missing",
+          "effects": [
+            {
+              "emit": "export-failed",
+              "payload": {
+                "code": "'not-found'",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-import",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "import-request",
+          "effects": [
+            {
+              "set": "requests",
+              "to": "requests + 1"
+            },
+            {
+              "emit": "ws-import",
+              "payload": {
+                "name": "event.name",
+                "bundle": "event.bundle",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-import-ok",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "ws-import-done",
+          "effects": [
+            {
+              "emit": "import-ok",
+              "payload": {
+                "ok": true,
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-import-refused",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "ws-import-refused",
+          "effects": [
+            {
+              "emit": "import-refused",
+              "payload": {
+                "code": "'bundle.invalid'",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-generated",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "generated-write-request",
+          "effects": [
+            {
+              "set": "requests",
+              "to": "requests + 1"
+            },
+            {
+              "emit": "ws-write-generated",
+              "payload": {
+                "name": "event.name",
+                "files": "event.files",
+                "caller": "'http'",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dev-generated-ok",
+          "from": "dev-ready",
+          "to": "dev-ready",
+          "on": "ws-generated-done",
+          "guard": "event.caller == 'http'",
+          "effects": [
+            {
+              "emit": "generated-write-ok",
+              "payload": {
+                "ok": true,
+                "written": "event.written",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "workspace-disk-flow",
+      "name": "Workspace service: the project files on disk",
+      "subject": "workspace-service",
+      "description": "tools/workspace.js on one project. The variables are what the disk holds: diskSpec, diskLayout, recordedVersion and generatedHash stand for the files by their hashes; journalLines counts the lines of .history/journal.jsonl; specWrites, layoutWrites and imports count replacements by write() and importProject(). caller tells the endpoint's calls (http) from the command line's (cli), which reach the same functions.",
+      "initial": "ws-ready",
+      "variables": [
+        {
+          "name": "diskSpec",
+          "type": "string",
+          "initial": "h1"
+        },
+        {
+          "name": "diskLayout",
+          "type": "string",
+          "initial": "L1"
+        },
+        {
+          "name": "recordedVersion",
+          "type": "string",
+          "initial": "r1"
+        },
+        {
+          "name": "generatedHash",
+          "type": "string",
+          "initial": "g1"
+        },
+        {
+          "name": "journalLines",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "specWrites",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "layoutWrites",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "conflicts",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "imports",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "ws-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "ws-read-missing-project",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "ws-read",
+          "guard": "event.name == 'missing'",
+          "effects": [
+            {
+              "emit": "ws-read-missing",
+              "payload": {
+                "caller": "event.caller",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ws-read-files",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "ws-read",
+          "effects": [
+            {
+              "emit": "ws-read-done",
+              "payload": {
+                "spec": "diskSpec",
+                "layout": "diskLayout",
+                "recorded": "recordedVersion",
+                "caller": "event.caller",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ws-list-projects",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "ws-list",
+          "effects": [
+            {
+              "emit": "ws-list-done",
+              "payload": {
+                "projects": [
+                  "exegra",
+                  "benchmark"
+                ],
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ws-conflict-spec",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "ws-write",
+          "guard": "event.file == 'spec' && event.baseHash != diskSpec",
+          "description": "The current hash differs from the base hash: nothing is written and no journal line is appended.",
+          "effects": [
+            {
+              "set": "conflicts",
+              "to": "conflicts + 1"
+            },
+            {
+              "emit": "ws-write-conflict",
+              "payload": {
+                "file": "'spec'",
+                "current": "diskSpec",
+                "caller": "event.caller",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ws-conflict-layout",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "ws-write",
+          "guard": "event.file == 'layout' && event.baseHash != diskLayout",
+          "effects": [
+            {
+              "set": "conflicts",
+              "to": "conflicts + 1"
+            },
+            {
+              "emit": "ws-write-conflict",
+              "payload": {
+                "file": "'layout'",
+                "current": "diskLayout",
+                "caller": "event.caller",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ws-write-journal-append-fails",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "ws-write",
+          "guard": "event.file == 'spec' && event.baseHash == diskSpec",
+          "faultOnly": true,
+          "description": "atomicWrite replaced the file, then fs.appendFile of the journal fails: the file stays replaced, no line is written, and the exception makes the write a failure.",
+          "effects": [
+            {
+              "set": "diskSpec",
+              "to": "event.text"
+            },
+            {
+              "set": "specWrites",
+              "to": "specWrites + 1"
+            },
+            {
+              "emit": "disk-file-replaced",
+              "payload": {
+                "file": "'spec'",
+                "hash": "event.text"
+              }
+            },
+            {
+              "emit": "ws-write-error",
+              "payload": {
+                "file": "'spec'",
+                "caller": "event.caller",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ws-write-spec",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "ws-write",
+          "guard": "event.file == 'spec' && event.baseHash == diskSpec",
+          "description": "atomicWrite (temporary sibling, rename), then one journal line, under the per-project lock.",
+          "effects": [
+            {
+              "set": "diskSpec",
+              "to": "event.text"
+            },
+            {
+              "set": "specWrites",
+              "to": "specWrites + 1"
+            },
+            {
+              "set": "journalLines",
+              "to": "journalLines + 1"
+            },
+            {
+              "emit": "disk-file-replaced",
+              "payload": {
+                "file": "'spec'",
+                "hash": "event.text"
+              }
+            },
+            {
+              "emit": "ws-write-done",
+              "payload": {
+                "file": "'spec'",
+                "hash": "event.text",
+                "caller": "event.caller",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ws-write-layout",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "ws-write",
+          "guard": "event.file == 'layout' && event.baseHash == diskLayout",
+          "effects": [
+            {
+              "set": "diskLayout",
+              "to": "event.text"
+            },
+            {
+              "set": "layoutWrites",
+              "to": "layoutWrites + 1"
+            },
+            {
+              "set": "journalLines",
+              "to": "journalLines + 1"
+            },
+            {
+              "emit": "disk-file-replaced",
+              "payload": {
+                "file": "'layout'",
+                "hash": "event.text"
+              }
+            },
+            {
+              "emit": "ws-write-done",
+              "payload": {
+                "file": "'layout'",
+                "hash": "event.text",
+                "caller": "event.caller",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ws-external-spec",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "disk-edited-externally",
+          "guard": "event.file == 'spec'",
+          "description": "Another process replaced the file: no journal line, no base-hash check.",
+          "effects": [
+            {
+              "set": "diskSpec",
+              "to": "event.hash"
+            },
+            {
+              "emit": "disk-file-replaced",
+              "payload": {
+                "file": "'spec'",
+                "hash": "event.hash"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ws-external-layout",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "disk-edited-externally",
+          "guard": "event.file == 'layout'",
+          "effects": [
+            {
+              "set": "diskLayout",
+              "to": "event.hash"
+            },
+            {
+              "emit": "disk-file-replaced",
+              "payload": {
+                "file": "'layout'",
+                "hash": "event.hash"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ws-recorded",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "ws-write-recorded",
+          "description": "writeRecorded: atomic, no base-hash check, no journal line.",
+          "effects": [
+            {
+              "set": "recordedVersion",
+              "to": "event.version"
+            },
+            {
+              "emit": "disk-file-replaced",
+              "payload": {
+                "file": "'recorded'",
+                "hash": "event.version"
+              }
+            },
+            {
+              "emit": "ws-recorded-done",
+              "payload": {
+                "version": "event.version"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ws-generated-unchanged",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "ws-write-generated",
+          "guard": "event.files == generatedHash",
+          "description": "Files whose content is unchanged are skipped.",
+          "effects": [
+            {
+              "emit": "ws-generated-done",
+              "payload": {
+                "written": [],
+                "caller": "event.caller",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ws-generated",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "ws-write-generated",
+          "description": "No journal line and no change notice: the watcher ignores generated/.",
+          "effects": [
+            {
+              "set": "generatedHash",
+              "to": "event.files"
+            },
+            {
+              "emit": "ws-generated-done",
+              "payload": {
+                "written": [
+                  "ARCHITECTURE.md",
+                  "claims-report.json",
+                  "claims-report.md",
+                  "manifest.json",
+                  "tasks.json"
+                ],
+                "caller": "event.caller",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ws-export-missing-project",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "ws-export",
+          "guard": "event.name == 'missing'",
+          "effects": [
+            {
+              "emit": "ws-export-missing",
+              "payload": {
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ws-export-files",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "ws-export",
+          "description": "The bundle holds the files as they are on disk.",
+          "effects": [
+            {
+              "emit": "ws-export-done",
+              "payload": {
+                "name": "event.name",
+                "files": "diskSpec",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ws-import-refused-bundle",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "ws-import",
+          "guard": "event.bundle == 'malformed'",
+          "effects": [
+            {
+              "emit": "ws-import-refused",
+              "payload": {
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "ws-import-bundle",
+          "from": "ws-ready",
+          "to": "ws-ready",
+          "on": "ws-import",
+          "description": "importProject: the files of the bundle are overwritten without a base-hash check and without a journal line.",
+          "effects": [
+            {
+              "set": "diskSpec",
+              "to": "event.bundle"
+            },
+            {
+              "set": "imports",
+              "to": "imports + 1"
+            },
+            {
+              "emit": "disk-file-replaced",
+              "payload": {
+                "file": "'spec'",
+                "hash": "event.bundle"
+              }
+            },
+            {
+              "emit": "ws-import-done",
+              "payload": {
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "workspace-watcher-flow",
+      "name": "Workspace watcher: notify hash changes of tracked files",
+      "subject": "workspace-service",
+      "description": "watch() of tools/workspace.js for one subscription: off until the stream subscribes, then every replacement of spec, layout or recorded results, own writes included, is notified 80 ms later (one logical tick).",
+      "initial": "watcher-off",
+      "variables": [
+        {
+          "name": "notices",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "watcher-off",
+          "name": "Not subscribed"
+        },
+        {
+          "id": "watcher-on",
+          "name": "Subscribed"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "watcher-subscribe",
+          "from": "watcher-off",
+          "to": "watcher-on",
+          "on": "ws-watch",
+          "description": "The current hashes become the baseline; changes made before this are never notified."
+        },
+        {
+          "id": "watcher-notify",
+          "from": "watcher-on",
+          "to": "watcher-on",
+          "on": "disk-file-replaced",
+          "effects": [
+            {
+              "set": "notices",
+              "to": "notices + 1"
+            },
+            {
+              "emit": "ws-change",
+              "after": 1,
+              "payload": {
+                "file": "event.file",
+                "hash": "event.hash"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "local-storage-flow",
+      "name": "Browser localStorage: the two Exegra keys",
+      "subject": "browser-storage",
+      "description": "localStorage of the browser profile: exegra.session (session preferences) and exegra.layout (responsive layout). A write that the browser refuses (storage unavailable) is caught and lost.",
+      "initial": "storage-ready",
+      "variables": [
+        {
+          "name": "storedSelection",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "storedView",
+          "type": "string",
+          "initial": "structural"
+        },
+        {
+          "name": "storedExplorerOpen",
+          "type": "boolean",
+          "initial": true
+        }
+      ],
+      "states": [
+        {
+          "id": "storage-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "storage-write-session",
+          "from": "storage-ready",
+          "to": "storage-ready",
+          "on": "preferences-written",
+          "effects": [
+            {
+              "set": "storedSelection",
+              "to": "event.selection"
+            },
+            {
+              "set": "storedView",
+              "to": "event.viewId"
+            }
+          ]
+        },
+        {
+          "id": "storage-read-session",
+          "from": "storage-ready",
+          "to": "storage-ready",
+          "on": "preferences-read",
+          "effects": [
+            {
+              "emit": "preferences-loaded",
+              "payload": {
+                "selection": "storedSelection",
+                "viewId": "storedView"
+              }
+            }
+          ]
+        },
+        {
+          "id": "storage-write-layout",
+          "from": "storage-ready",
+          "to": "storage-ready",
+          "on": "layout-preferences-written",
+          "effects": [
+            {
+              "set": "storedExplorerOpen",
+              "to": "event.explorerOpen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "session-storage-flow",
+      "name": "Browser sessionStorage: camera per project and view",
+      "subject": "browser-storage",
+      "description": "sessionStorage keys exegra.camera.<project>.<view> for two views of one project; gone when the tab closes. One camera per view: structuralCamera and dataCamera for the two views the scenarios use, and one variable per view this specification declares (cameraArchitecture, ...), because the real store keys the camera by project and view.",
+      "initial": "tab-storage-ready",
+      "variables": [
+        {
+          "name": "structuralCamera",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "dataCamera",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "cameraArchitecture",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "cameraRealisation",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "cameraDataAndEditFlow",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "cameraSemanticCoreOnly",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "cameraClaims",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "cameraBehavior",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "cameraReferences",
+          "type": "string",
+          "initial": "none"
+        }
+      ],
+      "states": [
+        {
+          "id": "tab-storage-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "tab-storage-save-structural",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-saved",
+          "guard": "event.view == 'structural'",
+          "effects": [
+            {
+              "set": "structuralCamera",
+              "to": "event.camera"
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-save-data",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-saved",
+          "guard": "event.view == 'data'",
+          "effects": [
+            {
+              "set": "dataCamera",
+              "to": "event.camera"
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-restore-structural",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-restore-requested",
+          "guard": "event.view == 'structural' && structuralCamera != 'none'",
+          "effects": [
+            {
+              "emit": "camera-restored",
+              "payload": {
+                "view": "event.view",
+                "camera": "structuralCamera"
+              }
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-restore-data",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-restore-requested",
+          "guard": "event.view == 'data' && dataCamera != 'none'",
+          "effects": [
+            {
+              "emit": "camera-restored",
+              "payload": {
+                "view": "event.view",
+                "camera": "dataCamera"
+              }
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-save-architecture",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-saved",
+          "guard": "event.view == 'architecture'",
+          "effects": [
+            {
+              "set": "cameraArchitecture",
+              "to": "event.camera"
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-restore-architecture",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-restore-requested",
+          "guard": "event.view == 'architecture' && cameraArchitecture != 'none'",
+          "effects": [
+            {
+              "emit": "camera-restored",
+              "payload": {
+                "view": "event.view",
+                "camera": "cameraArchitecture"
+              }
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-save-realisation",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-saved",
+          "guard": "event.view == 'realisation'",
+          "effects": [
+            {
+              "set": "cameraRealisation",
+              "to": "event.camera"
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-restore-realisation",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-restore-requested",
+          "guard": "event.view == 'realisation' && cameraRealisation != 'none'",
+          "effects": [
+            {
+              "emit": "camera-restored",
+              "payload": {
+                "view": "event.view",
+                "camera": "cameraRealisation"
+              }
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-save-data-and-edit-flow",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-saved",
+          "guard": "event.view == 'data-and-edit-flow'",
+          "effects": [
+            {
+              "set": "cameraDataAndEditFlow",
+              "to": "event.camera"
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-restore-data-and-edit-flow",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-restore-requested",
+          "guard": "event.view == 'data-and-edit-flow' && cameraDataAndEditFlow != 'none'",
+          "effects": [
+            {
+              "emit": "camera-restored",
+              "payload": {
+                "view": "event.view",
+                "camera": "cameraDataAndEditFlow"
+              }
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-save-semantic-core-only",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-saved",
+          "guard": "event.view == 'semantic-core-only'",
+          "effects": [
+            {
+              "set": "cameraSemanticCoreOnly",
+              "to": "event.camera"
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-restore-semantic-core-only",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-restore-requested",
+          "guard": "event.view == 'semantic-core-only' && cameraSemanticCoreOnly != 'none'",
+          "effects": [
+            {
+              "emit": "camera-restored",
+              "payload": {
+                "view": "event.view",
+                "camera": "cameraSemanticCoreOnly"
+              }
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-save-claims",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-saved",
+          "guard": "event.view == 'claims'",
+          "effects": [
+            {
+              "set": "cameraClaims",
+              "to": "event.camera"
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-restore-claims",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-restore-requested",
+          "guard": "event.view == 'claims' && cameraClaims != 'none'",
+          "effects": [
+            {
+              "emit": "camera-restored",
+              "payload": {
+                "view": "event.view",
+                "camera": "cameraClaims"
+              }
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-save-behavior",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-saved",
+          "guard": "event.view == 'behavior'",
+          "effects": [
+            {
+              "set": "cameraBehavior",
+              "to": "event.camera"
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-restore-behavior",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-restore-requested",
+          "guard": "event.view == 'behavior' && cameraBehavior != 'none'",
+          "effects": [
+            {
+              "emit": "camera-restored",
+              "payload": {
+                "view": "event.view",
+                "camera": "cameraBehavior"
+              }
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-save-references",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-saved",
+          "guard": "event.view == 'references'",
+          "effects": [
+            {
+              "set": "cameraReferences",
+              "to": "event.camera"
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-restore-references",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-restore-requested",
+          "guard": "event.view == 'references' && cameraReferences != 'none'",
+          "effects": [
+            {
+              "emit": "camera-restored",
+              "payload": {
+                "view": "event.view",
+                "camera": "cameraReferences"
+              }
+            }
+          ]
+        },
+        {
+          "id": "tab-storage-nothing",
+          "from": "tab-storage-ready",
+          "to": "tab-storage-ready",
+          "on": "camera-restore-requested",
+          "effects": [
+            {
+              "emit": "camera-none",
+              "payload": {
+                "view": "event.view"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shared-base-write-flow",
+      "name": "Two editors saving from a shared base",
+      "subject": "workspace-service",
+      "description": "The locked read-check-write of a single file. Values stand for distinct content hashes. Each request returns to its issuing editor. Both observed orders are possible.",
+      "initial": "edit-writer-ready",
+      "variables": [
+        {
+          "name": "stored",
+          "type": "string",
+          "initial": "initial"
+        },
+        {
+          "name": "decision",
+          "type": "string",
+          "initial": "pending"
+        },
+        {
+          "name": "accepted",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "edit-writer-ready",
+          "name": "Ready for a conditional write"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "shared-edit-accept",
+          "from": "edit-writer-ready",
+          "to": "edit-writer-ready",
+          "on": "two-session-write",
+          "guard": "event.base == stored",
+          "effects": [
+            {
+              "set": "stored",
+              "to": "event.value"
+            },
+            {
+              "set": "decision",
+              "to": "'accepted'"
+            },
+            {
+              "set": "accepted",
+              "to": "accepted + 1"
+            }
+          ]
+        },
+        {
+          "id": "shared-edit-accept-unchecked",
+          "from": "edit-writer-ready",
+          "to": "edit-writer-ready",
+          "on": "two-session-write",
+          "faultOnly": true,
+          "description": "The defect the claim guards against: the write is committed without comparing its base with the stored revision.",
+          "effects": [
+            {
+              "set": "stored",
+              "to": "event.value"
+            },
+            {
+              "set": "decision",
+              "to": "'accepted'"
+            },
+            {
+              "set": "accepted",
+              "to": "accepted + 1"
+            }
+          ]
+        },
+        {
+          "id": "shared-edit-refuse",
+          "from": "edit-writer-ready",
+          "to": "edit-writer-ready",
+          "on": "two-session-write",
+          "guard": "event.base != stored",
+          "effects": [
+            {
+              "set": "decision",
+              "to": "'conflict'"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

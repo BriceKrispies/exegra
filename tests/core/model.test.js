@@ -71,8 +71,11 @@ test('syntax errors yield diagnostics with positions and no model', () => {
   assert.equal(diagnostics[0].loc?.line, 9);
 });
 
-test('containment rules: parent must be a subsystem and must not cycle', () => {
-  assert.ok(codes(BASE.replace('"parent": "grp"', '"parent": "b"')).includes('component.parent-not-subsystem'));
+test('containment rules: any element may be a parent, and containment must not cycle', () => {
+  // Composite is derived from having members, so a component that is not a subsystem may contain another.
+  const nested = analyzeSpec(BASE.replace('"parent": "grp"', '"parent": "b"'));
+  assert.equal(nested.errorCount, 0, JSON.stringify(nested.diagnostics));
+  assert.ok(analyzeSpec(BASE.replace('"parent": "grp"', '"parent": "sys"')).errorCount === 0, 'the system is a parent too');
   const cyc = BASE.replace('"category": "logical", "purpose": "g"', '"category": "logical", "purpose": "g", "parent": "grp"');
   assert.ok(codes(cyc).includes('component.parent-cycle'));
 });

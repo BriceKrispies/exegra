@@ -76,8 +76,15 @@ export {};
  * @property {string} projection
  * @property {SceneNode[]} nodes
  * @property {SceneEdge[]} edges
- * @property {{id:string, label:string, shape?:string, line?:string, color:string, kind:'node'|'edge'}[]} legend
+ * @property {{id:string, label:string, shape?:string, line?:string, color:string, kind:'node'|'edge'|'mark', mark?:string}[]} legend
  * @property {string[]} notes   statements about what the view does and does not show
+ * @property {{hierarchy: string, blocks: string[], expanded?: string[], cut?: string|null, coarsen?: string[]|'all'|null}} [abstraction]  the cut a
+ *   structural scene draws the derived model of (src/core/abstraction.js); its edges are that model's interactions after the view's filters;
+ *   `expanded` the elements the cut opens, `cut` the declared cut with exactly these blocks, if any
+ * @property {{hidden: string[], removedBlocks: string[], droppedInteractions: number, droppedWitnesses: number, pathSummaries: number,
+ *   pathsThroughFiltered: number}} [filterReport]  what a structural view's filter and the viewer's hiding removed, all of it counted in the notes
+ * @property {{claimId: string, status: string, expressible: boolean, explanation: string, drawn: string[], notDrawn: string[]}[]} [levelClaims]
+ *   the claims stated at a cut, evaluated at the cut this scene draws, with which of their counterexample blocks and edges are drawn
  */
 
 /**
@@ -95,6 +102,12 @@ export {};
  * @property {string} [status]     verified|supported|violated|inconclusive|not-evaluated|active|visited
  * @property {boolean} [dimmed]
  * @property {string[]} [badges]
+ * @property {{kind: string, text: string, title?: string}[]} [marks]  what is known or missing about a structural block (knowledge
+ *   status, planned, unstated purpose, interface disagreement), drawn as badges distinct by kind and given in text
+ * @property {string} [element]    the element a structural node draws (a module element's id differs from its entityId)
+ * @property {string} [elementKind]
+ * @property {boolean} [block]     a block of the scene's cut (or an implicit block), not only a container of blocks
+ * @property {'transparent'|'opaque'|'unknown'} [knowledge]
  */
 
 /**
@@ -108,6 +121,14 @@ export {};
  * @property {string} color
  * @property {string} [label]
  * @property {boolean} [lifted]  edge was re-targeted to a collapsed ancestor
+ * @property {string} [kind]       the (derived) interaction kind a structural edge draws
+ * @property {string[]} [witnesses]  every relationship a structural edge stands for, sorted by id (the derived interaction's
+ *   witnesses kept by the view's filters); entityId is the first of them in declaration order
+ * @property {'static'|'runtime'|'none'} [dependencyClass]  dependency class of the relationship's kind; layout follows only static and runtime edges
+ * @property {string} [key]        the derived interaction a structural edge draws (from->to:kind)
+ * @property {{via: string[], kinds: string[]}} [pathSummary]  a derived path summary through removed blocks, not an interaction
+ * @property {{kind: string, text: string, title?: string}[]} [marks]  what is incomplete about a drawn fact (unwitnessed, kind not
+ *   coarsening, not only declared)
  * @property {string} [status]
  * @property {boolean} [dimmed]
  */

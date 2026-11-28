@@ -1,6 +1,13 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "gateway-machine": 0,
+   "ledger-machine": 0
+  },
+  "links": {},
   "machines": {
    "gateway-machine": {
     "state": "gw-idle",
@@ -18,10 +25,23 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 11
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 11,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "gateway-machine": 0,
+   "ledger-machine": 0
+  },
+  "links": {},
   "machines": {
    "gateway-machine": {
     "state": "gw-idle",
@@ -39,6 +59,7 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "submit",
@@ -46,6 +67,7 @@
      "amount": 150,
      "label": "a"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -56,6 +78,7 @@
    {
     "event": "tick",
     "payload": {},
+    "scheduledAt": 10,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -66,6 +89,7 @@
    {
     "event": "reset",
     "payload": {},
+    "scheduledAt": 11,
     "seq": 2,
     "source": {
      "kind": "scenario",
@@ -74,13 +98,27 @@
     "time": 11
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "fault-enable-transition",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "gateway-machine": 0,
+     "ledger-machine": 0
+    },
+    "links": {},
     "machines": {
      "gateway-machine": {
       "state": "gw-active",
@@ -98,9 +136,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "forward",
+      "from": {
+       "behavior": "gateway-machine",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "amount": 150,
        "meta": {
@@ -112,6 +156,7 @@
        },
        "tag": "big"
       },
+      "scheduledAt": 2,
       "seq": 3,
       "source": {
        "behavior": "gateway-machine",
@@ -123,6 +168,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 10,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -133,6 +179,7 @@
      {
       "event": "reset",
       "payload": {},
+      "scheduledAt": 11,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -141,14 +188,21 @@
       "time": 11
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "submit",
     "payload": {
      "amount": 150,
      "label": "a"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -179,6 +233,7 @@
      ],
      "from": "gw-idle",
      "guard": "event.amount >= 100",
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -199,11 +254,14 @@
     {
      "behavior": "ledger-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "submit",
     "gw-submit-large",
@@ -214,6 +272,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "gateway-machine": 0,
+     "ledger-machine": 0
+    },
+    "links": {},
     "machines": {
      "gateway-machine": {
       "state": "gw-active",
@@ -231,14 +296,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "audit-request",
+      "from": {
+       "behavior": "ledger-machine",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "at": 2,
        "level": 150,
        "note": "credit"
       },
+      "scheduledAt": 3,
       "seq": 4,
       "source": {
        "behavior": "ledger-machine",
@@ -250,6 +322,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 10,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -260,6 +333,7 @@
      {
       "event": "reset",
       "payload": {},
+      "scheduledAt": 11,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -268,9 +342,20 @@
       "time": 11
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "gateway-machine",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "forward",
     "payload": {
      "amount": 150,
@@ -283,6 +368,7 @@
      },
      "tag": "big"
     },
+    "scheduledAt": 2,
     "seq": 3,
     "source": {
      "behavior": "gateway-machine",
@@ -308,6 +394,7 @@
      ],
      "from": "ledger-open",
      "guard": "event.amount > 0",
+     "instance": 0,
      "sets": [
       {
        "after": 150,
@@ -328,11 +415,14 @@
     {
      "behavior": "gateway-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "forward",
     "led-credit",
@@ -343,6 +433,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "gateway-machine": 0,
+     "ledger-machine": 0
+    },
+    "links": {},
     "machines": {
      "gateway-machine": {
       "state": "gw-active",
@@ -360,10 +457,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 10,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -374,6 +473,7 @@
      {
       "event": "reset",
       "payload": {},
+      "scheduledAt": 11,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -382,15 +482,27 @@
       "time": 11
      }
     ],
-    "time": 3
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 3,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "ledger-machine",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "audit-request",
     "payload": {
      "at": 2,
      "level": 150,
      "note": "credit"
     },
+    "scheduledAt": 3,
     "seq": 4,
     "source": {
      "behavior": "ledger-machine",
@@ -404,16 +516,20 @@
     {
      "behavior": "gateway-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "ledger-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "audit-request"
    ],
@@ -421,6 +537,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "gateway-machine": 0,
+     "ledger-machine": 0
+    },
+    "links": {},
     "machines": {
      "gateway-machine": {
       "state": "gw-active",
@@ -438,10 +561,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "reset",
       "payload": {},
+      "scheduledAt": 11,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -450,11 +575,18 @@
       "time": 11
      }
     ],
-    "time": 10
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 10,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "tick",
     "payload": {},
+    "scheduledAt": 10,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -468,6 +600,7 @@
      "emitted": [],
      "from": "gw-active",
      "guard": "time >= 0 && ledger-machine.balance > 100 && ledger-machine.state == 'ledger-open'",
+     "instance": 0,
      "sets": [
       {
        "after": 2,
@@ -488,11 +621,14 @@
     {
      "behavior": "ledger-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "tick",
     "gw-tick",
@@ -503,6 +639,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "gateway-machine": 0,
+     "ledger-machine": 0
+    },
+    "links": {},
     "machines": {
      "gateway-machine": {
       "state": "gw-idle",
@@ -520,12 +663,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 11
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 11,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "reset",
     "payload": {},
+    "scheduledAt": 11,
     "seq": 2,
     "source": {
      "kind": "scenario",
@@ -539,6 +690,7 @@
      "emitted": [],
      "from": "gw-active",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "gw-idle",
      "transition": "gw-reset"
@@ -548,11 +700,14 @@
     {
      "behavior": "ledger-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "reset",
     "gw-reset",
@@ -561,5 +716,9 @@
    ],
    "time": 11
   }
- ]
+ ],
+ "stepsTaken": 5,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

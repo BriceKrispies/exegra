@@ -111,9 +111,10 @@ test('request/ack exchange between two machines with emitted events and after de
       guard: null,
       sets: [{ variable: 'sent', before: 0, after: 1 }],
       emitted: [{ event: 'request', time: 1, seq: 1, payload: { n: 1 } }],
+      instance: 0,
     },
   ]);
-  assert.deepEqual(trace.steps[0].ignored, [{ behavior: 'server-machine', reason: 'no-transition', considered: [] }]);
+  assert.deepEqual(trace.steps[0].ignored, [{ behavior: 'server-machine', reason: 'no-transition', considered: [], instance: 0 }]);
   assert.deepEqual(trace.steps[1].responsible, ['request', 'serve', 'server-machine', 'server']);
   assert.deepEqual(trace.steps[2].responsible, ['ack', 'receive-ack', 'client-machine', 'client']);
   assert.equal(trace.final.machines['client-machine'].state, 'done');
@@ -223,7 +224,7 @@ test('enable-transition activates a faultOnly transition and records the fault',
   assert.equal(without.outcome, 'quiescent');
   assert.deepEqual(without.steps[1].fired, []);
   assert.deepEqual(without.steps[1].ignored.filter((i) => i.behavior === "server-machine"), [
-    { behavior: 'server-machine', reason: 'guard-false', considered: ['serve'] },
+    { behavior: 'server-machine', reason: 'guard-false', considered: ['serve'], instance: 0 },
   ]);
   assert.equal(without.final.machines['client-machine'].state, 'waiting');
 
@@ -244,7 +245,7 @@ test('disable-transition stops a transition that would otherwise fire', () => {
   assert.equal(trace.outcome, 'quiescent');
   assert.deepEqual(trace.steps[1].fired, []);
   assert.deepEqual(trace.steps[1].ignored.filter((i) => i.behavior === "server-machine"), [
-    { behavior: 'server-machine', reason: 'disabled', considered: ['serve'] },
+    { behavior: 'server-machine', reason: 'disabled', considered: ['serve'], instance: 0 },
   ]);
   assert.deepEqual(trace.steps[1].faults, [{ fault: 'disable-serve', effect: 'disabled' }]);
   assert.equal(trace.final.machines['server-machine'].state, 'listening');

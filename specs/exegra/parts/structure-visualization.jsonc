@@ -1,0 +1,203 @@
+// Part of the specification: components, relationships.
+{
+  "components": [
+    {
+      "id": "visualization",
+      "name": "Visualization",
+      "kind": "subsystem",
+      "category": "logical",
+      "purpose": "Derives scenes from the model, lays them out and draws and interacts with them in 3D.",
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "Grouping only; the code lives in the child components.",
+        "language": "js"
+      },
+      "parent": "exegra",
+      "responsibilities": [
+        "Derive a scene from the model for a view: for a structural view, the derived model at the view's cut, minus what its filter removes and reports (projection system).",
+        "Lay a scene out deterministically by one of four methods, recursively over containers, honouring pins, and choose a method by a stated score (layout engine).",
+        "Draw a scene and its placement in 3D as a function of scene, placement, selection, highlight and camera, holding no domain state (scene renderer, visual interaction).",
+        "Overlay what a simulation trace shows on the component view: utilisation, queues, messages, failures and cost (simulation overlays)."
+      ]
+    },
+    // ======== Visualization ==============================================================
+    {
+      "id": "projection-system",
+      "name": "Projection system",
+      "parent": "visualization",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Derives a flat scene (nodes, edges, legend, notes) from the model for a declared view with one of six projections (structural, claims, behavior, references, data, reader); a view is never a separate dataset and every node and edge is backed by a real entity.",
+      "responsibilities": [
+        "List the views declared in the specification, plus an implicit view for each projection type without a declared view",
+        "Project the structural, claims and behavior projections, applying view filters (categories, relationship kinds, within, tags) and display options",
+        "Project references: the focused entity (the session's selection) and every entity within display.depth reference hops (1 to 3, in either direction, any entity kind, declared kinds included), at most 150 nodes with a note naming what was left out; filter.entityKinds restricts the kinds drawn, and without a focus it draws every entity of those kinds when there are at most 300, otherwise only a note asking for a selection",
+        "Handle collapsed subsystems (lifted edges), hidden entities, isolation, claim focus, scenario focus and the current simulation step",
+        "Take node shapes, colours and line styles from the effective vocabulary of the model; entities of declared kinds take the shape and colour their kind declares",
+        "Derive the message flow of a simulation step (src/core/flows.js): the sender is the subject of the behavior whose transition emitted the event, or outside for a scenario stimulus or an injected fault; the receivers are the subjects of the behaviors that fired on it; the path follows the scene edge between their drawn nodes, and is marked unshown when only a relationship the view does not draw connects them, or undeclared when none does",
+        "Project the Data view when the model declares records or copies: records, copies and the components that own or hold them, with edges from of, heldBy and owner; copies with data-rule findings are marked violated",
+        "Register the reader projection, which draws no scene: its views are read on the reader surface"
+      ],
+      "ports": [
+        { "id": "projection-scene-in", "name": "Project scene", "direction": "provides", "contract": "project-scene", "protocol": "in-process call", "description": "Project a model and a view into a SceneModel." }
+      ],
+      "unknowns": ["The cost of projection on large models has no recorded measurement; the benchmark specification exists for that purpose but no result is recorded.", "The references projection draws nothing but a note until an entity is selected, unless the view filters to entity kinds."],
+      "implementation": { "status": "model-configured", "modules": [
+          "src/core/projections.js",
+          "src/core/flows.js"
+        ],
+        "notes": "Views are declared in the specification and shapes, colours and line styles come from the model's vocabulary; the projection code is hand-written.",
+        "language": "js"
+      }
+    },
+    {
+      "id": "layout-engine",
+      "name": "Layout engine",
+      "parent": "visualization",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Computes deterministic layouts of a scene on the ground plane by one of four methods, recursively over containers, honouring pinned leaf positions, and can choose the method by scoring the results.",
+      "responsibilities": [
+        "Offer the methods layered (dependency layers left to right), layered-down (front to back), packed (no flow direction, connected siblings in tight rows) and radial (best-connected node at the centre, rings around it); each arranges the siblings of one container level and the shared recursion encloses them in their container with padding",
+        "Place pinned leaf nodes at their absolute [x, z] pin and keep their container enclosing them",
+        "Tolerate cycles, self edges and edges across containers",
+        "Shape the result towards a target width-to-depth ratio supplied by the caller (default 1.6)",
+        "chooseLayout (method auto): compute every method, score each placement (aspect against the target, mean edge length, edge crossings, whitespace area, fixed weights) and return the lowest score, ties going to the earlier method, together with every score"
+      ],
+      "unknowns": [
+        "Pins are absolute positions; nothing re-anchors them when the model changes.",
+        "The score weights are fixed constants chosen by hand; no recorded measurement shows that the lowest score is the most readable layout. Crossings are counted on at most 400 sampled edges.",
+        "Automatic layout computes all four methods on every recompute; its cost on large scenes has no recorded measurement."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/core/layout.js",
+          "src/core/layout/constants.js",
+          "src/core/layout/model.js",
+          "src/core/layout/solve.js",
+          "src/core/layout/layered.js",
+          "src/core/layout/packed.js",
+          "src/core/layout/radial.js",
+          "src/core/layout/score.js",
+          "src/core/layout/refine.js"
+        ],
+        "notes": "layout.js is the entry (layoutScene, chooseLayout, LAYOUT_METHODS, scorePlacement); the other modules hold the shared recursion (solve.js, model.js), the four arrangers, the score and the shared sizes.",
+        "language": "js"
+      }
+    },
+    {
+      "id": "scene-renderer",
+      "name": "Three.js scene renderer",
+      "parent": "visualization",
+      "category": "computational",
+      "runsIn": "browser",
+      "purpose": "Draws a SceneModel and its placement in 3D with Three.js, as a function of (scene, placement, selection, highlight, camera) with no domain state of its own.",
+      "responsibilities": [
+        "Diff the scene incrementally by node and edge id and animate placement changes",
+        "Draw node shapes, container slabs, edge curves with line styles, status colours and CSS2D labels with clutter management; the label layer is its own stacking context, so a label (even a message in flight, lifted above the other labels) never covers the interface around the scene",
+        "Run a requestAnimationFrame loop that renders only when something changed, and report frame statistics",
+        "Detect picking, hover, double click, dragging of leaf nodes and connect-mode clicks and report them through callbacks; it never edits the model. Touch: a tap allows 10 px of movement, a second finger makes the gesture a pinch or pan with no tap, and a node is dragged only after the finger has rested on it for 350 ms (a swipe that starts on a node orbits the camera)",
+        "Animate a simulation step's message: a marker labelled with the event travels from the sender's node along the drawn edge to each receiver (backwards along it for a reply), drops in from above for a request from outside, travels straight for a relationship the view does not draw, and travels straight in the violation colour when no relationship is declared; only the current step's message is in flight, so stepping quickly or playing never piles markers up; a message's clock advances by at most a twenty-fourth of its travel time per drawn frame, so where frames are slow (software rendering of a large scene) it travels more slowly and stays readable instead of vanishing after a few frames"
+      ],
+      "unknowns": [
+        "No frame-rate or load-time measurement is recorded for the 396-component benchmark specification.",
+        "Pointer, drag and connect handling live inside src/render/scene-view.js, which this file assigns to the renderer; the split between rendering and interaction is not a module boundary. The camera rig is visual-interaction, and the callbacks that turn gestures into operations are the composition root's (src/app/main.js)."
+      ],
+      "implementation": {
+        "status": "model-configured",
+        "modules": [
+          "src/render/scene-view.js",
+          "src/render/geometry.js",
+          "src/render/curves.js",
+          "src/render/labels.js",
+          "src/render/palette.js"
+        ],
+        "notes": "Node shapes, colours and line styles arrive in the scene from the model's vocabulary and are mapped to geometry and a palette; the renderer code is hand-written.",
+        "language": "js"
+      }
+    },
+    {
+      "id": "visual-interaction",
+      "name": "Camera rig",
+      "parent": "visualization",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "Rigs the cameras of the 3D scene for the scene view: perspective and top-down orthographic cameras with orbit controls, mode switching and animated fit.",
+      "responsibilities": [
+        "Perspective and top-down orthographic cameras with orbit controls, mode switching and animated fit",
+        "Report every camera movement to the scene view, and let it switch user control off while a node is dragged"
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/render/camera-rig.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "simulation-overlays",
+      "name": "Simulation overlays",
+      "parent": "visualization",
+      "category": "logical",
+      "runsIn": "both",
+      "purpose": "Overlays on the component view derived from a trace: utilisation heat, queue depth, message density, killed instances and partitions, cost per component, with a time scrubber.",
+      "responsibilities": [
+        "Derive each overlay value from the trace at the scrubbed time",
+        "Show nothing, not zero, where the trace has no data"
+      ],
+      "implementation": {
+        "status": "not-implemented",
+        "modules": [],
+        "notes": "Planned: WG-4671. Not built yet; its claims stay not evaluated until recorded evidence supports them."
+      }
+    }
+  ],
+  "relationships": [
+    // -- Visualization
+    { "id": "projection-system-calls-queries", "kind": "invokes", "from": "projection-system", "to": "queries", "description": "Resolves components, ancestors and descendants for projection." },
+    { "id": "projection-system-projects-scene-renderer", "kind": "projects", "from": "projection-system", "to": "scene-renderer", "description": "Derives the scene that the renderer draws; the renderer never reads the model.", "contract": "project-scene" },
+    { "id": "layout-engine-projects-scene-renderer", "kind": "projects", "from": "layout-engine", "to": "scene-renderer", "description": "Derives the placement of the scene's nodes on the ground plane." },
+    { "id": "scene-renderer-depends-on-threejs", "kind": "depends-on", "from": "scene-renderer", "to": "threejs-library", "description": "Builds geometry, materials, lines and CSS2D labels with Three.js." },
+    { "id": "scene-renderer-depends-on-browser-platform", "kind": "depends-on", "from": "scene-renderer", "to": "browser-platform", "description": "Uses the canvas, WebGL, pointer events, ResizeObserver and requestAnimationFrame." },
+    { "id": "scene-renderer-calls-composition-root", "kind": "invokes", "from": "scene-renderer", "to": "composition-root", "description": "Invokes the onSelect, onHover, onActivate, onMoveEnd and onConnect callbacks the composition root supplied when it created the scene view; it imports nothing from the application." },
+    { "id": "visual-interaction-depends-on-threejs", "kind": "depends-on", "from": "visual-interaction", "to": "threejs-library", "description": "The camera rig builds cameras and OrbitControls." },
+    {
+      "id": "simulation-overlays-projects-scene-renderer",
+      "kind": "projects",
+      "from": "simulation-overlays",
+      "to": "scene-renderer",
+      "description": "Overlay values drawn over the component view."
+    },
+    {
+      "id": "projection-system-calls-data-model",
+      "kind": "invokes",
+      "from": "projection-system",
+      "to": "data-model",
+      "description": "The Data projection draws records, copies, owners and holders, and marks copies with findings."
+    },
+    {
+      "id": "scene-renderer-calls-visual-interaction",
+      "kind": "invokes",
+      "from": "scene-renderer",
+      "to": "visual-interaction",
+      "description": "The scene view creates the camera rig on its canvas and drives it: size, mode, fit, user control during drags, and the camera it renders and picks with."
+    },
+    {
+      "id": "visual-interaction-data-flow-scene-renderer",
+      "kind": "data-flow",
+      "from": "visual-interaction",
+      "to": "scene-renderer",
+      "description": "The camera state (getState): the scene view hands it to the composition root through getCamera, to be remembered per project and view, and sets a remembered one back through setCamera."
+    },
+    {
+      "id": "projection-system-invokes-semantic-abstraction",
+      "kind": "invokes",
+      "from": "projection-system",
+      "to": "semantic-abstraction",
+      "description": "Draws the derived model of the cut a collapse set corresponds to, and classifies the hops of message flows against it."
+    }
+  ]
+}

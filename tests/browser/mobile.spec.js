@@ -573,3 +573,38 @@ test('the simulator shows the request log of contract events on a phone', { tag:
   expect(await ex(page, `return session.sim.stepIndex;`)).toBe(3);
   await page.screenshot({ path: path.join(SHOTS, 'test-phone-request-log.png') });
 });
+
+test('a phone walks the levels of the self-specification by touch and inspects a derived edge and a block', { tag: '@phone' }, async ({ page }) => {
+  await open(page, 'exegra');
+  await ex(page, `session.setView('architecture');`);
+  // The level controls are in the app bar's tools: choose L0, the system in its environment.
+  await page.getByTestId('appbar-overflow').tap();
+  await expect(page.locator('#appbar-tools')).toBeVisible();
+  await expectTouchTargets(page, 'tools menu with the level controls');
+  await page.getByTestId('cut-select').selectOption('l0');
+  await page.waitForFunction(() => /** @type {any} */ (window).__exegra.session.scene.abstraction?.cut === 'l0');
+  await page.keyboard.press('Escape');
+  await settled(page);
+  await expectNoHorizontalScroll(page, 'L0');
+  await page.screenshot({ path: path.join(SHOTS, 'test-phone-nav-l0.png') });
+
+  // Select the system: the inspector comes forward and shows it as a block; its Expand button opens it into its subsystems.
+  await ex(page, "session.select('exegra', { source: 'scene' });");
+  await waitSelected(page, 'exegra');
+  await expect(page.locator('#panel-context')).toHaveAttribute('data-detent', 'peek');
+  await page.locator('#panel-context .panel__handle').tap(); // peek -> half
+  await page.locator('#panel-context .panel__handle').tap(); // half -> full
+  await expect(page.locator('#panel-context')).toHaveAttribute('data-detent', 'full');
+  await settled(page);
+  await expect(page.getByTestId('block-panel')).toHaveAttribute('data-element', 'exegra');
+  await page.getByTestId('block-expand').tap();
+  await page.waitForFunction(() => /** @type {any} */ (window).__exegra.session.scene.abstraction?.cut === 'l1');
+  await expectTouchTargets(page, 'block panel');
+
+  // The bundled edge application -> semantic-core lists every relationship it stands for, each a 44 px link.
+  const n = /** @type {number} */ (await ex(page, `const e = session.scene.edges.find((x) => x.key === 'application->semantic-core:invokes'); session.select(e.entityId, { edge: e.id }); return e.witnesses.length;`));
+  await expect(page.getByTestId('witness-row')).toHaveCount(n);
+  await expectNoHorizontalScroll(page, 'witness list');
+  await expectTouchTargets(page, 'witness list');
+  await page.screenshot({ path: path.join(SHOTS, 'test-phone-nav-witnesses.png') });
+});

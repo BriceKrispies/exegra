@@ -2,6 +2,20 @@
 
 /** @typedef {import('../types.js').SceneModel} SceneModel */
 
+/** Scene edges that say nothing about flow: claim and evidence links, record and copy links. */
+const NON_FLOW_ENTITY_KINDS = new Set(['claim', 'evidence', 'copy', 'record']);
+
+/**
+ * Whether an edge gives the flow direction of the layout. A relationship edge does when the dependency class of
+ * its kind is static or runtime, so data flow, notification, composition and the like do not order components;
+ * an edge that states no class (a hand-built scene) does unless it is a claim, evidence, record or copy link.
+ * @param {import('../types.js').SceneEdge} e
+ */
+export function isFlowEdge(e) {
+  if (e.dependencyClass !== undefined) return e.dependencyClass !== 'none';
+  return !NON_FLOW_ENTITY_KINDS.has(e.entityKind);
+}
+
 /**
  * @param {SceneModel} scene
  */
@@ -50,7 +64,7 @@ export function buildModel(scene) {
   const edgesAt = new Map();
   const seenPairs = new Set();
   for (const e of scene.edges) {
-    if (!byId.has(e.from) || !byId.has(e.to)) continue;
+    if (!isFlowEdge(e) || !byId.has(e.from) || !byId.has(e.to)) continue;
     /** @type {string|null} */ let a = e.from;
     /** @type {string|null} */ let b = e.to;
     /** @type {string|null} */ let ca = null;

@@ -1,6 +1,14 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "interaction-prefs-flow": 0,
+   "local-storage-flow": 0,
+   "responsive-layout-flow": 0
+  },
+  "links": {},
   "machines": {
    "interaction-prefs-flow": {
     "state": "prefs-live",
@@ -25,10 +33,24 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 3
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 3,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "interaction-prefs-flow": 0,
+   "local-storage-flow": 0,
+   "responsive-layout-flow": 0
+  },
+  "links": {},
   "machines": {
    "interaction-prefs-flow": {
     "state": "prefs-live",
@@ -53,12 +75,14 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "entity-selected",
     "payload": {
      "id": "session"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -71,6 +95,7 @@
     "payload": {
      "view": "data"
     },
+    "scheduledAt": 1,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -83,6 +108,7 @@
     "payload": {
      "open": false
     },
+    "scheduledAt": 2,
     "seq": 2,
     "source": {
      "kind": "scenario",
@@ -93,6 +119,7 @@
    {
     "event": "page-reloaded",
     "payload": {},
+    "scheduledAt": 3,
     "seq": 3,
     "source": {
      "kind": "scenario",
@@ -101,13 +128,28 @@
     "time": 3
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "preferences-remembered",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "interaction-prefs-flow": 0,
+     "local-storage-flow": 0,
+     "responsive-layout-flow": 0
+    },
+    "links": {},
     "machines": {
      "interaction-prefs-flow": {
       "state": "prefs-live",
@@ -132,13 +174,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "preferences-written",
+      "from": {
+       "behavior": "interaction-prefs-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "selection": "session",
        "viewId": "structural"
       },
+      "scheduledAt": 0,
       "seq": 4,
       "source": {
        "behavior": "interaction-prefs-flow",
@@ -152,6 +201,7 @@
       "payload": {
        "view": "data"
       },
+      "scheduledAt": 1,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -164,6 +214,7 @@
       "payload": {
        "open": false
       },
+      "scheduledAt": 2,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -174,6 +225,7 @@
      {
       "event": "page-reloaded",
       "payload": {},
+      "scheduledAt": 3,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -182,13 +234,20 @@
       "time": 3
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "entity-selected",
     "payload": {
      "id": "session"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -212,6 +271,7 @@
      ],
      "from": "prefs-live",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "session",
@@ -227,16 +287,20 @@
     {
      "behavior": "responsive-layout-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "local-storage-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "entity-selected",
     "prefs-select",
@@ -247,6 +311,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "interaction-prefs-flow": 0,
+     "local-storage-flow": 0,
+     "responsive-layout-flow": 0
+    },
+    "links": {},
     "machines": {
      "interaction-prefs-flow": {
       "state": "prefs-live",
@@ -271,12 +343,14 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "view-switched",
       "payload": {
        "view": "data"
       },
+      "scheduledAt": 1,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -289,6 +363,7 @@
       "payload": {
        "open": false
       },
+      "scheduledAt": 2,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -299,6 +374,7 @@
      {
       "event": "page-reloaded",
       "payload": {},
+      "scheduledAt": 3,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -307,14 +383,26 @@
       "time": 3
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "interaction-prefs-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "preferences-written",
     "payload": {
      "selection": "session",
      "viewId": "structural"
     },
+    "scheduledAt": 0,
     "seq": 4,
     "source": {
      "behavior": "interaction-prefs-flow",
@@ -329,6 +417,7 @@
      "emitted": [],
      "from": "storage-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "session",
@@ -349,16 +438,20 @@
     {
      "behavior": "interaction-prefs-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "responsive-layout-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "preferences-written",
     "storage-write-session",
@@ -369,6 +462,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "interaction-prefs-flow": 0,
+     "local-storage-flow": 0,
+     "responsive-layout-flow": 0
+    },
+    "links": {},
     "machines": {
      "interaction-prefs-flow": {
       "state": "prefs-live",
@@ -393,13 +494,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "preferences-written",
+      "from": {
+       "behavior": "interaction-prefs-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "selection": "session",
        "viewId": "data"
       },
+      "scheduledAt": 1,
       "seq": 5,
       "source": {
        "behavior": "interaction-prefs-flow",
@@ -413,6 +521,7 @@
       "payload": {
        "open": false
       },
+      "scheduledAt": 2,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -423,6 +532,7 @@
      {
       "event": "page-reloaded",
       "payload": {},
+      "scheduledAt": 3,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -431,13 +541,20 @@
       "time": 3
      }
     ],
-    "time": 1
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 1,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "view-switched",
     "payload": {
      "view": "data"
     },
+    "scheduledAt": 1,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -461,6 +578,7 @@
      ],
      "from": "prefs-live",
      "guard": "event.view != viewId",
+     "instance": 0,
      "sets": [
       {
        "after": "data",
@@ -476,16 +594,20 @@
     {
      "behavior": "responsive-layout-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "local-storage-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "view-switched",
     "prefs-view",
@@ -496,6 +618,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "interaction-prefs-flow": 0,
+     "local-storage-flow": 0,
+     "responsive-layout-flow": 0
+    },
+    "links": {},
     "machines": {
      "interaction-prefs-flow": {
       "state": "prefs-live",
@@ -520,12 +650,14 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "panel-toggled",
       "payload": {
        "open": false
       },
+      "scheduledAt": 2,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -536,6 +668,7 @@
      {
       "event": "page-reloaded",
       "payload": {},
+      "scheduledAt": 3,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -544,14 +677,26 @@
       "time": 3
      }
     ],
-    "time": 1
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 1,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "interaction-prefs-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "preferences-written",
     "payload": {
      "selection": "session",
      "viewId": "data"
     },
+    "scheduledAt": 1,
     "seq": 5,
     "source": {
      "behavior": "interaction-prefs-flow",
@@ -566,6 +711,7 @@
      "emitted": [],
      "from": "storage-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "session",
@@ -586,16 +732,20 @@
     {
      "behavior": "interaction-prefs-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "responsive-layout-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "preferences-written",
     "storage-write-session",
@@ -606,6 +756,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "interaction-prefs-flow": 0,
+     "local-storage-flow": 0,
+     "responsive-layout-flow": 0
+    },
+    "links": {},
     "machines": {
      "interaction-prefs-flow": {
       "state": "prefs-live",
@@ -630,12 +788,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "layout-preferences-written",
+      "from": {
+       "behavior": "responsive-layout-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "explorerOpen": false
       },
+      "scheduledAt": 2,
       "seq": 6,
       "source": {
        "behavior": "responsive-layout-flow",
@@ -647,6 +812,7 @@
      {
       "event": "page-reloaded",
       "payload": {},
+      "scheduledAt": 3,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -655,13 +821,20 @@
       "time": 3
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "panel-toggled",
     "payload": {
      "open": false
     },
+    "scheduledAt": 2,
     "seq": 2,
     "source": {
      "kind": "scenario",
@@ -684,6 +857,7 @@
      ],
      "from": "layout-prefs-live",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": false,
@@ -699,16 +873,20 @@
     {
      "behavior": "interaction-prefs-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "local-storage-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "panel-toggled",
     "layout-prefs-toggle",
@@ -719,6 +897,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "interaction-prefs-flow": 0,
+     "local-storage-flow": 0,
+     "responsive-layout-flow": 0
+    },
+    "links": {},
     "machines": {
      "interaction-prefs-flow": {
       "state": "prefs-live",
@@ -743,10 +929,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "page-reloaded",
       "payload": {},
+      "scheduledAt": 3,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -755,13 +943,25 @@
       "time": 3
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "responsive-layout-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "layout-preferences-written",
     "payload": {
      "explorerOpen": false
     },
+    "scheduledAt": 2,
     "seq": 6,
     "source": {
      "behavior": "responsive-layout-flow",
@@ -776,6 +976,7 @@
      "emitted": [],
      "from": "storage-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": false,
@@ -791,16 +992,20 @@
     {
      "behavior": "interaction-prefs-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "responsive-layout-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 5,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "layout-preferences-written",
     "storage-write-layout",
@@ -811,6 +1016,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "interaction-prefs-flow": 0,
+     "local-storage-flow": 0,
+     "responsive-layout-flow": 0
+    },
+    "links": {},
     "machines": {
      "interaction-prefs-flow": {
       "state": "prefs-live",
@@ -835,10 +1048,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "preferences-read",
+      "from": {
+       "behavior": "interaction-prefs-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 3,
       "seq": 7,
       "source": {
        "behavior": "interaction-prefs-flow",
@@ -848,11 +1068,18 @@
       "time": 3
      }
     ],
-    "time": 3
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 3,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "page-reloaded",
     "payload": {},
+    "scheduledAt": 3,
     "seq": 3,
     "source": {
      "kind": "scenario",
@@ -873,6 +1100,7 @@
      ],
      "from": "prefs-live",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "none",
@@ -898,16 +1126,20 @@
     {
      "behavior": "responsive-layout-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "local-storage-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 6,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "page-reloaded",
     "prefs-reload",
@@ -918,6 +1150,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "interaction-prefs-flow": 0,
+     "local-storage-flow": 0,
+     "responsive-layout-flow": 0
+    },
+    "links": {},
     "machines": {
      "interaction-prefs-flow": {
       "state": "prefs-live",
@@ -942,13 +1182,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "preferences-loaded",
+      "from": {
+       "behavior": "local-storage-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "selection": "session",
        "viewId": "data"
       },
+      "scheduledAt": 3,
       "seq": 8,
       "source": {
        "behavior": "local-storage-flow",
@@ -958,11 +1205,23 @@
       "time": 3
      }
     ],
-    "time": 3
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 3,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "interaction-prefs-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "preferences-read",
     "payload": {},
+    "scheduledAt": 3,
     "seq": 7,
     "source": {
      "behavior": "interaction-prefs-flow",
@@ -987,6 +1246,7 @@
      ],
      "from": "storage-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "storage-ready",
      "transition": "storage-read-session"
@@ -996,16 +1256,20 @@
     {
      "behavior": "interaction-prefs-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "responsive-layout-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 7,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "preferences-read",
     "storage-read-session",
@@ -1016,6 +1280,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "interaction-prefs-flow": 0,
+     "local-storage-flow": 0,
+     "responsive-layout-flow": 0
+    },
+    "links": {},
     "machines": {
      "interaction-prefs-flow": {
       "state": "prefs-live",
@@ -1040,15 +1312,28 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 3
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 3,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "local-storage-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "preferences-loaded",
     "payload": {
      "selection": "session",
      "viewId": "data"
     },
+    "scheduledAt": 3,
     "seq": 8,
     "source": {
      "behavior": "local-storage-flow",
@@ -1063,6 +1348,7 @@
      "emitted": [],
      "from": "prefs-live",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "session",
@@ -1088,16 +1374,20 @@
     {
      "behavior": "responsive-layout-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "local-storage-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 8,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "preferences-loaded",
     "prefs-restore",
@@ -1106,5 +1396,9 @@
    ],
    "time": 3
   }
- ]
+ ],
+ "stepsTaken": 9,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

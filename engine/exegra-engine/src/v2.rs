@@ -15,7 +15,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use crate::expr::{eval_expr, expr_refs, parse_expr, Ast};
+use crate::expr::{eval_expr_mode, expr_refs, parse_expr, Ast};
 use crate::random;
 use crate::value::{JsObject, Value};
 use crate::workload::{self as work, Cursor, Phase, Rate};
@@ -3117,6 +3117,9 @@ struct Sim<'a> {
     meter: Measure,
     /// Whether steps are kept for the trace; without, step records carry no configuration.
     keep_steps: bool,
+    /// Whether the input is in the integer fragment of the behaviour calculus (`in_fragment`):
+    /// untyped arithmetic is then checked integer arithmetic.
+    integer: bool,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -3234,6 +3237,11 @@ impl<'a> Sim<'a> {
         Ok(c)
     }
 
+    /// Resolves a reference in the scope of the instance with machine key `mk`. `view` gives the
+    /// instance's own variables as its earlier effects left them; `start`, the start-of-step
+    /// configuration, gives other machines' variables and states, aggregates over instances and
+    /// resources (snapshot reads, as formal/Exegra/Format2.lean's `resolve` and the behaviour
+    /// calculus read them). In phase 1 both are the same configuration.
     #[allow(clippy::too_many_arguments)]
     fn resolve(
         &self,
@@ -3295,7 +3303,7 @@ impl<'a> Sim<'a> {
                 let Some(bd) = self.input.behavior(b) else {
                     return undef;
                 };
-                let ks = view.insts_of(b);
+                let ks = start.insts_of(b);
                 if ks.len() > 1 {
                     return Err(format!(
                         "Reference \"{}\" is ambiguous: \"{b}\" has {} instances.",
@@ -3303,7 +3311,7 @@ impl<'a> Sim<'a> {
                         ks.len()
                     ));
                 }
-                match ks.first().and_then(|v| view.machine(&self.mkey(bd, v))) {
+                match ks.first().and_then(|v| start.machine(&self.mkey(bd, v))) {
                     None => undef,
                     Some(m) => Ok(if *name == "state" {
                         Value::str(m.state.as_str())
@@ -3314,7 +3322,7 @@ impl<'a> Sim<'a> {
             }
             [b, "instances", "count"] => match self.input.behavior(b) {
                 Some(bd) if !matches!(bd.instances, Instances::Single) => {
-                    Ok(Value::Number(view.insts_of(b).len() as f64))
+                    Ok(Value::Number(start.insts_of(b).len() as f64))
                 }
                 _ => undef,
             },
@@ -3325,10 +3333,10 @@ impl<'a> Sim<'a> {
                 if matches!(bd.instances, Instances::Single) {
                     return undef;
                 }
-                let ms: Vec<&Machine> = view
+                let ms: Vec<&Machine> = start
                     .insts_of(b)
                     .iter()
-                    .filter_map(|v| view.machine(&self.mkey(bd, v)))
+                    .filter_map(|v| start.machine(&self.mkey(bd, v)))
                     .collect();
                 match *agg {
                     "count" => Ok(Value::Number(
@@ -3384,10 +3392,14 @@ impl<'a> Sim<'a> {
         for p in &compiled.refs {
             self.resolve(view, start, mk, inst, payload, time, p)?;
         }
-        eval_expr(&compiled.ast, &|path: &[String]| {
-            self.resolve(view, start, mk, inst, payload, time, path)
-                .unwrap_or(Value::Undefined)
-        })
+        eval_expr_mode(
+            &compiled.ast,
+            &|path: &[String]| {
+                self.resolve(view, start, mk, inst, payload, time, path)
+                    .unwrap_or(Value::Undefined)
+            },
+            self.integer,
+        )
         .map_err(|e| e.message)
     }
 
@@ -5515,9 +5527,118 @@ fn initial_instants(i: &Input, c: &mut Conf, seq: &mut u64) -> Vec<Draw> {
 }
 
 /// Run a version-2 input: the refusal message, or the trace as JSON text.
+/// Whether an input is in the integer fragment of the behaviour calculus (formal/Exegra/Elab.lean,
+/// `preCheck`): no resources, links, workloads, routes, measured outputs, keyed instances, `sample`
+/// effects or resource faults. Such an input runs with snapshot reads and checked integer
+/// arithmetic, as the calculus runs it; any other input runs as before.
+fn in_fragment(i: &Input) -> bool {
+    i.resources.is_empty()
+        && i.links.is_empty()
+        && i.workloads.is_empty()
+        && i.routes.is_empty()
+        && !i.measures()
+        && i.faults.iter().all(|f| !f.is_resource_kind())
+        && i.behaviors.iter().all(|b| {
+            !matches!(b.instances, Instances::Keyed { .. })
+                && b.transitions.iter().all(|t| {
+                    t.effects.iter().all(|e| {
+                        !matches!(
+                            e,
+                            Effect::Sample { .. }
+                                | Effect::Request { .. }
+                                | Effect::Release { .. }
+                                | Effect::Send { .. }
+                        )
+                    })
+                })
+        })
+}
+
+/// A number that is not an integer, anywhere an input in the integer fragment gives one: an
+/// initial value, a `set` or payload constant, a literal in an expression, a scenario or fault
+/// payload. Returns where it is.
+fn non_integer(i: &Input) -> Option<String> {
+    fn in_value(v: &Value, path: &str) -> Option<String> {
+        match v {
+            Value::Number(x) if x.fract() != 0.0 || !x.is_finite() => Some(path.to_string()),
+            Value::Array(xs) => xs
+                .iter()
+                .enumerate()
+                .find_map(|(k, x)| in_value(x, &format!("{path}[{k}]"))),
+            Value::Object(o) => o
+                .iter()
+                .find_map(|(k, x)| in_value(x, &format!("{path}.{k}"))),
+            Value::String(src) => match parse_expr(src) {
+                Ok(ast) => in_ast(&ast).then(|| path.to_string()),
+                Err(_) => None,
+            },
+            _ => None,
+        }
+    }
+    fn in_ast(a: &Ast) -> bool {
+        match a {
+            Ast::Lit(Value::Number(x)) => x.fract() != 0.0,
+            Ast::Lit(_) | Ast::Ref { .. } => false,
+            Ast::Un { a, .. } => in_ast(a),
+            Ast::Bin { a, b, .. } => in_ast(a) || in_ast(b),
+        }
+    }
+    for b in &i.behaviors {
+        for (name, v) in &b.variables {
+            if let Value::Number(x) = v {
+                if x.fract() != 0.0 {
+                    return Some(format!("{}.{name}", b.id));
+                }
+            }
+        }
+        for t in &b.transitions {
+            let what = format!("{}.{}", b.id, t.id);
+            if let Some(g) = &t.guard {
+                if parse_expr(g).is_ok_and(|a| in_ast(&a)) {
+                    return Some(format!("{what}.guard"));
+                }
+            }
+            for (k, e) in t.effects.iter().enumerate() {
+                let found = match e {
+                    Effect::Set { to: Some(v), .. } => {
+                        in_value(v, &format!("{what}.effects[{k}].to"))
+                    }
+                    Effect::Emit { payload, .. } | Effect::Timer { payload, .. } => {
+                        payload.iter().find_map(|(f, v)| {
+                            in_value(v, &format!("{what}.effects[{k}].payload.{f}"))
+                        })
+                    }
+                    _ => None,
+                };
+                if found.is_some() {
+                    return found;
+                }
+            }
+        }
+    }
+    for (k, st) in i.scenario.steps.iter().enumerate() {
+        if let Value::Object(o) = &st.payload {
+            for (f, v) in o.iter() {
+                if let Value::Number(x) = v {
+                    if x.fract() != 0.0 {
+                        return Some(format!("scenario.steps[{k}].payload.{f}"));
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
 pub fn run(root: &JsObject) -> R<String> {
     let input = decode(root)?;
     validate(&input)?;
+    let integer = in_fragment(&input);
+    if integer {
+        if let Some(path) = non_integer(&input) {
+            return Err(format!("The number at {path} is not an integer."));
+        }
+    }
     set_keep(true);
     let mut fault_ids: Vec<String> = Vec::new();
     for id in &input.scenario.faults {
@@ -5543,6 +5664,7 @@ pub fn run(root: &JsObject) -> R<String> {
         taken: 0,
         meter: Measure::new(&input, &initial),
         keep_steps: input.scenario.output != "metrics",
+        integer,
     };
     let keep_steps = sim.keep_steps;
     let bound = input.scenario.step_limit;
@@ -6162,10 +6284,17 @@ fn encode_trace(sim: &Sim, initial: &Conf, outcome: &str) -> Value {
             Value::Bool(outcome == "step-limit" || outcome == "error"),
         )
         .put("final", configuration(i, &sim.conf));
-    if measured {
-        o.put("metrics", sim.meter.encode(i)).done()
+    let o = if measured {
+        o.put("metrics", sim.meter.encode(i))
     } else {
+        o
+    };
+    // An input outside the integer fragment of the behaviour calculus runs the legacy semantics, and
+    // its trace says so (formal/Exegra/Format2B.lean, `legacyTrace`).
+    if sim.integer {
         o.done()
+    } else {
+        o.put("semantics", s("legacy")).done()
     }
 }
 

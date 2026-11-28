@@ -13,16 +13,20 @@
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
-import { createWorkspace, WorkspaceError, isValidProjectName, PROJECT_FILE } from '../tools/workspace.js';
+import { createWorkspace, WorkspaceError, isValidProjectName, PROJECT_FILE, FACT_FILES } from '../tools/workspace.js';
 import { checkTraceability } from '../tools/traceability.js';
+import { extractRepository, readFacts, factsDrift, factsText } from '../tools/extract.js';
+import { attachObserved, reconcile, extractionOf, stripExtracted } from '../src/core/extraction.js';
 import { readinessGaps } from '../src/core/readiness.js';
 import { machineCoverage, coverageOperations, DEFAULT_BOUND, DEFAULT_MAX_RUNS } from '../src/core/machine-coverage.js';
 import { functionCoverage } from '../src/core/function-coverage.js';
 import { resolveRoots, splitRootRef, collectExternalResults, RootsError } from '../tools/realisation-roots.js';
 import { Project } from '../src/core/project.js';
+import { locate, setLocator } from './locations.js';
 import { OPERATIONS, OpError, Tx, planDelete } from '../src/core/operations.js';
 import { analyzeSpec } from '../src/core/analyze.js';
 import { analyzeLayers } from '../src/core/layers.js';
@@ -30,20 +34,27 @@ import { evaluateIntegrity, counterexampleJson } from '../src/core/integrity.js'
 import { proveIntegrity } from '../tools/prove-integrity.js';
 import {
   entityLabel, childrenOf, ancestorsOf, inboundRefs, relationshipsOf, dependencies, contractsOf,
+  hierarchyIds, hierarchyOf, cutMap, cutBlocksOf, abstractionOf, elementKindOf, knowledgeOf,
 } from '../src/core/query.js';
 import { evaluateClaims, evaluateClaim, checkTrace, theoremRequests } from '../src/core/claims.js';
 import { applyConcordance } from '../src/core/concordance.js';
 import { checkTheorems } from '../tools/lean-theorems.js';
 import { requestLog } from '../src/core/contract-trace.js';
 import { runScenario } from '../src/core/engine.js';
+import { checkEditHistory } from '../src/core/edit-history.js';
 import { proveScenario, ProveError } from '../tools/prove.js';
 import { CLAIM_STATUSES } from '../src/core/claim-methods.js';
 import { stableStringify } from '../src/core/stable-json.js';
 import { testRefProblem, describeTestRefProblem } from '../src/core/evidence-ref.js';
 import { treeStamp, currentStamps } from '../tools/tree-stamp.js';
+import { scanImports, importScanRecord, IMPORT_ASSUMPTION } from '../tools/import-scan.js';
+import { dependencyGraph, impactedClaims, fileNodes, changeImpact } from '../src/core/impact.js';
+import { executeEvidence } from './evidence-run.js';
 import { createOutcomeReuse, testsVerdict } from './outcomes.js';
 import { snapshot, compare, sideCounts, NON_ACKNOWLEDGEABLE, withClaimStrength, claimBaseline, verifyRegressions } from './admit.js';
 import { claimStrength } from '../src/core/claim-strength.js';
+import { readCommands } from './read-commands.js';
+import { deriveModel, derivedJson, levelOf } from '../src/core/abstraction.js';
 
 /** @typedef {import('../src/core/types.js').Model} Model */
 /** @typedef {import('../src/core/types.js').Entity} Entity */
@@ -101,15 +112,16 @@ const INLINE_OPTIONS = {
 
 /** @param {Diagnostic} d */
 export function serializeDiagnostic(d) {
+  const at = locate(d.loc);
   return {
     code: d.code,
     severity: d.severity,
     message: d.message,
     entityId: d.entityId ?? null,
-    line: d.loc?.line ?? null,
-    column: d.loc?.column ?? null,
-    // The product file a diagnostic of a layered project is in; absent for the specification itself.
-    ...(d.loc?.file !== undefined ? { file: d.loc.file } : {}),
+    line: at.line,
+    column: at.column,
+    // The product file a diagnostic of a layered project is in, or the part file of a manifest; absent for a one-file specification.
+    ...(at.file !== undefined ? { file: at.file } : {}),
   };
 }
 
@@ -121,7 +133,7 @@ function entityJson(e, withData) {
     kind: e.kind,
     owner: e.owner ?? null,
     label: entityLabel(e),
-    source: { line: e.loc.line, column: e.loc.column, ...(e.loc.file !== undefined ? { file: e.loc.file } : {}) },
+    source: (({ file, line, column }) => ({ line, column, ...(file !== undefined ? { file } : {}) }))(locate(e.loc)),
   };
   if (withData) out.data = e.data;
   return out;
@@ -151,12 +163,13 @@ function strengthFields(strength, claimId) {
   return s ? { check: s.check, grounding: s.grounding, strength: s.details } : {};
 }
 
-/** @param {{status: string}[]} results */
+/** @param {{status: string, verdict?: {established: boolean}}[]} results */
 function summarize(results) {
   /** @type {Record<string, number>} */
-  const summary = { total: results.length, proved: 0, verified: 0, supported: 0, violated: 0, inconclusive: 0, 'not-evaluated': 0 };
+  const summary = { total: results.length, proved: 0, verified: 0, supported: 0, 'model-holds': 0, asserted: 0, violated: 0, inconclusive: 0, 'not-evaluated': 0, established: 0 };
   for (const r of results) {
     if (r.status in summary) summary[r.status] += 1;
+    if (r.verdict?.established) summary.established += 1;
   }
   return summary;
 }
@@ -279,11 +292,14 @@ async function loadProject(ctx) {
     }
     throw err;
   }
+  setLocator(data.spec.locate);
   const project = new Project({
     name: ctx.projectName,
     specText: data.spec.text,
     layoutText: data.layout?.text ?? null,
     layers: data.layers.map((/** @type {any} */ l) => ({ file: l.file, text: l.text, platform: l.platform })),
+    extracted: data.extracted ?? null,
+    observed: data.observed ?? null,
   });
   // Concordance results named by project.jsonc become derived evidence in the recorded results
   // handed to claim evaluation; their diagnostics are reported by validate.
@@ -573,7 +589,7 @@ export function countPassingTests(output, file) {
  * keeps an older pass; the one exception is a browser test that was not started and whose earlier result was
  * recorded on the same tree stamp.
  * @param {Record<string, any>} prior the `results` object recorded before this run
- * @param {{id: string, outcome: 'pass'|'fail'|'skipped'|'not-run', detail?: string, ranAt: string, obtained?: 'run'|'reused', attempted?: boolean}[]} runs
+ * @param {{id: string, outcome: 'pass'|'fail'|'skipped'|'not-run', detail?: string, ranAt: string, obtained?: 'run'|'reused'|'impact', attempted?: boolean, covers?: string[]}[]} runs
  *   this run, per evidence id (not-run: a realisation root's test that did not run; attempted false: a browser
  *   test verify did not start, under --skip-browser)
  * @param {string|null} [stamp] the stamp of the tree the run recorded (tools/tree-stamp.js, recordsStamp), written
@@ -601,17 +617,77 @@ export function mergeRecordedResults(prior, runs, stamp = null) {
     }
     results[run.id] = {
       outcome: run.outcome, ...(run.detail !== undefined ? { detail: run.detail } : {}), ranAt: run.ranAt,
-      ...(run.obtained ? { obtained: run.obtained } : {}), ...(stamp !== null ? { stamp } : {}),
+      ...(run.obtained ? { obtained: run.obtained } : {}), ...(run.covers ? { covers: run.covers } : {}), ...(stamp !== null ? { stamp } : {}),
     };
   }
   return results;
 }
 
 /**
+ * The repository files a run executed, from the V8 coverage files Node wrote (NODE_V8_COVERAGE): each script under
+ * the repository, outside node_modules, of which at least one range ran. Repository-relative, sorted.
+ * @param {string} dir @param {string} repoRoot
+ * @returns {string[]}
+ */
+export function coveredFiles(dir, repoRoot) {
+  const out = new Set();
+  let names = [];
+  try { names = fs.readdirSync(dir); } catch { return []; }
+  for (const name of names) {
+    if (!name.endsWith('.json')) continue;
+    let doc;
+    try { doc = JSON.parse(fs.readFileSync(path.join(dir, name), 'utf8')); } catch { continue; }
+    for (const script of Array.isArray(doc?.result) ? doc.result : []) {
+      if (typeof script?.url !== 'string' || !script.url.startsWith('file:')) continue;
+      let abs;
+      try { abs = fileURLToPath(script.url); } catch { continue; }
+      if (!isInside(repoRoot, abs) || abs.split(path.sep).includes('node_modules')) continue;
+      const ran = (Array.isArray(script.functions) ? script.functions : []).some((f) => (Array.isArray(f.ranges) ? f.ranges : []).some((/** @type {any} */ r) => r.count > 0));
+      if (ran) out.add(path.relative(repoRoot, abs).split(path.sep).join('/'));
+    }
+  }
+  return [...out].sort();
+}
+
+/**
+ * Read a change set: `{ops?: [operation], files?: [path], entities?: [id]}`. `ops` are transaction operations
+ * applied to the specification (admit, impact); `files` are the repository files the change touches (Lean sources,
+ * tests, measurements); `entities` are specification entities that changed since the last verification (verify).
+ * @param {any} ctx @param {string} file
+ * @returns {{ops: any[], files: string[], entities: string[]}}
+ */
+function readChangeSet(ctx, file) {
+  const abs = path.resolve(ctx.cwd ?? process.cwd(), file);
+  let value;
+  try {
+    value = JSON.parse(fs.readFileSync(abs, 'utf8'));
+  } catch (e) {
+    throw new CliError('change.invalid', `Cannot read the change set ${file}: ${/** @type {Error} */ (e).message}`);
+  }
+  const strs = (/** @type {any} */ v, /** @type {string} */ what) => {
+    if (v === undefined) return [];
+    if (!Array.isArray(v) || !v.every((x) => typeof x === 'string')) throw new CliError('change.invalid', `The change set's "${what}" must be a list of strings.`);
+    return v;
+  };
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new CliError('change.invalid', 'A change set is an object {ops, files, entities}.');
+  if (value.ops !== undefined && !Array.isArray(value.ops)) throw new CliError('change.invalid', 'The change set\'s "ops" must be a list of operations.');
+  return { ops: value.ops ?? [], files: strs(value.files, 'files'), entities: strs(value.entities, 'entities') };
+}
+
+/** The nodes of named specification entities (unknown ids are specification entities that no longer exist). @param {Model} model @param {string[]} ids */
+function changedEntityNodes(model, ids) {
+  return ids.map((id) => {
+    const e = model.entities.get(id);
+    const kind = e?.kind === 'claim' ? 'claim' : e?.kind === 'assumption' ? 'assumption' : e?.kind === 'evidence' ? 'evidence' : 'specEntity';
+    return { kind: /** @type {import('../src/core/impact.js').NodeKind} */ (kind), id };
+  });
+}
+
+/**
  * Execute one test evidence reference.
  * @param {string} ref
  * @param {{repoRoot: string, skipBrowser: boolean, log: (m: string) => void, reuse?: ReturnType<typeof createOutcomeReuse>|null}} env
- * @returns {{outcome: 'pass'|'fail'|'skipped', detail?: string, obtained: 'run'|'reused', ranAt?: string, attempted?: boolean}}
+ * @returns {{outcome: 'pass'|'fail'|'skipped', detail?: string, obtained: 'run'|'reused', ranAt?: string, attempted?: boolean, covers?: string[]}}
  */
 function runTestReference(ref, env) {
   const problem = testRefProblem(ref);
@@ -634,6 +710,8 @@ function runTestReference(ref, env) {
 
   const isWin = process.platform === 'win32';
   env.log(`verify: running ${ref}`);
+  /** @type {string[]|undefined} */
+  let covers;
   /** @type {import('node:child_process').SpawnSyncReturns<string>} */
   let run;
   if (browser) {
@@ -649,10 +727,17 @@ function runTestReference(ref, env) {
     const args = ['--test', '--test-reporter=tap'];
     if (pattern) args.push(`--test-name-pattern=${pattern}`);
     args.push(file);
-    run = spawnSync(process.execPath, args, {
-      cwd: env.repoRoot, shell: false, encoding: 'utf8', timeout: TEST_TIMEOUT_MS,
-      maxBuffer: TEST_OUTPUT_MAX_BYTES, windowsHide: true,
-    });
+    // The runner's coverage of this test: the repository files its run executed (WG-4648), for change impact.
+    const coverage = fs.mkdtempSync(path.join(os.tmpdir(), 'exegra-coverage-'));
+    try {
+      run = spawnSync(process.execPath, args, {
+        cwd: env.repoRoot, shell: false, encoding: 'utf8', timeout: TEST_TIMEOUT_MS,
+        maxBuffer: TEST_OUTPUT_MAX_BYTES, windowsHide: true, env: { ...process.env, NODE_V8_COVERAGE: coverage },
+      });
+      covers = coveredFiles(coverage, env.repoRoot);
+    } finally {
+      fs.rmSync(coverage, { recursive: true, force: true });
+    }
   }
   if (run.status === 0) {
     if (browser) {
@@ -671,8 +756,8 @@ function runTestReference(ref, env) {
     // A reference whose matched tests skipped themselves (a gated fixture, a missing tool), wholly or in part,
     // did not execute in full: it is not evidence either way, so it is recorded as skipped rather than as a failure.
     if (verdict.outcome === 'skipped') return { outcome: 'skipped', detail: verdict.detail, obtained: 'run' };
-    if (verdict.outcome === 'fail') return { outcome: 'fail', detail: 'a matching test failed', obtained: 'run' };
-    return { outcome: 'pass', obtained: 'run' };
+    if (verdict.outcome === 'fail') return { outcome: 'fail', detail: 'a matching test failed', obtained: 'run', ...(covers ? { covers } : {}) };
+    return { outcome: 'pass', obtained: 'run', ...(covers ? { covers } : {}) };
   }
   if (run.error) return { outcome: 'fail', detail: run.error.message, obtained: 'run' };
   const lines = `${run.stdout ?? ''}${run.stderr ?? ''}`.replace(/\s+$/, '').split(/\r?\n/);
@@ -715,41 +800,30 @@ async function runVerify(ctx) {
   // Outcomes that `npm test` and `npm run test:browser` recorded on this very tree are reused (cli/outcomes.js).
   const reuse = ctx.values.fresh === true ? null : createOutcomeReuse(ctx.repoRoot, treeStamp(ctx.repoRoot));
   if (reuse) for (const [kind, why] of Object.entries(reuse.notes)) ctx.log(`verify: not reusing ${kind} outcomes: ${why}`);
+  // (2b) the import scan: a fact about the assumption that the extracted facts describe the tree (tools/import-scan.js)
+  const importScan = scanImports(model, ctx.repoRoot);
+  const assumptions = { [IMPORT_ASSUMPTION]: importScanRecord(importScan, stamps.tree) };
   const priorRecorded = (await ws.read(ctx.projectName)).recorded;
   const priorResults = priorRecorded && typeof priorRecorded === 'object' && priorRecorded.results && typeof priorRecorded.results === 'object'
     ? priorRecorded.results : {};
-  /** @type {{id: string, outcome: 'pass'|'fail'|'skipped'|'not-run', detail?: string, ranAt: string, obtained?: 'run'|'reused', attempted?: boolean}[]} */
-  const runs = [];
-  /** @type {Record<string, any>[]} */
-  const evidence = [];
-  for (const ev of model.byKind.evidence ?? []) {
-    const base = { id: ev.id, kind: ev.data.kind, ref: ev.data.ref, claim: ev.data.claim };
-    if (ev.data.kind !== 'test') {
-      evidence.push({ ...base, outcome: 'not-executed' });
-      continue;
-    }
-    const ext = external.results.get(ev.id);
-    if (ext) {
-      const ranAt = ext.ranAt ?? new Date().toISOString();
-      runs.push({ id: ev.id, outcome: ext.outcome, ...(ext.detail !== undefined ? { detail: ext.detail } : {}), ranAt });
-      evidence.push({ ...base, ...ext, ranAt });
-      continue;
-    }
-    const run = runTestReference(String(ev.data.ref), { repoRoot: ctx.repoRoot, skipBrowser, log: ctx.log, reuse });
-    const ranAt = run.ranAt ?? new Date().toISOString();
-    runs.push({ id: ev.id, outcome: run.outcome, ...(run.detail !== undefined ? { detail: run.detail } : {}), ranAt, obtained: run.obtained, ...(run.attempted === false ? { attempted: false } : {}) });
-    if (run.outcome === 'skipped') {
-      evidence.push({ ...base, outcome: 'skipped', ...(run.detail !== undefined ? { detail: run.detail } : {}) });
-      continue;
-    }
-    evidence.push({ ...base, outcome: run.outcome, obtained: run.obtained, ...(run.detail !== undefined ? { detail: run.detail } : {}), ranAt });
-  }
+  // (3b) with a change set, only the evidence of the claims it re-marks runs (src/core/impact.js, decided in Lean);
+  // the others keep the results the last verification recorded fresh
+  const change = ctx.values.change !== undefined ? readChangeSet(ctx, String(ctx.values.change)) : null;
+  if (change && change.ops.length) throw new CliError('verify.change-ops', 'A change set for verify names the entities and files that changed since the last verification ("entities", "files"); the specification on disk already holds the change, so it takes no operations.');
+  const remark = change ? new Set(impactedClaims(dependencyGraph(model, { recorded: priorRecorded ?? undefined }), [...changedEntityNodes(model, change.entities), ...fileNodes(change.files)])) : null;
+  const priorStamp = priorRecorded && typeof priorRecorded === 'object' && typeof priorRecorded.stamp === 'string' ? priorRecorded.stamp : null;
+  const executed = executeEvidence(model, {
+    run: (ref) => runTestReference(ref, { repoRoot: ctx.repoRoot, skipBrowser, log: ctx.log, reuse }),
+    external: external.results, remark, priorResults, priorStamp,
+  });
+  const runs = executed.runs;
+  const evidence = executed.evidence;
   const results = mergeRecordedResults(priorResults, runs, stamps.tree);
   // A root's results also carry the root and its reports, which the merge would drop.
   for (const [id, ext] of external.results) results[id] = { ...ext, ...(stamps.tree !== null ? { stamp: stamps.tree } : {}) };
 
   // (4) record the results. Outcomes an external verification tool recorded per claim live in the same file;
-  // this command owns `results`, `traceability`, `theorems` and `claimBaseline` and keeps the rest.
+  // this command owns `results`, `traceability`, `assumptions`, `theorems` and `claimBaseline` and keeps the rest.
   /** @type {Record<string, any>} */
   const kept = {};
   const prior = priorRecorded;
@@ -758,11 +832,11 @@ async function runVerify(ctx) {
   // evaluation reads those checked on other formal/ sources as stale
   const { theorems } = leanTheoremChecks(model, prior, ctx.log);
   const baseline = prior && typeof prior === 'object' && prior.claimBaseline && typeof prior.claimBaseline === 'object' ? prior.claimBaseline : null;
-  const recordedNow = { ...kept, results, traceability, ...(Object.keys(theorems).length ? { theorems } : {}), ...(baseline ? { claimBaseline: baseline } : {}) };
+  const recordedNow = { ...kept, ...(stamps.tree !== null ? { stamp: stamps.tree } : {}), results, traceability, assumptions, ...(Object.keys(theorems).length ? { theorems } : {}), ...(baseline ? { claimBaseline: baseline } : {}) };
   await ws.writeRecorded(ctx.projectName, recordedNow);
 
   // (5) evaluate the claims with the new results, against the stamps they were recorded with
-  const claimResults = evaluateClaims(model, { recorded: { results, theorems, ...(data.recorded?.derived ? { derived: data.recorded.derived } : {}) }, stamps });
+  const claimResults = evaluateClaims(model, { recorded: { results, theorems, assumptions, ...(data.recorded?.derived ? { derived: data.recorded.derived } : {}) }, stamps });
   const violated = claimResults.filter((r) => r.status === 'violated').map((r) => r.claimId);
   const unexpectedViolated = violated.filter((id) => !expectViolated.includes(id));
   const failedEvidence = evidence.filter((e) => e.outcome === 'fail');
@@ -775,6 +849,8 @@ async function runVerify(ctx) {
   const result = {
     validation: { errors: counts.errors, warnings: counts.warnings, gaps: counts.gaps },
     traceability,
+    importScan: { checked: importScan.checked, imports: importScan.imports, undeclared: importScan.undeclared },
+    ...(remark ? { change: { remark: [...remark].sort(), reused: executed.reused } } : {}),
     evidence,
     ...(roots.length ? { roots: external.reports, notRun: evidence.filter((e) => e.outcome === 'not-run').map((e) => e.id) } : {}),
     claims: {
@@ -874,7 +950,7 @@ export const COMMANDS = {
 
   show: {
     usage: 'show <id>',
-    summary: 'One entity with its data, owned entities and inbound references; components add relationships, children and ancestors.',
+    summary: 'One entity with its data, owned entities and inbound references; components add relationships, children and ancestors; components and the system add their members in the logical hierarchy (module elements included) and their knowledge status.',
     options: { ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { project } = await loadProject(ctx);
@@ -895,6 +971,11 @@ export const COMMANDS = {
         }));
         result.children = childrenOf(model, e.id).map((c) => c.id);
         result.ancestors = ancestorsOf(model, e.id);
+      }
+      if (e.kind === 'component' || e.kind === 'system') {
+        // The element's place in the logical hierarchy, module elements included, and what is known of its inside.
+        result.members = /** @type {any} */ (hierarchyOf(model, 'logical')).children.get(e.id) ?? [];
+        result.knowledge = knowledgeOf(model, e.id);
       }
       return { result, semanticHash: project.semanticHash };
     },
@@ -963,19 +1044,36 @@ export const COMMANDS = {
   },
 
   evaluate: {
-    usage: 'evaluate [<claimId>]',
-    summary: 'Evaluate one claim or all claims. A violated claim is a finding; the command still succeeds.',
-    options: { ...INLINE_OPTIONS },
+    usage: 'evaluate [<claimId>] [--cut <id> | --hierarchy <id> --depth N | --expand a,b | --finest]',
+    summary: 'Evaluate one claim or all claims. A violated claim is a finding; the command still succeeds. With a cut (--cut names a declared one; --hierarchy with --depth, --expand or --finest gives an ad hoc one), every claim stated at a cut is evaluated at that cut instead: what the application shows for it at the cut a view draws.',
+    options: { cut: { type: 'string' }, hierarchy: { type: 'string' }, depth: { type: 'string' }, expand: { type: 'string' }, finest: { type: 'boolean' }, ...INLINE_OPTIONS },
     run: async (ctx) => {
       const { data, project } = await loadProject(ctx);
       const model = requireModel(project);
-      const recorded = withLean(model, data.recorded, ctx.log);
-      const stamps = currentStamps(ctx.repoRoot);
       const id = ctx.positionals[0];
+      // Lean theorem checks matter only to lean-theorem claims (and to a requirement, through the claims modelling it).
+      const one = id !== undefined ? model.entities.get(id) : undefined;
+      const needsLean = !one || one.data.kind === 'requirement' || one.data.evaluate?.method === 'lean-theorem';
+      const recorded = needsLean ? withLean(model, data.recorded, ctx.log) : data.recorded ?? undefined;
+      const stamps = currentStamps(ctx.repoRoot);
       const strength = claimStrength(model);
+      const { cut, hierarchy, depth, expand, finest } = ctx.values;
+      /** @type {string|{hierarchy: string, blocks: string[]}|null} */
+      let atCut = null;
+      if (cut !== undefined) {
+        if (hierarchy !== undefined || depth !== undefined || expand !== undefined || finest !== undefined) throw usage('invalid-argument', '--cut names a declared cut; it takes none of --hierarchy, --depth, --expand, --finest.');
+        atCut = requireEntity(model, cut, 'cut').id;
+      } else if (hierarchy !== undefined || depth !== undefined || expand !== undefined || finest !== undefined) {
+        const hid = hierarchy ?? 'logical';
+        if (!hierarchyOf(model, hid)) throw usage('invalid-argument', `Unknown hierarchy "${hid}"; the hierarchies are: ${hierarchyIds(model).join(', ')}.`);
+        const d = depth === undefined ? undefined : Number(depth);
+        if (d !== undefined && (!Number.isInteger(d) || d < 0)) throw usage('invalid-argument', '--depth must be a whole number of at least 0.');
+        const level = /** @type {any} */ (levelOf(model, { hierarchy: hid, expand: listValue(expand), depth: d, finest: finest === true }));
+        atCut = { hierarchy: hid, blocks: level.blocks };
+      }
       const results = (id !== undefined
-        ? [evaluateClaim(model, requireEntity(model, id, 'claim').id, { recorded, stamps })]
-        : evaluateClaims(model, { recorded, stamps })).map((r) => ({ ...r, ...strengthFields(strength, r.claimId) }));
+        ? [evaluateClaim(model, requireEntity(model, id, 'claim').id, { recorded, stamps, atCut })]
+        : evaluateClaims(model, { recorded, stamps, atCut })).map((r) => ({ ...r, ...strengthFields(strength, r.claimId) }));
       return { result: { results, summary: summarize(results) }, semanticHash: project.semanticHash };
     },
   },
@@ -1067,14 +1165,16 @@ export const COMMANDS = {
   },
 
   admit: {
-    usage: "admit [--file <ops.json> | --ops '<json>'] [--label <text>] [--write] [--accept <code[,code...]>]...",
-    summary: "Admit a change set only if everything the specification held still holds and the change's own claims hold: the before/after diff and a verdict with every reason. Writes only with --write and only when admitted; fails with admit.rejected otherwise.",
-    options: { file: { type: 'string' }, ops: { type: 'string' }, label: { type: 'string' }, write: { type: 'boolean' }, accept: { type: 'string', multiple: true } },
+    usage: "admit [--file <ops.json> | --ops '<json>' | --change <change.json>] [--label <text>] [--write] [--accept <code-or-claim[,...]>]...",
+    summary: "Admit a change set only if everything the specification held still holds and the change's own claims hold: the before/after diff and a verdict with every reason. A change set (--change: {ops, files}) may also touch Lean sources, tests and measurement files; the claims it re-marks and the changes to guarantees are listed, and a weakened lean-theorem claim is refused (admit.theorem-weakened) unless --accept names the claim. Writes only with --write and only when admitted; fails with admit.rejected otherwise.",
+    options: { file: { type: 'string' }, ops: { type: 'string' }, change: { type: 'string' }, label: { type: 'string' }, write: { type: 'boolean' }, accept: { type: 'string', multiple: true } },
     run: async (ctx) => {
       const accept = (/** @type {string[]} */ (ctx.values.accept ?? [])).flatMap(listValue);
       const fixed = accept.filter((c) => NON_ACKNOWLEDGEABLE.has(c));
       if (fixed.length) throw new CliError('admit.not-acknowledgeable', `Cannot accept ${fixed.join(', ')}: a reason without "acknowledgeable" is a failure to fix, not a decision to accept.`);
-      const list = await readOperations(ctx);
+      if (ctx.values.change !== undefined && (ctx.values.file !== undefined || ctx.values.ops !== undefined)) throw usage('invalid-argument', 'Give --change or --file/--ops, not both.');
+      const changeSet = ctx.values.change !== undefined ? readChangeSet(ctx, String(ctx.values.change)) : null;
+      const list = changeSet ? changeSet.ops : await readOperations(ctx);
       const { ws, data, project } = await loadProject(ctx);
       const beforeModel = requireModel(project);
       const initialSpec = project.specText;
@@ -1100,8 +1200,15 @@ export const COMMANDS = {
         };
       } else {
         const afterModel = requireModel(project);
-        const after = snapshot(afterModel, project.diagnostics, evaluateClaims(afterModel, { recorded: withLean(afterModel, data.recorded, ctx.log), stamps }));
-        report = { ...withClaimStrength(compare(before, after, { accept }), beforeModel, afterModel, accept), transaction: { accepted: true, affected: [...tx.affected].sort(), semanticChanged: tx.semanticChanged } };
+        const recordedAfter = withLean(afterModel, data.recorded, ctx.log);
+        const after = snapshot(afterModel, project.diagnostics, evaluateClaims(afterModel, { recorded: recordedAfter, stamps }));
+        const theorems = { old: data.recorded?.theorems ?? {}, new: recordedAfter?.theorems ?? {} };
+        const impact = changeImpact(beforeModel, afterModel, { files: changeSet?.files ?? [], recorded: data.recorded ?? undefined });
+        report = {
+          ...withClaimStrength(compare(before, after, { accept, theorems }), beforeModel, afterModel, accept),
+          impact: { remark: impact.remark, files: changeSet?.files ?? [] },
+          transaction: { accepted: true, affected: [...tx.affected].sort(), semanticChanged: tx.semanticChanged },
+        };
       }
       if (report.refusedAccept) {
         throw new CliError('admit.not-acknowledgeable', `Cannot accept ${report.refusedAccept.join(', ')}: the reason is not acknowledgeable.`, { result: report });
@@ -1128,6 +1235,30 @@ export const COMMANDS = {
     },
   },
 
+  impact: {
+    usage: 'impact --change <change.json>',
+    summary: 'The claims a change set re-marks: those that depend, through the dependency graph (assumptions, discharging claims, the entities their evaluate names, evidence and the files its tests cover, theorems, the declarations and files their statements use, measurements), on an entity the change\'s operations add, change or remove, or on a file it names. Decided in Lean (formal/Exegra/Impact.lean). Changes to guarantees (a claim\'s statement or evaluate) are listed apart. Changes nothing.',
+    options: { change: { type: 'string' } },
+    run: async (ctx) => {
+      if (ctx.values.change === undefined) throw usage('missing-argument', 'Give the change set with --change <change.json>.');
+      const change = readChangeSet(ctx, String(ctx.values.change));
+      const { data, project } = await loadProject(ctx);
+      const beforeModel = requireModel(project);
+      const hash = project.semanticHash;
+      let afterModel = beforeModel;
+      if (change.ops.length) {
+        const tx = project.apply(change.ops, { origin: 'cli' });
+        if (!tx.ok) throw new CliError('impact.transaction-refused', tx.message ?? 'The change set\'s operations were refused.', { diagnostics: tx.diagnostics.map(serializeDiagnostic) });
+        afterModel = requireModel(project);
+      }
+      const nodes = [...changedEntityNodes(afterModel, change.entities), ...fileNodes(change.files)];
+      const fromOps = changeImpact(beforeModel, afterModel, { files: change.files, recorded: data.recorded ?? undefined });
+      const extra = change.entities.length ? impactedClaims(dependencyGraph(afterModel, { recorded: data.recorded ?? undefined }), nodes) : [];
+      const remark = [...new Set([...fromOps.remark, ...extra])].sort();
+      return { result: { remark, guaranteeChanges: fromOps.guaranteeChanges, changed: [...fromOps.changed, ...changedEntityNodes(afterModel, change.entities)] }, semanticHash: hash };
+    },
+  },
+
   'plan-delete': {
     usage: 'plan-delete <id>',
     summary: 'What a cascade delete of an entity would remove and repair. Changes nothing.',
@@ -1138,6 +1269,29 @@ export const COMMANDS = {
       const id = positional(ctx, 0, 'id');
       requireEntity(model, id);
       return { result: planDelete(model, id), semanticHash: project.semanticHash };
+    },
+  },
+
+  'replay-edits': {
+    usage: 'replay-edits --file <capture.json>',
+    summary: 'Check captured replies and a durable read against both serial orders of the two-session edit scenario.',
+    options: { file: { type: 'string' }, ...INLINE_OPTIONS },
+    run: async (ctx) => {
+      if (!ctx.values.file) throw usage('missing-argument', 'Give a capture with --file.');
+      let capture;
+      try {
+        capture = JSON.parse(fs.readFileSync(ctx.values.file, 'utf8'));
+      } catch (err) {
+        throw usage('invalid-argument', `Cannot read the edit capture: ${/** @type {Error} */ (err).message}`);
+      }
+      const { project } = await loadProject(ctx);
+      const model = requireModel(project);
+      requireEntity(model, 'two-session-edit-race', 'scenario');
+      const result = checkEditHistory(model, capture);
+      if (result.verdict !== 'compatible') {
+        throw new CliError(`replay.${result.verdict}`, result.reason, { result: { ...result, semanticHash: project.semanticHash } });
+      }
+      return { result, semanticHash: project.semanticHash };
     },
   },
 
@@ -1271,7 +1425,8 @@ export const COMMANDS = {
       const generatorFile = path.join(HERE, '..', 'src', 'core', 'generate', 'index.js');
       if (!fs.existsSync(generatorFile)) throw new CliError('generate.unavailable', 'src/core/generate/index.js does not exist.');
       const { generateAll } = await import(pathToFileURL(generatorFile).href);
-      const files = generateAll(model, { claimResults, diagnostics: project.diagnostics, traceability });
+      // The documents describe the declared model: the extracted relationships (hundreds of them) are facts to query, not prose.
+      const files = generateAll(stripExtracted(model), { claimResults, diagnostics: project.diagnostics, traceability });
       /** @type {Record<string, {bytes: number, sha256: string}>} */
       const summary = {};
       for (const name of Object.keys(files).sort()) {
@@ -1318,11 +1473,141 @@ export const COMMANDS = {
 
   traceability: {
     usage: 'traceability',
-    summary: 'Compare declared implementation modules with the files on disk: this repository, or the realisation roots project.jsonc declares.',
+    summary: 'Compare declared implementation modules with the files on disk: this repository, or the realisation roots project.jsonc declares. Missing modules and unclaimed files are listed and exit 0; a file covered by two module elements (traceability.multiple-owners) is an error.',
     run: async (ctx) => {
       const { ws, project } = await loadProject(ctx);
       const model = requireModel(project);
-      return { result: checkTraceability(model, ctx.repoRoot, loadRoots(ws, ctx)), semanticHash: project.semanticHash };
+      const result = checkTraceability(model, ctx.repoRoot, loadRoots(ws, ctx));
+      if (result.errors.length) throw new CliError('traceability.multiple-owners', `${result.errors.length} file(s) belong to more than one module element.`, { diagnostics: result.errors, result });
+      return { result, semanticHash: project.semanticHash };
+    },
+  },
+
+  extract: {
+    usage: 'extract [--check]',
+    summary: 'Run the static extractor (tools/extract.js) over the implementation surface and write the fact file (specs/<project>/extracted/facts.json): per file its digest and its imports, re-exports and dynamic imports, with the extractor identity and version. With --check, write nothing and report whether the fact file describes the tree (exit 1 when it does not). Static structure only.',
+    options: { check: { type: 'boolean' } },
+    run: async (ctx) => {
+      const { project } = await loadProject(ctx);
+      const target = path.join(ctx.specs, ctx.projectName, FACT_FILES.extracted);
+      if (ctx.values.check === true) {
+        const stored = readFacts(target);
+        const drift = stored ? factsDrift(stored, ctx.repoRoot) : null;
+        const ok = !!drift && !drift.changed.length && !drift.missing.length && !drift.gone.length && !drift.extractor;
+        if (!ok) throw new CliError('extract.stale', stored ? `The fact file does not describe the tree: ${drift?.changed.length} changed, ${drift?.missing.length} new, ${drift?.gone.length} gone file(s).` : 'There is no fact file.', { result: { drift } });
+        return { result: { current: true, files: stored?.files.length ?? 0 }, semanticHash: project.semanticHash };
+      }
+      const facts = extractRepository(ctx.repoRoot);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, factsText(facts));
+      return { result: { wrote: path.relative(ctx.repoRoot, target).split(path.sep).join('/'), files: facts.files.length, imports: facts.files.reduce((n, f) => n + f.imports.length, 0), extractor: facts.extractor }, semanticHash: project.semanticHash };
+    },
+  },
+
+  reconcile: {
+    usage: 'reconcile [--observed <recording facts file>]',
+    summary: 'Reconcile the declared relationships with the extracted facts attached to the project (inside the extraction surface a static dependency is derived from the code, so a declared one is redundant, unwitnessed, reversed or of another kind), and with an observed recording when --observed names its fact file (tools/observe.js): an observed interaction with no declared relationship is reported, and a declared runtime interaction the recording does not show is reported as not observed, never as false. Extracted dependencies with no declared counterpart are not reported: they are the dependency. Runtime wiring is declared and never flagged for being unextracted.',
+    options: { observed: { type: 'string' } },
+    run: async (ctx) => {
+      const { project } = await loadProject(ctx);
+      const base = requireModel(project);
+      /** @type {any} */
+      let observed = null;
+      if (typeof ctx.values.observed === 'string') {
+        try { observed = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), ctx.values.observed), 'utf8')); } catch (e) { throw new CliError('reconcile.observed', `The observed facts ${ctx.values.observed} cannot be read: ${/** @type {Error} */ (e).message}`); }
+      }
+      const model = attachObserved(base, observed);
+      const r = reconcile(model);
+      return { result: { extraction: extractionOf(model) ? { extractor: extractionOf(model)?.facts.extractor, files: extractionOf(model)?.facts.files.length, relationships: extractionOf(model)?.edges.length, external: extractionOf(model)?.external.length } : null, observed: observed ? observed.recording : null, ...r }, semanticHash: project.semanticHash };
+    },
+  },
+
+  cut: {
+    usage: 'cut [--cut <id>] [--hierarchy <id>] [--depth N | --expand a,b | --finest]',
+    summary: 'The blocks of a cut and its abstraction map: every element at or below the cut -> its block (alpha_C), and the elements the cut opens. --cut names a declared cut; otherwise --hierarchy (default logical) with --depth, --expand or --finest gives an ad hoc one. With no option, lists the hierarchies and the declared cuts.',
+    options: { cut: { type: 'string' }, hierarchy: { type: 'string' }, depth: { type: 'string' }, expand: { type: 'string' }, finest: { type: 'boolean' }, ...INLINE_OPTIONS },
+    run: async (ctx) => {
+      const { project } = await loadProject(ctx);
+      const model = requireModel(project);
+      const { cut, hierarchy, depth, expand, finest } = ctx.values;
+      if (cut === undefined && hierarchy === undefined && depth === undefined && expand === undefined && finest === undefined) {
+        const hierarchies = hierarchyIds(model).map((id) => {
+          const h = /** @type {any} */ (hierarchyOf(model, id));
+          return { id, roots: h.roots.length, elements: h.order.length, depth: Math.max(0, ...h.depth.values()) };
+        });
+        const cuts = (model.byKind.cut ?? []).map((c) => {
+          const m = cutMap(model, c.id);
+          return { id: c.id, name: c.data.name ?? null, hierarchy: m?.hierarchy ?? null, blocks: m?.blocks.length ?? null };
+        });
+        return { result: { hierarchies, cuts }, semanticHash: project.semanticHash };
+      }
+      /** @type {{cut: string|null, hierarchy: string, blocks: string[], expanded: string[], map: Map<string, string>, problems: any[]}} */
+      let m;
+      if (cut !== undefined) {
+        if (hierarchy !== undefined || depth !== undefined || expand !== undefined || finest !== undefined) throw usage('invalid-argument', '--cut names a declared cut; it takes none of --hierarchy, --depth, --expand, --finest.');
+        requireEntity(model, cut, 'cut');
+        const found = cutMap(model, cut);
+        if (!found) throw new CliError('cut.hierarchy', `Cut "${cut}" is of a hierarchy the model does not have.`);
+        m = found;
+      } else {
+        const hid = hierarchy ?? 'logical';
+        const h = hierarchyOf(model, hid);
+        if (!h) throw usage('invalid-argument', `Unknown hierarchy "${hid}"; the hierarchies are: ${hierarchyIds(model).join(', ')}.`);
+        let d;
+        if (depth !== undefined) {
+          d = Number(depth);
+          if (!Number.isInteger(d) || d < 0) throw usage('invalid-argument', '--depth must be a whole number of at least 0.');
+        }
+        const r = cutBlocksOf(h, { expand: listValue(expand), depth: d, finest: finest === true });
+        m = { cut: null, hierarchy: hid, blocks: r.blocks, expanded: r.expanded, map: abstractionOf(h, r.blocks), problems: r.problems };
+      }
+      if (m.problems.length) throw new CliError('cut.invalid', `The cut is not well formed: ${m.problems.map((p) => p.message).join(' ')}`, { result: { problems: m.problems } });
+      /** @type {Record<string, string[]>} */
+      const members = {};
+      for (const [e, b] of m.map) (members[b] ??= []).push(e);
+      return {
+        result: {
+          cut: m.cut, hierarchy: m.hierarchy,
+          blocks: m.blocks.map((b) => ({ id: b, kind: elementKindOf(model, b), elements: members[b]?.length ?? 0 })),
+          expanded: m.expanded,
+          map: Object.fromEntries(m.map),
+        },
+        semanticHash: project.semanticHash,
+      };
+    },
+  },
+
+  derive: {
+    usage: 'derive [--cut <id>] [--hierarchy <id>] [--depth N | --expand a,b | --finest] [--coarsen <kinds>|all]',
+    summary: 'The derived architectural model at a cut (src/core/abstraction.js): its blocks (with the implicit blocks of opened elements that facts are attached to), the lifted interactions per kind with their complete witness sets, summaries and footprints, the fibre of each block, its boundary, and its derived interface compared with its declared ports, connector contractions, contract realisation paths, realisation maps between hierarchies, and the diagnostics of the abstraction (V1 partition, V2 witnessed facts, V3 interface agreement, V4 kind preservation, port connections, realisations). --cut names a declared cut; otherwise --hierarchy (default logical) with --depth, --expand or --finest gives an ad hoc one. --coarsen relabels each kind to its nearest listed ancestor kind (all: to the kinds directly under interacts-with). Loads no renderer code.',
+    options: { cut: { type: 'string' }, hierarchy: { type: 'string' }, depth: { type: 'string' }, expand: { type: 'string' }, finest: { type: 'boolean' }, coarsen: { type: 'string' }, ...INLINE_OPTIONS },
+    run: async (ctx) => {
+      const { project } = await loadProject(ctx);
+      const model = requireModel(project);
+      const { cut, hierarchy, depth, expand, finest, coarsen } = ctx.values;
+      /** @type {any} */
+      let ref;
+      if (cut !== undefined) {
+        if (hierarchy !== undefined || depth !== undefined || expand !== undefined || finest !== undefined) throw usage('invalid-argument', '--cut names a declared cut; it takes none of --hierarchy, --depth, --expand, --finest.');
+        requireEntity(model, cut, 'cut');
+        ref = { cut };
+      } else {
+        const hid = hierarchy ?? 'logical';
+        if (!hierarchyOf(model, hid)) throw usage('invalid-argument', `Unknown hierarchy "${hid}"; the hierarchies are: ${hierarchyIds(model).join(', ')}.`);
+        let d;
+        if (depth !== undefined) {
+          d = Number(depth);
+          if (!Number.isInteger(d) || d < 0) throw usage('invalid-argument', '--depth must be a whole number of at least 0.');
+        }
+        ref = { hierarchy: hid, expand: listValue(expand), depth: d, finest: finest === true };
+      }
+      const kinds = coarsen === undefined ? null : coarsen === 'all' ? 'all' : listValue(coarsen);
+      if (Array.isArray(kinds)) for (const k of kinds) if (!Object.hasOwn(model.meta.relationshipKinds, k)) throw usage('invalid-argument', `--coarsen names "${k}", which is not a relationship kind.`);
+      const derived = deriveModel(model, ref, { coarsen: kinds });
+      if (!derived) throw new CliError('cut.hierarchy', 'The cut is of a hierarchy the model does not have.');
+      const invalid = derived.diagnostics.filter((x) => x.condition === 'V1' && x.severity === 'error');
+      if (invalid.length) throw new CliError('cut.invalid', `The cut is not a valid abstraction: ${invalid.map((x) => x.message).join(' ')}`, { result: { diagnostics: invalid } });
+      return { result: derivedJson(derived), semanticHash: project.semanticHash };
     },
   },
 
@@ -1450,9 +1735,9 @@ export const COMMANDS = {
   },
 
   verify: {
-    usage: 'verify [--skip-browser] [--ingest-only] [--fresh] [--expect-violated a,b] [--accept-change a,b]',
-    summary: "Validate, check traceability, execute test evidence (reusing outcomes recorded on the same tree unless --fresh), record the results with the tree stamp and re-evaluate the claims. Fails on a claim that fell from a positive status or was removed since the last passing run, and on a changed counterexample of an expected-violated claim, unless --accept-change names it. Evidence in a realisation root is read from its JUnit reports; --ingest-only reads them without running the roots' test commands.",
-    options: { 'skip-browser': { type: 'boolean' }, 'ingest-only': { type: 'boolean' }, fresh: { type: 'boolean' }, 'expect-violated': { type: 'string' }, 'accept-change': { type: 'string' } },
+    usage: 'verify [--skip-browser] [--ingest-only] [--fresh] [--expect-violated a,b] [--accept-change a,b] [--change <change.json>]',
+    summary: "Validate, check traceability, execute test evidence (reusing outcomes recorded on the same tree unless --fresh), record the results with the tree stamp and re-evaluate the claims. Fails on a claim that fell from a positive status or was removed since the last passing run, and on a changed counterexample of an expected-violated claim, unless --accept-change names it. Evidence in a realisation root is read from its JUnit reports; --ingest-only reads them without running the roots' test commands. With --change (a change set naming the entities and files changed since the last verification), only the evidence of the claims the change re-marks runs; the others keep the results the last verification recorded fresh.",
+    options: { 'skip-browser': { type: 'boolean' }, 'ingest-only': { type: 'boolean' }, fresh: { type: 'boolean' }, 'expect-violated': { type: 'string' }, 'accept-change': { type: 'string' }, change: { type: 'string' } },
     run: async (ctx) => {
       const result = await runVerify(ctx);
       return result;
@@ -1469,6 +1754,8 @@ export const COMMANDS = {
     }),
   },
 };
+
+Object.assign(COMMANDS, readCommands({ loadProject, requireModel, requireEntity, usage, INLINE_OPTIONS, listValue, entityLabel }));
 
 // ---------------------------------------------------------------------------
 // Entry point

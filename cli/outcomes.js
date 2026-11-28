@@ -14,6 +14,8 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { testFact } from '../src/core/facts.js';
+import { factStamps } from '../tools/tree-stamp.js';
 
 export const OUTCOMES_DIR = '.outcomes';
 
@@ -92,6 +94,20 @@ export function testsVerdict(tests) {
     ? `every matching test (${notRun}) skipped itself or is a todo, so nothing was executed`
     : `${notRun} of ${leaves.length} matching tests skipped themselves or are todos, so the reference was not executed in full`;
   return { outcome: 'skipped', executed, skipped: notRun, detail };
+}
+
+/**
+ * The fact a test reference's outcome makes about the part of the claim its evidence entity stands for
+ * (Exegra.Verdict.Fact, kind test), as this adapter, the browser adapter and the JUnit adapter of
+ * tools/realisation-roots.js record it: a pass, a failure (also a reference that matched no test), or not run
+ * (skipped, a todo, or a realisation root's test that did not run). Stamped with the records stamp it was recorded
+ * on against the current one.
+ * @param {string} evidenceId @param {'pass'|'fail'|'skipped'|'not-run'|'none'} outcome
+ * @param {string|null|undefined} recorded @param {{tree: string|null, formal: string|null}} current
+ */
+export function referenceFact(evidenceId, outcome, recorded, current) {
+  const o = outcome === 'pass' ? 'pass' : outcome === 'skipped' || outcome === 'not-run' ? 'not-run' : 'fail';
+  return testFact(evidenceId, o, factStamps(recorded, current));
 }
 
 /**

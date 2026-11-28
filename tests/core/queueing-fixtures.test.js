@@ -20,7 +20,7 @@ import path from 'node:path';
 import { REPO_ROOT } from '../../tools/conformance.js';
 import { LEAN_BIN, RUST_BIN, runBinary } from '../../tools/differential.js';
 import { lowerInput, withFaults } from '../fixtures/queueing/inputs.js';
-import { evaluateMetricClaim } from '../../src/core/metric-claims.js';
+import { evaluateMetricClaim, metricVerdict } from '../../src/core/metric-claims.js';
 import { initEngine, runEngineText } from '../../src/core/engine.js';
 
 const FIXTURE = path.join(REPO_ROOT, 'tests', 'fixtures', 'queueing', 'mm1.json');
@@ -56,13 +56,14 @@ test('M/M/1 fixture: utilisation and mean wait hold in the model, and their twin
     const negatives = c.negatives.map((/** @type {{faults: string[]}} */ v) => withFaults(base, v.faults));
     const result = evaluateMetricClaim(run, { scenarios: [base], negatives }, { ...c, runs: fx.runs, fraction: fx.fraction, confidence: fx.confidence, seed: fx.seed });
     const s = result.scenarios[0];
+    const verdict = metricVerdict(result);
     const show = (/** @type {any} */ x) => JSON.stringify(x, (_, v) => (typeof v === 'bigint' ? String(v) : v));
     const dec = (/** @type {any} */ r) => (r && typeof r === 'object' ? (Number(r.n) / Number(r.d)).toFixed(4) : String(r));
-    t.diagnostic(`${c.id}: ${result.status}; base ${s.verdict} over ${s.kept}/${s.runs} runs, interval [${dec(s.interval?.lo)}, ${dec(s.interval?.hi)}] (ranks ${s.interval?.j}), spread ${dec(s.spread?.min)} / ${dec(s.spread?.median)} / ${dec(s.spread?.max)}; twin ${result.negatives[0].verdict}, interval [${dec(result.negatives[0].interval?.lo)}, ${dec(result.negatives[0].interval?.hi)}]`);
+    t.diagnostic(`${c.id}: ${verdict.label}; base ${s.verdict} over ${s.kept}/${s.runs} runs, interval [${dec(s.interval?.lo)}, ${dec(s.interval?.hi)}] (ranks ${s.interval?.j}), spread ${dec(s.spread?.min)} / ${dec(s.spread?.median)} / ${dec(s.spread?.max)}; twin ${result.negatives[0].verdict}, interval [${dec(result.negatives[0].interval?.lo)}, ${dec(result.negatives[0].interval?.hi)}]`);
     void show;
     assert.equal(s.runs, 59, `${c.id}: 59 runs`);
     assert.equal(s.truncated, 0, `${c.id}: no truncated run`);
     assert.equal(result.negatives[0].verdict, 'fails', `${c.id}: its twin fails`);
-    assert.equal(result.status, 'model-holds', `${c.id}: ${result.reason}; interval ${JSON.stringify(s.interval, (_, v) => (typeof v === 'bigint' ? String(v) : v))}`);
+    assert.equal(verdict.label, 'model-holds', `${c.id}: ${verdict.strength}; interval ${JSON.stringify(s.interval, (_, v) => (typeof v === 'bigint' ? String(v) : v))}`);
   }
 });

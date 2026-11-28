@@ -1,0 +1,1569 @@
+// Records, copies and decisions.
+{
+  "records": [
+    {
+      "id": "specification-text",
+      "name": "Specification text",
+      "owner": "specification-file",
+      "key": [
+        "project"
+      ],
+      "fields": [
+        {
+          "name": "project",
+          "type": "project-name"
+        },
+        {
+          "name": "text",
+          "type": "jsonc-text"
+        },
+        {
+          "name": "semantic-hash",
+          "type": "hash"
+        }
+      ],
+      "retention": "Kept in the repository; every saved write appends a line to .history/journal.jsonl.",
+      "description": "The serialized authority of a project: specs/<project>/spec.jsonc, or the file that specs/<project>/project.jsonc names. When that file is a manifest listing part files (specParts, WG-5386), the authority is its part files, which sit beside it, and each write goes to the part files holding the changed entities (tools/workspace.js writeSpecText(), tools/spec-manifest.js planWrite(), and tools/spec-store.js store export, each part by atomic rename through a temporary file); the manifest itself is never rewritten. Written by the workspace service (tools/workspace.js write(), under a base-hash check and atomic rename, from the session and from exegra apply) and, outside any transaction, by the bundle import (tools/workspace.js importProject()), by tools/import-markdown.js (--out), by tools/import-register.js (--out, or the project it names), by tools/make-benchmark.js (specs/benchmark/spec.jsonc) by tools/split-spec.js (the one-time conversion of a one-file specification to a manifest and its parts, writing the part files and the manifest) and by tools/spec-store.js (store export, atomically through a temporary file, refused as store.stale when the file changed since the last import). Exegra holds no personal data: no field is personal and none refers to a principal."
+    },
+    {
+      "id": "presentation-layout",
+      "name": "Presentation layout",
+      "owner": "layout-file",
+      "key": [
+        "project",
+        "view",
+        "entity"
+      ],
+      "fields": [
+        {
+          "name": "project",
+          "type": "project-name"
+        },
+        {
+          "name": "view",
+          "type": "view-id"
+        },
+        {
+          "name": "entity",
+          "type": "entity-id",
+          "description": "A leaf node of the view."
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "description": "Absolute ground-plane position, rounded to 0.01."
+        },
+        {
+          "name": "z",
+          "type": "number",
+          "description": "Absolute ground-plane position, rounded to 0.01."
+        }
+      ],
+      "retention": "specs/<project>/layout.jsonc, {exegraLayout: \"0.1\", views: {<view>: {positions: {<entity>: [x, z]}}}}; written by the workspace service under a base-hash check, one journal line per write (file layout), and overwritten without a check by a bundle import. specs/exegra has none.",
+      "description": "Presentation only: MovePresentationNode and ReplaceLayout change it with persistence \"layout\" and never change the semantic hash (src/core/operations.js). Parsed by parseLayout into Project.layout (copy parsed-layout)."
+    },
+    {
+      "id": "recorded-results",
+      "name": "Recorded verification results",
+      "owner": "recorded-results-file",
+      "key": [
+        "project",
+        "evidence-id"
+      ],
+      "fields": [
+        {
+          "name": "project",
+          "type": "project-name"
+        },
+        {
+          "name": "evidence-id",
+          "type": "evidence-id"
+        },
+        {
+          "name": "outcome",
+          "type": "'pass' | 'fail'"
+        },
+        {
+          "name": "detail",
+          "type": "text",
+          "description": "Up to the last 20 lines of test output for a fail; \"the reference matched no test\" for a pattern that selected nothing."
+        },
+        {
+          "name": "ran-at",
+          "type": "iso-timestamp",
+          "description": "Wall-clock time of the run (new Date().toISOString() in cli/commands.js runVerify); display only, never read by the claim evaluator."
+        },
+        {
+          "name": "traceability",
+          "type": "traceability-report",
+          "description": "{checkedModules, missingModules, unclaimedFiles, claimedFiles} of tools/traceability.js checkTraceability at the time of the run."
+        },
+        {
+          "name": "kept-keys",
+          "type": "json",
+          "description": "tool, version, source, claims and lint of the previous file, which verify carries over unchanged."
+        }
+      ],
+      "retention": "specs/<project>/evidence/results.json, written only by exegra verify (tools/workspace.js writeRecorded(), atomic, no base-hash check, no journal line) and replaced whole on every run; carried in a bundle by export and overwritten by import.",
+      "description": "Derived from executing the test evidence; the file is the authority for what was executed. Not bound to a code or model hash (unknown on recorded-results-file). The browser re-reads it when the watcher reports file \"recorded\" (src/app/session.js onExternalChange)."
+    },
+    {
+      "id": "external-claim-outcomes",
+      "name": "External claim outcomes",
+      "owner": "recorded-results-file",
+      "key": [
+        "project",
+        "claim-id"
+      ],
+      "fields": [
+        {
+          "name": "project",
+          "type": "project-name"
+        },
+        {
+          "name": "claim-id",
+          "type": "claim-id"
+        },
+        {
+          "name": "outcome",
+          "type": "'pass' | 'fail'"
+        },
+        {
+          "name": "status",
+          "type": "claim-status",
+          "description": "Optional status the external tool reports."
+        },
+        {
+          "name": "detail",
+          "type": "text"
+        },
+        {
+          "name": "proofs",
+          "type": "json",
+          "description": "Optional proof references."
+        },
+        {
+          "name": "tool",
+          "type": "text",
+          "description": "The top-level tool key of evidence/results.json."
+        }
+      ],
+      "retention": "The claims key of specs/<project>/evidence/results.json; exegra verify keeps it unchanged (cli/commands.js runVerify) and an import overwrites it with the rest of the file.",
+      "description": "Outcomes of claims an external verification tool checked (recorded.claims). Read by evaluateOne (src/core/claims.js) and reported as supported or violated with the statement that Exegra did not check it. DISCREPANCY (WG-4775, finding F03): nothing in this repository writes it; exegra prove writes only formal/generated/<scenario>.lean (tools/prove.js). Only a tool outside Exegra can produce it."
+    },
+    {
+      "id": "write-journal",
+      "name": "Write journal",
+      "owner": "workspace-service",
+      "key": [
+        "project",
+        "seq"
+      ],
+      "fields": [
+        {
+          "name": "project",
+          "type": "project-name"
+        },
+        {
+          "name": "seq",
+          "type": "number",
+          "description": "Line count of the journal before the append, plus one."
+        },
+        {
+          "name": "file",
+          "type": "'spec' | 'layout'"
+        },
+        {
+          "name": "hash",
+          "type": "sha-256",
+          "description": "Hash of the text written."
+        },
+        {
+          "name": "base-hash",
+          "type": "sha-256 | null",
+          "description": "The base hash the write was checked against."
+        },
+        {
+          "name": "label",
+          "type": "text | null"
+        },
+        {
+          "name": "origin",
+          "type": "text | null",
+          "description": "ui, source, cli, undo, redo or null; never external, since adopted changes are not written."
+        },
+        {
+          "name": "bytes",
+          "type": "number"
+        }
+      ],
+      "retention": "specs/<project>/.history/journal.jsonl: append-only, one JSON line per accepted spec or layout write, never truncated, read in full on every write to number the next line.",
+      "description": "A log of accepted writes, not an authority, and not complete. tools/workspace.js write() appends the line after the atomic replace (atomicWrite, then fs.appendFile), so a failed append leaves a replaced file without a line and the endpoint reports the write as failed. Conflicts (returned before the append), failures, bundle imports, recorded results, generated files, the Markdown importer, the benchmark generator and edits made outside Exegra write no line, and no line carries a timestamp. Observed (WG-4775 inventory): the last line's hash differs from the spec file, three lines have a base hash that is not the previous line's hash, and every line has origin cli. No product code reads it."
+    },
+    {
+      "id": "project-pointer",
+      "name": "Project pointer",
+      "owner": "specification-file",
+      "key": [
+        "project"
+      ],
+      "fields": [
+        {
+          "name": "project",
+          "type": "project-name"
+        },
+        {
+          "name": "spec",
+          "type": "relative-path",
+          "description": "Path of the specification relative to the project directory, ending in .jsonc."
+        }
+      ],
+      "retention": "specs/<project>/project.jsonc, written by hand; never written by Exegra (tools/workspace.js).",
+      "description": "Chooses the file that every read and write of a linked project's specification uses (tools/workspace.js specFile()); the linked-specs plugin reads it at build time (tools/vite-plugin-exegra.js exegraLinkedSpecs). A project with both spec.jsonc and a project.jsonc is refused as project.invalid. Written by exegra project register (cli/commands.js), which names the specification and any product files relative to specs/<project>/project.jsonc."
+    },
+    {
+      "id": "import-map",
+      "name": "Import map",
+      "owner": "markdown-importer",
+      "key": [
+        "project"
+      ],
+      "fields": [
+        {
+          "name": "project",
+          "type": "project-name"
+        },
+        {
+          "name": "categories",
+          "type": "json"
+        },
+        {
+          "name": "identity",
+          "type": "json",
+          "description": "project {id, name, title}."
+        },
+        {
+          "name": "layout",
+          "type": "json"
+        },
+        {
+          "name": "source",
+          "type": "relative-path",
+          "description": "The Markdown tree to import."
+        }
+      ],
+      "retention": "specs/<project>/import-map.jsonc of a linked project, written by hand; never written by Exegra.",
+      "description": "Input configuration of tools/import-markdown.js (main, buildSpec)."
+    },
+    {
+      "id": "markdown-source",
+      "name": "Markdown specification source",
+      "owner": "markdown-specification-source",
+      "key": [
+        "path"
+      ],
+      "fields": [
+        {
+          "name": "path",
+          "type": "relative-path"
+        },
+        {
+          "name": "text",
+          "type": "markdown"
+        },
+        {
+          "name": "git-commit",
+          "type": "git-object-id",
+          "description": "HEAD of the source repository, printed as \"Source git commit\"; kept in no other record."
+        }
+      ],
+      "retention": "An external repository, read only.",
+      "description": "The source of a linked project's specification text; tools/import-markdown.js reads the files and the .git HEAD and refs."
+    },
+    {
+      "id": "interaction-state",
+      "name": "Interaction state",
+      "owner": "session",
+      "key": [
+        "project"
+      ],
+      "fields": [
+        {
+          "name": "project",
+          "type": "project-name"
+        },
+        {
+          "name": "selection",
+          "type": "entity-id | null"
+        },
+        {
+          "name": "hover",
+          "type": "entity-id | null"
+        },
+        {
+          "name": "highlight",
+          "type": "entity-id[] | null",
+          "description": "Derived from the selected claim's involved entities and counterexample (updateHighlight)."
+        },
+        {
+          "name": "view-id",
+          "type": "view-id"
+        },
+        {
+          "name": "collapsed",
+          "type": "entity-id[]"
+        },
+        {
+          "name": "hidden",
+          "type": "entity-id[]"
+        },
+        {
+          "name": "isolate",
+          "type": "entity-id | null"
+        },
+        {
+          "name": "camera-mode",
+          "type": "'perspective' | 'top'"
+        },
+        {
+          "name": "mode",
+          "type": "'select' | 'connect'"
+        },
+        {
+          "name": "focus-claim",
+          "type": "claim-id | null"
+        },
+        {
+          "name": "focus-scenario",
+          "type": "scenario-id | null"
+        },
+        {
+          "name": "layout-method-by-view",
+          "type": "Record<view-id, layout-method>"
+        },
+        {
+          "name": "sim-scenario",
+          "type": "scenario-id | null"
+        }
+      ],
+      "retention": "In memory per tab (src/app/session.js session.selection, session.hover, session.highlight, session.viewId, session.ui); remembered in localStorage as session-preferences; onCommit drops ids that no longer exist.",
+      "description": "What the viewer is looking at. Deliberately outside the specification (module comment of src/app/session.js); changed by select, setHover, setView, toggleCollapsed, setHidden, setIsolate, setCameraMode, setMode, focusClaim, focusScenario, setLayoutMethod and simLoad."
+    },
+    {
+      "id": "session-log",
+      "name": "Session log",
+      "owner": "session",
+      "key": [
+        "seq"
+      ],
+      "fields": [
+        {
+          "name": "seq",
+          "type": "number"
+        },
+        {
+          "name": "kind",
+          "type": "'change' | 'error' | 'info' | 'save'"
+        },
+        {
+          "name": "message",
+          "type": "text"
+        },
+        {
+          "name": "detail",
+          "type": "json",
+          "description": "Change entries carry {revision, origin, affected, semanticChanged}; save entries the written hash."
+        },
+        {
+          "name": "diagnostics",
+          "type": "Diagnostic[]"
+        }
+      ],
+      "retention": "In memory (session.log), capped at the last 400 entries, lost on reload.",
+      "description": "Written by session.note: one change entry per commit, errors for rejections, load, save and conflict failures, save entries per written file. The only record of save outcomes in the browser; no timestamp, no request or response payload. Read by the activity panels and the shell notice."
+    },
+    {
+      "id": "save-pipeline-state",
+      "name": "Save pipeline state",
+      "owner": "session",
+      "key": [
+        "file"
+      ],
+      "fields": [
+        {
+          "name": "file",
+          "type": "'spec' | 'layout'"
+        },
+        {
+          "name": "save-state",
+          "type": "'saved' | 'saving' | 'conflict' | 'error' | 'readonly'"
+        },
+        {
+          "name": "base-hash",
+          "type": "sha-256 | null",
+          "description": "The hash of the last text read or written (hashes[file]); the next write is checked against it."
+        },
+        {
+          "name": "pending",
+          "type": "boolean"
+        },
+        {
+          "name": "saving",
+          "type": "boolean"
+        },
+        {
+          "name": "conflict-hash",
+          "type": "sha-256 | null"
+        },
+        {
+          "name": "conflict-text",
+          "type": "text | null"
+        },
+        {
+          "name": "last-label",
+          "type": "text"
+        },
+        {
+          "name": "last-origin",
+          "type": "text"
+        }
+      ],
+      "retention": "Closure variables of createSession (hashes, pending, saving, conflict, lastMeta) and session.saveState; in memory, reset by open.",
+      "description": "Decides every write of the browser session: onCommit sets pending (except for origin external), flush sends the current text with the base hash, the response replaces the base hash or stores the conflict, resolveConflict reloads or overwrites. open refuses to switch projects while a save is pending, in conflict or in error."
+    },
+    {
+      "id": "commit-history",
+      "name": "Commit history",
+      "owner": "transactions",
+      "key": [
+        "revision"
+      ],
+      "fields": [
+        {
+          "name": "revision",
+          "type": "number"
+        },
+        {
+          "name": "label",
+          "type": "text"
+        },
+        {
+          "name": "origin",
+          "type": "'ui' | 'source' | 'cli' | 'external' | 'undo' | 'redo' | 'import'"
+        },
+        {
+          "name": "ops",
+          "type": "Operation[]"
+        },
+        {
+          "name": "affected",
+          "type": "entity-id[]"
+        },
+        {
+          "name": "semantic-changed",
+          "type": "boolean"
+        },
+        {
+          "name": "spec-changed",
+          "type": "boolean"
+        },
+        {
+          "name": "layout-changed",
+          "type": "boolean"
+        },
+        {
+          "name": "hash-before",
+          "type": "semantic-hash"
+        },
+        {
+          "name": "hash-after",
+          "type": "semantic-hash"
+        }
+      ],
+      "retention": "In memory (Project.history), one entry per commit, undo, redo and reload, never bounded; persisted only as journal lines for spec and layout writes.",
+      "description": "Pushed by Project.#commit (src/core/project.js); read by the changes panel and the commit count of the shell."
+    },
+    {
+      "id": "undo-redo-stacks",
+      "name": "Undo and redo stacks",
+      "owner": "transactions",
+      "key": [
+        "stack",
+        "position"
+      ],
+      "fields": [
+        {
+          "name": "stack",
+          "type": "'undo' | 'redo'"
+        },
+        {
+          "name": "position",
+          "type": "number"
+        },
+        {
+          "name": "spec-text",
+          "type": "jsonc-text",
+          "description": "The whole specification text before the step."
+        },
+        {
+          "name": "layout-text",
+          "type": "jsonc-text | null"
+        },
+        {
+          "name": "entry-revision",
+          "type": "number"
+        }
+      ],
+      "retention": "In memory (Project.undoStack, Project.redoStack), whole texts per step with no bound; cleared by Project.reload; lost on reload of the page.",
+      "description": "Pushed by #commit, moved by undo and redo (src/core/project.js); an undo or redo is itself a commit with origin undo or redo, which the session flushes like any edit."
+    },
+    {
+      "id": "simulation-session",
+      "name": "Simulation session",
+      "owner": "session",
+      "key": [
+        "project"
+      ],
+      "fields": [
+        {
+          "name": "project",
+          "type": "project-name"
+        },
+        {
+          "name": "scenario-id",
+          "type": "scenario-id | null"
+        },
+        {
+          "name": "faults",
+          "type": "fault-id[]"
+        },
+        {
+          "name": "running",
+          "type": "boolean",
+          "description": "True from loadSim until the trace arrives."
+        },
+        {
+          "name": "step-index",
+          "type": "number",
+          "description": "Index of the step shown, -1 before the first."
+        },
+        {
+          "name": "playing",
+          "type": "boolean"
+        },
+        {
+          "name": "run-token",
+          "type": "number",
+          "description": "simToken: a run whose token is no longer current is discarded."
+        }
+      ],
+      "retention": "In memory (session.sim, simToken); only the scenario id is remembered (session-preferences sim-scenario).",
+      "description": "Set by loadSim, simStep, simBack, simSeek, simReset, simRunToEnd and simPlay (src/app/session.js); re-run on every semantic commit."
+    },
+    {
+      "id": "session-bookkeeping",
+      "name": "Session bookkeeping",
+      "owner": "session",
+      "key": [
+        "session"
+      ],
+      "fields": [
+        {
+          "name": "session",
+          "type": "tab"
+        },
+        {
+          "name": "log-seq",
+          "type": "number"
+        },
+        {
+          "name": "play-timer",
+          "type": "timer-handle"
+        },
+        {
+          "name": "store-cache",
+          "type": "json",
+          "description": "The parsed exegra.session object, written back by persistUi."
+        },
+        {
+          "name": "runner",
+          "type": "EngineRunner"
+        }
+      ],
+      "retention": "Closure variables of createSession (logSeq, playTimer, store, runner); in memory.",
+      "description": "Control state with no meaning outside the session."
+    },
+    {
+      "id": "engine-jobs",
+      "name": "Engine jobs",
+      "owner": "simulation-engine",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        {
+          "name": "id",
+          "type": "number",
+          "description": "seq of the runner, the correlation id of the worker messages."
+        },
+        {
+          "name": "input-text",
+          "type": "json-text",
+          "description": "JSON text of the SimulationInput posted to the worker."
+        },
+        {
+          "name": "worker-state",
+          "type": "'started' | 'failed' | 'stopped'"
+        }
+      ],
+      "retention": "In memory (src/app/engine-runner.js waiting map and worker); cleared when a new run stops the worker.",
+      "description": "One entry per run posted to the engine worker; a reply whose id is no longer waiting is ignored; a worker that fails to load reruns the waiting jobs on the main thread."
+    },
+    {
+      "id": "explorer-state",
+      "name": "Explorer state",
+      "owner": "explorer",
+      "key": [
+        "tab"
+      ],
+      "fields": [
+        {
+          "name": "tab",
+          "type": "tab"
+        },
+        {
+          "name": "filter",
+          "type": "text"
+        },
+        {
+          "name": "categories",
+          "type": "category[]"
+        },
+        {
+          "name": "closed-subsections",
+          "type": "text[]"
+        },
+        {
+          "name": "closed-sections",
+          "type": "text[]"
+        },
+        {
+          "name": "opened-sections",
+          "type": "text[]"
+        },
+        {
+          "name": "claims-grouped",
+          "type": "boolean"
+        }
+      ],
+      "retention": "In memory (src/ui/explorer.js state, claimsGrouped); not persisted.",
+      "description": "User input in the explorer."
+    },
+    {
+      "id": "source-draft",
+      "name": "Source editor draft",
+      "owner": "source-editor",
+      "key": [
+        "tab"
+      ],
+      "fields": [
+        {
+          "name": "tab",
+          "type": "tab"
+        },
+        {
+          "name": "draft",
+          "type": "jsonc-text | null",
+          "description": "Uncommitted text, or null when the editor shows the committed text."
+        },
+        {
+          "name": "base-revision",
+          "type": "number",
+          "description": "Revision when the draft started."
+        },
+        {
+          "name": "ack-revision",
+          "type": "number",
+          "description": "Revision the user accepted as the draft's base."
+        },
+        {
+          "name": "applying",
+          "type": "boolean"
+        }
+      ],
+      "retention": "In memory (src/ui/source-editor.js draft, baseRev, ackRev, applying); kept after a rejected apply, dropped on a successful apply or discard.",
+      "description": "Becomes a ReplaceSource operation on Apply (source-editor-flow)."
+    },
+    {
+      "id": "form-drafts",
+      "name": "Form and inspector drafts",
+      "owner": "dialogs",
+      "key": [
+        "form"
+      ],
+      "fields": [
+        {
+          "name": "form",
+          "type": "text",
+          "description": "The create, connect, rename or delete dialog, or the inspector property being edited."
+        },
+        {
+          "name": "values",
+          "type": "json",
+          "description": "Field values before submission (deep-cloned by src/ui/property-controls.js)."
+        },
+        {
+          "name": "inspector-last-id",
+          "type": "entity-id | null"
+        },
+        {
+          "name": "inspector-pending",
+          "type": "json"
+        }
+      ],
+      "retention": "In memory (src/ui/dialogs.js, src/ui/property-controls.js, src/ui/inspector.js lastId and pending); nothing reaches the model until submit.",
+      "description": "Submitted as CreateEntity, CreateRelationship, RenameEntity, DeleteEntity or SetProperty through session.apply (event edit-requested)."
+    },
+    {
+      "id": "shell-state",
+      "name": "Shell state",
+      "owner": "shell",
+      "key": [
+        "tab"
+      ],
+      "fields": [
+        {
+          "name": "tab",
+          "type": "tab"
+        },
+        {
+          "name": "last-log-seq",
+          "type": "number"
+        },
+        {
+          "name": "commit-count",
+          "type": "number"
+        }
+      ],
+      "retention": "In memory (src/ui/shell.js).",
+      "description": "Which log entry the shell last announced and the count of commits shown."
+    },
+    {
+      "id": "camera-state",
+      "name": "Camera state",
+      "owner": "visual-interaction",
+      "key": [
+        "project",
+        "view"
+      ],
+      "fields": [
+        {
+          "name": "project",
+          "type": "project-name"
+        },
+        {
+          "name": "view",
+          "type": "view-id"
+        },
+        {
+          "name": "camera",
+          "type": "json",
+          "description": "The camera rig state (src/render/camera-rig.js), serialisable."
+        }
+      ],
+      "retention": "In memory in the camera rig; remembered per project and view in sessionStorage (camera-memory).",
+      "description": "Changed by pointer, wheel and touch input."
+    },
+    {
+      "id": "responsive-layout-preferences",
+      "name": "Responsive layout preferences",
+      "owner": "responsive-layout",
+      "key": [
+        "browser-profile"
+      ],
+      "fields": [
+        {
+          "name": "browser-profile",
+          "type": "browser-profile"
+        },
+        {
+          "name": "context",
+          "type": "text"
+        },
+        {
+          "name": "tablet-dest",
+          "type": "text"
+        },
+        {
+          "name": "tablet-open",
+          "type": "boolean"
+        },
+        {
+          "name": "explorer-open",
+          "type": "boolean"
+        },
+        {
+          "name": "context-open",
+          "type": "boolean"
+        },
+        {
+          "name": "widths",
+          "type": "{explorer, panel, wide}"
+        }
+      ],
+      "retention": "localStorage key \"exegra.layout\" (src/ui/layout.js persist() and loadStored()); kept until the browser's site data is cleared; silently not remembered when storage is unavailable.",
+      "description": "Viewer preference for the panel arrangement; not part of any model."
+    },
+    {
+      "id": "engine-build-output",
+      "name": "Engine build output",
+      "owner": "simulation-engine",
+      "key": [
+        "file"
+      ],
+      "fields": [
+        {
+          "name": "file",
+          "type": "relative-path"
+        },
+        {
+          "name": "bytes",
+          "type": "number"
+        }
+      ],
+      "retention": "src/engine/pkg/ (wasm-bindgen --out-dir in tools/build-engine.js); generated, not committed; rebuilt when engine/ changes.",
+      "description": "Derived from the Rust sources in engine/, not from a specification. Loaded only by src/core/engine.js initEngine()."
+    },
+    {
+      "id": "engine-goldens",
+      "name": "Engine goldens",
+      "owner": "simulation-contract",
+      "key": [
+        "specification",
+        "scenario"
+      ],
+      "fields": [
+        {
+          "name": "specification",
+          "type": "text",
+          "description": "exegra, multiplayer or the conformance fixture."
+        },
+        {
+          "name": "scenario",
+          "type": "scenario-id"
+        },
+        {
+          "name": "input",
+          "type": "engine-input",
+          "description": "Format version 1."
+        },
+        {
+          "name": "trace",
+          "type": "trace",
+          "description": "Format version 1."
+        }
+      ],
+      "retention": "tests/conformance/goldens/, written by tools/record-goldens.js only on purpose (--force), committed.",
+      "description": "The reference suite an engine is accepted against (tools/conformance.js). Format 2 has no goldens."
+    },
+    {
+      "id": "differential-artifacts",
+      "name": "Differential and generated engine inputs",
+      "owner": "formal-semantics",
+      "key": [
+        "file"
+      ],
+      "fields": [
+        {
+          "name": "file",
+          "type": "relative-path"
+        },
+        {
+          "name": "input",
+          "type": "engine-input",
+          "description": "Version 1, or version 2 with --v2."
+        },
+        {
+          "name": "result",
+          "type": "json",
+          "description": "{detail, rust, lean} of a mismatch."
+        }
+      ],
+      "retention": "test-results/differential/ (tools/differential.js, every mismatching input and its result) and the directory given to gen-engine-inputs --out (tools/gen-engine-inputs.js); not committed.",
+      "description": "Derived from a seed, not from a specification record; kept as evidence of a disagreement between the Rust engine and the Lean semantics."
+    },
+    {
+      "id": "screenshot-images",
+      "name": "Screenshots",
+      "owner": "screenshot-tool",
+      "key": [
+        "file"
+      ],
+      "fields": [
+        {
+          "name": "file",
+          "type": "path"
+        },
+        {
+          "name": "size",
+          "type": "text"
+        }
+      ],
+      "retention": "The PNG path given to tools/shot.mjs (page.screenshot), and the --out directory of tools/walk-shots.mjs (a PNG and a JSON dump per step of the navigation walk, plus summary.json); developer output, not committed.",
+      "description": "An image of the running application; derived from the rendered page, not from one record."
+    },
+    {
+      "id": "traffic-log",
+      "name": "Recorded traffic",
+      "owner": "traffic-recorder",
+      "key": [
+        "session",
+        "seq"
+      ],
+      "fields": [
+        {
+          "name": "session",
+          "type": "tab"
+        },
+        {
+          "name": "seq",
+          "type": "number",
+          "description": "Logical time of the recorded step."
+        },
+        {
+          "name": "event",
+          "type": "event-id",
+          "description": "An event of this specification (contract events and the others)."
+        },
+        {
+          "name": "role",
+          "type": "'request' | 'response' | 'error'"
+        },
+        {
+          "name": "request-id",
+          "type": "number",
+          "description": "The correlation field."
+        },
+        {
+          "name": "payload",
+          "type": "json"
+        },
+        {
+          "name": "source",
+          "type": "code-location",
+          "description": "File and function that produced the event, as the event's description names it; inferred events are marked."
+        }
+      ],
+      "retention": "In memory in the browser tab: the last 5000 events (src/app/traffic-recorder.js); lost on reload. No durable file yet (WG-4780).",
+      "description": "The real run that Live mode replays through this specification: {seq, id, payload, at, inferred?} per event; at (performance.now) is for display only."
+    },
+    {
+      "id": "derivation-cache-entry",
+      "name": "Derivation cache entry",
+      "owner": "derivation-cache",
+      "key": [
+        "stage",
+        "key"
+      ],
+      "fields": [
+        {
+          "name": "stage",
+          "type": "text"
+        },
+        {
+          "name": "key",
+          "type": "hash"
+        },
+        {
+          "name": "bytes",
+          "type": "number"
+        }
+      ],
+      "retention": "One file <stage>-<key>.entry under the cache directory (EXEGRA_MODEL_CACHE_DIR, else model/ under EXEGRA_CACHE_DIR, else %LOCALAPPDATA%/exegra/cache/model or the XDG cache), outside the repository. Written through a temporary sibling and a rename; the least recently used entries are deleted past EXEGRA_MODEL_CACHE_MAX_BYTES (default 512 MiB); deleting the directory loses nothing.",
+      "description": "The encoded value of one derivation stage for one set of inputs and one version of Exegra's derivation sources: a header line (format, key, byte count, SHA-256 of the body) and the body."
+    },
+    {
+      "id": "formal-wasm-build-output",
+      "name": "Lean wasm build output and cache",
+      "owner": "lean-call-boundary",
+      "key": [
+        "file"
+      ],
+      "fields": [
+        {
+          "name": "file",
+          "type": "relative-path"
+        },
+        {
+          "name": "bytes",
+          "type": "number"
+        }
+      ],
+      "retention": "src/engine/lean/ (loader, .wasm, build-info.json; generated, not committed) and the tool cache (%LOCALAPPDATA%/exegra/cache/formal-wasm or EXEGRA_CACHE_DIR or XDG_CACHE_HOME/exegra/formal-wasm): pinned downloads, patched Lean runtime sources (.exegra-patches marker), compiled objects with stamp files, and linker response files. Written by tools/build-formal-wasm.js through a temporary sibling and a rename; rebuilt when formal/ or a pin changes.",
+      "description": "Derived from formal/ and the pinned toolchain, not from a specification. Loaded only by src/core/lean.js initLean()."
+    },
+    {
+      "id": "lean-theorem-check-file",
+      "name": "Theorem check file",
+      "owner": "verification-pipeline",
+      "key": [
+        "file"
+      ],
+      "fields": [
+        {
+          "name": "file",
+          "type": "absolute-path"
+        },
+        {
+          "name": "text",
+          "type": "lean-source"
+        }
+      ],
+      "retention": "A Check.lean in a fresh temporary directory (os.tmpdir()/exegra-theorems-*), written by tools/lean-theorems.js for one lake env lean run and removed after it.",
+      "description": "The Lean source that asks the kernel to re-check each named theorem and lists its axioms; its results become the theorems section of evidence/results.json."
+    },
+    {
+      "id": "test-outcomes-file",
+      "name": "Recorded test outcomes",
+      "owner": "verification-pipeline",
+      "key": [
+        "file"
+      ],
+      "fields": [
+        {
+          "name": "file",
+          "type": "relative-path"
+        },
+        {
+          "name": "treeStamp",
+          "type": "hash"
+        }
+      ],
+      "retention": ".outcomes/node.json (written by tools/outcomes-node-reporter.js through `npm test`) and .outcomes/playwright.json (tools/outcomes-playwright-reporter.js, through playwright.config.js), replaced by each run, not committed. Each holds every test's outcome and the stamp of the tree it ran on; `exegra verify` reuses an outcome only when the stamp equals the current tree's.",
+      "description": "The per-test outcomes of the last unit and browser runs, so that verify does not run the same tests again."
+    },
+    {
+      "id": "extracted-facts",
+      "name": "Extracted and observed facts",
+      "owner": "verification-pipeline",
+      "key": [
+        "file"
+      ],
+      "fields": [
+        {
+          "name": "file",
+          "type": "relative-path"
+        },
+        {
+          "name": "digest",
+          "type": "string",
+          "description": "sha-256 of the file text, CRLF normalised."
+        },
+        {
+          "name": "imports",
+          "type": "json",
+          "description": "Each import with its resolved target or external specifier, and whether it is dynamic."
+        }
+      ],
+      "retention": "specs/<project>/extracted/facts.json, written by tools/extract.js and by exegra extract (cli/commands.js), committed beside the specification; the observed facts of a recording go to the file given to tools/observe.js --out, not committed.",
+      "description": "Facts read from the implementation (exegra-extracted-facts/1, provenance extracted) and from a recorded session (provenance observed). Derived from the code and the recording, never authored; extract --check reports when the committed file is stale."
+    }
+  ],
+  "copies": [
+    {
+      "id": "session-model",
+      "name": "Session model",
+      "of": [
+        "specification-text"
+      ],
+      "heldBy": "session",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "the last commit of this session or the last adopted file change",
+        "mechanism": "the file watcher's server-sent events and Project.reload; a write with a stale base hash is refused as a conflict"
+      },
+      "description": "The browser session's Project (src/core/project.js, created by session.open): specText, layoutText, revision, semanticRevision, model (entities, byKind, refs with locations, expressions, effective meta-model), diagnostics and errorCount, semanticHash (cyrb53 of the normal form, src/core/hash.js), layout, history, undo and redo stacks and listeners. Replaced whole on every commit and by Project.reload. Project.textHash is a getter computed on read with no caller in src, tools or cli."
+    },
+    {
+      "id": "cli-project",
+      "name": "Agent command-line project",
+      "of": [
+        "specification-text"
+      ],
+      "heldBy": "agent-cli",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "read at the start of one invocation",
+        "mechanism": "--expect-hash refuses an apply on a changed specification"
+      },
+      "description": "One invocation of the agent command line reads the project with tools/workspace.js read() (spec, layout and recorded results with their hashes), builds a fresh Project (cli/commands.js loadProject) and, after an apply, writes the spec and then the layout with the hashes read at the start. There is no undo history across invocations."
+    },
+    {
+      "id": "generated-documents",
+      "name": "Generated documents",
+      "of": [
+        "specification-text",
+        "recorded-results"
+      ],
+      "fields": [
+        "specification-text.project",
+        "semantic-hash",
+        "recorded-results.outcome"
+      ],
+      "heldBy": "generated-artifacts",
+      "scope": "shared",
+      "freshness": {
+        "bound": "the last run of npm run generate",
+        "mechanism": "npm run generate rewrites them; each document records the semantic hash it was derived from"
+      },
+      "description": "specs/<project>/generated/ (manifest.json, ARCHITECTURE.md, claims-report.md, claims-report.json, tasks.json): derived by generateAll (src/core/generate/index.js) from the model, the claim results evaluated with the recorded results, the diagnostics and the traceability check, and written by exegra generate --write (cli/commands.js) or the Realisation panel (POST /__exegra/generated), each through tools/workspace.js writeGenerated(), which skips files whose content is unchanged and writes no journal line."
+    },
+    {
+      "id": "parsed-layout",
+      "name": "Parsed layout",
+      "of": [
+        "presentation-layout"
+      ],
+      "heldBy": "transactions",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "the last commit or reload of this Project",
+        "mechanism": "parseLayout runs in Project.#derive on every commit that changes the layout text; an unreadable layout is treated as empty"
+      },
+      "description": "Project.layout (src/core/operations.js parseLayout): views with positions per entity and an ok flag; the pins session.recompute applies."
+    },
+    {
+      "id": "session-preferences",
+      "name": "Session preferences",
+      "of": [
+        "interaction-state",
+        "simulation-session"
+      ],
+      "fields": [
+        "layout-method-by-view",
+        "view-id",
+        "selection",
+        "collapsed",
+        "hidden",
+        "isolate",
+        "camera-mode",
+        "focus-claim",
+        "focus-scenario",
+        "sim-scenario",
+        "interaction-state.project"
+      ],
+      "heldBy": "browser-storage",
+      "scope": "per-principal",
+      "freshness": {
+        "bound": "the last interaction change of this browser profile",
+        "mechanism": "session.persistUi writes the whole store on every select, view, toggle, layout-method change, simulation load and commit; session.open restores the ids that still exist"
+      },
+      "description": "localStorage key \"exegra.session\": {perProject: {<project>: {layoutByView, viewId, selection, collapsed, hidden, isolate, cameraMode, focusClaim, focusScenario, simScenario}}, projectName}. A failed setItem (storage unavailable) is ignored and nothing is remembered. One browser profile, not a principal of any system Exegra specifies."
+    },
+    {
+      "id": "camera-memory",
+      "name": "Camera memory",
+      "of": [
+        "camera-state"
+      ],
+      "heldBy": "browser-storage",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "the last pointer-up, wheel, view change or page hide of this tab",
+        "mechanism": "saveCamera (src/app/main.js) on view change, pagehide, pointerup and wheel; pushScene restores once per project and view"
+      },
+      "description": "sessionStorage keys \"exegra.camera.<project>.<view>\" holding the camera rig state; gone when the tab closes."
+    },
+    {
+      "id": "project-list",
+      "name": "Project list",
+      "of": [
+        "specification-text",
+        "project-pointer"
+      ],
+      "fields": [
+        "specification-text.project",
+        "spec"
+      ],
+      "heldBy": "session",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "the last session.init or refreshProjects (after an import)",
+        "mechanism": "GET /__exegra/projects (tools/workspace.js listProjects: every directory with a spec.jsonc or project.jsonc); in a production build the names of the bundled shipped projects"
+      },
+      "description": "session.projects ({name, title}[], the title read from the specification's system name) and session.specLocation (the path from the read response). Not refreshed when another process adds a project."
+    },
+    {
+      "id": "derived-scene",
+      "name": "Derived scene and placement",
+      "of": [
+        "specification-text",
+        "presentation-layout",
+        "interaction-state"
+      ],
+      "fields": [
+        "text",
+        "x",
+        "z",
+        "view-id",
+        "collapsed",
+        "hidden",
+        "isolate",
+        "focus-claim",
+        "focus-scenario",
+        "layout-method-by-view",
+        "selection"
+      ],
+      "heldBy": "session",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "the last commit, interaction change, selection change in the references view or viewport resize",
+        "mechanism": "session.recompute: projectScene, then chooseLayout or layoutScene with the view's pins and the viewport aspect"
+      },
+      "description": "session.scene (SceneModel: viewId, projection, nodes, edges, legend, notes), session.placement and session.layout ({methods, requested, used, scores, aspect}), and session.views (listViews). Presentation only; position carries no meaning."
+    },
+    {
+      "id": "scene-statistics",
+      "name": "Scene statistics",
+      "of": [
+        "specification-text",
+        "presentation-layout",
+        "interaction-state"
+      ],
+      "fields": [
+        "text",
+        "x",
+        "z",
+        "view-id"
+      ],
+      "heldBy": "scene-renderer",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "the last frame",
+        "mechanism": "the render loop and setScene diffs of src/render/scene-view.js"
+      },
+      "description": "Frame statistics (fpsAvg, frameMsAvg; counts of nodes, edges, labels, draw calls, triangles) and the redraw signature of every node and edge, shown by the overlay through shell.setStatsProvider. The renderer keeps no domain state."
+    },
+    {
+      "id": "session-claim-results",
+      "name": "Session claim results",
+      "of": [
+        "specification-text",
+        "recorded-results",
+        "external-claim-outcomes"
+      ],
+      "fields": [
+        "text",
+        "semantic-hash",
+        "recorded-results.outcome",
+        "recorded-results.detail",
+        "external-claim-outcomes.outcome",
+        "external-claim-outcomes.status"
+      ],
+      "heldBy": "session",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "the last semantic commit, open or recorded-results change",
+        "mechanism": "session.evaluate calls evaluateClaims synchronously on the main thread inside onCommit (semantic changes only), open and onExternalChange (file recorded); each result carries the semantic hash it was evaluated at"
+      },
+      "description": "session.claimResults (ClaimResult[]: claimId, kind, method, status verified, supported, model-holds, violated, inconclusive or not-evaluated, evaluator, semanticHash, scope with the fault-model text, explanation, assumptions, involved, counterexample, evidence items {id, kind, ref, supports, recorded}, negatives, and for metric-bound claims runs, passes, fraction, confidence and seeds), with the data-model findings of data-model claims. Trace and metric claims run engine scenarios inside this evaluation, on the main thread, not in the engine worker (src/core/claims.js)."
+    },
+    {
+      "id": "session-recorded-results",
+      "name": "Recorded results in the session",
+      "of": [
+        "recorded-results",
+        "external-claim-outcomes"
+      ],
+      "heldBy": "session",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "the last open or watcher notice of file recorded",
+        "mechanism": "session.open and onExternalChange re-read GET /__exegra/project and replace session.recorded"
+      },
+      "description": "session.recorded: the evidence/results.json object or null; read by evaluate and the Verification panel."
+    },
+    {
+      "id": "cli-claim-results",
+      "name": "Command-line claim results",
+      "of": [
+        "specification-text",
+        "recorded-results",
+        "external-claim-outcomes"
+      ],
+      "heldBy": "agent-cli",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "one invocation",
+        "mechanism": "claims, evaluate, generate and verify evaluate from the files read at the start; verify evaluates with the results it just recorded"
+      },
+      "description": "The ClaimResult list printed by exegra claims and evaluate, and the claims summary of exegra verify."
+    },
+    {
+      "id": "simulation-run",
+      "name": "Simulation run in the panel",
+      "of": [
+        "specification-text",
+        "simulation-session"
+      ],
+      "fields": [
+        "text",
+        "scenario-id",
+        "faults",
+        "step-index"
+      ],
+      "heldBy": "session",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "the last load, fault change or semantic commit",
+        "mechanism": "loadSim derives the engine input, runs it in the engine worker and wraps the trace in createTraceCursor; a run whose token is stale is discarded; updateChecks recomputes checks and the request log on every step"
+      },
+      "description": "session.sim: the engine input (format 1, or format 2 when needsFormat2 holds), the trace cursor (scenarioId, faults, initial, config, revealed steps, outcome running, quiescent, step-limit or error), checks (checkTrace results with the automatic contract-conformance checks), requestLog ({step, time, role, contract, event, lost, text}), and simFlow (the message flow of the step shown with its scene paths). In Live mode the cursor is the replay of the recorded real stream through live-session instead (scenarioId live-session, outcome running, steps with divergences and calibrations), with the replay's divergences added to the checks."
+    },
+    {
+      "id": "cli-outputs",
+      "name": "Command-line outputs",
+      "of": [
+        "specification-text",
+        "presentation-layout",
+        "recorded-results"
+      ],
+      "heldBy": "agent-cli",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "one invocation",
+        "mechanism": "every command reads the files at its start and prints one envelope"
+      },
+      "description": "The stdout envelope {ok, command, project, semanticHash?, result} or {ok: false, command, project, error {code, message}, diagnostics}, the stderr progress notes (\"verify: running <ref>\") and the result payloads: apply {revision, semanticHashBefore, semanticHashAfter, semanticChanged, affected, written, dryRun}, verify {validation, traceability, evidence, claims summary, violated, expectedViolated, unexpectedViolated}, simulate {scenarioId, faults, outcome, stepCount, final, checks, requestLog, steps}, trace (the full trace, or {written, stepCount}), generate {files {bytes, sha256}, written}, markdown {path, text} | {documents} | {out, written}, prove (proof-outputs), and the read-only listings of projects, validate, list, show, deps, contracts, claims, evaluate, gaps, traceability, plan-delete and ops. The trace file of trace --out (stable JSON) the documents of markdown --out and the ops.json of cover --write (the operations that state the missing machine coverage) are written where the caller says."
+    },
+    {
+      "id": "proof-outputs",
+      "name": "Proof outputs",
+      "of": [
+        "specification-text"
+      ],
+      "heldBy": "agent-cli",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "the last exegra prove of the scenario; a file is not checked against the current model",
+        "mechanism": "tools/prove.js proveScenario rewrites formal/generated/<scenario>.lean on every run"
+      },
+      "description": "formal/generated/<scenario>.lean (gitignored: the engine input text, its decoded term, one theorem per claim discharged by native_decide), the explorer request written to exegra-lean explore on stdin and its result, and the prove result {scenarioId, bound, stepLimit, maxStates, faults, exploreMs, checkMs, nativeCode, claims[], note?}; exploreMs and checkMs are measured wall-clock durations. A claim is reported only when Lean accepted its theorem. tools/prove-integrity.js writes formal/generated/integrity/<rule>.lean (the proof or refutation of an integrity rule) and its .values.json table."
+    },
+    {
+      "id": "markdown-export",
+      "name": "Markdown export",
+      "of": [
+        "specification-text"
+      ],
+      "heldBy": "agent-cli",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "the run that wrote it",
+        "mechanism": "exegra markdown --out (cli/commands.js), tools/import-markdown.js --export-md, tools/import-register.js --export-md and tools/import-register.js --render --out rewrite their output"
+      },
+      "description": "One Markdown file per document of a specification that holds documents (reconstructMarkdown); the importer's coverage check compares rebuilt text with the source files."
+    },
+    {
+      "id": "markdown-import-report",
+      "name": "Markdown import report",
+      "of": [
+        "markdown-source",
+        "specification-text"
+      ],
+      "heldBy": "markdown-importer",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "one run",
+        "mechanism": "printed by tools/import-markdown.js main on standard output and standard error"
+      },
+      "description": "Counts, the unmapped items and the coverage per file; when the coverage gate fails, the specification is not written."
+    },
+    {
+      "id": "project-bundle",
+      "name": "Project bundle",
+      "of": [
+        "specification-text",
+        "presentation-layout",
+        "recorded-results"
+      ],
+      "heldBy": "toolbar",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "the moment of export; never refreshed",
+        "mechanism": "GET /__exegra/export reads the files on disk (tools/workspace.js exportProject); without persistence the toolbar builds it from the in-memory texts"
+      },
+      "description": "A .exegra.json download, {format: \"exegra-project\", version: 1, name, files: {\"spec.jsonc\", \"layout.jsonc\"?, \"evidence/results.json\"?}}, built in src/ui/toolbar.js (URL.createObjectURL). Exported through the server it holds the files on disk, so an edit whose save has not landed yet is not in it."
+    },
+    {
+      "id": "shipped-specifications",
+      "name": "Shipped specifications in the production bundle",
+      "of": [
+        "specification-text",
+        "presentation-layout",
+        "recorded-results"
+      ],
+      "heldBy": "build-system",
+      "scope": "shared",
+      "freshness": {
+        "bound": "the last vite build",
+        "mechanism": "import.meta.glob of specs/*/spec.jsonc, layout.jsonc and evidence/results.json in src/app/session.js, and the virtual module of tools/vite-plugin-exegra.js exegraLinkedSpecs for linked projects, are inlined as text by vite build"
+      },
+      "description": "dist/ embeds, as text, the specification, layout and recorded results of the shipped projects and the specification of every linked project whose specification lives outside specs/ (finding F11). A production build reads them and never saves (save state read-only)."
+    },
+    {
+      "id": "engine-input",
+      "name": "Engine input",
+      "of": [
+        "specification-text"
+      ],
+      "heldBy": "session",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "one run",
+        "mechanism": "simulationInput (src/core/sim-input.js) derives it from the validated model at every load, fault change and semantic commit; claim evaluation and the command line derive it the same way per call and keep nothing"
+      },
+      "description": "Format version 1 {format: \"exegra-sim-input\", version: 1, scenario {id, steps, faults, stepLimit}, behaviors, events, faults}, or version 2 (times in base units, seed, horizon, instances, resources, workloads, routes, links) when needsFormat2 holds. Posted to the engine worker as JSON text."
+    },
+    {
+      "id": "search-results",
+      "name": "Search results",
+      "of": [
+        "specification-text"
+      ],
+      "heldBy": "toolbar",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "the last keystroke in search",
+        "mechanism": "recomputed from the current model on input"
+      },
+      "description": "Entities ranked by id, ref, name and statement, with the active index (src/ui/toolbar.js)."
+    },
+    {
+      "id": "changes-panel-items",
+      "name": "Changes panel items",
+      "of": [
+        "commit-history",
+        "session-log"
+      ],
+      "heldBy": "activity-panels",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "the last model or log event",
+        "mechanism": "src/ui/activity.js renders history and log aligned by position"
+      },
+      "description": "The changes list, keyed by log sequence (or a negative key where no log entry is aligned). The log is capped at 400 entries and the history is not, so the alignment assumes the log holds every change."
+    },
+    {
+      "id": "transaction-scratch",
+      "name": "Transaction scratch texts",
+      "of": [
+        "specification-text",
+        "presentation-layout"
+      ],
+      "fields": [
+        "text",
+        "x",
+        "z"
+      ],
+      "heldBy": "transactions",
+      "scope": "per-session",
+      "freshness": {
+        "bound": "one apply call",
+        "mechanism": "Tx (src/core/operations.js) copies both texts; discarded on failure, swapped in by #commit on success"
+      },
+      "description": "Working copies of the specification and layout texts, the affected entity ids and the specEdited and layoutEdited flags of one transaction."
+    }
+  ],
+  "decisions": [
+    {
+      "id": "decision-admit-pending-realisation",
+      "title": "admit: claims realised by code are pending realisation, not weak",
+      "status": "accepted",
+      "task": "WG-5273",
+      "context": "A requirement is realised by code and verified later, so it cannot be verified when first written; rejecting it pushed requirements into other entity kinds outside milestone tracking.",
+      "decision": "admit applies admit.new-claim-weak only to claims a model method can decide at specification time. A new claim realised by code (kind requirement whose method Exegra does not evaluate itself, a method declared in vocabulary.verificationMethods, or external-evidence) that names a milestone and is not-evaluated or inconclusive is admitted and reported under pendingRealisation. A new requirement without a milestone is the reason admit.requirement-without-milestone; another code-realised claim without one stays admit.new-claim-weak. Structural, data-model, integrity, lean-theorem and the other methods in the claim method registry stay under admit.new-claim-weak."
+    },
+    {
+      "id": "dec-claim-check-and-grounding",
+      "title": "Claim check strength and grounding",
+      "context": "A verified status says that an evaluator checked a claim within its scope; it does not say how much that check could have found. The Harbourline fold (WG-5265) added 76 claims through admit, all verified, and an independent judge found that most of them prove only the author's own state machines: invariants that only the injected fault transition can break, a bound that restates the count of its one scenario, guards decided by booleans and numbers written into scenario event payloads, and no behavior that refines or reads a real behavior, record, contract, role or capability (judge report F1, F2, F7, F8). A real platform that let an agent change a plan would leave every one of those claims verified.",
+      "decision": "Every claim and every integrity rule gets two computed attributes besides its status, from a static, deterministic analysis of the model (src/core/claim-strength.js, claimStrength): its check, how strong the evaluation behind the status is, and its grounding, whether what it reads is the platform's own entities or only the claim's own inputs. They never change a status. claims, evaluate and the claims report show them. admit counts them for the whole specification before and after the change, and rejects a claim the change creates when its check is holds-by-construction or restated-scenario (admit.claim-vacuous) or single-trace (admit.claim-single-trace), or its grounding is self-contained (admit.claim-self-contained); each such reason carries acknowledgeable: true so that a caller can accept it explicitly. Existing claims are counted and never a reason.",
+      "definitions": [
+        "check holds-by-construction: a never, state-invariant or precedes claim that no run without the defect can violate. Nominal transitions are those not faultOnly, plus the faultOnly ones a fault of the claim's own scenarios enables. For a state invariant, the expression is true for every combination of values its references can take in nominal runs: a variable assigned only by fault transitions, or by nothing, keeps its initial value; a variable set only to literals takes its initial value or one of them; two variables of one behavior that start equal and are always set together to the same expression stay equal; a state reference takes any state reachable from the initial state over nominal transitions. For never, and for the then of precedes, the occurrence can be produced only by fault transitions, or by nominal transitions whose guard is false for every such value. The result names the variables and the fault transitions. Examples: hl-chk-rx-continuous-renewal (clockRestarts == 0, incremented only by the fault hl-rx-renew-restarts-clock), hl-chk-wv-clock-from-receipt (clockStart and receivedAt set together from time), hl-chk-au-append-only (hl-au-edited emitted only by the fault hl-au-edit-allowed).",
+        "check restated-scenario: a state invariant that compares one numeric variable which nominal transitions change by an expression (a counter) with a literal bound, listing exactly one scenario, where the bound is exactly the extreme value the variable reaches in that scenario's run and the run changed it. Example: hl-chk-gf-no-creation-after-loss, featureRecords <= 1, where the one scenario creates one record. Only a plain comparison is examined; a bound inside an implication is not.",
+        "check single-trace: any other state-invariant, precedes, eventually or never claim. It is decided by running hand-written scenarios, without exhaustive exploration and without refinement. Example: hl-chk-ag-forbidden-refused.",
+        "check explored: a trace claim that an exhaustive exploration of its scenario (exegra prove) found to hold, when the caller supplies that result; exploration results are not recorded in a project yet (WG-5280). check refined: a refines claim, or a trace claim whose behaviors all refine an existing behavior.",
+        "Other checks name the method: structural (no-relationship, reachable, only-via, has-port, property-defined, acyclic, implementation-language), data-model, lean-theorem, sampled (metric-bound), test (external evidence with a test attached), evidence (other external evidence and external verification methods), integrity (an integrity rule) and none (no method, or one this build does not evaluate).",
+        "grounding bound: the check reads the platform's own entities: the component graph (structural methods), records and copies (data-model), Lean definitions (lean-theorem), the entities of the kinds an integrity rule quantifies over, or behaviors that are anchored and branch on no free input. A behavior is anchored when it refines an existing behavior, is stored in a record (storage or instances.storedIn), reacts to or emits an event of a contract (the details name the capabilities the contract requires), or reads the state or variables of an anchored behavior. Example: hl-agent-roles-hold-no-forbidden-power, which ranges over every role.",
+        "grounding partly-bound: some of what the check reads is bound and some is not: an anchored behavior whose guards or effects also read a payload field of an event that belongs to no contract, a claim that reads one anchored and one unanchored behavior, or a data-model claim restricted to records the change adds.",
+        "grounding self-contained: the behaviors the check reads are not anchored: their guards and effects read only their own variables, time and payload fields of events that belong to no contract, which the scenarios supply as literals. Example: hl-agent-forbidden-acts-flow branches on event.changesPower, so hl-chk-ag-forbidden-refused is self-contained.",
+        "grounding not-applicable: the status comes from evidence outside the model (external-evidence or an external verification method), or nothing is evaluated.",
+        "Baseline: under admit an entity the change creates does not anchor anything, so a new behavior reading another new behavior, or a new event of a new contract, is self-contained. claims, evaluate and the claims report have no baseline and count every entity of the model."
+      ],
+      "alternatives": [
+        "Make vacuous trace claims inconclusive in the evaluator. Not taken: the trace does hold, and the status says what the evaluator found on it; the weakness is in what the check could have found, a separate axis, and changing the statuses would move many existing results at once.",
+        "Require an exhaustive exploration (exegra prove) of every new trace claim. Not taken for now: prove needs Lean and a build of formal/, and its results are not recorded in the project, so admit cannot read them. The explored check is the place a recorded result will raise a claim (WG-5280).",
+        "Detect vacuity by mutation: run every scenario with all faultOnly transitions enabled, or with generated payloads. Not taken: negatives already do the first, both depend on the hand-written scenarios, and the static analysis of the values nominal transitions can produce answers the question for every nominal run, cheaply enough for every admit.",
+        "Ground a claim through its subjects or its behavior's subject component. Not taken: every behavior names a subject, so that field cannot tell a machine that reads the platform from one that reads only its own payload (judge F1).",
+        "Count any reference to another behavior as binding. Not taken: a fold's machines would then bind to each other. A behavior binds only through a chain of reads that ends at a refinement, a record or a contract.",
+        "Read the access model directly from guards. Not possible: the expression language reads variables, payload fields, time and other machines only, so roles, capabilities and grants reach a behavior through a contract's auth.requires, and integrity rules are where they are quantified over."
+      ],
+      "consequences": "Statuses do not change; the strength is a second view that admit enforces for new claims only. The value analysis over-approximates nominal runs (it ignores guards when collecting values and reachable states, and treats other values as unknown), so it does not report a claim that some nominal run can violate as holds-by-construction, but it misses vacuity that depends on guards, on arithmetic or on keyed instances. restated-scenario needs one run of the claim's scenario and is restricted to a plain comparison with a literal. Grounding is structural: an anchored behavior can still decide on a field that means nothing, and a contract event's payload is still supplied by the scenario. explored is reported only when the caller supplies exploration results (WG-5280).",
+      "tasks": [
+        "WG-5274",
+        "WG-5276",
+        "WG-5280"
+      ],
+      "basis": [
+        "claim-strength",
+        "claim-evaluator",
+        "agent-cli"
+      ]
+    },
+    {
+      "id": "dec-residency",
+      "title": "Residency: regions as entities, placement on components, confinement on tenant classes, checked on the structure",
+      "status": "accepted",
+      "task": "WG-5277",
+      "subjects": [
+        "validator",
+        "metamodel"
+      ],
+      "context": "A fold of 26 business requirements for a multi-tenant platform (Harbourline BR-04, BR-05, BR-09, BR-18, BR-24) could not state residency against anything real: the format had no region, so every rule became a scenario boolean (a harbour flag in a step payload) or prose, and an exception edge copy was given a 72 hour freshness bound that weakened the existing 5 s purge of edge copies. Residency has to compose with records, copies, retention and erasure bounds and with the access model (flags, plans, roles), not duplicate them.",
+      "decision": "Four additions. A region entity. A tenant class entity that selects tenants by one feature flag or one plan (or every tenant), names the regions its tenants may be provisioned in, a confinement (home, provisioned-regions or none) and the records it binds. Two component properties, placement (per-region, fixed or global) and regions, and one relationship property, carries (the records a data flow passes on). A residency exception entity naming one copy or flow of a tenant class, the feature, the approving role, maxDuration, renewalWindow, purgeWithin, the residual and a status. Validation (src/core/residency.js) follows each bound record to its owner, the holder of each copy and both ends of each carrying relationship, and reports residency.record-outside, residency.copy-outside or residency.flow-outside where the component cannot keep a tenant of the class in its permitted regions, unless an active exception names that copy or flow; plus residency.placement-missing, residency.region-uncovered, component.placement-regions, tenant-class.selector, tenant-class.provisioned-in and the exception rules (target, duration, purge, renewal). The properties are flat references, so integrity rules and recursive relations read them.",
+      "alternatives": [
+        "Region as a property of every entity (records and copies each naming a region): not taken. A record class or copy class has no single region; its data is wherever its holder runs, and a tenant's region is run-time data, so a region per record would be stated twice and drift from the placement of the component that holds it.",
+        "A separate placement relation (placement entities pairing a component with regions): not taken for components, which have exactly one placement, so a property says the same thing with less text and stays readable by integrity rules as c.placement. The binding of records to a class is a relation, kept as the tenant class's binds list.",
+        "Tenant classes by flag, by plan or by both: a class takes at most one selector (tenant-class.selector) so its membership is one condition; Harbour tenants are the tenants with the regulated-sector flag on.",
+        "Checking per scenario (a scenario names a tenant's region and a machine moves its data): not taken for placement. The structure decides residency for every tenant of the class whichever region it was provisioned in, with no inputs to choose; a scenario would check only the regions it happened to name. The run-time part, an exception expiring and its copies being purged, stays an obligation shown by evidence.",
+        "Exceptions that expire by a date written in the specification: not taken. A specification states classes of exception, not approvals; maxDuration, renewalWindow and purgeWithin record the bounds of one approval, and status records that a class of exception is no longer in force (expired or revoked covers nothing).",
+        "The purge after expiry as a freshness or erasure bound of the excepted copy: not taken, because it weakens the copy's own bounds for every tenant (the fold's mistake); purgeWithin belongs to the exception."
+      ],
+      "consequences": "Harbourline BR-04 and BR-05 are written with no scenario (tests/fixtures/residency/harbourline.jsonc). Placement is static: a component placed per-region is trusted to route each tenant to its home instance, which only evidence about the running system shows. The exception lifecycle (expiry, renewal within the window, purge within the bound) is recorded, not executed. Fields are not regions: a copy of a bound record is bound whatever fields it holds, and a reference-only payload is stated by an integrity rule over the copy's fields."
+    },
+    {
+      "id": "dec-pooled-quotas",
+      "title": "Pooled quotas: a pool construct over per-tenant quotas whose meaning runs as derived machines",
+      "status": "accepted",
+      "task": "WG-5278",
+      "subjects": [
+        "simulation-contract",
+        "validator",
+        "metamodel"
+      ],
+      "context": "Harbourline BR-12 pools storage and automation-run quotas across a reseller's client tenants: a client may exceed its fair share while the pool has headroom, is throttled after three consecutive days over its share even with headroom unless burst-eligible, and burst eligibility is set by the reseller, applies from the day it is set and never to days already throttled. The format had per-tenant quotas only, so the fold became a hand-written machine with no pool, no headroom and a permanent throttle, and one of its invariants was false for burst-eligible clients but held because only one scenario was run. The rule must be checkable by exploration and compose with plans, quotas and the limit store.",
+      "decision": "A quotaPool entity: memberClass and groupedBy (who shares), heldBy (the limit store), window and windowEnd (the day boundary event), limits (each a rate or a level whose per-member contribution is a per-tenant quota's limit or a perMember amount, with its usage event), overShare.consecutive, throttle (to fair-share or refuse, and a required release: a number of windows at or under the share, or never) and exemption (setBy role, capability, set event, effective same-window or next-window, retroactive). A member's fair share is its contribution and the capacity is the sum. The meaning is executable: src/core/pools.js derives one engine-input machine per limit and modelled member (<pool>-<limit>-m<k>, states normal and throttled, variables usage, day, overDays, underDays, throttledOn, burstSetOn, burstFrom, admitted, refused), and a scenario that lists the pool in pools runs them next to its behaviors, so simulate, the trace check and the Lean explorer decide claims over them. Validation checks the construct (pool.* codes) and claim expressions that read the machines.",
+      "alternatives": [
+        "Fold the pool into quota (a quota with scope pool): not taken. A quota is one counter per scope and window with one onExceed; a pool adds a group, fair shares, headroom, a multi-window rule, an exemption and a release, and keeping the per-tenant quota as each member's contribution keeps what one tenant is entitled to stated once.",
+        "Make capacity and fair share numbers of their own on the pool: not taken for rates, since the per-tenant quota already says what a tenant may use per window; perMember is kept for levels such as storage, which no quota counts.",
+        "Ask authors to write the pool's machine as an ordinary behavior: not taken. That is what the fold did; the rules then live in a hand-written machine that may differ from the pool it claims to model, with nothing to check them against.",
+        "Generate the machine into the specification as behavior entities (as cover-machines writes scenarios): not taken. The machine would be a second copy of the pool's meaning that drifts unless validation re-derives and compares it; deriving it when a scenario runs keeps one source.",
+        "Synthesise the machines as entities of the model at parse time: not taken. Entities have source positions and take part in rename and delete through the Lean model derivation; a derived machine has neither, and adding that machinery is larger than the need.",
+        "One machine per pool with per-member variables: not taken. The expression language has no conditional, so each window end would need a transition for every combination of member outcomes; one machine per member keeps each window end to one of a few guarded transitions, and the members read each other's usage for the pool total.",
+        "A scenario boolean saying a member is burst-eligible or throttled: not taken; eligibility is an event set by the reseller and the throttle follows from usage, so exploration over injected events covers the cases."
+      ],
+      "consequences": "Harbourline BR-12 is written with no scenario boolean (tests/fixtures/pooled-quotas/harbourline.jsonc), and a claim that a burst-eligible client is never throttled after eligibility was set holds by exploration and fails when eligibility is effective only from the next window. A specification must say when a throttle lifts. The machines are not entities: renaming a pool does not rewrite claim expressions that name them, and the simulator panel and inspector do not show them (WG-5281). The model runs 1 to 4 members with equal contributions; unequal plans across members, usage that spans windows and revocation of eligibility are not modelled."
+    }
+  ]
+}

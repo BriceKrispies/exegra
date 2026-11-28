@@ -1,10 +1,11 @@
 // The engine input: everything the simulation engine reads for one scenario run, as a plain
 // JSON document, and nothing else. It holds no JSONC, meta-model, layout or validation state, so
 // an engine in any language can run from it alone. Pure; no I/O.
-// Format "exegra-sim-input", version 1; see docs/simulation.md, "Engine input and trace format".
+// Format "exegra-sim-input", version 2; see docs/simulation.md, "Engine input and trace format".
 // A scenario that uses a construct of format 2 (workloads, a seed or horizon, instances, resource,
-// timer or link effects) derives version 2 instead (simulationInputV2; docs/simulation.md,
-// "Specification-level form").
+// timer or link effects) derives its times in its `timeUnit` (simulationInputV2; docs/simulation.md,
+// "Specification-level form"); any other scenario counts time in logical ticks (unit `tick`), with
+// every number as the scenario gives it. Format 1 no longer exists (WG-5681).
 
 import { lowerDistribution, unitExponentialTable } from './distributions.js';
 import { unsharedText } from './codegen-model.js';
@@ -18,7 +19,7 @@ import { poolMachines } from './pools.js';
  * @typedef {{id:string, from:string, to:string, on:string, guard:string|null, effects:any[], faultOnly:boolean}} InputTransition
  * @typedef {{id:string, subject:string, initial:string, types?:Record<string, string>, variables:{name:string, initial:any}[], states:string[], transitions:InputTransition[]}} InputBehavior
  * @typedef {{id:string, kind:string, event?:string, transition?:string, occurrence?:number, by?:number, at?:number, payload?:Record<string, any>}} InputFault
- * @typedef {{format:'exegra-sim-input', version:1,
+ * @typedef {{format:'exegra-sim-input', version:2, time?:{unit:string, perSecond:number|null},
  *   scenario:{id:string, steps:{at:number, event:string, payload:Record<string, any>}[], faults:string[], stepLimit:number},
  *   behaviors:InputBehavior[], events:{id:string}[], faults:InputFault[]}} SimulationInput
  */
@@ -87,7 +88,8 @@ export function behaviorTypes(model, bid) {
   for (const k of conflicting) delete out[k];
   return out;
 }
-export const SIM_INPUT_VERSION = 1;
+/** The engine input format's version: 2 (format 1 is gone, WG-5681). */
+export const SIM_INPUT_VERSION = 2;
 
 /** Fields of an effect the engine reads. */
 const EFFECT_KEYS = ['set', 'to', 'emit', 'after', 'payload'];
@@ -182,7 +184,7 @@ export function simulationInput(model, scenarioId, faults) {
     if (!ev || ev.kind !== 'event') throw new Error(`Fault "${f.id}" injects "${f.event}", which is not an event.`);
   }
 
-  /** @type {SimulationInput} */
+  /** The fields every version-2 input shares, before units and format-2 constructs. */
   const v1 = {
     format: SIM_INPUT_FORMAT,
     version: SIM_INPUT_VERSION,
@@ -191,7 +193,9 @@ export function simulationInput(model, scenarioId, faults) {
     events: (model.byKind.event ?? []).map((e) => ({ id: e.id })),
     faults: faultDecls,
   };
-  return needsFormat2(model, sdata) || faultDecls.some((f) => FORMAT2_FAULTS.includes(/** @type {string} */ (f.kind))) ? simulationInputV2(model, scenarioId, v1) : v1;
+  if (needsTimedInput(model, sdata) || faultDecls.some((f) => FORMAT2_FAULTS.includes(/** @type {string} */ (f.kind)))) return simulationInputV2(model, scenarioId, v1);
+  // A scenario with no format-2 construct counts time in logical ticks: every number as it is.
+  return /** @type {SimulationInput} */ ({ ...v1, version: SIM_INPUT_VERSION, time: { unit: 'tick', perSecond: null } });
 }
 
 /**
@@ -313,11 +317,13 @@ export function lowerSpecDistribution(d, unit, what) {
 const V2_EFFECTS = ['use', 'acquire', 'release', 'timer', 'cancel', 'via'];
 
 /**
- * Whether a scenario needs format 2: it names workloads, a seed or a horizon, or one of its
- * behaviors has instances or a format-2 effect. Every other scenario derives version 1, unchanged.
+ * Whether a scenario needs the timed version-2 input (simulationInputV2: times in base units of its
+ * `timeUnit`, instances, resources, workloads): it names workloads, a seed or a horizon, or one of its
+ * behaviors has instances or one of the effects only that input has. Every other scenario derives a
+ * version-2 input that counts time in logical ticks (format 1 is gone, WG-5681).
  * @param {Model} model @param {any} sdata
  */
-export function needsFormat2(model, sdata) {
+export function needsTimedInput(model, sdata) {
   if ((Array.isArray(sdata.workloads) && sdata.workloads.length) || sdata.seed !== undefined || sdata.horizon !== undefined) return true;
   for (const fid of Array.isArray(sdata.faults) ? sdata.faults : []) if (FORMAT2_FAULTS.includes(model.entities.get(fid)?.data?.kind)) return true;
   for (const bid of sdata.behaviors ?? []) {
@@ -332,8 +338,8 @@ export function needsFormat2(model, sdata) {
 
 /**
  * The time unit an implementation-level machine's bare numbers are in (WG-4902, docs/semantics.md,
- * "Time"): the unit of the scenarios that run it. A format-2 scenario's unit is its `timeUnit`, by default
- * `us`; a format-1 scenario that names a `timeUnit` has that unit, and one that names none constrains
+ * "Time"): the unit of the scenarios that run it. A timed scenario's unit is its `timeUnit`, by default
+ * `us`; a tick-counted scenario that names a `timeUnit` has that unit, and one that names none constrains
  * nothing. With no constraining scenario the unit is `ms`, the unit of generated code's clock. When the
  * scenarios disagree, `units` lists every unit found and `unit` is the first.
  * @param {Model} model @param {string} bid
@@ -347,7 +353,7 @@ export function machineTimeUnit(model, bid) {
   for (const s of model.byKind.scenario ?? []) {
     const d = /** @type {any} */ (s.data);
     if (!Array.isArray(d.behaviors) || !d.behaviors.includes(bid)) continue;
-    const u = typeof d.timeUnit === 'string' ? d.timeUnit : needsFormat2(model, d) ? 'us' : undefined;
+    const u = typeof d.timeUnit === 'string' ? d.timeUnit : needsTimedInput(model, d) ? 'us' : undefined;
     if (u === undefined) continue;
     scenarios.push(s.id);
     if (!units.includes(u)) units.push(u);
@@ -383,12 +389,12 @@ function effectV2(fx, unit, what) {
 
 /**
  * The version-2 engine input of a scenario (docs/simulation.md, "Specification-level form"): the
- * version-1 fields with times in whole base units of the scenario's `timeUnit` (default `us`),
+ * shared fields with times in whole base units of the scenario's `timeUnit` (default `us`),
  * behaviors with their instances and format-2 effects, the routes, resources, links, workloads and
  * request classes the model declares, the scenario's seed, horizon, warm-up and stop time, and
  * distributions lowered to integer tables (`src/core/distributions.js`). Throws on a malformed
  * unit, rate or distribution, before any engine runs.
- * @param {Model} model @param {string} scenarioId @param {any} v1 the version-1 input of the scenario
+ * @param {Model} model @param {string} scenarioId @param {any} v1 the fields every version-2 input of the scenario shares
  * @returns {any}
  */
 export function simulationInputV2(model, scenarioId, v1) {

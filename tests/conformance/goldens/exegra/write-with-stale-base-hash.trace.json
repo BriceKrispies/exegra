@@ -1,6 +1,13 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "write-client-flow": 0,
+   "write-endpoint-flow": 0
+  },
+  "links": {},
   "machines": {
    "write-client-flow": {
     "state": "write-client-saved",
@@ -19,10 +26,23 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "write-client-flow": 0,
+   "write-endpoint-flow": 0
+  },
+  "links": {},
   "machines": {
    "write-client-flow": {
     "state": "write-client-idle",
@@ -41,6 +61,7 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "write-intent",
@@ -51,6 +72,7 @@
      "requestId": 1,
      "text": "9b2f1c0e"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -59,13 +81,27 @@
     "time": 0
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "write-with-stale-base-hash",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "write-client-flow": 0,
+     "write-endpoint-flow": 0
+    },
+    "links": {},
     "machines": {
      "write-client-flow": {
       "state": "write-client-awaiting",
@@ -84,15 +120,22 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "write-file-request",
+      "from": {
+       "behavior": "write-client-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "baseHash": "h1",
        "file": "spec",
        "name": "exegra",
        "text": "spec text of revision 2"
       },
+      "scheduledAt": 0,
       "seq": 1,
       "source": {
        "behavior": "write-client-flow",
@@ -102,8 +145,14 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "write-intent",
     "payload": {
@@ -113,6 +162,7 @@
      "requestId": 1,
      "text": "9b2f1c0e"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -138,6 +188,7 @@
      ],
      "from": "write-client-idle",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -153,11 +204,14 @@
     {
      "behavior": "write-endpoint-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "write-intent",
     "write-client-send",
@@ -168,6 +222,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "write-client-flow": 0,
+     "write-endpoint-flow": 0
+    },
+    "links": {},
     "machines": {
      "write-client-flow": {
       "state": "write-client-awaiting",
@@ -186,13 +247,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "write-file-conflict",
+      "from": {
+       "behavior": "write-endpoint-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "code": "conflict",
        "current": "h2"
       },
+      "scheduledAt": 0,
       "seq": 2,
       "source": {
        "behavior": "write-endpoint-flow",
@@ -202,9 +270,20 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "write-client-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "write-file-request",
     "payload": {
      "baseHash": "h1",
@@ -212,6 +291,7 @@
      "name": "exegra",
      "text": "spec text of revision 2"
     },
+    "scheduledAt": 0,
     "seq": 1,
     "source": {
      "behavior": "write-client-flow",
@@ -236,6 +316,7 @@
      ],
      "from": "write-endpoint-ready",
      "guard": "event.baseHash != diskHash",
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -251,11 +332,14 @@
     {
      "behavior": "write-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "write-file-request",
     "write-endpoint-conflict",
@@ -266,6 +350,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "write-client-flow": 0,
+     "write-endpoint-flow": 0
+    },
+    "links": {},
     "machines": {
      "write-client-flow": {
       "state": "write-client-awaiting",
@@ -284,15 +375,22 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "write-file-request",
+      "from": {
+       "behavior": "write-client-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "baseHash": "h2",
        "file": "spec",
        "name": "exegra",
        "text": "spec text of revision 2"
       },
+      "scheduledAt": 0,
       "seq": 3,
       "source": {
        "behavior": "write-client-flow",
@@ -302,14 +400,26 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "write-endpoint-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "write-file-conflict",
     "payload": {
      "code": "conflict",
      "current": "h2"
     },
+    "scheduledAt": 0,
     "seq": 2,
     "source": {
      "behavior": "write-endpoint-flow",
@@ -336,6 +446,7 @@
      ],
      "from": "write-client-awaiting",
      "guard": "attempts < 3",
+     "instance": 0,
      "sets": [
       {
        "after": 2,
@@ -356,11 +467,14 @@
     {
      "behavior": "write-endpoint-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "write-file-conflict",
     "write-client-retry",
@@ -371,6 +485,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "write-client-flow": 0,
+     "write-endpoint-flow": 0
+    },
+    "links": {},
     "machines": {
      "write-client-flow": {
       "state": "write-client-awaiting",
@@ -389,13 +510,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "write-file-ok",
+      "from": {
+       "behavior": "write-endpoint-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "hash": "h3",
        "ok": true
       },
+      "scheduledAt": 0,
       "seq": 4,
       "source": {
        "behavior": "write-endpoint-flow",
@@ -405,9 +533,20 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "write-client-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "write-file-request",
     "payload": {
      "baseHash": "h2",
@@ -415,6 +554,7 @@
      "name": "exegra",
      "text": "spec text of revision 2"
     },
+    "scheduledAt": 0,
     "seq": 3,
     "source": {
      "behavior": "write-client-flow",
@@ -439,6 +579,7 @@
      ],
      "from": "write-endpoint-ready",
      "guard": "event.baseHash == diskHash",
+     "instance": 0,
      "sets": [
       {
        "after": "h3",
@@ -459,11 +600,14 @@
     {
      "behavior": "write-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "write-file-request",
     "write-endpoint-accept",
@@ -474,6 +618,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "write-client-flow": 0,
+     "write-endpoint-flow": 0
+    },
+    "links": {},
     "machines": {
      "write-client-flow": {
       "state": "write-client-saved",
@@ -492,15 +643,28 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "write-endpoint-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "write-file-ok",
     "payload": {
      "hash": "h3",
      "ok": true
     },
+    "scheduledAt": 0,
     "seq": 4,
     "source": {
      "behavior": "write-endpoint-flow",
@@ -515,6 +679,7 @@
      "emitted": [],
      "from": "write-client-awaiting",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": true,
@@ -530,11 +695,14 @@
     {
      "behavior": "write-endpoint-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "write-file-ok",
     "write-client-done",
@@ -543,5 +711,9 @@
    ],
    "time": 0
   }
- ]
+ ],
+ "stepsTaken": 5,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

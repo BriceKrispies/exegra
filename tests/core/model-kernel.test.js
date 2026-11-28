@@ -8,72 +8,11 @@
 //   import-markdown,cli,workspace}.test.js ran, the invalid-spec cases among them; 81 of the 206
 //   have diagnostics);
 // - the edge cases below (repeated keys, array-index keys, non-ASCII keys, unusual numbers).
+// The two sweeps over every specification the tests read run in tests/proofs/model-kernel.test.js, outside the
+// routine suite (npm run test:proofs, npm run verify and the Check workflow run them).
 
 import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
-import zlib from 'node:zlib';
-import { fileURLToPath } from 'node:url';
-import * as reference from '../oracle/parse-reference.js';
-import { parseSpec } from '../../src/core/parse.js';
-import { semanticHash, normalize } from '../../src/core/hash.js';
-
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-
-/** @param {string} dir @returns {string[]} */
-function jsoncFiles(dir) {
-  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-    const p = path.join(dir, e.name);
-    return e.isDirectory() ? jsoncFiles(p) : e.name.endsWith('.jsonc') ? [p] : [];
-  });
-}
-
-/** Everything a model holds, as plain data (entities in declaration order, byKind as ids). @param {any} m */
-function plainModel(m) {
-  if (!m) return null;
-  return {
-    schemaVersion: m.schemaVersion,
-    system: m.system?.id ?? null,
-    entities: [...m.entities.values()],
-    byKind: Object.fromEntries(Object.entries(m.byKind).map(([k, v]) => [k, /** @type {any[]} */ (v).map((e) => e.id)])),
-    refs: m.refs,
-    exprs: m.exprs,
-    meta: JSON.parse(JSON.stringify(m.meta)),
-    vocabulary: m.vocabulary,
-  };
-}
-
-/** @param {string} text @param {string} name */
-function same(text, name) {
-  const want = reference.parseSpec(text);
-  const got = parseSpec(text);
-  assert.deepEqual(got.diagnostics, want.diagnostics, `${name}: diagnostics`);
-  assert.deepEqual(plainModel(got.model), plainModel(want.model), `${name}: model`);
-  assert.equal(semanticHash(got.model), reference.semanticHash(want.model), `${name}: semantic hash`);
-  if (want.model) {
-    // Compared as the text that is hashed: JSON carries -0 as 0 and an infinite number as null.
-    assert.equal(JSON.stringify(normalize(/** @type {any} */ (got.model))), JSON.stringify(reference.normalize(want.model)), `${name}: normal form`);
-    // A model without the hash parseSpec attached is hashed by Lean from its declarations.
-    assert.equal(semanticHash({ .../** @type {any} */ (got.model), semanticHash: undefined }), reference.semanticHash(want.model), `${name}: hash of declarations`);
-  }
-  return want.diagnostics.length;
-}
-
-test('the specifications and fixtures the tests read derive identically', () => {
-  const files = ['specs/exegra/spec.jsonc', 'specs/benchmark/spec.jsonc', ...jsoncFiles(path.join(ROOT, 'tests/fixtures')).map((f) => path.relative(ROOT, f))];
-  assert.ok(files.length >= 6);
-  for (const f of files) same(fs.readFileSync(path.join(ROOT, f), 'utf8'), f);
-});
-
-test('every specification text the core tests parse derives identically', () => {
-  /** @type {string[]} */
-  const cases = JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(ROOT, 'tests/fixtures/parse-corpus/cases.json.gz'))).toString('utf8'));
-  let invalid = 0;
-  cases.forEach((text, i) => { if (same(text, `case ${i}`)) invalid++; });
-  assert.equal(cases.length, 206);
-  assert.ok(invalid >= 80, `only ${invalid} cases have diagnostics`);
-});
+import { same } from '../oracle/same-model.js';
 
 const BASE = (extra) => `{ "exegra": "0.1", "system": { "id": "s", "name": "S" }, ${extra} }`;
 

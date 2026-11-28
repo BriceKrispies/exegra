@@ -1,11 +1,11 @@
-// Runs `exegra prove`: explores a scenario with the verified explorer of the formal semantics, writes
+// Runs `exegra prove`: explores a scenario with the explorer of the behaviour calculus, writes
 // the Lean proof file under formal/generated/ (ignored by git) and checks it with Lake. The pure part
 // (the request, the Lean text, the results) is src/core/proof-export.js.
 //
 // Steps:
 //   1. `lake build` in formal/ (no work when it is up to date), so the explorer and its proofs are built;
 //   2. `exegra-lean explore` runs the compiled explorer on the scenario's engine input and invariants;
-//   3. the proof file states, per claim, `explore env inv bound maxStates = <that result>`, discharged
+//   3. the proof file states, per claim, `verdictOf inputText inv bound maxStates = <that result>`, discharged
 //      by native_decide, and `lake env lean` checks it and prints the axioms of each theorem. The
 //      modules' native shared libraries (precompileModules in formal/lakefile.toml) are loaded into
 //      Lean, so native_decide runs the compiled explorer instead of interpreting it.
@@ -42,7 +42,8 @@ export class ProveError extends Error {
 }
 
 /** The modules a proof file needs, in import order. */
-const NATIVE_MODULES = ['Number', 'Value', 'Json', 'Expr', 'Input', 'Trace', 'Semantics', 'Explore', 'Search', 'Prove', 'Temporal'];
+const NATIVE_MODULES = ['Number', 'Value', 'Json', 'Expr', 'Input', 'Trace', 'Random', 'Resource', 'Workload', 'Format2',
+  'Search', 'Core_LTS', 'Core_Search', 'Core_Behav', 'Core_BehavExec', 'Core_BehavCheck', 'Elab', 'Format2B', 'ProveB'];
 
 /**
  * `--load-dynlib` options for the modules' shared libraries, or none when one is missing (Lean then
@@ -95,7 +96,6 @@ export function proveScenario(model, scenarioId, opts = {}) {
     const trun = spawnSync(LEAN_BIN, ['temporal'], { ...SPAWN, input: temporalRequest(plan) });
     if (trun.status !== 0) throw new ProveError('prove.explore-failed', `exegra-lean temporal failed: ${tail(`${trun.stderr}${trun.stdout}`, 10) || `exit status ${trun.status}`}`);
     const tex = JSON.parse(trun.stdout);
-    explored.leanInput = tex.leanInput;
     const byId = new Map([...explored.results.map((/** @type {any} */ r) => [r.id, r]), ...tex.results.map((/** @type {any} */ r) => [r.id, { ...r, temporal: true }])]);
     explored.results = plan.claims.map((c) => byId.get(c.claimId));
   } else {

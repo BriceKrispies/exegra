@@ -7,8 +7,15 @@
 //
 // A selector picks components. It is a string id, an array of ids, or an object
 // whose present fields must all match:
-//   { ids, category, kind, tag, trustZone, within, all }
+//   { ids, category, kind, tag, facet, trustZone, within, outside, except, all }
 // A component nested (at any depth) inside a selected subsystem is also selected.
+// facet names a declared facet or a tag (a tag is an implicit facet); it selects the facet's members.
+// outside: X selects the complement of X: every component that is not X, not inside X and not an ancestor of X.
+// except: [{id, reason}] removes those elements (and what they contain) from the selection; each needs a reason.
+//
+// The graph methods (no-relationship, reachable, only-via, acyclic) may state a level: `cut` names a declared cut,
+// and the claim is evaluated on the derived model of that cut under the transfer rules (claims.js, "Claims stated
+// at a cut"; src/core/abstraction.js).
 //
 // A matcher picks trace occurrences: { event: <event id> } or { transition: <transition id> }.
 //
@@ -23,6 +30,7 @@ export const CLAIM_STATUSES = /** @type {const} */ ({
   violated: { label: 'Violated', tone: 'bad' },
   inconclusive: { label: 'Inconclusive', tone: 'warn' },
   'model-holds': { label: 'Holds in the model (parameters assumed)', tone: 'ok-model' },
+  asserted: { label: 'Asserted by an author: written down, not established by anything Exegra checked', tone: 'warn' },
   'not-evaluated': { label: 'Not evaluated', tone: 'none' },
 });
 
@@ -31,9 +39,11 @@ export const CLAIM_METHODS = {
     kinds: ['structural'],
     doc: 'No relationship (optionally: no transitive path) leads from any `from` component to any `to` component.',
     params: {
+      cut: { type: 'ids:cut', doc: 'The level the claim is stated at: a declared cut. The claim is evaluated on the derived model of that cut (blocks and lifted interactions with witnesses), and its verdict transfers to the base only by the transfer rules (absence exactly; a coarse path only when a chain between members witnesses it; acyclicity as a statement about blocks). Naming an element hidden inside a block of the cut, or selecting part of a block, is not expressible at that level.' },
       from: { type: 'selector', required: true },
       to: { type: 'selector', required: true },
       kinds: { type: 'strings', doc: 'Relationship kinds considered. Default: every kind.' },
+      classes: { type: 'strings', doc: 'Dependency classes of the relationship kinds followed (static, runtime, none), as well as `kinds`: a relationship must pass both. A legacy kind has the class of the kind it behaves as.' },
       transitive: { type: 'boolean', doc: 'Also forbid multi-hop paths.' },
       where: { type: 'edge-filter', doc: 'Only relationships whose property has one of the values, e.g. {"property": "layer", "values": ["current", "target"]}.' },
     },
@@ -42,9 +52,11 @@ export const CLAIM_METHODS = {
     kinds: ['structural'],
     doc: 'Every `from` component reaches at least one `to` component along directed relationships.',
     params: {
+      cut: { type: 'ids:cut', doc: 'The level the claim is stated at: a declared cut. The claim is evaluated on the derived model of that cut (blocks and lifted interactions with witnesses), and its verdict transfers to the base only by the transfer rules (absence exactly; a coarse path only when a chain between members witnesses it; acyclicity as a statement about blocks). Naming an element hidden inside a block of the cut, or selecting part of a block, is not expressible at that level.' },
       from: { type: 'selector', required: true },
       to: { type: 'selector', required: true },
       kinds: { type: 'strings', doc: 'Relationship kinds followed. Default: every kind.' },
+      classes: { type: 'strings', doc: 'Dependency classes of the relationship kinds followed (static, runtime, none), as well as `kinds`: a relationship must pass both. A legacy kind has the class of the kind it behaves as.' },
       where: { type: 'edge-filter', doc: 'Only relationships whose property has one of the values, e.g. {"property": "layer", "values": ["current", "target"]}.' },
     },
   },
@@ -52,10 +64,12 @@ export const CLAIM_METHODS = {
     kinds: ['structural'],
     doc: 'Every directed path from a `from` component to a `to` component passes through a `via` component.',
     params: {
+      cut: { type: 'ids:cut', doc: 'The level the claim is stated at: a declared cut. The claim is evaluated on the derived model of that cut (blocks and lifted interactions with witnesses), and its verdict transfers to the base only by the transfer rules (absence exactly; a coarse path only when a chain between members witnesses it; acyclicity as a statement about blocks). Naming an element hidden inside a block of the cut, or selecting part of a block, is not expressible at that level.' },
       from: { type: 'selector', required: true },
       to: { type: 'selector', required: true },
       via: { type: 'selector', required: true },
       kinds: { type: 'strings' },
+      classes: { type: 'strings', doc: 'Dependency classes of the relationship kinds followed (static, runtime, none), as well as `kinds`: a relationship must pass both. A legacy kind has the class of the kind it behaves as.' },
       where: { type: 'edge-filter', doc: 'Only relationships whose property has one of the values, e.g. {"property": "layer", "values": ["current", "target"]}.' },
     },
   },
@@ -79,9 +93,11 @@ export const CLAIM_METHODS = {
   },
   acyclic: {
     kinds: ['structural'],
-    doc: 'The directed graph of the given relationship kinds has no cycle.',
+    doc: 'The directed graph of the given relationship kinds has no cycle (stated at a cut: the blocks form no cycle).',
     params: {
+      cut: { type: 'ids:cut', doc: 'The level the claim is stated at: a declared cut. The claim is evaluated on the derived model of that cut (blocks and lifted interactions with witnesses), and its verdict transfers to the base only by the transfer rules (absence exactly; a coarse path only when a chain between members witnesses it; acyclicity as a statement about blocks). Naming an element hidden inside a block of the cut, or selecting part of a block, is not expressible at that level.' },
       kinds: { type: 'strings', doc: 'Default: kinds flagged as dependencies.' },
+      classes: { type: 'strings', doc: 'Dependency classes of the relationship kinds followed (static, runtime, none), as well as `kinds`: a relationship must pass both. A legacy kind has the class of the kind it behaves as.' },
       where: { type: 'edge-filter', doc: 'Only relationships whose property has one of the values, e.g. {"property": "layer", "values": ["current", "target"]}.' },
       within: { type: 'selector' },
     },
@@ -164,6 +180,7 @@ export const CLAIM_METHODS = {
     params: {
       theorem: { type: 'string', required: true, doc: 'The fully qualified theorem name, e.g. Exegra.runInput_terminates.' },
       about: { type: 'strings', doc: 'Implementation constants (compiled definitions) the statement must mention, e.g. Exegra.runInput.' },
+      supersedes: { type: 'string', doc: 'A theorem of type `new statement → old statement`: when the statement of the theorem changes, admit accepts the change as a strengthening, not a weakening, only if this theorem passes the Lean gate (exegra admit, reason admit.theorem-weakened).' },
     },
   },
   'implementation-language': {
@@ -175,6 +192,27 @@ export const CLAIM_METHODS = {
       exclude: { type: 'selector', doc: 'Components left out (exactly these: a subsystem named here does not take its children with it).' },
       plannedBy: { type: 'string', doc: 'The Workgraph task that ports the rest, named in the result.' },
     },
+  },
+  'abstraction-well-formed': {
+    kinds: ['structural'],
+    doc: 'The abstraction structure is well formed: every listed hierarchy (default: logical and every declared one) is laminar and acyclic, with every element under at most one parent and every module element under exactly one element, and every listed cut (default: every declared cut) is an antichain that covers every element of its hierarchy, so its abstraction map sends each element at or below it to exactly one block. Violated with the offending elements; decided by the model.',
+    params: {
+      hierarchies: { type: 'strings', doc: 'The hierarchy ids checked (logical is the one component.parent declares). Default: every hierarchy.' },
+      cuts: { type: 'ids:cut', doc: 'The cuts checked. Default: every declared cut.' },
+    },
+  },
+  'abstraction-invariants': {
+    kinds: ['structural'],
+    doc: 'The derived models of the listed cuts (default: every declared cut), with kinds as declared and coarsened to the top kinds, satisfy the listed invariants of an abstraction (default: all; src/core/abstraction.js, abstractionInvariants): witness-completeness (I1), boundary-accounting (I2), recoverability (I3), interfaces-from-boundaries (I4), functoriality over every comparable pair of the listed cuts (I5), kind-preservation (I6) and determinism (I7). Each is recomputed from the relationships independently of how the derived model is assembled. Violated with the faults; decided by the model.',
+    params: {
+      cuts: { type: 'ids:cut', doc: 'The cuts checked. Default: every declared cut.' },
+      invariants: { type: 'strings', doc: 'The invariants checked, by name. Default: all seven.' },
+    },
+  },
+  'extraction-reconciled': {
+    kinds: ['structural'],
+    doc: 'The declared relationships agree with the facts extracted from the implementation (tools/extract.js, read as data with provenance extracted): inside the extraction surface no declared static dependency is redundant (the extracted fact carries the edge), unwitnessed, reversed or of another kind, and every extracted file belongs to a module element. An extracted dependency with no declared counterpart is not a discrepancy, since the extracted fact is the dependency. Static structure only: runtime wiring stays declared and is not compared. Violated with the discrepancies; decided by the model and the facts.',
+    params: {},
   },
   'external-evidence': {
     kinds: ['measured', 'structural', 'invariant', 'temporal'],

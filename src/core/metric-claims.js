@@ -1,12 +1,13 @@
 // The metric-bound claim method (format 2, WG-4715; docs/simulation.md, "Claims over metrics"):
 // run each scenario once per run seed in metrics mode, take one statistic per run from the trace's
 // measured outputs, decide by the exact binomial test (op and bound) or the sign-test interval
-// (approx), and combine the scenarios with the negatives into a status that is model-holds,
-// violated or inconclusive, never verified or supported. Pure: the engine is passed in as a
+// (approx), and turn the scenarios and the negatives into facts from which Lean decides the status
+// (model-holds, violated or inconclusive, never verified or supported). The engine is passed in as a
 // function from engine-input text to trace, so this module runs on the WebAssembly engine, the
 // native binary or the Lean executable alike.
 
-import { claimStatus, evaluateRuns, parseRational, rat, runSeed, underpowered } from './metric-stats.js';
+import { decideStatuses } from './verdict.js';
+import { evaluateRuns, parseRational, rat, runSeed, underpowered } from './metric-stats.js';
 
 /** @typedef {import('./metric-stats.js').Rational} Rational */
 /** @typedef {import('./metric-stats.js').RunStatistic} RunStatistic */
@@ -194,8 +195,9 @@ export function evaluateScenario(run, input, claim) {
 }
 
 /**
- * Evaluate a metric-bound claim: every scenario must hold, every negative fail and every control
- * negative hold.
+ * Evaluate a metric-bound claim: run every scenario, negative and control negative and test each. The claim's
+ * status is not decided here: it is decided in Lean from the facts these results make (metricVerdictInput), the
+ * claim holding only when every scenario holds, every negative fails and every control negative holds.
  * @param {EngineRun} run
  * @param {{scenarios: any[], negatives?: any[], controlNegatives?: any[]}} inputs engine inputs
  * @param {Parameters<typeof evaluateScenario>[2]} claim
@@ -204,6 +206,38 @@ export function evaluateMetricClaim(run, inputs, claim) {
   const scenarios = inputs.scenarios.map((i) => evaluateScenario(run, i, claim));
   const negatives = (inputs.negatives ?? []).map((i) => evaluateScenario(run, i, claim));
   const controlNegatives = (inputs.controlNegatives ?? []).map((i) => evaluateScenario(run, i, claim));
-  const status = claimStatus(scenarios, negatives, controlNegatives);
-  return { ...status, scope: 'model only; parameters as stated', runs: claim.runs, fraction: String(claim.fraction ?? '0.95'), confidence: String(claim.confidence ?? '0.95'), scenarios, negatives, controlNegatives };
+  return { scope: 'model only; parameters as stated', runs: claim.runs, fraction: String(claim.fraction ?? '0.95'), confidence: String(claim.confidence ?? '0.95'), scenarios, negatives, controlNegatives };
+}
+
+/**
+ * The facts a metric claim's results make, for the Lean verdict (src/core/verdict.js): the claim is the
+ * conjunction of one part per scenario (its statistical test passed, failed or could not decide), per negative
+ * (passed when the negative fails, as it must; undecided otherwise) and per control negative (passed when it
+ * holds). The first part is named after the claim, so that facts about the claim as a whole can target it.
+ * @param {{scenarios: {verdict: string}[], negatives: {verdict: string}[], controlNegatives: {verdict: string}[]}} result
+ * @param {string} claimId @param {string[]} [assumptions] @param {string} [stamp] the model's semantic hash
+ * @returns {{claim: import('./verdict.js').VerdictClaim, facts: import('./verdict.js').Fact[], parts: {id: string, role: string, index: number}[]}}
+ */
+export function metricVerdictInput(result, claimId, assumptions = [], stamp = 'model') {
+  /** @type {{id: string, role: string, index: number, outcome: import('./verdict.js').FactOutcome}[]} */
+  const parts = [];
+  const outcome = (/** @type {string} */ v, /** @type {string} */ wanted) => (v === wanted ? 'pass' : v === 'fails' && wanted === 'holds' ? 'fail' : 'undecided');
+  result.scenarios.forEach((s, i) => parts.push({ id: i === 0 ? claimId : `${claimId}#scenario-${i}`, role: 'scenario', index: i, outcome: outcome(s.verdict, 'holds') }));
+  result.negatives.forEach((s, i) => parts.push({ id: `${claimId}#negative-${i}`, role: 'negative', index: i, outcome: s.verdict === 'fails' ? 'pass' : 'undecided' }));
+  result.controlNegatives.forEach((s, i) => parts.push({ id: `${claimId}#control-${i}`, role: 'control', index: i, outcome: s.verdict === 'holds' ? 'pass' : 'undecided' }));
+  if (!parts.length) parts.push({ id: claimId, role: 'scenario', index: 0, outcome: 'undecided' });
+  return {
+    claim: { all: parts.map((p) => ({ part: p.id, subject: /** @type {const} */ ('model'), assumptions })) },
+    facts: parts.map((p) => ({ kind: /** @type {const} */ ('statistical'), subject: /** @type {const} */ ('model'), target: { part: p.id }, stamps: { recorded: stamp, current: stamp }, outcome: p.outcome })),
+    parts: parts.map(({ id, role, index }) => ({ id, role, index })),
+  };
+}
+
+/**
+ * The Lean verdict of a metric claim's results on their own (no evidence, no assumptions): what the fixtures check.
+ * @param {Parameters<typeof metricVerdictInput>[0]} result
+ */
+export function metricVerdict(result) {
+  const input = metricVerdictInput(result, 'metric-claim');
+  return decideStatuses([{ claim: input.claim, facts: input.facts }])[0];
 }

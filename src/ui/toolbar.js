@@ -376,14 +376,43 @@ export function mountToolbar(el, session, shellApi) {
       ? `Automatic: chose "${used?.label ?? info.used}" for this scene and viewport. Scores (lower is better): ${scores}. Position is presentation only.`
       : `${used?.description ?? ''} Position is presentation only.`;
   });
+  // The level a structural view shows: the hierarchy it is drawn in and the cut (a declared one, the view's default, or
+  // the interactive cut expanding and collapsing blocks has made). Interaction state, per view; the model is untouched.
+  const hierarchySelect = /** @type {HTMLSelectElement} */ (h('select', {
+    class: 'appbar__select appbar__select--level', 'data-testid': 'hierarchy-select', 'aria-label': 'Hierarchy', title: 'The hierarchy this view is drawn in',
+    onchange: () => session.setHierarchy(hierarchySelect.value),
+  }));
+  const cutSelect = /** @type {HTMLSelectElement} */ (h('select', {
+    class: 'appbar__select appbar__select--level', 'data-testid': 'cut-select', 'aria-label': 'Cut', title: 'The level this view shows: a declared cut, or the cut expanding and collapsing blocks has made',
+    onchange: () => { if (cutSelect.value === '*default') session.resetCut(); else if (cutSelect.value && !cutSelect.value.startsWith('*')) session.setCut(cutSelect.value); },
+  }));
+  track(['project', 'view', 'ui', 'scene'], () => {
+    const nav = session.currentCut?.() ?? null;
+    hierarchySelect.disabled = cutSelect.disabled = !nav;
+    hierarchySelect.hidden = cutSelect.hidden = !nav;
+    if (!nav) return;
+    const hs = /** @type {string[]} */ (session.hierarchies());
+    if (hierarchySelect.dataset.sig !== hs.join('|')) {
+      hierarchySelect.dataset.sig = hs.join('|');
+      clear(hierarchySelect);
+      for (const id of hs) hierarchySelect.append(h('option', { value: id }, `Hierarchy: ${id}`));
+    }
+    hierarchySelect.value = nav.hierarchy;
+    clear(cutSelect);
+    const cuts = (session.model?.byKind.cut ?? []).filter((/** @type {any} */ c) => (typeof c.data.hierarchy === 'string' ? c.data.hierarchy : 'logical') === nav.hierarchy);
+    if (!nav.cut) cutSelect.append(h('option', { value: '*interactive' }, `Cut: interactive (${nav.blocks.length} blocks)`));
+    for (const c of cuts) cutSelect.append(h('option', { value: c.id, title: typeof c.data.description === 'string' ? c.data.description : '' }, `Cut: ${typeof c.data.name === 'string' ? c.data.name : c.id}`));
+    cutSelect.append(h('option', { value: '*default' }, "Cut: this view's default"));
+    cutSelect.value = nav.cut ?? '*interactive';
+  });
   const pinnedIds = () => {
-    const positions = session.project?.layout?.views?.[session.viewId]?.positions ?? {};
+    const positions = session.project?.layout?.views?.[session.layoutKey?.() ?? session.viewId]?.positions ?? {};
     return Object.keys(positions).filter((id) => session.model?.entities.has(id));
   };
   const resetBtn = tool({ testid: 'reset-layout', icon: 'restart', label: 'Reset layout', title: 'Return every pinned node of this view to automatic layout', onclick: () => {
     const ids = pinnedIds();
     if (!ids.length) return;
-    session.apply(ids.map((id) => ({ type: 'MovePresentationNode', view: session.viewId, id, reset: true })), { label: 'Reset layout' });
+    session.apply(ids.map((id) => ({ type: 'MovePresentationNode', view: session.layoutKey?.() ?? session.viewId, id, reset: true })), { label: 'Reset layout' });
   } });
 
   // Overlay cards: the legend and the render statistics.
@@ -504,6 +533,7 @@ export function mountToolbar(el, session, shellApi) {
     saveLine,
     menuOnly('History', mUndo, mRedo),
     group('Edit', h('div', { class: 'appbar__segment', role: 'group', 'aria-label': 'Interaction mode' }, modeSelect, modeConnect), newBtn, delBtn),
+    group('Level', hierarchySelect, cutSelect),
     group('Layout', layoutSelect, resetBtn),
     menuOnly('Camera', mPersp, mTop, mFit),
     group('Overlay', legendBtn, statsBtn),

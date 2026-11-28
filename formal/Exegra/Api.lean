@@ -1,6 +1,7 @@
 import Exegra.Api.Basic
 import Exegra.Api.Engine
 import Exegra.Api.Model
+import Exegra.Api.Verdict
 
 /-!
 The one entry point of the Lean core for the JavaScript shell (`src/core/lean.js`): a JSON
@@ -18,7 +19,7 @@ a name.
 namespace Exegra.Api
 
 /-- The functions of the module ports, in lookup order. -/
-def modules : List Entry := Engine.entries ++ ModelPort.entries
+def modules : List Entry := Engine.entries ++ ModelPort.entries ++ VerdictPort.entries
 
 def functionsDoc : String := "The registered functions, [{name, doc}], in lookup order."
 
@@ -69,15 +70,17 @@ theorem registry_names_nodup : (registry.map (·.name)).Nodup := by decide
 /-- The engine at the boundary is the implementation `exegra-lean` runs, on the parsed input. -/
 theorem call_engine_run (v : Value) : call "engine.run" v = Impl.runAnyValue v := rfl
 
-/-- The engine at the boundary computes the definition of the semantics (`Exegra.runAnyValue`,
-the function the theorems of `Exegra/Properties.lean` are about), by the refinement theorem
-`Impl.runAnyValue_eq`. -/
+/-- The engine at the boundary computes the definition's dispatch (`Exegra.runAnyValue`,
+`Exegra/Format2B.lean`), by the refinement theorem `Impl.runAnyValue_eq`. That is all this states:
+for an input the elaborator accepts the definition runs `traceOfB`, the fold of the calculus
+scheduler (`V2.runB_terminates`, `V2.runB_reach`); an input outside the fragment runs the legacy
+interpreter, about which no theorem of the calculus says anything; a version-1 input is refused. -/
 theorem call_engine_run_spec (v : Value) : call "engine.run" v = runAnyValue v :=
   Impl.runAnyValue_eq v
 
-theorem call_engine_explore (v : Value) : call "engine.explore" v = exploreValue v := rfl
+theorem call_engine_explore (v : Value) : call "engine.explore" v = V2.ProveB.exploreValue v := rfl
 
-theorem call_engine_temporal (v : Value) : call "engine.temporal" v = temporalValue v := rfl
+theorem call_engine_temporal (v : Value) : call "engine.temporal" v = V2.ProveB.temporalValue v := rfl
 
 /-- `exegra-lean`'s engine is the boundary's `engine.run` after parsing its input text. -/
 theorem implRunAny_eq_parse_call (text : String) :
@@ -95,6 +98,13 @@ theorem call_model_derive (v : Value) : call "model.derive" v = Model.deriveValu
 /-- **Model derivation is total at the boundary**: `model.derive` answers every argument value
 with a result, never with an error (and, being a Lean definition, always returns). -/
 theorem call_model_derive_total (v : Value) : ∃ out, call "model.derive" v = .ok out := ⟨_, rfl⟩
+
+/-- `claims.status` at the boundary is the verdict of `Exegra.Verdict.status`, written as JSON. -/
+theorem call_claims_status (v : Value) : call "claims.status" v = Verdict.statusValue v := rfl
+
+/-- `verdict.isRegression` at the boundary is `Exegra.Verdict.isRegression` over each pair. -/
+theorem call_verdict_isRegression (v : Value) :
+    call "verdict.isRegression" v = Verdict.regressionValue v := rfl
 
 /-- `hash.semantic` at the boundary computes the definition of the semantic hash
 (`Exegra.Hash.semanticHash`) of the declarations it is given, by `Hash.semanticHash'_eq`. -/

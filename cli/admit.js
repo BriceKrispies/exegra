@@ -7,24 +7,21 @@ import { readinessGaps } from '../src/core/readiness.js';
 import { CLAIM_METHODS } from '../src/core/claim-methods.js';
 import { durationNs } from '../src/core/constructs.js';
 import { claimStrength, strengthCounts, VACUOUS_CHECKS } from '../src/core/claim-strength.js';
+import { isRegression, statusOf } from '../src/core/verdict.js';
+import { call } from '../src/core/lean.js';
+import { specChanges } from '../src/core/impact.js';
 
 /** @typedef {import('../src/core/types.js').Model} Model */
 /** @typedef {import('../src/core/types.js').Diagnostic} Diagnostic */
 
-/**
- * Claim statuses ranked best to worst. A claim whose status falls to a lower rank has regressed.
- * supported and model-holds share a rank; so do inconclusive and not-evaluated, both undecided. A fall from
- * a positive status to not-evaluated (a stale or missing fact, a check that no longer runs) is a regression
- * like any other; a positive claim that is removed is the reason admit.claim-removed.
- * @type {Record<string, number>}
- */
-export const CLAIM_RANK = { proved: 5, verified: 4, supported: 3, 'model-holds': 3, inconclusive: 2, 'not-evaluated': 2, violated: 1 };
-
-/** Statuses that assert something holds. */
+/** Statuses that assert something holds (the words Lean shows a positive strength with). */
 export const POSITIVE_STATUSES = new Set(['proved', 'verified', 'supported', 'model-holds']);
 
 /** Statuses a claim created by the change may have. */
 const STRONG = new Set(['proved', 'verified']);
+
+/** A status tuple in words. @param {any} v */
+const verdictText = (v) => (v ? `${v.strength}, ${v.subject}, ${v.freshness}${v.openAssumptions?.length ? `, open: ${v.openAssumptions.join(', ')}` : ''}` : 'no status');
 
 /** @param {string} a @param {string} b */
 const byText = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -34,9 +31,9 @@ const byText = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
  * @param {Model} model @param {Diagnostic[]} diagnostics @param {any[]} claimResults results of evaluateClaims for the model
  */
 export function snapshot(model, diagnostics, claimResults) {
-  /** @type {Map<string, {id: string, status: string, explanation: string}>} */
+  /** @type {Map<string, {id: string, status: string, explanation: string, verdict?: import('../src/core/verdict.js').Status}>} */
   const claims = new Map();
-  for (const r of claimResults) claims.set(r.claimId, { id: r.claimId, status: r.status, explanation: r.explanation ?? '' });
+  for (const r of claimResults) claims.set(r.claimId, { id: r.claimId, status: r.status, explanation: r.explanation ?? '', ...(r.verdict ? { verdict: statusOf(r.verdict) } : {}) });
   /** @type {Map<string, any>} */
   const errors = new Map();
   /** @type {Map<string, any>} */
@@ -84,22 +81,34 @@ function delta(before, after) {
 /**
  * Compare two snapshots and decide.
  * @param {Snapshot} before @param {Snapshot} after
- * @param {{accept?: string[]}} [options] accept: reason codes the caller acknowledges (see acknowledge)
+ * @param {{accept?: string[], theorems?: {old: Record<string, any>, new: Record<string, any>}}} [options] accept:
+ *   reason codes the caller acknowledges, and claim ids whose theorem weakening it accepts (see acknowledge);
+ *   theorems: the Lean theorem checks recorded before the change and made after it (theoremChanges)
  */
 export function compare(before, after, options = {}) {
   const ids = [...new Set([...before.claims.keys(), ...after.claims.keys()])].sort(byText);
   /** @type {any[]} */ const changed = [];
   /** @type {any[]} */ const added = [];
   /** @type {any[]} */ const removed = [];
+  // Whether a move is a regression is decided in Lean (Exegra.Verdict.isRegression): a removal, or a new status
+  // that is not at least the old one in the status order.
+  const kept = ids.filter((id) => before.claims.get(id)?.verdict && after.claims.get(id)?.verdict);
+  const index = new Map(kept.map((id, i) => [id, i]));
+  const moves = isRegression(kept.flatMap((id) => {
+    const b = /** @type {any} */ (before.claims.get(id)).verdict;
+    const a = /** @type {any} */ (after.claims.get(id)).verdict;
+    return [{ old: b, new: a }, { old: a, new: b }];
+  }));
   for (const id of ids) {
     const b = before.claims.get(id);
     const a = after.claims.get(id);
     if (b && a) {
-      if (b.status !== a.status) {
-        const rb = CLAIM_RANK[b.status];
-        const ra = CLAIM_RANK[a.status];
-        const direction = rb === undefined || ra === undefined ? 'unranked' : ra < rb ? 'worse' : ra > rb ? 'better' : 'same-rank';
-        changed.push({ id, before: b.status, after: a.status, direction, explanation: a.explanation });
+      const i = index.get(id);
+      const worse = i !== undefined ? moves[2 * i] : false;
+      const back = i !== undefined ? moves[2 * i + 1] : false;
+      if (b.status !== a.status || worse || back) {
+        const direction = i === undefined ? 'unranked' : worse && back ? 'incomparable' : worse ? 'worse' : back ? 'better' : 'same';
+        changed.push({ id, before: b.status, after: a.status, direction, regression: worse, explanation: a.explanation, ...(b.verdict ? { beforeVerdict: b.verdict } : {}), ...(a.verdict ? { afterVerdict: a.verdict } : {}) });
       }
     } else if (a) added.push({ id, status: a.status, explanation: a.explanation });
     else if (b) removed.push({ id, status: b.status });
@@ -112,12 +121,15 @@ export function compare(before, after, options = {}) {
   /** @type {{code: string, message: string, id?: string, [k: string]: any}[]} */
   const reasons = [];
   for (const c of changed) {
-    if (c.direction === 'worse') reasons.push({ code: 'admit.claim-regressed', id: c.id, before: c.before, after: c.after, message: `Claim "${c.id}" moved from ${c.before} to ${c.after}.` });
+    if (c.regression) reasons.push({ code: 'admit.claim-regressed', id: c.id, before: c.before, after: c.after, message: `Claim "${c.id}" moved from ${c.before} to ${c.after}${c.before === c.after ? ` (${verdictText(c.beforeVerdict)} to ${verdictText(c.afterVerdict)})` : ''}.` });
   }
-  // Removing a claim that held takes a guarantee away: a reason, which the caller may accept explicitly
-  // (--accept admit.claim-removed) when the removal is the decision.
+  // Removing a claim takes away what it established (Exegra.Verdict.isRegression counts every removal): a reason,
+  // which the caller may accept explicitly (--accept admit.claim-removed) when the removal is the decision.
+  const removedWith = removed.filter((r) => before.claims.get(r.id)?.verdict);
+  const removedMoves = isRegression(removedWith.map((r) => ({ old: /** @type {any} */ (before.claims.get(r.id)).verdict, new: null })));
   for (const r of removed) {
-    if (POSITIVE_STATUSES.has(r.status)) reasons.push({ code: 'admit.claim-removed', acknowledgeable: true, id: r.id, before: r.status, message: `Claim "${r.id}" was ${r.status} and the change removes it.` });
+    const i = removedWith.indexOf(r);
+    if (i >= 0 ? removedMoves[i] : POSITIVE_STATUSES.has(r.status)) reasons.push({ code: 'admit.claim-removed', acknowledgeable: true, id: r.id, before: r.status, message: `Claim "${r.id}" was ${r.status} and the change removes it.` });
   }
   for (const e of errors.new) reasons.push({ code: 'admit.new-error', id: e.entityId ?? undefined, diagnosticCode: e.code, message: `New validation error ${e.code}${e.entityId ? ` at "${e.entityId}"` : ''}: ${e.message}` });
   for (const v of violations.new) {
@@ -128,6 +140,8 @@ export function compare(before, after, options = {}) {
   const privilege = privilegeChanges(before.model, after.model);
   reasons.push(...privilege.reasons);
   reasons.push(...guaranteeChanges(before.model, after.model));
+  const theorems = theoremChanges(before.model, after.model, options.theorems?.old ?? {}, options.theorems?.new ?? {});
+  reasons.push(...theorems.reasons);
   const ack = acknowledge(reasons, options.accept ?? []);
   reasons.splice(0, reasons.length, ...ack.open);
   reasons.sort((x, y) => byText(x.code, y.code) || byText(x.id ?? '', y.id ?? '') || byText(x.message, y.message));
@@ -138,6 +152,10 @@ export function compare(before, after, options = {}) {
     acknowledged: ack.acknowledged,
     ...(ack.refused.length ? { refusedAccept: ack.refused } : {}),
     pendingRealisation: pending,
+    // Changes to what claims guarantee (a statement, an evaluate, a theorem's statement), listed apart from the diff.
+    guaranteeChanges: [...specChanges(before.model, after.model).guaranteeChanges, ...theorems.guaranteeChanges]
+      .sort((x, y) => byText(x.claim, y.claim) || byText(x.change, y.change)),
+    ...(theorems.notCompared.length ? { theoremsNotCompared: theorems.notCompared } : {}),
     diff: {
       claims: { changed, added, removed },
       privilege: { added: privilege.added, removed: privilege.removed },
@@ -149,7 +167,7 @@ export function compare(before, after, options = {}) {
       before: sideCounts(before),
       after: sideCounts(after),
       changedClaims: changed.length,
-      regressedClaims: changed.filter((c) => c.direction === 'worse').length,
+      regressedClaims: changed.filter((c) => c.regression).length,
       addedClaims: added.length,
       removedClaims: removed.length,
       newValidationErrors: errors.new.length,
@@ -181,9 +199,11 @@ export const NON_ACKNOWLEDGEABLE = new Set([
  */
 export function acknowledge(reasons, accept) {
   const accepted = new Set(accept);
-  const refused = [...accepted].filter((c) => NON_ACKNOWLEDGEABLE.has(c) || reasons.some((r) => r.code === c && r.acknowledgeable !== true)).sort(byText);
-  const open = reasons.filter((r) => !(r.acknowledgeable === true && accepted.has(r.code)));
-  const acknowledged = reasons.filter((r) => r.acknowledgeable === true && accepted.has(r.code));
+  const refused = [...accepted].filter((c) => NON_ACKNOWLEDGEABLE.has(c) || reasons.some((r) => r.code === c && (r.acknowledgeable !== true || r.acceptBy === 'claim'))).sort(byText);
+  // A reason accepted by claim (admit.theorem-weakened) is acknowledged only when --accept names its claim.
+  const ok = (/** @type {any} */ r) => r.acknowledgeable === true && (r.acceptBy === 'claim' ? accepted.has(r.id) : accepted.has(r.code));
+  const open = reasons.filter((r) => !ok(r));
+  const acknowledged = reasons.filter(ok);
   return { open, acknowledged, refused };
 }
 
@@ -386,6 +406,59 @@ export function guaranteeChanges(model0, model1) {
   return reasons;
 }
 
+// ---------------------------------------------------------------------------------------------------------
+// Theorem weakening (WG-5684, criterion 11): decided in Lean (Exegra.Impact.weakening).
+
+/**
+ * What a change does to the theorems of lean-theorem claims, between the check recorded before it (`oldTheorems`,
+ * the results file) and the check made after it (`newTheorems`, tools/lean-theorems.js on the changed tree). For
+ * each claim kept by the change whose theorem has a recorded check: a weakening is the reason
+ * admit.theorem-weakened, acknowledged only by `--accept <claim>`; a changed statement hash is a guarantee change.
+ * Lean decides both. A check recorded before statements were hashed with binder names erased (no hashVersion 2)
+ * cannot be compared by statement: the claim is listed in `notCompared` and only removal, axioms and about count.
+ * @param {any} model0 @param {any} model1 @param {Record<string, any>} oldTheorems @param {Record<string, any>} newTheorems
+ */
+export function theoremChanges(model0, model1, oldTheorems, newTheorems) {
+  /** @type {{id: string, theorem: string, old: any, new: any, oldAbout: string[], newAbout: string[]}[]} */
+  const items = [];
+  /** @type {string[]} */
+  const notCompared = [];
+  const about = (/** @type {any} */ ev) => (Array.isArray(ev?.about) ? ev.about.filter((/** @type {any} */ a) => typeof a === 'string') : []);
+  for (const c of [...(model0?.byKind?.claim ?? [])].sort((a, b) => byText(a.id, b.id))) {
+    const ev0 = c.data.evaluate;
+    const ev1 = model1?.entities?.get(c.id)?.data?.evaluate;
+    if (ev0?.method !== 'lean-theorem' || ev1?.method !== 'lean-theorem' || typeof ev0.theorem !== 'string') continue;
+    const old = Object.hasOwn(oldTheorems, ev0.theorem) ? oldTheorems[ev0.theorem] : undefined;
+    if (!old || !old.found) continue;
+    const found = typeof ev1.theorem === 'string' && Object.hasOwn(newTheorems, ev1.theorem) ? newTheorems[ev1.theorem] : null;
+    // The superseding theorem counts only when the claim names it.
+    const fresh = found ? { ...found, supersedes: found.supersedes && found.supersedes.name === ev1.supersedes ? found.supersedes : null } : null;
+    let oldCheck = old;
+    if (fresh && old.hashVersion !== fresh.hashVersion) {
+      notCompared.push(c.id);
+      oldCheck = { ...old, statementHash: fresh.statementHash };
+    }
+    items.push({ id: c.id, theorem: ev1.theorem, old: oldCheck, new: fresh, oldAbout: about(ev0), newAbout: about(ev1) });
+  }
+  if (!items.length) return { reasons: [], guaranteeChanges: [], notCompared };
+  const r = call('theorem.weakening', { items: items.map(({ old, new: n, oldAbout, newAbout }) => ({ old, new: n, oldAbout, newAbout })) });
+  if (!r.ok) throw new Error(`The Lean theorem weakening check could not be computed: ${r.error}`);
+  const why = { removed: 'the theorem is gone', 'axioms-gained': 'its proof now depends on more axioms', 'about-changed': 'the constants it is about changed', 'statement-changed': 'its statement changed and no superseding theorem of type new statement -> old statement passes the Lean gate' };
+  /** @type {any[]} */
+  const reasons = [];
+  /** @type {any[]} */
+  const guarantee = [];
+  items.forEach((it, i) => {
+    const out = r.value[i];
+    if (out.weakened) {
+      reasons.push({ code: 'admit.theorem-weakened', acknowledgeable: true, acceptBy: 'claim', id: it.id, theorem: it.theorem, weakening: out.weakened,
+        message: `The change weakens the theorem "${it.theorem}" of claim "${it.id}": ${why[/** @type {keyof typeof why} */ (out.weakened)] ?? out.weakened}. Accept it explicitly with --accept ${it.id}.` });
+    }
+    if (out.statementChanged) guarantee.push({ claim: it.id, change: 'theorem-statement', before: it.old.statementHash ?? null, after: it.new?.statementHash ?? null });
+  });
+  return { reasons, guaranteeChanges: guarantee, notCompared };
+}
+
 // ---------------------------------------------------------------------------
 // Claim strength (WG-5274, WG-5276; decision dec-claim-check-and-grounding)
 // ---------------------------------------------------------------------------
@@ -463,32 +536,33 @@ export function counterexampleFingerprint(cx) {
 }
 
 /**
- * The baseline `exegra verify` records with a passing run: each claim's status and, for a violated one, the
- * fingerprint of its counterexample.
- * @param {{claimId: string, status: string, counterexample?: any}[]} claimResults
- * @returns {Record<string, {status: string, counterexample?: string}>}
+ * The baseline `exegra verify` records with a passing run: each claim's status word, the status tuple Lean decided
+ * (Exegra.Verdict.Status) and, for a violated one, the fingerprint of its counterexample.
+ * @param {{claimId: string, status: string, verdict?: import('../src/core/verdict.js').Status, counterexample?: any}[]} claimResults
+ * @returns {Record<string, {status: string, verdict?: import('../src/core/verdict.js').Status, counterexample?: string}>}
  */
 export function claimBaseline(claimResults) {
-  /** @type {Record<string, {status: string, counterexample?: string}>} */
+  /** @type {Record<string, {status: string, verdict?: import('../src/core/verdict.js').Status, counterexample?: string}>} */
   const out = {};
   for (const r of claimResults) {
     const fp = r.status === 'violated' ? counterexampleFingerprint(r.counterexample) : null;
-    out[r.claimId] = { status: r.status, ...(fp ? { counterexample: fp } : {}) };
+    out[r.claimId] = { status: r.status, ...(r.verdict ? { verdict: statusOf(r.verdict) } : {}), ...(fp ? { counterexample: fp } : {}) };
   }
   return out;
 }
 
 /**
- * What a verify run regressed against the baseline of the last passing run.
- * - verify.claim-regressed: a claim that was positive (proved, verified, supported, model-holds) now has a lower
- *   rank (CLAIM_RANK, so inconclusive and not-evaluated count); a fall to violated is reported here too unless the
- *   claim is expected to be violated.
- * - verify.claim-removed: a positive claim of the baseline no longer exists.
+ * What a verify run regressed against the baseline of the last passing run. Whether a move is a regression is
+ * decided in Lean (Exegra.Verdict.isRegression over the recorded status tuples).
+ * - verify.claim-regressed: a claim whose status is not at least its baseline status in the status order; a fall to
+ *   violated is not reported here when the claim is expected to be violated.
+ * - verify.claim-removed: a claim of the baseline no longer exists.
  * - verify.counterexample-changed: an expected-violated claim that was violated is violated with another
  *   counterexample, so the violation is no longer the known one.
- * A claim named in `accept` is not reported.
- * @param {Record<string, {status: string, counterexample?: string}>} baseline
- * @param {Record<string, {status: string, counterexample?: string}>} current
+ * A claim named in `accept` is not reported. A baseline entry without a status tuple (recorded before verdicts were
+ * decided in Lean) is not compared; the next passing run records the tuple.
+ * @param {Record<string, {status: string, verdict?: any, counterexample?: string}>} baseline
+ * @param {Record<string, {status: string, verdict?: any, counterexample?: string}>} current
  * @param {{expectViolated?: string[], accept?: string[]}} [options]
  * @returns {{code: string, id: string, before: string, after: string|null, message: string}[]}
  */
@@ -497,26 +571,29 @@ export function verifyRegressions(baseline, current, options = {}) {
   const accepted = new Set(options.accept ?? []);
   /** @type {{code: string, id: string, before: string, after: string|null, message: string}[]} */
   const out = [];
+  /** @type {{id: string, b: any, a: any}[]} */
+  const pending = [];
   for (const id of Object.keys(baseline).sort(byText)) {
     if (accepted.has(id)) continue;
     const b = baseline[id];
     if (!b || typeof b.status !== 'string') continue;
     const a = Object.hasOwn(current, id) ? current[id] : undefined;
-    if (!a) {
-      if (POSITIVE_STATUSES.has(b.status)) out.push({ code: 'verify.claim-removed', id, before: b.status, after: null, message: `Claim "${id}" was ${b.status} and no longer exists.` });
-      continue;
-    }
-    if (expected.has(id) && b.status === 'violated' && a.status === 'violated') {
+    if (a && expected.has(id) && b.status === 'violated' && a.status === 'violated') {
       if (b.counterexample && a.counterexample && b.counterexample !== a.counterexample) {
         out.push({ code: 'verify.counterexample-changed', id, before: b.status, after: a.status, message: `Claim "${id}" is expected to be violated, but its counterexample changed (${b.counterexample} to ${a.counterexample}): the violation is no longer the known one.` });
       }
       continue;
     }
-    if (!POSITIVE_STATUSES.has(b.status)) continue;
-    if (a.status === 'violated' && expected.has(id)) continue;
-    const rb = CLAIM_RANK[b.status];
-    const ra = CLAIM_RANK[a.status];
-    if (ra === undefined || ra < rb) out.push({ code: 'verify.claim-regressed', id, before: b.status, after: a.status, message: `Claim "${id}" moved from ${b.status} to ${a.status}.` });
+    if (a && a.status === 'violated' && expected.has(id)) continue;
+    if (!b.verdict || (a && !a.verdict)) continue;
+    pending.push({ id, b, a });
   }
-  return out;
+  const regressions = isRegression(pending.map((x) => ({ old: x.b.verdict, new: x.a ? x.a.verdict : null })));
+  pending.forEach((x, i) => {
+    if (!regressions[i]) return;
+    if (!x.a) out.push({ code: 'verify.claim-removed', id: x.id, before: x.b.status, after: null, message: `Claim "${x.id}" was ${x.b.status} and no longer exists.` });
+    else out.push({ code: 'verify.claim-regressed', id: x.id, before: x.b.status, after: x.a.status, message: `Claim "${x.id}" moved from ${x.b.status} to ${x.a.status}${x.b.status === x.a.status ? ` (${verdictText(x.b.verdict)} to ${verdictText(x.a.verdict)})` : ''}.` });
+  });
+  const order = { 'verify.claim-removed': 0, 'verify.counterexample-changed': 1, 'verify.claim-regressed': 2 };
+  return out.sort((x, y) => (order[/** @type {keyof typeof order} */ (x.code)] - order[/** @type {keyof typeof order} */ (y.code)]) || byText(x.id, y.id));
 }

@@ -1,0 +1,1479 @@
+// Part of the specification: claims, evidence.
+{
+  // ---- Claims ----------------------------------------------------------------------------
+  "claims": [
+    // ======== Structural claims (evaluated on this model's components and relationships)
+    {
+      "id": "core-independent-of-ui",
+      "kind": "structural",
+      "statement": "At cut l1 no block outside the semantic core is reached from the semantic core by a dependency relationship (depends-on, imports, invokes, composes, notifies, exercises, subscribes, reads, writes or submits-edits), directly or through any chain of them, except the JSONC parser library and the JavaScript runtime, which the core uses on purpose. The targets are everything outside the semantic core at that level, so a new top-level element is covered without being listed.",
+      "rationale": "The core must run unchanged in the browser and in Node and be testable without either. Stated at l1 with a complement selector, the claim covers every top-level element, including the markdown specification source, the external test runner, the SQLite engine, the composition root, the browser user and the Node.js runtime, which the earlier hand-written list of 12 targets omitted. Absence of a path between blocks transfers exactly to the components inside them. Two exceptions are stated with their reasons: the parser, the transactions and the spec layers parse JSONC with the jsonc-parser library, and the Lean call boundary runs the kernel on the JavaScript runtime. The data-flow relationship from the transaction system to the session (the commit event handed to the listener the session registered) is not a dependency and is not followed: the core knows its listeners only as callbacks.",
+      "subjects": ["semantic-core", "application", "visualization", "persistence", "threejs-library", "vite-dev-server", "browser-platform"],
+      "assumptions": [
+        "static-extractor-sound",
+        "extracted-facts-current"
+      ],
+      "evaluate": {
+        "method": "no-relationship",
+        "cut": "l1",
+        "from": "semantic-core",
+        "to": {
+          "outside": "semantic-core",
+          "except": [
+            {
+              "id": "jsonc-parser-library",
+              "reason": "A real dependency: the parser, the transactions and the spec layers parse JSONC with it (parser-depends-on-jsonc-parser, transactions-depends-on-jsonc-parser, spec-layers-depends-on-jsonc-parser)."
+            },
+            {
+              "id": "javascript-runtime",
+              "reason": "A real dependency: the Lean call boundary runs the kernel, compiled to WebAssembly, on the JavaScript runtime (lean-call-boundary-depends-on-javascript-runtime)."
+            }
+          ]
+        },
+        "kinds": [
+          "depends-on",
+          "imports",
+          "invokes",
+          "composes",
+          "notifies",
+          "exercises",
+          "subscribes",
+          "reads",
+          "writes",
+          "submits-edits"
+        ],
+        "transitive": true
+      }
+    },
+    {
+      "id": "core-dependencies-acyclic",
+      "kind": "structural",
+      "statement": "The dependency relationships among the components of the semantic core, of every kind that was a dependency before the interaction taxonomy and every kind that replaced calls (depends-on, imports, invokes, composes, notifies, exercises, subscribes, reads, writes, submits-edits), form no cycle.",
+      "rationale": "Checked on the declared component graph. This claim was violated on the previous declaration: the Lean call boundary dispatches model.derive and hash.semantic to the Lean definitions (lean-call-boundary-calls-model-derivation, lean-call-boundary-calls-model-hash), and the semantic hash component also held the JavaScript binding that calls the boundary (src/core/hash.js). The binding is now its own component, hash-binding, so the Lean kernel component model-hash no longer calls the boundary. The module graph of src/core (44 modules) has no cycle, checked by a script when this was corrected; that is not a checked claim, and the match between the declared edges and the imports is the assumption relationships-match-imports.",
+      "subjects": [
+        "semantic-core",
+        "parser",
+        "validator",
+        "transactions",
+        "claim-evaluator",
+        "simulation-engine"
+      ],
+      "assumptions": [
+        "static-extractor-sound",
+        "extracted-facts-current"
+      ],
+      "evaluate": {
+        "method": "acyclic",
+        "within": "semantic-core",
+        "kinds": [
+          "depends-on",
+          "imports",
+          "invokes",
+          "composes",
+          "notifies",
+          "exercises",
+          "subscribes",
+          "reads",
+          "writes",
+          "submits-edits"
+        ]
+      }
+    },
+    {
+      "id": "transactions-provide-apply-contract",
+      "kind": "structural",
+      "statement": "The transaction system provides a port with the apply-transaction contract.",
+      "subjects": ["transactions", "apply-transaction"],
+      "assumptions": [
+        "static-extractor-sound",
+        "extracted-facts-current"
+      ],
+      "evaluate": { "method": "has-port", "select": "transactions", "direction": "provides", "contract": "apply-transaction" }
+    },
+    // ======== Behavioral claims over Exegra's own edit flow (traces of the listed scenarios only)
+    {
+      "id": "edit-representations-equivalent",
+      "kind": "temporal",
+      "statement": "After a valid edit, at quiescence the scene (projection and renderer), the inspector and the source editor all show the revision of the transaction system, for a visual edit and for a source edit.",
+      "rationale": "The text is the single authority; the views are projections of the committed model and must not diverge from it. Checked on the final configuration of the listed traces only.",
+      "subjects": ["transactions", "projection-system", "scene-renderer", "inspector", "source-editor", "visual-edit-flow", "source-edit-flow"],
+      "assumptions": ["machines-abstract-the-code", "views-derive-from-committed-model", "tests-exercise-shipped-modules", "browser-tests-run-real-application", "recorded-results-reflect-current-code"],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "visual-edit-flow",
+          "source-edit-flow"
+        ],
+        "expr": "renderer-flow.shownRevision == transaction-flow.revision && projection-flow.shownRevision == transaction-flow.revision && inspector-flow.shownRevision == transaction-flow.revision && source-editor-flow.shownRevision == transaction-flow.revision",
+        "negatives": [
+          {
+            "scenario": "visual-edit-flow",
+            "faults": [
+              "publish-lost"
+            ]
+          },
+          {
+            "scenario": "source-edit-flow",
+            "faults": [
+              "publish-lost"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "file-matches-model-after-save",
+      "kind": "temporal",
+      "statement": "After a valid edit, at quiescence the file on disk holds the committed revision and the session reports saved, for a visual edit and for a source edit.",
+      "subjects": ["transactions", "session", "workspace-service", "visual-edit-flow", "source-edit-flow"],
+      "assumptions": ["machines-abstract-the-code", "views-derive-from-committed-model", "filesystem-honours-atomic-rename", "tests-exercise-shipped-modules", "browser-tests-run-real-application", "recorded-results-reflect-current-code"],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "visual-edit-flow",
+          "source-edit-flow"
+        ],
+        "expr": "workspace-flow.persistedRevision == transaction-flow.revision && session-flow.saveState == 'saved'",
+        "negatives": [
+          {
+            "scenario": "visual-edit-flow",
+            "faults": [
+              "disk-changed-externally"
+            ]
+          },
+          {
+            "scenario": "source-edit-flow",
+            "faults": [
+              "disk-changed-externally"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "refresh-follows-commit",
+      "kind": "temporal",
+      "statement": "Every projection refresh is preceded by a delivered transaction commit: views are refreshed from a committed model, never from a candidate.",
+      "subjects": ["transactions", "projection-system", "transaction-committed", "projection-refreshed", "visual-edit-flow", "source-edit-flow"],
+      "assumptions": ["machines-abstract-the-code", "views-derive-from-committed-model"],
+      "evaluate": {
+        "method": "precedes",
+        "scenarios": [
+          "visual-edit-flow",
+          "source-edit-flow"
+        ],
+        "first": {
+          "event": "transaction-committed"
+        },
+        "then": {
+          "event": "projection-refreshed"
+        },
+        "negatives": [
+          {
+            "scenario": "visual-edit-flow",
+            "faults": [
+              "refresh-before-commit"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "commit-only-after-validation",
+      "kind": "temporal",
+      "statement": "Every commit of an operation transaction (the edit flows modelled here) is preceded by a delivered validation-passed: no operation transaction commits without a validation with no errors.",
+      "rationale": "Scoped to operation transactions and replacement sources. Undo and redo restore text that was committed before and reload adopts any text that parses (including text with validation errors): all three commit without validating again, and the machines in this file do not model them.",
+      "subjects": ["transactions", "validator", "validation-passed", "transaction-committed", "visual-edit-flow", "source-edit-flow", "edit-with-disk-conflict"],
+      "assumptions": ["machines-abstract-the-code"],
+      "evaluate": {
+        "method": "precedes",
+        "scenarios": [
+          "visual-edit-flow",
+          "source-edit-flow",
+          "edit-with-disk-conflict"
+        ],
+        "first": {
+          "event": "validation-passed"
+        },
+        "then": {
+          "event": "transaction-committed"
+        },
+        "negatives": [
+          {
+            "scenario": "visual-edit-flow",
+            "faults": [
+              "commit-skips-validation"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "rejected-edit-changes-nothing",
+      "kind": "invariant",
+      "statement": "In the rejected edit, at every step the revision of the transaction system, of the projection, renderer, inspector and source editor and of the file on disk is still the initial revision, and the session still reports saved.",
+      "subjects": ["transactions", "projection-system", "scene-renderer", "inspector", "source-editor", "workspace-service", "rejected-edit"],
+      "assumptions": ["machines-abstract-the-code", "views-derive-from-committed-model", "tests-exercise-shipped-modules", "browser-tests-run-real-application", "recorded-results-reflect-current-code"],
+      "evaluate": {
+        "method": "state-invariant",
+        "scenarios": [
+          "rejected-edit"
+        ],
+        "expr": "transaction-flow.revision == 1 && projection-flow.shownRevision == 1 && renderer-flow.shownRevision == 1 && inspector-flow.shownRevision == 1 && source-editor-flow.shownRevision == 1 && workspace-flow.persistedRevision == 1 && session-flow.saveState == 'saved'",
+        "negatives": [
+          {
+            "scenario": "rejected-edit",
+            "faults": [
+              "reject-partially-applied"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    // ======== Claims the model cannot establish; they rest on executed tests only
+    {
+      "id": "layout-moves-are-not-semantic",
+      "kind": "invariant",
+      "statement": "Moving a node changes only the layout file: the semantic hash and the specification text cannot change.",
+      "subjects": [
+        "transactions",
+        "layout-file",
+        "specification-file",
+        "composition-root"
+      ],
+      "assumptions": ["tests-exercise-shipped-modules", "browser-tests-run-real-application", "recorded-results-reflect-current-code"],
+      "evaluate": { "method": "external-evidence" }
+    },
+    {
+      "id": "undo-saved-to-disk",
+      "kind": "temporal",
+      "statement": "After an edit and its undo, the model holds the original text, the file on disk holds it too and the session reports saved.",
+      "subjects": [
+        "transactions",
+        "session",
+        "workspace-service",
+        "undo-restores-and-saves"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "undo-restores-and-saves"
+        ],
+        "expr": "project-history-flow.specHash == 'h1' && workspace-disk-flow.diskSpec == project-history-flow.specHash && project-session-flow.saveState == 'saved'",
+        "negatives": [
+          {
+            "scenario": "undo-restores-and-saves",
+            "faults": [
+              "session-skips-flush-on-undo"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "undo-restores-earlier-text",
+      "kind": "invariant",
+      "statement": "Whenever a step can be redone, the model holds the text from before the undone edit.",
+      "subjects": [
+        "transactions",
+        "undo-restores-and-saves"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "state-invariant",
+        "scenarios": [
+          "undo-restores-and-saves"
+        ],
+        "expr": "project-history-flow.redoDepth == 1 => project-history-flow.specHash == 'h1'",
+        "negatives": [
+          {
+            "scenario": "undo-restores-and-saves",
+            "faults": [
+              "undo-keeps-text"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "layout-move-writes-layout-only",
+      "kind": "temporal",
+      "statement": "A dragged node is saved to layout.jsonc and spec.jsonc is not written.",
+      "subjects": [
+        "transactions",
+        "session",
+        "layout-file",
+        "layout-move-saved"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "layout-move-saved"
+        ],
+        "expr": "workspace-disk-flow.diskLayout == 'L2' && workspace-disk-flow.specWrites == 0 && project-session-flow.saveState == 'saved'",
+        "negatives": [
+          {
+            "scenario": "layout-move-saved",
+            "faults": [
+              "move-edits-spec"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "core-logic-in-lean",
+      "kind": "structural",
+      "statement": "Every implemented component of the verified kernel (facet verdict-kernel, the components tagged verdict-kernel: the code that decides whether a claim holds, namely model derivation, the semantic hash, engine-input derivation, the engine, the explorer and temporal checker, claim verdicts and their helpers, and transactions) is implemented in Lean, so the claims about the kernel are theorems about the code that runs. Everything else (layout, projections, scene, generators, UI, live replay, request-log rendering, command-line arguments, workspace I/O, the JSONC text layer) is JavaScript outside the verdict path.",
+      "subjects": [
+        "semantic-core"
+      ],
+      "assumptions": [
+        "static-extractor-sound",
+        "extracted-facts-current"
+      ],
+      "rationale": "Decision of 2026-11-18 (WG-4799, programme WG-4785): a small verified kernel. Violated until every kernel component is Lean: the result lists the ones that are not (claim verdicts WG-4801, engine-input derivation WG-4800, transactions WG-4802). The JavaScript outside the kernel is named in the trusted base (trusted-js-shell) as outside the verdict path, not as a gap.",
+      "evaluate": {
+        "method": "implementation-language",
+        "select": {
+          "facet": "verdict-kernel"
+        },
+        "language": "lean",
+        "plannedBy": "WG-4785"
+      }
+    },
+    {
+      "id": "model-references-resolve",
+      "kind": "invariant",
+      "statement": "In a derived model whose diagnostics contain no reference diagnostic (ref.unresolved, ref.kind), every reference names an entity of the model whose kind the reference allows.",
+      "subjects": [
+        "model-derivation"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "Theorem of formal/Exegra/ModelProps.lean (WG-4799) about the derivation that runs: the diagnostics are the derivation's own followed by one per reference that does not resolve.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Model.derive_refs_resolve",
+        "about": [
+          "Exegra.Model.derive"
+        ]
+      }
+    },
+    {
+      "id": "model-derivation-total",
+      "kind": "structural",
+      "statement": "Model derivation at the Lean call boundary (model.derive) answers every argument value with a result, never with an error, and always returns.",
+      "subjects": [
+        "model-derivation",
+        "lean-call-boundary"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "Theorem of formal/Exegra/Api.lean (WG-4799). Every definition of the derivation is total (none is partial); recursion over the document is bounded by fuel (see the unknowns of model-derivation).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Api.call_model_derive_total",
+        "about": [
+          "Exegra.Api.call"
+        ]
+      }
+    },
+    {
+      "id": "model-derivation-matches-javascript",
+      "kind": "structural",
+      "statement": "The Lean model derivation and semantic hash give the diagnostics, model and hash of the JavaScript parser they replaced on every specification the tests read (specs/exegra, specs/benchmark, tests/fixtures) and on every specification text the core tests parse, the invalid ones included.",
+      "subjects": [
+        "model-derivation",
+        "model-hash",
+        "parser"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel",
+        "trusted-lean-compiler-runtime",
+        "trusted-emscripten-toolchain",
+        "trusted-libuv",
+        "trusted-js-glue",
+        "trusted-wasm-engine"
+      ],
+      "rationale": "Differential test against the JavaScript kept as an oracle in tests/oracle/parse-reference.js (WG-4799): 206 captured texts, 81 of them with diagnostics, plus edge cases for repeated keys, array-index keys, non-ASCII keys and unusual numbers. Checked once by hand against the 28 semantic hashes stored in specs/exegra/generated/manifest.json over its history and the 63 versions of the specifications in git: all equal.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "product-layers-checked",
+      "kind": "structural",
+      "statement": "A project's product files (project.jsonc \"products\") are validated together with the platform specification: a product that imports the platform and declares only the allowed sections passes, and each of these is refused with its own named rule, whose message names the offending id or section and says how to fix it: an imported id the platform does not declare (layer.import-unknown), a redefinition of a platform entity or of another product's (layer.redefines-entity), a section a product may not declare (layer.kind-not-allowed), a platform entity used without being imported (layer.import-missing), a reference nothing declares (layer.reference-unknown), a missing header (layer.header-missing), an import of another platform file (layer.import-mismatch) a reference into another product (layer.cross-product-reference), two product files with one product id (layer.product-id-duplicate), an entity id that fails the id pattern or is missing (layer.entity-id-invalid, layer.entity-id-missing) and a platform entity that names a product entity (layer.platform-references-product). A platform entity named under any reference key of the meta-model requires an import. Transactions edit only the platform text and refuse a product's entities (layer.product-entity).",
+      "subjects": [
+        "spec-layers",
+        "workspace-service",
+        "transactions"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/layers.test.js (the ev-layers-* evidence entries) over the fixtures in tests/fixtures/layers.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "product-layers-leave-platform-unchanged",
+      "kind": "structural",
+      "statement": "Adding product files to a project changes neither the platform's parsed model (every platform entity keeps its data, path and location) nor its semantic hash: validate reports the hash of the platform text alone as semanticHash, and the combined model's hash as layeredHash.",
+      "subjects": [
+        "spec-layers",
+        "transactions"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/layers.test.js (the ev-layers-platform-* evidence entries). Code generated from the platform carries this hash in its headers, so it stays byte-identical when a product is added.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "product-layers-no-platform-power",
+      "kind": "structural",
+      "statement": "A product file cannot claim what only the platform may have: a role at platform level or with anonymous, service or external holders, a contract that is public with the anonymous scheme, is implemented by a platform component or carries a realisation of generated, hand or derived, a behavior at implementation level, an event that is a domain event, an elapsed-time event or states a delivery guarantee, a capability that is core and a setting that is set at or locked by the platform level are each refused with layer.platform-power, naming the entity and the fix. specc refuses the same product files with the same rule codes.",
+      "subjects": [
+        "spec-layers"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/layers.test.js (the ev-layers-power evidence entry) over the negative fixtures in tests/fixtures/layers/refused.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "product-layers-typed-sections",
+      "kind": "structural",
+      "statement": "A product file may declare the typed sections objects, policies, queries, views, workflows, segments, settings, ledgerUnits, ledgerPools, ledgerLimits, mailTemplates, noticeTemplates, tokens, triggers, automations and operations, each value of which is checked against the platform type its section maps to (object-type-def, policy-def, query-def, view-def, workflow-def, segment-decl, setting-def, ledger-unit-decl, ledger-pool-decl, ledger-limit, mail-template-decl, notice-template-decl, token-decl, trigger-def, automation-def, tenant-operation-def): a value that does not have the shape of its type is refused with layer.value-invalid, a union value the platform union lacks with layer.outside-catalogue, and a name in the product namespace that no product entity declares with layer.reference-unknown or that another product declares with layer.cross-product-reference. The typed sections are not entities of the combined model and do not change the platform semantic hash. specc reads the same table and gives the same rule codes.",
+      "subjects": [
+        "spec-layers"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/layers.test.js and tests/core/layer-values.test.js (the ev-layers-typed-* evidence entries) over the complete products tests/fixtures/layers/typed and the negative fixtures in tests/fixtures/layers/refused.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "product-layers-namespace",
+      "kind": "structural",
+      "statement": "Every entity id of a product file begins with the namespace of its product, the product id with each hyphen replaced by an underscore followed by two underscores, and a local name; an id outside it is refused with layer.namespace-missing. A capability a product declares is confined to that product: another product file that names it is refused with layer.cross-product-reference, and a product capability is reported unreachable only when no role or grant confers it.",
+      "subjects": [
+        "spec-layers"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/layers.test.js (the ev-layers-namespace and ev-layers-capability evidence entries); D-6582, D-6590 and D-6597 of the platform specification.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "product-layers-expressions",
+      "kind": "structural",
+      "statement": "An expression written as text in a typed section of a product file (a policy condition, a trigger condition, an operation's check, a field default or read rule, a constraint, a segment predicate, an automation's expression) is parsed and checked with the tenant rule language in the scope it is written in: a text that does not parse, or uses a name or call the language lacks, is refused with layer.expr-syntax; a record field the object type of the scope lacks with layer.expr-unknown-field; a role neither the platform nor the product declares with layer.expr-unknown-role; a param the scope does not bind with layer.expr-unknown-param; and an operand of a shape its operator does not accept, a comparison of two shapes, or a hop through a field that is not a single reference with layer.expr-type. The nine operators of the language (checked + - *, a timestamp plus or minus milliseconds, ms_between, days, hours, minutes, concat, text) are parsed and typed as the language declares them, with the sign rule for a - before a digit. Each refusal names the product entity, the place and text, and the position in the text. specc gives the same rule codes.",
+      "subjects": [
+        "spec-layers"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/layer-expr.test.js and tests/core/layers.test.js (the ev-layers-expressions-* evidence entries) over the refused fixtures tests/fixtures/layers/refused/expression-*.jsonc and the complete products tests/fixtures/layers/typed.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "product-layers-retention",
+      "kind": "structural",
+      "statement": "An object type of a product file that has a field with a personal declaration and no retention rule is refused with layer.retention-missing (D-6584); a type without a personal field needs none. specc gives the same rule code.",
+      "subjects": [
+        "spec-layers"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/layers.test.js (ev-layers-retention) over tests/fixtures/layers/refused/retention-missing.jsonc and the complete products.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "batched-transaction-equals-per-operation",
+      "kind": "invariant",
+      "statement": "For the same operations, a transaction that re-derives the model once produces byte for byte the specification and layout text, the failure, the affected ids, the verdict and the diagnostics of a transaction that re-derives the model after every edit, and its index of declarations never differs from the model it describes.",
+      "rationale": "Evidence is a differential test over seeded random operation sequences (property edits and removals, creations, nested declarations, relationships, renames, deletions, claim edits, layout moves, failing operations) on a hand-written JSONC specification with comments and trailing commas, the benchmark specification and Exegra's own; EXEGRA_TX_DIFF_SPEC adds a large linked specification.",
+      "subjects": [
+        "transactions"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "transaction-derives-model-once",
+      "kind": "invariant",
+      "statement": "A transaction of property edits, creations, relationships, nested declarations and replacements of nested declarations derives the model of the specification once, when its result is analysed; a deletion or rename derives it once more, before its edits, and the operations after it need no further derivation.",
+      "rationale": "The derivation of a 7 MB specification takes about 2.6 s; re-deriving after every operation made a 100-operation apply take about 9 minutes.",
+      "subjects": [
+        "transactions"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "derivation-cache-transparent",
+      "kind": "structural",
+      "statement": "A derivation served from the cache is observably identical to one computed: validate and claims print byte-identical output on a hit and on a miss, the encoding rebuilds Maps, Sets, objects without a prototype, -0, shared references and cycles exactly, and with EXEGRA_NO_CACHE set nothing is read or written.",
+      "subjects": [
+        "derivation-cache"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/derivation-cache.test.js (the ev-derivation-cache-* evidence entries). WG-5636.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "derivation-cache-keyed-by-content",
+      "kind": "structural",
+      "statement": "A cached derivation is reused only for the same input contents and the same Exegra derivation sources: changing a specification file, the file the project config names or any source under src/core or src/engine/lean is a miss, and a missing, truncated or altered entry is a miss that is replaced, never an error.",
+      "subjects": [
+        "derivation-cache"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/derivation-cache.test.js (the ev-derivation-cache-* evidence entries). WG-5636.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "derivation-cache-concurrent-safe",
+      "kind": "structural",
+      "statement": "Processes sharing one cache directory at the same time all succeed with the same output and leave only whole entries: a write is a temporary file renamed into place.",
+      "subjects": [
+        "derivation-cache"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/derivation-cache.test.js (the ev-derivation-cache-* evidence entries). WG-5636.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "product-layers-share-platform-analysis",
+      "kind": "structural",
+      "statement": "Validating several sets of product files over one platform text in one process parses the platform text once, and every validation reports exactly what a validation of that set alone reports: the same errors, warnings, gaps, semantic hash and layered hash. The shared platform analysis is read-only, so no validation can alter what the next one sees.",
+      "subjects": [
+        "spec-layers"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/layers-cache.test.js (the ev-layers-cache-* evidence entries). The platform's parse, syntax tree and line index depend on its text alone; the combined text is still analysed in full for every set of product files.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "core-static-dependencies-acyclic",
+      "kind": "structural",
+      "statement": "The static dependencies (relationship kinds of class static: depends-on, imports) among the components of the semantic core form no cycle.",
+      "rationale": "The class-restricted companion of core-dependencies-acyclic: it follows only what a component names in its own code, so a cycle here is a real import cycle, not a call cycle.",
+      "subjects": [
+        "semantic-core"
+      ],
+      "assumptions": [
+        "static-extractor-sound",
+        "extracted-facts-current"
+      ],
+      "evaluate": {
+        "method": "acyclic",
+        "within": "semantic-core",
+        "classes": [
+          "static"
+        ]
+      }
+    },
+    {
+      "id": "core-runtime-dependencies-acyclic",
+      "kind": "structural",
+      "statement": "The runtime dependencies (relationship kinds of class runtime: invokes, calls, reads, writes, subscribes, submits-edits) among the components of the semantic core form no cycle.",
+      "rationale": "The runtime-control companion of core-dependencies-acyclic. Lifecycle composition, notification, data flow and test-harness relationships are not followed: they are not runtime dependencies of the target.",
+      "subjects": [
+        "semantic-core"
+      ],
+      "assumptions": [
+        "static-extractor-sound",
+        "extracted-facts-current"
+      ],
+      "evaluate": {
+        "method": "acyclic",
+        "within": "semantic-core",
+        "classes": [
+          "runtime"
+        ]
+      }
+    },
+    {
+      "id": "change-impact-remarks-dependents",
+      "kind": "invariant",
+      "statement": "For each change of the change-impact fixture alone, the claims re-marked are exactly the expected set, a statement edit is listed as a guarantee change, and exegra impact --change prints them.",
+      "subjects": [
+        "change-impact",
+        "claim-verdict",
+        "agent-cli"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      },
+      "guaranteeClass": "change-impact"
+    },
+    {
+      "id": "abstraction-witness-completeness",
+      "kind": "structural",
+      "statement": "Every derived interaction of every declared cut of this specification, with kinds as declared and coarsened to the top kinds, has a non-empty witness set, and re-lifting each of its witnesses gives exactly that interaction (I1).",
+      "rationale": "Decided by the model: src/core/abstraction.js recomputes the invariant from the relationships independently of how the derived model is assembled (abstractionInvariants). The same checks run over generated fact bases and hierarchies in tests/core/abstraction.test.js.",
+      "subjects": [
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "abstraction-invariants",
+        "invariants": [
+          "witness-completeness"
+        ]
+      }
+    },
+    {
+      "id": "abstraction-boundary-accounting",
+      "kind": "structural",
+      "statement": "At every declared cut, with and without coarsening, every relationship whose ends lie in different blocks is a witness of exactly one derived interaction, of its own kind or its coarsening (I2).",
+      "rationale": "Decided by the model: src/core/abstraction.js recomputes the invariant from the relationships independently of how the derived model is assembled (abstractionInvariants). The same checks run over generated fact bases and hierarchies in tests/core/abstraction.test.js.",
+      "subjects": [
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "abstraction-invariants",
+        "invariants": [
+          "boundary-accounting"
+        ]
+      }
+    },
+    {
+      "id": "abstraction-recoverability",
+      "kind": "structural",
+      "statement": "At every declared cut the fibres of the blocks together with the witness sets of the derived interactions are exactly the relationships of this specification, each once, so expanding recovers the facts a level omits (I3).",
+      "rationale": "Decided by the model: src/core/abstraction.js recomputes the invariant from the relationships independently of how the derived model is assembled (abstractionInvariants). The same checks run over generated fact bases and hierarchies in tests/core/abstraction.test.js.",
+      "subjects": [
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "abstraction-invariants",
+        "invariants": [
+          "recoverability"
+        ]
+      }
+    },
+    {
+      "id": "abstraction-interfaces-from-boundaries",
+      "kind": "structural",
+      "statement": "At every declared cut the boundary of each block is the set of relationships with exactly one end in it, and its derived interface is the grouping of that boundary by direction, kind and contract alone (I4).",
+      "rationale": "Decided by the model: src/core/abstraction.js recomputes the invariant from the relationships independently of how the derived model is assembled (abstractionInvariants). The same checks run over generated fact bases and hierarchies in tests/core/abstraction.test.js.",
+      "subjects": [
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "abstraction-invariants",
+        "invariants": [
+          "interfaces-from-boundaries"
+        ]
+      }
+    },
+    {
+      "id": "abstraction-functoriality",
+      "kind": "structural",
+      "statement": "For every pair of declared cuts of one hierarchy where one refines the other, deriving straight to the coarser cut equals deriving to the finer one and lifting from there, on interactions, witness sets, every summary attribute and fibres, also with kinds coarsened (I5).",
+      "rationale": "Decided by the model: src/core/abstraction.js recomputes the invariant from the relationships independently of how the derived model is assembled (abstractionInvariants). The same checks run over generated fact bases and hierarchies in tests/core/abstraction.test.js.",
+      "subjects": [
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "abstraction-invariants",
+        "invariants": [
+          "functoriality"
+        ]
+      }
+    },
+    {
+      "id": "abstraction-kind-preservation",
+      "kind": "structural",
+      "statement": "At every declared cut every derived kind is the kind of each of its witnesses or the declared coarsening of it (I6).",
+      "rationale": "Decided by the model: src/core/abstraction.js recomputes the invariant from the relationships independently of how the derived model is assembled (abstractionInvariants). The same checks run over generated fact bases and hierarchies in tests/core/abstraction.test.js.",
+      "subjects": [
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "abstraction-invariants",
+        "invariants": [
+          "kind-preservation"
+        ]
+      }
+    },
+    {
+      "id": "abstraction-determinism",
+      "kind": "structural",
+      "statement": "The derived model of every declared cut does not depend on the order the relationships are declared in (I7).",
+      "rationale": "Decided by the model: src/core/abstraction.js recomputes the invariant from the relationships independently of how the derived model is assembled (abstractionInvariants). The same checks run over generated fact bases and hierarchies in tests/core/abstraction.test.js.",
+      "subjects": [
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "abstraction-invariants",
+        "invariants": [
+          "determinism"
+        ]
+      }
+    },
+    {
+      "id": "derived-model-goldens",
+      "kind": "invariant",
+      "statement": "Through the command line, with no renderer code loaded, Exegra derives the architectural model of the cuts l0, l1, persistence-expanded, semantic-core-expanded and module-level of this specification; the outputs equal the recorded goldens and an independent recomputation of the lift from the relationships and component parents.",
+      "subjects": [
+        "semantic-abstraction",
+        "agent-cli"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "abstraction-no-silent-dropping",
+      "kind": "invariant",
+      "statement": "An invalid abstraction always produces an explicit diagnostic: a coarse fact with no witness at a transparent block, a declared interface that omits a boundary interaction, a declared port nothing realises, a coarse kind that is not a coarsening of its witnesses, a realisation map whose path does not exist, an incompatible port connection, and a level-bound claim naming an element hidden at its cut (I8).",
+      "subjects": [
+        "semantic-abstraction",
+        "validator",
+        "claim-evaluator"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "footprint-incremental-equals-full",
+      "kind": "invariant",
+      "statement": "Every derived fact and every structural claim result carries a footprint; after an edit, re-deriving only the facts and re-evaluating only the claims whose footprint the edit touches gives the same derived models and claim results as recomputing everything, over a randomised sequence of at least 200 relationship edits of this specification (P13).",
+      "subjects": [
+        "semantic-abstraction",
+        "claim-evaluator"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "interfaces-reconciled",
+      "kind": "invariant",
+      "statement": "Every declared port is reported as matching a derived boundary group of its owner or as unmatched, and the realisation path of every contract is reported hop by hop with the hops whose events carry no contract flagged; for write-file the in-process hop to the workspace service is flagged.",
+      "subjects": [
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "realisation-maps-checked",
+      "kind": "invariant",
+      "statement": "A logical interaction declared as realised by a path in another hierarchy is checked as a fact: the path exists, runs head to tail and connects the placements of the interaction ends; and producer to consumer pairs contract only through declared connector elements.",
+      "subjects": [
+        "semantic-abstraction",
+        "validator"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "extracted-changes-propagate",
+      "kind": "invariant",
+      "statement": "In a fixture repository, adding, removing or retargeting an import updates the extracted facts, then the derived interaction at the module, component, subsystem and system cuts, then the verdict of a dependent claim; the propagated derived model equals the model derived from scratch on the new facts, and touching one file changes only the facts of that file.",
+      "subjects": [
+        "semantic-abstraction",
+        "verification-pipeline"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "observed-facts-reconcile",
+      "kind": "invariant",
+      "statement": "Observed facts from a recorded session enter the model as relationships with provenance observed, naming the recording; an observed interaction between components with no declared relationship is reported, and a declared runtime interaction no recording shows is reported as not observed, never as false.",
+      "subjects": [
+        "semantic-abstraction"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "edit-history-checks-observers",
+      "kind": "invariant",
+      "statement": "The replay rejects a crossed reply or inconsistent stored value, accepts either valid serial order and distinguishes witnessed reply loss from incomplete capture.",
+      "subjects": [
+        "self-model-replay",
+        "workspace-service",
+        "two-session-edit-race"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "two-browser-writes-match-model",
+      "kind": "invariant",
+      "statement": "Two Exegra sessions submitting changes from the same hash see the replies predicted by the shared-base scenario, for either forced order, and a separate read of the file confirms the winning change.",
+      "subjects": [
+        "self-model-replay",
+        "workspace-service",
+        "two-session-edit-race"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    }
+  ],
+  "evidence": [
+    { "id": "ev-roundtrip-core", "claim": "edit-representations-equivalent", "kind": "test", "ref": "tests/core/roundtrip.test.js", "description": "Visual and textual routes to a change yield equal semantic state; a visual edit changes exactly one value in the source; undo and redo restore the exact text." },
+    { "id": "ev-browser-inspector-rename", "claim": "edit-representations-equivalent", "kind": "test", "ref": "tests/browser/exegra.spec.js#inspector rename persists to spec.jsonc and survives reload", "description": "A rename in the inspector reaches the scene, the source and the file on disk, and survives a reload." },
+    { "id": "ev-browser-source-edit", "claim": "edit-representations-equivalent", "kind": "test", "ref": "tests/browser/exegra.spec.js#source edit updates the scene", "description": "A source edit updates the scene. The full title continues '; invalid source is rejected and the draft is kept'." },
+    { "id": "ev-workspace-write", "claim": "file-matches-model-after-save", "kind": "test", "ref": "tests/core/workspace.test.js#write with the current baseHash succeeds", "description": "A write with the current base hash replaces the file and changes its hash." },
+    { "id": "ev-browser-persists", "claim": "file-matches-model-after-save", "kind": "test", "ref": "tests/browser/exegra.spec.js#inspector rename persists to spec.jsonc and survives reload", "description": "The edited text is on disk after the edit." },
+    { "id": "ev-roundtrip-rejected", "claim": "rejected-edit-changes-nothing", "kind": "test", "ref": "tests/core/roundtrip.test.js#invalid operations are rejected atomically", "description": "A rejected operation leaves the committed model untouched." },
+    { "id": "ev-browser-rejected-source", "claim": "rejected-edit-changes-nothing", "kind": "test", "ref": "tests/browser/exegra.spec.js#source edit updates the scene", "description": "An invalid source draft is rejected and the scene keeps showing the committed model." },
+    { "id": "ev-layout-core", "claim": "layout-moves-are-not-semantic", "kind": "test", "ref": "tests/core/roundtrip.test.js#moving a node is presentation only", "description": "Moving a node cannot change the semantic hash or the specification text." },
+    { "id": "ev-layout-browser", "claim": "layout-moves-are-not-semantic", "kind": "test", "ref": "tests/browser/exegra.spec.js#moving a node changes layout.jsonc only", "description": "Dragging a node in the real application changes only layout.jsonc." },
+    {
+      "id": "ev-model-kernel-corpus",
+      "claim": "model-derivation-matches-javascript",
+      "kind": "test",
+      "ref": "tests/proofs/model-kernel.test.js#the specifications and fixtures the tests read derive identically",
+      "description": "specs/exegra, specs/benchmark and every tests/fixtures .jsonc: identical diagnostics, model, normal form and hash."
+    },
+    {
+      "id": "ev-model-kernel-cases",
+      "claim": "model-derivation-matches-javascript",
+      "kind": "test",
+      "ref": "tests/proofs/model-kernel.test.js#every specification text the core tests parse derives identically",
+      "description": "The 206 texts the core tests parse (81 with diagnostics): identical diagnostics, model, normal form and hash."
+    },
+    {
+      "id": "ev-model-kernel-edges",
+      "claim": "model-derivation-matches-javascript",
+      "kind": "test",
+      "ref": "tests/core/model-kernel.test.js#edge cases derive identically",
+      "description": "Repeated keys, array-index and non-ASCII keys, -0 and out-of-range numbers, malformed vocabularies: identical results."
+    },
+    {
+      "id": "ev-layers-accepted",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product file importing the platform passes validation",
+      "description": "The badges product passes, its entities carry the product file in their locations and paths in that file."
+    },
+    {
+      "id": "ev-layers-cli",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#the CLI validates a project that lists product files and reports the platform hash as semanticHash",
+      "description": "validate and show read the product files project.jsonc lists."
+    },
+    {
+      "id": "ev-layers-import-unknown",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#an imported id the platform does not declare is refused with layer.import-unknown",
+      "description": "Negative fixture refused/import-unknown.jsonc."
+    },
+    {
+      "id": "ev-layers-redefines",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product that redefines a platform entity is refused with layer.redefines-entity",
+      "description": "Negative fixture refused/redefines-entity.jsonc."
+    },
+    {
+      "id": "ev-layers-redefines-product",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#two product files that declare the same id are refused with layer.redefines-entity",
+      "description": "Two copies of the badges product."
+    },
+    {
+      "id": "ev-layers-kind",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a section a product may not declare is refused with layer.kind-not-allowed",
+      "description": "Negative fixture refused/kind-not-allowed.jsonc, and vocabulary, functions, capabilities and system."
+    },
+    {
+      "id": "ev-layers-import-missing",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a platform entity used without being imported is refused with layer.import-missing",
+      "description": "Negative fixture refused/import-missing.jsonc: a reference and a type text."
+    },
+    {
+      "id": "ev-layers-reference-unknown",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a reference no layer declares is refused with layer.reference-unknown",
+      "description": "Negative fixture refused/reference-unknown.jsonc."
+    },
+    {
+      "id": "ev-layers-header-missing",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product file without a header is refused with layer.header-missing",
+      "description": "Negative fixture refused/header-missing.jsonc."
+    },
+    {
+      "id": "ev-layers-import-mismatch",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product that imports another platform file is refused with layer.import-mismatch",
+      "description": "Negative fixture refused/import-mismatch.jsonc, through the workspace and the CLI."
+    },
+    {
+      "id": "ev-layers-cross-product",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a reference into another product file is refused with layer.cross-product-reference",
+      "description": "Negative fixture refused/cross-product.jsonc beside products/badges.jsonc."
+    },
+    {
+      "id": "ev-layers-transactions",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#transactions on a layered project edit the platform text and refuse product entities",
+      "description": "A platform edit applies with the product still layered; an edit of a product entity is refused."
+    },
+    {
+      "id": "ev-layers-platform-hash",
+      "claim": "product-layers-leave-platform-unchanged",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#adding a product file leaves the platform semantic hash unchanged",
+      "description": "The layered analysis and a layered Project report the hash of the platform alone."
+    },
+    {
+      "id": "ev-layers-platform-model",
+      "claim": "product-layers-leave-platform-unchanged",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#the parsed platform specification is unchanged by layering",
+      "description": "The platform model, and the platform entities of the combined model, equal the model of the platform alone."
+    },
+    {
+      "id": "ev-layers-platform-cli-hash",
+      "claim": "product-layers-leave-platform-unchanged",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#the CLI validates a project that lists product files and reports the platform hash as semanticHash",
+      "description": "validate of the layered project and of the platform alone report the same semanticHash."
+    },
+    {
+      "id": "ev-layers-power",
+      "claim": "product-layers-no-platform-power",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product that claims a platform power or has a malformed entity id is refused with the rule for it",
+      "description": "One negative fixture per power: platform-level role, anonymous, service and external holders, public anonymous contract, contract implemented by a platform component, realisation, implementation-level behavior, domain event."
+    },
+    {
+      "id": "ev-layers-power-accepted",
+      "claim": "product-layers-no-platform-power",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product role at tenant level held by people and teams and agents is accepted",
+      "description": "A tenant role held by people, teams and agents and a public facade contract on a session scheme are not refused."
+    },
+    {
+      "id": "ev-layers-product-id-duplicate",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#two product files with one product id are refused with layer.product-id-duplicate",
+      "description": "Negative fixture refused/duplicate-product-id.jsonc beside products/badges.jsonc."
+    },
+    {
+      "id": "ev-layers-reference-keys",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a reference through a reference key requires an import",
+      "description": "Negative fixture refused/import-missing-reference.jsonc: event.contract, record.owner and behavior.subject."
+    },
+    {
+      "id": "ev-layers-platform-references-product",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a platform entity that references a product entity is refused with layer.platform-references-product",
+      "description": "A platform relationship and a platform type text that name a product entity."
+    },
+    {
+      "id": "ev-layers-reload",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#reload picks up a changed product file",
+      "description": "Project.reload takes the product files as they are now; the layered model and layered hash follow, the platform hash does not."
+    },
+    {
+      "id": "ev-layers-typed-accepted",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#the complete products declare everything they name and pass validation with the platform hash unchanged",
+      "description": "The badge-milestones and promotions products declare their object types, policies, ledger units, pools and limits, templates, triggers, automations and operations, pass validation, and leave the platform semantic hash unchanged."
+    },
+    {
+      "id": "ev-layers-typed-value-invalid",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a value that does not fit its platform type is refused with layer.value-invalid",
+      "description": "A field without its type and a member the platform type lacks."
+    },
+    {
+      "id": "ev-layers-typed-catalogue",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a union value the platform lacks is refused with layer.outside-catalogue",
+      "description": "A trigger event, an automation step and an operation step outside the platform unions."
+    },
+    {
+      "id": "ev-layers-typed-references",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a name in a typed section that no product file declares or that another product declares is refused",
+      "description": "An object type and an automation no product declares, and an object type another product declares."
+    },
+    {
+      "id": "ev-layers-typed-redefine",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a typed item may not redefine a platform entity or another item",
+      "description": "A ledger unit with the id of a platform component, and a unit and a pool with one id."
+    },
+    {
+      "id": "ev-layers-typed-table",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#Exegra and specc read the same table of typed sections",
+      "description": "The sections, in order, and the platform type each names."
+    },
+    {
+      "id": "ev-layers-typed-check",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layer-values.test.js#a missing field and a stray field and a wrong scalar and an id outside its pattern are refused",
+      "description": "The generic check over a small platform."
+    },
+    {
+      "id": "ev-layers-typed-variants",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layer-values.test.js#a variant the union lacks is outside the catalogue and a variant with fields needs them",
+      "description": "Union variants by tag."
+    },
+    {
+      "id": "ev-layers-namespace",
+      "claim": "product-layers-namespace",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#an id outside the namespace of its product is refused with layer.namespace-missing",
+      "description": "An id with no namespace and an id with one underscore."
+    },
+    {
+      "id": "ev-layers-capability",
+      "claim": "product-layers-namespace",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product capability is reachable when a role confers it and a plan is not needed",
+      "description": "A product capability conferred by a role needs no plan; one no role confers is unreachable."
+    },
+    {
+      "id": "ev-layers-expressions-scope",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#the scope comes from the value that holds the text",
+      "description": "The scope of a text: the object type of a policy, segment, trigger or operation, the params an event or an operation binds."
+    },
+    {
+      "id": "ev-layers-expressions-check",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#fields hops params and roles are checked against the scope",
+      "description": "Unknown fields, hops, params and roles."
+    },
+    {
+      "id": "ev-layers-expressions-syntax",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#a name or call the language lacks and malformed text is layer.expr-syntax with its position",
+      "description": "Syntax errors and their positions."
+    },
+    {
+      "id": "ev-layers-expressions-types",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#shapes that the operator does not accept are layer.expr-type",
+      "description": "Shapes an operator does not accept."
+    },
+    {
+      "id": "ev-layers-expressions-refused",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#an expression that does not parse or check in its scope is refused with one rule code per kind",
+      "description": "The refused fixtures, one rule code per kind."
+    },
+    {
+      "id": "ev-layers-expressions-free",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#an automation accepts any field and param but is still checked for syntax and roles",
+      "description": "An automation's expressions."
+    },
+    {
+      "id": "ev-layers-retention",
+      "claim": "product-layers-retention",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a personal field without a retention rule on its object type is refused with layer.retention-missing",
+      "description": "The refused fixture and the complete products."
+    },
+    {
+      "id": "ev-batched-differential-small",
+      "claim": "batched-transaction-equals-per-operation",
+      "kind": "test",
+      "ref": "tests/core/batched-transactions.test.js#batched transactions equal per-operation re-derivation on a hand-written JSONC specification",
+      "description": "Seeded random transactions on a JSONC specification with comments, one-line declarations and trailing commas, through Tx and through Project.apply."
+    },
+    {
+      "id": "ev-batched-differential-benchmark",
+      "claim": "batched-transaction-equals-per-operation",
+      "kind": "test",
+      "ref": "tests/core/batched-transactions.test.js#batched transactions equal per-operation re-derivation on the benchmark specification",
+      "description": "Seeded random transactions on specs/benchmark."
+    },
+    {
+      "id": "ev-batched-differential-exegra",
+      "claim": "batched-transaction-equals-per-operation",
+      "kind": "test",
+      "ref": "tests/core/batched-transactions.test.js#batched transactions equal per-operation re-derivation on the Exegra specification",
+      "description": "Seeded random transactions on Exegra's own specification, through Tx and through Project.apply."
+    },
+    {
+      "id": "ev-transaction-derives-once",
+      "claim": "transaction-derives-model-once",
+      "kind": "test",
+      "ref": "tests/core/batched-transactions.test.js#a batched transaction derives the model once for property edits and creations",
+      "description": "Counts the derivations of one transaction through edits, creations, a replacement of nested declarations, a rename and a deletion."
+    },
+    {
+      "id": "ev-layers-expressions-operators",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#each of the nine operators is accepted and the bare result of arithmetic is an expression",
+      "description": "Each of the nine operators is accepted."
+    },
+    {
+      "id": "ev-layers-expressions-operator-types",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#one operand of the wrong shape per operator is layer.expr-type with the kernel message",
+      "description": "One wrong operand per operator is layer.expr-type with the stated message."
+    },
+    {
+      "id": "ev-layers-expressions-sign",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#a minus before a digit is a sign only where no operand ends before it",
+      "description": "The sign rule for a minus before a digit."
+    },
+    {
+      "id": "ev-layers-expressions-precedence",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#precedence binds the product over the sum over a comparison",
+      "description": "Precedence and associativity."
+    },
+    {
+      "id": "ev-layers-expressions-time-time",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#Time plus Time and Time minus Time are refused: ms_between gives the difference",
+      "description": "Time + Time is refused."
+    },
+    {
+      "id": "ev-layers-expressions-step-params",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr.test.js#a step reads the id of an earlier create step as a parameter",
+      "description": "A step reads the id of an earlier create step as a param."
+    },
+    {
+      "id": "ev-layers-expressions-drift",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr-drift.test.js#layer-expr.js parses and types every operator the fixture language declares",
+      "description": "Every operator the fixture language declares is parsed and typed as declared."
+    },
+    {
+      "id": "ev-layers-expressions-drift-detects",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr-drift.test.js#the probe fails for an operator layer-expr.js lacks and for one it types differently",
+      "description": "The probe fails for an operator layer-expr.js lacks."
+    },
+    {
+      "id": "ev-layers-expressions-drift-strata",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr-drift.test.js#layer-expr.js parses and types every operator the Strata platform declares",
+      "description": "The same probe over the Strata platform language, when its specification is present."
+    },
+    {
+      "id": "ev-layers-expressions-corpus",
+      "claim": "product-layers-expressions",
+      "kind": "test",
+      "ref": "tests/core/layer-expr-drift.test.js#layer-expr.js and the language checker agree on every checked case of the shared table",
+      "description": "layer-expr.js and the language checker agree on every checked case."
+    },
+    {
+      "id": "ev-layers-header-version-platform",
+      "claim": "product-layers-checked",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product header takes version and platform and refuses a malformed one with layer.header-invalid",
+      "description": "The header members version and platform are accepted and validated."
+    },
+    {
+      "id": "ev-layers-typed-queries-views-workflows",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product file may declare queries and views and workflows and refuses each that does not fit its platform type",
+      "description": "A member the platform type lacks in a query, a view and a workflow is exactly layer.value-invalid naming query-def, view-def and workflow-def, and a view section over a query nobody declares is layer.reference-unknown."
+    },
+    {
+      "id": "ev-layers-typed-queries-views-workflows-accepted",
+      "claim": "product-layers-typed-sections",
+      "kind": "test",
+      "ref": "tests/core/layers.test.js#a product declaring a query and a view and a workflow that fit their platform types is accepted",
+      "description": "A product declaring one query, one view over it and one workflow validates."
+    },
+    {
+      "id": "ev-layers-cache-identical",
+      "claim": "product-layers-share-platform-analysis",
+      "kind": "test",
+      "ref": "tests/core/layers-cache.test.js#layer sets over one platform give the output of independent validations and the platform is analysed once",
+      "description": "Four validations over one platform text parse it once; each gives the output of the same layer set validated alone."
+    },
+    {
+      "id": "ev-layers-cache-read-only",
+      "claim": "product-layers-share-platform-analysis",
+      "kind": "test",
+      "ref": "tests/core/layers-cache.test.js#the shared platform analysis cannot be corrupted by a caller",
+      "description": "The cached platform model refuses changes; the combined model is rebuilt for each call."
+    },
+    {
+      "id": "ev-derivation-cache-identical",
+      "claim": "derivation-cache-transparent",
+      "kind": "test",
+      "ref": "tests/core/derivation-cache.test.js#a hit gives byte-identical validate and claims output to a cold run",
+      "description": "Cold, warm and uncached runs of validate and claims print the same bytes; EXEGRA_NO_CACHE=1 writes no entry."
+    },
+    {
+      "id": "ev-derivation-cache-encoding",
+      "claim": "derivation-cache-transparent",
+      "kind": "test",
+      "ref": "tests/core/derivation-cache.test.js#the encoding reproduces Maps and Sets and null prototypes and negative zero and shared references and cycles",
+      "description": "The encoding round-trips the shapes of a derived model and refuses what it cannot reproduce."
+    },
+    {
+      "id": "ev-derivation-cache-inputs",
+      "claim": "derivation-cache-keyed-by-content",
+      "kind": "test",
+      "ref": "tests/core/derivation-cache.test.js#changing a specification file or the project config is a miss",
+      "description": "An edited specification and a project config naming another file are both misses."
+    },
+    {
+      "id": "ev-derivation-cache-sources",
+      "claim": "derivation-cache-keyed-by-content",
+      "kind": "test",
+      "ref": "tests/core/derivation-cache.test.js#editing an Exegra derivation source is a miss",
+      "description": "Editing a file of a copy of src/core changes the source hash and misses."
+    },
+    {
+      "id": "ev-derivation-cache-damaged",
+      "claim": "derivation-cache-keyed-by-content",
+      "kind": "test",
+      "ref": "tests/core/derivation-cache.test.js#a damaged entry is a miss and never an error and is replaced",
+      "description": "A truncated, altered, foreign or empty entry is a miss with the same output, and is rewritten."
+    },
+    {
+      "id": "ev-derivation-cache-concurrent",
+      "claim": "derivation-cache-concurrent-safe",
+      "kind": "test",
+      "ref": "tests/core/derivation-cache.test.js#concurrent processes on one cache all succeed with the same output",
+      "description": "Four processes started together on an empty cache succeed with one output and leave two whole entries."
+    },
+    {
+      "id": "ev-change-impact-graph",
+      "claim": "change-impact-remarks-dependents",
+      "kind": "test",
+      "ref": "tests/core/change-impact.test.js#the dependency graph has the node kinds",
+      "description": "The graph has the node kinds and edges of the fixture."
+    },
+    {
+      "id": "ev-change-impact-fixture",
+      "claim": "change-impact-remarks-dependents",
+      "kind": "test",
+      "ref": "tests/core/change-impact.test.js#change impact on the fixture",
+      "description": "Set equality of the re-marked claims for each change of expected.json."
+    },
+    {
+      "id": "ev-change-impact-cli",
+      "claim": "change-impact-remarks-dependents",
+      "kind": "test",
+      "ref": "tests/core/change-impact.test.js#exegra impact --change prints the claims to re-mark",
+      "description": "The impact command prints the claims a change set re-marks."
+    },
+    {
+      "id": "ev-derived-goldens",
+      "kind": "test",
+      "ref": "tests/core/abstraction.test.js#derived models of the five self-specification cuts equal their goldens and an independent recomputation",
+      "claim": "derived-model-goldens",
+      "description": "Each of the five cuts is derived through the core and compared with tests/fixtures/abstraction/<cut>.json and with a lift computed from the raw relationships and parents."
+    },
+    {
+      "id": "ev-derive-cli-renderer-free",
+      "kind": "test",
+      "ref": "tests/core/abstraction.test.js#the CLI derives the model with no renderer code loaded",
+      "claim": "derived-model-goldens",
+      "description": "The derive command runs in a child process that loads no module under src/render or src/ui."
+    },
+    {
+      "id": "ev-abstraction-negative-fixtures",
+      "kind": "test",
+      "ref": "tests/core/abstraction.test.js#negative fixtures produce one explicit diagnostic each",
+      "claim": "abstraction-no-silent-dropping",
+      "description": "One fixture per diagnostic, each producing the expected code."
+    },
+    {
+      "id": "ev-port-connections",
+      "kind": "test",
+      "ref": "tests/core/abstraction.test.js#a relationship can end at a port and incompatible port connections are diagnostics",
+      "claim": "abstraction-no-silent-dropping",
+      "description": "A requires-to-provides connection with one contract validates; requires-to-requires and contract mismatches are validation errors."
+    },
+    {
+      "id": "ev-footprint-randomised",
+      "kind": "test",
+      "ref": "tests/core/abstraction.test.js#footprint invalidation equals full re-derivation over a randomised sequence of edits",
+      "claim": "footprint-incremental-equals-full",
+      "description": "200 seeded edits (kind, endpoints, description, additions, deletions) of the self-specification; incremental and full results are deep-equal and the recomputed set is exactly the facts whose footprint holds the edited relationship."
+    },
+    {
+      "id": "ev-port-reconciliation",
+      "kind": "test",
+      "ref": "tests/core/abstraction.test.js#every declared port of the self-specification is matched or reported unmatched and the write-file path flags its untyped hops",
+      "claim": "interfaces-reconciled",
+      "description": "Every port of the self-specification appears in the reconciliation; the write-file path runs session, persistence client, dev-server plugin, workspace service."
+    },
+    {
+      "id": "ev-realisation-maps",
+      "kind": "test",
+      "ref": "tests/core/abstraction.test.js#realisation maps between a logical and a deployment hierarchy are checked as facts",
+      "claim": "realisation-maps-checked",
+      "description": "A fixture with a logical and a deployment hierarchy: a holding realisation, a broken path and a path from the wrong host."
+    },
+    {
+      "id": "ev-connector-contraction",
+      "kind": "test",
+      "ref": "tests/core/abstraction.test.js#connector-mediated interactions contract through declared connectors only",
+      "claim": "realisation-maps-checked",
+      "description": "A publish and a subscribe through a connector element contract to one notifies between the blocks of producer and consumer."
+    },
+    {
+      "id": "ev-core-independent-restated",
+      "kind": "test",
+      "ref": "tests/core/abstraction.test.js#core-independent-of-ui restated at L1 keeps its verdict over the same leaves and covers four more components",
+      "claim": "core-independent-of-ui",
+      "description": "The hand-listed leaf form and the restated L1 form are both verified, over target leaves that include the old ones."
+    },
+    {
+      "id": "ev-extracted-changes-propagate",
+      "claim": "extracted-changes-propagate",
+      "kind": "test",
+      "ref": "tests/core/extraction-propagation.test.js",
+      "description": "The fixture repository scenarios: add, remove, retarget, with per-cut before and after models and the equality with a derivation from scratch."
+    },
+    {
+      "id": "ev-observed-facts",
+      "claim": "observed-facts-reconcile",
+      "kind": "test",
+      "ref": "tests/core/observed.test.js",
+      "description": "A recorded session fixture gives observed relationships, observed-but-undeclared and not-observed diagnostics."
+    },
+    {
+      "id": "ev-edit-history-checks-observers",
+      "claim": "edit-history-checks-observers",
+      "kind": "test",
+      "ref": "tests/core/edit-history.test.js",
+      "description": "The replay rejects a crossed reply or inconsistent stored value, accepts either valid serial order and distinguishes witnessed reply loss from incomplete capture."
+    },
+    {
+      "id": "ev-two-browser-writes-match-model",
+      "claim": "two-browser-writes-match-model",
+      "kind": "test",
+      "ref": "tests/browser/edit-history.spec.js#two editing sessions",
+      "description": "Two Exegra sessions submitting changes from the same hash see the replies predicted by the shared-base scenario, for either forced order, and a separate read of the file confirms the winning change."
+    }
+  ]
+}

@@ -1,0 +1,603 @@
+{
+ "behaviors": [
+  {
+   "id": "shared-base-write-flow",
+   "initial": "edit-writer-ready",
+   "states": [
+    "edit-writer-ready"
+   ],
+   "subject": "workspace-service",
+   "transitions": [
+    {
+     "effects": [
+      {
+       "set": "stored",
+       "to": "event.value"
+      },
+      {
+       "set": "decision",
+       "to": "'accepted'"
+      },
+      {
+       "set": "accepted",
+       "to": "accepted + 1"
+      }
+     ],
+     "faultOnly": false,
+     "from": "edit-writer-ready",
+     "guard": "event.base == stored",
+     "id": "shared-edit-accept",
+     "on": "two-session-write",
+     "to": "edit-writer-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "stored",
+       "to": "event.value"
+      },
+      {
+       "set": "decision",
+       "to": "'accepted'"
+      },
+      {
+       "set": "accepted",
+       "to": "accepted + 1"
+      }
+     ],
+     "faultOnly": true,
+     "from": "edit-writer-ready",
+     "guard": null,
+     "id": "shared-edit-accept-unchecked",
+     "on": "two-session-write",
+     "to": "edit-writer-ready"
+    },
+    {
+     "effects": [
+      {
+       "set": "decision",
+       "to": "'conflict'"
+      }
+     ],
+     "faultOnly": false,
+     "from": "edit-writer-ready",
+     "guard": "event.base != stored",
+     "id": "shared-edit-refuse",
+     "on": "two-session-write",
+     "to": "edit-writer-ready"
+    }
+   ],
+   "variables": [
+    {
+     "initial": "initial",
+     "name": "stored"
+    },
+    {
+     "initial": "pending",
+     "name": "decision"
+    },
+    {
+     "initial": 0,
+     "name": "accepted"
+    }
+   ]
+  }
+ ],
+ "events": [
+  {
+   "id": "edit-requested"
+  },
+  {
+   "id": "source-apply-requested"
+  },
+  {
+   "id": "operation-submitted"
+  },
+  {
+   "id": "text-edits-computed"
+  },
+  {
+   "id": "model-parsed"
+  },
+  {
+   "id": "validation-passed"
+  },
+  {
+   "id": "validation-failed"
+  },
+  {
+   "id": "transaction-committed"
+  },
+  {
+   "id": "transaction-rejected"
+  },
+  {
+   "id": "refresh-requested"
+  },
+  {
+   "id": "projection-refreshed"
+  },
+  {
+   "id": "model-published"
+  },
+  {
+   "id": "save-requested"
+  },
+  {
+   "id": "save-succeeded"
+  },
+  {
+   "id": "save-conflicted"
+  },
+  {
+   "id": "write-intent"
+  },
+  {
+   "id": "write-file-request"
+  },
+  {
+   "id": "write-file-ok"
+  },
+  {
+   "id": "write-file-conflict"
+  },
+  {
+   "id": "write-file-failed"
+  },
+  {
+   "id": "read-project-request"
+  },
+  {
+   "id": "read-project-ok"
+  },
+  {
+   "id": "read-project-failed"
+  },
+  {
+   "id": "list-projects-request"
+  },
+  {
+   "id": "list-projects-ok"
+  },
+  {
+   "id": "watch-project-request"
+  },
+  {
+   "id": "file-change-notice-sent"
+  },
+  {
+   "id": "export-request"
+  },
+  {
+   "id": "export-ok"
+  },
+  {
+   "id": "export-failed"
+  },
+  {
+   "id": "import-request"
+  },
+  {
+   "id": "import-ok"
+  },
+  {
+   "id": "import-refused"
+  },
+  {
+   "id": "generated-write-request"
+  },
+  {
+   "id": "generated-write-ok"
+  },
+  {
+   "id": "engine-run-posted"
+  },
+  {
+   "id": "engine-run-returned"
+  },
+  {
+   "id": "engine-run-refused"
+  },
+  {
+   "id": "cli-command-request"
+  },
+  {
+   "id": "cli-command-ok"
+  },
+  {
+   "id": "cli-command-failed"
+  },
+  {
+   "id": "session-init-requested"
+  },
+  {
+   "id": "project-open-requested"
+  },
+  {
+   "id": "open-refused"
+  },
+  {
+   "id": "read-intent"
+  },
+  {
+   "id": "project-files-read"
+  },
+  {
+   "id": "project-read-failed"
+  },
+  {
+   "id": "project-opened"
+  },
+  {
+   "id": "list-intent"
+  },
+  {
+   "id": "projects-listed"
+  },
+  {
+   "id": "watch-intent"
+  },
+  {
+   "id": "external-change-received"
+  },
+  {
+   "id": "disk-edited-externally"
+  },
+  {
+   "id": "reload-requested"
+  },
+  {
+   "id": "commit-notified"
+  },
+  {
+   "id": "edit-applied"
+  },
+  {
+   "id": "node-moved"
+  },
+  {
+   "id": "undo-requested"
+  },
+  {
+   "id": "redo-requested"
+  },
+  {
+   "id": "conflict-resolution-chosen"
+  },
+  {
+   "id": "save-failed"
+  },
+  {
+   "id": "claims-evaluation-requested"
+  },
+  {
+   "id": "claim-scenarios-run"
+  },
+  {
+   "id": "claims-evaluated"
+  },
+  {
+   "id": "recorded-results-adopted"
+  },
+  {
+   "id": "export-clicked"
+  },
+  {
+   "id": "export-intent"
+  },
+  {
+   "id": "bundle-received"
+  },
+  {
+   "id": "export-refused-received"
+  },
+  {
+   "id": "bundle-downloaded"
+  },
+  {
+   "id": "import-file-chosen"
+  },
+  {
+   "id": "import-intent"
+  },
+  {
+   "id": "import-done"
+  },
+  {
+   "id": "import-refused-received"
+  },
+  {
+   "id": "generate-clicked"
+  },
+  {
+   "id": "generated-intent"
+  },
+  {
+   "id": "generated-saved"
+  },
+  {
+   "id": "ws-read"
+  },
+  {
+   "id": "ws-read-done"
+  },
+  {
+   "id": "ws-read-missing"
+  },
+  {
+   "id": "ws-list"
+  },
+  {
+   "id": "ws-list-done"
+  },
+  {
+   "id": "ws-write"
+  },
+  {
+   "id": "ws-write-done"
+  },
+  {
+   "id": "ws-write-conflict"
+  },
+  {
+   "id": "ws-write-error"
+  },
+  {
+   "id": "disk-file-replaced"
+  },
+  {
+   "id": "ws-watch"
+  },
+  {
+   "id": "ws-change"
+  },
+  {
+   "id": "ws-write-recorded"
+  },
+  {
+   "id": "ws-recorded-done"
+  },
+  {
+   "id": "ws-write-generated"
+  },
+  {
+   "id": "ws-generated-done"
+  },
+  {
+   "id": "ws-export"
+  },
+  {
+   "id": "ws-export-done"
+  },
+  {
+   "id": "ws-export-missing"
+  },
+  {
+   "id": "ws-import"
+  },
+  {
+   "id": "ws-import-done"
+  },
+  {
+   "id": "ws-import-refused"
+  },
+  {
+   "id": "verify-tests-run"
+  },
+  {
+   "id": "verify-tests-finished"
+  },
+  {
+   "id": "verify-claims-evaluated"
+  },
+  {
+   "id": "engine-not-built"
+  },
+  {
+   "id": "engine-run-called"
+  },
+  {
+   "id": "engine-run-finished"
+  },
+  {
+   "id": "engine-run-failed"
+  },
+  {
+   "id": "trace-file-written"
+  },
+  {
+   "id": "prove-requested"
+  },
+  {
+   "id": "lake-build-requested"
+  },
+  {
+   "id": "lake-build-finished"
+  },
+  {
+   "id": "explorer-request-sent"
+  },
+  {
+   "id": "explorer-result-returned"
+  },
+  {
+   "id": "lean-file-written"
+  },
+  {
+   "id": "lean-check-requested"
+  },
+  {
+   "id": "lean-check-finished"
+  },
+  {
+   "id": "lean-rejects-proof"
+  },
+  {
+   "id": "prove-finished"
+  },
+  {
+   "id": "markdown-import-run"
+  },
+  {
+   "id": "markdown-source-unmapped"
+  },
+  {
+   "id": "markdown-spec-built"
+  },
+  {
+   "id": "markdown-report-printed"
+  },
+  {
+   "id": "conformance-run"
+  },
+  {
+   "id": "golden-replayed"
+  },
+  {
+   "id": "golden-compared"
+  },
+  {
+   "id": "engine-diverges"
+  },
+  {
+   "id": "conformance-reported"
+  },
+  {
+   "id": "differential-run"
+  },
+  {
+   "id": "differential-mismatch-saved"
+  },
+  {
+   "id": "sim-load-requested"
+  },
+  {
+   "id": "engine-run-intent"
+  },
+  {
+   "id": "worker-terminated"
+  },
+  {
+   "id": "worker-run-done"
+  },
+  {
+   "id": "worker-load-failed"
+  },
+  {
+   "id": "sim-trace-ready"
+  },
+  {
+   "id": "sim-run-failed"
+  },
+  {
+   "id": "sim-step-requested"
+  },
+  {
+   "id": "sim-back-requested"
+  },
+  {
+   "id": "sim-run-to-end-requested"
+  },
+  {
+   "id": "sim-step-shown"
+  },
+  {
+   "id": "step-pulsed"
+  },
+  {
+   "id": "page-loaded"
+  },
+  {
+   "id": "engine-load-requested"
+  },
+  {
+   "id": "engine-load-settled"
+  },
+  {
+   "id": "entity-selected"
+  },
+  {
+   "id": "view-selected"
+  },
+  {
+   "id": "preferences-written"
+  },
+  {
+   "id": "page-reloaded"
+  },
+  {
+   "id": "preferences-read"
+  },
+  {
+   "id": "preferences-loaded"
+  },
+  {
+   "id": "panel-toggled"
+  },
+  {
+   "id": "layout-preferences-written"
+  },
+  {
+   "id": "camera-moved"
+  },
+  {
+   "id": "view-switched"
+  },
+  {
+   "id": "camera-saved"
+  },
+  {
+   "id": "camera-restore-requested"
+  },
+  {
+   "id": "camera-restored"
+  },
+  {
+   "id": "camera-none"
+  },
+  {
+   "id": "traffic-step-recorded"
+  },
+  {
+   "id": "sim-reset-requested"
+  },
+  {
+   "id": "sim-seek-requested"
+  },
+  {
+   "id": "two-session-write"
+  }
+ ],
+ "faults": [],
+ "format": "exegra-sim-input",
+ "scenario": {
+  "faults": [],
+  "id": "two-session-edit-race",
+  "stepLimit": 1000,
+  "steps": [
+   {
+    "at": 0,
+    "event": "two-session-write",
+    "payload": {
+     "attempt": "a",
+     "base": "initial",
+     "value": "edit-a"
+    }
+   },
+   {
+    "at": 0,
+    "event": "two-session-write",
+    "payload": {
+     "attempt": "b",
+     "base": "initial",
+     "value": "edit-b"
+    }
+   }
+  ]
+ },
+ "time": {
+  "perSecond": null,
+  "unit": "tick"
+ },
+ "version": 2
+}

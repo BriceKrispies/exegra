@@ -27,9 +27,10 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { analyzeSpec } from '../../src/core/analyze.js';
+import { readSpecFile } from '../../tools/spec-manifest.js';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
-const SPEC = readFileSync(path.join(ROOT, 'specs/exegra/spec.jsonc'), 'utf8');
+const SPEC = readSpecFile(path.join(ROOT, 'specs/exegra/spec.jsonc'));
 
 const WRITE = /\b(?:localStorage|sessionStorage)\.setItem\(|\bwriteFileSync\(|\bappendFileSync\(|\bfs\.(?:writeFile|appendFile|rename)\(|\bcreateWriteStream\(|(?<!function )\batomicWrite\(|URL\.createObjectURL\(|\bindexedDB\b|\.screenshot\(\s*\{|'--out-dir'/;
 
@@ -59,6 +60,9 @@ const STORES = [
   { file: 'tools/prove.js', fn: 'proveScenario', locators: ['formal/generated/'], store: 'proof-outputs' },
   { file: 'tools/record-goldens.js', needle: 'writeFileSync(w.path', locators: ['tests/conformance/goldens/'], store: 'engine-goldens' },
   { file: 'tools/shot.mjs', needle: '.screenshot(', locators: ['tools/shot.mjs'], store: 'screenshot-images' },
+  { file: 'tools/walk-shots.mjs', needle: '.screenshot(', locators: ['tools/walk-shots.mjs'], store: 'screenshot-images' },
+  { file: 'tools/walk-shots.mjs', needle: 'writeFileSync(`${base}.json`', locators: ['tools/walk-shots.mjs'], store: 'screenshot-images' },
+  { file: 'tools/walk-shots.mjs', needle: "writeFileSync(path.join(OUT, 'summary.json')", locators: ['tools/walk-shots.mjs'], store: 'screenshot-images' },
   { file: 'tools/build-engine.js', needle: "'--out-dir'", locators: ['src/engine/pkg/'], store: 'engine-build-output' },
   { file: 'src/core/derivation-cache.js', needle: 'writeFileSync(tmp', locators: ['<stage>-<key>.entry'], store: 'derivation-cache-entry' },
   { file: 'tools/build-formal-wasm.js', fn: 'writeAtomic', locators: ['src/engine/lean/', 'formal-wasm'], store: 'formal-wasm-build-output' },
@@ -68,6 +72,11 @@ const STORES = [
   { file: 'tools/build-formal-wasm.js', needle: 'writeFileSync(rsp', locators: ['linker response files'], store: 'formal-wasm-build-output' },
   { file: 'tools/outcomes-playwright-reporter.js', needle: 'writeFileSync(OUTPUT', locators: ['.outcomes/playwright.json'], store: 'test-outcomes-file' },
   { file: 'cli/commands.js', needle: 'writeFileSync(file, `${JSON.stringify(link', locators: ['exegra project register'], store: 'project-pointer' },
+  { file: 'tools/split-spec.js', needle: 'writeFileSync(path.join(dir, name), t)', locators: ['tools/split-spec.js'], store: 'specification-text' },
+  { file: 'tools/split-spec.js', needle: "writeFileSync(path.join(dir, 'spec.jsonc'), manifest)", locators: ['tools/split-spec.js'], store: 'specification-text' },
+  { file: 'tools/extract.js', needle: 'writeFileSync(out, factsText(facts))', locators: ['specs/<project>/extracted/facts.json', 'tools/extract.js'], store: 'extracted-facts' },
+  { file: 'cli/commands.js', needle: 'writeFileSync(target, factsText(facts))', locators: ['exegra extract (cli/commands.js)'], store: 'extracted-facts' },
+  { file: 'tools/observe.js', needle: 'fs.writeFileSync(out, text)', locators: ['tools/observe.js --out'], store: 'extracted-facts' },
   { file: 'tools/spec-store.js', needle: 'writeFileSync(tmp, bytes)', locators: ['tools/spec-store.js (store export'], store: 'specification-text' },
   { file: 'tools/spec-store.js', needle: 'writeFileSync(t, part.text', locators: ['tools/spec-store.js (store export', 'part files'], store: 'specification-text' },
   { file: 'tools/lean-theorems.js', needle: 'writeFileSync(file, text)', locators: ['exegra-theorems-'], store: 'lean-theorem-check-file' },

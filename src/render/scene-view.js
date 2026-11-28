@@ -42,9 +42,9 @@ const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
 /**
  * @typedef {Object} SceneCallbacks
- * @property {(id:string|null)=>void} [onSelect]
+ * @property {(id:string|null, hit?:{kind:'node'|'edge', sceneId:string})=>void} [onSelect]  the entity picked, and the scene node or edge it was picked on
  * @property {(id:string|null)=>void} [onHover]
- * @property {(id:string)=>void} [onActivate]
+ * @property {(id:string, hit?:{kind:'node'|'edge', sceneId:string})=>void} [onActivate]
  * @property {(moves:{id:string,x:number,z:number}[])=>void} [onMoveEnd]
  * @property {(from:string,to:string)=>void} [onConnect]
  */
@@ -285,7 +285,7 @@ export function createSceneView(host, callbacks = {}) {
   // ------------------------------------------------------------------ nodes
   const nodeSig = (n) => JSON.stringify([
     n.shape, n.color, n.label, n.sublabel ?? '', n.status ?? '', !!n.dimmed, n.badges ?? [],
-    n.parent ?? null, !!n.container, !!n.collapsed, n.entityId ?? '',
+    n.parent ?? null, !!n.container, !!n.collapsed, n.entityId ?? '', n.marks ?? [], n.knowledge ?? '',
   ]);
 
   function setBodyShape(ns) {
@@ -372,8 +372,10 @@ export function createSceneView(host, callbacks = {}) {
   function nodeSelected(ns) {
     return isSel(ns.id, ns.node.entityId) || connectSource === ns.id;
   }
+  /** Planned and unknown blocks are drawn translucent: what they stand for is not built, or not known. */
+  const isGhost = (ns) => !ns.slab && (ns.node.knowledge === 'unknown' || (ns.node.marks ?? []).some((m) => m.kind === 'planned' || m.kind === 'unknown'));
   function nodeOpacity(ns) {
-    let o = ns.node.dimmed ? 0.25 : 1;
+    let o = ns.node.dimmed ? 0.25 : isGhost(ns) ? 0.5 : 1;
     if (hlActive && !ns.hl) o = Math.min(o, 0.2);
     return o;
   }
@@ -411,6 +413,8 @@ export function createSceneView(host, callbacks = {}) {
     if (nodeSelected(ns)) cls += ' scene-label--selected';
     if (ns.node.dimmed || (hlActive && !ns.hl)) cls += ' scene-label--dimmed';
     if (ns.node.status) cls += ` scene-label--status-${ns.node.status}`;
+    if (ns.node.knowledge && ns.node.knowledge !== 'transparent') cls += ` scene-label--knowledge-${ns.node.knowledge}`;
+    if ((ns.node.marks ?? []).some((m) => m.kind === 'planned')) cls += ' scene-label--planned';
     if (ns.labelHidden) cls += ' scene-label--hidden';
     if (cls !== ns.labelCls) { ns.labelCls = cls; ns.parts.el.className = cls; }
   }
@@ -1142,7 +1146,7 @@ export function createSceneView(host, callbacks = {}) {
       }
       return;
     }
-    cb.onSelect(hit ? hitEntity(hit) : null);
+    cb.onSelect(hit ? hitEntity(hit) : null, hit ? { kind: hit.kind, sceneId: hit.kind === 'node' ? hit.ns.id : hit.es.id } : undefined);
   }
 
   // connect preview line
@@ -1237,7 +1241,7 @@ export function createSceneView(host, callbacks = {}) {
   function onDblClick(ev) {
     if (mode !== 'select') return;
     const hit = pick(ev.clientX, ev.clientY);
-    if (hit) cb.onActivate(hitEntity(hit));
+    if (hit) cb.onActivate(hitEntity(hit), { kind: hit.kind, sceneId: hit.kind === 'node' ? hit.ns.id : hit.es.id });
   }
 
   function onKeyDown(ev) {

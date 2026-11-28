@@ -1,6 +1,7 @@
 # Checks a change on a development branch: the Lean proofs (lake build checks every theorem), the
 # WebAssembly engine, the Rust oracle, the type check, the unit tests, and Exegra's own specification
-# (validate and traceability). It publishes nothing; .github/workflows/pages.yml publishes main.
+# (validate and traceability). The unit tests have a 120 s budget (tools/run-unit-tests.js); the proof
+# re-checks and long differentials run in their own step. It publishes nothing; .github/workflows/pages.yml publishes main.
 
 name: Check
 
@@ -24,6 +25,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The golden-changes test compares the goldens with their version at a base commit.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v5
         with:
@@ -79,6 +83,10 @@ jobs:
           node cli/exegra.js traceability --project exegra > "$RUNNER_TEMP/traceability.json"
           node -e "const r=JSON.parse(require('fs').readFileSync(process.env.RUNNER_TEMP+'/traceability.json','utf8')).result;const m=r.missingModules??[],u=r.unclaimedFiles??[];console.log(JSON.stringify({missingModules:m,unclaimedFiles:u},null,2));process.exit(m.length||u.length?1:0)"
 
+      - name: Snapshot reads change no golden (no reader fires with a machine it reads)
+        if: always()
+        run: python3 docs/assessment/2026-11-26/scripts/snapshot_diff.py tests/conformance/goldens --check
+
       - name: Type check
         if: always()
         run: npx tsc -p jsconfig.json --noEmit
@@ -92,6 +100,18 @@ jobs:
           status=$?
           grep -n -A40 -E '^\s*(✖|not ok)' "$RUNNER_TEMP/unit-tests.log" | head -600
           tail -25 "$RUNNER_TEMP/unit-tests.log"
+          exit $status
+
+      # The tests that re-check proofs and run long differentials (tests/proofs), kept out of the 120 s routine
+      # suite. This step and `exegra verify` below are where they are the record of what is proved.
+      - name: Proof re-checks and differentials
+        if: always()
+        run: |
+          set +e
+          node --test --test-concurrency=2 "tests/proofs/*.test.js" > "$RUNNER_TEMP/proof-tests.log" 2>&1
+          status=$?
+          grep -n -A40 -E '^[[:space:]]*(✖|not ok)' "$RUNNER_TEMP/proof-tests.log" | head -400
+          tail -25 "$RUNNER_TEMP/proof-tests.log"
           exit $status
 
       # Executes the evidence (unit and browser tests), checks the lean-theorem claims with Lean, records

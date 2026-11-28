@@ -3,7 +3,8 @@
 // over the model and the claim results, each entry a link to the entity it names.
 
 import { h, clear, on } from './dom.js';
-import { entityLabel, relationshipsOf, dependencies, contractsOf, childrenOf, ancestorsOf, inboundRefs, componentOf } from '../core/query.js';
+import { entityLabel, relationshipsOf, dependencies, contractsOf, childrenOf, ancestorsOf, inboundRefs, componentOf, elementsOf } from '../core/query.js';
+import { baseFacts, blockReport, deriveModel, witnessOf } from '../core/abstraction.js';
 import { CLAIM_STATUSES } from '../core/claim-methods.js';
 import { recordFields, copiesOf, copyFields, sourcesOf, isPrincipalData, PRINCIPAL } from '../core/data-model.js';
 import { renderProperty, pathKey } from './property-controls.js';
@@ -387,6 +388,165 @@ export function mountInspector(el, session) {
     ]);
   }
 
+  // ---- multiscale (WG-5695): what a drawn fact stands for, and what a block is at the current cut -------------
+
+  /** The label of an element: its entity's, or a module element's path. @param {string} id */
+  const elementName = (id) => { const e = session.model.entities.get(id); return e ? entityLabel(e) : id.startsWith('module:') ? id.slice(7) : id; };
+
+  /** A button that selects an element (an entity, or a module element). @param {string} id */
+  function elementLink(id) {
+    if (session.model.entities.has(id)) return link(id);
+    const b = h('button', { type: 'button', class: 'ilink mono', 'data-entity-id': id, title: `Module element ${id}` }, elementName(id));
+    on(b, 'click', () => session.select(id));
+    return b;
+  }
+
+  /**
+   * The derived interaction (or path summary) a selected relationship is a witness of in the current structural
+   * scene: every witness with its kind, contract, carried data and provenance, each one a link to the relationship.
+   * @param {any} r
+   */
+  function interactionSection(r) {
+    const model = session.model;
+    const scene = session.scene;
+    if (scene?.projection !== 'structural') return null;
+    const on1 = session.selectedEdge ? scene.edges.find((/** @type {any} */ e) => e.id === session.selectedEdge && (e.witnesses ?? []).includes(r.id)) : null;
+    const edge = on1 ?? scene.edges.find((/** @type {any} */ e) => !e.pathSummary && (e.witnesses ?? []).includes(r.id));
+    if (!edge) {
+      const d = scene.abstraction ? deriveModel(model, { hierarchy: scene.abstraction.hierarchy, blocks: scene.abstraction.blocks }) : null;
+      const w = d ? witnessOf(d, r.id) : null;
+      const text = w?.fibre ? `At this cut it lies inside the block ${elementName(w.fibre)}, so it is not drawn; expanding that block shows it.`
+        : w?.interaction ? `At this cut it is a witness of ${elementName(w.interaction.from)} → ${elementName(w.interaction.to)} (${w.interaction.kind}), which this view's filter does not draw.`
+          : 'It is not placed at this cut.';
+      return section('interaction', 'At this cut', [h('p', { class: 'insp__text', 'data-testid': 'interaction-not-drawn' }, text)]);
+    }
+    const facts = baseFacts(model).byId;
+    const kind = (/** @type {string} */ k) => model.meta.relationshipKinds[k]?.label ?? k;
+    const rows = (edge.witnesses ?? []).map((/** @type {string} */ w) => {
+      const f = facts.get(w);
+      const rel = model.entities.get(w);
+      const btn = h('button', { type: 'button', class: 'ilink', 'data-entity-id': w, title: `Relationship ${w}` }, w);
+      on(btn, 'click', () => session.select(w, { edge: edge.id }));
+      return h('li', { class: 'ilist__item witness', 'data-testid': 'witness-row', 'data-witness': w, 'aria-current': String(w === r.id) },
+        h('div', { class: 'witness__head' }, chip(kind(f?.kind ?? rel?.data.kind), 'none'), ' ', btn),
+        f ? h('div', { class: 'witness__ends ilist__sub' }, elementName(f.from), f.fromPort ? ` (port ${f.fromPort})` : '', ' → ', elementName(f.to), f.toPort ? ` (port ${f.toPort})` : '') : null,
+        h('dl', { class: 'kv witness__kv' },
+          h('div', { class: 'kv__row' }, h('dt', { class: 'kv__k' }, 'Contract'), h('dd', { class: 'kv__v', 'data-field': 'contract' }, f?.contract ? link(f.contract) : '—')),
+          h('div', { class: 'kv__row' }, h('dt', { class: 'kv__k' }, 'Carries'), h('dd', { class: 'kv__v', 'data-field': 'carries' }, f?.carries.length ? f.carries.flatMap((c, i) => [i ? ', ' : '', link(c)]) : '—')),
+          h('div', { class: 'kv__row' }, h('dt', { class: 'kv__k' }, 'Provenance'), h('dd', { class: 'kv__v', 'data-field': 'provenance' }, f?.provenance ?? 'declared'))));
+    });
+    const head = edge.pathSummary
+      ? `Derived path summary: ${elementName(edge.from)} may reach ${elementName(edge.to)} through ${edge.pathSummary.via.map(elementName).join(', ')}, which ${edge.pathSummary.via.length === 1 ? 'is' : 'are'} hidden. It is a may-path: a path through a block need not be a path through its members. These are the relationships along it.`
+      : `${elementName(edge.from)} → ${elementName(edge.to)}: ${kind(edge.kind)}, one derived interaction at this cut standing for ${rows.length} ${rows.length === 1 ? 'relationship' : 'relationships'}.`;
+    const marks = (edge.marks ?? []).map((/** @type {any} */ m) => h('li', { class: 'ilist__item', 'data-mark': m.kind }, chip(m.text, 'warn'), ' ', m.title ?? ''));
+    return section('interaction', edge.pathSummary ? 'Path summary' : 'Derived interaction', [
+      h('div', { 'data-testid': 'derived-interaction', 'data-edge': edge.id, 'data-key': edge.key ?? '', 'data-count': String(rows.length) },
+        h('p', { class: 'insp__text' }, head),
+        marks.length ? h('ul', { class: 'ilist' }, marks) : null,
+        h('h4', { class: 'isub__head' }, `Witnesses (${rows.length})`),
+        h('ul', { class: 'ilist witness-list', 'data-testid': 'witness-list' }, rows)),
+    ]);
+  }
+
+  const KNOWLEDGE_TEXT = { transparent: 'Transparent', opaque: 'Opaque', unknown: 'Unknown' };
+  const AGREEMENT_TEXT = {
+    agrees: 'Agrees: every declared port is realised on the boundary and every typed boundary group is covered by a port.',
+    disagrees: 'Disagrees (V3): see the findings below.',
+    'no-declared-interface': 'No declared interface: the block declares no ports, so its derived interface is all there is.',
+  };
+
+  /**
+   * An element as a block of the current structural cut: purpose, responsibilities, knowledge status, boundary,
+   * derived interface, declared interface with the agreement result, and the findings about it.
+   * @param {string} id
+   */
+  function blockSections(id) {
+    const model = session.model;
+    const nav = session.currentCut?.();
+    if (!nav) return [];
+    const rep = blockReport(model, nav.hierarchy, nav.expanded, id);
+    if (!rep) return [];
+    const out = [];
+    const opened = nav.opened.includes(id);
+    const isBlock = nav.blocks.includes(id);
+    const actions = [];
+    if (isBlock && rep.members) {
+      const b = h('button', { type: 'button', class: 'btn btn--small', 'data-testid': 'block-expand' }, `Expand into its ${rep.members} ${rep.members === 1 ? 'member' : 'members'}`);
+      on(b, 'click', () => session.toggleCollapsed(id));
+      actions.push(b);
+    }
+    if (opened) {
+      const b = h('button', { type: 'button', class: 'btn btn--small', 'data-testid': 'block-collapse' }, 'Collapse into one block');
+      on(b, 'click', () => session.toggleCollapsed(id));
+      actions.push(b);
+    }
+    const where = isBlock ? 'A block of the current cut.' : opened ? 'Opened at the current cut; described here as the block it is when collapsed.' : 'Inside a block of the current cut; described here as the block it is when revealed.';
+    const k = rep.knowledge;
+    out.push(section('block', 'Block at this cut', [h('div', { 'data-testid': 'block-panel', 'data-element': id },
+      h('p', { class: 'insp__text' }, where),
+      kv([
+        ['Purpose', h('span', { 'data-testid': 'block-purpose', 'data-stated': String(rep.purpose !== null) }, rep.purpose ?? (rep.kind === 'module' ? 'A module element: its purpose is that of the component declaring it.' : 'No purpose is stated (the first coherence condition of a level is not met).'))],
+        ['Knowledge', h('span', { 'data-testid': 'block-knowledge', 'data-status': k?.status ?? '', 'data-planned': String(rep.planned) },
+          chip(`${/** @type {any} */ (KNOWLEDGE_TEXT)[k?.status ?? ''] ?? '—'}${rep.planned ? ', planned' : ''}`, k?.status === 'transparent' ? 'ok' : k?.status === 'unknown' ? 'warn' : 'none'), ' ', k?.reason ?? '')],
+        rep.kind === 'module' ? ['Declared by', ...rep.owners.flatMap((o, i) => [i ? ', ' : '', link(o)])] : null,
+        ['Members', h('span', { class: 'mono' }, String(rep.members))],
+      ]),
+      rep.responsibilities.length ? h('div', { class: 'isub' }, h('h4', { class: 'isub__head' }, 'Responsibilities'), h('ul', { class: 'ilist', 'data-testid': 'block-responsibilities' }, rep.responsibilities.map((t) => h('li', { class: 'ilist__item' }, t)))) : null,
+      actions.length ? h('p', { class: 'insp__actions-inline' }, ...actions) : null)]));
+
+    const relList = (/** @type {string[]} */ ids) => h('ul', { class: 'ilist' }, ids.map((w) => h('li', { class: 'ilist__item' }, link(w, w))));
+    out.push(section('boundary', 'Boundary', [h('div', { 'data-testid': 'block-boundary', 'data-out': String(rep.boundary.out.length), 'data-in': String(rep.boundary.in.length) },
+      h('p', { class: 'insp__text' }, `${rep.boundary.out.length} ${rep.boundary.out.length === 1 ? 'relationship leaves' : 'relationships leave'} it and ${rep.boundary.in.length} ${rep.boundary.in.length === 1 ? 'enters' : 'enter'} it: the relationships with exactly one end inside.`),
+      rep.boundary.out.length ? h('details', { class: 'isub' }, h('summary', { class: 'isub__head' }, `Outgoing (${rep.boundary.out.length})`), relList(rep.boundary.out)) : null,
+      rep.boundary.in.length ? h('details', { class: 'isub' }, h('summary', { class: 'isub__head' }, `Incoming (${rep.boundary.in.length})`), relList(rep.boundary.in)) : null)]));
+
+    const groups = rep.interface.groups;
+    out.push(section('derived-interface', 'Derived interface', [groups.length ? h('table', { class: 'itable cardtable', 'data-testid': 'block-interface' },
+      h('thead', {}, h('tr', {}, h('th', {}, 'Direction'), h('th', {}, 'Kind'), h('th', {}, 'Contract'), h('th', {}, 'Relationships'), h('th', {}, 'Events'), h('th', {}, 'Declared by'))),
+      h('tbody', {}, groups.map((g) => h('tr', { 'data-testid': 'interface-group', 'data-group': g.id },
+        h('td', { class: 'cardtable__title' }, g.direction === 'out' ? 'Requires (out)' : 'Provides (in)'),
+        h('td', { 'data-label': 'Kind' }, model.meta.relationshipKinds[g.kind]?.label ?? g.kind),
+        h('td', { 'data-label': 'Contract' }, g.contract ? link(g.contract) : '—'),
+        h('td', { 'data-label': 'Relationships', class: 'mono' }, String(g.witnesses.length)),
+        h('td', { 'data-label': 'Events' }, g.events.length ? g.events.flatMap((e, i) => [i ? ', ' : '', link(e)]) : '—'),
+        h('td', { 'data-label': 'Declared by' }, g.matchedBy.length ? g.matchedBy.flatMap((p, i) => [i ? ', ' : '', link(p)]) : '—')))))
+      : h('p', { class: 'insp__muted', 'data-testid': 'block-interface-empty' }, 'Nothing crosses its boundary, so its derived interface is empty.')]));
+
+    const ports = rep.interface.ports;
+    out.push(section('declared-interface', 'Declared interface', [h('div', { 'data-testid': 'block-ports', 'data-ports': String(ports.length) },
+      h('p', { class: 'insp__text', 'data-testid': 'block-agreement', 'data-agreement': rep.agreement }, /** @type {any} */ (AGREEMENT_TEXT)[rep.agreement]),
+      rep.interface.authority === 'declared' ? h('p', { class: 'insp__muted' }, 'It is opaque: its declared interface is authoritative.') : null,
+      ports.length ? h('ul', { class: 'ilist' }, ports.map((p) => h('li', { class: 'ilist__item', 'data-port': p.port }, link(p.port), ' ', h('span', { class: 'ilist__sub' }, `${p.direction}${p.contract ? ` ${p.contract}` : ''}`), ' ',
+        p.matches.length ? chip(`realised by ${p.matches.length} ${p.matches.length === 1 ? 'group' : 'groups'}`, 'ok') : chip('realised by nothing', 'warn')))) : null)]));
+
+    const findings = rep.diagnostics;
+    out.push(section('coherence', 'Findings at this cut', [findings.length
+      ? h('ul', { class: 'ilist', 'data-testid': 'block-findings' }, findings.map((x) => h('li', { class: 'ilist__item', 'data-code': x.code }, chip(x.condition, x.severity === 'error' ? 'bad' : 'warn'), ' ', x.message)))
+      : h('p', { class: 'insp__muted', 'data-testid': 'block-findings' }, `No finding: the partition is well formed here and the interface conditions hold. ${rep.coherence.note}`)]));
+    return out;
+  }
+
+  /** A claim stated at a cut, with its result at the cut the current view draws. @param {any} claim */
+  function claimAtCutSection(claim) {
+    const at = (session.scene?.levelClaims ?? []).find((/** @type {any} */ c) => c.claimId === claim.id);
+    if (!at) return null;
+    return section('claim-at-cut', 'At the current cut', [h('div', { 'data-testid': 'claim-at-cut', 'data-status': at.status, 'data-expressible': String(at.expressible) },
+      at.expressible ? statusChip(at.status, true) : chip('Not expressible at this level', 'warn'),
+      h('p', { class: 'insp__text' }, at.explanation),
+      at.drawn.length || at.notDrawn.length ? h('p', { class: 'insp__muted' }, `Its counterexample: ${at.drawn.length} drawn in red at this cut${at.notDrawn.length ? `, ${at.notDrawn.length} not drawn here (${at.notDrawn.join(', ')})` : ''}.`) : null)]);
+  }
+
+  /** The inspector of a module element: what it is, and the block it is at the current cut. @param {string} id */
+  function moduleSections(id) {
+    const el = elementsOf(session.model).get(id);
+    return [section('identity', 'Identity', [kv([
+      ['Kind', 'Module element'],
+      ['Label', h('strong', { class: 'insp__title' }, elementName(id))],
+      ['Id', h('code', { class: 'mono' }, id)],
+      ['Declared by', ...(el?.owners ?? []).flatMap((o, i) => [i ? ', ' : '', link(o)])],
+    ])]), ...blockSections(id)];
+  }
+
   // ---- render ------------------------------------------------------------
 
   function captureFocus() {
@@ -422,14 +582,23 @@ export function mountInspector(el, session) {
       lastId = null;
       return;
     }
+    // A module element is an element no entity declares: it is shown as the block it is.
+    if (!entity && id && elementsOf(model).has(id)) {
+      root.dataset.entityId = id;
+      root.append(...moduleSections(id));
+      lastId = id;
+      el.scrollTop = same ? top : 0;
+      return;
+    }
     const shown = entity ?? model.system;
     root.dataset.entityId = shown.id;
     if (!entity) root.append(overview(model));
     root.append(identity(shown), properties(shown));
     root.append(...[diagnosticsSection(shown)].filter(Boolean));
+    if (shown.kind === 'component' || shown.kind === 'system') root.append(...blockSections(shown.id));
     if (shown.kind === 'component') root.append(...componentSections(shown));
-    else if (shown.kind === 'relationship') root.append(relationshipSection(shown));
-    else if (shown.kind === 'claim') root.append(claimSection(shown));
+    else if (shown.kind === 'relationship') root.append(...[interactionSection(shown), relationshipSection(shown)].filter(Boolean));
+    else if (shown.kind === 'claim') root.append(...[claimAtCutSection(shown), claimSection(shown)].filter(Boolean));
     else if (shown.kind === 'behavior') root.append(...behaviorSections(shown));
     else if (shown.kind === 'scenario') root.append(...scenarioSections(shown));
     else if (shown.kind === 'record') root.append(...recordSections(shown));
@@ -458,6 +627,8 @@ export function mountInspector(el, session) {
     session.on('project', now),
     session.on('model', schedule),
     session.on('claims', schedule),
+    // The cut changed: the block panel and the derived interaction of the selection change with it.
+    session.on('scene', schedule),
   ];
   render();
   return () => { if (pending) clearTimeout(pending); for (const u of unsubs) u(); clear(el); };

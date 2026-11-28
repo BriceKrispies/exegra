@@ -1,6 +1,13 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "markdown-import-flow": 0,
+   "workspace-disk-flow": 0
+  },
+  "links": {},
   "machines": {
    "markdown-import-flow": {
     "state": "md-done",
@@ -24,10 +31,23 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "markdown-import-flow": 0,
+   "workspace-disk-flow": 0
+  },
+  "links": {},
   "machines": {
    "markdown-import-flow": {
     "state": "md-idle",
@@ -51,10 +71,12 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "markdown-source-unmapped",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -65,6 +87,7 @@
    {
     "event": "markdown-import-run",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -73,13 +96,27 @@
     "time": 0
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "markdown-import-coverage-fails",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "markdown-import-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "markdown-import-flow": {
       "state": "md-idle",
@@ -103,10 +140,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "markdown-import-run",
       "payload": {},
+      "scheduledAt": 0,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -115,11 +154,18 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "markdown-source-unmapped",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -133,6 +179,7 @@
      "emitted": [],
      "from": "md-idle",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": false,
@@ -148,11 +195,14 @@
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "markdown-source-unmapped",
     "md-unmapped",
@@ -163,6 +213,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "markdown-import-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "markdown-import-flow": {
       "state": "md-idle",
@@ -186,12 +243,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "markdown-spec-built",
+      "from": {
+       "behavior": "markdown-import-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "coverage": false
       },
+      "scheduledAt": 0,
       "seq": 2,
       "source": {
        "behavior": "markdown-import-flow",
@@ -201,11 +265,18 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "markdown-import-run",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -228,6 +299,7 @@
      ],
      "from": "md-idle",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "md-idle",
      "transition": "md-build"
@@ -237,11 +309,14 @@
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "markdown-import-run",
     "md-build",
@@ -252,6 +327,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "markdown-import-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "markdown-import-flow": {
       "state": "md-done",
@@ -275,10 +357,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "markdown-report-printed",
+      "from": {
+       "behavior": "markdown-import-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 3,
       "source": {
        "behavior": "markdown-import-flow",
@@ -288,13 +377,25 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "markdown-import-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "markdown-spec-built",
     "payload": {
      "coverage": false
     },
+    "scheduledAt": 0,
     "seq": 2,
     "source": {
      "behavior": "markdown-import-flow",
@@ -316,6 +417,7 @@
      ],
      "from": "md-idle",
      "guard": "!event.coverage",
+     "instance": 0,
      "sets": [],
      "to": "md-done",
      "transition": "md-refuse"
@@ -325,11 +427,14 @@
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "markdown-spec-built",
     "md-refuse",
@@ -340,6 +445,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "markdown-import-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "markdown-import-flow": {
       "state": "md-done",
@@ -363,12 +475,25 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "markdown-import-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "markdown-report-printed",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 3,
     "source": {
      "behavior": "markdown-import-flow",
@@ -382,20 +507,28 @@
     {
      "behavior": "markdown-import-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "markdown-report-printed"
    ],
    "time": 0
   }
- ]
+ ],
+ "stepsTaken": 4,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

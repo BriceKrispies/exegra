@@ -2,8 +2,13 @@
 // semantic model. A view is never a separate dataset; every node and edge is
 // backed by a real entity. Positions are decided elsewhere (layout.js).
 
-import { componentOf, ancestorsOf, descendantsOf, entityLabel } from './query.js';
+import { ancestorsOf, entityLabel, componentsFor, elementsOf, hierarchyOf, ancestorsIn, cutBlocksOf, knowledgeOf, LOGICAL } from './query.js';
+import {
+  cutForCollapse, deriveModel, restrictInteraction, baseFacts, endpointElement, cutOfExpanded, expandedOfCut, declaredCutWithBlocks,
+  pathSummaries, blocksWithoutPurpose,
+} from './abstraction.js';
 import { own } from './own.js';
+import { kindInfo } from './interactions.js';
 import { dataFindings, sourcesOf } from './data-model.js';
 
 /** @typedef {import('./types.js').Model} Model */
@@ -11,11 +16,15 @@ import { dataFindings, sourcesOf } from './data-model.js';
 /** @typedef {import('./types.js').SceneModel} SceneModel */
 /** @typedef {import('./types.js').SceneNode} SceneNode */
 /** @typedef {import('./types.js').SceneEdge} SceneEdge */
+/** @typedef {import('./abstraction.js').DerivedModel} DerivedModel */
 
 /**
  * @typedef {Object} ProjectionContext
- * @property {Set<string>} [collapsed]
+ * @property {{hierarchy: string, expanded: string[]}|null} [cut]  a structural view's interactive cut: the hierarchy and the elements
+ *   the viewer has expanded (src/core/abstraction.js, cutOfExpanded); without it the view's default cut
+ * @property {Set<string>} [collapsed]  a legacy collapse set (cutForCollapse), used when no cut is given
  * @property {Set<string>} [hidden]
+ * @property {{claimId: string, result: any}[]} [levelClaims]  claims stated at a cut, evaluated at this scene's cut
  * @property {string|null} [isolate]
  * @property {string|null} [focusClaim]
  * @property {string|null} [focusScenario]
@@ -100,6 +109,15 @@ export function project(model, viewId, ctx = {}) {
 
 // ---------------------------------------------------------------- helpers
 
+/**
+ * The component a relationship endpoint stands for, from the core (abstraction.js, endpointElement).
+ * @param {Model} model @param {any} id @returns {Entity|undefined}
+ */
+function endpointComponent(model, id) {
+  const el = endpointElement(model, id);
+  return el ? model.entities.get(el.element) : undefined;
+}
+
 /** @param {Model} model @param {string} cat */
 function categoryOf(model, cat) {
   return own(model.meta.categories, cat) ?? { label: cat ?? 'component', shape: 'box', color: 'slate' };
@@ -133,198 +151,396 @@ function violatedIds(ctx) {
 }
 
 // ------------------------------------------------------------- structural
+//
+// A structural view is a hierarchy, a cut, a kind coarsening and a filter (WG-5695). The scene is the derived
+// model at the cut (src/core/abstraction.js, deriveModel): one node per block, a container for every element the cut
+// opens, and one edge per derived interaction. The filter (view.filter, isolate, hidden elements) then removes
+// blocks and witnesses, and everything it removes is reported: a connection through hidden blocks becomes a
+// labelled path summary, every other lost connection is counted in the notes. Nothing here lifts, bundles or maps
+// entities to elements; those are the core's (abstraction.js, query.js).
+
+/** A large model's structural views open as an overview: top-level subsystems collapsed (a default cut). */
+export const OVERVIEW_THRESHOLD = 30;
+
+/**
+ * The cut a structural view opens at, as the hierarchy and the elements it expands: the view's declared cut;
+ * otherwise, in the logical hierarchy, the overview of a large model (top-level subsystems collapsed) or every
+ * subsystem open; in another hierarchy, its first declared cut or its roots opened. A `within` filter opens the
+ * path to its element.
+ * @param {Model} model @param {any} view
+ * @returns {{hierarchy: string, expanded: string[]}}
+ */
+export function defaultCut(model, view) {
+  const cutEntity = typeof view.cut === 'string' ? model.entities.get(view.cut) : undefined;
+  const declared = cutEntity?.kind === 'cut' ? expandedOfCut(model, cutEntity.id) : null;
+  const hid = typeof view.hierarchy === 'string' && hierarchyOf(model, view.hierarchy) ? view.hierarchy : declared?.hierarchy ?? LOGICAL;
+  const h = /** @type {import('./query.js').Hierarchy} */ (hierarchyOf(model, hid));
+  /** @type {Set<string>} */
+  let expanded;
+  if (declared && declared.hierarchy === hid) expanded = new Set(declared.expanded);
+  else if (hid !== LOGICAL) {
+    const first = (model.byKind.cut ?? []).map((c) => expandedOfCut(model, c.id)).find((c) => c && c.hierarchy === hid);
+    expanded = new Set(first ? first.expanded : h.roots.filter((r) => (h.children.get(r) ?? []).length));
+  } else {
+    const systemId = model.system?.id;
+    const large = (model.byKind.component ?? []).length > OVERVIEW_THRESHOLD;
+    const collapsed = new Set(large ? (model.byKind.component ?? []).filter((c) => c.data.kind === 'subsystem' && (!c.data.parent || c.data.parent === systemId)).map((c) => c.id) : []);
+    expanded = new Set(cutBlocksOf(h, { blocks: cutForCollapse(model, collapsed).blocks }).expanded);
+  }
+  const within = view.filter?.within;
+  if (typeof within === 'string' && h.depth.has(within)) { expanded.add(within); for (const a of ancestorsIn(h, within)) expanded.add(a); }
+  return { hierarchy: hid, expanded: h.order.filter((e) => expanded.has(e)) };
+}
+
+/** The look of an element that is no component: the system, a module element. @type {Record<string, [string, string, string]>} shape, color, sublabel */
+const ELEMENT_LOOK = { system: ['box', 'steel', 'System'], module: ['tablet', 'slate', 'Module'] };
+
+/** The marks a block's knowledge status, realisation and coherence give, as short text and a sentence (WG-5695). */
+const MARK_TEXT = {
+  opaque: ['opaque', 'Opaque: its inside is not specified; its declared interface is all that is known.'],
+  external: ['external', 'Outside the specified system: only how the system uses it is specified.'],
+  planned: ['planned', 'Planned: not implemented; its declared interface is all there is.'],
+  unknown: ['unknown', 'Unknown: a placeholder; nothing derived through it is asserted.'],
+  'no-purpose': ['no purpose', 'States no purpose: the first coherence condition of a level is not met for this block.'],
+  'interface-disagrees': ['interface disagrees', 'Its declared ports and its derived interface disagree at this cut (V3).'],
+  unwitnessed: ['unwitnessed', 'Declared at a composite but witnessed by no relationship between its members (V2).'],
+  'kind-not-coarsening': ['kind not coarsening', 'Declared with a kind none of its member facts refines (V4).'],
+  'not-declared': ['not only declared', 'Witnessed by facts that are not declared in the specification: extracted from the code or observed in a recording.'],
+  'hidden-inside': ['hidden inside', 'Some elements inside it are hidden; relationships touching them are not drawn.'],
+};
+/** @param {keyof typeof MARK_TEXT} kind @param {string} [text] */
+const mark = (kind, text) => ({ kind, text: text ?? MARK_TEXT[kind][0], title: MARK_TEXT[kind][1] });
 
 registerProjection('structural', (model, view, ctx) => {
   const filter = view.filter ?? {};
   const display = view.display ?? {};
-  const comps = model.byKind.component ?? [];
-  const compById = new Map(comps.map((c) => [c.id, c]));
   const notes = [PRESENTATION_NOTE];
+  const elements = elementsOf(model);
+  const compById = new Map((model.byKind.component ?? []).map((c) => [c.id, c]));
 
-  // 1. Which components pass the scope and filters.
-  /** @type {Set<string>} */
-  let inScope = new Set(comps.map((c) => c.id));
-  const restrictTo = (/** @type {string} */ rootId, /** @type {string} */ label) => {
-    if (!compById.has(rootId)) return;
-    const keep = new Set([rootId, ...descendantsOf(model, rootId).map((c) => c.id)]);
-    inScope = new Set([...inScope].filter((id) => keep.has(id)));
-    notes.push(`${label} ${entityLabel(/** @type {Entity} */ (compById.get(rootId)))} and what it contains.`);
-  };
-  if (typeof filter.within === 'string') restrictTo(filter.within, 'Limited to the subsystem');
-  if (typeof ctx.isolate === 'string' && ctx.isolate) restrictTo(ctx.isolate, 'Isolated to');
+  // 1. The hierarchy: the viewer's (ctx.cut) or the view's default.
+  const nav = ctx.cut && hierarchyOf(model, ctx.cut.hierarchy) ? ctx.cut : null;
+  const fallback = nav ? null : defaultCut(model, view);
+  const hid = nav ? nav.hierarchy : /** @type {{hierarchy: string}} */ (fallback).hierarchy;
+  const h = /** @type {import('./query.js').Hierarchy} */ (hierarchyOf(model, hid));
+  const within = (/** @type {string} */ e, /** @type {string} */ root) => e === root || ancestorsIn(h, e).includes(root);
 
+  // 2. The filter, on elements: within and isolate (a subtree), categories and tags (matching elements and what
+  // contains them), hidden elements (and what they contain). A module element is judged by the component declaring it.
+  const dataOf = (/** @type {string} */ e) => { const el = elements.get(e); return el?.entity?.data ?? (el?.owners ? compById.get(el.owners[0])?.data : undefined) ?? {}; };
+  /** @type {string[]} */
+  const roots = [];
+  if (typeof filter.within === 'string' && h.depth.has(filter.within)) { roots.push(filter.within); notes.push(`Limited to ${elementLabel(model, filter.within)} and what it contains.`); }
+  if (typeof ctx.isolate === 'string' && ctx.isolate && h.depth.has(ctx.isolate)) { roots.push(ctx.isolate); notes.push(`Isolated to ${elementLabel(model, ctx.isolate)} and what it contains.`); }
   const cats = Array.isArray(filter.categories) && filter.categories.length ? filter.categories : null;
   const tags = Array.isArray(filter.tags) && filter.tags.length ? filter.tags : null;
-  if (cats || tags) {
-    /** @type {Set<string>} */
-    const matching = new Set();
-    for (const id of inScope) {
-      const c = /** @type {Entity} */ (compById.get(id));
-      if (cats && !cats.includes(c.data.category)) continue;
-      if (tags && !(Array.isArray(c.data.tags) && c.data.tags.some((/** @type {string} */ t) => tags.includes(t)))) continue;
-      matching.add(id);
-    }
-    const keep = new Set(matching);
-    for (const id of matching) for (const a of ancestorsOf(model, id)) if (inScope.has(a)) keep.add(a);
-    inScope = keep;
-    if (cats) notes.push(`Filtered to categories: ${cats.join(', ')}.`);
-    if (tags) notes.push(`Filtered to tags: ${tags.join(', ')}.`);
-  }
   const kinds = Array.isArray(filter.relationshipKinds) && filter.relationshipKinds.length ? filter.relationshipKinds : null;
+  if (cats) notes.push(`Filtered to categories: ${cats.join(', ')}.`);
+  if (tags) notes.push(`Filtered to tags: ${tags.join(', ')}.`);
   if (kinds) notes.push(`Filtered to relationship kinds: ${kinds.join(', ')}.`);
-
-  // 2. Hidden components (and everything inside them).
-  let hiddenCount = 0;
-  if (ctx.hidden && ctx.hidden.size) {
-    for (const id of [...inScope]) {
-      if (ctx.hidden.has(id) || ancestorsOf(model, id).some((a) => /** @type {Set<string>} */ (ctx.hidden).has(a))) { inScope.delete(id); hiddenCount++; }
-    }
-    if (hiddenCount) notes.push(`${hiddenCount} ${plural(hiddenCount, 'component is', 'components are')} hidden; relationships touching ${plural(hiddenCount, 'it are', 'them are')} not drawn.`);
-  }
-  if (inScope.size === 0) notes.push('No components match this view.');
-
-  // 3. Collapse: the outermost collapsed visible subsystem stands for its subtree.
-  /** @type {Map<string, string>} component id -> id of the node that represents it */
-  const rep = new Map();
+  const hidden = ctx.hidden ?? new Set();
+  const isHidden = (/** @type {string} */ e) => hidden.has(e) || ancestorsIn(h, e).some((a) => hidden.has(a));
+  const matches = (/** @type {string} */ e) => {
+    const d = dataOf(e);
+    if (cats && !cats.includes(d.category)) return false;
+    if (tags && !(Array.isArray(d.tags) && d.tags.some((/** @type {string} */ t) => tags.includes(t)))) return false;
+    return true;
+  };
+  // In scope: what passes within, isolate, categories and tags, before hiding (a hidden element in scope is summarised).
   /** @type {Set<string>} */
-  const shown = new Set();
-  /** @type {Set<string>} */
-  const collapsedShown = new Set();
-  const collapsed = ctx.collapsed ?? new Set();
-  for (const c of comps) {
-    if (!inScope.has(c.id)) continue;
-    const chain = [...ancestorsOf(model, c.id).reverse(), c.id];
-    const hit = chain.find((id) => collapsed.has(id) && inScope.has(id) && compById.get(id)?.data.kind === 'subsystem' && hasChildren(model, id));
-    const r = hit ?? c.id;
-    rep.set(c.id, r);
-    if (r === c.id) shown.add(c.id);
-    if (hit) collapsedShown.add(hit);
+  const scope = new Set();
+  for (const e of h.order) {
+    if (elements.get(e)?.kind === 'system' && !(h.children.get(e) ?? []).length) continue;
+    if (roots.some((r) => !within(e, r))) continue;
+    if ((cats || tags) && !matches(e)) continue;
+    scope.add(e);
   }
-  for (const id of collapsedShown) shown.add(id);
+  if (cats || tags) for (const e of [...scope]) for (const a of ancestorsIn(h, e)) if (roots.every((r) => within(a, r))) scope.add(a);
+  // Shown: in scope and not hidden, and what contains such an element.
+  const shownSet = new Set([...scope].filter((e) => !isHidden(e)));
+  for (const e of [...shownSet]) for (const a of ancestorsIn(h, e)) if (!isHidden(a)) shownSet.add(a);
+  const hiddenInScope = [...scope].filter((e) => hidden.has(e));
 
-  // 4. Nodes.
-  const violated = violatedIds(ctx);
+  // 3. The cut and its derived model.
+  /** @type {{hierarchy: string, blocks: string[], expanded: string[]}} */
+  let cut;
+  if (nav) cut = /** @type {any} */ (cutOfExpanded(model, hid, nav.expanded));
+  else if (ctx.collapsed && hid === LOGICAL) {
+    const b = cutForCollapse(model, ctx.collapsed, (id) => shownSet.has(id) && scope.has(id)).blocks;
+    cut = { hierarchy: LOGICAL, blocks: b, expanded: cutBlocksOf(h, { blocks: b }).expanded };
+  } else cut = /** @type {any} */ (cutOfExpanded(model, hid, /** @type {{expanded: string[]}} */ (fallback ?? defaultCut(model, view)).expanded));
+  const coarsen = Array.isArray(view.coarsen) && view.coarsen.length ? (view.coarsen.includes('all') ? 'all' : view.coarsen) : null;
+  const d = /** @type {DerivedModel} */ (deriveModel(model, { hierarchy: hid, blocks: cut.blocks }, { coarsen }));
+  const blockInfo = new Map(d.blocks.map((b) => [b.id, b]));
+  const openedSet = new Set(cut.expanded);
+
+  // 4. Which blocks are drawn. A block is removed by the filter when nothing in it is in scope, by the viewer when
+  // it or a container of it is hidden.
+  const visibleBlock = (/** @type {string} */ b) => shownSet.has(b) && !isHidden(b);
+  /** @type {Set<string>} */
+  const removedHidden = new Set();
+  /** @type {Set<string>} */
+  const removedFilter = new Set();
+  for (const b of d.blocks) {
+    if (visibleBlock(b.id)) continue;
+    if (isHidden(b.id) && [...scope].some((e) => within(e, b.id))) removedHidden.add(b.id); else removedFilter.add(b.id);
+  }
+  const drawnBlocks = d.blocks.filter((b) => visibleBlock(b.id)).map((b) => b.id);
+  /** Nodes: the drawn blocks and the opened elements that contain them. */
+  const drawn = new Set(drawnBlocks);
+  for (const b of drawnBlocks) for (const a of ancestorsIn(h, b)) if (openedSet.has(a)) drawn.add(a);
+  if (!drawn.size) notes.push('No element matches this view at this cut.');
+
+  // 5. Claims: verdicts of the whole model, and those of claims stated at a cut evaluated at this cut.
+  const levelResults = /** @type {{claimId: string, result: any}[]} */ (ctx.levelClaims ?? []);
+  const levelIds = new Set(levelResults.map((x) => x.claimId));
+  const violated = violatedIds({ claimResults: (ctx.claimResults ?? []).filter((r) => !levelIds.has(r.claimId)) });
+  /** @type {Set<string>} */
+  const levelViolated = new Set();
+  for (const { result } of levelResults) {
+    if (result?.status !== 'violated' || !result.counterexample) continue;
+    for (const id of [...(result.counterexample.entities ?? []), ...(result.counterexample.path ?? [])]) levelViolated.add(id);
+  }
+
+  // 6. Nodes.
   const colorBy = display.colorBy ?? 'category';
   const zones = colorBy === 'trustZone'
-    ? [...new Set(comps.filter((c) => shown.has(c.id) && typeof c.data.trustZone === 'string' && c.data.trustZone).map((c) => c.data.trustZone))].sort()
+    ? [...new Set([...drawn].map((id) => compById.get(id)?.data.trustZone).filter((z) => typeof z === 'string' && z))].sort()
     : [];
   const portCounts = new Map();
   if (display.showPorts === true) for (const p of model.byKind.port ?? []) if (p.owner) portCounts.set(p.owner, (portCounts.get(p.owner) ?? 0) + 1);
-
+  const purposeless = new Set(blocksWithoutPurpose(model, d).filter((b) => drawn.has(b)));
+  const v3 = new Set(d.diagnostics.filter((x) => x.condition === 'V3' && x.element).map((x) => /** @type {string} */ (x.element)));
   /** @type {Map<string, any>} */
   const legend = new Map();
   /** @type {SceneNode[]} */
   const nodes = [];
-  /** @type {Set<string>} */
-  const emitted = new Set();
-  const nearestShownParent = (/** @type {string} */ id) => {
-    for (const a of ancestorsOf(model, id)) if (shown.has(a)) return a;
-    return null;
-  };
-  /** @param {Entity} c */
-  const emit = (c) => {
-    if (emitted.has(c.id) || !shown.has(c.id)) return;
-    const parent = nearestShownParent(c.id);
-    if (parent) emit(/** @type {Entity} */ (compById.get(parent)));
-    emitted.add(c.id);
-    const cat = categoryOf(model, c.data.category);
-    const isCollapsed = collapsedShown.has(c.id);
-    const childShown = !isCollapsed && c.data.kind === 'subsystem' && comps.some((x) => shown.has(x.id) && nearestShownParent(x.id) === c.id);
-    /** @type {string} */
-    let color = cat.color;
-    /** @type {string} */
-    let legendId = String(c.data.category);
-    let legendLabel = cat.label;
-    if (colorBy === 'implementation') {
-      const st = c.data.implementation?.status;
+  const nearestDrawn = (/** @type {string} */ id) => ancestorsIn(h, id).find((a) => drawn.has(a)) ?? null;
+  for (const id of h.order) {
+    if (!drawn.has(id)) continue;
+    const el = /** @type {import('./query.js').Element} */ (elements.get(id));
+    const entity = el.entity ?? (el.owners ? compById.get(el.owners[0]) : undefined);
+    if (!entity) continue;
+    const isContainer = openedSet.has(id);
+    const members = (h.children.get(id) ?? []).length;
+    const isBlock = blockInfo.has(id);
+    const look = own(ELEMENT_LOOK, el.kind);
+    const cat = entity.kind === 'component' && el.kind !== 'module' ? categoryOf(model, entity.data.category) : null;
+    let color = cat ? cat.color : look ? look[1] : 'neutral';
+    let legendId = cat ? String(entity.data.category) : `element:${el.kind}`;
+    let legendLabel = cat ? cat.label : look ? look[2] : el.kind;
+    if (cat && colorBy === 'implementation') {
+      const st = entity.data.implementation?.status;
       const m = own(/** @type {any} */ (IMPLEMENTATION_COLORS), st);
       color = m ? m[0] : 'neutral';
       legendId = `implementation:${st ?? 'absent'}`;
       legendLabel = m ? `Implementation: ${m[1]}` : 'Implementation: not stated';
-    } else if (colorBy === 'trustZone') {
-      const z = c.data.trustZone;
+    } else if (cat && colorBy === 'trustZone') {
+      const z = entity.data.trustZone;
       color = z ? ZONE_PALETTE[zones.indexOf(z) % ZONE_PALETTE.length] : 'neutral';
       legendId = `zone:${z ?? 'none'}`;
       legendLabel = z ? `Trust zone: ${z}` : 'Trust zone: none stated';
     }
     /** @type {string[]} */
     const badges = [];
-    if (isCollapsed) badges.push(`${descendantsOf(model, c.id).length} inside`);
-    if (portCounts.has(c.id)) { const n = portCounts.get(c.id); badges.push(`${n} ${plural(n, 'port', 'ports')}`); }
+    if (!isContainer && members) {
+      // What the block stands for, counted after the filter: the elements inside it in scope and not hidden.
+      const inside = [...shownSet].filter((e) => e !== id && within(e, id));
+      const nonModule = inside.filter((e) => elements.get(e)?.kind !== 'module').length;
+      badges.push(nonModule ? `${nonModule} inside` : `${inside.length} ${plural(inside.length, 'module', 'modules')}`);
+    }
+    if (portCounts.has(id)) { const n = portCounts.get(id); badges.push(`${n} ${plural(n, 'port', 'ports')}`); }
     // When the whole system is illustrative the scene notes say so once; per-node badges mark only exceptions.
-    if (c.data.illustrative === true && model.system?.data.illustrative !== true) badges.push('illustrative');
+    if (entity.data.illustrative === true && el.kind !== 'module' && model.system?.data.illustrative !== true) badges.push('illustrative');
+    /** @type {{kind: string, text: string, title?: string}[]} */
+    const marks = [];
+    const knowledge = isBlock ? /** @type {any} */ (blockInfo.get(id)).knowledge : knowledgeOf(model, id)?.status ?? null;
+    if (el.kind !== 'module') {
+      const planned = entity.kind === 'component' && entity.data.implementation?.status === 'not-implemented';
+      if (knowledge === 'unknown') marks.push(mark('unknown'));
+      else if (planned) marks.push(mark('planned'));
+      else if (knowledge === 'opaque') marks.push(el.kind === 'external' || el.kind === 'actor' || entity.data.category === 'external' ? mark('external', el.kind === 'actor' ? 'actor' : 'external') : mark('opaque'));
+      if (purposeless.has(id)) marks.push(mark('no-purpose'));
+      if (v3.has(id) && isBlock) marks.push(mark('interface-disagrees'));
+    }
+    const hiddenInside = hiddenInScope.filter((x) => x !== id && within(x, id)).length;
+    if (hiddenInside) marks.push(mark('hidden-inside', `${hiddenInside} hidden`));
+    const path = String(el.path ?? '');
+    const label = el.kind === 'module' ? (path.endsWith('/') ? `${path.slice(0, -1).split('/').pop()}/` : path.split('/').pop() ?? path) : entityLabel(entity);
     /** @type {SceneNode} */
     const node = {
-      id: c.id, entityId: c.id, entityKind: 'component', label: entityLabel(c), sublabel: cat.label,
-      shape: childShown ? 'container' : cat.shape, color, parent, container: childShown,
+      id, entityId: entity.id, entityKind: entity.kind, label, sublabel: el.kind === 'module' ? path : cat ? cat.label : look ? look[2] : el.kind,
+      shape: isContainer ? 'container' : cat ? cat.shape : look ? look[0] : 'box', color, parent: nearestDrawn(id), container: isContainer,
+      element: id, elementKind: el.kind, block: isBlock,
     };
-    if (isCollapsed) node.collapsed = true;
+    if (knowledge) node.knowledge = knowledge;
+    if (!isContainer && members) node.collapsed = true;
     if (badges.length) node.badges = badges;
-    if (violated.has(c.id)) node.status = 'violated';
+    if (marks.length) node.marks = marks;
+    if (violated.has(id) || levelViolated.has(id)) node.status = 'violated';
     nodes.push(node);
-    if (childShown) addLegend(legend, 'container', { kind: 'node', label: 'Subsystem (contains components)', shape: 'container', color: 'neutral' });
-    else addLegend(legend, legendId, { kind: 'node', label: legendLabel, shape: colorBy === 'category' ? cat.shape : 'box', color });
-  };
-  for (const c of comps) emit(c);
+    if (isContainer) addLegend(legend, 'container', { kind: 'node', label: 'Opened element (contains the blocks drawn inside it)', shape: 'container', color: 'neutral' });
+    else addLegend(legend, legendId, { kind: 'node', label: legendLabel, shape: colorBy === 'category' || !cat ? node.shape : 'box', color });
+    for (const m of marks) addLegend(legend, `mark:${m.kind}`, { kind: 'mark', mark: m.kind, label: m.title ?? m.text, color: 'neutral' });
+  }
 
-  // 5. Edges.
-  /** @type {SceneEdge[]} */
-  const edges = [];
-  let lifted = 0;
-  let internal = 0;
-  let bundled = 0;
-  /** @type {Map<string, {edge: SceneEdge, count: number}>} */
-  const bundles = new Map();
-  for (const r of model.byKind.relationship ?? []) {
-    if (kinds && !kinds.includes(r.data.kind)) continue;
-    const fc = componentOf(model, r.data.from);
-    const tc = componentOf(model, r.data.to);
-    if (!fc || !tc) continue;
-    const from = rep.get(fc.id);
-    const to = rep.get(tc.id);
-    if (!from || !to) continue;
-    const isLifted = from !== fc.id || to !== tc.id;
-    if (isLifted && from === to) { internal++; continue; }
-    if (isLifted) lifted++;
-    const rk = relKindOf(model, r.data.kind);
+  // 7. Edges: the derived interactions between drawn blocks, each restricted to the witnesses the filter keeps,
+  // named by its first witness in declaration order and carrying all of them.
+  const facts = baseFacts(model).byId;
+  const factInScope = (/** @type {import('./abstraction.js').BaseFact} */ f) => scope.has(f.from) && scope.has(f.to);
+  const kindKept = (/** @type {import('./abstraction.js').BaseFact} */ f) => !kinds || kinds.includes(f.kind);
+  const keep = (/** @type {import('./abstraction.js').BaseFact} */ f) => factInScope(f) && !isHidden(f.from) && !isHidden(f.to) && kindKept(f);
+  const declaredOrder = new Map((model.byKind.relationship ?? []).map((r, i) => [r.id, i]));
+  const first = (/** @type {string[]} */ ws) => ws.reduce((a, b) => (/** @type {number} */ (declaredOrder.get(a)) <= /** @type {number} */ (declaredOrder.get(b)) ? a : b));
+  const unwitnessed = new Set(d.diagnostics.filter((x) => x.code === 'abstraction.unwitnessed' && x.relationship).map((x) => /** @type {string} */ (x.relationship)));
+  const notCoarsening = new Set(d.diagnostics.filter((x) => x.code === 'abstraction.kind-not-coarsening' && x.relationship).map((x) => /** @type {string} */ (x.relationship)));
+  /** @type {{edge: SceneEdge, order: number}[]} */
+  const drawnEdges = [];
+  let lifted = 0, bundled = 0, internal = 0, droppedInteractions = 0, droppedWitnesses = 0, droppedByKind = 0, droppedHidden = 0, droppedScope = 0;
+  for (const i of d.interactions) {
+    if (!drawn.has(i.from) || !drawn.has(i.to)) {
+      // Removed with a block: summarised below when the block is hidden, counted here otherwise.
+      if (!removedHidden.has(i.from) && !removedHidden.has(i.to) && (drawn.has(i.from) || drawn.has(i.to))) {
+        const kept = i.witnesses.filter((w) => { const f = facts.get(w); return !!f && kindKept(f); });
+        if (kept.length) { droppedInteractions++; droppedWitnesses += kept.length; }
+      }
+      continue;
+    }
+    const r = restrictInteraction(model, i, keep);
+    for (const w of i.witnesses) {
+      if (r?.witnesses.includes(w)) continue;
+      const f = facts.get(w);
+      if (f && !kindKept(f)) droppedByKind++;
+      else if (f && factInScope(f)) droppedHidden++;
+      else if (f) droppedScope++;
+    }
+    if (!r) continue;
+    const backing = /** @type {Entity} */ (model.entities.get(first(r.witnesses)));
+    const rk = relKindOf(model, i.kind);
+    const count = r.witnesses.length;
     /** @type {SceneEdge} */
     const e = {
-      id: r.id, entityId: r.id, entityKind: 'relationship', from, to, line: rk.line, color: rk.color,
-      label: typeof r.data.label === 'string' && r.data.label ? r.data.label : rk.label,
+      id: backing.id, entityId: backing.id, entityKind: 'relationship', from: i.from, to: i.to, line: rk.line, color: rk.color, dependencyClass: kindInfo(model.meta, i.kind).class,
+      label: r.lifted || count > 1 ? (count > 1 ? `${rk.label} ×${count}` : rk.label) : typeof backing.data.label === 'string' && backing.data.label ? backing.data.label : rk.label,
+      kind: i.kind, witnesses: r.witnesses, key: i.key,
     };
-    if (isLifted) e.lifted = true;
-    if (violated.has(r.id)) e.status = 'violated';
-    if (isLifted) {
-      // Several relationships of one kind between the same two drawn nodes become
-      // one line that says how many it stands for (it is backed by the first of them).
-      const key = `${from} ${to} ${r.data.kind}`;
-      const first = bundles.get(key);
-      if (first) {
-        first.count++;
-        first.edge.label = `${rk.label} ×${first.count}`;
-        if (e.status === 'violated') first.edge.status = 'violated';
-        bundled++;
-        continue;
-      }
-      bundles.set(key, { edge: e, count: 1 });
-      e.label = rk.label;
-    }
-    edges.push(e);
-    addLegend(legend, `rel:${r.data.kind}`, { kind: 'edge', label: rk.label, line: rk.line, color: rk.color });
+    /** @type {{kind: string, text: string, title?: string}[]} */
+    const marks = [];
+    if (r.witnesses.some((w) => unwitnessed.has(w))) marks.push(mark('unwitnessed'));
+    if (r.witnesses.some((w) => notCoarsening.has(w))) marks.push(mark('kind-not-coarsening'));
+    // Provenance: the witnesses that are not declared (extracted from the code, observed), named with their share.
+    const other = Object.entries(r.summary.provenance).filter(([p]) => p !== 'declared');
+    if (other.length) marks.push(mark('not-declared', other.map(([p, n]) => (n === count ? p : `${n} ${p}`)).join(', ')));
+    if (marks.length) { e.marks = marks; e.label = `${e.label} (${marks.map((m) => m.text).join(', ')})`; e.line = 'dashed'; }
+    if (r.lifted) { e.lifted = true; lifted += count; }
+    if (count > 1) bundled += count - 1;
+    if (r.witnesses.some((w) => violated.has(w) || levelViolated.has(w))) e.status = 'violated';
+    drawnEdges.push({ edge: e, order: /** @type {number} */ (declaredOrder.get(backing.id)) });
+    addLegend(legend, `rel:${i.kind}`, { kind: 'edge', label: rk.label, line: rk.line, color: rk.color });
+    for (const m of marks) addLegend(legend, `mark:${m.kind}`, { kind: 'mark', mark: m.kind, label: m.title ?? m.text, color: 'neutral' });
   }
-  if (lifted) notes.push(`${lifted} ${plural(lifted, 'relationship is', 'relationships are')} drawn to a collapsed subsystem rather than to the component inside it.`);
-  if (bundled) notes.push(`Relationships of one kind between the same two drawn nodes are bundled into one line labelled with their number (${bundled} ${plural(bundled, 'line', 'lines')} saved); expand the subsystem to see each.`);
-  if (internal) notes.push(`${internal} ${plural(internal, 'relationship', 'relationships')} inside collapsed subsystems ${plural(internal, 'is', 'are')} not drawn.`);
+  for (const b of drawnBlocks) {
+    if (openedSet.has(b) || !(h.children.get(b) ?? []).length) continue;
+    for (const w of d.fibres[b] ?? []) { const f = facts.get(w); if (f && keep(f)) internal++; }
+  }
+  const edges = drawnEdges.sort((a, b) => a.order - b.order).map((x) => x.edge);
+
+  // 8. Path summaries through hidden blocks; connections through blocks the filter removes are counted.
+  const summaryKeep = (/** @type {import('./abstraction.js').BaseFact} */ f) => factInScope(f) && kindKept(f);
+  const summaries = removedHidden.size ? pathSummaries(model, d, removedHidden, summaryKeep).filter((s) => drawn.has(s.from) && drawn.has(s.to)) : [];
+  for (const s of summaries) {
+    const backing = first(s.witnesses);
+    edges.push({
+      id: `summary:${s.from}->${s.to}`, entityId: backing, entityKind: 'relationship', from: s.from, to: s.to, line: 'dotted', color: 'neutral', dependencyClass: 'none',
+      label: `may reach via ${s.via.length} hidden (${s.via.map((v) => elementLabel(model, v)).join(', ')})`, witnesses: s.witnesses, pathSummary: { via: s.via, kinds: s.kinds },
+    });
+    addLegend(legend, 'path-summary', { kind: 'edge', label: 'Derived path summary through hidden elements (a may-path)', line: 'dotted', color: 'neutral' });
+  }
+  const touchingHidden = d.interactions.filter((i) => removedHidden.has(i.from) || removedHidden.has(i.to)).length;
+  const throughFiltered = removedFilter.size
+    ? pathSummaries(model, d, new Set([...removedFilter, ...removedHidden]), kindKept).filter((s) => drawn.has(s.from) && drawn.has(s.to) && s.via.some((v) => removedFilter.has(v)))
+    : [];
+
+  // 9. Notes: what this scene shows, and everything the filter took away, counted.
+  // A system with no members in this hierarchy (one that groups the elements under other roots, such as hosts) is a
+  // block with nothing inside and no relationship: it is reported, not drawn as an empty box.
+  for (const b of removedFilter) {
+    if (elements.get(b)?.kind !== 'system' || (h.children.get(b) ?? []).length) continue;
+    notes.push(`${elementLabel(model, b)} is a block of this cut with no members and no relationships in the ${hid} hierarchy, so it is not drawn.`);
+  }
+  const cutId = declaredCutWithBlocks(model, hid, cut.blocks);
+  const cutEntity = cutId ? model.entities.get(cutId) : undefined;
+  const cutBlocks = d.blocks.filter((b) => !b.implicit).length;
+  notes.push(`Cut: ${cutEntity ? entityLabel(cutEntity) : 'an interactive cut'} of the ${hid} hierarchy, ${cutBlocks} ${plural(cutBlocks, 'block', 'blocks')}${cut.expanded.length ? `, opening ${cut.expanded.map((e) => elementLabel(model, e)).join(', ')}` : ''}.`);
+  if (coarsen) notes.push(`Kinds are coarsened to ${coarsen === 'all' ? 'the kinds directly under interacts-with' : coarsen.join(', ')}.`);
+  if (hiddenInScope.length) notes.push(`${hiddenInScope.length} ${plural(hiddenInScope.length, 'element is', 'elements are')} hidden (${hiddenInScope.map((x) => elementLabel(model, x)).join(', ')})${touchingHidden ? `; ${touchingHidden} derived ${plural(touchingHidden, 'interaction touches', 'interactions touch')} hidden blocks` : ''}${summaries.length ? `, and ${summaries.length} ${plural(summaries.length, 'connection', 'connections')} through them ${plural(summaries.length, 'is', 'are')} drawn as dotted path ${plural(summaries.length, 'summary', 'summaries')} (may-paths: a path through a block need not be a path through its members)` : ''}.`);
+  if (droppedInteractions) notes.push(`${droppedInteractions} derived ${plural(droppedInteractions, 'interaction', 'interactions')} with a block outside this view's filter ${plural(droppedInteractions, 'is', 'are')} not drawn (${droppedWitnesses} ${plural(droppedWitnesses, 'relationship', 'relationships')}).`);
+  if (throughFiltered.length) notes.push(`${throughFiltered.length} ${plural(throughFiltered.length, 'connection', 'connections')} between drawn blocks ${plural(throughFiltered.length, 'passes', 'pass')} through blocks the filter removes and ${plural(throughFiltered.length, 'is', 'are')} not drawn.`);
+  if (droppedHidden) notes.push(`${droppedHidden} ${plural(droppedHidden, 'relationship touches', 'relationships touch')} hidden elements inside drawn blocks and ${plural(droppedHidden, 'is', 'are')} not drawn.`);
+  if (droppedScope) notes.push(`${droppedScope} ${plural(droppedScope, 'relationship has', 'relationships have')} an end inside a drawn block that this view's filter removes and ${plural(droppedScope, 'is', 'are')} not drawn.`);
+  if (droppedByKind) notes.push(`${droppedByKind} ${plural(droppedByKind, 'relationship', 'relationships')} of other kinds between drawn blocks ${plural(droppedByKind, 'is', 'are')} not drawn.`);
+  if (lifted) notes.push(`${lifted} ${plural(lifted, 'relationship is', 'relationships are')} drawn to a collapsed block rather than to the element inside it.`);
+  if (bundled) notes.push(`Relationships of one kind between the same two drawn blocks are one derived interaction, drawn as one line labelled with their number (${bundled} ${plural(bundled, 'line', 'lines')} saved); selecting it lists every relationship it stands for.`);
+  if (internal) notes.push(`${internal} ${plural(internal, 'relationship', 'relationships')} inside collapsed blocks ${plural(internal, 'is', 'are')} not drawn; expanding a block shows them.`);
+  const unknownBlocks = drawnBlocks.filter((b) => blockInfo.get(b)?.knowledge === 'unknown').length;
+  if (unknownBlocks) notes.push(`${unknownBlocks} unknown ${plural(unknownBlocks, 'block asserts', 'blocks assert')} nothing about ${plural(unknownBlocks, 'its', 'their')} inside.`);
+  if (purposeless.size) notes.push(`${purposeless.size} ${plural(purposeless.size, 'block states', 'blocks state')} no purpose (${[...purposeless].join(', ')}), so this level is not independently coherent.`);
+  /** @type {NonNullable<SceneModel['levelClaims']>} */
+  const levelClaims = [];
+  const sceneIds = new Set([...nodes.map((n) => n.id), ...edges.filter((e) => !e.pathSummary).flatMap((e) => e.witnesses ?? [])]);
+  for (const { claimId, result } of levelResults) {
+    const expressible = !(result?.diagnostics ?? []).some((/** @type {any} */ x) => x.code === 'claim.not-expressible');
+    const cx = result?.status === 'violated' ? [...new Set([...(result.counterexample?.entities ?? []), ...(result.counterexample?.path ?? [])])] : [];
+    const drawnCx = cx.filter((x) => sceneIds.has(x));
+    levelClaims.push({ claimId, status: result?.status ?? 'not-evaluated', expressible, explanation: result?.explanation ?? '', drawn: drawnCx, notDrawn: cx.filter((x) => !sceneIds.has(x)) });
+    const label = /** @type {any} */ (CLAIM_STATUS_LABELS)[result?.status] ?? result?.status;
+    notes.push(!expressible
+      ? `Claim ${claimId} is stated at a cut and is not expressible at this level: ${String(result?.explanation ?? '').replace(/^Not expressible at this level: /, '')}`
+      : `Claim ${claimId}, evaluated at this cut: ${label}${cx.length ? `; its counterexample is drawn in red${drawnCx.length < cx.length ? ` (${cx.length - drawnCx.length} of its ${cx.length} parts are not drawn here)` : ''}` : ''}.`);
+  }
   if (colorBy === 'implementation') notes.push('Color shows how each component is realised; shape still shows its category.');
   if (colorBy === 'trustZone') notes.push('Color shows the declared trust zone; shape still shows its category.');
   if (display.showPorts === true) notes.push('Ports are not drawn as separate nodes; a badge counts them.');
 
-  return { viewId: view.id, projection: 'structural', nodes, edges, legend: [...legend.values()], notes };
+  return {
+    viewId: view.id, projection: 'structural', nodes, edges, legend: [...legend.values()], notes,
+    abstraction: { hierarchy: hid, blocks: cut.blocks, expanded: cut.expanded, cut: cutId, coarsen },
+    filterReport: {
+      hidden: hiddenInScope, removedBlocks: [...removedHidden, ...removedFilter].sort(), droppedInteractions, droppedWitnesses: droppedWitnesses + droppedByKind + droppedHidden + droppedScope,
+      pathSummaries: summaries.length, pathsThroughFiltered: throughFiltered.length,
+    },
+    levelClaims,
+  };
 });
 
-/** @param {Model} model @param {string} id */
-function hasChildren(model, id) {
-  return (model.byKind.component ?? []).some((c) => c.data.parent === id);
+/**
+ * The semantic content of a structural scene, for comparison with the derived model the command line prints
+ * (`exegra derive`): its cut, its blocks, its derived interactions with their witnesses, its path summaries, its
+ * marks and its filter report. Presentation (positions, colours, labels) is left out.
+ * @param {SceneModel} scene
+ */
+export function sceneSemantics(scene) {
+  const byKey = (/** @type {{key: string}} */ a, /** @type {{key: string}} */ b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
+  return {
+    view: scene.viewId,
+    hierarchy: scene.abstraction?.hierarchy ?? null,
+    cut: scene.abstraction?.cut ?? null,
+    cutBlocks: [...(scene.abstraction?.blocks ?? [])],
+    expanded: [...(scene.abstraction?.expanded ?? [])],
+    blocks: scene.nodes.filter((n) => n.block).map((n) => n.id).sort(),
+    containers: scene.nodes.filter((n) => n.container).map((n) => n.id).sort(),
+    interactions: scene.edges.filter((e) => e.key).map((e) => ({ key: /** @type {string} */ (e.key), witnesses: [...(e.witnesses ?? [])] })).sort(byKey),
+    pathSummaries: scene.edges.filter((e) => e.pathSummary).map((e) => ({ from: e.from, to: e.to, via: e.pathSummary?.via ?? [], witnesses: [...(e.witnesses ?? [])] })),
+    marks: Object.fromEntries(scene.nodes.filter((n) => n.marks?.length).map((n) => [n.id, (n.marks ?? []).map((m) => m.kind)])),
+    filterReport: scene.filterReport ?? null,
+    levelClaims: (scene.levelClaims ?? []).map((c) => ({ claimId: c.claimId, status: c.status, expressible: c.expressible, drawn: c.drawn, notDrawn: c.notDrawn })),
+  };
+}
+
+/** The label of an element: its entity's, or a module element's path. @param {Model} model @param {string} id */
+function elementLabel(model, id) {
+  const e = model.entities.get(id);
+  return e ? entityLabel(e) : id.startsWith('module:') ? id.slice('module:'.length) : id;
 }
 
 // ----------------------------------------------------------------- claims
@@ -355,15 +571,11 @@ registerProjection('claims', (model, view, ctx) => {
   const resolve = (/** @type {string} */ id, /** @type {Set<string>} */ compsOut, /** @type {Set<string>} */ relsOut) => {
     const e = model.entities.get(id);
     if (!e) return;
-    if (e.kind === 'component') compsOut.add(e.id);
-    else if (e.kind === 'port') { if (e.owner) compsOut.add(e.owner); }
-    else if (e.kind === 'relationship') {
-      const f = componentOf(model, e.data.from);
-      const t = componentOf(model, e.data.to);
-      if (f && t) { compsOut.add(f.id); compsOut.add(t.id); relsOut.add(e.id); } else skip(e);
-    } else if (e.kind === 'behavior') {
-      if (typeof e.data.subject === 'string' && model.entities.get(e.data.subject)?.kind === 'component') compsOut.add(e.data.subject);
-    } else skip(e);
+    if (!['component', 'port', 'relationship', 'behavior'].includes(e.kind)) { skip(e); return; }
+    const stands = componentsFor(model, id);
+    if (e.kind === 'relationship') {
+      if (stands.length && endpointElement(model, e.data.from) && endpointElement(model, e.data.to)) { for (const c of stands) compsOut.add(c); relsOut.add(e.id); } else skip(e);
+    } else for (const c of stands) compsOut.add(c);
   };
 
   /** @type {Set<string>} */ const compIds = new Set();
@@ -465,19 +677,19 @@ registerProjection('claims', (model, view, ctx) => {
   const shownRels = new Set(relIds);
   if (focus) {
     for (const r of model.byKind.relationship ?? []) {
-      const f = componentOf(model, r.data.from);
-      const t = componentOf(model, r.data.to);
+      const f = endpointComponent(model, r.data.from);
+      const t = endpointComponent(model, r.data.to);
       if (f && t && compIds.has(f.id) && compIds.has(t.id)) shownRels.add(r.id);
     }
   }
   for (const r of model.byKind.relationship ?? []) {
     if (!shownRels.has(r.id)) continue;
-    const f = componentOf(model, r.data.from);
-    const t = componentOf(model, r.data.to);
+    const f = endpointComponent(model, r.data.from);
+    const t = endpointComponent(model, r.data.to);
     if (!f || !t || !compNodeIds.has(f.id) || !compNodeIds.has(t.id)) continue;
     const rk = relKindOf(model, r.data.kind);
     /** @type {SceneEdge} */
-    const e = { id: r.id, entityId: r.id, entityKind: 'relationship', from: f.id, to: t.id, line: rk.line, color: rk.color, label: typeof r.data.label === 'string' && r.data.label ? r.data.label : rk.label };
+    const e = { id: r.id, entityId: r.id, entityKind: 'relationship', from: f.id, to: t.id, line: rk.line, color: rk.color, dependencyClass: kindInfo(model.meta, r.data.kind).class, label: typeof r.data.label === 'string' && r.data.label ? r.data.label : rk.label };
     if (violated.has(r.id)) e.status = 'violated';
     edges.push(e);
     addLegend(legend, `rel:${r.data.kind}`, { kind: 'edge', label: rk.label, line: rk.line, color: rk.color });
@@ -744,8 +956,8 @@ registerProjection('references', (model, view, ctx) => {
   for (const id of drawn) {
     const e = /** @type {Entity} */ (model.entities.get(id));
     if (e.kind !== 'relationship' || (focus && focus.id === id)) continue;
-    const f = componentOf(model, e.data.from);
-    const t = componentOf(model, e.data.to);
+    const f = endpointComponent(model, e.data.from);
+    const t = endpointComponent(model, e.data.to);
     if (f && t && isDrawnComponent(f.id) && isDrawnComponent(t.id)) converted.set(id, { from: f.id, to: t.id });
   }
 
@@ -797,7 +1009,7 @@ registerProjection('references', (model, view, ctx) => {
     const rk = relKindOf(model, r.data.kind);
     /** @type {SceneEdge} */
     const e = {
-      id, entityId: id, entityKind: 'relationship', from: ends.from, to: ends.to, line: rk.line, color: rk.color,
+      id, entityId: id, entityKind: 'relationship', from: ends.from, to: ends.to, line: rk.line, color: rk.color, dependencyClass: kindInfo(model.meta, r.data.kind).class,
       label: typeof r.data.label === 'string' && r.data.label ? r.data.label : rk.label,
     };
     if (violated.has(id)) e.status = 'violated';

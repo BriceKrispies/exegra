@@ -3,25 +3,38 @@
 //
 //   node tools/differential.js [--seed <n>] [--count <n>] [--goldens] [--out <dir>]
 //                              [--lift] [--rust <binary>] [--lean <binary>]
+//   node tools/differential.js --calculus [--seed <n>] [--count <n>] [--lean <binary>] [--rust <binary>]
 //
-// Generates --count version-1 and --count version-2 inputs from --seed with tools/gen-engine-inputs.js (and, with --goldens, adds every
-// golden input of tests/conformance/goldens), runs each through the native Rust engine
+// Generates --count version-2 inputs in the integer fragment of the behaviour calculus and --count
+// version-2 inputs of every construct from --seed with tools/gen-engine-inputs.js (and, with --goldens,
+// adds every golden input of tests/conformance/goldens), runs each through the native Rust engine
 // (engine/target/release/exegra-sim) and the Lean executable (formal/.lake/build/bin/exegra-lean), and
 // compares the two traces as tools/conformance.js compares a trace with a golden: as JSON values, key
-// order ignored, numbers by value. With --lift, each engine instead runs every liftable version-1 input
-// both as it is and lifted to version 2, and the version-2 trace without its version-2 fields must
-// equal the version-1 trace (lift_agrees, formal/Exegra/Lift.lean). Two refusals agree when their messages agree (for input that is not
+// order ignored, numbers by value. Inputs the Lean elaborator refuses (ill-typed, a number that is not an
+// integer) are counted, not compared. With --lift, every golden's version-2 trace, stripped of the
+// version-2 fields, is compared with its version-1 trace at the base commit of
+// tests/conformance/golden-changes.json (format 1 is gone, WG-5681); the goldens that differ must be
+// exactly the manifest's. Two refusals agree when their messages agree (for input that is not
 // JSON, only that both say so). Reports the count, the seed, the construct coverage of the generated
 // inputs and of the traces, and every mismatch; each mismatching input is saved to --out (default
 // test-results/differential/). Exit code 0 when everything agrees, 1 on any mismatch, 2 on a usage error
 // or a missing binary.
+//
+// With --calculus (WG-5681): the inputs are every golden (all version 2), every version-2 fixture under
+// tests/fixtures and --count generated version-2 inputs in the integer fragment of the behaviour calculus
+// (gen-engine-inputs.js, generateInputsV2Int). Each is run by the Lean engine, which runs inputs the
+// elaborator accepts on the calculus scheduler, and by `exegra-lean --legacy`, the legacy interpreter; the
+// two traces must agree. When the Rust engine is built, its trace must agree with the Lean engine's too.
+// Inputs the elaborator refuses (ill-typed, non-integer) or runs on the legacy path (outside the fragment)
+// are counted, not compared. Inputs listed in tests/conformance/expected-differences.json may
+// differ and are reported, not failed, when they do.
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { REPO_ROOT, compareTraces, listGoldens } from './conformance.js';
-import { formatCoverage, generateInputs, generateInputsV2 } from './gen-engine-inputs.js';
+import { ELAB_REFUSAL, REPO_ROOT, compareTraces, goldenChanges, listGoldens } from './conformance.js';
+import { formatCoverage, generateInputsV2, generateInputsV2Int } from './gen-engine-inputs.js';
 
 const EXE = process.platform === 'win32' ? '.exe' : '';
 /** The native engine binary (cargo build --release in engine/). */
@@ -38,11 +51,11 @@ export const DEFAULT_OUT = path.join(REPO_ROOT, 'test-results', 'differential');
 
 /**
  * Run an engine binary on one input: the trace, or the refusal message without the program prefix.
- * @param {string} bin @param {string} inputText
+ * @param {string} bin @param {string} inputText @param {string[]} [args]
  * @returns {EngineResult}
  */
-export function runBinary(bin, inputText) {
-  const r = spawnSync(bin, [], { input: inputText, encoding: 'utf8', maxBuffer: 1 << 29, windowsHide: true });
+export function runBinary(bin, inputText, args = []) {
+  const r = spawnSync(bin, args, { input: inputText, encoding: 'utf8', maxBuffer: 1 << 29, windowsHide: true });
   if (r.error) throw new Error(`could not run ${bin}: ${r.error.message}`);
   if (r.status !== 0) {
     const msg = String(r.stderr ?? '').trim().replace(/^exegra-(sim|lean): /, '');
@@ -117,8 +130,11 @@ export function checkInputs(opts) {
   /** @type {Record<string, number>} */
   const cov = {};
   for (const { name, text } of opts.inputs) {
-    const rust = runBinary(rustBin, text);
     const lean = runBinary(leanBin, text);
+    // An input the Lean elaborator refuses (ill-typed, a number that is not an integer) is counted,
+    // not compared: the Rust engine does not mirror the static typing (WG-5681).
+    if (!lean.ok && ELAB_REFUSAL.test(lean.refusal)) { cov['elaboration refusal'] = (cov['elaboration refusal'] ?? 0) + 1; continue; }
+    const rust = runBinary(rustBin, text);
     if (rust.ok) traceCoverage(rust.trace, cov);
     else cov.refusal = (cov.refusal ?? 0) + 1;
     const detail = compareResults(rust, lean);
@@ -136,13 +152,13 @@ export function goldenInputs() {
 }
 
 /**
- * Generated inputs as named inputs.
+ * Generated version-2 inputs in the integer fragment of the behaviour calculus, as named inputs.
  * @param {number} seed @param {number} count
  * @returns {{inputs: NamedInput[], coverage: Record<string, number>}}
  */
-export function generatedInputs(seed, count) {
-  const { inputs, coverage } = generateInputs(seed, count);
-  return { inputs: inputs.map((input, i) => ({ name: `seed ${seed} input ${i}`, text: JSON.stringify(input) })), coverage };
+export function generatedInputsV2Int(seed, count) {
+  const { inputs, coverage } = generateInputsV2Int(seed, count);
+  return { inputs: inputs.map((input, i) => ({ name: `seed ${seed} integer input ${i}`, text: JSON.stringify(input) })), coverage };
 }
 
 /**
@@ -172,93 +188,69 @@ export function saveMismatches(mismatches, dir) {
   });
 }
 
-const TWO53 = 2 ** 53;
-/** @param {unknown} x */
-const isTime = (x) => x === undefined || x === null || (Number.isInteger(x) && /** @type {number} */ (x) >= 0 && /** @type {number} */ (x) < TWO53);
-
-/**
- * Whether a version-1 input meets the side conditions of lift_agrees (formal/Exegra/Lift.lean) that
- * can be checked on the input: integer times, durations and step limit; no variable named `instance`
- * and no reference format 2 resolves anew; distinct ids and no empty event id.
- * @param {any} input
- */
-export function liftable(input) {
-  if (!input || input.version !== 1 || !Array.isArray(input.behaviors) || !Array.isArray(input.events)) return false;
-  const sc = input.scenario ?? {};
-  if (!(sc.steps ?? []).every((/** @type {any} */ st) => Number.isInteger(st?.at) && isTime(st.at))) return false;
-  if (sc.stepLimit !== undefined && sc.stepLimit !== null && !(isTime(sc.stepLimit) && sc.stepLimit >= 1)) return false;
-  if (!(input.faults ?? []).every((/** @type {any} */ f) => isTime(f?.by) && isTime(f?.at))) return false;
-  const ids = [...input.behaviors.map((/** @type {any} */ b) => b?.id), ...input.events.map((/** @type {any} */ e) => e?.id), ...(input.faults ?? []).map((/** @type {any} */ f) => f?.id), sc.id];
-  if (new Set(ids).size !== ids.length || ids.includes('')) return false;
-  const newRef = /(^|[^\w.])instance([^\w]|$)|[A-Za-z_]\w*\.(count|sum|min|max|instances)\.[A-Za-z_]/;
-  for (const b of input.behaviors) {
-    if ((b.variables ?? []).some((/** @type {any} */ v) => v?.name === 'instance')) return false;
-    for (const t of b.transitions ?? []) {
-      const srcs = [typeof t.guard === 'string' ? t.guard : ''];
-      for (const e of t.effects ?? []) {
-        if (e && typeof e === 'object' && 'emit' in e && !isTime(e.after)) return false;
-        if (e && typeof e.to === 'string') srcs.push(e.to);
-        for (const v of Object.values(e?.payload ?? {})) if (typeof v === 'string') srcs.push(v);
+/** The version-2 fixtures under tests/fixtures (a file holding an engine input, or one under `base`). @returns {NamedInput[]} */
+export function fixtureInputsV2() {
+  /** @type {NamedInput[]} */
+  const out = [];
+  const walk = (/** @type {string} */ dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (e.name.endsWith('.json')) {
+        let j;
+        try { j = JSON.parse(fs.readFileSync(p, 'utf8')); } catch { continue; }
+        const input = j?.format === 'exegra-sim-input' ? j : j?.base?.format === 'exegra-sim-input' ? j.base : null;
+        if (input?.version === 2) out.push({ name: `fixture ${path.relative(REPO_ROOT, p).split(path.sep).join('/')}`, text: JSON.stringify(input) });
       }
-      if (srcs.some((s) => newRef.test(s))) return false;
     }
-  }
-  return true;
-}
-
-/** `lift(I)`: version 2, unit tick, no seed, nothing else changed. @param {any} input */
-export const liftInput = (input) => ({ ...input, version: 2, time: { unit: 'tick', perSecond: null } });
-
-/**
- * Remove the version-2 fields from a version-2 trace (the strip of lift_agrees).
- * @param {any} t
- */
-export function stripTrace(t) {
-  const drop = (/** @type {any} */ o, /** @type {string[]} */ keys) => { if (o && typeof o === 'object') for (const k of keys) delete o[k]; return o; };
-  const config = (/** @type {any} */ c) => {
-    drop(c, ['resources', 'links', 'timers', 'workloads', 'meters', 'routeCounters', 'streams', 'down', 'incarnations', 'activeFaults']);
-    for (const p of c?.pending ?? []) drop(p, ['scheduledAt', 'routes', 'from', 'target', 'copyOf']);
-    return c;
   };
-  const out = structuredClone(t);
-  drop(out, ['version', 'timeUnit', 'seed', 'truncated', 'initialDraws', 'stepsTaken']);
-  config(out.initial);
-  config(out.final);
-  for (const st of out.steps ?? []) {
-    drop(st, ['resources', 'draws', 'links']);
-    drop(st.event, ['scheduledAt', 'routes', 'from', 'target', 'copyOf']);
-    for (const f of st.fired ?? []) drop(f, ['instance']);
-    for (const i of st.ignored ?? []) drop(i, ['instance']);
-    config(st.config);
-  }
+  walk(path.join(REPO_ROOT, 'tests', 'fixtures'));
   return out;
 }
 
-/**
- * The lift check: every liftable input is run as version 1 and lifted to version 2 on one engine,
- * and the stripped version-2 result must equal the version-1 result.
- * @param {NamedInput[]} inputs @param {string} bin
- * @returns {{checked: number, mismatches: Mismatch[]}}
- */
-export function checkLift(inputs, bin) {
-  /** @type {Mismatch[]} */
-  const mismatches = [];
-  let checked = 0;
-  for (const { name, text } of inputs) {
-    let input;
-    try { input = JSON.parse(text); } catch { continue; }
-    if (!liftable(input)) continue;
-    checked++;
-    const v1 = runBinary(bin, text);
-    const lifted = JSON.stringify(liftInput(input));
-    const v2 = runBinary(bin, lifted);
-    const stripped = v2.ok ? { ok: true, trace: stripTrace(v2.trace) } : v2;
-    const detail = compareResults(/** @type {EngineResult} */ (v1), /** @type {EngineResult} */ (stripped));
-    if (detail) mismatches.push({ name: `lift ${name}`, inputText: lifted, rust: v1, lean: v2, detail: detail.replace(/Rust/g, 'version 1').replace(/Lean/g, 'version 2') });
-  }
-  return { checked, mismatches };
+/** The expected differences of the calculus path (tests/conformance/expected-differences.json), by input name. */
+export function expectedDifferences() {
+  const file = path.join(REPO_ROOT, 'tests', 'conformance', 'expected-differences.json');
+  if (!fs.existsSync(file)) return {};
+  return JSON.parse(fs.readFileSync(file, 'utf8')).differences ?? {};
 }
 
+/**
+ * The calculus check: the Lean engine (the calculus scheduler for elaborated inputs) against the legacy
+ * interpreter, and against the Rust engine when given.
+ * @param {NamedInput[]} inputs @param {string} leanBin @param {string|null} rustBin
+ */
+export function checkCalculus(inputs, leanBin, rustBin) {
+  /** @type {Mismatch[]} */
+  const mismatches = [];
+  /** @type {string[]} */
+  const expected = [];
+  const counts = { compared: 0, refused: 0, legacy: 0 };
+  const exp = expectedDifferences();
+  for (const { name, text } of inputs) {
+    const lean = runBinary(leanBin, text);
+    if (lean.ok && lean.trace.semantics === 'legacy') { counts.legacy++; continue; }
+    if (!lean.ok && ELAB_REFUSAL.test(lean.refusal)) {
+      counts.refused++;
+      if (exp[name]) expected.push(name);
+      continue;
+    }
+    counts.compared++;
+    const legacy = runBinary(leanBin, text, ['--legacy']);
+    let detail = compareResults(legacy, lean);
+    if (detail) detail = detail.replace(/Rust/g, 'legacy').replace(/Lean/g, 'calculus');
+    else if (rustBin) {
+      const rust = runBinary(rustBin, text);
+      detail = compareResults(rust, lean);
+    }
+    if (detail) {
+      if (exp[name]) expected.push(name);
+      else mismatches.push({ name, inputText: text, rust: legacy, lean, detail });
+    }
+  }
+  const unlisted = Object.keys(exp).filter((k) => !expected.includes(k));
+  return { counts, mismatches, expected, unlisted };
+}
 /** @param {string[]} argv */
 function main(argv) {
   let seed = 1;
@@ -268,11 +260,13 @@ function main(argv) {
   let rustBin = RUST_BIN;
   let leanBin = LEAN_BIN;
   let lift = false;
+  let calculus = false;
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     const v = argv[i + 1];
     if (a === '--goldens') goldens = true;
     else if (a === '--lift') lift = true;
+    else if (a === '--calculus') calculus = true;
     else if (a === '--seed' && v !== undefined) { seed = Number(v); i++; }
     else if (a === '--count' && v !== undefined) { count = Number(v); i++; }
     else if (a === '--out' && v !== undefined) { out = path.resolve(v); i++; }
@@ -284,32 +278,45 @@ function main(argv) {
     }
   }
   if (!Number.isInteger(seed) || !Number.isInteger(count) || count < 0) { process.stderr.write('--seed and --count must be integers\n'); return 2; }
-  if (lift) {
-    if (!fs.existsSync(leanBin)) { process.stderr.write(`The Lean semantics is not built: ${leanBin} (npm run build:formal).
+  if (calculus) {
+    if (!fs.existsSync(leanBin)) { process.stderr.write(`The Lean engine is not built: ${leanBin} (npm run build:formal).
 `); return 2; }
-    const inputs = [...(goldens ? goldenInputs() : []), ...generatedInputs(seed, count).inputs];
-    let failed = 0;
-    for (const [what, bin] of [['Lean', leanBin], ['Rust', rustBin]]) {
-      if (!fs.existsSync(bin)) { process.stdout.write(`lift: ${what} engine not built, skipped
-`); continue; }
-      const r = checkLift(inputs, bin);
-      saveMismatches(r.mismatches, path.join(out, `lift-${what.toLowerCase()}`));
-      for (const m of r.mismatches) process.stdout.write(`MISMATCH ${what} ${m.name}: ${m.detail}
+    const inputs = [...goldenInputs(), ...fixtureInputsV2(), ...generatedInputsV2Int(seed, count).inputs];
+    const rust = fs.existsSync(rustBin) ? rustBin : null;
+    if (!rust) process.stdout.write(`calculus: the Rust engine is not built (${rustBin}); only the legacy comparison runs
 `);
-      process.stdout.write(`lift (${what}): ${r.checked} liftable inputs of ${inputs.length}, ${r.checked - r.mismatches.length} agree, ${r.mismatches.length} mismatch
+    const r = checkCalculus(inputs, leanBin, rust);
+    saveMismatches(r.mismatches, path.join(out, 'calculus'));
+    for (const m of r.mismatches) process.stdout.write(`MISMATCH ${m.name}: ${m.detail}
 `);
-      failed += r.mismatches.length;
-    }
-    return failed ? 1 : 0;
+    for (const n of r.expected) process.stdout.write(`expected difference: ${n}
+`);
+    process.stdout.write(`calculus: ${inputs.length} inputs (goldens, fixtures, seed ${seed} with ${count} integer inputs): ${r.counts.compared} compared, ${r.counts.refused} refused, ${r.counts.legacy} on the legacy path; ${r.mismatches.length} mismatch, ${r.expected.length} expected differences
+`);
+    return r.mismatches.length ? 1 : 0;
+  }
+  if (lift) {
+    // Format 1 is gone (WG-5681): the lift check compares each golden's version-2 trace, stripped of the
+    // version-2 fields, with its version-1 trace at the base commit of tests/conformance/golden-changes.json.
+    const manifest = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'tests', 'conformance', 'golden-changes.json'), 'utf8'));
+    const changes = goldenChanges(manifest.base);
+    const bad = Object.entries(changes).filter(([name, c]) => manifest.changes[name] !== c);
+    for (const [name, c] of bad) process.stdout.write(`MISMATCH lift ${name}: ${c} (the manifest says ${manifest.changes[name] ?? 'unchanged'})
+`);
+    const counts = /** @type {Record<string, number>} */ ({});
+    for (const c of Object.values(changes)) counts[c] = (counts[c] ?? 0) + 1;
+    process.stdout.write(`lift: ${Object.keys(changes).length} goldens against ${manifest.base.slice(0, 7)}: ${Object.entries(counts).map(([k, n]) => `${n} ${k}`).join(', ')}; ${bad.length} outside the manifest
+`);
+    return bad.length ? 1 : 0;
   }
   for (const [what, bin, how] of [['Rust engine', rustBin, 'cargo build --release in engine/'], ['Lean semantics', leanBin, 'npm run build:formal']]) {
     if (!fs.existsSync(bin)) { process.stderr.write(`The ${what} is not built: ${bin} (${how}).\n`); return 2; }
   }
-  const gen1 = generatedInputs(seed, count);
+  const gen1 = generatedInputsV2Int(seed, count);
   const gen2 = generatedInputsV2(seed, count);
   /** @type {Record<string, number>} */
   const genCoverage = { ...gen1.coverage };
-  for (const [k, v] of Object.entries(gen2.coverage)) if (k.startsWith('v2 ')) genCoverage[k] = v;
+  for (const [k, v] of Object.entries(gen2.coverage)) genCoverage[k] = v;
   const gen = { coverage: genCoverage };
   const inputs = [...(goldens ? goldenInputs() : []), ...gen1.inputs, ...gen2.inputs];
   const result = checkInputs({ inputs, rustBin, leanBin });

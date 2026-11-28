@@ -150,6 +150,24 @@ function exchange(request) {
 const OK = '{"ok":';
 
 /**
+ * Stand-ins for registered Lean functions, by name: a test replaces one function at this boundary (for example
+ * `claims.status`, to show that no status is computed in JavaScript) without building another Lean core.
+ * @type {Map<string, (args: any) => any>}
+ */
+const overrides = new Map();
+
+/**
+ * Replace the Lean function `fn` with `impl` until the returned function is called. `impl` takes the arguments
+ * as a JS value and returns the result as a JS value (or throws, which is reported as an error reply).
+ * @param {string} fn @param {(args: any) => any} impl
+ * @returns {() => void} restores the Lean function
+ */
+export function overrideLeanFunction(fn, impl) {
+  overrides.set(fn, impl);
+  return () => { if (overrides.get(fn) === impl) overrides.delete(fn); };
+}
+
+/**
  * Call a registered Lean function with arguments given as JSON text; the result comes back as JSON
  * text, unparsed.
  * @param {string} fn
@@ -157,6 +175,14 @@ const OK = '{"ok":';
  * @returns {CallTextResult}
  */
 export function callText(fn, argsText) {
+  const stand = overrides.get(fn);
+  if (stand) {
+    try {
+      return { ok: true, text: JSON.stringify(stand(JSON.parse(argsText))) };
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+  }
   const reply = exchange(`{"fn":${JSON.stringify(fn)},"args":${argsText}}`);
   if (reply.startsWith(OK)) return { ok: true, text: reply.slice(OK.length, -1) };
   try {

@@ -8,6 +8,7 @@
 // theorem check, and compared at read time, so a result recorded for another tree is read as stale.
 
 import { createHash } from 'node:crypto';
+import { stampsOf } from '../src/core/facts.js';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -134,4 +135,15 @@ export function currentStamps(repoRoot) {
   } catch {
     return { tree: null, formal: null };
   }
+}
+
+/**
+ * The `stamps` of a fact (Exegra.Verdict.Stamps) recorded with `recorded`, against the current stamps of the tree:
+ * `which` selects the tree's records stamp (evidence results, external outcomes, import scans) or the hash of
+ * formal/ (Lean theorem checks).
+ * @param {string|null|undefined} recorded @param {{tree: string|null, formal: string|null}} current
+ * @param {'tree'|'formal'} [which]
+ */
+export function factStamps(recorded, current, which = 'tree') {
+  return stampsOf(recorded, current[which]);
 }

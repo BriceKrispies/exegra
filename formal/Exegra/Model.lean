@@ -501,7 +501,7 @@ def effectiveMeta (mm methods vocab : Value) (report : Report) : M Value := do
           report "vocabulary.type" s!"Relationship kind \"{id}\" must be an object." p
           continue
         for k in keysOf d do
-          if !["label", "line", "color", "dependency", "description"].contains k then
+          if !["label", "line", "color", "dependency", "description", "class", "direction", "parent"].contains k then
             report "vocabulary.unknown" s!"Unsupported relationship kind field \"{k}\"." (p ++ [s k])
         if !isString (get d "label") then
           report "vocabulary.type" s!"Relationship kind \"{id}\" needs a string \"label\"." p
@@ -509,17 +509,24 @@ def effectiveMeta (mm methods vocab : Value) (report : Report) : M Value := do
           report "vocabulary.line" s!"Relationship kind \"{id}\" needs \"line\" to be one of: {join lines ", "}." p
         if !includes colors (get d "color") then
           report "vocabulary.color" s!"Relationship kind \"{id}\" needs \"color\" to be one of: {join colors ", "}." p
+        -- The taxonomy (class, direction, parent) is checked by the JS validator (interactions.js); the
+        -- kernel passes it on. A kind that states a class needs no `dependency`: it is derived from the class.
+        let cls := get d "class"
         let dep := get d "dependency"
-        if !(match dep with | .bool _ => true | _ => false) then
+        if isUndef cls && !(match dep with | .bool _ => true | _ => false) then
           report "vocabulary.type" s!"Relationship kind \"{id}\" needs a boolean \"dependency\"." p
+        let depFlag := if isUndef cls then sameValue dep (.bool true) else !(sameValue cls (s "none"))
+        let taxonomy := ["class", "direction", "parent"].filterMap (fun k =>
+          let v := get d k
+          if isUndef v then none else some (k, v))
         let desc := get d "description"
-        relKinds := setKey relKinds id (.obj 0 [
+        relKinds := setKey relKinds id (.obj 0 ([
           ("label", s (jsString (orElse (get d "label") (s id)))),
           ("line", if includes lines (get d "line") then get d "line" else s "solid"),
           ("color", if includes colors (get d "color") then get d "color" else s "neutral"),
-          ("dependency", .bool (sameValue dep (.bool true))),
-          ("description", if isString desc then desc else s ""),
-          ("declared", .bool true)])
+          ("dependency", .bool depFlag),
+          ("description", if isString desc then desc else s "")] ++ taxonomy ++ [
+          ("declared", .bool true)]))
   -- entity kinds
   let eks := get vocab "entityKinds"
   if !isUndef eks then

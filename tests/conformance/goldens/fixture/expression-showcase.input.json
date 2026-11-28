@@ -25,7 +25,7 @@
       },
       {
        "set": "quo",
-       "to": "a / b"
+       "to": "(a - 1) / b"
       },
       {
        "set": "rem",
@@ -46,10 +46,6 @@
       {
        "set": "paren",
        "to": "(1 + 2) * 3"
-      },
-      {
-       "set": "inexact",
-       "to": "0.1 + 0.2"
       },
       {
        "set": "cat",
@@ -82,10 +78,6 @@
       {
        "set": "eqs",
        "to": "s == 'ab'"
-      },
-      {
-       "set": "mixed",
-       "to": "1 == '1'"
       },
       {
        "set": "nul",
@@ -160,7 +152,7 @@
      ],
      "faultOnly": false,
      "from": "ops-done",
-     "guard": "sum == 9 && cat == 'abcdef' && inexact > 0.3 && !eq == false",
+     "guard": "sum == 9 && cat == 'abcdef' && !eq == false",
      "id": "ops-again",
      "on": "ops-second",
      "to": "ops-done"
@@ -220,10 +212,6 @@
      "name": "paren"
     },
     {
-     "initial": 0,
-     "name": "inexact"
-    },
-    {
      "initial": "",
      "name": "cat"
     },
@@ -254,10 +242,6 @@
     {
      "initial": false,
      "name": "eqs"
-    },
-    {
-     "initial": true,
-     "name": "mixed"
     },
     {
      "initial": false,
@@ -389,5 +373,9 @@
    }
   ]
  },
- "version": 1
+ "time": {
+  "perSecond": null,
+  "unit": "tick"
+ },
+ "version": 2
 }

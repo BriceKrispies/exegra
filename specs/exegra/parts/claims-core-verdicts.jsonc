@@ -1,0 +1,1150 @@
+// Part of the specification: claims, evidence.
+{
+  "claims": [
+    {
+      "id": "results-report-ranges",
+      "kind": "invariant",
+      "statement": "A result over a parameter given as a range is reported as a spread (minimum, maximum and stated percentiles) across a seeded sweep, never as a single figure.",
+      "rationale": "Planned (WG-4670). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "claim-evaluator",
+        "claim-method-registry"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "statistical-claims-state-their-basis",
+      "kind": "invariant",
+      "statement": "Every statistical claim result names its number of runs, seed and confidence, is never shown as verified, and a statistical claim without that basis is a validation error.",
+      "rationale": "Planned (WG-4670). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "claim-evaluator",
+        "claim-method-registry"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "contract-events-validated",
+      "kind": "invariant",
+      "statement": "An event that names a contract has a role, and validation rejects, with the position of the event, a request whose payload has a field that is not an input of the contract, an input that is not optional and missing, or a field type that is not assignable to the input type; a response with a field that is not an output; an error without a code, or with a literal code that is not among the contract's errors; and a correlation field that is not a payload field.",
+      "subjects": [
+        "contract-conformance",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "trace-contract-conformance",
+      "kind": "invariant",
+      "statement": "On a simulated trace, every contract event's payload values fit the declared types, an error code is among the contract's errors, and every response or error answers an earlier unanswered request of the same contract (matched by the correlation field when one is declared, otherwise by count); each violation is a failed automatic check of the scenario with its step, shown by exegra simulate and the simulator panel, which also render the contract events as a request log.",
+      "subjects": [
+        "contract-conformance",
+        "claim-evaluator",
+        "simulator-panel"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "browser-tests-run-real-application",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "trace-claim-verified-needs-negative",
+      "kind": "invariant",
+      "statement": "A trace claim is reported verified only when it holds on every listed scenario and each of its declared negatives, of which there is at least one, violates it. A claim with no negative, or with a negative that holds or does not finish, is inconclusive.",
+      "rationale": "A trace check that nothing can make fail checks how the model was written, not the design. A negative shows the claim can fail: the same script with the protection removed by a fault produces a violation.",
+      "subjects": [
+        "claim-evaluator",
+        "claim-method-registry"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "trace-claims-state-how-decided",
+      "kind": "invariant",
+      "statement": "A trace claim's result says what its verdict rests on: the declaration order of two unguarded enabled transitions that decided which fired, a precedes ordering that only the scenario script witnesses (not verified), a never over an occurrence only a faultOnly transition can produce (holds for runs without the enabling fault), and an implication whose consequent names no state or variable (not exercised).",
+      "rationale": "Supported by tests/core/claim-diagnostics.test.js (the ev-trace-* evidence entries). A later transition that has a guard is not examined for order: whether its guard held is not evaluated there.",
+      "subjects": ["claim-evaluator"],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "models-property-evaluated",
+      "kind": "invariant",
+      "statement": "The models property that links a check over the behavior model to a requirement is evaluated: a requirement's result lists the claims that name it with their statuses (modelledBy, shown by claims and in the inspector), without changing the requirement's own status, and a models value that is not a requirement is a validation error.",
+      "rationale": "Supported by tests/core/claim-diagnostics.test.js (ev-models-*).",
+      "subjects": ["claim-evaluator","validator"],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "own-behavioral-claims-falsifiable",
+      "kind": "invariant",
+      "statement": "Every behavioral claim of this specification declares a negative that violates it, and every one is verified.",
+      "rationale": "Exegra applies the negative rule to itself first: each edit-flow claim is shown capable of failing by a fault that models a defect the code could have.",
+      "subjects": [
+        "claim-evaluator",
+        "visual-edit-flow",
+        "source-edit-flow",
+        "rejected-edit",
+        "edit-with-disk-conflict"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code",
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "metric-claims-report-basis",
+      "kind": "invariant",
+      "statement": "Every metric-bound claim result reports its runs, seeds, passes, N', fraction, confidence, the spread of the per-run statistic and its underpowered and truncated runs; a positive result is model-holds, never verified and never supported; samples follow the request lifecycle; an underpowered run (a quantile, mean, or ratio of counts with fewer than 30 expected on its rarer side) is left out only for an open-started class and otherwise does not satisfy the bound; it reads model-holds or fails only when the exact binomial test on the N' runs kept decides it and inconclusive otherwise; and a negative that does not fail, or a control negative that does not hold, makes it inconclusive.",
+      "rationale": "Planned (WG-4715; specified in docs/simulation.md, Claims over metrics and Request lifecycle). Refines statistical-claims-state-their-basis (WG-4670); the status name follows WG-4703. Negative twin: a false-positive ratio claim of at most 0.001 over 400 requests must be refused at validation rather than pass vacuously; a population-workload fixture whose collapse leaves too few samples must fail, not read inconclusive; 91 passes of 92 kept runs must be inconclusive; any path that maps a metric result to verified or supported fails the test. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "metric-claims",
+        "claim-evaluator",
+        "claim-method-registry"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code",
+        "seeded-streams-independent"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "pool-classes-protect-move-db-leg-under-flood",
+      "kind": "measured",
+      "statement": "On the pool fixture (tests/fixtures/queueing/pool-flood.json: a 20-connection pool with classes money, moves and page-reads in front of 4 shared database I/O channels; moves at 1,000/s; a page-read flood of 5,000/s from 2 s to 6 s), the p99 of the modelled database leg of a move over the flood window is at most 30 ms in at least 95% of runs at 95% confidence over 59 runs, in the base scenario and in its control without the flood; it fails in each of its two negative twins, and each twin fault leaves the control holding.",
+      "rationale": "Fixture specified in docs/simulation.md, Fixtures (database pool with classes under a page-read flood), with base, control and twins, built at the engine-input level (WG-4729) and sized so a run stays short. Parameters are assumed; a holding result is model-holds, never supported. The model covers only the database leg (pool wait and I/O). Negative twins: collapse-classes on the pool, and set-class-limit page-reads 12 (moves keep their reserved connections but queue behind page reads on the shared I/O channels): both must fail at 95% confidence and hold in the control.",
+      "subjects": [
+        "metric-claims",
+        "resource-model",
+        "workload-model",
+        "performance-metrics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code",
+        "seeded-streams-independent"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "metric-claims-calibrated-or-unvalidated",
+      "kind": "invariant",
+      "statement": "A metric claim reads unvalidated when it names no calibration, when a calibration fails on its hold-out load runs (distinct from the fitting runs, with equal workload, capacities and window; the sign-test interval of the model median over at least 6 kept runs, with no truncated run, outside the measurement band widened over repeats), when its evidence has expired at the asOf date recorded in the result or is bound to another component revision, or when a calibration tolerance exceeds the margin computed from the beta-quantile of the per-run statistic; it is flagged extrapolated outside the convex hull of the tested points with the same fault set, decided in exact rational arithmetic; and its result lists first the assumed and to-be-measured parameters, and pairs of flagged parameters, whose variation over their declared ranges flips the verdict.",
+      "rationale": "Planned (WG-4715; specified in docs/simulation.md, Calibration and sensitivity). Negative twin: a calibration whose hold-out run is also its fitting run must be refused; a hold-out run whose measured p99 is twice the model's must fail and leave the claim unvalidated; a calibration with 10% tolerance on a claim with a 5% margin must not validate it; a fixture whose verdict flips when the page-read class limit is doubled must list that parameter. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "metric-claims",
+        "performance-metrics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "metric-claims-in-specifications",
+      "kind": "invariant",
+      "statement": "A specification that declares resources, workloads, request classes and a format-2 scenario derives a version-2 engine input (times in base units, rates exact, distributions lowered), and a metric-bound claim over it evaluates to model-holds, violated or inconclusive with its run count and confidence, never verified or supported.",
+      "rationale": "WG-4729, docs/simulation.md, Specification-level form and Claims over metrics. Negative: a bound the model misses must read violated with a replayable seed.",
+      "subjects": [
+        "metric-claims",
+        "workload-model",
+        "resource-model"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "recorded-results-read-stale-on-stamp-mismatch",
+      "kind": "invariant",
+      "statement": "exegra verify records every evidence result with the records stamp of the tree (tools/tree-stamp.js: the tree stamp without the project's results.json and generated artifacts), and the command line evaluates claims against the current stamps: an evidence result or an external tool's outcome recorded on another stamp, or on none, is stale; a stale pass establishes nothing, so a claim resting on it is not evaluated, with an explanation that starts with Stale and the diagnostic claim.stale-evidence; a stale fail still contradicts its claim.",
+      "subjects": [
+        "claim-evaluator",
+        "verification-pipeline",
+        "recorded-results-file"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "Closes epistemics D2 and the architecture finding that recorded results carried no provenance. The status set stays closed: staleness is reported as not-evaluated with the freshness field stale and a diagnostic, not as a new status, because CLAIM_STATUSES, the admit ranks, the summaries and the generators all enumerate the seven statuses, and the status lattice that will carry freshness as its own component is milestone M3. The results file and generated artifacts are left out of the stamp so that writing them does not make the results they hold stale.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "recorded-results-unverifiable-without-stamp",
+      "kind": "invariant",
+      "statement": "Where no current stamp can be computed (the application in the browser), a claim status resting on recorded facts keeps its value but carries freshness unverifiable, the diagnostic claim.freshness-unverifiable and, when the status is positive, an explanation that says so; the verification panel says the recorded results' freshness is unverifiable there.",
+      "subjects": [
+        "claim-evaluator",
+        "verification-panel"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "The page cannot stamp the working tree, so it neither trusts recorded results silently nor hides them. The browser part (the panel line) has no browser test of its own; the evidence covers the evaluator.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "lean-theorem-requires-code-about",
+      "kind": "invariant",
+      "statement": "A lean-theorem claim is refused (violated) when it names no implementation constant in about, or when a named constant is opaque, or is reported implemented_by, extern or partial, because a theorem about such a constant says nothing about the code that runs.",
+      "subjects": [
+        "claim-evaluator"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Encodes the cases of finding L1 of docs/assessment/2026-11-26/lean.md that are reachable from the recorded facts: a claim with no about was proved, and an opaque about constant was accepted. tools/lean-theorems.js does not yet report implemented_by, extern or partial for a definition, so those refusals apply only to records that carry them; a partial def and an implemented_by opaque are opaque constants and are refused. The tautology case of L1 (a statement that mentions the code but says nothing about it) needs the statement binding of milestone M3 and is not decided here.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "lean-theorem-records-stale-on-source-change",
+      "kind": "invariant",
+      "statement": "Each recorded Lean theorem check carries the hash of the formal/ sources it was checked on, the records stamp of the tree and the hash of the theorem statement as Lean printed it; when Lean does not run (not installed, or EXEGRA_NO_LEAN=1) a recorded check whose formal hash differs from that of the current sources, or that carries none, does not keep its claim proved: the claim is not evaluated, with an explanation that starts with Stale and the diagnostic claim.stale-theorem.",
+      "subjects": [
+        "claim-evaluator",
+        "verification-pipeline"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Closes epistemics D3 and lean.md L2: replacing a proof by sorry and running verify without Lean kept all lean-theorem claims proved. A refusal recorded on other sources still stands, since staleness never improves a status. The statement hash is recorded for review and for admission of statement changes (milestone M10); nothing compares it yet.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "metric-open-started-computed",
+      "kind": "invariant",
+      "statement": "A metric-bound claim leaves an underpowered run out only for a request class that the engine input shows to be open-started (its named workload is open, or with none named an open workload issues its start event and no closed or population workload, behavior emit or then, scenario step or injected fault can); for every other class, and for a run with duplicate starts, an underpowered run is kept and does not satisfy the bound; nothing defaults a class to open-started.",
+      "subjects": [
+        "metric-claims"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "Encodes docs/assessment/2026-11-26/demos/metric-demo1.mjs and simulation.md finding F1: openStarted defaulted to true and was never computed, so 40 collapsing runs of 100 on a closed workload were left out and the claim read model-holds; it now reads violated.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "concordance-results-are-evidence",
+      "kind": "structural",
+      "statement": "A linked project's Concordance results (concordanceResults in project.jsonc) become derived test evidence of their claims: a pass makes a requirement supported and never verified, a fail makes it violated, a claim without an entry stays not evaluated, and a results file for another tool or specification, or an entry for an unknown claim, changes no status. A results file that names a specSha256 (the sha-256 of the specification text it was computed from) is not applied when that differs from the current text; one that names none is applied with its revision recorded as unknown, and its explanation says so.",
+      "subjects": [
+        "claim-evaluator",
+        "workspace-service"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/concordance.test.js (the ev-concordance-* evidence entries).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "lean-theorem-method-refuses-unsound-proofs",
+      "kind": "structural",
+      "statement": "A lean-theorem claim is proved only when Lean reports a kernel-checked theorem that depends on no axiom beyond propext, Classical.choice and Quot.sound and whose statement mentions every named implementation constant; sorry, native_decide, an axiom of its own and an off-topic statement are refused.",
+      "subjects": [
+        "claim-evaluator",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Supported by tests/core/lean-theorem.test.js (WG-4792).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "refines-checks-machine-refinement",
+      "kind": "invariant",
+      "statement": "A refines claim is verified only when, in the traces of the scenarios that run the implementation behavior, every initial configuration and every fired transition of it maps through its refinement mapping to the step its model machine takes or to a stutter, and at least one step matched a model transition; a step to the wrong model state, a step whose model guard is false, a wrong mapped post-variable, a moving step mapped to a stutter, different emitted events and a wrong initial state each make it violated, with the failing step as the last step of the counterexample trace. Timers the implementation sets are compared with the model's timers when the model transition sets some and are internal to the implementation otherwise; a model guard or effect that reads another behavior reads it from the same trace, through the machine that refines that behavior when it does not run itself. With refinement.timeScale, the model reads the trace time divided by it and its timer delays are compared multiplied by it. A delayed emit of the model is realised only by a delayed emit of the implementation for the same event and the payload fields the model sets, delivered after the model delay times the time scale; a timer never realises an emit, and an undelayed emit for a delayed one, or the reverse, is violated (reason emits).",
+      "rationale": "Supported by tests/core/refinement.test.js. The check covers the listed traces only, each with its scenario's own faults; checking every explored execution is WG-4852. The check is JavaScript in the verdict-kernel component claim-evaluator and is listed by core-logic-in-lean until it is ported.",
+      "subjects": [
+        "claim-evaluator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "machine-transition-coverage",
+      "kind": "invariant",
+      "statement": "For every implementation-level machine whose realisation is shipped, exegra cover-machines reports, per machine, the transitions and guard outcomes (true and false of each guard) covered out of the total, read from the traces of the scenarios that run it; for each item they leave out it searches bounded sequences of the machine's input events with representative payloads and waits, keeps the runs that reach it as generated scenarios cover-<machine>-<n> whose traces exercise it, and writes them with --write as CreateEntity operations tagged generated-coverage that apply accepts and that, once applied, cover the same items; a transition reached by no scenario and no searched sequence is machine.transition-unreachable, a warning, or an error under system.generation.",
+      "rationale": "WG-4965, item 2: every transition and guard outcome of every shipped machine should be exercised by a scenario both differentials run, and a machine with an unreachable transition reported. Evidence is tests/core/machine-coverage.test.js on tests/fixtures/machine-coverage/spec.jsonc, a door whose one scenario covers a guard false and whose jammed state nothing enters. Supported, not verified: the search is bounded and its claims of unreachability are within the bound.",
+      "subjects": [
+        "machine-coverage",
+        "agent-cli"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "claim-strength-names-weak-checks",
+      "kind": "structural",
+      "statement": "claimStrength reports a state invariant whose variables only fault transitions assign as holds-by-construction, naming the variables and those transitions; a counter bound equal to the extreme of its one scenario as restated-scenario; any other trace claim as single-trace, unless the caller supplies an exploration that found it holding (explored); and never changes a status.",
+      "subjects": [
+        "claim-strength"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/claim-strength.test.js (WG-5274), on fixtures that reproduce hl-chk-rx-continuous-renewal, hl-chk-gf-no-creation-after-loss and hl-chk-ag-forbidden-refused of the Harbourline fold.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "claim-strength-grounding",
+      "kind": "structural",
+      "statement": "claimStrength reports a claim whose behaviors branch only on payload fields of contract-less events as self-contained and names those fields, a claim over a behavior that reacts to a contract event as bound with the capabilities the contract requires, an integrity rule over the real roles as bound, and under a baseline counts an entity the change adds as anchoring nothing.",
+      "subjects": [
+        "claim-strength"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/claim-strength.test.js (WG-5276).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "verdict-status-partial-order",
+      "kind": "invariant",
+      "statement": "Status.le is a decidable partial order on statuses: reflexive, transitive and antisymmetric (two statuses each at most the other are equal).",
+      "subjects": [
+        "claim-verdict"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Verdict.lean (with Status.le_refl and Status.le_trans and the decidability instance); WG-5684 criterion 1.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Verdict.Status.le_antisymm",
+        "about": [
+          "Exegra.Verdict.Status.le"
+        ]
+      }
+    },
+    {
+      "id": "verdict-conjunction-meet",
+      "kind": "invariant",
+      "statement": "The strength of the status of a conjunction is the meet of the strengths of its parts: (status (conj cs) fs).strength = meet of (status c fs).strength over c in cs.",
+      "subjects": [
+        "claim-verdict"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem status_conj of formal/Exegra/Verdict.lean; WG-5684 criterion 2 (a). An empty conjunction is undecided.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Verdict.status_conj",
+        "about": [
+          "Exegra.Verdict.status",
+          "Exegra.Verdict.Strength.meetAll"
+        ]
+      }
+    },
+    {
+      "id": "verdict-contradiction-lowers",
+      "kind": "invariant",
+      "statement": "A fact that contradicts a claim never raises its status: Contradicts f c implies status c (fs ++ [f]) <= status c fs.",
+      "subjects": [
+        "claim-verdict"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem contradict_lowers of formal/Exegra/Verdict.lean; WG-5684 criterion 2 (b).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Verdict.contradict_lowers",
+        "about": [
+          "Exegra.Verdict.status",
+          "Exegra.Verdict.Contradicts"
+        ]
+      }
+    },
+    {
+      "id": "verdict-staleness-never-raises",
+      "kind": "invariant",
+      "statement": "Reading every fact as stale never raises a status: status c (fs.map markStale) <= status c fs.",
+      "subjects": [
+        "claim-verdict"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem stale_never_raises of formal/Exegra/Verdict.lean; WG-5684 criterion 2 (c).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Verdict.stale_never_raises",
+        "about": [
+          "Exegra.Verdict.status",
+          "Exegra.Verdict.markStale"
+        ]
+      }
+    },
+    {
+      "id": "verdict-refuted-assumption-undecided",
+      "kind": "invariant",
+      "statement": "A claim one of whose assumptions is refuted by the facts is undecided: a in c.assumptions and assumptionRefuted a fs imply (status c fs).strength = undecided.",
+      "subjects": [
+        "claim-verdict"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem refuted_assumption_undecided of formal/Exegra/Verdict.lean; WG-5684 criterion 2 (d). The assumptions of a conjunction are those every part rests on.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Verdict.refuted_assumption_undecided",
+        "about": [
+          "Exegra.Verdict.status",
+          "Exegra.Verdict.assumptionRefuted",
+          "Exegra.Verdict.Claim.assumptions"
+        ]
+      }
+    },
+    {
+      "id": "verdict-established-iff",
+      "kind": "invariant",
+      "statement": "A status is shown established exactly when its strength is proved, it is fresh and it has no open assumption.",
+      "subjects": [
+        "claim-verdict"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem established_iff of formal/Exegra/Verdict.lean; WG-5684 criterion 2 (e).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Verdict.established_iff",
+        "about": [
+          "Exegra.Verdict.shownEstablished",
+          "Exegra.Verdict.status"
+        ]
+      }
+    },
+    {
+      "id": "verdict-strength-bounded-by-kind",
+      "kind": "invariant",
+      "statement": "The strength of a status is at most the join of maxStrength over the kinds of the fresh facts it was taken from, with maxStrength test = checkedOnInstances, boundedExploration = exploredToBound, leanTheorem = proved and document = asserted.",
+      "subjects": [
+        "claim-verdict"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem strength_le_kind of formal/Exegra/Verdict.lean (usedFacts_fresh: the facts used are fresh; the four maxStrength equations are theorems by rfl); WG-5684 criterion 2 (f).",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Verdict.strength_le_kind",
+        "about": [
+          "Exegra.Verdict.status",
+          "Exegra.Verdict.bound",
+          "Exegra.Verdict.usedFacts"
+        ]
+      }
+    },
+    {
+      "id": "verdict-regression-iff",
+      "kind": "invariant",
+      "statement": "A move from an old status to a new one is a regression exactly when the claim was removed or the new status is not at least the old one: isRegression old new iff new = none or not Status.le old new.",
+      "subjects": [
+        "claim-verdict"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem regression_iff of formal/Exegra/Verdict.lean; WG-5684 criterion 2 (g). admit and verify call isRegression through verdict.isRegression.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Verdict.regression_iff",
+        "about": [
+          "Exegra.Verdict.isRegression",
+          "Exegra.Verdict.Status.le"
+        ]
+      }
+    },
+    {
+      "id": "impact-changed-claim-remarked",
+      "kind": "invariant",
+      "statement": "A claim the change itself changes is among the claims it re-marks.",
+      "subjects": [
+        "claim-verdict",
+        "change-impact"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Impact.lean; WG-5684 criterion 7.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Impact.changed_claim_impacted",
+        "about": [
+          "Exegra.Impact.impacted"
+        ]
+      },
+      "guaranteeClass": "change-impact"
+    },
+    {
+      "id": "impact-direct-dependency-remarked",
+      "kind": "invariant",
+      "statement": "A claim that depends directly on a changed node of the dependency graph is among the claims the change re-marks.",
+      "subjects": [
+        "claim-verdict",
+        "change-impact"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Impact.lean; WG-5684 criterion 7.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Impact.direct_dependency_impacted",
+        "about": [
+          "Exegra.Impact.impacted"
+        ]
+      },
+      "guaranteeClass": "change-impact"
+    },
+    {
+      "id": "impact-proof-only-not-weakened",
+      "kind": "invariant",
+      "statement": "A change of a theorem that keeps its statement hash, its axioms and its about set is not a weakening.",
+      "subjects": [
+        "claim-verdict"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Impact.lean; WG-5684 criterion 11.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Impact.proof_only_not_weakened",
+        "about": [
+          "Exegra.Impact.weakening"
+        ]
+      },
+      "guaranteeClass": "change-impact"
+    },
+    {
+      "id": "impact-statement-change-weakens",
+      "kind": "invariant",
+      "statement": "A change of a theorem's statement hash with no superseding implication is a weakening.",
+      "subjects": [
+        "claim-verdict"
+      ],
+      "assumptions": [
+        "trusted-lean-kernel"
+      ],
+      "rationale": "Theorem of formal/Exegra/Impact.lean; WG-5684 criterion 11.",
+      "evaluate": {
+        "method": "lean-theorem",
+        "theorem": "Exegra.Impact.statement_change_weakens",
+        "about": [
+          "Exegra.Impact.weakening"
+        ]
+      },
+      "guaranteeClass": "change-impact"
+    },
+    {
+      "id": "claim-statuses-decided-in-lean",
+      "kind": "invariant",
+      "statement": "Every status evaluateClaims reports is the one the Lean function claims.status returns, and every regression admit and verify report is the one verdict.isRegression returns; no claim status is computed in JavaScript, and metric-stats has no claimStatus.",
+      "subjects": [
+        "claim-evaluator",
+        "verdict-boundary",
+        "claim-verdict"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "facts-meet-lean-schema",
+      "kind": "invariant",
+      "statement": "The trusted fact producers (the test-runner adapters, the tree stamp, the Lean theorem checker, the import scan) emit facts that decode against the Lean fact schema, and a fact that does not decode is refused with its reason and reported on its claim as claim.fact-refused.",
+      "subjects": [
+        "verdict-boundary",
+        "claim-verdict",
+        "verification-pipeline"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "inflation-demos-honest",
+      "kind": "invariant",
+      "statement": "Every status-inflation demo of the 2026-11-26 assessment yields its honest status: skipped references are not run, a passing test is checked on instances and never established, a document is asserted, a conjunction with an untested part is undecided, a theorem naming no code is refused, a stale theorem check is not proved, the collapsing metric claim is violated, the workflow checks fail on the five pages mutants, and a refuted assumption leaves its claim undecided.",
+      "subjects": [
+        "claim-evaluator",
+        "claim-verdict"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "level-claims-sound-transfer",
+      "kind": "invariant",
+      "statement": "A graph claim stated at a cut reports a verdict only through the transfer rules: absence transfers exactly, a coarse path is a may-path unless a chain of relationships between members witnesses it, acyclicity is a statement about blocks; a claim naming an element hidden at its cut is not expressible at that level (I9).",
+      "subjects": [
+        "claim-evaluator",
+        "semantic-abstraction"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "navigation-level-claims-at-cut",
+      "kind": "structural",
+      "statement": "A claim stated at a cut is shown, for a structural view in its hierarchy, with its result evaluated at the cut the view draws: the same result exegra evaluate --cut gives for that cut; its counterexample blocks and edges are drawn red in the scene, or the claim says it is not expressible at this level.",
+      "subjects": [
+        "claim-evaluator",
+        "projection-system",
+        "session"
+      ],
+      "rationale": "Supported by the core fixture with a cycle of blocks and a claim naming an element hidden at the cut, and by the browser walk, which compares the shown result with the command line at every step (core-independent-of-ui is not expressible at L0 and verified at the other steps).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    }
+  ],
+  "evidence": [
+    { "id": "ev-concordance-pass", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#a Concordance pass makes a requirement supported", "description": "A recorded pass of a requirement in the Concordance results is supported, not verified." },
+    { "id": "ev-concordance-fail", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#a Concordance fail makes a requirement violated", "description": "A recorded fail in the Concordance results makes the requirement violated." },
+    { "id": "ev-concordance-absent", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#a claim without a Concordance entry stays not evaluated", "description": "A claim with no entry in the Concordance results stays not evaluated." },
+    { "id": "ev-concordance-diagnostics", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#a Concordance file for another tool or specification changes nothing", "description": "A results file for another tool or another specification, or a missing or invalid one, warns and changes no status." },
+    { "id": "ev-concordance-unknown-claim", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#an unknown claim id is a warning and the other entries still apply", "description": "An entry for an id that is not a claim of the specification warns, naming the id, and the other entries still apply." },
+    { "id": "ev-concordance-unconfigured", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#a project without concordanceResults is unchanged", "description": "A project that names no Concordance results file is evaluated exactly as before." },
+    { "id": "ev-concordance-directory", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#a results path that is a directory is a warning and not a load failure", "description": "A results path that is a directory warns (concordance.unreadable) and the project still loads." },
+    { "id": "ev-concordance-watched", "claim": "concordance-results-are-evidence", "kind": "test", "ref": "tests/core/concordance.test.js#watching a project reports a change to its Concordance results file as a change of the recorded results", "description": "A change to the Concordance results file is reported by the file watcher as a change of the recorded results." },
+    { "id": "ev-trace-order-decides", "claim": "trace-claims-state-how-decided", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#two unguarded transitions on one event are warned about and the result says the order decided", "description": "Two unguarded transitions on one event warn, and the claim scope names the transition the declaration order chose; a guard removes both." },
+    { "id": "ev-trace-precedes-script", "claim": "trace-claims-state-how-decided", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#precedes between two scripted deliveries is not verified and one the system produces is", "description": "An ordering between two scripted deliveries is inconclusive; one a transition produces is verified." },
+    { "id": "ev-trace-never-faultonly", "claim": "trace-claims-state-how-decided", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#a never over an occurrence only a faultOnly transition produces says it holds for fault-free runs", "description": "A never over an occurrence only a faultOnly transition emits says so in its scope; it does not when the scenario enables the fault." },
+    { "id": "ev-trace-constant-consequent", "claim": "trace-claims-state-how-decided", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#an implication with a constant consequent is not exercised", "description": "An implication whose consequent names no state or variable is inconclusive." },
+    { "id": "ev-models-listed", "claim": "models-property-evaluated", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#a requirement shows the model claims that name it and their statuses", "description": "A requirement result lists the claims whose models property names it with their statuses, and its own status is unchanged." },
+    { "id": "ev-models-validated", "claim": "models-property-evaluated", "kind": "test", "ref": "tests/core/claim-diagnostics.test.js#a models value that names a claim which is not a requirement is a validation error", "description": "A models value that is not a requirement is the error claim.models-not-requirement." },
+    {
+      "id": "ev-contract-events-static",
+      "claim": "contract-events-validated",
+      "kind": "test",
+      "ref": "tests/core/contract-trace.test.js#validate reports contract events that do not fit their contract",
+      "description": "A request with an unknown field, a missing input, a wrong type, a response with a foreign field and an error code outside the contract are each reported at the event; a conforming model has no such diagnostic."
+    },
+    {
+      "id": "ev-contract-trace-checks",
+      "claim": "trace-contract-conformance",
+      "kind": "test",
+      "ref": "tests/core/contract-trace.test.js#simulate checks values error codes and request response pairing",
+      "description": "A wrong-typed value, an error code outside the contract and a response with no earlier request are failed automatic checks with their step; Exegra's own write-with-stale-base-hash scenario passes them."
+    },
+    {
+      "id": "ev-contract-request-log",
+      "claim": "trace-contract-conformance",
+      "kind": "test",
+      "ref": "tests/core/contract-trace.test.js#the request log renders contract events with binding and outcome",
+      "description": "The trace of write-with-stale-base-hash renders as a request, a refused write and a retry, using the contract's binding; a trace without contract events renders no lines."
+    },
+    {
+      "id": "ev-browser-requests-section",
+      "claim": "trace-contract-conformance",
+      "kind": "test",
+      "ref": "tests/browser/mobile.spec.js#the simulator shows the request log of contract events on a phone",
+      "description": "On a phone, the Requests section of the simulator panel lists the request, the refused write and the retry of write-with-stale-base-hash, with jump targets of at least 44 px and no horizontal scroll."
+    },
+    {
+      "id": "ev-negatives-status",
+      "claim": "trace-claim-verified-needs-negative",
+      "kind": "test",
+      "ref": "tests/core/claims.test.js#negatives: verified needs a violating negative",
+      "description": "A trace claim with a violating negative is verified; with none, with a negative that holds, or with one cut off unfinished, it is inconclusive and says why."
+    },
+    {
+      "id": "ev-own-claims-falsifiable",
+      "claim": "own-behavioral-claims-falsifiable",
+      "kind": "test",
+      "ref": "tests/core/claims.test.js#negatives: every behavioral claim of the exegra specification is verified with a violating negative",
+      "description": "Loads specs/exegra/spec.jsonc and checks that every trace claim declares negatives and is verified."
+    },
+    {
+      "id": "ev-pool-flood-fixture",
+      "claim": "pool-classes-protect-move-db-leg-under-flood",
+      "kind": "test",
+      "ref": "tests/core/pool-fixture.test.js",
+      "description": "Runs only with EXEGRA_FIXTURES=1 (354 runs, about 15 minutes on the native engine). Recorded 2026-11-17: model-holds. Per-run p99 of the move leg: base holds 59/59 (spread 2987 / 3433 / 4630 us), control holds 59/59 (1584 / 1802 / 2376 us); the twin collapse-classes fails 0/59 (every run +inf: moves are refused at the shared queue), the twin page-read limit 12 fails 0/59 (70839 / 83599 / 105493 us: moves wait behind page reads on the shared I/O channels); both twin faults hold on the control (59/59; spreads up to 21768 and 13969 us). A model result on assumed parameters, not evidence about any system."
+    },
+    {
+      "id": "ev-metric-claims-in-specifications",
+      "claim": "metric-claims-in-specifications",
+      "kind": "test",
+      "ref": "tests/core/metric-spec.test.js",
+      "description": "A small specification with a resource, an open workload, a request class and a metric-bound claim: simulationInput derives version 2; the claim reads model-holds with N = 8, its scale-demand twin fails, and a missed bound reads violated."
+    },
+    {
+      "id": "ev-stale-evidence",
+      "claim": "recorded-results-read-stale-on-stamp-mismatch",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#a recorded result whose stamp is not the current stamp leaves its claim not evaluated as stale",
+      "description": "A pass recorded on another stamp, or with none, leaves an external-evidence claim not evaluated with a Stale explanation, freshness stale and claim.stale-evidence; on the current stamp it is supported and fresh; a stale fail still violates."
+    },
+    {
+      "id": "ev-stale-external-tool",
+      "claim": "recorded-results-read-stale-on-stamp-mismatch",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#an outcome an external tool recorded on another tree does not support its claim",
+      "description": "An external tool's recorded pass for a claim of a declared verification method supports it only when stamped with the current stamp."
+    },
+    {
+      "id": "ev-records-stamp",
+      "claim": "recorded-results-read-stale-on-stamp-mismatch",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#the records stamp ignores the files Exegra writes from its results and the formal hash follows formal sources",
+      "description": "In a scratch git tree, writing results.json and generated artifacts leaves the records stamp unchanged while an edit of the specification changes it; the formal hash changes when a proof is replaced; verify writes the stamp into every recorded result."
+    },
+    {
+      "id": "ev-unverifiable-freshness",
+      "claim": "recorded-results-unverifiable-without-stamp",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#without a current stamp recorded results are reported with unverifiable freshness",
+      "description": "With no current stamp a recorded pass still supports its claim, which carries freshness unverifiable, an explanation saying so and the info diagnostic claim.freshness-unverifiable."
+    },
+    {
+      "id": "ev-lean-about-refusals",
+      "claim": "lean-theorem-requires-code-about",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#the lean-theorem rule refuses a claim with no about list and an about constant that is not the code that runs",
+      "description": "Recorded facts of a kernel-checked theorem with standard axioms: no about and an empty about are violated, an opaque about constant and one reported implemented_by, extern or partial are violated, a definition named in the statement is proved."
+    },
+    {
+      "id": "ev-lean-stale-sources",
+      "claim": "lean-theorem-records-stale-on-source-change",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#a recorded Lean check of other formal sources does not keep its claim proved",
+      "description": "A recorded check whose formal hash differs from the current one, or that has none, leaves the claim not evaluated with a Stale explanation and claim.stale-theorem; with the current hash it is proved and fresh."
+    },
+    {
+      "id": "ev-metric-closed-violated",
+      "claim": "metric-open-started-computed",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#a closed-workload class whose runs collapse reads violated: underpowered runs are kept and fail",
+      "description": "metric-demo1 through evaluateMetricClaim with a closed workload: the class is not open-started, all 100 runs are kept and the claim is violated; the demo's statistics with openStarted unstated also fail."
+    },
+    {
+      "id": "ev-metric-open-started-rule",
+      "claim": "metric-open-started-computed",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#open-startedness is computed from the workloads that can start the class",
+      "description": "An open workload alone makes the class open-started and the underpowered runs left out; a behavior emit, a population, a scenario step or a non-request metric does not; a run with duplicate starts is kept."
+    },
+    {
+      "id": "ev-lean-theorem-method",
+      "claim": "lean-theorem-method-refuses-unsound-proofs",
+      "kind": "test",
+      "ref": "tests/proofs/lean-theorem.test.js",
+      "description": "Lean proves Exegra.V2.runB_terminates about Exegra.V2.runInput and refuses a sorry, a native_decide, an own axiom and an off-topic statement; the rule on recorded facts; no record gives not evaluated."
+    },
+    {
+      "id": "ev-refines-verified",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#a refinement with an internal state mapped by stutter is verified on the trace",
+      "description": "An implementation of a lease with an internal renewing state mapped by stutter refines its model: verified, with two matched steps and two stutters."
+    },
+    {
+      "id": "ev-refines-wrong-state",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#refines is violated by a step to the wrong model state",
+      "description": "A step whose target maps to another model state than the model transition enters is violated at that step (model-to)."
+    },
+    {
+      "id": "ev-refines-guard-false",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#refines is violated by a step whose model guard is false",
+      "description": "A release by a client that does not hold the lease is violated at that step (model-guard-false)."
+    },
+    {
+      "id": "ev-refines-post-variable",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#refines is violated by a wrong mapped post-variable",
+      "description": "An implementation step that sets a mapped variable differently from the model is violated at that step (post-variables)."
+    },
+    {
+      "id": "ev-refines-false-stutter",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#refines is violated by a non-stutter step mapped to null",
+      "description": "A step that moves the mapped state but is mapped to a stutter is violated at that step (stutter-state)."
+    },
+    {
+      "id": "ev-refines-initial",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#refines is violated by a wrong initial state",
+      "description": "An implementation whose initial state maps to another state than the model initial state is violated on the initial configuration (initial-state)."
+    },
+    {
+      "id": "ev-refines-emits",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#refines is violated when emitted events differ from the model",
+      "description": "An implementation step that does not emit the event the model transition emits is violated at that step (emits)."
+    },
+    {
+      "id": "ev-refines-declaration-order",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#refines and the ordering rule agree",
+      "description": "A step mapped to the otherwise transition of a model group is violated when an earlier guarded transition would fire (model-not-chosen), and verified when that guard is false."
+    },
+    {
+      "id": "ev-refines-timer-same",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#a timer the implementation sets and receives refines the same timer of the model",
+      "description": "An implementation that sets a timer on acquire and expires when it fires refines a model that sets a timer for the same event: verified."
+    },
+    {
+      "id": "ev-refines-timer-internal",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#a timer the model does not set is internal to the implementation",
+      "description": "When the model transition sets no timer, the implementation timer is not compared: verified."
+    },
+    {
+      "id": "ev-refines-timer-differs",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#refines is violated when the implementation timer emits another event than the model timer",
+      "description": "A timer for another event than the model timer is violated at the step that sets it (timers)."
+    },
+    {
+      "id": "ev-refines-cross-refined",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#a model guard reading another behavior is evaluated through the machine that refines it",
+      "description": "A model guard reading rev-model.revoked is evaluated through the refinement mapping of rev-impl, which runs in its place: verified."
+    },
+    {
+      "id": "ev-refines-cross-direct",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#a model guard reading another behavior is evaluated on that behavior when it runs itself",
+      "description": "A model guard reading a behavior that runs in the scenario reads its machine directly: verified."
+    },
+    {
+      "id": "ev-refines-cross-violated",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#refines is violated when a model guard reading another behavior is false",
+      "description": "An implementation that accepts after revocation is violated where the model guard reading the other behavior is false (model-guard-false)."
+    },
+    {
+      "id": "ev-refines-time-scale",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#a tick-based model and a millisecond implementation at real timings agree through the time scale",
+      "description": "A model in one-minute ticks and an implementation in milliseconds with timeScale 60000 agree at real timings, inside and past the lifetime: verified."
+    },
+    {
+      "id": "ev-refines-time-scale-violated",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#refines is violated when the implementation accepts past the scaled lifetime",
+      "description": "An implementation that accepts 16 minutes after issue is violated where the model guard over the scaled time is false (model-guard-false)."
+    },
+    {
+      "id": "ev-refines-time-scale-absent",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#without the time scale the model reads milliseconds as ticks and the same run is violated",
+      "description": "The same run without timeScale is violated: the model timer delay is compared in raw trace units (timers)."
+    },
+    {
+      "id": "ev-refines-delayed-emit-scaled",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#a delayed emit of the model is realised by a delayed emit at the scaled delay",
+      "description": "A model emit 5 ticks later, realised by an implementation emit 5000 ms later with timeScale 1000, refines it: verified."
+    },
+    {
+      "id": "ev-refines-delayed-emit-event",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#refines is violated when the delayed emit realising a delayed emit emits another event",
+      "description": "A delayed emit of another event than the model's delayed emit is violated at that step (emits)."
+    },
+    {
+      "id": "ev-refines-delayed-emit-delay",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#refines is violated when the delayed emit realising a delayed emit has another delay",
+      "description": "A delayed emit at another delay than the model's scaled delay is violated at that step (emits)."
+    },
+    {
+      "id": "ev-refines-delayed-emit-at-once",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#refines is violated when a delayed emit of the model is emitted at once",
+      "description": "An undelayed emit where the model delays it is violated at that step (emits)."
+    },
+    {
+      "id": "ev-refines-timer-not-emit",
+      "claim": "refines-checks-machine-refinement",
+      "kind": "test",
+      "ref": "tests/core/refinement.test.js#refines is violated when a timer stands in for a delayed emit of the model",
+      "description": "A timer with the model's event and scaled delay, in place of the model's delayed emit, is violated at that step (emits): a timer fires at its own machine, not at the receivers."
+    },
+    {
+      "id": "ev-machine-transition-coverage-1",
+      "claim": "machine-transition-coverage",
+      "kind": "test",
+      "ref": "tests/core/machine-coverage.test.js#the items are the transitions and both outcomes of each guard",
+      "description": "The door's items are its five transitions and the true and false outcome of its one guard."
+    },
+    {
+      "id": "ev-machine-transition-coverage-2",
+      "claim": "machine-transition-coverage",
+      "kind": "test",
+      "ref": "tests/core/machine-coverage.test.js#a guard is false when a later transition of the same state and event fires",
+      "description": "A fired otherwise transition marks the earlier guard of its state and event false; an event ignored as guard-false marks each considered guard false."
+    },
+    {
+      "id": "ev-machine-transition-coverage-3",
+      "claim": "machine-transition-coverage",
+      "kind": "test",
+      "ref": "tests/core/machine-coverage.test.js#the scenario covers what it delivers and the search covers the rest and reports the unreachable transition",
+      "description": "The scenario covers t-open-else and the guard false; generated scenarios cover t-open, its guard true, t-close and t-lock (after its timer); t-unjam is the one machine.transition-unreachable warning, its source state entered by nothing."
+    },
+    {
+      "id": "ev-machine-transition-coverage-4",
+      "claim": "machine-transition-coverage",
+      "kind": "test",
+      "ref": "tests/core/machine-coverage.test.js#under system.generation an unreachable transition is an error",
+      "description": "With system.generation the finding is an error."
+    },
+    {
+      "id": "ev-machine-transition-coverage-5",
+      "claim": "machine-transition-coverage",
+      "kind": "test",
+      "ref": "tests/core/machine-coverage.test.js#a bound too small to reach a transition is reported as unreachable within that bound",
+      "description": "With a bound of one action t-close is reported unreachable within that bound."
+    },
+    {
+      "id": "ev-machine-transition-coverage-6",
+      "claim": "machine-transition-coverage",
+      "kind": "test",
+      "ref": "tests/core/machine-coverage.test.js#the generated scenarios added through their operations cover everything the search found",
+      "description": "The operations are CreateEntity of scenarios tagged generated-coverage; added to the specification they validate and cover every item the search found, and nothing more is generated."
+    },
+    {
+      "id": "ev-machine-transition-coverage-7",
+      "claim": "machine-transition-coverage",
+      "kind": "test",
+      "ref": "tests/core/machine-coverage.test.js#a door without the jammed state is fully covered and has no finding",
+      "description": "Without the state nothing enters, every transition and guard outcome is covered and there is no finding."
+    },
+    {
+      "id": "ev-machine-transition-coverage-8",
+      "claim": "machine-transition-coverage",
+      "kind": "test",
+      "ref": "tests/core/machine-coverage.test.js#cover-machines reports the table and the finding and writes ops.json that apply accepts",
+      "description": "The command prints the table and the finding, writes ops.json, apply accepts it, and a second run generates nothing."
+    },
+    {
+      "id": "ev-strength-hbc",
+      "claim": "claim-strength-names-weak-checks",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#a state invariant whose variable only a fault transition changes holds by construction and names the variable and the transition",
+      "description": "clockRestarts == 0 with only a fault incrementing it is holds-by-construction, naming the variable and the fault transition; the status stays verified."
+    },
+    {
+      "id": "ev-strength-restated",
+      "claim": "claim-strength-names-weak-checks",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#a counter bound equal to what its one scenario produces is a restated scenario",
+      "description": "featureRecords <= 1 over a scenario that creates one record is restated-scenario."
+    },
+    {
+      "id": "ev-strength-single-trace",
+      "claim": "claim-strength-names-weak-checks",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#a claim decided on one scenario by a literal payload guard is single-trace and self-contained and names the free input",
+      "description": "A never claim decided by a guard on event.changesPower is single-trace."
+    },
+    {
+      "id": "ev-strength-explored",
+      "claim": "claim-strength-names-weak-checks",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#a trace claim an exhaustive exploration found holding is explored",
+      "description": "A supplied exploration makes a single-trace claim explored and leaves a vacuous claim holds-by-construction."
+    },
+    {
+      "id": "ev-strength-self-contained",
+      "claim": "claim-strength-grounding",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#a claim decided on one scenario by a literal payload guard is single-trace and self-contained and names the free input",
+      "description": "The payload-driven behavior is self-contained and its free input is named."
+    },
+    {
+      "id": "ev-strength-contract-bound",
+      "claim": "claim-strength-grounding",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#a behavior that reacts to a contract event is bound and names the capabilities the contract requires",
+      "description": "A behavior that reacts to a contract event is bound, naming the contract and the capability it requires."
+    },
+    {
+      "id": "ev-strength-integrity-bound",
+      "claim": "claim-strength-grounding",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#an integrity rule over the real roles is bound",
+      "description": "An integrity rule quantifying over every role is bound."
+    },
+    {
+      "id": "ev-strength-baseline",
+      "claim": "claim-strength-grounding",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#under a baseline a contract the change adds anchors nothing",
+      "description": "With the contract outside the baseline the same claim is self-contained."
+    },
+    {
+      "id": "ev-verdict-boundary",
+      "claim": "claim-statuses-decided-in-lean",
+      "kind": "test",
+      "ref": "tests/core/verdict-boundary.test.js",
+      "description": "Stubs claims.status and verdict.isRegression at the call boundary and checks that every status and regression is the stub's; no claimStatus in src/core or cli."
+    },
+    {
+      "id": "ev-fact-schema",
+      "claim": "facts-meet-lean-schema",
+      "kind": "test",
+      "ref": "tests/core/fact-schema.test.js",
+      "description": "Producers' facts decode; malformed facts are refused with the reason; a refused fact is left out of the verdict with a diagnostic."
+    },
+    {
+      "id": "ev-inflation-demos",
+      "claim": "inflation-demos-honest",
+      "kind": "test",
+      "ref": "tests/core/inflation-demos.test.js",
+      "description": "Runs each demo case on the demo's own model and asserts the Lean verdict."
+    },
+    {
+      "id": "ev-spurious-path",
+      "kind": "test",
+      "ref": "tests/core/abstraction.test.js#a spurious coarse path is may-reachable and not verified",
+      "claim": "level-claims-sound-transfer",
+      "description": "A fixture whose coarse path joins two relationships that no path inside the middle block connects is inconclusive, not verified."
+    },
+    {
+      "id": "ev-composite-cycle",
+      "kind": "test",
+      "ref": "tests/core/abstraction.test.js#a cycle only between two subsystems is reported by acyclic at that cut",
+      "claim": "level-claims-sound-transfer",
+      "description": "The leaf graph is acyclic and acyclic at the leaves is verified; at the cut of the two subsystems acyclic is violated with the member witnesses."
+    },
+    {
+      "id": "ev-restated-core-independence",
+      "kind": "test",
+      "ref": "tests/core/abstraction.test.js#core-independent-of-ui restated at L1 keeps its verdict over the same leaves and covers four more components",
+      "claim": "level-claims-sound-transfer",
+      "description": "The hand-listed form and the restated form are both verified, and the restated targets include the old ones and the four top-level components the hand list omitted."
+    },
+    {
+      "id": "ev-nav-level-claims",
+      "claim": "navigation-level-claims-at-cut",
+      "kind": "test",
+      "ref": "tests/core/navigation.test.js#a claim stated at a cut is shown with its result at the drawn cut with its counterexample drawn or as not expressible",
+      "description": "A cycle of blocks drawn red and a claim not expressible at its cut."
+    },
+    {
+      "id": "ev-nav-level-claims-browser",
+      "claim": "navigation-level-claims-at-cut",
+      "kind": "test",
+      "ref": "tests/browser/navigation.spec.js#the self-specification is walked from the system in its environment down to module elements with each step equal to the CLI",
+      "description": "The shown result equals exegra evaluate --cut at every step."
+    }
+  ]
+}

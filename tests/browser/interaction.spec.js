@@ -41,6 +41,21 @@ async function clickEntity(page, id) {
   await page.mouse.click(pt.x, pt.y);
 }
 
+/**
+ * A screen point that picks the container itself: its front edge, nudged sideways when a relationship line crosses
+ * the default point (the layout decides where lines run).
+ * @param {import('@playwright/test').Page} page @param {string} id
+ */
+async function containerPoint(page, id) {
+  const base = /** @type {any} */ (await ex(page, `return view.screenPoint(${JSON.stringify(id)});`));
+  for (const dx of [0, -60, 60, -120, 120, -180, 180]) {
+    await page.mouse.click(base.x + dx, base.y);
+    const picked = await ex(page, `return session.selection ?? null;`);
+    if (picked === id || (Array.isArray(picked) && picked.length === 1 && picked[0] === id)) return { x: base.x + dx, y: base.y };
+  }
+  throw new Error(`no point on the front edge of ${id} picks it`);
+}
+
 const waitSaved = (/** @type {import('@playwright/test').Page} */ page) =>
   page.waitForFunction(() => /** @type {any} */ (window).__exegra.session.saveState === 'saved');
 
@@ -48,14 +63,14 @@ test('nested subsystems collapse, expand and isolate without changing the model'
   await open(page);
   const before = /** @type {any} */ (await ex(page, `return { hash: session.project.semanticHash, rev: session.project.revision, nodes: session.scene.nodes.length };`));
   // Double-click the subsystem container: it collapses to one node and its relationships are lifted onto it.
-  const pt = /** @type {any} */ (await ex(page, `return view.screenPoint('data');`));
+  const pt = await containerPoint(page, 'data');
   await page.mouse.dblclick(pt.x, pt.y);
   await page.waitForFunction(() => /** @type {any} */ (window).__exegra.session.ui.collapsed.has('data'));
   const collapsed = /** @type {any} */ (await ex(page, `return { ids: session.scene.nodes.map((n) => n.id), lifted: session.scene.edges.filter((e) => e.lifted).length, notes: session.scene.notes.join(' ') };`));
   expect(collapsed.ids).toContain('data');
   expect(collapsed.ids).not.toContain('game-database');
   expect(collapsed.lifted).toBeGreaterThan(0);
-  expect(collapsed.notes).toMatch(/collapsed subsystem/);
+  expect(collapsed.notes).toMatch(/collapsed block/);
   await ex(page, `session.toggleCollapsed('data');`);
   expect(await ex(page, `return session.scene.nodes.length;`)).toBe(before.nodes);
   // Isolate a subsystem: only its subtree is drawn.
@@ -184,15 +199,15 @@ test('stepping a simulation sends a labelled marker along the edge from sender t
   // Step 0: the edit request comes in from outside.
   await ex(page, `session.simStep();`);
   const first = /** @type {any[]} */ (await ex(page, `return view.getFlows();`));
-  expect(first.map((f) => [f.kind, f.to])).toEqual([['enter', 'visual-interaction']]);
+  expect(first.map((f) => [f.kind, f.to])).toEqual([['enter', 'composition-root']]);
   await expect(page.locator('.scene-flow-label--enter')).toHaveCount(1);
-  await expect(page.getByTestId('sim-flow')).toHaveText(/outside \(scenario\) → Visual interaction and application entry/);
+  await expect(page.getByTestId('sim-flow')).toHaveText(/outside \(scenario\) → Composition root/);
 
   // Step 1: the operation travels along the declared edge to the transaction system, and moves.
   await page.waitForTimeout(1600);
   await ex(page, `session.simStep();`);
   const a = /** @type {any[]} */ (await ex(page, `return view.getFlows();`));
-  expect(a.map((f) => [f.kind, f.from, f.to, f.edge, f.reverse])).toEqual([['edge', 'visual-interaction', 'transactions', 'visual-interaction-submits-edits-transactions', false]]);
+  expect(a.map((f) => [f.kind, f.from, f.to, f.edge, f.reverse])).toEqual([['edge', 'composition-root', 'transactions', 'composition-root-submits-edits-transactions', false]]);
   const label = page.locator('.scene-flow-label--edge');
   await expect(label).toHaveText('Operation submitted');
   const p0 = await label.boundingBox();
@@ -201,7 +216,7 @@ test('stepping a simulation sends a labelled marker along the edge from sender t
   const p1 = await label.boundingBox();
   expect(b[0].progress).toBeGreaterThan(a[0].progress);
   expect(p0 && p1 && Math.hypot(p1.x - p0.x, p1.y - p0.y)).toBeGreaterThan(5);
-  await expect(page.getByTestId('sim-flow')).toHaveText(/Visual interaction and application entry → Transaction system$/);
+  await expect(page.getByTestId('sim-flow')).toHaveText(/Composition root → Transaction system$/);
   await page.screenshot({ path: path.join(SHOTS, 'test-sim-flow-edge.png') });
 
   // Step 9: the save goes from the session straight to the workspace service, which no relationship connects.

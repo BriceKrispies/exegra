@@ -1,0 +1,1091 @@
+// Part of the specification: claims, evidence.
+{
+  "claims": [
+    {
+      "id": "simulation-deterministic",
+      "kind": "invariant",
+      "statement": "Running a scenario twice with the same model and faults gives deep-equal traces, and stepping one event at a time gives the same trace as running to the end.",
+      "subjects": ["simulation-engine", "run-scenario"],
+      "assumptions": ["tests-exercise-shipped-modules", "recorded-results-reflect-current-code"],
+      "evaluate": { "method": "external-evidence" }
+    },
+    {
+      "id": "simulation-seeded-runs-reproducible",
+      "kind": "invariant",
+      "statement": "The same model, scenario, faults and seed give deep-equal traces and metrics, draws included, in the Rust engine and in the Lean semantics; on a fixture that samples, two different seeds give different draws; and the seeds of a claim's runs are the successive SplitMix64 outputs of its base seed, with arithmetic mod 2^64.",
+      "rationale": "Planned (WG-4664; specified in docs/simulation.md, Randomness). Draws come from SplitMix64 streams addressed by (stream name, counter), the counters are part of the configuration, and sequence numbers increment on every creation. Negative twin: a fixture run with two seeds fails if the seed is ignored; an engine mutant that iterates a hash map of streams, or that reuses the sequence number of a removed entry, fails the deep-equality test against the Lean semantics. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "simulation-engine",
+        "formal-semantics",
+        "workload-model"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "simulation-instances-are-independent",
+      "kind": "invariant",
+      "statement": "N instances of one behavior keep separate state: an effect of one instance changes no variable or state of another, every fired and ignored entry of a step names its instance, and an event routed to one instance fires on that instance only.",
+      "rationale": "Planned (WG-4664; specified in docs/simulation.md, Instances). Negative twin: a fixture with two instances of a counter, where an event routed by key to instance 0 must leave instance 1 unchanged; an engine mutant that shares the variable map between instances, or delivers a routed event to every instance, fails it. Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "simulation-engine",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "specs-declare-aspects-as-data",
+      "kind": "invariant",
+      "statement": "A specification names simulation aspects with versions and gives their parameters as data; an unknown aspect or version is a validation error, and no specification text is evaluated as code.",
+      "rationale": "Planned (WG-4665). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "simulation-aspect-registry",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "aspect-runs-reproducible",
+      "kind": "invariant",
+      "statement": "The same specification, aspect versions, parameters and seed give deep-equal traces, including every aspect metric.",
+      "rationale": "Planned (WG-4665). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "simulation-aspect-registry",
+        "simulation-engine"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "refinement-agrees-at-boundary",
+      "kind": "invariant",
+      "statement": "When a component has an abstract behavior and refined child behaviors, the refined trace projected onto the component's boundary is allowed by the abstract behavior, or the first diverging boundary event is reported as a violation.",
+      "rationale": "Planned (WG-4666). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "refinement-checker"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "simulation-depth-follows-collapse",
+      "kind": "temporal",
+      "statement": "Collapsing a subsystem in the view runs its abstract behavior and expanding it runs its children's, and the simulator panel says which level each component ran at.",
+      "rationale": "Planned (WG-4666). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "refinement-checker",
+        "session",
+        "simulator-panel"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "chaos-campaigns-reproducible",
+      "kind": "invariant",
+      "statement": "The same campaign and seed give deep-equal sets of runs, and every run's check results are reported.",
+      "rationale": "Planned (WG-4667). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "chaos-aspect"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "chaos-failures-only-as-declared",
+      "kind": "invariant",
+      "statement": "A chaos campaign injects only the failure kinds and targets its parameters name, and records each injected failure in the trace.",
+      "rationale": "Planned (WG-4667). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "chaos-aspect"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "load-matches-queueing-theory",
+      "kind": "measured",
+      "statement": "Single-station M/M/1 and M/M/c queues reproduce the analytic mean waiting time and utilisation within the tolerance and number of seeded runs stated by the test.",
+      "rationale": "Planned (WG-4668). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "load-aspect",
+        "simulation-engine"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "load-parameters-sourced",
+      "kind": "invariant",
+      "statement": "Every load parameter (arrival rate, service time, capacity) names its source, a requirement, a measurement or an assumption, and a parameter without one is a validation error.",
+      "rationale": "Planned (WG-4668). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "load-aspect",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "cost-prices-sourced",
+      "kind": "invariant",
+      "statement": "Every price names a source and a date, and a cost that would use an unsourced price is reported as not computed, naming the price.",
+      "rationale": "Planned (WG-4669). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "cost-aspect"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "cost-follows-usage",
+      "kind": "invariant",
+      "statement": "A reported cost equals the recorded resource usage multiplied by the price profile, line by line.",
+      "rationale": "Planned (WG-4669). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "cost-aspect",
+        "load-aspect"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "engines-agree-on-traces",
+      "kind": "invariant",
+      "statement": "The Rust simulation engine, the differential oracle, native and WebAssembly, reproduces every golden trace of the conformance suite exactly, as the Lean engine does.",
+      "rationale": "Supported by tests/core/conformance.test.js (WG-4672): it runs the Lean WebAssembly engine and the Rust WebAssembly engine (tools/rust-engine.js) against every golden under tests/conformance/goldens, from the model and from the input file alone, compares the Rust and Lean traces byte for byte, and runs the native binary engine/target/release/exegra-sim when it is built (skipped with a message otherwise). The claim that the application and the CLI run only the Lean engine is not tested here: it is a separate claim, app-and-cli-run-lean-engine-only, which has no evidence.",
+      "subjects": [
+        "simulation-engine",
+        "simulation-contract"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "simulation-contract-pinned",
+      "kind": "invariant",
+      "statement": "For every scenario of the golden conformance suite, the simulation engine reproduces the committed trace exactly, both from the model and from the committed engine input alone, and simulationInput derives exactly the committed input.",
+      "rationale": "Pinned by tests/core/conformance.test.js (WG-4674): the goldens under tests/conformance/goldens were recorded with the former JavaScript engine and stay as committed; the test runs the engine against every one of them, from the model and from the input file alone, and compares the derived inputs, so a change of the engine's behavior fails it until the goldens are re-recorded on purpose with tools/record-goldens.js --force.",
+      "subjects": [
+        "simulation-contract",
+        "simulation-engine"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "simulation-runs-off-main-thread",
+      "kind": "invariant",
+      "statement": "The Simulation tab runs a scenario in a Web Worker: while a long run is in progress the page keeps drawing frames and reacting to input, the tab shows the run as running, and the finished trace is then stepped exactly as before.",
+      "rationale": "Supported by the browser test that loads a scenario looping up to a large step limit and checks that animation frames keep coming and the toolbar reacts while the run is in progress (WG-4672). It shows responsiveness for that run in the test browser; it says nothing about the cost of handing a very large finished trace to the page, which still happens on the main thread.",
+      "subjects": [
+        "simulation-engine",
+        "session"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "fault-model-scoped-claims",
+      "kind": "invariant",
+      "statement": "Every behavioral or reliability claim names the fault model it is evaluated under, every failure-mode rate, duration and bound names its source, and the fault model appears in each such claim result's scope.",
+      "rationale": "A claim that names a fault model says in its result's scope what it holds under: the model, its failure modes and its concurrency bounds. Evidence is the core test; the claim is supported, not verified, because Exegra does not check its own validation rules.",
+      "subjects": [
+        "fault-model",
+        "claim-evaluator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "deployment-cutover-safe",
+      "kind": "invariant",
+      "statement": "Under the fault model and within the stated bounds, no request is served by a version that failed its health gate during a blue-green cutover, and old and new versions are compatible with the schema at every step of an expand/contract migration.",
+      "rationale": "Planned (WG-4677). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "deployment-model"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "deployment-rollback-durable",
+      "kind": "invariant",
+      "statement": "Under the fault model and within the stated bounds, a rollback loses no committed transaction and returns traffic only to a version that passed its gate.",
+      "rationale": "Planned (WG-4677). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "deployment-model"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "implementation-refines-model",
+      "kind": "invariant",
+      "statement": "Every implementation trace of a checked system, projected onto the model's boundary events, is allowed by the model, or the first disallowed boundary event is reported.",
+      "rationale": "Planned (WG-4679). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "implementation-refinement"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "engine-matches-formal-semantics",
+      "kind": "invariant",
+      "statement": "The Rust engine and the Lean formal semantics give identical traces on every golden and on every input of a recorded seeded run of the input generator, whose coverage of the language's constructs is stated.",
+      "rationale": "Supported by tests/core/formal-semantics.test.js (WG-4685): the Lean executable reproduces every golden trace, and the native Rust engine and the Lean executable give identical traces on every golden input and on 150 inputs of seed 4685 of tools/gen-engine-inputs.js, whose construct coverage the test checks and tools/differential.js reports. It is evidence on the inputs run, not a proof that the engine refines the semantics.",
+      "subjects": [
+        "simulation-engine",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "resource-queues-respect-bounds",
+      "kind": "invariant",
+      "statement": "At every settled step of every format-2 run, the units a request class holds never exceed its limit, the units held never exceed capacity (except units held across a mid-run capacity cut, which are never preempted), waiting requests never exceed the class and resource bounds, bounds are enforced class by class in declaration order and then for the resource, and the request removed is the one the overflow rule names (refuse and drop: the newest; shed-oldest: the oldest of the class, or for the resource bound the oldest overall under fifo and the oldest of the lowest-priority class under priority), with the matching refused event and reason.",
+      "rationale": "Planned (WG-4664; specified in docs/simulation.md, Resources). To be proved in Lean as an invariant of the step and checked differentially on generated inputs. Negative twin: a fixture whose arrival rate exceeds capacity with a class bound of 3 under each overflow rule must remove exactly the named request; engine mutants that check bounds before granting, refuse the oldest instead of the newest, or shed across classes for a class bound fail it. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "resource-model",
+        "simulation-engine",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "resource-utilisation-at-most-one",
+      "kind": "invariant",
+      "statement": "Service demand conserves work: for every resource and run, the integral of units held over the window never exceeds the integral of the capacity in effect (while no mid-run capacity cut leaves units held above it), a completed use request held its units for exactly ceil(draw times demand factor times scale), and the sum of completed service times equals the busy integral when the window covers the run.",
+      "rationale": "Planned (WG-4664, WG-4715; specified in docs/simulation.md, Resources and Measured outputs). Negative twin: engine mutants that grant without checking free units, release before service-done, or apply the demand factor after rounding report a busy integral above the capacity integral or different from the sum of service times on the saturated fixture, and the test must fail on them. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "resource-model",
+        "performance-metrics",
+        "simulation-engine"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "format-1-unchanged-under-format-2",
+      "kind": "invariant",
+      "statement": "Format 1 is removed and every conformance golden is version 2: for each golden, its trace minus the version-2 fields equals its version-1 trace at the base commit of tests/conformance/golden-changes.json, or the difference is listed, with its reason, in that manifest; simulationInput derives a version-2 input for every specification.",
+      "rationale": "WG-5681 removed format 1 and lift_agrees with it. tests/core/conformance.test.js checks the manifest against git (goldenChanges in tools/conformance.js), so a golden that changes without an entry fails; tools/differential.js --lift prints the same comparison. Negative twin: editing a golden trace without a manifest entry fails the test. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "simulation-contract",
+        "simulation-engine",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "engine-matches-formal-semantics-v2",
+      "kind": "invariant",
+      "statement": "The Rust engine and the Lean semantics give identical version-2 traces and metrics on every version-2 golden and on every input of a recorded seeded run of the version-2 input generator, whose coverage of instances, routes, timers, resources and their overflow rules, links, workloads, distributions and resource faults is stated.",
+      "rationale": "Planned (WG-4664, WG-4715), as engine-matches-formal-semantics is for format 1. Evidence on the inputs run, not a proof that the engine refines the semantics. Negative twin: the differential tool must report a mismatch, with the first differing step and field, for an engine mutant that grants under fifo by class priority, and for one that rounds a transfer time down; a generator run whose coverage omits a construct is reported, not counted as agreement on it. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "simulation-engine",
+        "formal-semantics",
+        "simulation-contract"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "metrics-reproduce-mm1-utilisation",
+      "kind": "measured",
+      "statement": "The M/M/1 fixture (Poisson arrivals at 800/s, exponential service of mean 1 ms, one server, unit us, warm-up 20 s, horizon 220 s) reproduces utilisation 0.8 within 2% by an approx metric claim at 95% confidence over 59 seeded runs.",
+      "rationale": "Fixture specified in docs/simulation.md, Fixtures (queueing theory); planned (WG-4715). Its parameters are tagged assumed or to be measured; a holding result is model-holds, never supported. Negative twin: the same runs with set-capacity 2 (utilisation 0.4) must fail the claim. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "performance-metrics",
+        "workload-model",
+        "resource-model",
+        "metric-claims"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code",
+        "seeded-streams-independent"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "response-time-counts-failures-as-unbounded",
+      "kind": "invariant",
+      "statement": "In every response-time distribution, a measured request that ended refused, timeout or error (a lost start included, by the request lifecycle), or is censored, counts as +infinity, so only ok requests are finite and a mean over a class with any such request is undefined; a claim restricted to outcomes ok reports how many requests it left out.",
+      "rationale": "Planned (WG-4715; specified in docs/simulation.md, Measured outputs). Negative twin: in the pool fixture's collapse-classes twin most moves are refused quickly; a metrics implementation that took their short end - start as samples would make the twin pass, and the test must fail on such a mutant. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "performance-metrics",
+        "metric-claims"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "metrics-reproduce-mm1-mean-wait",
+      "kind": "measured",
+      "statement": "The M/M/1 fixture reproduces the mean waiting time in queue rho / (mu - lambda) = 4 ms within 5%, by an approx metric claim on the median of the per-run means at 95% confidence over 59 seeded runs (the order statistics 22 and 38), with the measured gap between the median of per-run means and the analytic mean stated beside the tolerance.",
+      "rationale": "Fixture specified in docs/simulation.md, Fixtures (queueing theory), with base, control and twins; planned (WG-4715). Parameters are tagged assumed or to be measured; a holding result is model-holds, never supported. Negative twin: the fault replace-demand with a fixed 1 ms service (M/D/1, mean wait 2 ms) must fail the claim. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "performance-metrics",
+        "workload-model",
+        "resource-model",
+        "metric-claims"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code",
+        "seeded-streams-independent"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "metrics-reproduce-mm2-erlang-c",
+      "kind": "measured",
+      "statement": "The M/M/2 fixture (lambda = 1600/s, mean service 1 ms, two servers) reproduces the Erlang C mean waiting time C(2, 1.6) / (2 mu - lambda) of about 1.78 ms within 5% at 95% confidence over 59 seeded runs.",
+      "rationale": "Fixture specified in docs/simulation.md, Fixtures (queueing theory); planned (WG-4715). Fixture results test the engine and method, not any system. Negative twin: the variant mm2-split (two capacity-1 resources fed by a random route, so two M/M/1 queues at 800/s each with mean wait 4 ms; a round-robin split would be E2/M/1 at about 2.84 ms) must fail the claim, which shows the multi-server grant is not two queues. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "performance-metrics",
+        "resource-model",
+        "metric-claims"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code",
+        "seeded-streams-independent"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "ladder-reacts-without-flapping",
+      "kind": "measured",
+      "statement": "On the ladder fixture, a behavior reading a meter of refused page reads rises to rung 1 within 10 s of the flood start (time-to-first), makes at most 4 rung transitions during the flood, and returns within 30 s after it (time-to-recover), each at 95% confidence over 59 runs.",
+      "rationale": "Fixture specified in docs/simulation.md, Fixtures (load-shedding ladder); planned (WG-4715). Its parameters are tagged assumed or to be measured; a holding result is model-holds, never supported. Negative twin: equal rise and lift thresholds and no hold (a faultOnly transition enabled) flap, with more than 20 transitions, and the transition-count claim must fail. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "performance-metrics",
+        "metric-claims",
+        "workload-model"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code",
+        "seeded-streams-independent"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "retry-budget-bounds-amplification",
+      "kind": "measured",
+      "statement": "On the retry fixture (2,000 client behaviors with a 500 ms timeout, a database slowdown of 5 times from 20 s to 30 s), the busiest second of queries reaching the pool during the slowdown, relative to the mean per second over 10 to 20 s (the ratio form of metric-bound), is at most 1.5 when clients retry within a 10% budget, at 95% confidence over 59 runs.",
+      "rationale": "Fixture specified in docs/simulation.md, Fixtures (retry amplification), with base, control and twins; planned (WG-4715). Parameters are tagged assumed or to be measured; a holding result is model-holds, never supported. Control: no slowdown. Negative twin: the unbudgeted retry transition (faultOnly, enabled) amplifies the ratio beyond 3 and the claim must fail; the same transition in the control must not. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "workload-model",
+        "performance-metrics",
+        "metric-claims"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code",
+        "seeded-streams-independent"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "reconnect-stagger-bounds-handshake-wait",
+      "kind": "measured",
+      "statement": "On the reconnect fixture (4,000 client behaviors on 4 hosts, host 0 crashed at 30 s with a connection-reset notice and restarted after 2 s), clients that reconnect after a uniform 0 to 5 s stagger keep the p90 wait for the host CPU (TLS handshake demand) at most 200 ms in the window 30 to 40 s, at 95% confidence over 59 runs; about 1,000 handshakes per run leave 100 samples beyond the p90.",
+      "rationale": "Fixture specified in docs/simulation.md, Fixtures (reconnect storm), with base, control and twins; planned (WG-4715). Parameters are tagged assumed or to be measured; a holding result is model-holds, never supported. Control: no crash. Negative twin: an immediate reconnect (stagger 0) must fail the claim, and the same transition enabled in the control must not. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "resource-model",
+        "workload-model",
+        "metric-claims"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code",
+        "seeded-streams-independent"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "address-limiter-acts",
+      "kind": "measured",
+      "statement": "On the address-limiter fixture (50 attacking addresses at 100/s each, a limiter keyed on address admitting 20/s), at least 90% of attack requests are refused, at 95% confidence over 59 runs.",
+      "rationale": "Fixture specified in docs/simulation.md, Fixtures (address limiter), with base, control and twins; planned (WG-4715). Negative twin: a variant of the base whose limiter limit variable starts at 1,000/s per address refuses no attack request and the claim must fail. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "workload-model",
+        "performance-metrics",
+        "metric-claims"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code",
+        "seeded-streams-independent"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "address-limiter-false-positives-bounded",
+      "kind": "measured",
+      "statement": "On the address-limiter fixture, legitimate users grouped onto addresses (up to 50 behind one shared address) see a false-positive refusal ratio of at most 0.001, at 95% confidence over 59 runs.",
+      "rationale": "Fixture specified in docs/simulation.md, Fixtures (address limiter), with base, control and twins; planned (WG-4715). Negative twin: a variant of the base whose limiter limit variable starts at 2/s per address refuses users behind shared addresses and the claim must fail. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "workload-model",
+        "performance-metrics",
+        "metric-claims"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code",
+        "seeded-streams-independent"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "bulkhead-keeps-static-served-under-db-slowdown",
+      "kind": "measured",
+      "statement": "On the hold-across fixture (16 API threads held while calling the database, a database slowdown of 10 times from 20 s to 40 s, static requests at 200/s), with database calls limited to 8 threads and a maximum wait, the p99 of static requests in the slowdown window is at most 50 ms, at 95% confidence over 59 runs.",
+      "rationale": "Fixture specified in docs/simulation.md, Fixtures (holding across a downstream wait), with base, control and twins; planned (WG-4715). Parameters are tagged assumed or to be measured; a holding result is model-holds, never supported. Control: no slowdown. Negative twin: collapse-classes on the thread pool lets database calls hold all 16 threads, static requests starve, and the claim must fail; in the control it must not. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "resource-model",
+        "performance-metrics",
+        "metric-claims"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code",
+        "seeded-streams-independent"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "crash-instance-loses-state",
+      "kind": "invariant",
+      "statement": "A crash-instance fault stops exactly the named instance at its time: its incarnation is incremented, its timers removed, its waiting requests removed with their timeouts, its in-service requests ended with their service-done entries and its units released, its restart drawn, its notify event broadcast; every targeted entry created for the old incarnation, a reply to a call it made before the crash included, is dropped as stale; a routed entry decided for it is ignored by that behavior only, and a broadcast skips it; instance aggregates exclude it while it is down; round-robin, random, any and least-busy routes skip it; a restart edge restores only its own incarnation; a crash of a missing or already down instance does nothing; and on restart the instance is in its initial state with its initial variables.",
+      "rationale": "Planned (WG-4715, defined once here for WG-4704's crash-restart; specified in docs/simulation.md, Faults in format 2). Negative twin: client C calls server S, C crashes and restarts, S replies: the reply must be dropped as stale; two overlapping crashes of one instance must not restart it at the first restart edge; engine mutants that deliver the reply to the new incarnation, restart early, or route to a down instance because it holds nothing fail it. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "resource-model",
+        "simulation-engine",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "distribution-lowering-bit-exact",
+      "kind": "invariant",
+      "statement": "simulationInput lowers distributions with integer arithmetic only: the exponential and normal quantile tables are produced by the integer algorithms of docs/simulation.md and equal the correctly rounded values at the 1,045 grid points, their canonical text hashing to SHA-256 a23cd2a9566c106701375d5cf75ef982b8db6f3e52c199c47e6239649c840950; exp_fp, ln_fp and the exponential, log-normal and empirical constructions reproduce every reference output bit for bit; and a lowered value of 2^53 base units or more, a sigma above 8 or a p99 above 10^6 times the median is refused.",
+      "rationale": "Built (WG-4715) in src/core/distributions.js. Negative twin: an implementation that evaluates the log-normal quantile with Math.exp or AS 241 in doubles, rounds sigma instead of flooring it, or computes the normal CDF at 2^-96 instead of 2^-192, must fail the table hash or a reference output; a log-normal of median 1 ms and sigma 9 must be refused. The correctly rounded values were checked once against an 80-digit computation when the algorithms were specified; the test pins them through the hash.",
+      "subjects": [
+        "workload-model",
+        "simulation-contract"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "poisson-arrivals-by-inversion",
+      "kind": "invariant",
+      "statement": "Poisson arrivals, constant or ramped, take exactly one arrival draw per instant, computed by inverting the integrated rate with exact integer square roots and rounding to the nearest base unit; no valid input is refused or fails for rejected candidates, and a draw whose instant falls at or after its phase end or the horizon creates nothing.",
+      "rationale": "Planned (WG-4715; specified in docs/simulation.md, Workloads). Negative twin: a ramp from 0 to 10^7/s over 1000 s in unit ns, which would need about 1.4 x 10^5 rejections under thinning, must run with one draw per instant; an implementation that rounds interarrivals down instead of to the nearest unit must fail the fixture that measures the arrival rate of a constant phase at a mean interarrival of 100 base units. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "workload-model",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "overlapping-faults-follow-active-set",
+      "kind": "invariant",
+      "statement": "With windowed faults that overlap on one resource, the value in effect at every fault-edge is the declared function of the active set: the last active set-capacity, set-class-limit or replace-demand in the order of the input's faults list, the product of the active scale-demand factors reduced to lowest terms, and collapsed while any collapse-classes is active; demand and scale are evaluated at the grant against the faults active then; when a collapse ends, waiting requests return to their own classes in (since, seq) order; and under a collapse each request keeps its class for maxWait and metrics.",
+      "rationale": "Planned (WG-4715; specified in docs/simulation.md, Faults in format 2). Negative twin: two overlapping set-capacity faults whose order in the input is swapped must give different capacities during the overlap; an engine mutant that applies the most recently started fault instead of the last in input order, or that leaves requests in the collapsed queue after the collapse ends, fails it. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "resource-model",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "broadcasts-evaluated-at-delivery",
+      "kind": "invariant",
+      "statement": "A broadcast reaches the instances that are up when it is delivered (keyed instances created since its creation and instances restarted since included) and skips down ones without an ignored entry; targeted entries keep the instance and incarnation fixed when they were created; routed entries are decided, with their counters, draws and incarnation, when first taken as head, and a delayed copy keeps the decision; and the next arrival instant of a workload is created exactly once, even when a fault delays or drops the first entry of the current instant.",
+      "rationale": "Planned (WG-4664, WG-4715; specified in docs/simulation.md, Instances and Workloads). Negative twin: a broadcast at time 10 to a behavior whose instance crashed at 5 and restarted at 8 must reach the restarted instance while a reply created at 7 for its old incarnation is dropped; an arrival created at 6 and routed least-busy, delivered at 9, must see the load at 9 and must not be stale; a delayed first arrival must not create the next instant twice. Engine mutants that route at creation or recreate the instant fail it. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "simulation-engine",
+        "workload-model",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "request-lifecycle-defines-outcomes",
+      "kind": "invariant",
+      "statement": "Every request of a class follows the request lifecycle of docs/simulation.md: it starts when its start entry is first taken as head; it ends once, at the first delivered end event with its key (a deliver step that does not fail, whether or not a transition fires), as error at once when its start entry is dropped, crashed, stale or handled by no transition, or as timeout on a closed-client timeout; it is censored otherwise; only ok requests are finite samples; and every sample count, bucket power and derived metric is computed from these outcomes.",
+      "rationale": "Planned (WG-4715; specified in docs/simulation.md, Request lifecycle). Negative twin: a fixture whose start event is dropped by a drop-event fault, whose start event reaches a behavior with no transition for it, and whose start is routed to a crashed instance must record three error ends at the step that lost them, and a p99 claim over it must count them as +infinity; a metrics implementation that leaves lost starts out of the samples, or ends a request on a dropped end event, fails it. Not evaluated until recorded evidence exists.",
+      "subjects": [
+        "performance-metrics",
+        "metric-claims",
+        "formal-semantics"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "conformance-never-hides-mismatch",
+      "kind": "invariant",
+      "statement": "The conformance runner reports agreement only when no golden trace differed.",
+      "subjects": [
+        "simulation-contract",
+        "engine-goldens",
+        "engine-conformance-agrees",
+        "engine-conformance-diverges"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "state-invariant",
+        "scenarios": [
+          "engine-conformance-agrees",
+          "engine-conformance-diverges"
+        ],
+        "expr": "conformance-flow.reportedAgree => conformance-flow.mismatches == 0",
+        "negatives": [
+          {
+            "scenario": "engine-conformance-diverges",
+            "faults": [
+              "conformance-ignores-mismatch"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "app-and-cli-run-lean-engine-only",
+      "kind": "invariant",
+      "statement": "The application and the command line run scenarios on the Lean engine only: no module of src/app, src/ui or cli/ loads the Rust engine or runs a scenario any other way.",
+      "rationale": "Not evaluated: no evidence attached. Read from the code when this was corrected: src/core/engine.js is the only module that loads an engine, and it calls engine.run through the Lean call boundary (src/core/lean.js); the Rust engine is loaded only by tools/rust-engine.js and tests. A test that lists the imports of src/app, src/ui and cli/ and fails on any reference to the Rust engine would make this claim evidence-backed.",
+      "subjects": [
+        "simulation-engine",
+        "session",
+        "agent-cli"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "implementation-properties-declarative",
+      "kind": "invariant",
+      "statement": "The implementation-level properties (level, instances.storedIn, delivery, elapsed, an emit effect's to, transaction, otherwise, ignores) never change simulation: the engine input derived by simulationInput does not contain them and a specification that uses them parses and validates like any other. The one exception is the declared types of an implementation-level behavior (variable repr, payload field types), which reach the engine input only as the behavior's lowered types, never as repr.",
+      "rationale": "docs/semantics.md states that these properties are declarative and names the Lean definition that stays normative for each machine construct; since WG-4902 the declared types make arithmetic checked (claim expression-semantics-shared). The derivation in src/core/sim-input.js builds behaviors and transitions field by field and strips storedIn and an emit's to. Supported by the core tests over the fixture machines.",
+      "subjects": [
+        "simulation-contract",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "runtime-fault-kinds-simulated",
+      "kind": "invariant",
+      "statement": "The fault kinds duplicate-event, lose-event and retry-event derive a version-2 engine input; the engine delivers an entry a duplicate-event matches and queues a copy of it by later (default 0), recorded duplicated; drops an entry a lose-event matches, recorded lost; and delays an entry a retry-event matches by the sum of the retry backoff waits after its attempts, recorded retried.",
+      "rationale": "WG-4903. Normative: dropMatches, delayMatches and duplicateAfter in formal/Exegra/Format2.lean; the shell computes a retry's delay (src/core/fault-model.js, retryDelay) and the Rust oracle (engine/exegra-engine/src/v2.rs) mirrors the semantics. Supported by the core test over the runtime-faults fixture.",
+      "subjects": [
+        "simulation-engine",
+        "simulation-contract"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "pooled-quotas-executable",
+      "kind": "invariant",
+      "statement": "quotaPool is an entity kind and a scenario lists the pools it runs; a pool runs as one machine per pooled limit and modelled member, whose transitions admit usage on headroom (within the fair share when throttled), throttle a member over its fair share at the end of the stated consecutive windows unless its exemption applies from that window, release after the stated windows under, and record an exemption from the window it is set in or the next; simulation and the Lean explorer run these machines, so a claim over them is decided by exploration and a wrong rule (eligibility effective only from the next window, or a longer over-share window) yields a counterexample; and the pool rules are reported at their positions.",
+      "rationale": "Evidence is the core tests of WG-5278 (tests/core/pooled-quotas.test.js) on the Harbourline BR-12 fixture: the machines and their derivation, a throttle and its release in a simulated run, exploration that holds for the burst and three-day claims and returns a counterexample for each seeded wrong rule, retroactive and default exemptions, and each validation rule broken once. Supported, not verified, because Exegra does not check its own derivation. The decision is dec-pooled-quotas.",
+      "subjects": [
+        "simulation-contract",
+        "validator",
+        "metamodel"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    }
+  ],
+  "evidence": [
+    { "id": "ev-simulation-core", "claim": "simulation-deterministic", "kind": "test", "ref": "tests/core/sim.test.js", "description": "Identical inputs give deep-equal traces; reset and stepwise runs equal a single run." },
+    {
+      "id": "ev-simulation-contract",
+      "claim": "simulation-contract-pinned",
+      "kind": "test",
+      "ref": "tests/core/conformance.test.js",
+      "description": "The WebAssembly engine reproduces every golden trace from the model and from the committed engine input alone, simulationInput derives the committed inputs, and the conformance runner reports an altered trace at the right step and path."
+    },
+    {
+      "id": "ev-engines-agree",
+      "claim": "engines-agree-on-traces",
+      "kind": "test",
+      "ref": "tests/core/conformance.test.js",
+      "description": "The Rust engine as WebAssembly, and as the native binary when it is built, reproduces every golden trace of the conformance suite."
+    },
+    {
+      "id": "ev-simulation-worker-responsive",
+      "claim": "simulation-runs-off-main-thread",
+      "kind": "test",
+      "ref": "tests/browser/simulation-worker.spec.js#a long simulation runs in a worker while the page stays responsive",
+      "description": "A scenario added through a transaction loops up to 20000 steps; while it runs, frames keep coming, the toolbar reacts and the tab shows it as running, and the finished trace steps as before."
+    },
+    {
+      "id": "ev-fault-model-core",
+      "claim": "fault-model-scoped-claims",
+      "kind": "test",
+      "ref": "tests/core/fault-model.test.js",
+      "description": "Missing sources and wrong enums are errors; renames and deletes follow references through the new properties, including the any-kind source; gap.no-fault-model and the realises-outside-model warning are reported; a claim result's scope begins with the fault model; realises never reaches the engine input."
+    },
+    {
+      "id": "ev-formal-differential",
+      "claim": "engine-matches-formal-semantics",
+      "kind": "test",
+      "ref": "tests/proofs/formal-semantics.test.js",
+      "description": "The Lean executable reproduces every golden trace; the native Rust engine and the Lean executable give identical traces on every golden input and on 150 seeded generated inputs covering every fault kind, run-time and parse errors, step limits and simultaneous events. Skipped, with a message, when a binary is not built."
+    },
+    {
+      "id": "ev-distribution-lowering",
+      "claim": "distribution-lowering-bit-exact",
+      "kind": "test",
+      "ref": "tests/core/distributions.test.js",
+      "description": "exp_fp and ln_fp meet their exact checks; Qexp and Qnorm give the reference values and the canonical table text hashes to the pinned SHA-256; the log-normal, exponential, empirical, uniform and constant families lower to the reference tables; values of 2^53 base units or more, sigma above 8 and p99 above 10^6 times the median are refused."
+    },
+    {
+      "id": "ev-mm1-utilisation-fixture",
+      "claim": "metrics-reproduce-mm1-utilisation",
+      "kind": "test",
+      "ref": "tests/core/queueing-fixtures.test.js",
+      "description": "Runs only with EXEGRA_FIXTURES=1 (236 runs of a 90 s horizon, about 7 minutes on the native engine). Recorded 2026-11-17: model-holds, 59/59 runs, sign-test interval [0.7967, 0.8009] inside [0.784, 0.816]; per-run spread 0.7925 / 0.7988 / 0.8096; the twin, the fault set-capacity 2, fails with [0.3983, 0.4005]. A model result on assumed parameters, not evidence about any system."
+    },
+    {
+      "id": "ev-mm1-mean-wait-fixture",
+      "claim": "metrics-reproduce-mm1-mean-wait",
+      "kind": "test",
+      "ref": "tests/core/queueing-fixtures.test.js",
+      "description": "Runs only with EXEGRA_FIXTURES=1. Recorded 2026-11-17 on the native engine at a 90 s horizon: model-holds, 59/59 runs, sign-test interval [3910.6, 4032.3] us inside [3800, 4200]; per-run spread 3708.1 / 3965.1 / 4443.3 us (the median of per-run means sits about 0.9% below the analytic 4 ms); the twin, the fault replace-demand with a constant 1 ms service (M/D/1), fails with [1968.4, 2004.3] us. A model result, not evidence about any system."
+    },
+    {
+      "id": "ev-readiness-declarative",
+      "claim": "implementation-properties-declarative",
+      "kind": "test",
+      "ref": "tests/core/readiness-machines.test.js#the implementation-level properties do not reach the simulation input",
+      "description": "The engine input derived from the fixture machine contains none of the implementation-level properties and keeps its instance key."
+    },
+    {
+      "id": "ev-readiness-declared-types",
+      "claim": "implementation-properties-declarative",
+      "kind": "test",
+      "ref": "tests/core/readiness-time.test.js#the engine input gives an implementation machine its declared types lowered",
+      "description": "The engine input of the time fixture gives its machine exactly the lowered types of time, its variables and its payload field."
+    },
+    {
+      "id": "ev-runtime-faults-lowered",
+      "claim": "runtime-fault-kinds-simulated",
+      "kind": "test",
+      "ref": "tests/core/runtime-faults.test.js#the new fault kinds lower into a format-2 engine input",
+      "description": "The runtime-faults scenario derives a version-2 input whose retry carries the backoff sum and whose duplicate carries its delay, 0 by default."
+    },
+    {
+      "id": "ev-runtime-faults-run",
+      "claim": "runtime-fault-kinds-simulated",
+      "kind": "test",
+      "ref": "tests/core/runtime-faults.test.js#the engine delivers a duplicate twice and drops a lost event and delays a retried one by its backoff",
+      "description": "The engine run of the runtime-faults scenario delivers the notice and its duplicate 500 ms later, records the lost and dropped hints, and delays the retried notice by 3 s."
+    },
+    {
+      "id": "ev-pooled-quotas-1",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#quota pools are entities of the metamodel with a section of their own and scenarios list the pools they run",
+      "description": "Quota pools are entities of the metamodel with a section of their own and scenarios list the pools they run."
+    },
+    {
+      "id": "ev-pooled-quotas-2",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#the Harbourline fixture states BR-12 as a pool and validates with no errors and no warnings",
+      "description": "The Harbourline fixture states BR-12 as a pool and validates with no errors and no warnings."
+    },
+    {
+      "id": "ev-pooled-quotas-3",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#a pool runs as one machine per pooled limit and modelled member with the pool variables",
+      "description": "A pool runs as one machine per pooled limit and modelled member with the pool variables."
+    },
+    {
+      "id": "ev-pooled-quotas-4",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#a client over its fair share is admitted while the pool has headroom and throttled after three days and released after two under",
+      "description": "A client over its fair share is admitted while the pool has headroom and throttled after three days and released after two under."
+    },
+    {
+      "id": "ev-pooled-quotas-5",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#exploration decides that a burst-eligible client is never throttled after eligibility was set",
+      "description": "Exploration decides that a burst-eligible client is never throttled after eligibility was set."
+    },
+    {
+      "id": "ev-pooled-quotas-6",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#exploration finds a counterexample when eligibility takes effect only from the next day",
+      "description": "Exploration finds a counterexample when eligibility takes effect only from the next day."
+    },
+    {
+      "id": "ev-pooled-quotas-7",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#exploration finds a counterexample when the over-share window is four days instead of three",
+      "description": "Exploration finds a counterexample when the over-share window is four days instead of three."
+    },
+    {
+      "id": "ev-pooled-quotas-8",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#a retroactive exemption lifts a throttle already in force and the default one does not",
+      "description": "A retroactive exemption lifts a throttle already in force and the default one does not."
+    },
+    {
+      "id": "ev-pooled-quotas-9",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#a scenario may run a pool and no behavior but not neither",
+      "description": "A scenario may run a pool and no behavior but not neither."
+    },
+    {
+      "id": "ev-pooled-quotas-10",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a pool with no limit is reported once as pool.limits at quotaPools.0.limits",
+      "description": "Pooled quotas: a pool with no limit is reported once as pool.limits at quotaPools.0.limits."
+    },
+    {
+      "id": "ev-pooled-quotas-11",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: two limits with one name is reported once as pool.limits at quotaPools.0.limits.1.name",
+      "description": "Pooled quotas: two limits with one name is reported once as pool.limits at quotaPools.0.limits.1.name."
+    },
+    {
+      "id": "ev-pooled-quotas-12",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a limit with both a quota and an amount per member is reported once as pool.limit-contribution at quotaPools.0.limits.0",
+      "description": "Pooled quotas: a limit with both a quota and an amount per member is reported once as pool.limit-contribution at quotaPools.0.limits.0."
+    },
+    {
+      "id": "ev-pooled-quotas-13",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a limit whose amount per member is not positive is reported once as pool.limit-contribution at quotaPools.0.limits.1.perMember",
+      "description": "Pooled quotas: a limit whose amount per member is not positive is reported once as pool.limit-contribution at quotaPools.0.limits.1.perMember."
+    },
+    {
+      "id": "ev-pooled-quotas-14",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a pooled quota counted per principal is reported once as pool.quota-scope at quotaPools.0.limits.0.quota",
+      "description": "Pooled quotas: a pooled quota counted per principal is reported once as pool.quota-scope at quotaPools.0.limits.0.quota."
+    },
+    {
+      "id": "ev-pooled-quotas-15",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a pooled quota with another window is reported once as pool.quota-window at quotaPools.0.limits.0.quota",
+      "description": "Pooled quotas: a pooled quota with another window is reported once as pool.quota-window at quotaPools.0.limits.0.quota."
+    },
+    {
+      "id": "ev-pooled-quotas-16",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a pooled quota stated as a level is reported once as pool.limit-kind at quotaPools.0.limits.0.kind",
+      "description": "Pooled quotas: a pooled quota stated as a level is reported once as pool.limit-kind at quotaPools.0.limits.0.kind."
+    },
+    {
+      "id": "ev-pooled-quotas-17",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a pooled quota held by another component is reported once as pool.held-by at quotaPools.0.heldBy",
+      "description": "Pooled quotas: a pooled quota held by another component is reported once as pool.held-by at quotaPools.0.heldBy."
+    },
+    {
+      "id": "ev-pooled-quotas-18",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a usage event with no amount is reported once as pool.event-payload at quotaPools.0.limits.1.usage",
+      "description": "Pooled quotas: a usage event with no amount is reported once as pool.event-payload at quotaPools.0.limits.1.usage."
+    },
+    {
+      "id": "ev-pooled-quotas-19",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: an exemption event with no member is reported once as pool.event-payload at quotaPools.0.exemption.event",
+      "description": "Pooled quotas: an exemption event with no member is reported once as pool.event-payload at quotaPools.0.exemption.event."
+    },
+    {
+      "id": "ev-pooled-quotas-20",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a level with no usage event is reported once as pool.usage-event at quotaPools.0.limits.1",
+      "description": "Pooled quotas: a level with no usage event is reported once as pool.usage-event at quotaPools.0.limits.1."
+    },
+    {
+      "id": "ev-pooled-quotas-21",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a window that is not a duration is reported once as pool.window at quotaPools.0.window",
+      "description": "Pooled quotas: a window that is not a duration is reported once as pool.window at quotaPools.0.window."
+    },
+    {
+      "id": "ev-pooled-quotas-22",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: an over-share rule of zero days is reported once as pool.over-share at quotaPools.0.overShare.consecutive",
+      "description": "Pooled quotas: an over-share rule of zero days is reported once as pool.over-share at quotaPools.0.overShare.consecutive."
+    },
+    {
+      "id": "ev-pooled-quotas-23",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a throttle with no release is reported once as pool.release at quotaPools.0.throttle.release",
+      "description": "Pooled quotas: a throttle with no release is reported once as pool.release at quotaPools.0.throttle.release."
+    },
+    {
+      "id": "ev-pooled-quotas-24",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: five modelled members is reported once as pool.model-members at quotaPools.0.modelMembers",
+      "description": "Pooled quotas: five modelled members is reported once as pool.model-members at quotaPools.0.modelMembers."
+    },
+    {
+      "id": "ev-pooled-quotas-25",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: an exemption set by a role without its capability is reported once as pool.exemption-capability at quotaPools.0.exemption.capability",
+      "description": "Pooled quotas: an exemption set by a role without its capability is reported once as pool.exemption-capability at quotaPools.0.exemption.capability."
+    },
+    {
+      "id": "ev-pooled-quotas-26",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a pool machine id that is already an entity is reported once as pool.machine-id at quotaPools.0.limits",
+      "description": "Pooled quotas: a pool machine id that is already an entity is reported once as pool.machine-id at quotaPools.0.limits."
+    },
+    {
+      "id": "ev-pooled-quotas-27",
+      "claim": "pooled-quotas-executable",
+      "kind": "test",
+      "ref": "tests/core/pooled-quotas.test.js#pooled quotas: a claim reading a variable a pool machine does not have is reported once as expr.reference at claims.0.evaluate.expr",
+      "description": "Pooled quotas: a claim reading a variable a pool machine does not have is reported once as expr.reference at claims.0.evaluate.expr."
+    }
+  ]
+}

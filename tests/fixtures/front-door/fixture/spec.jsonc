@@ -1,0 +1,14 @@
+// A small specification for the get, find and refs tests.
+{
+  "exegra": "0.1",
+  "system": { "id": "demo-system", "name": "Demo system" },
+  "components": [
+    { "id": "client", "name": "Client", "category": "logical", "purpose": "Sends the requests of the demonstration." },
+    { "id": "server", "name": "Server", "category": "logical", "purpose": "Answers every request it receives." },
+    { "id": "cache", "name": "Cache", "category": "logical", "purpose": "Keeps recent answers." }
+  ],
+  "relationships": [
+    { "id": "client-calls-server", "kind": "calls", "from": "client", "to": "server" },
+    { "id": "server-reads-cache", "kind": "reads", "from": "server", "to": "cache" }
+  ]
+}

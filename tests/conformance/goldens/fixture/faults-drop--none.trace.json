@@ -1,6 +1,14 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "auditor-machine": 0,
+   "gateway-machine": 0,
+   "ledger-machine": 0
+  },
+  "links": {},
   "machines": {
    "auditor-machine": {
     "state": "aud-alarmed",
@@ -25,10 +33,24 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 12
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 12,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "auditor-machine": 0,
+   "gateway-machine": 0,
+   "ledger-machine": 0
+  },
+  "links": {},
   "machines": {
    "auditor-machine": {
     "state": "aud-watching",
@@ -53,6 +75,7 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "submit",
@@ -60,6 +83,7 @@
      "amount": 150,
      "label": "dropped"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -73,6 +97,7 @@
      "amount": 150,
      "label": "kept"
     },
+    "scheduledAt": 2,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -83,6 +108,7 @@
    {
     "event": "tick",
     "payload": {},
+    "scheduledAt": 10,
     "seq": 2,
     "source": {
      "kind": "scenario",
@@ -93,6 +119,7 @@
    {
     "event": "tick",
     "payload": {},
+    "scheduledAt": 11,
     "seq": 3,
     "source": {
      "kind": "scenario",
@@ -103,6 +130,7 @@
    {
     "event": "tick",
     "payload": {},
+    "scheduledAt": 12,
     "seq": 4,
     "source": {
      "kind": "scenario",
@@ -111,13 +139,28 @@
     "time": 12
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "faults-drop",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "auditor-machine": 0,
+     "gateway-machine": 0,
+     "ledger-machine": 0
+    },
+    "links": {},
     "machines": {
      "auditor-machine": {
       "state": "aud-watching",
@@ -142,6 +185,7 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "submit",
@@ -149,6 +193,7 @@
        "amount": 150,
        "label": "kept"
       },
+      "scheduledAt": 2,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -158,6 +203,11 @@
      },
      {
       "event": "forward",
+      "from": {
+       "behavior": "gateway-machine",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "amount": 150,
        "meta": {
@@ -169,6 +219,7 @@
        },
        "tag": "big"
       },
+      "scheduledAt": 2,
       "seq": 5,
       "source": {
        "behavior": "gateway-machine",
@@ -180,6 +231,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 10,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -190,6 +242,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 11,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -200,6 +253,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 12,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -208,14 +262,21 @@
       "time": 12
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "submit",
     "payload": {
      "amount": 150,
      "label": "dropped"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -246,6 +307,7 @@
      ],
      "from": "gw-idle",
      "guard": "event.amount >= 100",
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -266,16 +328,20 @@
     {
      "behavior": "ledger-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "auditor-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "submit",
     "gw-submit-large",
@@ -286,6 +352,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "auditor-machine": 0,
+     "gateway-machine": 0,
+     "ledger-machine": 0
+    },
+    "links": {},
     "machines": {
      "auditor-machine": {
       "state": "aud-watching",
@@ -310,9 +384,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "forward",
+      "from": {
+       "behavior": "gateway-machine",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "amount": 150,
        "meta": {
@@ -324,6 +404,7 @@
        },
        "tag": "big"
       },
+      "scheduledAt": 2,
       "seq": 5,
       "source": {
        "behavior": "gateway-machine",
@@ -335,6 +416,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 10,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -345,6 +427,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 11,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -355,6 +438,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 12,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -363,14 +447,21 @@
       "time": 12
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "submit",
     "payload": {
      "amount": 150,
      "label": "kept"
     },
+    "scheduledAt": 2,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -383,21 +474,26 @@
     {
      "behavior": "gateway-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "ledger-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "auditor-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "submit"
    ],
@@ -405,6 +501,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "auditor-machine": 0,
+     "gateway-machine": 0,
+     "ledger-machine": 0
+    },
+    "links": {},
     "machines": {
      "auditor-machine": {
       "state": "aud-watching",
@@ -429,14 +533,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "audit-request",
+      "from": {
+       "behavior": "ledger-machine",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "at": 2,
        "level": 150,
        "note": "credit"
       },
+      "scheduledAt": 3,
       "seq": 6,
       "source": {
        "behavior": "ledger-machine",
@@ -448,6 +559,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 10,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -458,6 +570,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 11,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -468,6 +581,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 12,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -476,9 +590,20 @@
       "time": 12
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "gateway-machine",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "forward",
     "payload": {
      "amount": 150,
@@ -491,6 +616,7 @@
      },
      "tag": "big"
     },
+    "scheduledAt": 2,
     "seq": 5,
     "source": {
      "behavior": "gateway-machine",
@@ -516,6 +642,7 @@
      ],
      "from": "ledger-open",
      "guard": "event.amount > 0",
+     "instance": 0,
      "sets": [
       {
        "after": 150,
@@ -536,16 +663,20 @@
     {
      "behavior": "gateway-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "auditor-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "forward",
     "led-credit",
@@ -556,6 +687,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "auditor-machine": 0,
+     "gateway-machine": 0,
+     "ledger-machine": 0
+    },
+    "links": {},
     "machines": {
      "auditor-machine": {
       "state": "aud-alarmed",
@@ -580,10 +719,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "alarm",
+      "from": {
+       "behavior": "auditor-machine",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 6,
       "seq": 7,
       "source": {
        "behavior": "auditor-machine",
@@ -595,6 +741,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 10,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -605,6 +752,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 11,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -615,6 +763,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 12,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -623,15 +772,27 @@
       "time": 12
      }
     ],
-    "time": 3
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 3,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "ledger-machine",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "audit-request",
     "payload": {
      "at": 2,
      "level": 150,
      "note": "credit"
     },
+    "scheduledAt": 3,
     "seq": 6,
     "source": {
      "behavior": "ledger-machine",
@@ -653,6 +814,7 @@
      ],
      "from": "aud-watching",
      "guard": "event.level >= 150",
+     "instance": 0,
      "sets": [
       {
        "after": 150,
@@ -668,16 +830,20 @@
     {
      "behavior": "gateway-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "ledger-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "audit-request",
     "aud-high",
@@ -688,6 +854,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "auditor-machine": 0,
+     "gateway-machine": 0,
+     "ledger-machine": 0
+    },
+    "links": {},
     "machines": {
      "auditor-machine": {
       "state": "aud-alarmed",
@@ -712,10 +886,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 10,
       "seq": 2,
       "source": {
        "kind": "scenario",
@@ -726,6 +902,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 11,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -736,6 +913,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 12,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -744,11 +922,23 @@
       "time": 12
      }
     ],
-    "time": 6
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 6,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "auditor-machine",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "alarm",
     "payload": {},
+    "scheduledAt": 6,
     "seq": 7,
     "source": {
      "behavior": "auditor-machine",
@@ -763,6 +953,7 @@
      "emitted": [],
      "from": "aud-alarmed",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -778,16 +969,20 @@
     {
      "behavior": "gateway-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "ledger-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "alarm",
     "aud-alarm",
@@ -798,6 +993,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "auditor-machine": 0,
+     "gateway-machine": 0,
+     "ledger-machine": 0
+    },
+    "links": {},
     "machines": {
      "auditor-machine": {
       "state": "aud-alarmed",
@@ -822,10 +1025,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 11,
       "seq": 3,
       "source": {
        "kind": "scenario",
@@ -836,6 +1041,7 @@
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 12,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -844,11 +1050,18 @@
       "time": 12
      }
     ],
-    "time": 10
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 10,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "tick",
     "payload": {},
+    "scheduledAt": 10,
     "seq": 2,
     "source": {
      "kind": "scenario",
@@ -862,6 +1075,7 @@
      "emitted": [],
      "from": "gw-active",
      "guard": "time >= 0 && ledger-machine.balance > 100 && ledger-machine.state == 'ledger-open'",
+     "instance": 0,
      "sets": [
       {
        "after": 2,
@@ -882,16 +1096,20 @@
     {
      "behavior": "ledger-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "auditor-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 5,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "tick",
     "gw-tick",
@@ -902,6 +1120,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "auditor-machine": 0,
+     "gateway-machine": 0,
+     "ledger-machine": 0
+    },
+    "links": {},
     "machines": {
      "auditor-machine": {
       "state": "aud-alarmed",
@@ -926,10 +1152,12 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "tick",
       "payload": {},
+      "scheduledAt": 12,
       "seq": 4,
       "source": {
        "kind": "scenario",
@@ -938,11 +1166,18 @@
       "time": 12
      }
     ],
-    "time": 11
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 11,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "tick",
     "payload": {},
+    "scheduledAt": 11,
     "seq": 3,
     "source": {
      "kind": "scenario",
@@ -956,6 +1191,7 @@
      "emitted": [],
      "from": "gw-active",
      "guard": "time >= 0 && ledger-machine.balance > 100 && ledger-machine.state == 'ledger-open'",
+     "instance": 0,
      "sets": [
       {
        "after": 3,
@@ -976,16 +1212,20 @@
     {
      "behavior": "ledger-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "auditor-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 6,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "tick",
     "gw-tick",
@@ -996,6 +1236,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "auditor-machine": 0,
+     "gateway-machine": 0,
+     "ledger-machine": 0
+    },
+    "links": {},
     "machines": {
      "auditor-machine": {
       "state": "aud-alarmed",
@@ -1020,12 +1268,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 12
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 12,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "tick",
     "payload": {},
+    "scheduledAt": 12,
     "seq": 4,
     "source": {
      "kind": "scenario",
@@ -1039,6 +1295,7 @@
      "emitted": [],
      "from": "gw-active",
      "guard": "time >= 0 && ledger-machine.balance > 100 && ledger-machine.state == 'ledger-open'",
+     "instance": 0,
      "sets": [
       {
        "after": 4,
@@ -1059,16 +1316,20 @@
     {
      "behavior": "ledger-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "auditor-machine",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 7,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "tick",
     "gw-tick",
@@ -1077,5 +1338,9 @@
    ],
    "time": 12
   }
- ]
+ ],
+ "stepsTaken": 8,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

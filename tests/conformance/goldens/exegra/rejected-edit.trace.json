@@ -3,6 +3,21 @@
   "validation-fails"
  ],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "inspector-flow": 0,
+   "interaction-flow": 0,
+   "parser-flow": 0,
+   "projection-flow": 0,
+   "renderer-flow": 0,
+   "session-flow": 0,
+   "source-editor-flow": 0,
+   "transaction-flow": 0,
+   "validator-flow": 0,
+   "workspace-flow": 0
+  },
+  "links": {},
   "machines": {
    "inspector-flow": {
     "state": "inspector-ready",
@@ -68,10 +83,31 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "inspector-flow": 0,
+   "interaction-flow": 0,
+   "parser-flow": 0,
+   "projection-flow": 0,
+   "renderer-flow": 0,
+   "session-flow": 0,
+   "source-editor-flow": 0,
+   "transaction-flow": 0,
+   "validator-flow": 0,
+   "workspace-flow": 0
+  },
+  "links": {},
   "machines": {
    "inspector-flow": {
     "state": "inspector-ready",
@@ -137,10 +173,12 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "edit-requested",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -149,13 +187,35 @@
     "time": 0
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "rejected-edit",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "inspector-flow": 0,
+     "interaction-flow": 0,
+     "parser-flow": 0,
+     "projection-flow": 0,
+     "renderer-flow": 0,
+     "session-flow": 0,
+     "source-editor-flow": 0,
+     "transaction-flow": 0,
+     "validator-flow": 0,
+     "workspace-flow": 0
+    },
+    "links": {},
     "machines": {
      "inspector-flow": {
       "state": "inspector-ready",
@@ -221,10 +281,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "operation-submitted",
+      "from": {
+       "behavior": "interaction-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 1,
       "source": {
        "behavior": "interaction-flow",
@@ -234,11 +301,18 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "edit-requested",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -259,6 +333,7 @@
      ],
      "from": "interaction-idle",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "interaction-awaiting",
      "transition": "interaction-submit"
@@ -268,61 +343,87 @@
     {
      "behavior": "source-editor-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "transaction-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "parser-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "validator-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "projection-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "renderer-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "inspector-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "edit-requested",
     "interaction-submit",
     "interaction-flow",
-    "visual-interaction"
+    "composition-root"
    ],
    "time": 0
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "inspector-flow": 0,
+     "interaction-flow": 0,
+     "parser-flow": 0,
+     "projection-flow": 0,
+     "renderer-flow": 0,
+     "session-flow": 0,
+     "source-editor-flow": 0,
+     "transaction-flow": 0,
+     "validator-flow": 0,
+     "workspace-flow": 0
+    },
+    "links": {},
     "machines": {
      "inspector-flow": {
       "state": "inspector-ready",
@@ -388,10 +489,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "text-edits-computed",
+      "from": {
+       "behavior": "transaction-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 2,
       "source": {
        "behavior": "transaction-flow",
@@ -401,11 +509,23 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "interaction-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "operation-submitted",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 1,
     "source": {
      "behavior": "interaction-flow",
@@ -427,6 +547,7 @@
      ],
      "from": "tx-idle",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "tx-validating",
      "transition": "tx-begin"
@@ -436,51 +557,62 @@
     {
      "behavior": "interaction-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "source-editor-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "parser-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "validator-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "projection-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "renderer-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "inspector-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "operation-submitted",
     "tx-begin",
@@ -491,6 +623,21 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "inspector-flow": 0,
+     "interaction-flow": 0,
+     "parser-flow": 0,
+     "projection-flow": 0,
+     "renderer-flow": 0,
+     "session-flow": 0,
+     "source-editor-flow": 0,
+     "transaction-flow": 0,
+     "validator-flow": 0,
+     "workspace-flow": 0
+    },
+    "links": {},
     "machines": {
      "inspector-flow": {
       "state": "inspector-ready",
@@ -556,10 +703,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "model-parsed",
+      "from": {
+       "behavior": "parser-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 3,
       "source": {
        "behavior": "parser-flow",
@@ -569,11 +723,23 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "transaction-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "text-edits-computed",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 2,
     "source": {
      "behavior": "transaction-flow",
@@ -595,6 +761,7 @@
      ],
      "from": "parser-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -610,51 +777,62 @@
     {
      "behavior": "interaction-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "source-editor-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "transaction-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "validator-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "projection-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "renderer-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "inspector-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "text-edits-computed",
     "parser-parse",
@@ -665,6 +843,21 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "inspector-flow": 0,
+     "interaction-flow": 0,
+     "parser-flow": 0,
+     "projection-flow": 0,
+     "renderer-flow": 0,
+     "session-flow": 0,
+     "source-editor-flow": 0,
+     "transaction-flow": 0,
+     "validator-flow": 0,
+     "workspace-flow": 0
+    },
+    "links": {},
     "machines": {
      "inspector-flow": {
       "state": "inspector-ready",
@@ -730,10 +923,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "validation-failed",
+      "from": {
+       "behavior": "validator-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 4,
       "source": {
        "behavior": "validator-flow",
@@ -743,11 +943,23 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "parser-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "model-parsed",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 3,
     "source": {
      "behavior": "parser-flow",
@@ -774,6 +986,7 @@
      ],
      "from": "validator-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "failed",
@@ -789,51 +1002,62 @@
     {
      "behavior": "interaction-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "source-editor-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "transaction-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "parser-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "projection-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "renderer-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "inspector-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "model-parsed",
     "validator-reject",
@@ -845,6 +1069,21 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "inspector-flow": 0,
+     "interaction-flow": 0,
+     "parser-flow": 0,
+     "projection-flow": 0,
+     "renderer-flow": 0,
+     "session-flow": 0,
+     "source-editor-flow": 0,
+     "transaction-flow": 0,
+     "validator-flow": 0,
+     "workspace-flow": 0
+    },
+    "links": {},
     "machines": {
      "inspector-flow": {
       "state": "inspector-ready",
@@ -910,10 +1149,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "transaction-rejected",
+      "from": {
+       "behavior": "transaction-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 0,
       "seq": 5,
       "source": {
        "behavior": "transaction-flow",
@@ -923,11 +1169,23 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "validator-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "validation-failed",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 4,
     "source": {
      "behavior": "validator-flow",
@@ -949,6 +1207,7 @@
      ],
      "from": "tx-validating",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": true,
@@ -964,51 +1223,62 @@
     {
      "behavior": "interaction-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "source-editor-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "parser-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "validator-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "projection-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "renderer-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "inspector-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "validation-failed",
     "tx-reject",
@@ -1019,6 +1289,21 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "inspector-flow": 0,
+     "interaction-flow": 0,
+     "parser-flow": 0,
+     "projection-flow": 0,
+     "renderer-flow": 0,
+     "session-flow": 0,
+     "source-editor-flow": 0,
+     "transaction-flow": 0,
+     "validator-flow": 0,
+     "workspace-flow": 0
+    },
+    "links": {},
     "machines": {
      "inspector-flow": {
       "state": "inspector-ready",
@@ -1084,12 +1369,25 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "transaction-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "transaction-rejected",
     "payload": {},
+    "scheduledAt": 0,
     "seq": 5,
     "source": {
      "behavior": "transaction-flow",
@@ -1104,6 +1402,7 @@
      "emitted": [],
      "from": "interaction-awaiting",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": true,
@@ -1119,6 +1418,7 @@
      "emitted": [],
      "from": "session-in-sync",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -1134,56 +1434,70 @@
     {
      "behavior": "source-editor-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "transaction-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "parser-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "validator-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "projection-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "renderer-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "inspector-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 5,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "transaction-rejected",
     "interaction-refuse",
     "interaction-flow",
-    "visual-interaction",
+    "composition-root",
     "session-on-rejection",
     "session-flow",
     "session"
    ],
    "time": 0
   }
- ]
+ ],
+ "stepsTaken": 6,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

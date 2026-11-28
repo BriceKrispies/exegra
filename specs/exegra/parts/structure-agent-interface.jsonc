@@ -1,0 +1,273 @@
+// Part of the specification: components, relationships.
+{
+  "components": [
+    {
+      "id": "agent-interface",
+      "name": "Agent interface",
+      "kind": "subsystem",
+      "category": "logical",
+      "runsIn": "node",
+      "purpose": "The structured command line through which AI coding agents read and change a specification using the same model and transactions as the UI.",
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "Grouping only; the code lives in the child component.",
+        "language": "js"
+      },
+      "parent": "exegra",
+      "responsibilities": [
+        "Expose every read, check, simulation, derivation, generation and edit of a specification as a command that prints one JSON document (agent-cli).",
+        "Change a specification only through the semantic core's transactions, with a dry run first, so an agent's edit is validated exactly as a browser edit is.",
+        "Run the verification pipeline and the generators for an agent (exegra verify, exegra generate).",
+        "Keep an agent in this repository from reading or editing a specification file directly, pointing it at the commands instead (spec-guard)."
+      ]
+    },
+    // ======== Agent interface ===================================================================
+    {
+      "id": "agent-cli",
+      "name": "Agent command line",
+      "parent": "agent-interface",
+      "category": "client",
+      "runsIn": "node",
+      "purpose": "A command line that prints one JSON document per command so an AI coding agent can read, check, simulate, generate, verify and change a specification through the same pipeline as the UI.",
+      "responsibilities": [
+        "Commands: projects, validate, list, show, deps, contracts, claims, evaluate, gaps, ops, apply, admit, plan-delete, simulate, trace, prove, integrity, prove-integrity, generate, traceability, verify, readiness, cover-machines, cover-functions, store, help",
+        "Print a JSON envelope (ok, command, project, semanticHash, result or error with code and diagnostics) and use exit codes 0 ok, 1 command failed, 2 usage error",
+        "Apply operations through Project.apply, then write the changed files with the base hashes read at the start; a stale --expect-hash, an invalid operation or a disk conflict leaves the files unchanged",
+        "Run the verification pipeline: validation, traceability, execution of test evidence and recording of the results, each with the records stamp of the tree; record a reference that skipped, wholly or in part, as not-run instead of keeping an older pass",
+        "Fail verify when, against the claim statuses and counterexample fingerprints the last passing run recorded (claimBaseline), a positive claim falls to a lower status (inconclusive and not-evaluated included) or is removed, or an expected-violated claim's counterexample changes, unless --accept-change names the claim; a failing run keeps the earlier baseline",
+        "Evaluate claims in claims, evaluate, gaps, admit and generate against the current stamps of the repository (tools/tree-stamp.js currentStamps), so recorded results of another tree read as stale",
+        "Include the request log of the run in the simulate result (requestLog), one line per contract event",
+        "Copy a project's specification into its SQLite store and write it back as text (store import, store export), refusing an export over a specification that changed since the store last synchronised with it",
+        "Register a specification file and product files as a project from a script (project add, remove, list: specs/<name>/project.jsonc with paths relative to the project directory, refusing an existing project without --force and a name that is not a project name), and take the project inline (--spec, --product) on the read-only commands, so a job needs no registration",
+        "Acknowledge admit reasons by code (admit --accept, repeatable or comma separated): a reason that carries acknowledgeable true and whose code is accepted no longer blocks admission and is listed under acknowledged; a reason without it (a failure rather than a decision) cannot be accepted, and passing its code is the error admit.not-acknowledgeable",
+        "Report in admit what a change does to privileges and guarantees as acknowledgeable reasons: admit.privilege-change for every capability added to a role, grant, delegation or token scope and every new or changed grant or delegation without maxDuration (capabilities removed are listed under diff.privilege.removed, not as a reason), and admit.guarantee-weakened for a copy class whose freshness or erasure bound is looser than another class of the same record, a changed or removed retention, integrity rule or claim (before and after)",
+        "Report a new claim that is realised by code and cannot be decided at specification time (a requirement, a claim of an external verification method or of external-evidence) that names a milestone and has no result yet as pendingRealisation instead of a weak claim; a requirement without a milestone is the reason admit.requirement-without-milestone",
+        "Admit a change set (admit): evaluate the specification before and after the operations are applied in memory through Project.apply, report the diff of claim statuses, validation diagnostics, readiness gaps and integrity violations, and admit it only when no claim got worse (a fall from a positive status to not-evaluated included), no claim that was positive is removed unless admit.claim-removed is accepted, no validation error or integrity violation is new and every claim it creates is verified or proved; report the check and grounding of every claim (counts before and after, and each claim it creates) and reject a claim the change creates that is holds-by-construction or restated-scenario (admit.claim-vacuous), single-trace (admit.claim-single-trace) or self-contained (admit.claim-self-contained), each reason marked acknowledgeable; write the specification, as apply does, only with --write and an admitted verdict",
+        "Show the check and grounding of each claim (src/core/claim-strength.js) in the results of claims and evaluate",
+        "Targeted reads (cli/read-commands.js): get prints named entities with their declaration, owner, source file and line and resolved references both ways; find filters entities by kind, property, references, text and prints only requested fields up to a limit; refs lists the outbound and inbound references of one entity exactly as the model holds them. They answer from the semantic model, so an agent never has to open the specification text.",
+        "Print the claims a change set re-marks (impact --change), decided in Lean over the dependency graph",
+        "Take a change set over the specification, Lean, test and measurement files in admit (--change), report the claims it re-marks and list every guarantee change apart; refuse a weakened lean-theorem claim (admit.theorem-weakened, decided in Lean) unless --accept names the claim; decide claim regressions in admit and verify with the Lean function verdict.isRegression over status tuples",
+        "Replay a captured history with replay-edits --file and return a nonzero exit status for an incompatible or inconclusive capture."
+      ],
+      "ports": [
+        {
+          "id": "cli-command-in",
+          "name": "Command",
+          "direction": "provides",
+          "contract": "agent-command",
+          "protocol": "process arguments and JSON on stdout",
+          "description": "One command per process invocation."
+        },
+        {
+          "id": "cli-apply-out",
+          "name": "Apply transaction",
+          "direction": "requires",
+          "contract": "apply-transaction",
+          "protocol": "in-process call",
+          "description": "Every mutation goes through Project.apply."
+        }
+      ],
+      "unknowns": [
+        "Each invocation builds a fresh Project from disk: there is no undo history across invocations and no long-running session.",
+        "Writing the spec file and the layout file are two separate writes; if the second conflicts, the first has already been written.",
+        "No MCP server or other protocol wrapper exists; the command line is the only agent-facing interface."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "cli/exegra.js",
+          "cli/commands.js",
+          "cli/admit.js",
+          "cli/read-commands.js",
+          "cli/locations.js"
+        ],
+        "notes": "The `verify` command's pipeline (runVerify, runTestReference) lives in cli/commands.js; the traceability check it uses is in tools/traceability.js, claimed by verification-pipeline.",
+        "language": "js"
+      }
+    },
+    {
+      "id": "spec-guard",
+      "name": "Specification access guard",
+      "parent": "agent-interface",
+      "category": "infrastructure",
+      "runsIn": "node",
+      "purpose": "A Claude Code PreToolUse hook that stops an agent in this repository from reading or editing a specification file (specs/<project>/spec.jsonc and the part files of a manifest) directly, and points it at the command line instead.",
+      "responsibilities": [
+        "Read the hook JSON (tool_name, tool_input) on stdin; refuse by exiting 2 with the reason on stderr, allow by exiting 0 silently",
+        "Refuse Read, Edit, Write and MultiEdit whose file is a specification file or a part file of a manifest specification; allow a Read of the first 60 lines (the header comment)",
+        "Refuse a Grep whose path or glob explicitly targets a specification, and shell commands that print or edit one (cat, type, Get-Content, head, tail, less, sed, grep and redirections); leave a repository-wide Grep, the exegra command line and scripts that parse with jsonc-parser alone",
+        "Name the replacement in every refusal: exegra get, find and refs to read; apply --dry-run then apply to edit"
+      ],
+      "unknowns": [
+        "A shell command that reaches a specification through a variable, a glob or a program the guard does not list is not recognised; the guard stops the usual reads, it is not a sandbox."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "tools/spec-guard.js"
+        ],
+        "notes": "Wired in .claude/settings.json under hooks.PreToolUse (WG-5703).",
+        "language": "js"
+      }
+    }
+  ],
+  "relationships": [
+    { "id": "agent-cli-submits-edits-transactions", "kind": "submits-edits", "from": "agent-cli", "to": "transactions", "description": "The apply command submits operations through Project.apply with origin cli; nothing edits specification text directly.", "contract": "apply-transaction" },
+    { "id": "agent-cli-calls-workspace-service", "kind": "invokes", "from": "agent-cli", "to": "workspace-service", "description": "Reads projects and writes changed files with the hashes read at the start; records verification results and generated artifacts." },
+    { "id": "agent-cli-data-flow-workspace-service", "kind": "data-flow", "from": "agent-cli", "to": "workspace-service", "description": "The committed spec and layout text with their base hashes travel to the workspace service after a successful transaction." },
+    { "id": "agent-cli-calls-queries", "kind": "invokes", "from": "agent-cli", "to": "queries", "description": "Answers list, show, deps, contracts and plan-delete." },
+    { "id": "agent-cli-calls-claim-evaluator", "kind": "invokes", "from": "agent-cli", "to": "claim-evaluator", "description": "Evaluates claims for claims, evaluate, trace and verify.", "contract": "evaluate-claims" },
+    { "id": "agent-cli-calls-simulation-engine", "kind": "invokes", "from": "agent-cli", "to": "simulation-engine", "description": "Runs scenarios for simulate and trace.", "contract": "run-scenario" },
+    {
+      "id": "agent-cli-calls-generators",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "generators",
+      "description": "The generate command derives the artifacts."
+    },
+    { "id": "agent-cli-calls-verification-pipeline", "kind": "invokes", "from": "agent-cli", "to": "verification-pipeline", "description": "The traceability and verify commands run the module-to-disk check." },
+    { "id": "agent-cli-calls-test-suites", "kind": "invokes", "from": "agent-cli", "to": "test-suites", "description": "verify executes test evidence by spawning node --test on a core test file." },
+    { "id": "agent-cli-calls-playwright-runner", "kind": "invokes", "from": "agent-cli", "to": "playwright-runner", "description": "verify executes browser test evidence by spawning Playwright, unless --skip-browser." },
+    { "id": "agent-cli-calls-filesystem", "kind": "invokes", "from": "agent-cli", "to": "filesystem", "description": "Reads operation files and checks paths." },
+    {
+      "id": "agent-cli-calls-simulation-contract",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "simulation-contract",
+      "description": "simulate and trace derive the engine input the same way."
+    },
+    {
+      "id": "agent-cli-calls-contract-conformance",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "contract-conformance",
+      "description": "simulate lists the request log of the run."
+    },
+    {
+      "id": "agent-cli-calls-proof-export",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "proof-export",
+      "description": "The prove command explores a scenario and checks its state invariants in Lean."
+    },
+    {
+      "id": "agent-cli-calls-external-realisation",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "external-realisation",
+      "description": "traceability, generate and verify resolve the project's realisation roots; verify records external test evidence from their JUnit reports."
+    },
+    {
+      "id": "agent-cli-calls-integrity-rules",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "integrity-rules",
+      "description": "The integrity and prove-integrity commands."
+    },
+    {
+      "id": "agent-cli-calls-stable-serialization",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "stable-serialization",
+      "description": "Serialises results deterministically."
+    },
+    {
+      "id": "agent-cli-calls-markdown-importer",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "markdown-importer",
+      "description": "The markdown command renders the documents of a linked project through the importer's module."
+    },
+    {
+      "id": "agent-cli-calls-validator",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "validator",
+      "description": "Applies the evidence reference rule (src/core/evidence-ref.js) to the commands that run verification."
+    },
+    {
+      "id": "agent-cli-calls-generation-readiness",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "generation-readiness",
+      "description": "The readiness command lists the gaps of a project."
+    },
+    {
+      "id": "agent-cli-calls-machine-coverage",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "machine-coverage",
+      "description": "The cover-machines command reports the coverage table and the findings and writes the generated scenarios as ops.json."
+    },
+    {
+      "id": "agent-cli-calls-spec-store",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "spec-store",
+      "description": "store import and store export copy a project's specification into its store and back."
+    },
+    {
+      "id": "agent-cli-calls-spec-layers",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "spec-layers",
+      "description": "Trying integrity rules on a layered project analyses the platform text with its product files."
+    },
+    {
+      "id": "agent-cli-calls-claim-strength",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "claim-strength",
+      "description": "Adds the check and grounding to claims and evaluate, and the strength review to admit."
+    },
+    {
+      "id": "agent-cli-depends-on-nodejs-runtime",
+      "kind": "depends-on",
+      "from": "agent-cli",
+      "to": "nodejs-runtime",
+      "description": "Runs as a Node.js process: reads process.argv, writes one JSON document to stdout, sets the exit code, and uses node:child_process, node:crypto and node:util."
+    },
+    {
+      "id": "spec-guard-calls-filesystem",
+      "kind": "invokes",
+      "from": "spec-guard",
+      "to": "filesystem"
+    },
+    {
+      "id": "agent-cli-calls-verdict-boundary",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "verdict-boundary",
+      "description": "admit and verify decide regressions with verdict.isRegression."
+    },
+    {
+      "id": "agent-cli-calls-change-impact",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "change-impact",
+      "description": "impact, admit --change and verify --change compute the claims a change re-marks."
+    },
+    {
+      "id": "agent-cli-calls-lean-call-boundary",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "lean-call-boundary",
+      "description": "admit decides theorem weakening with theorem.weakening."
+    },
+    {
+      "id": "agent-cli-invokes-semantic-abstraction",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "semantic-abstraction",
+      "description": "Prints the derived model of a cut for derive."
+    },
+    {
+      "id": "agent-cli-calls-edit-history-replay",
+      "kind": "invokes",
+      "from": "agent-cli",
+      "to": "self-model-replay",
+      "description": "Replay a captured two-session edit against the shared-base scenario."
+    }
+  ]
+}

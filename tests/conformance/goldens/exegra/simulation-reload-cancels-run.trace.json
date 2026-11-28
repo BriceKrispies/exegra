@@ -1,6 +1,14 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "engine-runner-flow": 0,
+   "engine-worker-flow": 0,
+   "sim-session-flow": 0
+  },
+  "links": {},
   "machines": {
    "engine-runner-flow": {
     "state": "runner-ready",
@@ -31,10 +39,24 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 3
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 3,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "engine-runner-flow": 0,
+   "engine-worker-flow": 0,
+   "sim-session-flow": 0
+  },
+  "links": {},
   "machines": {
    "engine-runner-flow": {
     "state": "runner-ready",
@@ -65,12 +87,14 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "sim-load-requested",
     "payload": {
      "scenario": "visual-edit-flow"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -83,6 +107,7 @@
     "payload": {
      "scenario": "rejected-edit"
     },
+    "scheduledAt": 1,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -91,13 +116,28 @@
     "time": 1
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "simulation-reload-cancels-run",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -128,13 +168,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "engine-run-intent",
+      "from": {
+       "behavior": "sim-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "scenario": "visual-edit-flow",
        "token": 1
       },
+      "scheduledAt": 0,
       "seq": 2,
       "source": {
        "behavior": "sim-session-flow",
@@ -148,6 +195,7 @@
       "payload": {
        "scenario": "rejected-edit"
       },
+      "scheduledAt": 1,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -156,13 +204,20 @@
       "time": 1
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "sim-load-requested",
     "payload": {
      "scenario": "visual-edit-flow"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -186,6 +241,7 @@
      ],
      "from": "sim-idle",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -221,16 +277,20 @@
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "sim-load-requested",
     "sim-load",
@@ -241,6 +301,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -271,13 +339,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "engine-run-posted",
+      "from": {
+       "behavior": "engine-runner-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "id": 1,
        "input": "visual-edit-flow"
       },
+      "scheduledAt": 0,
       "seq": 3,
       "source": {
        "behavior": "engine-runner-flow",
@@ -291,6 +366,7 @@
       "payload": {
        "scenario": "rejected-edit"
       },
+      "scheduledAt": 1,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -299,14 +375,26 @@
       "time": 1
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "sim-session-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "engine-run-intent",
     "payload": {
      "scenario": "visual-edit-flow",
      "token": 1
     },
+    "scheduledAt": 0,
     "seq": 2,
     "source": {
      "behavior": "sim-session-flow",
@@ -331,6 +419,7 @@
      ],
      "from": "runner-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -356,16 +445,20 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "engine-run-intent",
     "runner-post",
@@ -376,6 +469,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -406,12 +507,14 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "sim-load-requested",
       "payload": {
        "scenario": "rejected-edit"
       },
+      "scheduledAt": 1,
       "seq": 1,
       "source": {
        "kind": "scenario",
@@ -421,11 +524,17 @@
      },
      {
       "event": "worker-run-done",
+      "from": {
+       "behavior": "engine-worker-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "generation": 0,
        "id": 1,
        "input": "visual-edit-flow"
       },
+      "scheduledAt": 2,
       "seq": 4,
       "source": {
        "behavior": "engine-worker-flow",
@@ -435,14 +544,26 @@
       "time": 2
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "engine-runner-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "engine-run-posted",
     "payload": {
      "id": 1,
      "input": "visual-edit-flow"
     },
+    "scheduledAt": 0,
     "seq": 3,
     "source": {
      "behavior": "engine-runner-flow",
@@ -468,6 +589,7 @@
      ],
      "from": "worker-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -483,16 +605,20 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "engine-run-posted",
     "worker-run",
@@ -503,6 +629,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -533,13 +667,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "engine-run-intent",
+      "from": {
+       "behavior": "sim-session-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "scenario": "rejected-edit",
        "token": 2
       },
+      "scheduledAt": 1,
       "seq": 5,
       "source": {
        "behavior": "sim-session-flow",
@@ -550,11 +691,17 @@
      },
      {
       "event": "worker-run-done",
+      "from": {
+       "behavior": "engine-worker-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "generation": 0,
        "id": 1,
        "input": "visual-edit-flow"
       },
+      "scheduledAt": 2,
       "seq": 4,
       "source": {
        "behavior": "engine-worker-flow",
@@ -564,13 +711,20 @@
       "time": 2
      }
     ],
-    "time": 1
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 1,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "sim-load-requested",
     "payload": {
      "scenario": "rejected-edit"
     },
+    "scheduledAt": 1,
     "seq": 1,
     "source": {
      "kind": "scenario",
@@ -594,6 +748,7 @@
      ],
      "from": "sim-idle",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 2,
@@ -629,16 +784,20 @@
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "sim-load-requested",
     "sim-load",
@@ -649,6 +808,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -679,10 +846,17 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "worker-terminated",
+      "from": {
+       "behavior": "engine-runner-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {},
+      "scheduledAt": 1,
       "seq": 6,
       "source": {
        "behavior": "engine-runner-flow",
@@ -693,10 +867,16 @@
      },
      {
       "event": "engine-run-posted",
+      "from": {
+       "behavior": "engine-runner-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "id": 2,
        "input": "rejected-edit"
       },
+      "scheduledAt": 1,
       "seq": 7,
       "source": {
        "behavior": "engine-runner-flow",
@@ -707,11 +887,17 @@
      },
      {
       "event": "worker-run-done",
+      "from": {
+       "behavior": "engine-worker-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "generation": 0,
        "id": 1,
        "input": "visual-edit-flow"
       },
+      "scheduledAt": 2,
       "seq": 4,
       "source": {
        "behavior": "engine-worker-flow",
@@ -721,14 +907,26 @@
       "time": 2
      }
     ],
-    "time": 1
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 1,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "sim-session-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "engine-run-intent",
     "payload": {
      "scenario": "rejected-edit",
      "token": 2
     },
+    "scheduledAt": 1,
     "seq": 5,
     "source": {
      "behavior": "sim-session-flow",
@@ -759,6 +957,7 @@
      ],
      "from": "runner-ready",
      "guard": "waitingId != 0",
+     "instance": 0,
      "sets": [
       {
        "after": 2,
@@ -784,16 +983,20 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "engine-run-intent",
     "runner-restart",
@@ -804,6 +1007,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -834,13 +1045,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "engine-run-posted",
+      "from": {
+       "behavior": "engine-runner-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "id": 2,
        "input": "rejected-edit"
       },
+      "scheduledAt": 1,
       "seq": 7,
       "source": {
        "behavior": "engine-runner-flow",
@@ -851,11 +1069,17 @@
      },
      {
       "event": "worker-run-done",
+      "from": {
+       "behavior": "engine-worker-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "generation": 0,
        "id": 1,
        "input": "visual-edit-flow"
       },
+      "scheduledAt": 2,
       "seq": 4,
       "source": {
        "behavior": "engine-worker-flow",
@@ -865,11 +1089,23 @@
       "time": 2
      }
     ],
-    "time": 1
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 1,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "engine-runner-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "worker-terminated",
     "payload": {},
+    "scheduledAt": 1,
     "seq": 6,
     "source": {
      "behavior": "engine-runner-flow",
@@ -884,6 +1120,7 @@
      "emitted": [],
      "from": "worker-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -899,16 +1136,20 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 5,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "worker-terminated",
     "worker-terminate",
@@ -919,6 +1160,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -949,14 +1198,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "worker-run-done",
+      "from": {
+       "behavior": "engine-worker-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "generation": 0,
        "id": 1,
        "input": "visual-edit-flow"
       },
+      "scheduledAt": 2,
       "seq": 4,
       "source": {
        "behavior": "engine-worker-flow",
@@ -967,11 +1223,17 @@
      },
      {
       "event": "worker-run-done",
+      "from": {
+       "behavior": "engine-worker-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "generation": 1,
        "id": 2,
        "input": "rejected-edit"
       },
+      "scheduledAt": 3,
       "seq": 8,
       "source": {
        "behavior": "engine-worker-flow",
@@ -981,14 +1243,26 @@
       "time": 3
      }
     ],
-    "time": 1
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 1,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "engine-runner-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "engine-run-posted",
     "payload": {
      "id": 2,
      "input": "rejected-edit"
     },
+    "scheduledAt": 1,
     "seq": 7,
     "source": {
      "behavior": "engine-runner-flow",
@@ -1014,6 +1288,7 @@
      ],
      "from": "worker-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 2,
@@ -1029,16 +1304,20 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 6,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "engine-run-posted",
     "worker-run",
@@ -1049,6 +1328,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -1079,14 +1366,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "worker-run-done",
+      "from": {
+       "behavior": "engine-worker-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "generation": 1,
        "id": 2,
        "input": "rejected-edit"
       },
+      "scheduledAt": 3,
       "seq": 8,
       "source": {
        "behavior": "engine-worker-flow",
@@ -1096,15 +1390,27 @@
       "time": 3
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "engine-worker-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "worker-run-done",
     "payload": {
      "generation": 0,
      "id": 1,
      "input": "visual-edit-flow"
     },
+    "scheduledAt": 2,
     "seq": 4,
     "source": {
      "behavior": "engine-worker-flow",
@@ -1118,11 +1424,13 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
@@ -1130,11 +1438,14 @@
      "considered": [
       "worker-reply"
      ],
+     "instance": 0,
      "reason": "guard-false"
     }
    ],
    "index": 7,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "worker-run-done"
    ],
@@ -1142,6 +1453,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -1172,14 +1491,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "engine-run-returned",
+      "from": {
+       "behavior": "engine-worker-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "id": 2,
        "ok": true,
        "trace": "rejected-edit"
       },
+      "scheduledAt": 3,
       "seq": 9,
       "source": {
        "behavior": "engine-worker-flow",
@@ -1189,15 +1515,27 @@
       "time": 3
      }
     ],
-    "time": 3
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 3,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "engine-worker-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "worker-run-done",
     "payload": {
      "generation": 1,
      "id": 2,
      "input": "rejected-edit"
     },
+    "scheduledAt": 3,
     "seq": 8,
     "source": {
      "behavior": "engine-worker-flow",
@@ -1223,6 +1561,7 @@
      ],
      "from": "worker-ready",
      "guard": "event.generation == generation",
+     "instance": 0,
      "sets": [],
      "to": "worker-ready",
      "transition": "worker-reply"
@@ -1232,16 +1571,20 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 8,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "worker-run-done",
     "worker-reply",
@@ -1252,6 +1595,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -1282,13 +1633,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "sim-trace-ready",
+      "from": {
+       "behavior": "engine-runner-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "steps": 3,
        "token": 2
       },
+      "scheduledAt": 3,
       "seq": 10,
       "source": {
        "behavior": "engine-runner-flow",
@@ -1298,15 +1656,27 @@
       "time": 3
      }
     ],
-    "time": 3
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 3,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "engine-worker-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "engine-run-returned",
     "payload": {
      "id": 2,
      "ok": true,
      "trace": "rejected-edit"
     },
+    "scheduledAt": 3,
     "seq": 9,
     "source": {
      "behavior": "engine-worker-flow",
@@ -1331,6 +1701,7 @@
      ],
      "from": "runner-ready",
      "guard": "event.id == waitingId",
+     "instance": 0,
      "sets": [
       {
        "after": 0,
@@ -1346,16 +1717,20 @@
     {
      "behavior": "sim-session-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 9,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "engine-run-returned",
     "runner-forward",
@@ -1366,6 +1741,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "engine-runner-flow": 0,
+     "engine-worker-flow": 0,
+     "sim-session-flow": 0
+    },
+    "links": {},
     "machines": {
      "engine-runner-flow": {
       "state": "runner-ready",
@@ -1396,15 +1779,28 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 3
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 3,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "engine-runner-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "sim-trace-ready",
     "payload": {
      "steps": 3,
      "token": 2
     },
+    "scheduledAt": 3,
     "seq": 10,
     "source": {
      "behavior": "engine-runner-flow",
@@ -1419,6 +1815,7 @@
      "emitted": [],
      "from": "sim-idle",
      "guard": "event.token == token",
+     "instance": 0,
      "sets": [
       {
        "after": 2,
@@ -1449,16 +1846,20 @@
     {
      "behavior": "engine-runner-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-worker-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 10,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "sim-trace-ready",
     "sim-adopt",
@@ -1467,5 +1868,9 @@
    ],
    "time": 3
   }
- ]
+ ],
+ "stepsTaken": 11,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

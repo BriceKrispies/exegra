@@ -1,6 +1,13 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "cli-process-flow": 0,
+   "workspace-disk-flow": 0
+  },
+  "links": {},
   "machines": {
    "cli-process-flow": {
     "state": "cli-done",
@@ -33,10 +40,23 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 2
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 2,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "cli-process-flow": 0,
+   "workspace-disk-flow": 0
+  },
+  "links": {},
   "machines": {
    "cli-process-flow": {
     "state": "cli-idle",
@@ -69,6 +89,7 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "cli-command-request",
@@ -77,6 +98,7 @@
      "options": "--file ops.json",
      "requestId": 1
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -85,13 +107,27 @@
     "time": 0
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "cli-apply",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-loading",
@@ -124,14 +160,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-read",
+      "from": {
+       "behavior": "cli-process-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "cli",
        "name": "exegra",
        "requestId": 1
       },
+      "scheduledAt": 0,
       "seq": 1,
       "source": {
        "behavior": "cli-process-flow",
@@ -141,8 +184,14 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "cli-command-request",
     "payload": {
@@ -150,6 +199,7 @@
      "options": "--file ops.json",
      "requestId": 1
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -174,6 +224,7 @@
      ],
      "from": "cli-idle",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "apply",
@@ -199,11 +250,14 @@
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "cli-command-request",
     "cli-start",
@@ -214,6 +268,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-loading",
@@ -246,9 +307,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-read-done",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "cli",
        "layout": "L1",
@@ -256,6 +323,7 @@
        "requestId": 1,
        "spec": "h1"
       },
+      "scheduledAt": 0,
       "seq": 2,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -265,15 +333,27 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "cli-process-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-read",
     "payload": {
      "caller": "cli",
      "name": "exegra",
      "requestId": 1
     },
+    "scheduledAt": 0,
     "seq": 1,
     "source": {
      "behavior": "cli-process-flow",
@@ -301,6 +381,7 @@
      ],
      "from": "ws-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "ws-ready",
      "transition": "ws-read-files"
@@ -310,11 +391,14 @@
     {
      "behavior": "cli-process-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-read",
     "ws-read-files",
@@ -325,6 +409,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-applying",
@@ -357,9 +448,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-write",
+      "from": {
+       "behavior": "cli-process-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "baseHash": "h1",
        "caller": "cli",
@@ -368,6 +465,7 @@
        "requestId": 1,
        "text": "h2"
       },
+      "scheduledAt": 2,
       "seq": 3,
       "source": {
        "behavior": "cli-process-flow",
@@ -377,9 +475,20 @@
       "time": 2
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "workspace-disk-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-read-done",
     "payload": {
      "caller": "cli",
@@ -388,6 +497,7 @@
      "requestId": 1,
      "spec": "h1"
     },
+    "scheduledAt": 0,
     "seq": 2,
     "source": {
      "behavior": "workspace-disk-flow",
@@ -416,6 +526,7 @@
      ],
      "from": "cli-loading",
      "guard": "event.caller == 'cli' && command == 'apply'",
+     "instance": 0,
      "sets": [
       {
        "after": "h1",
@@ -436,11 +547,14 @@
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-read-done",
     "cli-apply-read",
@@ -451,6 +565,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-applying",
@@ -483,13 +604,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "disk-file-replaced",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "file": "spec",
        "hash": "h2"
       },
+      "scheduledAt": 2,
       "seq": 4,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -500,12 +628,18 @@
      },
      {
       "event": "ws-write-done",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "cli",
        "file": "spec",
        "hash": "h2",
        "requestId": 1
       },
+      "scheduledAt": 2,
       "seq": 5,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -515,9 +649,20 @@
       "time": 2
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "cli-process-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-write",
     "payload": {
      "baseHash": "h1",
@@ -527,6 +672,7 @@
      "requestId": 1,
      "text": "h2"
     },
+    "scheduledAt": 2,
     "seq": 3,
     "source": {
      "behavior": "cli-process-flow",
@@ -562,6 +708,7 @@
      ],
      "from": "ws-ready",
      "guard": "event.file == 'spec' && event.baseHash == diskSpec",
+     "instance": 0,
      "sets": [
       {
        "after": "h2",
@@ -587,11 +734,14 @@
     {
      "behavior": "cli-process-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-write",
     "ws-write-spec",
@@ -602,6 +752,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-applying",
@@ -634,15 +791,22 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-write-done",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "cli",
        "file": "spec",
        "hash": "h2",
        "requestId": 1
       },
+      "scheduledAt": 2,
       "seq": 5,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -652,14 +816,26 @@
       "time": 2
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "workspace-disk-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "disk-file-replaced",
     "payload": {
      "file": "spec",
      "hash": "h2"
     },
+    "scheduledAt": 2,
     "seq": 4,
     "source": {
      "behavior": "workspace-disk-flow",
@@ -673,16 +849,20 @@
     {
      "behavior": "cli-process-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "disk-file-replaced"
    ],
@@ -690,6 +870,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-writing-layout",
@@ -722,9 +909,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-write",
+      "from": {
+       "behavior": "cli-process-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "baseHash": "L1",
        "caller": "cli",
@@ -733,6 +926,7 @@
        "requestId": 1,
        "text": "L2"
       },
+      "scheduledAt": 2,
       "seq": 6,
       "source": {
        "behavior": "cli-process-flow",
@@ -742,9 +936,20 @@
       "time": 2
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "workspace-disk-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-write-done",
     "payload": {
      "caller": "cli",
@@ -752,6 +957,7 @@
      "hash": "h2",
      "requestId": 1
     },
+    "scheduledAt": 2,
     "seq": 5,
     "source": {
      "behavior": "workspace-disk-flow",
@@ -780,6 +986,7 @@
      ],
      "from": "cli-applying",
      "guard": "event.caller == 'cli'",
+     "instance": 0,
      "sets": [
       {
        "after": true,
@@ -795,11 +1002,14 @@
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 5,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-write-done",
     "cli-apply-spec-written",
@@ -810,6 +1020,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-writing-layout",
@@ -842,13 +1059,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "disk-file-replaced",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "file": "layout",
        "hash": "L2"
       },
+      "scheduledAt": 2,
       "seq": 7,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -859,12 +1083,18 @@
      },
      {
       "event": "ws-write-done",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "cli",
        "file": "layout",
        "hash": "L2",
        "requestId": 1
       },
+      "scheduledAt": 2,
       "seq": 8,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -874,9 +1104,20 @@
       "time": 2
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "cli-process-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-write",
     "payload": {
      "baseHash": "L1",
@@ -886,6 +1127,7 @@
      "requestId": 1,
      "text": "L2"
     },
+    "scheduledAt": 2,
     "seq": 6,
     "source": {
      "behavior": "cli-process-flow",
@@ -921,6 +1163,7 @@
      ],
      "from": "ws-ready",
      "guard": "event.file == 'layout' && event.baseHash == diskLayout",
+     "instance": 0,
      "sets": [
       {
        "after": "L2",
@@ -946,11 +1189,14 @@
     {
      "behavior": "cli-process-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 6,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-write",
     "ws-write-layout",
@@ -961,6 +1207,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-writing-layout",
@@ -993,15 +1246,22 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-write-done",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "cli",
        "file": "layout",
        "hash": "L2",
        "requestId": 1
       },
+      "scheduledAt": 2,
       "seq": 8,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -1011,14 +1271,26 @@
       "time": 2
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "workspace-disk-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "disk-file-replaced",
     "payload": {
      "file": "layout",
      "hash": "L2"
     },
+    "scheduledAt": 2,
     "seq": 7,
     "source": {
      "behavior": "workspace-disk-flow",
@@ -1032,16 +1304,20 @@
     {
      "behavior": "cli-process-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 7,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "disk-file-replaced"
    ],
@@ -1049,6 +1325,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-done",
@@ -1081,9 +1364,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "cli-command-ok",
+      "from": {
+       "behavior": "cli-process-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "command": "apply",
        "ok": true,
@@ -1092,6 +1381,7 @@
        "result": "written: spec, layout",
        "semanticHash": "m2"
       },
+      "scheduledAt": 2,
       "seq": 9,
       "source": {
        "behavior": "cli-process-flow",
@@ -1101,9 +1391,20 @@
       "time": 2
      }
     ],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "workspace-disk-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-write-done",
     "payload": {
      "caller": "cli",
@@ -1111,6 +1412,7 @@
      "hash": "L2",
      "requestId": 1
     },
+    "scheduledAt": 2,
     "seq": 8,
     "source": {
      "behavior": "workspace-disk-flow",
@@ -1139,6 +1441,7 @@
      ],
      "from": "cli-writing-layout",
      "guard": "event.caller == 'cli'",
+     "instance": 0,
      "sets": [
       {
        "after": true,
@@ -1154,11 +1457,14 @@
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 8,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-write-done",
     "cli-apply-written",
@@ -1169,6 +1475,13 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-done",
@@ -1201,10 +1514,22 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 2
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 2,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "cli-process-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "cli-command-ok",
     "payload": {
      "command": "apply",
@@ -1214,6 +1539,7 @@
      "result": "written: spec, layout",
      "semanticHash": "m2"
     },
+    "scheduledAt": 2,
     "seq": 9,
     "source": {
      "behavior": "cli-process-flow",
@@ -1227,20 +1553,28 @@
     {
      "behavior": "cli-process-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 9,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "cli-command-ok"
    ],
    "time": 2
   }
- ]
+ ],
+ "stepsTaken": 10,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

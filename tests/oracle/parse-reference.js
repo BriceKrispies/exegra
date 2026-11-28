@@ -1,6 +1,6 @@
 // The JavaScript model derivation and semantic hash as they were before the verified kernel
 // (WG-4799): src/core/parse.js and the normalize/hash part of src/core/hash.js, kept unchanged as
-// a differential oracle. tests/core/model-kernel.test.js compares the Lean kernel, called through
+// a differential oracle. tests/proofs/model-kernel.test.js compares the Lean kernel, called through
 // src/core/parse.js and src/core/hash.js, with it on every specification the tests use. Like the
 // Rust engine for the simulator, it is not used by the application.
 
@@ -85,12 +85,13 @@ function effectiveMeta(vocab, report) {
       const p = ['vocabulary', 'relationshipKinds', id];
       if (!isObject(def)) { report('vocabulary.type', `Relationship kind "${id}" must be an object.`, p); continue; }
       const d = /** @type {any} */ (def);
-      for (const k of Object.keys(d)) if (!['label', 'line', 'color', 'dependency', 'description'].includes(k)) report('vocabulary.unknown', `Unsupported relationship kind field "${k}".`, [...p, k]);
+      for (const k of Object.keys(d)) if (!['label', 'line', 'color', 'dependency', 'description', 'class', 'direction', 'parent'].includes(k)) report('vocabulary.unknown', `Unsupported relationship kind field "${k}".`, [...p, k]);
       if (typeof d.label !== 'string') report('vocabulary.type', `Relationship kind "${id}" needs a string "label".`, p);
       if (!V.lines.includes(d.line)) report('vocabulary.line', `Relationship kind "${id}" needs "line" to be one of: ${V.lines.join(', ')}.`, p);
       if (!V.colors.includes(d.color)) report('vocabulary.color', `Relationship kind "${id}" needs "color" to be one of: ${V.colors.join(', ')}.`, p);
-      if (typeof d.dependency !== 'boolean') report('vocabulary.type', `Relationship kind "${id}" needs a boolean "dependency".`, p);
-      meta.relationshipKinds[id] = { label: String(d.label ?? id), line: V.lines.includes(d.line) ? d.line : 'solid', color: V.colors.includes(d.color) ? d.color : 'neutral', dependency: d.dependency === true, description: typeof d.description === 'string' ? d.description : '', declared: true };
+      if (d.class === undefined && typeof d.dependency !== 'boolean') report('vocabulary.type', `Relationship kind "${id}" needs a boolean "dependency".`, p);
+      const taxonomy = Object.fromEntries(['class', 'direction', 'parent'].filter((k) => d[k] !== undefined).map((k) => [k, d[k]]));
+      meta.relationshipKinds[id] = { label: String(d.label ?? id), line: V.lines.includes(d.line) ? d.line : 'solid', color: V.colors.includes(d.color) ? d.color : 'neutral', dependency: d.class === undefined ? d.dependency === true : d.class !== 'none', description: typeof d.description === 'string' ? d.description : '', ...taxonomy, declared: true };
     }
   }
   /**

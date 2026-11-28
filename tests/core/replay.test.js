@@ -10,8 +10,9 @@ import { analyzeSpec } from '../../src/core/analyze.js';
 import { createReplay, replayStream, replayChecks, REPLAY_CLAIM } from '../../src/core/replay.js';
 import { checkTrace } from '../../src/core/claims.js';
 import { requestLog } from '../../src/core/contract-trace.js';
+import { readSpecFile } from '../../tools/spec-manifest.js';
 
-const { model } = analyzeSpec(fs.readFileSync(new URL('../../specs/exegra/spec.jsonc', import.meta.url), 'utf8'));
+const { model } = analyzeSpec(readSpecFile(new URL('../../specs/exegra/spec.jsonc', import.meta.url)));
 /** @type {{seq: number, id: string, payload: Record<string, any>}[]} */
 const STREAM = JSON.parse(fs.readFileSync(new URL('../fixtures/live/open-edit-save.json', import.meta.url), 'utf8'));
 const copy = () => STREAM.map((e) => ({ ...e, payload: { ...e.payload } }));

@@ -27,7 +27,11 @@ test('a long simulation runs in a worker while the page stays responsive', async
   await page.waitForTimeout(500);
 
   // A scenario that loops up to a large step limit, added through a transaction. Every step evaluates
-  // an expression of 8192 terms (all zero) while the trace stays small: one variable, one event.
+  // an expression of 8192 terms (all zero) while the trace stays small: one variable, one event. The
+  // step limit keeps the run at several seconds on the behaviour calculus's scheduler, which evaluates
+  // boxed integers with checked arithmetic: about 1.1 ms per step of this expression in WebAssembly over
+  // 5000 steps (measured 2026-11-27, Node 24), against about 0.6 ms for the float evaluator of the
+  // removed format-1 engine, whose 20000 steps this test used to run (WG-5681).
   const created = await ex(page, `
     const term = (d) => d === 0 ? '(n - n)' : '(' + term(d - 1) + ' + ' + term(d - 1) + ')';
     const subject = session.model.byKind.component[0].id;
@@ -41,7 +45,7 @@ test('a long simulation runs in a worker while the page stays responsive', async
           effects: [{ set: 'n', to: 'n + 1 + ' + term(12) }, { emit: 'load-tick', after: 1 }] }],
       } },
       { type: 'CreateEntity', kind: 'scenario', data: {
-        id: 'load-long-run', name: 'Long run', behaviors: ['load-ticker'], steps: [{ at: 0, event: 'load-tick' }], maxSteps: 20000,
+        id: 'load-long-run', name: 'Long run', behaviors: ['load-ticker'], steps: [{ at: 0, event: 'load-tick' }], maxSteps: 5000,
       } },
     ], { label: 'Add a long-running scenario' });
     return r.ok ? true : r.message;`);

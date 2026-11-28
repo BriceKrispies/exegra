@@ -1,4 +1,6 @@
-import Exegra.Semantics
+import Exegra.Expr
+import Exegra.Input
+import Exegra.Trace
 import Exegra.Random
 import Exegra.Resource
 import Exegra.Workload
@@ -7,12 +9,14 @@ import Exegra.Workload
 Format 2 of the engine input and trace, the WG-4664 part (`docs/simulation.md`, "Planned:
 resources, workloads and performance"): integer time in a declared unit, instances (counted and
 keyed, with routes), resources (`use`, `acquire`, `release`, class queues, bounds, overflow) and
-seeded SplitMix64 streams. Version-1 inputs never reach this module (`Exegra.runAny`).
+seeded SplitMix64 streams. Since WG-5681 this is the legacy interpreter: `V2.runInput`
+(`Exegra/Format2B.lean`) runs it only for inputs outside the behaviour calculus's fragment, and
+`exegra-lean --legacy` runs it for the differential check. Version-1 inputs are refused (`Exegra.runAny`).
 
 Not here yet (refused when present): meters and prices (WG-4715), and the fault kind `crash-instance`
 (WG-4664; no instance is ever down, every incarnation is 0).
 
-The step mirrors the format-1 step (`Exegra/Semantics.lean`): the head is taken, drop and delay
+The step mirrors the step of the removed format 1: the head is taken, drop and delay
 faults act (`lose-event` as a drop, `retry-event` as a delay, WG-4903), then phase 1 (choose, reading the configuration from before the step) and phase 2
 (effects, writing the next configuration). New here:
 
@@ -29,6 +33,26 @@ faults act (`lose-event` as a drop, `retry-event` as a delay, WG-4903), then pha
 
 ORDER marks where an order decides an observable result.
 -/
+
+namespace Exegra
+
+/-- Remove repeats, keeping first occurrences. -/
+def dedup (xs : List String) : List String :=
+  xs.foldl (fun acc x => if acc.contains x then acc else acc ++ [x]) []
+
+def lookupNat (xs : List (String × Nat)) (k : String) : Option Nat :=
+  (xs.find? (·.1 == k)).map (·.2)
+
+def lookupSeq (xs : List (Nat × List String)) (k : Nat) : Option (List String) :=
+  (xs.find? (·.1 == k)).map (·.2)
+
+/-- Parse an expression; a parse error is reported with its source. -/
+def compile (src : String) : Except String Ast :=
+  match parseExpr src with
+  | .ok a => .ok a
+  | .error e => .error s!"Expression \"{src}\": {e}"
+
+end Exegra
 
 namespace Exegra.V2
 
@@ -1132,15 +1156,17 @@ def numsOf (path : String) (vs : List Value) : Except String (List Float) :=
     | .num x => .ok x
     | v => .error s!"Aggregate \"{path}\" needs numbers, got {v.typeName}."
 
-/-- Resolve a reference in the scope of the instance with machine key `mk`. `view` gives
-variables, states and aggregates; `start` the start-of-step configuration, from which resources
-are read. -/
+/-- Resolve a reference in the scope of the instance with machine key `mk`. `view` gives the
+instance's own variables as its earlier effects left them; `start`, the start-of-step
+configuration, gives everything else: other machines' variables and states (`b.x`, `b.state`),
+aggregates over instances and resources (snapshot reads, docs/simulation.md; WG-5681). In phase 1
+the two are the same configuration. -/
 def resolve (env : Env) (view start : Conf) (mk : String) (inst : Value) (payload : Value)
     (time : Nat) (path : List String) : Except String Value :=
   let i := env.input
   let joined := ".".intercalate path
   let machinesOf (b : BehaviorIn) : List Machine :=
-    (view.instsOf b.id).filterMap fun v => view.machine? (machineKey b v)
+    (start.instsOf b.id).filterMap fun v => start.machine? (machineKey b v)
   match path with
   | ["time"] => .ok (.num time.toFloat)
   | ["instance"] => .ok inst
@@ -1168,16 +1194,16 @@ def resolve (env : Env) (view start : Conf) (mk : String) (inst : Value) (payloa
     match i.behavior? b with
     | none => .ok .undef
     | some bd =>
-      let ks := view.instsOf b
+      let ks := start.instsOf b
       if ks.length > 1 then .error s!"Reference \"{joined}\" is ambiguous: \"{b}\" has {ks.length} instances."
-      else match ks.head? >>= fun v => view.machine? (machineKey bd v) with
+      else match ks.head? >>= fun v => start.machine? (machineKey bd v) with
         | none => .ok .undef
         | some m => .ok (if name == "state" then .str m.state else (objGet? m.vars name).getD .undef)
   | [b, "instances", "count"] =>
     match i.behavior? b with
     | some bd => match bd.instances with
       | .single => .ok .undef
-      | _ => .ok (.num (view.instsOf b).length.toFloat)
+      | _ => .ok (.num (start.instsOf b).length.toFloat)
     | none => .ok .undef
   | [b, agg, x] =>
     match i.behavior? b with
@@ -3029,29 +3055,11 @@ def trace (t : Trace2) : Value :=
 
 end Encode
 
-/-- Run a decoded version-2 input: a refusal, or the trace JSON text. -/
-def runInput (i : Input) : Except String String := do
+/-- The legacy interpreter on a decoded version-2 input: a refusal, or the trace JSON text. It
+runs every input outside the behaviour calculus (`Exegra.V2.runInput`, Format2B.lean, dispatches),
+and `exegra-lean --legacy` runs it on every input for the differential check. -/
+def runInputLegacy (i : Input) : Except String String := do
   validate i
   pure (Json.write (Encode.trace (traceOf i)))
 
 end Exegra.V2
-
-namespace Exegra
-
-/-- The engine input of either version, parsed. Version 1 is run by the format-1 semantics,
-unchanged (`runValue`, the body of `runText`); version 2 by `V2.runInput`. -/
-def runAnyValue (v : Value) : Except String String :=
-  match v with
-  | .obj _ root =>
-    match objGet? root "version", objGet? root "format" with
-    | some (.num x), some (.str "exegra-sim-input") =>
-      if x == 2 then do V2.runInput (← V2.Decode.input root) else runValue v
-    | _, _ => runValue v
-  | _ => runValue v
-
-/-- `runAnyValue` on JSON text: what `exegra-lean` runs. -/
-def runAny (text : String) : Except String String := do
-  let v ← Json.parse text
-  runAnyValue v
-
-end Exegra

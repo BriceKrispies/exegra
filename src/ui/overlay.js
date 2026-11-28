@@ -1,4 +1,5 @@
-// Viewport overlay: the view name, an illustrative-example mark and notes (top left),
+// Viewport overlay: the view name, an illustrative-example mark, the claims stated at a cut with their result at the
+// cut a structural view shows (the hierarchy and cut controls are in the app bar's tools) and notes (top left),
 // the legend and the render statistics. The overlay is pointer-transparent except its
 // own summaries. On a phone the legend and the statistics start closed and are not
 // drawn at all until opened (from the app bar's overflow menu); a closed card never
@@ -21,6 +22,9 @@ const POSITION_NOTE = 'Position on the ground plane is presentation only. Contai
 export function mountOverlay(el, session, getStats, env) {
   const viewTitle = h('div', { class: 'overlay__view', 'data-testid': 'overlay-view' });
   const notesBody = h('ul', { class: 'overlay__notes' });
+  // Claims stated at a cut, with their result at the cut the structural view shows.
+  const levelClaims = h('ul', { class: 'overlay__level-claims', 'data-testid': 'level-claims' });
+  const levelBar = h('div', { class: 'overlay__level', 'data-testid': 'level-bar' }, levelClaims);
   const notesSummary = h('summary', { class: 'overlay__summary' });
   const notes = h('details', { class: 'overlay__details overlay__details--notes' }, notesSummary, notesBody);
 
@@ -35,7 +39,7 @@ export function mountOverlay(el, session, getStats, env) {
   const statsCard = h('div', { class: 'overlay__card overlay__card--stats' }, stats);
   clear(el);
   el.append(
-    h('div', { class: 'overlay__corner overlay__corner--tl' }, h('div', { class: 'overlay__card overlay__card--view' }, viewTitle, notes)),
+    h('div', { class: 'overlay__corner overlay__corner--tl' }, h('div', { class: 'overlay__card overlay__card--view' }, viewTitle, levelBar, notes)),
     h('div', { class: 'overlay__corner overlay__corner--bl' }, legendCard),
     h('div', { class: 'overlay__corner overlay__corner--br' }, statsCard));
 
@@ -76,6 +80,7 @@ export function mountOverlay(el, session, getStats, env) {
     if (view) viewTitle.append(h('b', { class: 'overlay__view-name' }, view.name), h('span', { class: 'overlay__view-proj' }, `${view.projection} projection`));
     if (session.model?.system?.data.illustrative === true) viewTitle.append(h('span', { class: 'overlay__illustrative', 'data-testid': 'illustrative-mark', title: 'This system is an illustrative example, not a statement about real software.' }, 'Illustrative example'));
 
+    renderLevel();
     const sceneNotes = /** @type {string[]} */ (scene?.notes ?? []);
     notesSummary.textContent = `Notes (${sceneNotes.length + 1})`;
     clear(notesBody);
@@ -90,11 +95,23 @@ export function mountOverlay(el, session, getStats, env) {
     if (!entries.length) legendBody.append(h('li', { class: 'overlay__muted' }, 'Nothing to show in this view.'));
     for (const l of entries) {
       legendBody.append(h('li', { class: 'overlay__legend-item', 'data-legend-kind': l.kind },
-        l.kind === 'edge' ? lineSwatch(l.line, l.color, { arrow: true, width: 24 }) : shapeGlyph(l.shape, l.color, 12),
+        l.kind === 'edge' ? lineSwatch(l.line, l.color, { arrow: true, width: 24 }) : l.kind === 'mark' ? h('span', { class: `scene-label__badge scene-label__mark scene-label__mark--${l.mark}` }, l.mark.replace(/-/g, ' ')) : shapeGlyph(l.shape, l.color, 12),
         h('span', { class: 'overlay__legend-label', title: l.label }, l.label)));
     }
     sync();
   };
+
+  const STATUS_TONE = { proved: 'ok', verified: 'ok', supported: 'ok-external', violated: 'bad', inconclusive: 'warn', 'not-evaluated': 'none' };
+  function renderLevel() {
+    const claims = /** @type {any[]} */ (session.scene?.projection === 'structural' ? session.scene.levelClaims ?? [] : []);
+    levelBar.hidden = !claims.length;
+    clear(levelClaims);
+    for (const c of claims) {
+      const text = c.expressible ? `${c.claimId}: ${String(c.status).replace(/-/g, ' ')} at this cut` : `${c.claimId}: not expressible at this level`;
+      levelClaims.append(h('li', { class: 'overlay__level-claim', 'data-testid': 'level-claim', 'data-claim': c.claimId, 'data-status': c.status, 'data-expressible': String(c.expressible), title: c.explanation },
+        h('span', { class: 'chip', 'data-tone': c.expressible ? /** @type {any} */ (STATUS_TONE)[c.status] ?? 'none' : 'warn' }, h('span', { class: 'chip__dot', 'aria-hidden': 'true' }), text)));
+    }
+  }
 
   const fmt = (/** @type {any} */ n, /** @type {number} */ d = 0) => (typeof n === 'number' && Number.isFinite(n) ? n.toFixed(d) : '-');
   const renderStats = () => {

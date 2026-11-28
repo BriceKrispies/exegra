@@ -1,0 +1,222 @@
+// Top-level components (the subsystems, the composition root, external systems and actors) and the relationships from them.
+{
+  "components": [
+    // ======== External systems =========================================================================
+    {
+      "id": "threejs-library",
+      "name": "Three.js",
+      "category": "external",
+      "runsIn": "browser",
+      "purpose": "The WebGL 3D library (three, with OrbitControls, CSS2DRenderer and fat-line addons) that draws the scene.",
+      "responsibilities": ["Render 3D geometry through WebGL and CSS2D labels"]
+    },
+    {
+      "id": "vite-dev-server",
+      "name": "Vite",
+      "category": "external",
+      "runsIn": "node",
+      "purpose": "The development server and bundler that serves the application and hosts the development-server plugin.",
+      "responsibilities": ["Serve modules with hot reload, run middleware, build the production bundle"]
+    },
+    {
+      "id": "browser-platform",
+      "name": "Web browser platform",
+      "category": "external",
+      "runsIn": "browser",
+      "purpose": "The browser's DOM, canvas and WebGL, fetch and EventSource, ResizeObserver and requestAnimationFrame that the application runs on.",
+      "responsibilities": ["Host the page, run its modules and deliver input events"]
+    },
+    {
+      "id": "browser-storage",
+      "name": "Browser web storage",
+      "category": "external",
+      "runsIn": "browser",
+      "purpose": "localStorage (session state per project, the responsive layout's destination, panel widths and open panels) and sessionStorage (camera per project and view) of the browser.",
+      "responsibilities": ["Remember interaction state; it may be unavailable, in which case the state is simply not remembered"]
+    },
+    {
+      "id": "filesystem",
+      "name": "File system",
+      "category": "external",
+      "runsIn": "node",
+      "purpose": "The operating system file system holding project directories, the repository sources and the temporary files used for atomic replacement.",
+      "responsibilities": ["Hold files, perform renames and report changes to watchers"]
+    },
+    {
+      "id": "jsonc-parser-library",
+      "name": "jsonc-parser",
+      "category": "external",
+      "runsIn": "both",
+      "purpose": "The JSONC library used to parse specification text into a tree and to compute minimal text edits.",
+      "responsibilities": ["Parse JSON with comments and trailing commas, locate nodes, modify and apply edits"]
+    },
+    {
+      "id": "playwright-runner",
+      "name": "Playwright",
+      "category": "external",
+      "runsIn": "node",
+      "purpose": "The browser automation and test runner used by the browser tests and the screenshot tool, driving the installed Chrome.",
+      "responsibilities": ["Drive Chrome, run browser tests and capture screenshots"]
+    },
+    {
+      "id": "ai-coding-agent",
+      "name": "AI coding agent",
+      "category": "external",
+      "purpose": "An external program that reads and changes specifications by running the agent command line.",
+      "responsibilities": [
+        "Run commands, read their JSON output and decide what to apply"
+      ],
+      "kind": "actor"
+    },
+    {
+      "id": "markdown-specification-source",
+      "name": "Markdown specification",
+      "category": "external",
+      "runsIn": "node",
+      "purpose": "A specification as structured Markdown in its own repository, named by the import map of a linked project. It is the authority for that project; Exegra reads it only through the importer and never writes to it.",
+      "responsibilities": ["Hold the white paper, roadmap, requirement documents and verification document that the importer reads"]
+    },
+    {
+      "id": "external-test-runner",
+      "name": "Root test runner",
+      "category": "external",
+      "runsIn": "node",
+      "purpose": "The test runner of a realisation root (bun test, for example), started by `exegra verify` through the command project.jsonc declares for that root, writing a JUnit report.",
+      "responsibilities": [
+        "Run a root's tests and write a JUnit XML report"
+      ]
+    },
+    {
+      "id": "sqlite-engine",
+      "name": "SQLite (node:sqlite)",
+      "category": "external",
+      "runsIn": "node",
+      "purpose": "The SQLite database engine built into Node (node:sqlite, DatabaseSync), which holds specification stores.",
+      "responsibilities": [
+        "Store tables in one database file, run transactions, and let several processes read one database in WAL mode while one writes"
+      ]
+    },
+    {
+      "id": "composition-root",
+      "name": "Composition root",
+      "kind": "component",
+      "parent": "exegra",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "The application entry (src/app/main.js): creates the session, mounts the shell, the panels and the scene view, and wires session events to the views and view callbacks to the session. It holds no business rules; it sits above the subsystems it wires.",
+      "responsibilities": [
+        "Create the session and the scene view, and mount the shell, the inspector, the source editor, the simulator, verification and realisation panels and the reader surface",
+        "Route scene-view callbacks to the session: select and hover, activate (collapse a subsystem or fit), move (MovePresentationNode operations submitted through session.apply) and connect (open the connect dialog)",
+        "Push every new scene, placement, selection and highlight from the session to the scene view, and pulse simulation steps and live events",
+        "Remember the camera per project and view in sessionStorage, report the scene viewport's width-to-height ratio to the session (after resizes settle) for the automatic layout, and expose window.__exegra for tests",
+        "Load the Lean engine (initEngine) before the first project opens, and record the start-up and camera events with the traffic recorder"
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/app/main.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "browser-user",
+      "name": "Person editing in the browser",
+      "kind": "actor",
+      "category": "external",
+      "runsIn": "browser",
+      "purpose": "The person who reads and edits a specification in the browser application: gestures on the 3D scene, the inspector, the source editor, the dialogs and the toolbar.",
+      "responsibilities": [
+        "Ask for edits, views, simulations and verification through the page, and read what it shows"
+      ]
+    },
+    {
+      "id": "javascript-runtime",
+      "name": "JavaScript runtime",
+      "kind": "external",
+      "category": "external",
+      "runsIn": "both",
+      "purpose": "Any standard JavaScript engine with WebAssembly: what code that runs both in the browser and in Node.js needs, and nothing more.",
+      "responsibilities": [
+        "Run ECMAScript modules and instantiate WebAssembly"
+      ]
+    },
+    {
+      "id": "nodejs-runtime",
+      "name": "Node.js runtime",
+      "kind": "external",
+      "category": "external",
+      "runsIn": "node",
+      "purpose": "The Node.js process the command line, the development server plugin and the tools run in: process arguments and exit codes, node:fs, node:path, node:child_process and node:crypto.",
+      "responsibilities": [
+        "Run the command line, the tools and the development server plugin"
+      ]
+    }
+  ],
+  "relationships": [
+    { "id": "composition-root-calls-scene-renderer", "kind": "invokes", "from": "composition-root", "to": "scene-renderer", "description": "Creates the scene view and calls setScene, setSelection, setHighlight, setMode, setCameraMode, fit, pulse and the camera accessors." },
+    { "id": "composition-root-depends-on-browser-platform", "kind": "depends-on", "from": "composition-root", "to": "browser-platform", "description": "Listens for pagehide, pointer-up and wheel events, observes the scene host with ResizeObserver and schedules fits with requestAnimationFrame." },
+    { "id": "composition-root-calls-session", "kind": "invokes", "from": "composition-root", "to": "session", "description": "Selects, hovers, toggles collapse, requests fits, sets mode, starts the session and reports the scene viewport's width-to-height ratio with setViewportAspect for the automatic layout." },
+    { "id": "composition-root-subscribes-session", "kind": "subscribes", "from": "composition-root", "to": "session", "description": "Listens for scene, selection, ui, project, view, fit and sim events to update the renderer." },
+    { "id": "composition-root-submits-edits-transactions", "kind": "submits-edits", "from": "composition-root", "to": "transactions", "description": "A drag in the scene ends in the onMoveEnd callback, which submits MovePresentationNode operations through session.apply.", "contract": "apply-transaction" },
+    { "id": "composition-root-calls-dialogs", "kind": "invokes", "from": "composition-root", "to": "dialogs", "description": "Opens the connect dialog after two successive node clicks in connect mode." },
+    { "id": "composition-root-calls-shell", "kind": "composes", "from": "composition-root", "to": "shell", "description": "Mounts the shell, uses its host elements, shows destinations through it and has a tap in the scene bring the inspector forward." },
+    { "id": "composition-root-calls-inspector", "kind": "composes", "from": "composition-root", "to": "inspector", "description": "Mounts the inspector." },
+    { "id": "composition-root-calls-source-editor", "kind": "composes", "from": "composition-root", "to": "source-editor", "description": "Mounts the source editor." },
+    { "id": "composition-root-calls-simulator-panel", "kind": "composes", "from": "composition-root", "to": "simulator-panel", "description": "Mounts the simulator panel." },
+    { "id": "composition-root-calls-verification-panel", "kind": "composes", "from": "composition-root", "to": "verification-panel", "description": "Mounts the verification panel." },
+    { "id": "composition-root-calls-realisation-panel", "kind": "composes", "from": "composition-root", "to": "realisation-panel", "description": "Mounts the realisation panel." },
+    { "id": "composition-root-writes-browser-storage", "kind": "writes", "from": "composition-root", "to": "browser-storage", "description": "Remembers the camera per project and view in sessionStorage." },
+    // -- Agent interface and tooling
+    { "id": "ai-coding-agent-calls-agent-cli", "kind": "invokes", "from": "ai-coding-agent", "to": "agent-cli", "description": "Runs one command per process and reads the JSON envelope.", "contract": "agent-command" },
+    { "id": "markdown-specification-source-data-flow-markdown-importer", "kind": "data-flow", "from": "markdown-specification-source", "to": "markdown-importer", "description": "The requirements, components, relationships, goals, decisions and roadmap stated in the Markdown travel to the importer, one way." },
+    {
+      "id": "composition-root-calls-traffic-recorder",
+      "kind": "invokes",
+      "from": "composition-root",
+      "to": "traffic-recorder",
+      "description": "src/app/main.js records page-loaded, the engine load, session-init-requested, camera events and step-pulsed."
+    },
+    {
+      "id": "markdown-specification-source-data-flow-register-importer",
+      "kind": "data-flow",
+      "from": "markdown-specification-source",
+      "to": "register-importer",
+      "description": "The headings, prose and register tables of the Markdown file travel to the importer, one way."
+    },
+    {
+      "id": "composition-root-calls-reader-surface",
+      "kind": "composes",
+      "from": "composition-root",
+      "to": "reader-surface",
+      "description": "Mounts the reader surface."
+    },
+    {
+      "id": "composition-root-calls-persistence-client",
+      "kind": "composes",
+      "from": "composition-root",
+      "to": "persistence-client",
+      "description": "The composition root (src/app/main.js) reads PERSISTENCE_AVAILABLE from the persistence client to record whether the page can save; the session it creates constructs and uses the client."
+    },
+    {
+      "id": "composition-root-calls-simulation-engine",
+      "kind": "composes",
+      "from": "composition-root",
+      "to": "simulation-engine",
+      "description": "The composition root initialises the Lean engine (initEngine) before the first project opens."
+    },
+    {
+      "id": "browser-user-data-flow-shell",
+      "kind": "data-flow",
+      "from": "browser-user",
+      "to": "shell",
+      "description": "Gestures, clicks and typed text on the page the shell lays out: the scene, the inspector, the source editor, the dialogs and the toolbar."
+    },
+    {
+      "id": "ai-coding-agent-calls-spec-guard",
+      "kind": "invokes",
+      "from": "ai-coding-agent",
+      "to": "spec-guard"
+    }
+  ]
+}

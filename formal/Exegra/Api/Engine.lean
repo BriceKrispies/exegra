@@ -1,8 +1,8 @@
 import Exegra.Api.Basic
 import Exegra.Format2
-import Exegra.Prove
-import Exegra.Temporal
 import Exegra.Impl.Refinement
+import Exegra.Elab
+import Exegra.ProveB
 
 /-!
 The simulation engine's functions at the call boundary: the dispatch `exegra-lean` runs, on
@@ -42,17 +42,20 @@ def exprEvalValue (args : Value) : Except String String :=
 
 def entries : List Entry := [
   { name := "engine.run",
-    doc := "An engine input (format 1 or 2) to its trace.",
+    doc := "A version-2 engine input to its trace (version 1 is refused).",
     fn := Impl.runAnyValue },
   { name := "expr.eval",
     doc := "{expr, env: {path: value}, types: {path: typeName}} to {value} or {error}: one expression evaluated as a behavior's expressions are.",
     fn := exprEvalValue },
   { name := "engine.explore",
-    doc := "An exploration request {input, claims, bound, maxStates, emitLean?} to the explorer's result per claim.",
-    fn := exploreValue },
+    doc := "An exploration request {input, claims, bound, maxStates} (a version-2 input) to the calculus explorer's result per claim.",
+    fn := V2.ProveB.exploreValue },
+  { name := "engine.elab",
+    doc := "A version-2 engine input to its elaboration into the behaviour calculus: {accepted, machines, faults, samples} or {accepted: false, kind, detail, message}.",
+    fn := V2.Elab.elabJson },
   { name := "engine.temporal",
-    doc := "A temporal request {input, claims, bound, maxStates, emitLean?} to the checker's result per claim.",
-    fn := temporalValue }
+    doc := "A temporal request {input, claims, bound, maxStates} (a version-2 input) to the calculus checker's result per claim.",
+    fn := V2.ProveB.temporalValue }
 ]
 
 end Exegra.Api.Engine

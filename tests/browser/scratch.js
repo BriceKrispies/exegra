@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readSpecFile } from '../../tools/spec-manifest.js';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const SPECS = path.join(ROOT, 'specs');
@@ -34,6 +35,12 @@ export function resetScratch(which, index = slot()) {
   for (const entry of fs.readdirSync(dir)) {
     if (entry !== 'spec.jsonc') fs.rmSync(path.join(dir, entry), { recursive: true, force: true });
   }
+  // The part files of a manifest specification first, so the manifest never names a part that is not there; then
+  // the facts extracted from the implementation, which the application attaches as the command line does.
+  for (const sub of ['parts', 'extracted']) {
+    const from = path.join(SOURCES[which], sub);
+    if (fs.existsSync(from)) fs.cpSync(from, path.join(dir, sub), { recursive: true });
+  }
   fs.copyFileSync(path.join(SOURCES[which], 'spec.jsonc'), path.join(dir, 'spec.jsonc'));
   const recorded = path.join(SOURCES[which], 'evidence', 'results.json');
   if (fs.existsSync(recorded)) {
@@ -48,8 +55,14 @@ export function removeScratch() {
   }
 }
 
-/** @param {'exegra'|'multiplayer'} which @param {string} file */
+/**
+ * A scratch project's file. The specification is read resolved: a manifest specification (the self-specification
+ * keeps its entities in part files) gives the assembled text, so a test sees what the application saved wherever it
+ * went; a plain specification is its own text.
+ * @param {'exegra'|'multiplayer'} which @param {string} file
+ */
 export function readScratch(which, file) {
   const p = path.join(SPECS, SCRATCH[which], file);
-  return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null;
+  if (!fs.existsSync(p)) return null;
+  return file === 'spec.jsonc' ? readSpecFile(p) : fs.readFileSync(p, 'utf8');
 }

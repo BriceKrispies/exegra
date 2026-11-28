@@ -16,6 +16,18 @@ export function layersOf(files) {
 }
 
 /**
+ * The facts read from outside the specification that a project carries (src/core/extraction.js): the extracted
+ * facts (specs/<project>/extracted/facts.json) and the observed facts, as the persistence service returns them, or
+ * null each. They become relationships of the model with their own provenance, exactly as the command line attaches them.
+ * @param {{extracted?: any, observed?: any}|null|undefined} files
+ * @returns {{extracted: import('../core/extraction.js').ExtractedFacts|null, observed: import('../core/extraction.js').ObservedFacts|null}}
+ */
+export function factsOf(files) {
+  const obj = (/** @type {any} */ x) => (x && typeof x === 'object' && !Array.isArray(x) ? x : null);
+  return { extracted: obj(files?.extracted), observed: obj(files?.observed) };
+}
+
+/**
  * Re-derive `project` from a read of its files on disk after `file` changed: a changed, added or removed
  * product file takes the product layers of the read (all of them); the specification and the layout take
  * their text. The product layers of the read are passed with every reload, since the platform check

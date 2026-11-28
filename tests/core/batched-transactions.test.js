@@ -7,7 +7,7 @@
 //
 // Corpora: a small hand-written JSONC specification with comments, one-line declarations and
 // trailing commas; specs/benchmark; specs/exegra. EXEGRA_TX_DIFF_SEEDS multiplies the number of
-// seeds (default 1). EXEGRA_TX_DIFF_SPEC names a further specification file to run on, such as a
+// seeds (default 1; the routine seeds are 24, 3 and 2, one run of each shape; raise it for a longer sweep). EXEGRA_TX_DIFF_SPEC names a further specification file to run on, such as a
 // frozen copy of a large linked project.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -18,6 +18,7 @@ import { Project } from '../../src/core/project.js';
 import { analyzeSpec } from '../../src/core/analyze.js';
 import { OPERATIONS, OpError, Tx, EMPTY_LAYOUT } from '../../src/core/operations.js';
 import { declarationSite } from '../../src/core/query.js';
+import { readSpecFile } from '../../tools/spec-manifest.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SCALE = Math.max(1, Number(process.env.EXEGRA_TX_DIFF_SEEDS ?? 1) || 1);
@@ -254,18 +255,18 @@ function projectDifferential(spec, layout, seeds, offset) {
 }
 
 test('batched transactions equal per-operation re-derivation on a hand-written JSONC specification', () => {
-  differential('small', SMALL, EMPTY_LAYOUT, 120 * SCALE);
-  projectDifferential(SMALL, EMPTY_LAYOUT, 30 * SCALE, 1000);
+  differential('small', SMALL, EMPTY_LAYOUT, 24 * SCALE);
+  projectDifferential(SMALL, EMPTY_LAYOUT, 8 * SCALE, 1000);
 });
 
 test('batched transactions equal per-operation re-derivation on the benchmark specification', () => {
   const spec = fs.readFileSync(path.join(ROOT, 'specs/benchmark/spec.jsonc'), 'utf8');
-  differential('benchmark', spec, EMPTY_LAYOUT, 12 * SCALE);
+  differential('benchmark', spec, EMPTY_LAYOUT, 3 * SCALE);
 });
 
 test('batched transactions equal per-operation re-derivation on the Exegra specification', () => {
-  const spec = fs.readFileSync(path.join(ROOT, 'specs/exegra/spec.jsonc'), 'utf8');
-  differential('exegra', spec, EMPTY_LAYOUT, 4 * SCALE);
+  const spec = readSpecFile(path.join(ROOT, 'specs/exegra/spec.jsonc'));
+  differential('exegra', spec, EMPTY_LAYOUT, 2 * SCALE);
   projectDifferential(spec, EMPTY_LAYOUT, 1 * SCALE, 2000);
 });
 

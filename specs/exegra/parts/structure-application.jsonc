@@ -1,0 +1,746 @@
+// Part of the specification: components, relationships.
+{
+  "components": [
+    {
+      "id": "application",
+      "name": "Application",
+      "kind": "subsystem",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "The browser application: the session that owns interaction state, the shell and every panel.",
+      "implementation": {
+        "status": "manual",
+        "modules": [],
+        "notes": "Grouping only; the code lives in the child components.",
+        "language": "js"
+      },
+      "parent": "exegra",
+      "responsibilities": [
+        "Own the open project and the interaction state that is not part of the specification: selection, active view, the cut each structural view shows, hidden elements, camera and simulation position (session).",
+        "Turn user gestures into transactions of the semantic core and show what the core reports back: diagnostics, claim results, rejected edits and saves.",
+        "Present every view and panel on phone, tablet and desktop from one DOM: app bar, explorer, inspector, simulator, verification, realisation, source editor and reader (shell, responsive layout).",
+        "Make each drawn fact inspectable: the witnesses of a derived interaction and the purpose, boundary and interfaces of a block (inspector).",
+        "Record the events the running application really produces, named by this specification's event ids, so Live mode can replay them through the self-model (traffic recorder)."
+      ]
+    },
+    // ======== Application ======================================================================
+    {
+      "id": "session",
+      "name": "Application session",
+      "parent": "application",
+      "category": "computational",
+      "runsIn": "browser",
+      "purpose": "The one object the UI talks to: it owns the project, the interaction state and everything derived from the model, and saves committed text asynchronously.",
+      "responsibilities": [
+        "Open, list and switch projects: the new project is read first and the switch is refused while a save is pending, in conflict or in error; load shipped specs when persistence is unavailable",
+        "Forward edits to the transaction system and log rejected edits",
+        "On every commit: re-evaluate claims when the semantics changed, re-project (the selection is the focus of the references projection) and re-lay-out the scene, then notify subscribers (scene, model, claims, selection)",
+        "Choose the layout of the active view: the viewer's preference for that view (setLayoutMethod, remembered in localStorage), else the view's display.layout, else auto; auto asks chooseLayout with the viewport's width-to-height ratio reported through setViewportAspect (clamped to 0.5 to 3.5, small changes ignored), the other choices ask layoutScene for that method; the pins of the view apply",
+        "Save committed spec and layout text asynchronously with the base hash of the last read or write, report saving, saved, conflict, error or read-only, and resolve a conflict by reload or overwrite",
+        "Watch the project files and adopt an external change with Project.reload: any text that parses is adopted, including text with validation errors; the adoption clears the undo and redo history and is not undoable; text with syntax errors is refused and the last valid model is kept",
+        "Hold selection, hover, active view, collapsed, hidden and isolated sets, simulation state and the change log, and remember UI state in localStorage",
+        "Derive the current simulation step's message flow and its path through the current scene, for the renderer and the simulator panel",
+        "Run the loaded scenario off the main thread (engine worker) whenever it is loaded or its faults change, show it as running until the trace arrives, discard a run that a newer load replaced, and step, step back, seek, reset, play and run to the end through the finished trace with a cursor that reveals one recorded step at a time",
+        "Record the session's real events in the traffic recorder (and install the persistence client's observer), and in Live mode replay the kept stream through the scenario live-session (src/core/replay.js) as events arrive, batched per microtask: the cursor follows the newest step unless the user stepped back, checks are checkTrace plus the replay's divergences, and a semantic commit replays the stream through the new model",
+        "Re-derive the model from the product layers of a fresh read of the project when the watcher reports a changed, added or removed product file (src/app/disk-reload.js), keeping the platform text and layout in memory"
+      ],
+      "ports": [
+        {
+          "id": "session-apply-out",
+          "name": "Apply transaction",
+          "direction": "requires",
+          "contract": "apply-transaction",
+          "protocol": "in-process call",
+          "description": "Forwards operations to Project.apply."
+        },
+        {
+          "id": "session-write-out",
+          "name": "Write file",
+          "direction": "requires",
+          "contract": "write-file",
+          "protocol": "persistence client call",
+          "description": "Saves the committed spec and layout text."
+        },
+        {
+          "id": "session-claims-out",
+          "name": "Evaluate claims",
+          "direction": "requires",
+          "contract": "evaluate-claims",
+          "protocol": "in-process call",
+          "description": "Re-evaluates claims after a semantic change."
+        },
+        {
+          "id": "session-project-out",
+          "name": "Project scene",
+          "direction": "requires",
+          "contract": "project-scene",
+          "protocol": "in-process call",
+          "description": "Derives the scene of the active view."
+        },
+        {
+          "id": "session-run-out",
+          "name": "Run scenario",
+          "direction": "requires",
+          "contract": "run-scenario",
+          "protocol": "in-process call",
+          "description": "Runs the scenario shown in the simulator panel in the engine worker and wraps its trace in a cursor."
+        }
+      ],
+      "unknowns": [
+        "A failed save leaves the pending flag set and stops writing until the next commit; there is no automatic retry.",
+        "The layout method chosen for a view is stored only in the browser's localStorage under the project and view: it is not in the specification or the layout file, is not shared and is lost when storage is cleared.",
+        "The session writes the current text, not one write per revision; the edit-flow machines in this file abstract that.",
+        "Claim re-evaluation and re-projection run synchronously inside every commit with no measurement of their cost on large models."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/app/session.js",
+          "src/app/disk-reload.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "shell",
+      "name": "Application shell",
+      "parent": "application",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "The page frame, mobile first: the full-screen scene, the app bar, the navigation and the two panels (explorer and context) that the responsive layout places as sheets, a side panel or columns; toasts and keyboard shortcuts.",
+      "responsibilities": [
+        "Create the responsive layout; mount the app bar, explorer, diagnostics, changes, overlay and simulation transport, and hand the other panels their host elements",
+        "Keep a one-line summary of every destination current, which is what a peeking sheet shows (for the inspector: the selection's name, kind and status)",
+        "Show errors from the session log as toasts",
+        "Undo and redo shortcuts, the delete shortcut for the selection, F to fit, / to search, Escape to leave connect mode or clear the selection"
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "index.html",
+          "src/ui/shell.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "toolbar",
+      "name": "Toolbar",
+      "parent": "application",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "The app bar: project and view switching, search, a status badge with validation counts and the save state, and an overflow menu holding the remaining actions (undo and redo, editing tools, layout, camera and fit, legend and render statistics, export and import) below desktop width; on a desktop the actions sit inline. It also builds the floating scene controls (fit, the camera pair and the connect-mode indicator). The simulation's quick controls live in the docked transport.",
+      "responsibilities": [
+        "Switch project and view: below 1200 px through one title button (the project small over the view) that opens a picker sheet listing the views and the projects, on a desktop through two selects; search entities in a full-screen sheet on a phone or inline from 768 px, and select and frame the result",
+        "Create and delete entities and switch select or connect mode; show a connect-mode indicator in the floating scene controls that also leaves the mode",
+        "Fit and switch the camera mode from the floating scene controls; undo and redo float above the sheet's peek height on a phone and sit in the bar from 768 px",
+        "Choose the layout method of the active view (auto or one of the session's methods) through session.setLayoutMethod; the choice is a viewer preference, not an edit, and the selector's tooltip shows the scores that auto compared; reset layout (MovePresentationNode with reset)",
+        "Show validation in a status badge that opens Diagnostics: below 1200 px one dot coloured by the worst status and the total count, on a desktop the three counts. Show the save state as a badge on the overflow button and a line in the overflow menu below 1200 px, and as a small button on a desktop when it needs attention; a conflict opens the save-conflict menu: reload from disk or overwrite disk",
+        "Open and close the legend and render statistics cards of the overlay",
+        "Export a project bundle and import one, replacing the project by name; an import is refused when the bundle's spec.jsonc has syntax errors, and a bundle with validation errors is only noted"
+      ],
+      "unknowns": ["Import writes the project's files through the persistence service without passing the transaction system, a validation gate or a base-hash check (analyzeSpec is run on the bundle first, but only syntax errors stop it); the session then opens whatever was written, with its validation errors."],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/toolbar.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "explorer",
+      "name": "System explorer",
+      "parent": "application",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "A filterable tree of components and flat lists of every other entity kind, including kinds a specification declares, built to stay usable on models with thousands of entities, with selection, collapse, hide and isolate marks. It is a bottom sheet on a phone, a side panel from 768 px and a column of its own from 1200 px; rows and row actions are touch targets, and the selected row keeps its actions visible, so nothing depends on hover.",
+      "responsibilities": [
+        "Show one section per entity kind present: the built-in kinds first, then the kinds the specification declares",
+        "Build rows lazily: a closed section or group renders nothing until it is opened, and sections and groups with more than 60 matching rows start closed",
+        "Render at most 200 rows per list and say how many matching rows are left out; narrow with a text filter (id, reference, name, statement, ends of relationships) and with component category chips",
+        "Group claims by their area property when any claim declares one",
+        "Select entities and toggle collapse, hide and isolate marks without rebuilding the rows"
+      ],
+      "unknowns": ["Rows beyond the 200-row window of a list can only be reached by narrowing the filter; there is no paging."],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/explorer.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "activity-panels",
+      "name": "Diagnostics and change log panels",
+      "parent": "application",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "Show the current diagnostics (errors, warnings, gaps) and the session's change log of commits, saves and rejected edits. In a panel narrower than 640 px a diagnostic is a two-line row; from there up it is one line.",
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/activity.js",
+          "src/ui/detail.js"
+        ],
+        "notes": "detail.js turns a log entry's detail (a string, or a rejected transaction's code and diagnostics) into text and is used by these panels and by the shell's toasts.",
+        "language": "js"
+      }
+    },
+    {
+      "id": "overlay",
+      "name": "Viewport overlay",
+      "parent": "application",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "Shows the active view's name and notes, an illustrative-example mark, the legend and the renderer's statistics over the 3D viewport. On a phone the legend and the statistics are not drawn until opened from the app bar's overflow menu, so they never cover the scene uninvited; from 768 px a closed card shows its summary, the legend starts open when it is short and the statistics start open.",
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/overlay.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "inspector",
+      "name": "Semantic inspector",
+      "parent": "application",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "Shows the selected entity: model-derived properties editable through the transaction system, relationships, dependencies, contracts, claim results and referencing entities. It is the destination a tap in the scene opens, at peek on a phone.",
+      "responsibilities": [
+        "Generate the property editor from the effective meta-model, so a property added through the vocabulary gets a working control",
+        "Commit every property change as a SetProperty operation and show a rejection under the control",
+        "Show claim evaluation results with scope, counterexample, assumptions and evidence, and open a counterexample in the simulator",
+        "In Identity, show the id, a Reference row when the entity carries a ref and an Origin row when it carries a source, and a Rename id button that opens the rename dialog",
+        "Offer connect, create-inside and delete actions through dialogs",
+        "Place labels above their controls in a panel narrower than 420 px and beside them from there up; its small tables (states, transitions, scenario steps) are card lists in a narrow panel",
+        "For a record, list its fields (type, personal class, reference, role) and its copies; for a copy, list its source records and the fields it holds, with personal and principal fields marked"
+      ],
+      "implementation": {
+        "status": "model-configured",
+        "modules": [
+          "src/ui/inspector.js"
+        ],
+        "notes": "The property editor is generated from the effective meta-model by property-controls; the read-only sections are hand-written queries.",
+        "language": "js"
+      }
+    },
+    {
+      "id": "property-controls",
+      "name": "Property controls",
+      "parent": "application",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "One generic form control per meta-model property definition, with no knowledge of any particular entity kind.",
+      "responsibilities": [
+        "Render string, text, boolean, number, enum, reference, list, object and JSON-valued properties from their definitions",
+        "Report rejected changes with their diagnostics under the control",
+        "Render the draft fields of the create dialogs"
+      ],
+      "unknowns": ["src/ui/property-controls.js and src/ui/dialogs.js import each other."],
+      "implementation": {
+        "status": "model-configured",
+        "modules": [
+          "src/ui/property-controls.js"
+        ],
+        "notes": "Controls are derived from the effective meta-model at runtime; the control code is hand-written.",
+        "language": "js"
+      }
+    },
+    {
+      "id": "dialogs",
+      "name": "Edit dialogs",
+      "parent": "application",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "Modal dialogs for the editing operations: create a component or any other entity, connect two components, delete with a cascade preview, rename an id. Full-screen sheets on a phone, centred cards from 768 px.",
+      "responsibilities": [
+        "Check ids against the id pattern and for duplicates before submitting",
+        "Preview what a delete removes and repairs using planDelete, and require cascade when other entities refer to the target",
+        "Submit CreateEntity, CreateRelationship, DeleteEntity and RenameEntity through the session and show a rejection inside the dialog"
+      ],
+      "unknowns": ["src/ui/dialogs.js and src/ui/property-controls.js import each other."],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/dialogs.js"
+        ],
+        "notes": "The create-any-entity dialog is generated from the meta-model; the other dialogs are hand-written.",
+        "language": "js"
+      }
+    },
+    {
+      "id": "source-editor",
+      "name": "Source editor",
+      "parent": "application",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "A textarea over the committed specification text that keeps whatever the user types as a draft until the model accepts it as a ReplaceSource transaction.",
+      "responsibilities": [
+        "Show the committed text and stay in sync with every commit made elsewhere",
+        "Analyze the draft after a short pause and show its diagnostics; mark error and warning lines in the gutter",
+        "Apply the draft through the transaction system; if it is rejected, keep the draft exactly as typed and show the diagnostics",
+        "Warn when the model changed since the draft was started, and reveal the declaration of an entity selected elsewhere",
+        "Take the full height of its panel (the full sheet on a phone); only the editor scrolls horizontally"
+      ],
+      "unknowns": ["It is a plain textarea: no syntax highlighting, completion or incremental analysis; the whole draft is analyzed on every pause."],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/source-editor.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "simulator-panel",
+      "name": "Simulator panel",
+      "parent": "application",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "Select a scenario and its faults, step, play, rewind and seek through its trace, and show the step, the transitions that fired, ignored events and the claim checks of the trace so far, and the message of the step: who sent its event to whom, and whether a declared relationship carries it. A docked transport (step back, play or pause, step, the step counter and run to end) stays visible while a scenario is loaded, above the navigation on a phone and floating over the scene from 768 px, so the messages can be watched in the scene while stepping. In a panel narrower than 900 px its sections are one stack ordered for stepping: the current step (message, delivered event, fired transitions, violations), the timeline as a bounded scrolling list, the checks, then the run settings (scenario, faults, controls) with the scenario's description and behaviors collapsed under About this scenario; with no scenario loaded the scenario picker comes first. From 900 px they are three columns. From 768 px the floating transport hides while the panel itself is open. When the scenario has contract events, a Requests section lists them as a request log, one jump target per line, dimmed while still to come.",
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/sim-panel.js",
+          "src/ui/sim-transport.js"
+        ],
+        "notes": "Holds no semantic state; the panel and the transport drive the session's simulation functions.",
+        "language": "js"
+      },
+      "responsibilities": [
+        "Offer a Live source next to the scenario select (session.simLive): the status line counts real events, divergences and awaited predictions; the timeline lists recorded events with logical and display-only wall-clock time, marking inferred events and divergences; a Divergences section lists every divergence with a jump to its step; the step column shows calibrations and divergences; at every size, with 44 px source buttons"
+      ]
+    },
+    {
+      "id": "verification-panel",
+      "name": "Verification panel",
+      "parent": "application",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "Inventory of claims with their evaluated status, scope, counterexample, evidence and assumptions, with status, kind, method and text filters, built to stay usable on models with thousands of claims.",
+      "responsibilities": [
+        "Count claims by status and show each claim's status, kind, evaluation method, scope and counterexample",
+        "Filter by status, claim kind, evaluation method (named by the specification's verification methods where it declares them) and text",
+        "Render at most 200 rows and say how many matching claims are not shown",
+        "Show, when the specification declares verification methods, a line saying that claims verified by them are checked by tools outside Exegra and are not evaluated without recorded evidence",
+        "Show the claims as a list of cards in a panel narrower than 640 px and as a table from there up",
+        "Say on the recorded-results line that the freshness of the recorded results is unverifiable in the page, which cannot stamp the files they were recorded for"
+      ],
+      "unknowns": ["It shows recorded results loaded with the project and cannot execute tests; execution happens only through `exegra verify`.", "Rows beyond the 200-row window can only be reached by filtering; there is no paging."],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/verification-panel.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "realisation-panel",
+      "name": "Realisation panel",
+      "parent": "application",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "Shows how each component is realised, the bootstrap boundary, model and implementation discrepancies from the recorded traceability result, and generates artifacts from the model.",
+      "responsibilities": [
+        "Summarize and filter components by declared realisation status; show per-component claim counts",
+        "Show declared modules missing on disk and source files no component claims, from the traceability result recorded by `exegra verify`",
+        "Generate the five artifacts in the browser and, under the development server, write them to the project's generated directory",
+        "Show the components as a list of cards in a panel narrower than 640 px and as a table from there up"
+      ],
+      "unknowns": ["It cannot run the traceability check; without a recorded result it says the check has not been run."],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/realisation-panel.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "dom-helpers",
+      "name": "DOM helpers",
+      "parent": "application",
+      "category": "logical",
+      "runsIn": "browser",
+      "purpose": "Small stateless DOM construction helpers and glyphs shared by the UI modules.",
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/dom.js"
+        ],
+        "language": "js"
+      }
+    },
+    {
+      "id": "stylesheets",
+      "name": "Stylesheets",
+      "parent": "application",
+      "category": "logical",
+      "runsIn": "browser",
+      "purpose": "Layered CSS written for a phone first and widened with min-width queries: tokens (colours, type scale, the breakpoints, the 44 px touch target and the shell sizes), reset, base, layout (where the shell's parts sit at each size), panels (sheets, navigation, menus and the tables that become cards), touch targets in the states layer, and one file per component group.",
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/styles/activity.css",
+          "src/styles/base.css",
+          "src/styles/dialogs.css",
+          "src/styles/explorer.css",
+          "src/styles/inspector.css",
+          "src/styles/layout.css",
+          "src/styles/main.css",
+          "src/styles/overlay.css",
+          "src/styles/panels.css",
+          "src/styles/reader.css",
+          "src/styles/realisation.css",
+          "src/styles/reset.css",
+          "src/styles/scene.css",
+          "src/styles/sim.css",
+          "src/styles/source-editor.css",
+          "src/styles/states.css",
+          "src/styles/tokens.css",
+          "src/styles/toolbar.css",
+          "src/styles/utilities.css",
+          "src/styles/verification.css"
+        ],
+        "language": "css"
+      }
+    },
+    {
+      "id": "responsive-layout",
+      "name": "Responsive layout",
+      "parent": "application",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "Mobile first: on a phone the 3D scene fills the screen and every panel is a bottom sheet over it; the same panels expand into a side panel on a tablet and into side-by-side columns on a desktop. One set of panel components serves every size.",
+      "responsibilities": [
+        "Hold the destinations (explore, inspect, simulate, verify, and changes, diagnostics, source and realisation under More) in a bottom navigation bar on a phone and a navigation rail from 768 px wide, where every destination has its own rail button",
+        "Present the active destination as a bottom sheet with peek, half and full detents on a phone: dragged on its header by touch or pointer, a flick snaps one detent on, a tap on the handle cycles the detents, tapping the active destination again or Escape collapses it, one sheet at a time",
+        "From 768 px show the active destination as a side panel beside the scene with a collapse control and a width dragged on pointer devices; from 1200 px show the explorer as a column of its own and the context panel beside the scene without opening anything",
+        "Use the same panel elements at every size: layout.js only sets data attributes and widths, layout.css places them, sheet.js drags the detents",
+        "Bring the inspector forward when an entity is selected by any route, unless another panel is pinned open: at peek on a phone when no sheet is open or another only peeks, docked on a tablet when the side panel is closed",
+        "Keep the scene interactive above or beside every panel, and dock the simulation transport above the navigation while a scenario is loaded",
+        "Give every interactive control a touch target of at least 44 by 44 CSS pixels and respect the safe-area insets of the device",
+        "Remember the context destination, the panel widths and the open state of the tablet and desktop panels in localStorage; a phone always starts with the scene and no sheet open",
+        "Keep the page frame from scrolling: html, body and the app frame clip their overflow, programmatic focus never scrolls, and only the inside of a panel scrolls"
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/layout.js",
+          "src/ui/sheet.js",
+          "src/ui/menu.js"
+        ],
+        "notes": "layout.js holds the destinations, the navigation and the panel states; sheet.js is the bottom-sheet controller; menu.js is the menu controller shared by More, the app bar's overflow menu and the save-conflict menu.",
+        "language": "js"
+      }
+    },
+    {
+      "id": "traffic-recorder",
+      "name": "Traffic recorder",
+      "parent": "application",
+      "category": "logical",
+      "runsIn": "browser",
+      "purpose": "Records the events a running Exegra really produces, named by the event ids of this specification (requests and answers of the persistence client with the development server's own events, change notices, engine-worker messages, commits, claim evaluations, simulator controls, preference and camera storage writes), as a bounded stream with logical sequence numbers, so that the stream can be replayed through this specification (component self-model-replay) and shown in the simulator panel's Live mode.",
+      "responsibilities": [
+        "Keep the last 5000 recorded events in memory as {seq, id, payload, at}: seq is the logical sequence number (1, 2, 3, ...) and the only time the replay and the claim evaluator see; at is performance.now(), kept in the application layer for display and stripped before anything reaches the core (src/app/traffic-recorder.js, forReplay); older events are dropped and counted",
+        "Hand out request ids (nextRequestId), the correlation field requestId of the contract events of this specification; the persistence client sends it as x-exegra-request-id and the development server stamps its own events with it",
+        "Receive events from the producers at the code locations the event descriptions name: src/app/main.js (page, engine load, camera), src/app/session.js (project open, list and read, commits, saves and their answers, external changes, claim evaluation, simulator controls, preference writes), src/app/engine-runner.js (worker messages), src/persist/client.js (requests, the server events of each answer, change notices), src/ui/toolbar.js (export, import), src/ui/realisation-panel.js (generate), src/ui/layout.js (layout preference writes)",
+        "Record texts and bundles as their sha-256 (src/core/sha256.js), as this specification represents them, never the text itself",
+        "Record a write to a store that leaves the store's modelled abstraction unchanged (the selection and view of exegra.session, whether the explorer is open in exegra.layout) as nothing: a stutter step of the self-model"
+      ],
+      "unknowns": [
+        "The stream is kept in memory only and is lost on reload; there is no durable record under specs/<project>/.history/ (WG-4780).",
+        "The development server tells its own writes from external edits by the hashes it wrote. A change written by the server for another tab is therefore not seen as an external edit by this tab, and the replay reports its change notice as unpredicted (WG-4781).",
+        "Command-line runs (cli/commands.js) record nothing: the stream covers the browser application and the development server only."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/app/traffic-recorder.js"
+        ],
+        "notes": "Built (WG-4777). The producers live in the modules they observe; the server-side events are produced by tools/vite-plugin-exegra.js and returned with each answer.",
+        "language": "js"
+      }
+    },
+    {
+      "id": "reader-surface",
+      "name": "Reader surface",
+      "parent": "application",
+      "category": "client",
+      "runsIn": "browser",
+      "purpose": "Shows the page of the current reader view in place of the scene, with the scene's controls and overlay hidden, and turns every entity on it into a link that selects the entity through the session, so the inspector shows and edits it.",
+      "responsibilities": [
+        "Replace the scene while the current view uses the reader projection and give it back otherwise",
+        "Draw text, counts, tables, lists, document outlines and sections, and the index of kinds with a page per kind",
+        "Keep each view's facets, text filter, show-all choice, open kind and open section while the model changes",
+        "Mark the selected entity on the page without redrawing it, and redraw on scene and project events",
+        "Link refs written in prose (an entity's ref property) to their entities"
+      ],
+      "unknowns": [
+        "Filters live only in memory; they are not remembered across reloads."
+      ],
+      "implementation": {
+        "status": "manual",
+        "modules": [
+          "src/ui/reader.js"
+        ]
+      }
+    }
+  ],
+  "relationships": [
+    { "id": "session-data-flow-layout-engine", "kind": "data-flow", "from": "session", "to": "layout-engine", "description": "The projected scene, the pins of the active view, the requested method (auto or one of the four) and the viewport's width-to-height ratio travel to the layout engine; the placement, the method used and, for auto, the scores come back as the return value." },
+    // -- Session
+    { "id": "session-calls-transactions", "kind": "invokes", "from": "session", "to": "transactions", "description": "Creates a Project per opened project and forwards apply, undo, redo and reload.", "contract": "apply-transaction" },
+    { "id": "session-reads-transactions", "kind": "reads", "from": "session", "to": "transactions", "description": "Reads the committed model, diagnostics, texts and revision from the project; the UI reads them through the session." },
+    { "id": "session-subscribes-transactions", "kind": "subscribes", "from": "session", "to": "transactions", "description": "Registers its commit listener with Project.subscribe; the project knows it only as a callback." },
+    { "id": "session-calls-claim-evaluator", "kind": "invokes", "from": "session", "to": "claim-evaluator", "description": "Re-evaluates claims after a semantic change and checks the simulator's trace.", "contract": "evaluate-claims" },
+    { "id": "session-calls-simulation-engine", "kind": "invokes", "from": "session", "to": "simulation-engine", "description": "Runs the loaded scenario in the engine worker and steps through the finished trace with a cursor.", "contract": "run-scenario" },
+    { "id": "session-calls-projection-system", "kind": "invokes", "from": "session", "to": "projection-system", "description": "Lists views and projects the active view with the interaction context.", "contract": "project-scene" },
+    { "id": "session-calls-layout-engine", "kind": "invokes", "from": "session", "to": "layout-engine", "description": "Lays the scene out with the pins of the active view from the layout file: chooseLayout with the viewport's aspect when the view's layout is auto, layoutScene with the chosen method otherwise." },
+    { "id": "session-calls-persistence-client", "kind": "invokes", "from": "session", "to": "persistence-client", "description": "Lists and reads projects, writes spec and layout text after commits and watches for external changes.", "contract": "write-file" },
+    { "id": "session-data-flow-persistence-client", "kind": "data-flow", "from": "session", "to": "persistence-client", "description": "Committed spec and layout text and the base hash of the last read or write travel to the persistence client, after the commit and asynchronously." },
+    { "id": "session-writes-browser-storage", "kind": "writes", "from": "session", "to": "browser-storage", "description": "Remembers view, selection, collapsed, hidden, isolate, camera mode, focus and the layout method chosen per view, per project, in localStorage." },
+    // -- Panels
+    { "id": "shell-calls-session", "kind": "invokes", "from": "shell", "to": "session", "description": "Passes the session to the panels it mounts and calls select, fit, undo and redo." },
+    { "id": "shell-subscribes-session", "kind": "subscribes", "from": "shell", "to": "session", "description": "Listens to session events to show toasts and keep the destination summaries current." },
+    { "id": "shell-calls-toolbar", "kind": "composes", "from": "shell", "to": "toolbar", "description": "Mounts the toolbar." },
+    { "id": "shell-calls-explorer", "kind": "composes", "from": "shell", "to": "explorer", "description": "Mounts the explorer." },
+    { "id": "shell-calls-activity-panels", "kind": "composes", "from": "shell", "to": "activity-panels", "description": "Mounts the diagnostics and changes panels." },
+    { "id": "shell-calls-overlay", "kind": "composes", "from": "shell", "to": "overlay", "description": "Mounts the viewport overlay with a provider of render statistics." },
+    { "id": "shell-calls-dialogs", "kind": "invokes", "from": "shell", "to": "dialogs", "description": "The Delete shortcut opens the delete dialog for the selection." },
+    { "id": "shell-submits-edits-transactions", "kind": "submits-edits", "from": "shell", "to": "transactions", "description": "Ctrl+Z, Ctrl+Shift+Z and Ctrl+Y call undo and redo on the project through the session.", "contract": "apply-transaction" },
+    { "id": "shell-depends-on-stylesheets", "kind": "reads", "from": "shell", "to": "stylesheets", "description": "index.html loads the stylesheet entry point main.css." },
+    { "id": "toolbar-calls-session", "kind": "invokes", "from": "toolbar", "to": "session", "description": "Switches project and view, sets modes and the camera mode, fits, chooses the layout method of the view with setLayoutMethod (a viewer preference, not an edit), selects search results, undoes and redoes, resolves save conflicts." },
+    { "id": "toolbar-subscribes-session", "kind": "subscribes", "from": "toolbar", "to": "session", "description": "Updates each toolbar group from the session events it depends on." },
+    { "id": "toolbar-calls-queries", "kind": "invokes", "from": "toolbar", "to": "queries", "description": "Labels search results." },
+    { "id": "toolbar-calls-validator", "kind": "invokes", "from": "toolbar", "to": "validator", "description": "Import analyzes the bundle's spec.jsonc with analyzeSpec and refuses it when it has syntax errors." },
+    { "id": "toolbar-calls-dialogs", "kind": "invokes", "from": "toolbar", "to": "dialogs", "description": "Opens the create and delete dialogs." },
+    { "id": "toolbar-submits-edits-transactions", "kind": "submits-edits", "from": "toolbar", "to": "transactions", "description": "Reset layout submits MovePresentationNode with reset; undo and redo go through the session.", "contract": "apply-transaction" },
+    { "id": "toolbar-calls-persistence-client", "kind": "invokes", "from": "toolbar", "to": "persistence-client", "description": "Export reads a project bundle and Import writes one." },
+    { "id": "toolbar-data-flow-persistence-client", "kind": "data-flow", "from": "toolbar", "to": "persistence-client", "description": "An imported bundle (spec.jsonc, layout.jsonc, results.json text) is sent to the persistence service, bypassing the transaction system." },
+    { "id": "explorer-calls-session", "kind": "invokes", "from": "explorer", "to": "session", "description": "Selects entities and toggles collapse, hidden and isolate marks." },
+    { "id": "explorer-subscribes-session", "kind": "subscribes", "from": "explorer", "to": "session", "description": "Refreshes on model, selection and ui events." },
+    { "id": "explorer-calls-queries", "kind": "invokes", "from": "explorer", "to": "queries", "description": "Labels entities and finds ancestors." },
+    { "id": "explorer-reads-claim-method-registry", "kind": "reads", "from": "explorer", "to": "claim-method-registry", "description": "Reads claim status labels." },
+    { "id": "activity-panels-calls-session", "kind": "invokes", "from": "activity-panels", "to": "session", "description": "Reads diagnostics and the log; selects or reveals the entity of a row." },
+    { "id": "activity-panels-subscribes-session", "kind": "subscribes", "from": "activity-panels", "to": "session", "description": "Refreshes on model and log events." },
+    { "id": "overlay-calls-session", "kind": "invokes", "from": "overlay", "to": "session", "description": "Reads the scene's legend and notes." },
+    { "id": "overlay-subscribes-session", "kind": "subscribes", "from": "overlay", "to": "session", "description": "Refreshes on scene events." },
+    { "id": "overlay-observes-scene-renderer", "kind": "observes", "from": "overlay", "to": "scene-renderer", "description": "Shows the renderer's frame rate, frame time, draw calls, triangles and counts through the statistics provider." },
+    { "id": "inspector-calls-session", "kind": "invokes", "from": "inspector", "to": "session", "description": "Reads the selection, model and claim results, selects linked entities and reveals source." },
+    { "id": "inspector-subscribes-session", "kind": "subscribes", "from": "inspector", "to": "session", "description": "Re-renders on selection, project, model and claims events." },
+    { "id": "inspector-calls-queries", "kind": "invokes", "from": "inspector", "to": "queries", "description": "Lists relationships, dependencies, contracts, children and references of the selection." },
+    { "id": "inspector-reads-claim-method-registry", "kind": "reads", "from": "inspector", "to": "claim-method-registry", "description": "Reads claim status labels and tones." },
+    { "id": "inspector-calls-property-controls", "kind": "invokes", "from": "inspector", "to": "property-controls", "description": "Renders one control per meta-model property definition." },
+    { "id": "inspector-calls-dialogs", "kind": "invokes", "from": "inspector", "to": "dialogs", "description": "Opens connect, create and delete dialogs." },
+    { "id": "inspector-submits-edits-transactions", "kind": "submits-edits", "from": "inspector", "to": "transactions", "description": "Every property change is a SetProperty operation submitted through session.apply.", "contract": "apply-transaction" },
+    { "id": "property-controls-reads-claim-method-registry", "kind": "reads", "from": "property-controls", "to": "claim-method-registry", "description": "Describes claim evaluation methods in the evaluation editor." },
+    { "id": "property-controls-calls-queries", "kind": "invokes", "from": "property-controls", "to": "queries", "description": "Labels referenced entities and finds declaration sites." },
+    { "id": "property-controls-calls-dialogs", "kind": "invokes", "from": "property-controls", "to": "dialogs", "description": "Opens the rename, delete and nested-entity dialogs from a property control." },
+    { "id": "dialogs-calls-session", "kind": "invokes", "from": "dialogs", "to": "session", "description": "Reads the model and applies the dialog's operation." },
+    { "id": "dialogs-calls-queries", "kind": "invokes", "from": "dialogs", "to": "queries", "description": "Labels entities and finds references." },
+    { "id": "dialogs-reads-metamodel", "kind": "reads", "from": "dialogs", "to": "metamodel", "description": "Reads the id pattern and checks ids with it." },
+    { "id": "dialogs-calls-property-controls", "kind": "invokes", "from": "dialogs", "to": "property-controls", "description": "Renders draft fields and rejections." },
+    { "id": "dialogs-submits-edits-transactions", "kind": "submits-edits", "from": "dialogs", "to": "transactions", "description": "Submits CreateEntity, CreateRelationship, DeleteEntity and RenameEntity through session.apply.", "contract": "apply-transaction" },
+    { "id": "source-editor-calls-session", "kind": "invokes", "from": "source-editor", "to": "session", "description": "Reads the committed text and applies the draft." },
+    { "id": "source-editor-subscribes-session", "kind": "subscribes", "from": "source-editor", "to": "session", "description": "Refreshes on model and project events and reveals declarations on request." },
+    { "id": "source-editor-calls-validator", "kind": "invokes", "from": "source-editor", "to": "validator", "description": "Analyzes the draft with analyzeSpec for its diagnostics." },
+    { "id": "source-editor-calls-parser", "kind": "invokes", "from": "source-editor", "to": "parser", "description": "Parses the draft to find the location of an entity to reveal." },
+    { "id": "source-editor-reads-transactions", "kind": "reads", "from": "source-editor", "to": "transactions", "description": "Reads the committed spec text and revision from the project." },
+    { "id": "source-editor-submits-edits-transactions", "kind": "submits-edits", "from": "source-editor", "to": "transactions", "description": "Applying a draft submits a ReplaceSource operation through session.apply.", "contract": "apply-transaction" },
+    { "id": "simulator-panel-calls-session", "kind": "invokes", "from": "simulator-panel", "to": "session", "description": "Loads, steps, plays, seeks and resets the session's simulation and selects entities." },
+    { "id": "simulator-panel-subscribes-session", "kind": "subscribes", "from": "simulator-panel", "to": "session", "description": "Refreshes on sim, model and project events." },
+    { "id": "simulator-panel-calls-queries", "kind": "invokes", "from": "simulator-panel", "to": "queries", "description": "Labels entities." },
+    { "id": "verification-panel-calls-session", "kind": "invokes", "from": "verification-panel", "to": "session", "description": "Reads claim results and recorded results; selects claims and switches to the claims view." },
+    { "id": "verification-panel-subscribes-session", "kind": "subscribes", "from": "verification-panel", "to": "session", "description": "Refreshes on claims, model, project and selection events." },
+    { "id": "verification-panel-calls-queries", "kind": "invokes", "from": "verification-panel", "to": "queries", "description": "Labels claims." },
+    { "id": "verification-panel-reads-claim-method-registry", "kind": "reads", "from": "verification-panel", "to": "claim-method-registry", "description": "Reads claim status labels and tones." },
+    { "id": "realisation-panel-calls-session", "kind": "invokes", "from": "realisation-panel", "to": "session", "description": "Reads the model, claim results and recorded traceability; selects components." },
+    { "id": "realisation-panel-subscribes-session", "kind": "subscribes", "from": "realisation-panel", "to": "session", "description": "Refreshes on model, project and claims events." },
+    { "id": "realisation-panel-calls-queries", "kind": "invokes", "from": "realisation-panel", "to": "queries", "description": "Labels components." },
+    { "id": "realisation-panel-calls-generators", "kind": "invokes", "from": "realisation-panel", "to": "generators", "description": "Generates the five artifacts from the session's model and results in the browser." },
+    { "id": "realisation-panel-calls-persistence-client", "kind": "invokes", "from": "realisation-panel", "to": "persistence-client", "description": "Writes generated artifacts to the project's generated directory (development server only)." },
+    { "id": "realisation-panel-data-flow-persistence-client", "kind": "data-flow", "from": "realisation-panel", "to": "persistence-client", "description": "The generated files' text travels to the persistence service; the specification is not part of it." },
+    { "id": "dom-helpers-depends-on-browser-platform", "kind": "depends-on", "from": "dom-helpers", "to": "browser-platform", "description": "Creates DOM and SVG elements." },
+    {
+      "id": "session-calls-simulation-overlays",
+      "kind": "invokes",
+      "from": "session",
+      "to": "simulation-overlays",
+      "description": "Derives the overlays of the scrubbed time (planned, WG-4671)."
+    },
+    {
+      "id": "session-calls-simulation-contract",
+      "kind": "invokes",
+      "from": "session",
+      "to": "simulation-contract",
+      "description": "Derives the engine input for the scenario the Simulation tab loads."
+    },
+    {
+      "id": "shell-calls-responsive-layout",
+      "kind": "composes",
+      "from": "shell",
+      "to": "responsive-layout",
+      "description": "Creates the responsive layout, which places the panels as sheets, a side panel or columns for the viewport and shows destinations on request."
+    },
+    {
+      "id": "responsive-layout-writes-browser-storage",
+      "kind": "writes",
+      "from": "responsive-layout",
+      "to": "browser-storage",
+      "description": "Remembers the context destination, the panel widths and the open state of the tablet and desktop panels in localStorage."
+    },
+    {
+      "id": "toolbar-calls-responsive-layout",
+      "kind": "invokes",
+      "from": "toolbar",
+      "to": "responsive-layout",
+      "description": "The overflow menu and the save-conflict menu use the shared menu controller."
+    },
+    {
+      "id": "shell-calls-queries",
+      "kind": "invokes",
+      "from": "shell",
+      "to": "queries",
+      "description": "Labels the selection in the inspector's summary line."
+    },
+    {
+      "id": "shell-calls-simulator-panel",
+      "kind": "composes",
+      "from": "shell",
+      "to": "simulator-panel",
+      "description": "Mounts the simulation transport."
+    },
+    {
+      "id": "session-calls-contract-conformance",
+      "kind": "invokes",
+      "from": "session",
+      "to": "contract-conformance",
+      "description": "Derives the request log of the loaded run for the simulator panel."
+    },
+    {
+      "id": "inspector-calls-data-model",
+      "kind": "invokes",
+      "from": "inspector",
+      "to": "data-model",
+      "description": "Lists a record's fields and copies and a copy's source fields."
+    },
+    {
+      "id": "traffic-recorder-observes-persistence-client",
+      "kind": "observes",
+      "from": "traffic-recorder",
+      "to": "persistence-client",
+      "description": "The persistence client records each request (with its requestId) through the observer the session installs (observeTraffic), then the development server's events returned with the answer."
+    },
+    {
+      "id": "traffic-recorder-observes-dev-server-plugin",
+      "kind": "observes",
+      "from": "traffic-recorder",
+      "to": "dev-server-plugin",
+      "description": "The development server returns its own events (ws-*, the answer, inferred external edits) in the x-exegra-trace header of each answer and as trace messages of the change stream; the persistence client appends them."
+    },
+    {
+      "id": "traffic-recorder-observes-simulation-engine",
+      "kind": "observes",
+      "from": "traffic-recorder",
+      "to": "simulation-engine",
+      "description": "src/app/engine-runner.js records engine-run-posted, worker-run-done, engine-run-returned or engine-run-refused, worker-terminated and worker-load-failed through the record callback the session passes to createEngineRunner, so the engine runner imports nothing of the application."
+    },
+    {
+      "id": "session-calls-traffic-recorder",
+      "kind": "invokes",
+      "from": "session",
+      "to": "traffic-recorder",
+      "description": "Records the session's events, installs the persistence client's observer and reads the stream for Live mode."
+    },
+    {
+      "id": "responsive-layout-calls-traffic-recorder",
+      "kind": "invokes",
+      "from": "responsive-layout",
+      "to": "traffic-recorder",
+      "description": "src/ui/layout.js records panel-toggled and layout-preferences-written."
+    },
+    {
+      "id": "session-calls-self-model-replay",
+      "kind": "invokes",
+      "from": "session",
+      "to": "self-model-replay",
+      "description": "Live mode replays the recorded stream through the scenario live-session (createReplay, replayChecks)."
+    },
+    {
+      "id": "reader-surface-calls-reader-pages",
+      "kind": "invokes",
+      "from": "reader-surface",
+      "to": "reader-pages",
+      "description": "Derives the page of the current reader view, a kind's page and section bodies."
+    },
+    {
+      "id": "reader-surface-calls-session",
+      "kind": "invokes",
+      "from": "reader-surface",
+      "to": "session",
+      "description": "Selects entities; reads the model, the views, the current view and the scene's projection."
+    },
+    {
+      "id": "reader-surface-subscribes-session",
+      "kind": "subscribes",
+      "from": "reader-surface",
+      "to": "session",
+      "description": "Redraws on scene and project events; marks the selection on selection events."
+    },
+    {
+      "id": "session-calls-stable-serialization",
+      "kind": "invokes",
+      "from": "session",
+      "to": "stable-serialization",
+      "description": "Hashes the spec and layout text with sha256Hex for the recorded events."
+    },
+    {
+      "id": "toolbar-calls-stable-serialization",
+      "kind": "invokes",
+      "from": "toolbar",
+      "to": "stable-serialization",
+      "description": "Hashes the specification of an exported or imported bundle for the recorded events."
+    },
+    {
+      "id": "realisation-panel-calls-stable-serialization",
+      "kind": "invokes",
+      "from": "realisation-panel",
+      "to": "stable-serialization",
+      "description": "Hashes the generated files for the recorded events."
+    },
+    {
+      "id": "shell-data-flow-browser-user",
+      "kind": "data-flow",
+      "from": "shell",
+      "to": "browser-user",
+      "description": "What the person sees: the 3D scene, the panels, the diagnostics and the claim results, in the page the shell lays out."
+    },
+    {
+      "id": "session-invokes-queries",
+      "kind": "invokes",
+      "from": "session",
+      "to": "queries",
+      "description": "Asks which components an entity stands for when it highlights a claim's entities in a structural scene."
+    },
+    {
+      "id": "inspector-invokes-semantic-abstraction",
+      "kind": "invokes",
+      "from": "inspector",
+      "to": "semantic-abstraction",
+      "description": "The inspector asks the abstraction engine for the witnesses of a derived interaction (baseFacts, witnessOf) and for the block report of an element at the current cut (blockReport): purpose, boundary, derived and declared interface."
+    },
+    {
+      "id": "session-invokes-semantic-abstraction",
+      "kind": "invokes",
+      "from": "session",
+      "to": "semantic-abstraction",
+      "description": "The session keeps each structural view's cut as the elements the viewer expanded and asks the abstraction engine what cut they denote, how expanding or collapsing one block changes them, and which declared cut has those blocks (cutOfExpanded, toggleExpanded, expandedOfCut, declaredCutWithBlocks)."
+    }
+  ]
+}

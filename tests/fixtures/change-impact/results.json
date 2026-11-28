@@ -1,0 +1,19 @@
+{
+  "stamp": "BEFORE",
+  "results": {
+    "ev-c1": { "outcome": "pass", "ranAt": "2026-11-27T00:00:00.000Z", "stamp": "BEFORE" },
+    "ev-c2": { "outcome": "pass", "ranAt": "2026-11-27T00:00:00.000Z", "stamp": "BEFORE" },
+    "ev-c3": { "outcome": "pass", "ranAt": "2026-11-27T00:00:00.000Z", "stamp": "BEFORE" },
+    "ev-t1": { "outcome": "pass", "ranAt": "2026-11-27T00:00:00.000Z", "stamp": "BEFORE", "covers": ["tests/fixtures/change-impact/t1.test.js"] },
+    "ev-c6": { "outcome": "pass", "ranAt": "2026-11-27T00:00:00.000Z", "stamp": "BEFORE" },
+    "ev-c7": { "outcome": "pass", "ranAt": "2026-11-27T00:00:00.000Z", "stamp": "BEFORE" }
+  },
+  "theorems": {
+    "ChangeImpact.f1_thm": {
+      "found": true, "kind": "theorem", "kernel": "ok", "axioms": [], "statementHash": "f1-statement", "hashVersion": 2,
+      "formalHash": "FORMAL", "file": "tests/fixtures/change-impact/F1.lean",
+      "about": { "ChangeImpact.f1": { "kind": "definition", "inStatement": true } },
+      "declarations": [{ "name": "ChangeImpact.f1", "file": "tests/fixtures/change-impact/F1.lean" }]
+    }
+  }
+}

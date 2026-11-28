@@ -236,7 +236,7 @@ is pinned to `propext`, `Classical.choice` and `Quot.sound` (`sat_mono` to `prop
 
 ### Comparison with Nemo
 
-`tests/core/integrity-nemo.test.js` compares the JavaScript tables with
+`tests/proofs/integrity-nemo.test.js` compares the JavaScript tables with
 [Nemo](https://github.com/knowsys/nemo), an independent Datalog engine. It translates the
 relations of the fixture, and of seeded random programs over random graphs, to Nemo rules. The
 programs use closures of edges in three recursive forms, a mutually recursive pair, and negation of

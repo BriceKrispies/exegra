@@ -3,20 +3,22 @@
 // It owns no semantic state of its own. The Project (src/core/project.js) is
 // the authority; everything here is either derived from it (scene, placement,
 // claim results, simulation) or is interaction state that is deliberately not
-// part of the specification (selection, active view, collapsed/hidden sets).
+// part of the specification (selection, active view, the cut each structural view shows, hidden sets).
 
 import { Project } from '../core/project.js';
-import { listViews, project as projectScene } from '../core/projections.js';
+import { listViews, project as projectScene, defaultCut } from '../core/projections.js';
+import { cutOfExpanded, toggleExpanded, expandedOfCut, declaredCutWithBlocks } from '../core/abstraction.js';
 import { layoutScene, chooseLayout, LAYOUT_METHODS } from '../core/layout.js';
-import { evaluateClaims, checkTrace } from '../core/claims.js';
+import { evaluateClaims, evaluateClaim, checkTrace } from '../core/claims.js';
 import { applyConcordance } from '../core/concordance.js';
 import { createTraceCursor } from '../core/engine.js';
 import { simulationInput } from '../core/sim-input.js';
 import { createEngineRunner } from './engine-runner.js';
 import { stepFlow, flowPaths, describeFlow } from '../core/flows.js';
+import { componentsFor, elementsOf, hierarchyOf, hierarchyIds, cutHierarchyId } from '../core/query.js';
 import { requestLog } from '../core/contract-trace.js';
 import * as persist from '../persist/client.js';
-import { layersOf, reloadFromDisk } from './disk-reload.js';
+import { layersOf, factsOf, reloadFromDisk } from './disk-reload.js';
 import { traffic } from './traffic-recorder.js';
 import { sha256Hex } from '../core/sha256.js';
 import { createReplay, replayChecks, REPLAY_SCENARIO } from '../core/replay.js';
@@ -28,13 +30,15 @@ import LINKED from 'virtual:exegra-linked-specs';
 
 const STORE_KEY = 'exegra.session';
 const PLAY_INTERVAL_MS = 800;
-const OVERVIEW_THRESHOLD = 30;
 
 // Specifications shipped with the build. Used only when the development
 // persistence service is unavailable (a production build), where the
 // application is read-only with respect to disk.
 const SHIPPED = import.meta.glob('/specs/*/{spec,layout}.jsonc', { query: '?raw', import: 'default', eager: true });
 const SHIPPED_RECORDED = import.meta.glob('/specs/*/evidence/results.json', { import: 'default', eager: true });
+// The extracted and observed facts of each shipped project (src/core/extraction.js), bundled like its specification so the
+// read-only build derives the same model as the command line.
+const SHIPPED_FACTS = import.meta.glob('/specs/*/extracted/{facts,observed}.json', { import: 'default', eager: true });
 // Specifications that live outside specs/ (named by a project's project.jsonc), bundled by the build.
 for (const [name, text] of Object.entries(LINKED)) SHIPPED[`/specs/${name}/spec.jsonc`] = text;
 
@@ -110,8 +114,10 @@ export function createSession() {
 
     /** @type {'saved'|'saving'|'conflict'|'error'|'readonly'} */
     saveState: /** @type {any} */ (persist.PERSISTENCE_AVAILABLE ? 'saved' : 'readonly'),
-    /** @type {string|null} */
+    /** The selected entity, or a module element (an element that is no entity). @type {string|null} */
     selection: null,
+    /** The scene edge the selection was made on (a derived interaction or a path summary), while the selection is one of its witnesses. @type {string|null} */
+    selectedEdge: null,
     /** @type {string|null} */
     hover: null,
     /** Entity ids the scene should emphasise because of the current selection (a claim's involved entities). @type {string[]|null} */
@@ -120,7 +126,25 @@ export function createSession() {
     views: [],
     viewId: 'structural',
     ui: {
-      collapsed: /** @type {Set<string>} */ (new Set()),
+      /**
+       * The cut each structural view shows, as interaction state (WG-5695): the hierarchy it is drawn in and, per
+       * hierarchy, the elements the viewer has expanded. A view without an entry shows its default cut.
+       * @type {Map<string, {hierarchy: string, expanded: Record<string, string[]>}>}
+       */
+      cuts: new Map(),
+      /**
+       * The blocks of the current structural cut that stand for subsystems or the system (blocks with members other
+       * than module elements): what "collapsed" meant before cuts. Read-only; toggleCollapsed changes the cut.
+       * @returns {Set<string>}
+       */
+      get collapsed() {
+        const a = session.scene.abstraction;
+        const model = session.model;
+        if (!a || !model) return new Set();
+        const h = hierarchyOf(model, a.hierarchy);
+        const elements = elementsOf(model);
+        return new Set(a.blocks.filter((b) => (h?.children.get(b) ?? []).some((c) => elements.get(c)?.kind !== 'module')));
+      },
       hidden: /** @type {Set<string>} */ (new Set()),
       isolate: /** @type {string|null} */ (null),
       cameraMode: /** @type {'perspective'|'top'} */ ('perspective'),
@@ -249,7 +273,7 @@ export function createSession() {
         if (session.persistent) rec('read-intent', { name, requestId, purpose: 'open' });
         files = session.persistent
           ? await persist.readProject(name, { requestId })
-          : { spec: { text: /** @type {string} */ (SHIPPED[`/specs/${name}/spec.jsonc`]), hash: null }, layout: SHIPPED[`/specs/${name}/layout.jsonc`] ? { text: /** @type {string} */ (SHIPPED[`/specs/${name}/layout.jsonc`]), hash: null } : null, recorded: SHIPPED_RECORDED[`/specs/${name}/evidence/results.json`] ?? null };
+          : { spec: { text: /** @type {string} */ (SHIPPED[`/specs/${name}/spec.jsonc`]), hash: null }, layout: SHIPPED[`/specs/${name}/layout.jsonc`] ? { text: /** @type {string} */ (SHIPPED[`/specs/${name}/layout.jsonc`]), hash: null } : null, recorded: SHIPPED_RECORDED[`/specs/${name}/evidence/results.json`] ?? null, extracted: SHIPPED_FACTS[`/specs/${name}/extracted/facts.json`] ?? null, observed: SHIPPED_FACTS[`/specs/${name}/extracted/observed.json`] ?? null };
         if (session.persistent) rec('project-files-read', filesRead(files, requestId));
       } catch (e) {
         if (session.persistent) rec('project-read-failed', { requestId });
@@ -262,7 +286,8 @@ export function createSession() {
       /** @type {Project} */
       let project;
       try {
-        project = new Project({ name, specText: files.spec.text, layoutText: files.layout?.text ?? null, layers: layersOf(files) });
+        // The facts extracted from the implementation (and observed ones) are attached as the command line attaches them.
+        project = new Project({ name, specText: files.spec.text, layoutText: files.layout?.text ?? null, layers: layersOf(files), ...factsOf(files) });
       } catch (e) {
         session.note('error', `Could not open project "${name}": ${/** @type {Error} */ (e).message}`);
         emit('project', { name: session.projectName });
@@ -284,11 +309,16 @@ export function createSession() {
 
       const saved = store.perProject[name] ?? {};
       const has = (/** @type {any} */ id) => typeof id === 'string' && !!session.model?.entities.has(id);
-      session.ui.collapsed = new Set((saved.collapsed ?? []).filter(has));
-      // First visit to a large model: start from an overview with top-level subsystems
-      // closed (double-click opens one). Purely a viewing default; it is remembered once changed.
-      if (!store.perProject[name] && (session.model?.byKind.component.length ?? 0) > OVERVIEW_THRESHOLD) {
-        for (const c of session.model?.byKind.component ?? []) if (c.data.kind === 'subsystem' && !c.data.parent) session.ui.collapsed.add(c.id);
+      // The cut of each structural view as the viewer left it; a view never changed opens at its default cut
+      // (the view's declared cut, or for a large model the overview with top-level subsystems collapsed).
+      session.ui.cuts = new Map();
+      for (const [viewId, c] of Object.entries(saved.cuts ?? {})) {
+        const st = /** @type {any} */ (c);
+        if (!st || typeof st.hierarchy !== 'string' || !session.model || !hierarchyOf(session.model, st.hierarchy)) continue;
+        /** @type {Record<string, string[]>} */
+        const expanded = {};
+        for (const [hid, list] of Object.entries(st.expanded ?? {})) if (Array.isArray(list)) expanded[hid] = list.filter((x) => typeof x === 'string');
+        session.ui.cuts.set(viewId, { hierarchy: st.hierarchy, expanded });
       }
       session.ui.hidden = new Set((saved.hidden ?? []).filter(has));
       session.ui.isolate = has(saved.isolate) ? saved.isolate : null;
@@ -297,6 +327,7 @@ export function createSession() {
       session.ui.focusClaim = has(saved.focusClaim) ? saved.focusClaim : null;
       session.ui.focusScenario = has(saved.focusScenario) ? saved.focusScenario : null;
       session.selection = has(saved.selection) ? saved.selection : null;
+      session.selectedEdge = null;
       session.hover = null;
       session.viewId = typeof saved.viewId === 'string' ? saved.viewId : 'structural';
       session.sim = emptySim();
@@ -368,9 +399,12 @@ export function createSession() {
     },
 
     // ---- interaction state ---------------------------------------------------
-    /** @param {string|null} id @param {{source?: string}} [opts] */
+    /** @param {string|null} id @param {{source?: string, edge?: string|null}} [opts] edge: the scene edge it was selected on */
     select(id, opts = {}) {
-      if (id !== null && !session.model?.entities.has(id)) id = null;
+      // An entity, or a module element: an element of the hierarchy that no entity declares.
+      if (id !== null && !session.model?.entities.has(id) && !(session.model && elementsOf(session.model).has(id))) id = null;
+      if (opts.edge !== undefined) session.selectedEdge = opts.edge ?? null;
+      else if (session.selectedEdge && !(session.scene.edges.find((e) => e.id === session.selectedEdge)?.witnesses ?? []).includes(/** @type {string} */ (id))) session.selectedEdge = null;
       const entity = id ? session.model?.entities.get(id) : null;
       let sceneDirty = false;
       if (entity?.kind === 'claim' && session.ui.focusClaim !== id) { session.ui.focusClaim = id; sceneDirty = true; }
@@ -382,7 +416,7 @@ export function createSession() {
       if (refocus) sceneDirty = true;
       updateHighlight();
       if (sceneDirty) recompute();
-      if (changed || sceneDirty) { persistUi(); emit('selection', { id, source: opts.source }); }
+      if (changed || sceneDirty || opts.edge !== undefined) { persistUi(); emit('selection', { id, source: opts.source }); }
       if (refocus) emit('fit', { ids: undefined });
     },
     /** @param {string|null} id */
@@ -416,11 +450,75 @@ export function createSession() {
       emit('view', null);
       emit('fit', { ids: undefined });
     },
-    /** @param {string} id */
+    /**
+     * Expand a block of the current structural cut, or collapse an opened element: only the blocks inside it change.
+     * An element hidden inside a block is revealed by expanding its containers. Interaction state; the model is untouched.
+     * @param {string} id
+     */
     toggleCollapsed(id) {
-      if (session.ui.collapsed.has(id)) session.ui.collapsed.delete(id); else session.ui.collapsed.add(id);
+      const nav = session.currentCut();
+      if (!nav || !session.model) return;
+      const state = cutState();
+      if (!state) return;
+      state.expanded[nav.hierarchy] = toggleExpanded(session.model, nav.hierarchy, nav.expanded, id);
       uiChanged();
       emit('fit', { ids: undefined }); // the layout changes shape; keep the whole scene in view
+    },
+    /**
+     * The cut the current structural view shows: its hierarchy, the elements it expands (as stored, possibly with
+     * expansions under collapsed elements) and the cut they denote. null for other projections.
+     * @returns {{hierarchy: string, expanded: string[], blocks: string[], opened: string[], cut: string|null}|null}
+     */
+    currentCut() {
+      const model = session.model;
+      const view = session.views.find((v) => v.id === session.viewId);
+      if (!model || !view || view.projection !== 'structural') return null;
+      const st = session.ui.cuts.get(session.viewId);
+      const viewData = viewDataOf(session.viewId);
+      const def = defaultCut(model, viewData);
+      const hierarchy = st && hierarchyOf(model, st.hierarchy) ? st.hierarchy : def.hierarchy;
+      const expanded = st?.expanded[hierarchy] ?? (hierarchy === def.hierarchy ? def.expanded : defaultCut(model, { ...viewData, hierarchy, cut: undefined }).expanded);
+      const c = /** @type {NonNullable<ReturnType<typeof cutOfExpanded>>} */ (cutOfExpanded(model, hierarchy, expanded));
+      return { hierarchy, expanded, blocks: c.blocks, opened: c.expanded, cut: declaredCutWithBlocks(model, hierarchy, c.blocks) };
+    },
+    /** The hierarchies a structural view can be drawn in. */
+    hierarchies() { return session.model ? hierarchyIds(session.model) : []; },
+    /** Draw the current structural view in another hierarchy, at the cut last shown there (or its default). @param {string} hierarchy */
+    setHierarchy(hierarchy) {
+      if (!session.model || !hierarchyOf(session.model, hierarchy)) return;
+      const state = cutState();
+      if (!state) return;
+      state.hierarchy = hierarchy;
+      uiChanged();
+      emit('fit', { ids: undefined });
+    },
+    /** Show a declared cut in the current structural view (its hierarchy too). @param {string} cutId */
+    setCut(cutId) {
+      const e = session.model ? expandedOfCut(session.model, cutId) : null;
+      const state = cutState();
+      if (!e || !state) return;
+      state.hierarchy = e.hierarchy;
+      state.expanded[e.hierarchy] = e.expanded;
+      uiChanged();
+      emit('fit', { ids: undefined });
+    },
+    /** Return the current structural view to its default cut. */
+    resetCut() {
+      session.ui.cuts.delete(session.viewId);
+      uiChanged();
+      emit('fit', { ids: undefined });
+    },
+    /**
+     * The layout key pins of the current scene are stored under: the view id at the view's default cut, and the view
+     * id with the cut (a declared cut's id, or the blocks of an interactive one) otherwise. Pins of other cuts are kept.
+     */
+    layoutKey() {
+      const nav = session.currentCut();
+      if (!nav || !session.model) return session.viewId;
+      const def = defaultCut(session.model, viewDataOf(session.viewId));
+      const defBlocks = cutOfExpanded(session.model, def.hierarchy, def.expanded)?.blocks ?? [];
+      if (nav.hierarchy === def.hierarchy && defBlocks.join('\u0001') === nav.blocks.join('\u0001')) return session.viewId;
+      return `${session.viewId}@${nav.cut ?? `${nav.hierarchy}:${sha256Hex([...nav.blocks].sort().join('\n')).slice(0, 12)}`}`;
     },
     /** @param {string} id @param {boolean} hidden */
     setHidden(id, hidden) {
@@ -690,19 +788,67 @@ export function createSession() {
       const r = session.claimResult(sel.id);
       const ids = new Set([...(r?.involved ?? sel.data.subjects ?? []), ...(r?.counterexample?.entities ?? [])]);
       ids.add(sel.id);
-      // Entities that have no node in a structural scene are shown on the component they belong to.
+      // Entities that have no node in a structural scene are shown on the components they stand for (the core
+      // query componentsFor); the behaviors themselves stay highlighted for the behavior view.
       const model = session.model;
-      const addBehavior = (/** @type {any} */ b) => { if (b?.kind === 'behavior') { ids.add(b.id); if (typeof b.data.subject === 'string') ids.add(b.data.subject); } };
       for (const id of [...ids]) {
         const e = model?.entities.get(id);
-        if (!e) continue;
-        if (e.kind === 'behavior') addBehavior(e);
-        else if (e.kind === 'port' && e.owner) ids.add(e.owner);
-        else if ((e.kind === 'state' || e.kind === 'transition') && e.owner) addBehavior(model?.entities.get(e.owner));
-        else if (e.kind === 'scenario') for (const b of e.data.behaviors ?? []) addBehavior(model?.entities.get(b));
+        if (!e || !model || e.kind === 'relationship') continue;
+        for (const c of componentsFor(model, id)) ids.add(c);
+        if (e.kind === 'behavior') ids.add(e.id);
+        else if ((e.kind === 'state' || e.kind === 'transition') && e.owner && model.entities.get(e.owner)?.kind === 'behavior') ids.add(e.owner);
+        else if (e.kind === 'scenario') for (const b of e.data.behaviors ?? []) if (model.entities.get(b)?.kind === 'behavior') ids.add(b);
       }
       session.highlight = [...ids];
     } else session.highlight = null;
+  }
+
+  /** The declaration of a view, as the projection receives it. @param {string} viewId */
+  function viewDataOf(viewId) {
+    const e = session.model?.entities.get(viewId);
+    return e && e.kind === 'view' ? { ...e.data, id: viewId } : { id: viewId };
+  }
+
+  /** The stored cut state of the current structural view, created from its default when it has none. */
+  function cutState() {
+    const nav = session.currentCut();
+    if (!nav) return null;
+    let st = session.ui.cuts.get(session.viewId);
+    if (!st) { st = { hierarchy: nav.hierarchy, expanded: { [nav.hierarchy]: [...nav.expanded] } }; session.ui.cuts.set(session.viewId, st); }
+    if (!st.expanded[nav.hierarchy]) st.expanded[nav.hierarchy] = [...nav.expanded];
+    return st;
+  }
+
+  /** Results of claims stated at a cut, evaluated at the cut a view shows, by model and cut. @type {WeakMap<object, Map<string, {claimId: string, result: any}[]>>} */
+  const levelCache = new WeakMap();
+  /**
+   * The claims stated at a cut of the hierarchy the view is drawn in, evaluated at the view's cut (src/core/claims.js,
+   * atCut): the declared cut by its id when the blocks are a declared cut's, otherwise the blocks themselves.
+   * @param {{hierarchy: string, blocks: string[], cut: string|null}} nav
+   */
+  function levelClaimsAt(nav) {
+    const model = session.model;
+    if (!model) return [];
+    const claims = (model.byKind.claim ?? []).filter((c) => {
+      const cut = c.data.evaluate?.cut;
+      const e = typeof cut === 'string' ? model.entities.get(cut) : undefined;
+      return e?.kind === 'cut' && cutHierarchyId(e) === nav.hierarchy;
+    });
+    if (!claims.length) return [];
+    let m = levelCache.get(model);
+    if (!m) { m = new Map(); levelCache.set(model, m); }
+    const key = `${nav.hierarchy}|${nav.cut ?? nav.blocks.join('\u0001')}`;
+    const hit = m.get(key);
+    if (hit) return hit;
+    /** @type {{claimId: string, result: any}[]} */
+    const out = [];
+    for (const c of claims) {
+      try {
+        out.push({ claimId: c.id, result: evaluateClaim(model, c.id, { recorded: session.recorded ?? undefined, stamps: null, atCut: nav.cut ?? { hierarchy: nav.hierarchy, blocks: nav.blocks } }) });
+      } catch (e) { session.note('error', `Claim ${c.id} could not be evaluated at this cut: ${/** @type {Error} */ (e).message}`); }
+    }
+    m.set(key, out);
+    return out;
   }
 
   function recompute() {
@@ -723,8 +869,10 @@ export function createSession() {
       const view = session.views.find((v) => v.id === session.viewId);
       const s = session.sim;
       const showTrace = view?.projection === 'behavior' && s.simulation && (!session.ui.focusScenario || session.ui.focusScenario === s.scenarioId);
+      const nav = session.currentCut();
       session.scene = projectScene(model, session.viewId, {
-        collapsed: session.ui.collapsed,
+        cut: nav ? { hierarchy: nav.hierarchy, expanded: nav.expanded } : null,
+        levelClaims: nav ? levelClaimsAt(nav) : [],
         hidden: session.ui.hidden,
         isolate: session.ui.isolate,
         focusClaim: session.ui.focusClaim,
@@ -734,7 +882,7 @@ export function createSession() {
         trace: showTrace ? s.simulation.trace() : null,
         stepIndex: s.stepIndex,
       });
-      const pins = session.project.layout.views[session.viewId]?.positions ?? {};
+      const pins = session.project.layout.views[session.layoutKey()]?.positions ?? {};
       const declared = model.entities.get(session.viewId)?.data.display?.layout;
       const requested = store.perProject[session.projectName]?.layoutByView?.[session.viewId] ?? declared ?? 'auto';
       session.layout.requested = requested === 'auto' || LAYOUT_METHODS.some((m) => m.id === requested) ? requested : 'auto';
@@ -767,7 +915,7 @@ export function createSession() {
       layoutByView: store.perProject[session.projectName]?.layoutByView,
       viewId: session.viewId,
       selection: session.selection,
-      collapsed: [...session.ui.collapsed],
+      cuts: Object.fromEntries(session.ui.cuts),
       hidden: [...session.ui.hidden],
       isolate: session.ui.isolate,
       cameraMode: session.ui.cameraMode,
@@ -870,7 +1018,8 @@ export function createSession() {
       rec('commit-notified', { origin: entry.origin, file, text: textHashes[file] });
     }
     if (session.selection && !session.model?.entities.has(session.selection)) session.selection = null;
-    for (const set of [session.ui.collapsed, session.ui.hidden]) for (const id of [...set]) if (!session.model?.entities.has(id)) set.delete(id);
+    for (const id of [...session.ui.hidden]) if (!session.model?.entities.has(id)) session.ui.hidden.delete(id);
+    if (session.selection && !session.model?.entities.has(session.selection)) session.selectedEdge = null;
     for (const key of /** @type {const} */ (['isolate', 'focusClaim', 'focusScenario'])) {
       const v = session.ui[key];
       if (v && !session.model?.entities.has(v)) session.ui[key] = null;
@@ -945,7 +1094,7 @@ export function createSession() {
     }
   }
 
-  /** @param {{file: 'spec'|'layout'|'recorded'|'products', hash: string|null}} change */
+  /** @param {{file: 'spec'|'layout'|'recorded'|'products'|'facts', hash: string|null}} change */
   async function onExternalChange(change) {
     const name = session.projectName;
     if (change.file === 'recorded') {
@@ -966,6 +1115,7 @@ export function createSession() {
       return;
     }
     if (change.file === 'products') { await onProductsChange(name); return; }
+    if (change.file === 'facts') { await onFactsChange(name); return; }
     if (change.hash === hashes[change.file]) return; // our own write
     if (saving || pending[change.file] || conflict) return; // the pending write will surface the conflict
     const requestId = traffic.nextRequestId();
@@ -988,6 +1138,32 @@ export function createSession() {
       }
     } catch (e) {
       session.note('error', `Could not re-read the project after an external change: ${/** @type {Error} */ (e).message}`);
+    }
+  }
+
+  /**
+   * The extracted or observed fact file changed (a re-extraction, a new recording): read the project again and
+   * attach the new facts to the Project. The specification text, the layout and the undo history are kept; the
+   * model, the claims and every view follow, as after a specification change.
+   * @param {string} name
+   */
+  async function onFactsChange(name) {
+    const requestId = traffic.nextRequestId();
+    try {
+      rec('read-intent', { name, requestId, purpose: 'external' });
+      const files = await persist.readProject(name, { requestId });
+      rec('project-files-read', filesRead(files, requestId));
+      if (name !== session.projectName) return;
+      const r = session.project.setFacts(factsOf(files));
+      if (!r.affected.length && r.before === r.after) return;
+      evaluate();
+      recompute();
+      session.note('info', `The extracted facts changed on disk and were adopted (${r.affected.length} relationship${r.affected.length === 1 ? '' : 's'} changed).`);
+      emit('model', { result: null, entry: null });
+      emit('claims', null);
+      emit('selection', { id: session.selection });
+    } catch (e) {
+      session.note('error', `Could not re-read the project after its fact files changed: ${/** @type {Error} */ (e).message}`);
     }
   }
 

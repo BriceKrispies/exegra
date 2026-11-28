@@ -88,7 +88,7 @@ export async function listProjects(opts = {}) {
 /**
  * @param {string} name
  * @param {TrafficOptions} [opts]
- * @returns {Promise<{spec: {text: string, hash: string, path?: string}, layers?: {file: string, text: string, hash: string, platform?: any}[], layout: {text: string, hash: string}|null, recorded: object|null}>}
+ * @returns {Promise<{spec: {text: string, hash: string, path?: string}, layers?: {file: string, text: string, hash: string, platform?: any}[], layout: {text: string, hash: string}|null, recorded: object|null, extracted?: object|null, observed?: object|null}>}
  */
 export async function readProject(name, opts = {}) {
   if (!PERSISTENCE_AVAILABLE) throw new Error(UNAVAILABLE);
@@ -144,7 +144,7 @@ export async function writeGenerated(name, files, opts = {}) {
  * cannot reject) and never calls onChange.
  *
  * @param {string} name
- * @param {(change: {file: 'spec'|'layout'|'recorded'|'products', hash: string|null}) => void} onChange
+ * @param {(change: {file: 'spec'|'layout'|'recorded'|'products'|'facts', hash: string|null}) => void} onChange
  * @returns {() => void}
  */
 export function watchProject(name, onChange) {

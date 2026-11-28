@@ -3166,6 +3166,9 @@
   },
   {
    "id": "sim-seek-requested"
+  },
+  {
+   "id": "two-session-write"
   }
  ],
  "faults": [],
@@ -3192,5 +3195,9 @@
    }
   ]
  },
- "version": 1
+ "time": {
+  "perSecond": null,
+  "unit": "tick"
+ },
+ "version": 2
 }

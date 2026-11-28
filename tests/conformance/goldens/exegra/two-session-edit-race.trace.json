@@ -1,0 +1,270 @@
+{
+ "faults": [],
+ "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "shared-base-write-flow": 0
+  },
+  "links": {},
+  "machines": {
+   "shared-base-write-flow": {
+    "state": "edit-writer-ready",
+    "vars": {
+     "accepted": 1,
+     "decision": "conflict",
+     "stored": "edit-a"
+    }
+   }
+  },
+  "meters": {},
+  "pending": [],
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
+ },
+ "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "shared-base-write-flow": 0
+  },
+  "links": {},
+  "machines": {
+   "shared-base-write-flow": {
+    "state": "edit-writer-ready",
+    "vars": {
+     "accepted": 0,
+     "decision": "pending",
+     "stored": "initial"
+    }
+   }
+  },
+  "meters": {},
+  "pending": [
+   {
+    "event": "two-session-write",
+    "payload": {
+     "attempt": "a",
+     "base": "initial",
+     "value": "edit-a"
+    },
+    "scheduledAt": 0,
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    },
+    "time": 0
+   },
+   {
+    "event": "two-session-write",
+    "payload": {
+     "attempt": "b",
+     "base": "initial",
+     "value": "edit-b"
+    },
+    "scheduledAt": 0,
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    },
+    "time": 0
+   }
+  ],
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
+ },
+ "initialDraws": [],
+ "outcome": "quiescent",
+ "scenarioId": "two-session-edit-race",
+ "seed": null,
+ "steps": [
+  {
+   "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "shared-base-write-flow": 0
+    },
+    "links": {},
+    "machines": {
+     "shared-base-write-flow": {
+      "state": "edit-writer-ready",
+      "vars": {
+       "accepted": 1,
+       "decision": "accepted",
+       "stored": "edit-a"
+      }
+     }
+    },
+    "meters": {},
+    "pending": [
+     {
+      "event": "two-session-write",
+      "payload": {
+       "attempt": "b",
+       "base": "initial",
+       "value": "edit-b"
+      },
+      "scheduledAt": 0,
+      "seq": 1,
+      "source": {
+       "kind": "scenario",
+       "step": 1
+      },
+      "time": 0
+     }
+    ],
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
+   },
+   "draws": [],
+   "event": {
+    "id": "two-session-write",
+    "payload": {
+     "attempt": "a",
+     "base": "initial",
+     "value": "edit-a"
+    },
+    "scheduledAt": 0,
+    "seq": 0,
+    "source": {
+     "kind": "scenario",
+     "step": 0
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "shared-base-write-flow",
+     "emitted": [],
+     "from": "edit-writer-ready",
+     "guard": "event.base == stored",
+     "instance": 0,
+     "sets": [
+      {
+       "after": "edit-a",
+       "before": "initial",
+       "variable": "stored"
+      },
+      {
+       "after": "accepted",
+       "before": "pending",
+       "variable": "decision"
+      },
+      {
+       "after": 1,
+       "before": 0,
+       "variable": "accepted"
+      }
+     ],
+     "to": "edit-writer-ready",
+     "transition": "shared-edit-accept"
+    }
+   ],
+   "ignored": [],
+   "index": 0,
+   "kind": "deliver",
+   "links": [],
+   "resources": [],
+   "responsible": [
+    "two-session-write",
+    "shared-edit-accept",
+    "shared-base-write-flow",
+    "workspace-service"
+   ],
+   "time": 0
+  },
+  {
+   "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "shared-base-write-flow": 0
+    },
+    "links": {},
+    "machines": {
+     "shared-base-write-flow": {
+      "state": "edit-writer-ready",
+      "vars": {
+       "accepted": 1,
+       "decision": "conflict",
+       "stored": "edit-a"
+      }
+     }
+    },
+    "meters": {},
+    "pending": [],
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
+   },
+   "draws": [],
+   "event": {
+    "id": "two-session-write",
+    "payload": {
+     "attempt": "b",
+     "base": "initial",
+     "value": "edit-b"
+    },
+    "scheduledAt": 0,
+    "seq": 1,
+    "source": {
+     "kind": "scenario",
+     "step": 1
+    }
+   },
+   "faults": [],
+   "fired": [
+    {
+     "behavior": "shared-base-write-flow",
+     "emitted": [],
+     "from": "edit-writer-ready",
+     "guard": "event.base != stored",
+     "instance": 0,
+     "sets": [
+      {
+       "after": "conflict",
+       "before": "accepted",
+       "variable": "decision"
+      }
+     ],
+     "to": "edit-writer-ready",
+     "transition": "shared-edit-refuse"
+    }
+   ],
+   "ignored": [],
+   "index": 1,
+   "kind": "deliver",
+   "links": [],
+   "resources": [],
+   "responsible": [
+    "two-session-write",
+    "shared-edit-refuse",
+    "shared-base-write-flow",
+    "workspace-service"
+   ],
+   "time": 0
+  }
+ ],
+ "stepsTaken": 2,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
+}

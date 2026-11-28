@@ -346,13 +346,13 @@ export function dataRuleDiagnostics(model) {
  * Evaluate a data-model claim: `rules` (default: all six), optionally narrowed
  * to the copies and fields of `records`.
  * @param {Model} model @param {any} ev
- * @returns {{status: 'verified'|'violated'|'inconclusive', scope: string, explanation: string, selected: string[], counterexample?: {summary: string, entities: string[]}}}
+ * @returns {{outcome: 'pass'|'fail'|'undecided', scope: string, explanation: string, selected: string[], counterexample?: {summary: string, entities: string[]}}}
  */
 export function evaluateDataClaim(model, ev) {
   const rules = Array.isArray(ev.rules) ? ev.rules : RULE_IDS;
   const unknown = rules.filter((/** @type {any} */ r) => !RULE_IDS.includes(r));
-  if (unknown.length) return { status: 'inconclusive', scope: 'Nothing was checked.', explanation: `Unknown data rule${unknown.length === 1 ? '' : 's'} ${unknown.map((/** @type {any} */ r) => `"${r}"`).join(', ')}; the rules are ${RULE_IDS.join(', ')}.`, selected: [] };
-  if (!rules.length) return { status: 'inconclusive', scope: 'Nothing was checked.', explanation: 'The claim lists no data rule.', selected: [] };
+  if (unknown.length) return { outcome: 'undecided', scope: 'Nothing was checked.', explanation: `Unknown data rule${unknown.length === 1 ? '' : 's'} ${unknown.map((/** @type {any} */ r) => `"${r}"`).join(', ')}; the rules are ${RULE_IDS.join(', ')}.`, selected: [] };
+  if (!rules.length) return { outcome: 'undecided', scope: 'Nothing was checked.', explanation: 'The claim lists no data rule.', selected: [] };
   const only = Array.isArray(ev.records) ? new Set(ev.records) : typeof ev.records === 'string' ? new Set([ev.records]) : null;
   const scoped = only ? narrow(model, only) : model;
   const { findings, checked } = dataFindings(scoped);
@@ -363,14 +363,14 @@ export function evaluateDataClaim(model, ev) {
   if (mine.length) {
     const first = mine[0];
     return {
-      status: 'violated', scope, selected,
+      outcome: 'fail', scope, selected,
       explanation: `${first.message}${mine.length > 1 ? ` ${mine.length - 1} more ${mine.length === 2 ? 'finding' : 'findings'}: ${mine.slice(1).map((f) => `${f.rule} on ${f.entityId}`).join(', ')}.` : ''}`,
       counterexample: { summary: mine.map((f) => `${f.rule}: ${f.entityId}${f.fields.length ? ` (${f.fields.join(', ')})` : ''}`).join('; '), entities: [...new Set(mine.flatMap((f) => [f.entityId, ...f.records]))] },
     };
   }
   const vacuous = rules.filter((/** @type {DataRule} */ r) => checked[r] === 0);
-  if (vacuous.length) return { status: 'inconclusive', scope, selected, explanation: `Rule${vacuous.length === 1 ? '' : 's'} ${vacuous.join(', ')} had nothing to check in this model, so ${vacuous.length === 1 ? 'it holds' : 'they hold'} only vacuously. It is not reported as verified; list only the rules that apply.` };
-  return { status: 'verified', scope, selected, explanation: `No finding: ${rules.map((/** @type {DataRule} */ r) => DATA_RULES[r].doc).join(' ')}` };
+  if (vacuous.length) return { outcome: 'undecided', scope, selected, explanation: `Rule${vacuous.length === 1 ? '' : 's'} ${vacuous.join(', ')} had nothing to check in this model, so ${vacuous.length === 1 ? 'it holds' : 'they hold'} only vacuously. It is not reported as verified; list only the rules that apply.` };
+  return { outcome: 'pass', scope, selected, explanation: `No finding: ${rules.map((/** @type {DataRule} */ r) => DATA_RULES[r].doc).join(' ')}` };
 }
 
 /**

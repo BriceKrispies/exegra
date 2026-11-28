@@ -1,6 +1,14 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "cli-process-flow": 0,
+   "engine-call-flow": 0,
+   "workspace-disk-flow": 0
+  },
+  "links": {},
   "machines": {
    "cli-process-flow": {
     "state": "cli-done",
@@ -40,10 +48,24 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "cli-process-flow": 0,
+   "engine-call-flow": 0,
+   "workspace-disk-flow": 0
+  },
+  "links": {},
   "machines": {
    "cli-process-flow": {
     "state": "cli-idle",
@@ -83,6 +105,7 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "cli-command-request",
@@ -91,6 +114,7 @@
      "options": "visual-edit-flow",
      "requestId": 1
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -99,13 +123,28 @@
     "time": 0
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "cli-trace-written",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "engine-call-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-loading",
@@ -145,14 +184,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-read",
+      "from": {
+       "behavior": "cli-process-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "cli",
        "name": "exegra",
        "requestId": 1
       },
+      "scheduledAt": 0,
       "seq": 1,
       "source": {
        "behavior": "cli-process-flow",
@@ -162,8 +208,14 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "cli-command-request",
     "payload": {
@@ -171,6 +223,7 @@
      "options": "visual-edit-flow",
      "requestId": 1
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -195,6 +248,7 @@
      ],
      "from": "cli-idle",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": "trace",
@@ -220,16 +274,20 @@
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-call-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "cli-command-request",
     "cli-start",
@@ -240,6 +298,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "engine-call-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-loading",
@@ -279,9 +345,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-read-done",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "cli",
        "layout": "L1",
@@ -289,6 +361,7 @@
        "requestId": 1,
        "spec": "h1"
       },
+      "scheduledAt": 0,
       "seq": 2,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -298,15 +371,27 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "cli-process-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-read",
     "payload": {
      "caller": "cli",
      "name": "exegra",
      "requestId": 1
     },
+    "scheduledAt": 0,
     "seq": 1,
     "source": {
      "behavior": "cli-process-flow",
@@ -334,6 +419,7 @@
      ],
      "from": "ws-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "ws-ready",
      "transition": "ws-read-files"
@@ -343,16 +429,20 @@
     {
      "behavior": "cli-process-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-call-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-read",
     "ws-read-files",
@@ -363,6 +453,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "engine-call-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-tracing",
@@ -402,12 +500,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "engine-run-called",
+      "from": {
+       "behavior": "cli-process-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "scenario": "visual-edit-flow"
       },
+      "scheduledAt": 0,
       "seq": 3,
       "source": {
        "behavior": "cli-process-flow",
@@ -417,9 +522,20 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "workspace-disk-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-read-done",
     "payload": {
      "caller": "cli",
@@ -428,6 +544,7 @@
      "requestId": 1,
      "spec": "h1"
     },
+    "scheduledAt": 0,
     "seq": 2,
     "source": {
      "behavior": "workspace-disk-flow",
@@ -451,6 +568,7 @@
      ],
      "from": "cli-loading",
      "guard": "event.caller == 'cli' && command == 'trace'",
+     "instance": 0,
      "sets": [],
      "to": "cli-tracing",
      "transition": "cli-trace-read"
@@ -460,16 +578,20 @@
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-call-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-read-done",
     "cli-trace-read",
@@ -480,6 +602,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "engine-call-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-tracing",
@@ -519,12 +649,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "engine-run-finished",
+      "from": {
+       "behavior": "engine-call-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "steps": 12
       },
+      "scheduledAt": 0,
       "seq": 4,
       "source": {
        "behavior": "engine-call-flow",
@@ -534,13 +671,25 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "cli-process-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "engine-run-called",
     "payload": {
      "scenario": "visual-edit-flow"
     },
+    "scheduledAt": 0,
     "seq": 3,
     "source": {
      "behavior": "cli-process-flow",
@@ -564,6 +713,7 @@
      ],
      "from": "engine-call-ready",
      "guard": "built",
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -579,16 +729,20 @@
     {
      "behavior": "cli-process-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "engine-run-called",
     "engine-call-run",
@@ -599,6 +753,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "engine-call-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-tracing",
@@ -638,12 +800,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "trace-file-written",
+      "from": {
+       "behavior": "cli-process-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "path": "trace.json"
       },
+      "scheduledAt": 0,
       "seq": 5,
       "source": {
        "behavior": "cli-process-flow",
@@ -653,13 +822,25 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "engine-call-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "engine-run-finished",
     "payload": {
      "steps": 12
     },
+    "scheduledAt": 0,
     "seq": 4,
     "source": {
      "behavior": "engine-call-flow",
@@ -683,6 +864,7 @@
      ],
      "from": "cli-tracing",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": true,
@@ -698,16 +880,20 @@
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-call-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "engine-run-finished",
     "cli-trace-run",
@@ -718,6 +904,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "engine-call-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-done",
@@ -757,9 +951,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "cli-command-ok",
+      "from": {
+       "behavior": "cli-process-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "command": "trace",
        "ok": true,
@@ -768,6 +968,7 @@
        "result": "written: trace.json",
        "semanticHash": "m1"
       },
+      "scheduledAt": 0,
       "seq": 6,
       "source": {
        "behavior": "cli-process-flow",
@@ -777,13 +978,25 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "cli-process-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "trace-file-written",
     "payload": {
      "path": "trace.json"
     },
+    "scheduledAt": 0,
     "seq": 5,
     "source": {
      "behavior": "cli-process-flow",
@@ -812,6 +1025,7 @@
      ],
      "from": "cli-tracing",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": true,
@@ -832,16 +1046,20 @@
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-call-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 5,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "trace-file-written",
     "cli-trace-file",
@@ -852,6 +1070,14 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "cli-process-flow": 0,
+     "engine-call-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "cli-process-flow": {
       "state": "cli-done",
@@ -891,10 +1117,22 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "cli-process-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "cli-command-ok",
     "payload": {
      "command": "trace",
@@ -904,6 +1142,7 @@
      "result": "written: trace.json",
      "semanticHash": "m1"
     },
+    "scheduledAt": 0,
     "seq": 6,
     "source": {
      "behavior": "cli-process-flow",
@@ -917,25 +1156,34 @@
     {
      "behavior": "cli-process-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "engine-call-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 6,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "cli-command-ok"
    ],
    "time": 0
   }
- ]
+ ],
+ "stepsTaken": 7,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

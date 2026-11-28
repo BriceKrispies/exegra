@@ -1,0 +1,919 @@
+// Contracts.
+{
+  // ---- Contracts ---------------------------------------------------------------------
+  "contracts": [
+    {
+      "id": "apply-transaction",
+      "name": "Apply a transaction",
+      "description": "Project.apply: the single entry through which a project's specification or layout changes (UI, source editor, agent command line). Defined by src/core/project.js and src/core/operations.js.",
+      "inputs": [
+        { "name": "operations", "type": "Operation | Operation[]", "description": "Typed operations: CreateEntity, DeleteEntity, RenameEntity, SetProperty, CreateRelationship, DeleteRelationship, MovePresentationNode, AddClaim, ModifyClaim, AddState, AddTransition, ReplaceSource, ReplaceLayout." },
+        { "name": "label", "type": "string", "description": "Optional history label." },
+        { "name": "origin", "type": "string", "description": "Optional origin of the change (ui by default, cli, undo, redo, external)." },
+        { "name": "expectRevision / expectHash", "type": "number / string", "description": "Optional optimistic concurrency guards against the project's revision or semantic hash." }
+      ],
+      "outputs": [
+        { "name": "result", "type": "TransactionResult", "description": "ok, revision after the call, semantic hash, affected entity ids, semanticChanged and the diagnostics of the resulting (or rejected) state; on failure also code and message." },
+        { "name": "commit event", "type": "{type: 'commit', result, entry}", "description": "Delivered synchronously to every subscriber after a successful commit; the history entry says whether spec and layout changed." }
+      ],
+      "preconditions": [
+        "The operation list is not empty and every operation names a known type",
+        "When expectRevision or expectHash is given, it equals the project's current revision or semantic hash",
+        "A current model exists unless every operation is ReplaceSource or ReplaceLayout",
+        "Each operation's own preconditions hold (the entity exists and has the right kind, new ids match the id pattern and are unused, parameters have the right shape)"
+      ],
+      "postconditions": [
+        "Atomicity: when the result is not ok, the specification text, layout text, model, revision, history and undo stacks are exactly as before",
+        "The resulting specification, if the specification text was edited, has no validation errors; a transaction whose result would have errors is rejected",
+        "On success the revision has increased by exactly one, a new immutable model snapshot derived from the new text exists and the undo stack gained one entry (the redo stack is cleared)",
+        "Presentation operations (MovePresentationNode, ReplaceLayout) never change the specification text or the semantic hash",
+        "Existing comments and formatting outside the edited ranges are preserved"
+      ],
+      "errors": [
+        { "name": "op.empty", "condition": "The transaction has no operation." },
+        { "name": "op.unknown", "condition": "An operation has an unknown type." },
+        { "name": "revision.stale", "condition": "expectRevision or expectHash does not match the project." },
+        { "name": "model.unavailable", "condition": "The current source has syntax errors and an operation other than ReplaceSource or ReplaceLayout was submitted." },
+        { "name": "validation.failed", "condition": "The resulting specification would have validation errors, or a replacement source has syntax errors." },
+        { "name": "layout.invalid", "condition": "The resulting layout would be unreadable." },
+        { "name": "op.param / op.kind", "condition": "An operation parameter is missing or has the wrong shape, or an entity kind cannot be created." },
+        { "name": "entity.unknown / entity.kind", "condition": "An id names no entity, or an entity of the wrong kind." },
+        { "name": "id.format / id.duplicate", "condition": "A new id breaks the id pattern or is already used." },
+        { "name": "delete.system / delete.referenced", "condition": "The system entity cannot be deleted; an entity that others refer to is deleted without cascade." },
+        { "name": "edit.syntax / edit.not-array", "condition": "A text edit would leave the specification syntactically invalid, or targets something that is not an array." }
+      ],
+      "obligations": ["Callers must show the rejection and its diagnostics to the user or agent; a rejected transaction is never retried implicitly."]
+    },
+    {
+      "id": "write-file",
+      "name": "Write a project file",
+      "description": "Writing spec.jsonc or layout.jsonc of a project: persistence client, POST /__exegra/write of the development-server plugin, and the workspace service's write function in tools/workspace.js.",
+      "inputs": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Project name matching ^[a-z0-9][a-z0-9_-]{0,63}$."
+        },
+        {
+          "name": "file",
+          "type": "'spec' | 'layout'",
+          "description": "Which project file."
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "description": "Complete new file text, at most 16 MB. In simulated traces the text stands for itself by its hash."
+        },
+        {
+          "name": "baseHash",
+          "type": "string | null",
+          "description": "sha-256 hash of the file text the caller last read or wrote; null means the caller expects the file to be absent."
+        },
+        {
+          "name": "meta",
+          "type": "{label, origin}",
+          "description": "Optional journal annotations.",
+          "optional": true
+        },
+        {
+          "name": "requestId",
+          "type": "number",
+          "description": "Correlation id. Not on the wire today: the traffic recorder (planned, WG-4775 layer 2) assigns it per call in src/persist/client.js request() and stamps the response with the id of the request it answers.",
+          "optional": true
+        }
+      ],
+      "outputs": [
+        {
+          "name": "success",
+          "type": "{ok: true, hash}",
+          "description": "The hash of the text now on disk."
+        },
+        {
+          "name": "conflict",
+          "type": "{ok: false, conflict: true, current: {text, hash}}",
+          "description": "The file's current content, returned instead of writing; HTTP status 409."
+        },
+        {
+          "name": "failure",
+          "type": "{ok: false, error, code}",
+          "description": "Any other refusal or failure, with the error code (HTTP 400, 403, 404, 413 or 500)."
+        },
+        {
+          "name": "correlation",
+          "type": "{requestId: number}",
+          "description": "Correlation id. Not on the wire today: the traffic recorder (planned, WG-4775 layer 2) assigns it per call in src/persist/client.js request() and stamps the response with the id of the request it answers."
+        }
+      ],
+      "preconditions": [
+        "The project name is valid and the target path stays inside the project directory",
+        "The file is spec or layout and the text is a string within the size limit",
+        "Over HTTP: the Host and any Origin are loopback and the x-exegra-client header is present"
+      ],
+      "postconditions": [
+        "Optimistic concurrency: the file is replaced only if the sha-256 of its current text equals baseHash (absent equals null); otherwise it is left untouched and the conflict result carries its current content",
+        "Replacement writes a temporary sibling file and renames it over the target; writes of one project are serialized",
+        "After the replace, one line is appended to .history/journal.jsonl; if the append fails the file stays replaced, no line is written and the write is answered as a failure (record write-journal)"
+      ],
+      "errors": [
+        {
+          "name": "conflict",
+          "condition": "The file on disk differs from the base hash."
+        },
+        {
+          "name": "name.invalid / path.unsafe",
+          "condition": "The project name is invalid or the path escapes the project."
+        },
+        {
+          "name": "file.unknown / input.invalid / too-large",
+          "condition": "The file is not spec or layout, an input has the wrong type, or the text exceeds 16 MB."
+        },
+        {
+          "name": "project.invalid / not-found",
+          "condition": "project.jsonc is malformed or names a missing file (HTTP 400, thrown by the workspace)."
+        },
+        {
+          "name": "body.invalid / body.too-large",
+          "condition": "The body is not a JSON object (400) or is larger than 20 MB (413)."
+        },
+        {
+          "name": "route.unknown",
+          "condition": "No such endpoint (404)."
+        },
+        {
+          "name": "host.forbidden / origin.forbidden / client.header",
+          "condition": "The request is not from a loopback host or origin, or lacks the x-exegra-client header (HTTP 403, tools/vite-plugin-exegra.js checkRequest)."
+        },
+        {
+          "name": "internal",
+          "condition": "Any other exception: HTTP 500 {ok: false, error: \"Internal error.\", code: \"internal\"}, logged to the Vite logger."
+        }
+      ],
+      "obligations": [
+        "A client that receives a conflict must not overwrite silently: the session keeps the conflict until the user chooses to reload from disk or overwrite disk."
+      ],
+      "binding": {
+        "protocol": "HTTP",
+        "method": "POST",
+        "path": "/__exegra/write"
+      }
+    },
+    {
+      "id": "project-scene",
+      "name": "Project a model into a scene",
+      "description": "project(model, viewId, ctx) in src/core/projections.js, followed by layoutScene(scene, pinned, {method, aspect}) or chooseLayout(scene, pinned, {aspect}) in src/core/layout.js.",
+      "inputs": [
+        { "name": "model", "type": "Model", "description": "The committed model snapshot." },
+        { "name": "viewId", "type": "string", "description": "A declared view, or the id of an implicit view; an unknown id falls back to the first view." },
+        { "name": "ctx", "type": "ProjectionContext", "description": "Collapsed and hidden sets, isolated subsystem, focused claim and scenario, the focused entity (for the references projection), claim results, simulation trace and step." },
+        { "name": "layout options", "type": "{method?: string, aspect?: number}", "description": "The layout method (layered, layered-down, packed, radial or auto) and the target width-to-depth ratio of the view; defaults are layered and 1.6." },
+        { "name": "pinned", "type": "Record<sceneNodeId, [x, z]>", "description": "Absolute positions of leaf nodes from the layout file." }
+      ],
+      "outputs": [
+        { "name": "scene", "type": "SceneModel", "description": "Nodes, edges, legend and notes." },
+        { "name": "placement", "type": "Placement", "description": "A rectangle on the ground plane for every node; chooseLayout also returns the method it chose and the score of every method." }
+      ],
+      "postconditions": [
+        "Every node and every edge of the scene is backed by an entity of the model (it carries that entity's id)",
+        "Pure and deterministic: the same inputs give the same scene and placement, and the model is not changed",
+        "Position carries no meaning: containment and relationships do"
+      ],
+      "obligations": ["The renderer draws only what a scene and a placement contain and reads nothing from the model."]
+    },
+    {
+      "id": "evaluate-claims",
+      "name": "Evaluate claims",
+      "description": "evaluateClaims, evaluateClaim and checkTrace in src/core/claims.js.",
+      "inputs": [
+        {
+          "name": "model",
+          "type": "Model",
+          "description": "The model whose claims are evaluated."
+        },
+        {
+          "name": "recorded",
+          "type": "Recorded | null",
+          "description": "Recorded execution results of evidence, keyed by evidence id (results), and outcomes an external tool recorded per claim (claims, see record external-claim-outcomes)."
+        }
+      ],
+      "outputs": [
+        { "name": "results", "type": "ClaimResult[]", "description": "One result per claim in declaration order: status, evaluator, semantic hash, scope, explanation, assumptions, involved entities, counterexample and evidence." }
+      ],
+      "postconditions": [
+        "A status is verified only when an evaluator checked the claim on the model; a selector that selects nothing is inconclusive, not verified",
+        "A claim whose method is not registered is not evaluated",
+        "Trace-based statuses state that only the listed scenarios' traces were checked",
+        "Evidence can only make a model-evaluated claim worse (a recorded fail or contradicting evidence turns verified into violated), never better",
+        "An external-evidence claim is supported only by a recorded passing test or by non-test evidence, and says whether Exegra executed anything",
+        "A metric-bound claim is reported model-holds, violated or inconclusive with its run count and confidence, never verified or supported",
+        "Deterministic: no clock, randomness or I/O. Trace and metric claims run the engine synchronously on the caller's thread; in the application that is the main thread, inside every semantic commit"
+      ],
+      "errors": [
+        { "name": "unknown claim", "condition": "evaluateClaim is called with an id that is not a claim; it throws." },
+        { "name": "evaluator failure", "condition": "An exception while evaluating a claim becomes an inconclusive result rather than aborting the evaluation." }
+      ]
+    },
+    {
+      "id": "run-scenario",
+      "name": "Run a scenario",
+      "description": "runScenario, createSimulation and createTraceCursor in src/core/engine.js, on the Rust engine compiled to WebAssembly; semantics are specified in docs/module-contracts.md.",
+      "inputs": [
+        { "name": "model", "type": "Model", "description": "The model holding the behaviors." },
+        { "name": "scenarioId", "type": "string", "description": "A scenario of the model." },
+        { "name": "faults", "type": "string[]", "description": "Optional fault ids replacing the scenario's own list." }
+      ],
+      "outputs": [
+        { "name": "trace", "type": "Trace", "description": "Initial configuration, every step with fired transitions, ignored events, faults and the configuration after it, the outcome and the final configuration." }
+      ],
+      "preconditions": ["The scenario, every behavior it lists and every active fault exist in the model"],
+      "postconditions": [
+        "Deterministic: the same inputs give deep-equal traces",
+        "The run ends quiescent (queue empty), at the step limit (maxSteps, default 1000) or in error (an expression failed; the failing step carries the error)",
+        "Recorded steps are not changed by later steps"
+      ],
+      "errors": [
+        { "name": "unknown identifier", "condition": "The scenario, a listed behavior or an active fault does not exist; a plain Error is thrown." }
+      ]
+    },
+    {
+      "id": "agent-command",
+      "name": "Agent command",
+      "description": "One invocation of `node cli/exegra.js <command> [args] [--project <name>] [--specs <dir>] [--pretty]`; described in docs/agent-interface.md.",
+      "inputs": [
+        {
+          "name": "command",
+          "type": "string",
+          "description": "projects, validate, list, show, deps, contracts, claims, evaluate, gaps, ops, apply, plan-delete, simulate, prove, trace, generate, markdown, traceability, verify or help."
+        },
+        {
+          "name": "options",
+          "type": "flags",
+          "description": "Command options and positionals; --project defaults to exegra and --specs to the repository's specs directory. apply reads its operations from --file, --ops or stdin. In simulated traces options carries the one argument a scenario needs."
+        },
+        {
+          "name": "requestId",
+          "type": "number",
+          "description": "Correlation id. Not on the wire: one process answers one invocation; the traffic recorder (planned, WG-4775) numbers invocations.",
+          "optional": true
+        }
+      ],
+      "outputs": [
+        {
+          "name": "envelope",
+          "type": "{ok: true, command: string, project: string, semanticHash: string, result}",
+          "description": "One JSON document on stdout (cli/exegra.js main, built by runCommand in cli/commands.js); the failure envelope {ok: false, command, project, error: {code, message}, diagnostics} is the error role."
+        },
+        {
+          "name": "progress notes",
+          "type": "{notes: string[]}",
+          "description": "Lines on stderr such as \"verify: running <ref>\" (ctx.log); not part of the stdout document."
+        },
+        {
+          "name": "exit code",
+          "type": "{exit: number}",
+          "description": "0 ok, 1 the command failed, 2 usage error (exitCodeOf)."
+        },
+        {
+          "name": "correlation",
+          "type": "{requestId: number}",
+          "description": "Correlation id assigned by the traffic recorder (planned, WG-4775)."
+        }
+      ],
+      "postconditions": [
+        "Every mutation is applied through Project.apply; no command edits specification text directly",
+        "A rejected or stale transaction, or a disk conflict, leaves the files unchanged apart from the case noted on agent-cli (spec written, layout conflicting)"
+      ],
+      "errors": [
+        {
+          "name": "usage.unknown-command / usage.invalid-argument / usage.missing-argument",
+          "condition": "Missing or unknown command or argument (exit code 2)."
+        },
+        {
+          "name": "revision.stale / write.conflict",
+          "condition": "The expected hash does not match, or a file changed on disk since it was read; for apply, a layout conflict after the specification was written says so in the message."
+        },
+        {
+          "name": "validation.failed / model.unavailable / op.unknown / op.empty / op.param / entity.unknown / entity.kind",
+          "condition": "The transaction was rejected, or the project has syntax errors, or an argument names no entity of the right kind."
+        },
+        {
+          "name": "project.not-found / simulate.failed / verify.failed / generate.unavailable",
+          "condition": "The project does not exist, the engine refused or could not run the scenario, the specification has syntax errors, or the generators are missing."
+        },
+        {
+          "name": "markdown.none / markdown.render / markdown.unknown / markdown.path",
+          "condition": "The markdown command has nothing to render, fails, is asked for an unknown document or would leave its output directory."
+        },
+        {
+          "name": "internal.error",
+          "condition": "Any other exception."
+        }
+      ]
+    },
+    {
+      "id": "engine-input-v2",
+      "name": "Engine input, format version 2",
+      "description": "Derived (WG-4664, WG-4715, WG-4729): simulationInput returns {format: \"exegra-sim-input\", version: 2} for a specification using resources, workloads, links, instances, timers or seeded randomness (needsFormat2 in src/core/sim-input.js), and the Rust engine runs it with its version-2 semantics (engine/exegra-engine/src/lib.rs, v2.rs). Every version-1 field keeps its meaning with times as integers of the base unit. Remaining (WG-4741): crash-instance, meters and the cost metric are not run, and there are no format-2 goldens. Normative definition: docs/simulation.md, \"Engine input and trace format version 2\".",
+      "inputs": [
+        {
+          "name": "version",
+          "type": "2",
+          "description": "Version-1 inputs are still run by the version-1 semantics; any other value is refused."
+        },
+        {
+          "name": "time",
+          "type": "{unit: \"tick\" | \"s\" | \"ms\" | \"us\" | \"ns\", perSecond: null | 1 | 1000 | 1000000 | 1000000000}",
+          "description": "Base unit; times and durations are integers in [0, 2^53). Unit tick allows no rate or bandwidth."
+        },
+        {
+          "name": "scenario.seed",
+          "type": "decimal string | null",
+          "description": "Unsigned 64-bit seed without sign or leading zeros; required when any element draws; not needed when the only random sites are choice values."
+        },
+        {
+          "name": "scenario.stepLimit",
+          "type": "integer in [1, 2^53)",
+          "description": "maxSteps of the specification."
+        },
+        {
+          "name": "scenario.horizon / warmup / stopAt",
+          "type": "integer | null",
+          "description": "Horizon required with workloads; warmup < horizon <= stopAt."
+        },
+        {
+          "name": "scenario.output",
+          "type": "\"trace\" | \"metrics\"",
+          "description": "Full trace, or metrics and final configuration only.",
+          "optional": true
+        },
+        {
+          "name": "scenario.steps[].target",
+          "type": "{behavior, instance}",
+          "description": "Optional addressee of an input step.",
+          "optional": true
+        },
+        {
+          "name": "behaviors[].instances",
+          "type": "{count: integer} | {key: string, max: integer}",
+          "description": "Counted or keyed instances; keyed machine keys keep the canonical JSON of the key, quotes included.",
+          "optional": true
+        },
+        {
+          "name": "transitions[].effects",
+          "type": "Effect[]",
+          "description": "Adds emit with after as integer or distribution, target \"reply\", via, size and fanout; use, acquire, release with class; timer, cancel; set with {sample: dist}."
+        },
+        {
+          "name": "routes",
+          "type": "{event, behavior, by: \"key\" | \"round-robin\" | \"random\" | \"any\" | \"least-busy\", field?, resource?}[]",
+          "description": "Instance routing decided when the entry is created; down instances are skipped except by key; any is enumerated by the explorer."
+        },
+        {
+          "name": "resources",
+          "type": "{id, kind, capacity, discipline: \"fifo\" | \"priority\", queueBound, overflow: \"refuse\" | \"drop\" | \"shed-oldest\", demandFactor: [n, num, den][] | {usl: {alpha: [num, den], beta: [num, den]}} | null, classes: {id, priority, reserved, limit, queueBound, maxWait}[]}[]",
+          "description": "Resources with capacity, request classes, queue rules and load-dependent demand (a step table whose last row holds beyond it, or USL parameters evaluated exactly at each grant)."
+        },
+        {
+          "name": "links",
+          "type": "{id, from, to, latency: Dist | null, bandwidth: integer | null, queueBound: integer | null, ordered: boolean, fanout: boolean}[]",
+          "description": "Bytes per second, a latency distribution, ordering and per-receiver fan-out queues."
+        },
+        {
+          "name": "workloads",
+          "type": "{id, kind: \"open\" | \"closed\" | \"population\", ...}[]",
+          "description": "Open: event, process, phases, repeat, batch, clients {count, pick, addresses}, legitimate, maxArrivals, payload. Closed: event, population, think, start, reply, timeout, payload, legitimate. Population: behavior, count, start, clients, legitimate. Phases: from < until, sorted, non-overlapping; rates count instants."
+        },
+        {
+          "name": "unitExponential",
+          "type": "[u, x][]",
+          "description": "The pinned unit-mean exponential quantile table at scale 2^-64 on the standard grid (x below 2^72), present when a workload is Poisson.",
+          "optional": true
+        },
+        {
+          "name": "requests",
+          "type": "{id, start: {event, workload?}, key, ends: {event, outcome: \"ok\" | \"refused\" | \"timeout\" | \"error\"}[]}[]",
+          "description": "Request classes measured by the metrics."
+        },
+        {
+          "name": "meters",
+          "type": "{id, of, measure: \"count\" | \"rate\" | \"ratio\" | \"quantile\", window, q?}[]",
+          "description": "Windowed measurements readable in expressions."
+        },
+        {
+          "name": "prices",
+          "type": "{id, counts, price: {num, den}, currency}[]",
+          "description": "Exact rational prices per counted unit (a delivery, an ended request, a byte, a resource unit held for one second, an instance up for one second)."
+        },
+        {
+          "name": "metrics",
+          "type": "{quantiles: string[], series?: {bucket}}",
+          "description": "Quantiles as exact decimals (default 0.5, 0.9, 0.99) and an optional series bucket dividing horizon - warmup.",
+          "optional": true
+        },
+        {
+          "name": "faults[]",
+          "type": "Fault",
+          "description": "Optional window {at, until} (not on crash-instance); adds scale-demand, set-capacity, set-class-limit, collapse-classes, replace-demand and crash-instance {behavior, instance, at, restartAfter?, notify?}."
+        },
+        {
+          "name": "Dist",
+          "type": "{kind: \"fixed\", value} | {kind: \"uniform\", lo, hi} | {kind: \"table\", points: [u, x][]} | {kind: \"choice\", values}",
+          "description": "Integer distributions; continuous ones are lowered to tables with the pinned quantile tables and 96-bit fixed-point exp and ln."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "trace",
+          "type": "Trace (version 2)",
+          "description": "See contract trace-v2."
+        }
+      ],
+      "preconditions": [
+        "The input was derived from a validated specification, or is a generated input of the version-2 generator",
+        "Every integer is within its bound (docs/simulation.md, Integers and bounds; distribution tables below 2^53, unitExponential below 2^72); a specification duration that is not a whole number of base units is a validation error, never rounded",
+        "No reserved name is used, ids of behaviors, resources, meters, links and workloads are distinct, and every reference resolves",
+        "Phases are valid: from < until, sorted, non-overlapping, and repeat at least the last until",
+        "Reserved units sum to at most capacity, each class's reserved units are at most its limit, and every request can be granted, for every fault mask the scenario admits",
+        "A keyed behavior's max is at least the sum of the counts of the populations on it",
+        "A seed is present when any element draws"
+      ],
+      "postconditions": [
+        "Two calls of simulationInput on the same model give identical documents",
+        "A specification that uses no format-2 construct still derives a version-1 input, unchanged"
+      ],
+      "errors": [
+        {
+          "name": "refusal",
+          "condition": "In order after the version-1 refusals: unknown time unit; Field \"<path>\" must be an integer in [<lo>, <hi>].; a malformed seed; a reserved name; an unknown id; a malformed table; a Poisson phase whose mean interarrival is below 100 base units; a rate or bandwidth under unit tick; reserved units above capacity or above a class limit, or a request that can never be granted; a window on crash-instance; a population larger than its behavior's max; Input samples \"<stream>\" but declares no seed.; via together with after; workloads without a horizon, warmup >= horizon or stopAt < horizon."
+        }
+      ]
+    },
+    {
+      "id": "trace-v2",
+      "name": "Trace, format version 2",
+      "description": "Returned by the Rust engine for a version-2 input (engine/exegra-engine/src/v2.rs) and read by the metric-bound claims (src/core/metric-claims.js): the version-1 trace with integer times, instances, resource and link state, draws and metrics. A version-1 input still returns a version-1 trace. Remaining (WG-4741): crash-instance, meters and the cost metric. Normative definition: docs/simulation.md, \"Engine input and trace format version 2\".",
+      "inputs": [
+        {
+          "name": "input",
+          "type": "engine-input-v2",
+          "description": "The engine input."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "version, timeUnit, seed",
+          "type": "2, string, decimal string | null",
+          "description": "Copied from the input."
+        },
+        {
+          "name": "configuration",
+          "type": "{time, machines, pending, resources, links, timers, workloads, meters, routeCounters, streams, down, incarnations}",
+          "description": "Machines keyed <behavior> for a single undeclared instance, else <behavior>#<index or canonical JSON key>; holdings per instance and class; timers by stable id; draw counters per stream; pending entries carry scheduledAt and, when addressed to an instance, its incarnation."
+        },
+        {
+          "name": "steps[].kind",
+          "type": "\"deliver\" | \"drop\" | \"delay\" | \"service-done\" | \"wait-timeout\" | \"link-done\" | \"fault-edge\" | \"client-timeout\"",
+          "description": "Internal entries are steps of their own and count against the step limit."
+        },
+        {
+          "name": "steps[].event",
+          "type": "{id, payload, seq, source, scheduledAt, target?, from?, routes?, timer?, incarnation?}",
+          "description": "Sources add arrival, timer, resource, link and fault-edge kinds."
+        },
+        {
+          "name": "steps[].fired[].instance / ignored[].instance",
+          "type": "number | string",
+          "description": "The instance the transition ran on; ignored reason adds no-instance."
+        },
+        {
+          "name": "steps[].resources",
+          "type": "{resource, class, request, action, at, waited?, served?, reason?}[]",
+          "description": "enqueued, granted, completed, released, refused, shed, dropped, timed-out, in the order they happened."
+        },
+        {
+          "name": "steps[].draws",
+          "type": "{stream, index, value}[]",
+          "description": "Every random draw of the step in order (for an arrival instant: arrival, batch, then client and payload per entry); value as a decimal string."
+        },
+        {
+          "name": "steps[].faults[]",
+          "type": "{fault, effect}[]",
+          "description": "Adds effects scaled, capacity, limit, collapsed, replaced, crashed, stale and restarted."
+        },
+        {
+          "name": "outcome, truncated",
+          "type": "\"quiescent\" | \"step-limit\" | \"error\" | \"stopped\", boolean",
+          "description": "A truncated run never satisfies a metric claim."
+        },
+        {
+          "name": "metrics",
+          "type": "Metrics",
+          "description": "Integer measured outputs over [warmup, horizon), from the request lifecycle of docs/simulation.md: requests start when their start entry is first taken as head, a lost start ends as error, only ok requests are finite samples, and counts of unkeyed, duplicate and late ends are reported; nearest-rank percentiles and optional series."
+        },
+        {
+          "name": "initialDraws",
+          "type": "{stream, index, value}[]",
+          "description": "Draws made at the start of the run, in order."
+        }
+      ],
+      "preconditions": [
+        "The input is a valid version-2 engine input"
+      ],
+      "postconditions": [
+        "Deterministic: the same input, seed and faults give deep-equal traces and metrics",
+        "Every number in the trace other than variable and payload values is an integer",
+        "Held units stay within class limits and capacity, and waiting requests within their bounds, at every settled step (a mid-run capacity cut keeps held units until released)",
+        "Each conformance golden's trace minus the version-2 fields equals its version-1 trace at the base commit of tests/conformance/golden-changes.json, except the goldens that manifest lists",
+        "With output metrics, the metrics equal those computed from the full trace of the same input"
+      ],
+      "errors": [
+        {
+          "name": "failed step",
+          "condition": "Version-1 failures, plus: Value <what> exceeds 2^53.; Value demand scale of \"<r>\" exceeds 2^32.; Reference \"<path>\" is ambiguous: \"<behavior>\" has <n> instances.; Aggregate \"<path>\" needs numbers, got <type>.; Behavior \"<b>\" would exceed <M> instances.; Route of \"<event>\" to \"<behavior>\" needs payload field \"<field>\".; Instance \"<key>\" releases <n> units of \"<r>\" class \"<c>\" but holds <m>.; Effect replies to \"<event>\", which has no requester.; Size of emit \"<event>\" must be an integer in [0, 2^40), got <value>."
+        }
+      ]
+    },
+    {
+      "id": "read-project",
+      "name": "Read a project",
+      "description": "GET /__exegra/project?name=: the persistence client's readProject (src/persist/client.js), the development-server route and tools/workspace.js read().",
+      "inputs": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Project name."
+        },
+        {
+          "name": "requestId",
+          "type": "number",
+          "description": "Correlation id. Not on the wire today: the traffic recorder (planned, WG-4775 layer 2) assigns it per call in src/persist/client.js request() and stamps the response with the id of the request it answers.",
+          "optional": true
+        }
+      ],
+      "outputs": [
+        {
+          "name": "files",
+          "type": "{spec: {text, hash, path}, layout: {text, hash} | null, recorded: object | null}",
+          "description": "The specification with its sha-256 and its path relative to the repository, the layout or null, and the parsed evidence/results.json or null. In simulated traces spec and layout carry the hashes only."
+        },
+        {
+          "name": "correlation",
+          "type": "{requestId: number}",
+          "description": "Correlation id. Not on the wire today: the traffic recorder (planned, WG-4775 layer 2) assigns it per call in src/persist/client.js request() and stamps the response with the id of the request it answers."
+        }
+      ],
+      "preconditions": [
+        "The project name is valid",
+        "Over HTTP: the Host and any Origin are loopback and the x-exegra-client header is present"
+      ],
+      "postconditions": [
+        "Nothing on disk changes",
+        "The hashes are those of the texts returned"
+      ],
+      "errors": [
+        {
+          "name": "not-found",
+          "condition": "The project has no specification (HTTP 400)."
+        },
+        {
+          "name": "name.invalid / project.invalid",
+          "condition": "Invalid name or malformed project.jsonc (HTTP 400)."
+        },
+        {
+          "name": "host.forbidden / origin.forbidden / client.header",
+          "condition": "The request is not from a loopback host or origin, or lacks the x-exegra-client header (HTTP 403, tools/vite-plugin-exegra.js checkRequest)."
+        },
+        {
+          "name": "internal",
+          "condition": "Any other exception: HTTP 500 {ok: false, error: \"Internal error.\", code: \"internal\"}, logged to the Vite logger."
+        }
+      ],
+      "binding": {
+        "protocol": "HTTP",
+        "method": "GET",
+        "path": "/__exegra/project"
+      }
+    },
+    {
+      "id": "list-projects",
+      "name": "List projects",
+      "description": "GET /__exegra/projects: src/persist/client.js listProjects, tools/workspace.js listProjects (every directory under specs/ with a spec.jsonc or a project.jsonc).",
+      "inputs": [
+        {
+          "name": "requestId",
+          "type": "number",
+          "description": "Correlation id. Not on the wire today: the traffic recorder (planned, WG-4775 layer 2) assigns it per call in src/persist/client.js request() and stamps the response with the id of the request it answers.",
+          "optional": true
+        }
+      ],
+      "outputs": [
+        {
+          "name": "list",
+          "type": "{projects: {name, title}[]}",
+          "description": "Project names with the title read from each specification."
+        },
+        {
+          "name": "correlation",
+          "type": "{requestId: number}",
+          "description": "Correlation id. Not on the wire today: the traffic recorder (planned, WG-4775 layer 2) assigns it per call in src/persist/client.js request() and stamps the response with the id of the request it answers."
+        }
+      ],
+      "postconditions": [
+        "Nothing on disk changes"
+      ],
+      "errors": [
+        {
+          "name": "host.forbidden / origin.forbidden / client.header",
+          "condition": "The request is not from a loopback host or origin, or lacks the x-exegra-client header (HTTP 403, tools/vite-plugin-exegra.js checkRequest)."
+        },
+        {
+          "name": "internal",
+          "condition": "Any other exception: HTTP 500 {ok: false, error: \"Internal error.\", code: \"internal\"}, logged to the Vite logger."
+        }
+      ],
+      "binding": {
+        "protocol": "HTTP",
+        "method": "GET",
+        "path": "/__exegra/projects"
+      }
+    },
+    {
+      "id": "watch-project",
+      "name": "Subscribe to project changes",
+      "description": "GET /__exegra/events?name=: a server-sent-events stream (src/persist/client.js watchProject, tools/vite-plugin-exegra.js openEvents, tools/workspace.js watch). The stream answers with no response of its own; each change is a one-way message of contract file-change-notice.",
+      "inputs": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Project name."
+        }
+      ],
+      "outputs": [],
+      "preconditions": [
+        "The Host and any Origin are loopback (the x-exegra-client header is not required for the stream, since EventSource cannot send it)"
+      ],
+      "postconditions": [
+        "The subscription takes the current hashes of spec, layout and recorded results as its baseline; a change made while no stream is open is never notified",
+        "A ping comment keeps the stream alive every 25 s; the browser reopens a dropped stream"
+      ],
+      "errors": [
+        {
+          "name": "name.invalid",
+          "condition": "Invalid project name, before any header is sent."
+        }
+      ],
+      "binding": {
+        "protocol": "HTTP",
+        "method": "GET",
+        "path": "/__exegra/events"
+      }
+    },
+    {
+      "id": "file-change-notice",
+      "name": "File change notice",
+      "description": "One server-sent event \"change\" with data {file, hash}: written by tools/vite-plugin-exegra.js openEvents when tools/workspace.js watch() sees a tracked file's hash change after an 80 ms debounce. Own writes are notified too; the session filters them by hash.",
+      "inputs": [
+        {
+          "name": "file",
+          "type": "'spec' | 'layout' | 'recorded' | 'products'",
+          "description": "The file whose hash changed."
+        },
+        {
+          "name": "hash",
+          "type": "string | null",
+          "description": "Its new sha-256, or null when it was removed."
+        }
+      ],
+      "outputs": [],
+      "postconditions": [
+        "A one-way message: nothing answers it",
+        "Changes under .history/, generated/ and *.tmp are not notified"
+      ],
+      "binding": {
+        "protocol": "SSE",
+        "path": "/__exegra/events (event: change)"
+      }
+    },
+    {
+      "id": "export-project",
+      "name": "Export a project bundle",
+      "description": "GET /__exegra/export?name=: src/persist/client.js exportProject, tools/workspace.js exportProject.",
+      "inputs": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Project name."
+        },
+        {
+          "name": "requestId",
+          "type": "number",
+          "description": "Correlation id. Not on the wire today: the traffic recorder (planned, WG-4775 layer 2) assigns it per call in src/persist/client.js request() and stamps the response with the id of the request it answers.",
+          "optional": true
+        }
+      ],
+      "outputs": [
+        {
+          "name": "bundle",
+          "type": "{format: 'exegra-project', version: 1, name: string, files}",
+          "description": "files: {\"spec.jsonc\", \"layout.jsonc\"?, \"evidence/results.json\"?} as read from disk at that moment. In simulated traces files carries the specification's hash."
+        },
+        {
+          "name": "correlation",
+          "type": "{requestId: number}",
+          "description": "Correlation id. Not on the wire today: the traffic recorder (planned, WG-4775 layer 2) assigns it per call in src/persist/client.js request() and stamps the response with the id of the request it answers."
+        }
+      ],
+      "postconditions": [
+        "Nothing on disk changes",
+        "The bundle holds the files on disk, not the session's in-memory text: an edit whose save has not landed is not in it"
+      ],
+      "errors": [
+        {
+          "name": "not-found",
+          "condition": "The project has no specification (HTTP 400)."
+        },
+        {
+          "name": "name.invalid",
+          "condition": "Invalid project name."
+        },
+        {
+          "name": "host.forbidden / origin.forbidden / client.header",
+          "condition": "The request is not from a loopback host or origin, or lacks the x-exegra-client header (HTTP 403, tools/vite-plugin-exegra.js checkRequest)."
+        },
+        {
+          "name": "internal",
+          "condition": "Any other exception: HTTP 500 {ok: false, error: \"Internal error.\", code: \"internal\"}, logged to the Vite logger."
+        }
+      ],
+      "binding": {
+        "protocol": "HTTP",
+        "method": "GET",
+        "path": "/__exegra/export"
+      }
+    },
+    {
+      "id": "import-project",
+      "name": "Import a project bundle",
+      "description": "POST /__exegra/import {name, bundle}: src/persist/client.js importProject, tools/workspace.js importProject. Outside the transaction system: claim edits-only-via-transactions is violated by this path.",
+      "inputs": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Project name to create or replace."
+        },
+        {
+          "name": "bundle",
+          "type": "object",
+          "description": "An exegra-project bundle. In simulated traces it carries the specification's hash."
+        },
+        {
+          "name": "requestId",
+          "type": "number",
+          "description": "Correlation id. Not on the wire today: the traffic recorder (planned, WG-4775 layer 2) assigns it per call in src/persist/client.js request() and stamps the response with the id of the request it answers.",
+          "optional": true
+        }
+      ],
+      "outputs": [
+        {
+          "name": "done",
+          "type": "{ok: true}",
+          "description": "Every file of the bundle was written."
+        },
+        {
+          "name": "correlation",
+          "type": "{requestId: number}",
+          "description": "Correlation id. Not on the wire today: the traffic recorder (planned, WG-4775 layer 2) assigns it per call in src/persist/client.js request() and stamps the response with the id of the request it answers."
+        }
+      ],
+      "preconditions": [
+        "The bundle passes validateBundle (format, version, known file names, strings within 5 MB); the toolbar has refused a specification with syntax errors (analyzeSpec), but not one with validation errors"
+      ],
+      "postconditions": [
+        "The files present in the bundle are overwritten one after another with atomic renames, without a base-hash check and without a journal line; files absent from the bundle are left alone",
+        "A running session sees the change through its watcher like any external change"
+      ],
+      "errors": [
+        {
+          "name": "bundle.invalid / too-large",
+          "condition": "The bundle is malformed: HTTP 400 {ok: false, error} with no code field; the recorder labels it bundle.invalid."
+        },
+        {
+          "name": "name.invalid / body.invalid / body.too-large",
+          "condition": "Invalid name or body."
+        },
+        {
+          "name": "host.forbidden / origin.forbidden / client.header",
+          "condition": "The request is not from a loopback host or origin, or lacks the x-exegra-client header (HTTP 403, tools/vite-plugin-exegra.js checkRequest)."
+        },
+        {
+          "name": "internal",
+          "condition": "Any other exception: HTTP 500 {ok: false, error: \"Internal error.\", code: \"internal\"}, logged to the Vite logger."
+        }
+      ],
+      "binding": {
+        "protocol": "HTTP",
+        "method": "POST",
+        "path": "/__exegra/import"
+      }
+    },
+    {
+      "id": "write-generated",
+      "name": "Write generated artifacts",
+      "description": "POST /__exegra/generated {name, files}: src/persist/client.js writeGenerated (from the Realisation panel), tools/workspace.js writeGenerated.",
+      "inputs": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Project name."
+        },
+        {
+          "name": "files",
+          "type": "object",
+          "description": "Relative .json or .md paths under generated/ to their text. In simulated traces it carries the semantic hash the documents were derived from."
+        },
+        {
+          "name": "requestId",
+          "type": "number",
+          "description": "Correlation id. Not on the wire today: the traffic recorder (planned, WG-4775 layer 2) assigns it per call in src/persist/client.js request() and stamps the response with the id of the request it answers.",
+          "optional": true
+        }
+      ],
+      "outputs": [
+        {
+          "name": "written",
+          "type": "{ok: true, written: string[]}",
+          "description": "The files whose content changed and were rewritten."
+        },
+        {
+          "name": "correlation",
+          "type": "{requestId: number}",
+          "description": "Correlation id. Not on the wire today: the traffic recorder (planned, WG-4775 layer 2) assigns it per call in src/persist/client.js request() and stamps the response with the id of the request it answers."
+        }
+      ],
+      "postconditions": [
+        "Each changed file is replaced atomically under specs/<project>/generated/; unchanged files are skipped",
+        "No base-hash check, no journal line, no change notice (the watcher ignores generated/)"
+      ],
+      "errors": [
+        {
+          "name": "path.unsafe / input.invalid",
+          "condition": "A key is not a relative .json or .md path inside generated/, or a value is not a string."
+        },
+        {
+          "name": "name.invalid / body.invalid / body.too-large",
+          "condition": "Invalid name or body."
+        },
+        {
+          "name": "host.forbidden / origin.forbidden / client.header",
+          "condition": "The request is not from a loopback host or origin, or lacks the x-exegra-client header (HTTP 403, tools/vite-plugin-exegra.js checkRequest)."
+        },
+        {
+          "name": "internal",
+          "condition": "Any other exception: HTTP 500 {ok: false, error: \"Internal error.\", code: \"internal\"}, logged to the Vite logger."
+        }
+      ],
+      "binding": {
+        "protocol": "HTTP",
+        "method": "POST",
+        "path": "/__exegra/generated"
+      }
+    },
+    {
+      "id": "engine-worker-run",
+      "name": "Run in the engine worker",
+      "description": "The messages between src/app/engine-runner.js and src/app/engine-worker.js: one engine input as JSON text in, one trace as JSON text or an error out, paired by id.",
+      "inputs": [
+        {
+          "name": "id",
+          "type": "number",
+          "description": "The runner's sequence number for the job."
+        },
+        {
+          "name": "input",
+          "type": "string",
+          "description": "JSON text of the SimulationInput (format 1 or 2). In simulated traces the scenario id stands for it."
+        }
+      ],
+      "outputs": [
+        {
+          "name": "reply",
+          "type": "{id: number, ok: true, trace: string}",
+          "description": "JSON text of the trace."
+        }
+      ],
+      "postconditions": [
+        "A reply carries the id of its job; the runner ignores a reply whose id is no longer waiting",
+        "A new run while one is waiting terminates the worker, so the old job is never answered; the session also discards a run whose token is stale"
+      ],
+      "errors": [
+        {
+          "name": "engine.refused",
+          "condition": "The engine refused the input or could not be loaded: {id, ok: false, error}; the recorder labels it engine.refused."
+        }
+      ],
+      "binding": {
+        "protocol": "Worker postMessage",
+        "operation": "postMessage {id, input}"
+      }
+    }
+  ]
+}

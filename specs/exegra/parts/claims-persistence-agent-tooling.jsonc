@@ -1,0 +1,1410 @@
+// Part of the specification: claims, evidence.
+{
+  "claims": [
+    {
+      "id": "agent-interface-uses-transactions",
+      "kind": "structural",
+      "statement": "The agent command line reaches the transaction system along its relationships.",
+      "rationale": "Every mutation by an agent goes through Project.apply, the same pipeline as the UI.",
+      "subjects": ["agent-cli", "transactions"],
+      "assumptions": [
+        "static-extractor-sound",
+        "extracted-facts-current"
+      ],
+      "evaluate": { "method": "reachable", "from": "agent-cli", "to": "transactions" }
+    },
+    {
+      "id": "conflict-never-overwrites",
+      "kind": "invariant",
+      "statement": "In the edit whose write conflicts with the disk, at every step, once the conflict is flagged the revision persisted on disk is still the initial one: the conflicting file is never overwritten.",
+      "subjects": ["workspace-service", "session", "edit-with-disk-conflict", "write-file"],
+      "assumptions": ["machines-abstract-the-code", "filesystem-honours-atomic-rename", "tests-exercise-shipped-modules", "recorded-results-reflect-current-code"],
+      "evaluate": {
+        "method": "state-invariant",
+        "scenarios": [
+          "edit-with-disk-conflict"
+        ],
+        "expr": "workspace-flow.conflict => workspace-flow.persistedRevision == 1",
+        "negatives": [
+          {
+            "scenario": "edit-with-disk-conflict",
+            "faults": [
+              "conflict-overwrites"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "generation-deterministic",
+      "kind": "invariant",
+      "statement": "Two runs of the generators over the same model and inputs produce byte-identical artifacts.",
+      "subjects": ["generators", "generated-artifacts"],
+      "assumptions": ["tests-exercise-shipped-modules", "recorded-results-reflect-current-code"],
+      "evaluate": { "method": "external-evidence" }
+    },
+    {
+      "id": "persistence-confined-to-workspace",
+      "kind": "invariant",
+      "statement": "Project names are validated and every path is resolved inside specs/<project>/ before any read or write; names and paths that escape that directory are refused, and generated files can only be written under generated/. The one exception is deliberate: a project.jsonc may name a specification file outside the project directory (a linked project, such as a specification kept in its own repository), which is then read and written there. project.jsonc is not writable through the workspace endpoints (write and import accept only spec.jsonc, layout.jsonc and evidence/results.json), so only a person editing the file on disk can point a project elsewhere.",
+      "subjects": ["workspace-service", "write-file"],
+      "assumptions": ["tests-exercise-shipped-modules", "filesystem-honours-atomic-rename", "recorded-results-reflect-current-code"],
+      "evaluate": { "method": "external-evidence" }
+    },
+    {
+      "id": "generated-infrastructure-matches-model",
+      "kind": "invariant",
+      "statement": "The generated infrastructure and pipeline realise exactly the modeled environments, slots, gates and transitions, deterministically, and any edit to the generated output is detected.",
+      "rationale": "Planned (WG-4678). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "infrastructure-generator",
+        "deployment-model"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "claims-monitored-in-production",
+      "kind": "invariant",
+      "statement": "Each claim with a declared observable has a generated runtime monitor, and a monitor that fires marks its claim violated with the observation; game-day results are recorded as evidence with their measurements.",
+      "rationale": "Planned (WG-4680). Not evaluated until recorded evidence of its test exists.",
+      "subjects": [
+        "reality-loop"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "accepted-writes-journaled",
+      "kind": "invariant",
+      "statement": "In these runs every accepted write of spec.jsonc or layout.jsonc has its journal line.",
+      "subjects": [
+        "workspace-service",
+        "write-journal",
+        "undo-restores-and-saves",
+        "layout-move-saved"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "state-invariant",
+        "scenarios": [
+          "undo-restores-and-saves",
+          "layout-move-saved"
+        ],
+        "expr": "workspace-disk-flow.journalLines == workspace-disk-flow.specWrites + workspace-disk-flow.layoutWrites",
+        "negatives": [
+          {
+            "scenario": "undo-restores-and-saves",
+            "faults": [
+              "journal-append-fails"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation",
+      "rationale": "The negative is a failure of the environment: the journal is appended after the file is replaced, so a failed append leaves an accepted write without a line. The journal is not written for imports, recorded results, generated files or changes made outside Exegra at all (record write-journal)."
+    },
+    {
+      "id": "cli-success-means-all-written",
+      "kind": "invariant",
+      "statement": "Whenever exegra apply reports success, both files on disk hold the texts the transaction produced.",
+      "subjects": [
+        "agent-cli",
+        "workspace-service",
+        "agent-command",
+        "cli-apply",
+        "cli-apply-partial-write"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "state-invariant",
+        "scenarios": [
+          "cli-apply",
+          "cli-apply-partial-write"
+        ],
+        "expr": "cli-process-flow.reportedOk => workspace-disk-flow.diskSpec == 'h2' && workspace-disk-flow.diskLayout == 'L2'",
+        "negatives": [
+          {
+            "scenario": "cli-apply-partial-write",
+            "faults": [
+              "apply-reports-ok-after-layout-conflict"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "cli-partial-write-reported",
+      "kind": "temporal",
+      "statement": "When the layout write of exegra apply conflicts, the specification has already been written and the failure says so.",
+      "subjects": [
+        "agent-cli",
+        "workspace-service",
+        "specification-file",
+        "cli-apply-partial-write"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "eventually",
+        "scenarios": [
+          "cli-apply-partial-write"
+        ],
+        "expr": "cli-process-flow.reportedFailure && cli-process-flow.failureNotesSpecWritten && workspace-disk-flow.diskSpec == 'h2' && workspace-disk-flow.diskLayout == 'Lx'",
+        "negatives": [
+          {
+            "scenario": "cli-apply-partial-write",
+            "faults": [
+              "cli-failure-omits-partial-write"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation",
+      "rationale": "States a weakness as it is (finding F05): the two writes are not atomic together. The claim is that the caller is told, not that the partial write cannot happen."
+    },
+    {
+      "id": "verify-records-before-reporting",
+      "kind": "temporal",
+      "statement": "exegra verify prints its envelope only after the recorded results are on disk.",
+      "subjects": [
+        "agent-cli",
+        "verification-pipeline",
+        "recorded-results",
+        "cli-verify-with-open-session"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "precedes",
+        "scenarios": [
+          "cli-verify-with-open-session"
+        ],
+        "first": {
+          "event": "ws-recorded-done"
+        },
+        "then": {
+          "event": "cli-command-ok"
+        },
+        "negatives": [
+          {
+            "scenario": "cli-verify-with-open-session",
+            "faults": [
+              "verify-reports-before-recording"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "trace-file-only-from-a-run",
+      "kind": "invariant",
+      "statement": "exegra trace writes a trace file only for a run the engine completed.",
+      "subjects": [
+        "agent-cli",
+        "simulation-engine",
+        "cli-outputs",
+        "cli-trace-written",
+        "cli-trace-refused"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "state-invariant",
+        "scenarios": [
+          "cli-trace-written",
+          "cli-trace-refused"
+        ],
+        "expr": "cli-process-flow.traceWritten => cli-process-flow.engineOk",
+        "negatives": [
+          {
+            "scenario": "cli-trace-refused",
+            "faults": [
+              "trace-written-on-refusal"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "markdown-written-only-when-covered",
+      "kind": "invariant",
+      "statement": "The Markdown importer writes a specification only when its coverage check passed.",
+      "subjects": [
+        "markdown-importer",
+        "specification-file",
+        "markdown-import",
+        "markdown-import-coverage-fails"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "state-invariant",
+        "scenarios": [
+          "markdown-import",
+          "markdown-import-coverage-fails"
+        ],
+        "expr": "markdown-import-flow.written => markdown-import-flow.coverageOk",
+        "negatives": [
+          {
+            "scenario": "markdown-import-coverage-fails",
+            "faults": [
+              "markdown-writes-despite-gate"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    },
+    {
+      "id": "verify-reuses-fresh-outcomes-only",
+      "kind": "invariant",
+      "statement": "A verify run takes the outcome of a test evidence entry from a recorded test run only when that run was complete, the tree did not change while it ran, and its tree stamp equals the stamp of the tree verify runs on; a reference matching no recorded test is run, never assumed to pass.",
+      "subjects": [
+        "verification-pipeline",
+        "recorded-results-file"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "The check ran every test twice (WG-4794). The stamp covers tracked and untracked files by content and the generated engine builds, so an edit after the run, a rebuilt engine or a different Node version makes the recorded outcomes stale and the tests run again.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "verify-skip-records-not-run",
+      "kind": "invariant",
+      "statement": "A verify run in which a test evidence reference skipped (a matched test skipped itself or is a todo, wholly or in part, or a browser test was not started under --skip-browser) records that evidence as not-run, which counts as no result, and never keeps an older pass for it; the only result kept is that of a browser test not started whose earlier result was recorded on the same tree stamp.",
+      "subjects": [
+        "agent-cli",
+        "recorded-results-file"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "Replaces verify-skip-keeps-recorded-outcome, which kept the older pass on purpose: a pass recorded before a test started to skip kept its claim supported on code it never ran against (assessment 2026-11-26, epistemics D1 and D2; milestone M0 of docs/foundations.md). A result recorded on the same tree stamp is still a fact about the tree, so a browser test that verify did not start keeps it.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "test-evidence-skip-aware",
+      "kind": "invariant",
+      "statement": "A test evidence reference passes only when at least one matched leaf test executed and passed and no matched test failed, skipped itself or is a todo; a describe block is not a test of its own; the fresh path (node's TAP output) and the reuse path (outcomes recorded by npm test) decide this with the same function, and a reference whose matched tests skipped, wholly or in part, is recorded as not run on both.",
+      "subjects": [
+        "verification-pipeline",
+        "agent-cli"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "Encodes docs/assessment/2026-11-26/demos/skipped-test-counts-as-pass.test.js (tests/fixtures/skipped-tests/demo.test.js): the patterns inner real check, trivially|real check and publishes each counted as a pass before (a suite whose only test skipped printed a plain ok line; a todo was not filtered; a mixed match passed on the reuse path). A whole-file reference to a file with a test that skips itself, for want of Lean or a native binary, is now not a pass where that test skipped.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "admit-rejects-downgrades-and-removals",
+      "kind": "invariant",
+      "statement": "exegra admit ranks not-evaluated with inconclusive, so a claim that moves from a positive status to not-evaluated is the reason admit.claim-regressed (not acknowledgeable), and a claim that was proved, verified, supported or model-holds and that the change removes is the reason admit.claim-removed, which only an explicit --accept admit.claim-removed acknowledges.",
+      "subjects": [
+        "agent-cli"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "Encodes the compare() demonstration of epistemics D8: supported to not-evaluated, proved to not-evaluated and a removed verified claim were all admitted with no reason.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "verify-fails-on-regression",
+      "kind": "invariant",
+      "statement": "exegra verify records, with each passing run, every claim's status and the fingerprint of each violated claim's counterexample (claimBaseline in results.json), and fails when, against that baseline, a positive claim falls to a lower status (inconclusive and not-evaluated included), a positive claim no longer exists, or a claim named by --expect-violated is violated with another counterexample; --accept-change names the claims whose change is accepted, and a failing run leaves the baseline as it was.",
+      "subjects": [
+        "agent-cli",
+        "recorded-results-file"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "rationale": "Encodes epistemics D8 for verify: the expectation matched claim ids only, so a new counterexample of core-logic-in-lean or edits-only-via-transactions passed, and a claim falling to inconclusive or not-evaluated passed. Keeping the baseline on failure means running verify again does not wave the regression through.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "journal-failure-reported",
+      "kind": "invariant",
+      "statement": "When a spec or layout write replaces its file but the journal line cannot be appended, the write result says the journal line was not written, the CLI apply result lists it in journalWarnings, and the session reports it as an error; the replaced file is not restored.",
+      "subjects": [
+        "workspace-service",
+        "agent-cli",
+        "session"
+      ],
+      "assumptions": [
+        "filesystem-honours-atomic-rename"
+      ],
+      "rationale": "The file write happens before the journal append, and nothing else checks that the append happened. A silent gap in the journal would leave an edit with no history line.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "pages-site-published-from-main",
+      "kind": "structural",
+      "statement": "The Pages workflow file .github/workflows/pages.yml is triggered by a push to main with no path, tag or branch filter beyond main, and grants pages: write and id-token: write; its build job, with no condition and no step whose failure is ignored, builds the Lean core, validates Exegra's own specification, builds the bundle and uploads dist, in that order; its deploy job needs the build job, runs only on main and deploys the uploaded artifact; and the Vite configuration's base is relative, so the bundle loads under the repository's sub-path.",
+      "subjects": [
+        "build-system"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/pages-site.test.js (the ev-pages-* evidence entries), which read the structure of vite.config.js and .github/workflows/pages.yml, and which are shown to fail on the five workflow mutants of docs/assessment/2026-11-26/demos/pages-mutants.mjs (deploy job if: false, build job if: false, || true after validate, a paths filter that never matches, needs: build removed; ev-pages-mutants-refused). It does not establish that GitHub runs the workflow (Pages enabled as the source, the workflow enabled, a push not marked to skip CI), nor that every push to main is published: under the workflow's concurrency group a queued run is replaced when a newer push arrives, so an intermediate push may never be built or deployed. The checks are structural: they catch the listed mutants, not every edit that breaks publishing (a broken build command, a wrong artifact name in a later action version, a failing deploy).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "register-import-holds-every-line",
+      "kind": "invariant",
+      "statement": "The register importer writes nothing unless the Markdown file rebuilds line for line from the generated sections with every entity marker expanded to the lines it came from, and every imported table row rendered from its properties gives the cells of its source row.",
+      "rationale": "A converted specification replaces its Markdown, so a line the conversion dropped or a cell it changed would be lost silently. The two checks make loss a failed import instead.",
+      "subjects": [
+        "register-importer"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "register-import-entities-cite-source",
+      "kind": "invariant",
+      "statement": "Every document, section, table and row entity the register importer writes carries a source property naming the file and line it was imported from, and every row whose rule has an identifier column carries that identifier as written in ref.",
+      "rationale": "A reader of the converted specification must be able to go from any entity to the words it was made from.",
+      "subjects": [
+        "register-importer"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "register-import-drafts-are-marked",
+      "kind": "invariant",
+      "statement": "Every entity the register importer takes from a draft fragment carries origin \"draft\" and a source in that fragment, the system notes name the fragment, and the Markdown rendered from the sections is the same with or without drafts.",
+      "rationale": "Authored additions sit in the same file as the converted specification; a reader must always be able to tell them from what the Markdown says.",
+      "subjects": [
+        "register-importer"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "register-import-respects-authority",
+      "kind": "invariant",
+      "statement": "When the import map says the JSONC is the authority, the register importer writes nothing to the project's specification file, and --render produces the Markdown from the specification file alone.",
+      "rationale": "After the conversion the JSONC is edited in Exegra; a re-import would silently discard those edits.",
+      "subjects": [
+        "register-importer"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "realisation-roots-traced",
+      "kind": "invariant",
+      "statement": "When project.jsonc declares realisation roots, traceability checks each module written <alias>:<path> against that root's directory, reports a module naming an undeclared alias as missing, and reports unclaimed files only for roots that declare include globs (minus exclude globs); with no roots declared, the traceability result is the same as without the feature.",
+      "subjects": [
+        "external-realisation",
+        "verification-pipeline"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "external-not-run-distinct-from-fail",
+      "kind": "invariant",
+      "statement": "External test evidence is recorded as fail only when a matched JUnit test case reports a failure whose text matches none of the root's environmental patterns; a test absent from the report, skipped, reported as an error, or failing for an environmental reason is recorded as not-run, which `verify` never counts as a failure and the claim evaluator treats as having no result.",
+      "subjects": [
+        "external-realisation",
+        "recorded-results-file"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "store-export-is-byte-identical",
+      "kind": "invariant",
+      "statement": "Exporting a specification imported into its store gives the imported text byte for byte, and its rows cover every code unit of it exactly once: for Exegra's specification, every linked project's specification, every JSONC fixture and every parse corpus case that parses, and for CRLF line endings, a byte order mark, tabs, trailing commas, comments inside and between entities, empty sections, a missing final newline and non-ASCII text.",
+      "subjects": [
+        "spec-store"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "store-reimport-gives-same-rows",
+      "kind": "invariant",
+      "statement": "Importing the export of a store gives a store whose rows (entity, trivia, ref and meta) equal the original store's.",
+      "subjects": [
+        "spec-store"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "store-model-equals-text-model",
+      "kind": "invariant",
+      "statement": "The model read from a store has the semantic hash, diagnostics, error count and entities of the model of its exported text, and the semantic hash recorded at import is that hash.",
+      "subjects": [
+        "spec-store"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "store-refuses-what-it-cannot-return",
+      "kind": "invariant",
+      "statement": "A text that does not parse, is not well-formed Unicode or is not valid UTF-8 is refused by import with a StoreError naming the problem, and the store keeps the rows it held.",
+      "subjects": [
+        "spec-store"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "store-export-never-overwrites-stale-specification",
+      "kind": "invariant",
+      "statement": "exegra store export replaces the specification only when the file is still the text the store last synchronised with, or is already the exported text; otherwise it fails with store.stale and leaves the file unchanged.",
+      "subjects": [
+        "spec-store"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "cli-registers-projects-from-scripts",
+      "kind": "structural",
+      "statement": "A script can register a spec file (and product files) as a project in one command, and can run read-only commands on one without registering it: project add writes specs/<name>/project.jsonc with paths relative to the project directory, refuses an existing project unless --force, a name that is not a valid project name, a project that keeps its own spec.jsonc and files that cannot be read (writing nothing); project remove deletes the link; validate and the other read-only commands take --spec and --product inline and write nothing.",
+      "subjects": [
+        "agent-cli",
+        "workspace-service"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/cli-project.test.js (the ev-cli-project-* evidence entries). WG-5041.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "admit-never-writes-a-rejected-change",
+      "kind": "structural",
+      "statement": "The admit command never writes the specification for a rejected verdict, even with --write, and reports every reason for the rejection (each claim that moved to a worse status, each new validation error, each new integrity violation, each new claim that is not verified or proved, a refused transaction), not only the first.",
+      "subjects": [
+        "agent-cli",
+        "transactions"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/admit.test.js (the ev-admit-* evidence entries).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "admit-privilege-and-guarantee-changes-need-acknowledgement",
+      "kind": "structural",
+      "statement": "The admit command reports every capability a change adds to a role, grant, delegation or token scope, every new or changed grant or delegation without maxDuration, every copy class looser than another of the same record, and every changed integrity rule, claim or retention, each as a reason that blocks admission until its code is accepted with --accept; a reason that is not acknowledgeable cannot be accepted, and an accepted reason is listed under acknowledged.",
+      "subjects": [
+        "agent-cli"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/admit.test.js (the ev-admit-privilege-*, ev-admit-weakened-* and ev-admit-accept-* evidence entries). WG-5275.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "admit-requirement-claims-pend-on-realisation",
+      "kind": "structural",
+      "statement": "The admit command admits a new claim that is realised by code (a requirement, or a claim of an external verification method or of external-evidence) when it names a milestone and has no result yet, and lists it under pendingRealisation; a new requirement without a milestone is rejected as admit.requirement-without-milestone; a new claim a model method can decide (structural, data-model, integrity, lean-theorem and the other methods Exegra evaluates) must still be verified or proved.",
+      "subjects": [
+        "agent-cli",
+        "claim-method-registry"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/admit.test.js (the ev-admit-pending-* evidence entries). WG-5273.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "admit-flags-weak-new-claims",
+      "kind": "structural",
+      "statement": "admit rejects a claim the change creates that is holds-by-construction or restated-scenario (admit.claim-vacuous), single-trace (admit.claim-single-trace) or self-contained (admit.claim-self-contained), each reason carrying acknowledgeable: true, reports the counts by check and grounding before and after, and never makes an existing claim a reason.",
+      "subjects": [
+        "agent-cli",
+        "claim-strength"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/claim-strength.test.js (WG-5274, WG-5276).",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "specification-manifest-parts",
+      "kind": "structural",
+      "statement": "A specification may be a manifest (specParts) listing part files, and Exegra reads it as the one document the parts make: array sections are concatenated in manifest order, a section that is not an array may be in one part only, and a missing part, a part that is itself a manifest, a manifest with sections of its own, a section two parts both hold and an id two parts give one section are refused with an error that names the files. The semantic hash is that of the one-file specification. exegra apply writes each changed entity back to the part that holds it, and a new entity to the part the manifest's specSections table names for its section (else beside its section, else the first part).",
+      "subjects": [
+        "workspace-service"
+      ],
+      "assumptions": [],
+      "rationale": "Supported by tests/core/spec-manifest.test.js (the ev-spec-manifest-* evidence entries). WG-5386.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "module-to-element-map-is-a-function",
+      "kind": "structural",
+      "statement": "Every file of the traceability surface belongs to exactly one module element, and each module element to exactly one element, from the system exegra through its subsystems and components: a file covered by two module elements is the traceability error traceability.multiple-owners, src/core/builtin-types.js belongs to generation-readiness only, and src/app/main.js is the composition-root element directly under exegra.",
+      "subjects": [
+        "verification-pipeline",
+        "queries",
+        "composition-root",
+        "generation-readiness"
+      ],
+      "assumptions": [
+        "static-extractor-sound",
+        "extracted-facts-current"
+      ],
+      "rationale": "Supported by tests/core/multiscale.test.js: the traceability check on a fixture with a file claimed twice and a directory overlapping a file, and on this repository.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "cli-get-prints-entities-with-references",
+      "kind": "invariant",
+      "statement": "exegra get prints exactly the named entities, each with its declaration, owner, source line and the references it holds and receives, and fails on an unknown id.",
+      "subjects": [
+        "agent-cli"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "cli-find-filters-entities",
+      "kind": "invariant",
+      "statement": "exegra find returns only the entities matching every given filter (kind, property, refers-to, referenced-by, text), only the requested fields, and at most the limit while reporting the total.",
+      "subjects": [
+        "agent-cli"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "cli-refs-equals-model-refs",
+      "kind": "invariant",
+      "statement": "exegra refs lists, for an entity, the outbound and inbound references exactly as the model holds them.",
+      "subjects": [
+        "agent-cli"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "guard-refuses-direct-spec-access",
+      "kind": "invariant",
+      "statement": "The guard refuses Read, Edit, Write, MultiEdit, an explicit Grep and a printing or editing shell command aimed at a specification file or a manifest part file, with a message naming get, find, refs and apply.",
+      "subjects": [
+        "spec-guard"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "guard-leaves-other-calls-alone",
+      "kind": "invariant",
+      "statement": "The guard allows a Read of the header, a Read of any other file, a repository-wide Grep, the exegra command line and scripts that parse with jsonc-parser, and exits silently with 0.",
+      "subjects": [
+        "spec-guard"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "capability-matrix-generated",
+      "kind": "invariant",
+      "statement": "exegra generate writes generated/capabilities.md with one row per guarantee class, whose established cell lists exactly the claims of that class Lean shows established (proved, fresh, no open assumption).",
+      "subjects": [
+        "generators"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "verify-reruns-only-impacted-evidence",
+      "kind": "invariant",
+      "statement": "With a change set, verify runs the evidence of exactly the claims the change re-marks and reuses the results the last verification recorded fresh for the others.",
+      "subjects": [
+        "verification-pipeline",
+        "change-impact"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      },
+      "guaranteeClass": "change-impact"
+    },
+    {
+      "id": "admit-takes-change-sets",
+      "kind": "invariant",
+      "statement": "admit accepts a change set touching the specification, Lean, test and measurement files, reports the claims it re-marks and lists the changes to guarantees in a separate section.",
+      "subjects": [
+        "agent-cli",
+        "change-impact"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      },
+      "guaranteeClass": "change-impact"
+    },
+    {
+      "id": "admit-refuses-theorem-weakening",
+      "kind": "invariant",
+      "statement": "admit refuses a change that weakens the theorem of a lean-theorem claim (removed, axioms gained, about changed, or statement changed without a superseding implication that passes the Lean gate) unless --accept names the claim, and admits a proof-only change, a dropped hypothesis conjunct and a strengthened conclusion with their implications.",
+      "subjects": [
+        "agent-cli",
+        "claim-verdict",
+        "verification-pipeline"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      },
+      "guaranteeClass": "change-impact"
+    },
+    {
+      "id": "import-scan-checks-relationships",
+      "kind": "invariant",
+      "statement": "The import scan checks extracted-facts-current: it re-reads the digest of every file of the implementation surface against the recorded fact file, and checks the file-system imports that no extracted element stands for; on the current tree a stale fact file, or src/core/derivation-cache.js importing node:fs with no declared relationship to the file system, refutes the assumption, and the claims that rest on it are then not verified.",
+      "subjects": [
+        "verification-pipeline",
+        "claim-evaluator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "self-specification-split-by-area",
+      "kind": "structural",
+      "statement": "Exegra's own specification is a manifest of part files grouped by area, none over 120 KB. Splitting it left the semantic hash and the document unchanged (entities of a section compared by id), a new component, relationship, claim, evidence record or behaviour that apply creates is written to the part the placement table computes from the entity (a component by its nearest named ancestor, a claim by the subsystem of its first subject, evidence where its claim is), one transaction's undo and redo restore every part byte for byte, the commands print the part file and line of a source location, and the specification guard refuses the part files and the directory that holds them.",
+      "rationale": "Supported by tests/core/spec-split.test.js (the ev-self-spec-split-* evidence entries). WG-5704.",
+      "subjects": [
+        "workspace-service",
+        "spec-guard"
+      ],
+      "assumptions": [],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "extraction-reconciles-with-declarations",
+      "kind": "structural",
+      "statement": "Inside the extraction surface, static dependencies are derived from the facts extracted from the implementation and no declared static dependency stands beside them: no declared relationship of class static between components of the surface is redundant with an extracted fact, unwitnessed by one, reversed against one or of another kind than one, and every file of the extracted facts belongs to a module element. An extracted dependency with no declared counterpart is not a discrepancy, since it is the dependency. Runtime wiring stays declared and is not compared with the extraction.",
+      "rationale": "This replaces the assumption that the hand-declared relationships match the real imports (relationships-match-imports), which recorded counts of 12 and 121 and had drifted with nothing to check it. The check now reads the extracted facts: static structure only, never runtime behavioural fidelity.",
+      "subjects": [
+        "verification-pipeline",
+        "semantic-abstraction"
+      ],
+      "assumptions": [
+        "static-extractor-sound",
+        "extracted-facts-current"
+      ],
+      "evaluate": {
+        "method": "extraction-reconciled"
+      }
+    },
+    {
+      "id": "static-extractor-reads-exact-imports",
+      "kind": "invariant",
+      "statement": "The static extractor reports the static imports, re-exports and dynamic imports of JavaScript files, the import lines of Lean files and the module-level mod and use of Rust files, resolved to the files they name, marks dynamic imports as such, ignores imports written in comments, and gives for an unchanged file the same facts and digest (a fact is a function of the file bytes and the extractor version).",
+      "subjects": [
+        "verification-pipeline"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "levels-zero-and-one-state-purposes",
+      "kind": "structural",
+      "statement": "Levels 0 and 1 of this specification are independently understandable: the system and every block of the cuts l0 and l1 (the system, its subsystems, the composition root and the people and systems around it) state a purpose and responsibilities.",
+      "subjects": [
+        "agent-interface",
+        "application",
+        "persistence",
+        "semantic-core",
+        "tooling",
+        "visualization",
+        "composition-root"
+      ],
+      "rationale": "Supported by the core test that reads the block report of every block of l0 and l1.",
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "shared-base-single-commit",
+      "kind": "invariant",
+      "statement": "At most one of the two writes from the same initial revision commits.",
+      "subjects": [
+        "workspace-service",
+        "two-session-edit-race"
+      ],
+      "assumptions": [
+        "machines-abstract-the-code"
+      ],
+      "evaluate": {
+        "method": "state-invariant",
+        "scenarios": [
+          "two-session-edit-race"
+        ],
+        "expr": "shared-base-write-flow.accepted <= 1",
+        "negatives": [
+          {
+            "scenario": "two-session-edit-race",
+            "faults": [
+              "stale-write-accepted"
+            ]
+          }
+        ]
+      },
+      "faultModel": "local-workstation"
+    }
+  ],
+  // ---- Evidence --------------------------------------------------------------------------
+  // Evidence of kind test is executed by `exegra verify`; until it has run it shows no recorded
+  // execution. A pattern after # is matched against test titles; titles containing a comma or
+  // semicolon are referenced by a prefix because verify accepts neither in a reference.
+  "evidence": [
+    { "id": "ev-pages-relative-base", "claim": "pages-site-published-from-main", "kind": "test", "ref": "tests/core/pages-site.test.js#the production build uses relative asset URLs so it loads under a sub-path", "description": "The Vite configuration's base is relative." },
+    { "id": "ev-pages-on-push-to-main", "claim": "pages-site-published-from-main", "kind": "test", "ref": "tests/core/pages-site.test.js#the Pages workflow is triggered by a push to main with no path or tag filter and may deploy to Pages", "description": "The workflow's push trigger names exactly the branch main and no other filter, and it grants pages: write and id-token: write." },
+    { "id": "ev-pages-validate-before-deploy", "claim": "pages-site-published-from-main", "kind": "test", "ref": "tests/core/pages-site.test.js#the Pages workflow builds the Lean core and validates the specification before it builds and deploys dist", "description": "Read structurally: the build job has no condition and builds the Lean core, validates specs/exegra/spec.jsonc, builds and uploads dist in that order, none of these steps conditional or able to hide a failure; the deploy job needs build, runs only on main and deploys." },
+    { "id": "ev-pages-mutants-refused", "claim": "pages-site-published-from-main", "kind": "test", "ref": "tests/core/pages-site.test.js#the workflow checks fail on each of the five publishing mutants", "description": "The checks of the two workflow tests fail on each of the five mutants of docs/assessment/2026-11-26/demos/pages-mutants.mjs applied to the workflow as it is: if: false on the deploy or the build job, || true after validate, a never-matching paths filter, needs: build removed." },
+    { "id": "ev-workspace-conflict", "claim": "conflict-never-overwrites", "kind": "test", "ref": "tests/core/workspace.test.js#write with a stale baseHash conflicts", "description": "A write with a stale base hash conflicts and leaves the file untouched." },
+    { "id": "ev-generate-core", "claim": "generation-deterministic", "kind": "test", "ref": "tests/core/generate.test.js", "description": "Two runs are byte-identical; equivalent source texts give the same artifacts." },
+    { "id": "ev-workspace-confinement", "claim": "persistence-confined-to-workspace", "kind": "test", "ref": "tests/core/workspace.test.js", "description": "Invalid names, escaping paths, unknown files and generated paths outside generated/ are refused." },
+    {
+      "id": "ev-verify-reuses-fresh-outcomes",
+      "claim": "verify-reuses-fresh-outcomes-only",
+      "kind": "test",
+      "ref": "tests/core/outcome-reuse.test.js#outcomes are used only while the tree is the one they ran on",
+      "description": "An outcome file stamped with the current tree answers a reference; with another stamp it answers nothing. Companion tests cover a reference matching no recorded test, failures, skipped tests, mixed matches and the stamp itself."
+    },
+    {
+      "id": "ev-verify-skip-records-not-run",
+      "claim": "verify-skip-records-not-run",
+      "kind": "test",
+      "ref": "tests/core/cli.test.js#a skipped verify run records the evidence as not run instead of keeping an older pass",
+      "description": "mergeRecordedResults records a skipped entry as not-run with the current stamp instead of its older pass, records the runs that executed, and keeps a result of a browser test not started only when it was recorded on the same stamp."
+    },
+    {
+      "id": "ev-skip-not-supporting",
+      "claim": "verify-skip-records-not-run",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#a test that skipped now is recorded as not run and no older pass supports its claim",
+      "description": "An older pass followed by a skip is recorded as not-run, and the external-evidence claim resting on it is inconclusive, not supported."
+    },
+    {
+      "id": "ev-skip-aware-fresh",
+      "claim": "test-evidence-skip-aware",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#a reference whose matched test skipped or is a todo is not a pass on the fresh path",
+      "description": "node --test runs the demo fixture (tests/fixtures/skipped-tests/demo.test.js) with the patterns inner real check, trivially|real check and publishes, and with no pattern; the TAP verdict is skipped for each, a suite and a todo count no pass, and the executed test alone passes."
+    },
+    {
+      "id": "ev-skip-aware-reuse",
+      "claim": "test-evidence-skip-aware",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#a reference whose matched test skipped or is a todo is not a pass on the reuse path",
+      "description": "The outcomes npm test's reporter records for the same fixture answer the same references with skipped, including an outcome file written before suites and todos were flagged."
+    },
+    {
+      "id": "ev-skip-aware-whole-file",
+      "claim": "test-evidence-skip-aware",
+      "kind": "test",
+      "ref": "tests/core/outcome-reuse.test.js#a whole-file reference to a file with a self-skipping test is not a pass",
+      "description": "A recorded file with one passing and one skipped test answers a whole-file reference with skipped, naming how many matched tests did not execute."
+    },
+    {
+      "id": "ev-admit-downgrades",
+      "claim": "admit-rejects-downgrades-and-removals",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#admit rejects a claim that falls to not evaluated and a positive claim that is removed",
+      "description": "compare() rejects supported and proved claims falling to not-evaluated (admit.claim-regressed) and a removed verified claim (admit.claim-removed), and admits the removal only when it is accepted."
+    },
+    {
+      "id": "ev-verify-regressions",
+      "claim": "verify-fails-on-regression",
+      "kind": "test",
+      "ref": "tests/core/fact-producers.test.js#verify fails on a fall from a positive status a removal and a changed counterexample of an expected violation",
+      "description": "verifyRegressions over claimBaseline: a proved claim falling to not-evaluated, a supported one to inconclusive, a removed supported claim and an expected-violated claim with a new counterexample entity are each reported; an unchanged run and accepted changes are not."
+    },
+    {
+      "id": "ev-journal-append-failure",
+      "claim": "journal-failure-reported",
+      "kind": "test",
+      "ref": "tests/core/workspace.test.js#a journal line that cannot be appended is reported and the file write still stands",
+      "description": "A journal path that is a directory makes the append fail: the write still replaces the file and reports journal.written false with a message."
+    },
+    {
+      "id": "ev-register-import-coverage",
+      "claim": "register-import-holds-every-line",
+      "kind": "test",
+      "ref": "tests/core/import-register.test.js#the fixture imports and validates and rebuilds line for line",
+      "description": "The fixture converts with both checks passing, the output validates without errors and the sections rebuild the file exactly."
+    },
+    {
+      "id": "ev-register-import-lost-cell",
+      "claim": "register-import-holds-every-line",
+      "kind": "test",
+      "ref": "tests/core/import-register.test.js#a row that does not render back fails the import",
+      "description": "A row whose rendering differs from its source cells fails the import and is named."
+    },
+    {
+      "id": "ev-register-import-sources",
+      "claim": "register-import-entities-cite-source",
+      "kind": "test",
+      "ref": "tests/core/import-register.test.js#every imported entity names its source line",
+      "description": "Every document, section, table and row of the fixture output has a source whose line holds the text it came from, and keyed rows carry ref."
+    },
+    {
+      "id": "ev-register-import-drafts",
+      "claim": "register-import-drafts-are-marked",
+      "kind": "test",
+      "ref": "tests/core/import-register.test.js#a draft fragment is merged with origin and source and a checked basis",
+      "description": "A fixture draft merges with origin and source, its basis references are checked by validation, and the rendered Markdown is unchanged."
+    },
+    {
+      "id": "ev-register-import-authority",
+      "claim": "register-import-respects-authority",
+      "kind": "test",
+      "ref": "tests/core/import-register.test.js#a map whose JSONC is the authority refuses to import and render needs only the JSONC",
+      "description": "An authority map makes the import exit 1 without writing; --render of a written specification gives the source Markdown."
+    },
+    {
+      "id": "ev-external-traceability",
+      "claim": "realisation-roots-traced",
+      "kind": "test",
+      "ref": "tests/core/external-realisation.test.js#traceability",
+      "description": "Modules in a fake external root are checked there; an undeclared alias is missing; only roots with include globs report unclaimed files; no roots gives the earlier result."
+    },
+    {
+      "id": "ev-external-junit",
+      "claim": "external-not-run-distinct-from-fail",
+      "kind": "test",
+      "ref": "tests/core/external-realisation.test.js#junit",
+      "description": "A fixture JUnit report gives pass, fail and not-run per evidence entry, matched by file, describe path and name; verify --ingest-only records them and fails only on a real failure."
+    },
+    {
+      "id": "ev-store-round-trip",
+      "claim": "store-export-is-byte-identical",
+      "kind": "test",
+      "ref": "tests/core/spec-store.test.js#round trip",
+      "description": "Round-trips every project specification, JSONC fixture, parse corpus case and edge case, and checks that the rows are contiguous verbatim slices covering the text."
+    },
+    {
+      "id": "ev-store-reimport",
+      "claim": "store-reimport-gives-same-rows",
+      "kind": "test",
+      "ref": "tests/core/spec-store.test.js#reimporting an export gives the same rows",
+      "description": "Compares every row of a store and of the store imported from its export, for Exegra's specification and two fixtures."
+    },
+    {
+      "id": "ev-store-model",
+      "claim": "store-model-equals-text-model",
+      "kind": "test",
+      "ref": "tests/core/spec-store.test.js#the model read from the store is the model of the text: semantic hash and diagnostics",
+      "description": "Compares loadModelFromStore with analyzeSpec for a valid specification, one with errors, one with a byte order mark and one with an unresolved reference."
+    },
+    {
+      "id": "ev-store-refusal",
+      "claim": "store-refuses-what-it-cannot-return",
+      "kind": "test",
+      "ref": "tests/core/spec-store.test.js#a text that does not parse is refused and the store keeps what it held",
+      "description": "Imports broken, empty, lone-surrogate and invalid UTF-8 input over a stored specification and checks the export is unchanged."
+    },
+    {
+      "id": "ev-store-cli-refusal",
+      "claim": "store-refuses-what-it-cannot-return",
+      "kind": "test",
+      "ref": "tests/core/spec-store.test.js#exegra store import and export through the command line",
+      "description": "store import of a broken specification fails with store.syntax."
+    },
+    {
+      "id": "ev-store-stale",
+      "claim": "store-export-never-overwrites-stale-specification",
+      "kind": "test",
+      "ref": "tests/core/spec-store.test.js#files: a WAL database beside the specification and an exact export that never overwrites a stale specification",
+      "description": "Changes the specification after an import and checks that export to it is refused and the file keeps its new text."
+    },
+    {
+      "id": "ev-store-cli-stale",
+      "claim": "store-export-never-overwrites-stale-specification",
+      "kind": "test",
+      "ref": "tests/core/spec-store.test.js#exegra store import and export through the command line",
+      "description": "store export to a specification changed since the import fails with store.stale."
+    },
+    {
+      "id": "ev-cli-project-add",
+      "claim": "cli-registers-projects-from-scripts",
+      "kind": "test",
+      "ref": "tests/core/cli-project.test.js#project add registers a spec file and product files stored relative to the project directory",
+      "description": "project add writes a relative link that validate reads as a layered project; project list shows it."
+    },
+    {
+      "id": "ev-cli-project-refusals",
+      "claim": "cli-registers-projects-from-scripts",
+      "kind": "test",
+      "ref": "tests/core/cli-project.test.js#project add refuses to overwrite a project unless --force and refuses a bad name or an unreadable file",
+      "description": "Existing project, bad names and unreadable files are refused; --force replaces."
+    },
+    {
+      "id": "ev-cli-project-own-spec",
+      "claim": "cli-registers-projects-from-scripts",
+      "kind": "test",
+      "ref": "tests/core/cli-project.test.js#project add refuses a name whose project keeps its own spec.jsonc",
+      "description": "A project with its own spec.jsonc is never given a link."
+    },
+    {
+      "id": "ev-cli-project-remove",
+      "claim": "cli-registers-projects-from-scripts",
+      "kind": "test",
+      "ref": "tests/core/cli-project.test.js#project remove deletes the link and the directory only when nothing else is in it",
+      "description": "remove deletes the link only."
+    },
+    {
+      "id": "ev-cli-project-inline",
+      "claim": "cli-registers-projects-from-scripts",
+      "kind": "test",
+      "ref": "tests/core/cli-project.test.js#validate and other read-only commands accept the project inline with --spec and --product",
+      "description": "Inline projects on read-only commands; writers refuse the options."
+    },
+    {
+      "id": "ev-admit-regressed",
+      "claim": "admit-never-writes-a-rejected-change",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a change that worsens a claim is rejected naming the claim with both statuses",
+      "description": "A change that worsens a claim is rejected, naming the claim with its status before and after."
+    },
+    {
+      "id": "ev-admit-violation",
+      "claim": "admit-never-writes-a-rejected-change",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a change that adds an integrity violation is rejected with the rule and its counterexample",
+      "description": "A change that adds an integrity violation is rejected with the rule and the counterexample."
+    },
+    {
+      "id": "ev-admit-weak",
+      "claim": "admit-never-writes-a-rejected-change",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a new claim that is not verified or proved is a reason to reject",
+      "description": "A new claim that is only inconclusive is a reason to reject."
+    },
+    {
+      "id": "ev-admit-refused",
+      "claim": "admit-never-writes-a-rejected-change",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a refused transaction is rejected with the transaction code and message",
+      "description": "A refused transaction is a rejected verdict carrying the transaction code and message, and writes nothing."
+    },
+    {
+      "id": "ev-admit-admitted",
+      "claim": "admit-never-writes-a-rejected-change",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a substantial accepted change is admitted and lists the new claim as verified",
+      "description": "An accepted change with several entities and a claim that verifies is admitted and lists the claim as verified."
+    },
+    {
+      "id": "ev-admit-write",
+      "claim": "admit-never-writes-a-rejected-change",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#--write leaves the spec byte-identical on a rejected change and writes an admitted one",
+      "description": "With --write a rejected change leaves the file byte-identical and an admitted one writes it."
+    },
+    {
+      "id": "ev-admit-deterministic",
+      "claim": "admit-never-writes-a-rejected-change",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#admit output is identical across two runs",
+      "description": "Two runs print identical output, with reasons in id order."
+    },
+    {
+      "id": "ev-admit-privilege-role",
+      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a role that gains a capability is a privilege-change reason until it is accepted",
+      "description": "The owner role gains a capability: a privilege-change reason, admitted with --accept admit.privilege-change and listed under acknowledged."
+    },
+    {
+      "id": "ev-admit-privilege-removed",
+      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#removing a capability from a role is reported but is not a reason",
+      "description": "A removed capability is listed under diff.privilege.removed and does not block."
+    },
+    {
+      "id": "ev-admit-privilege-grant",
+      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a new grant without maxDuration is a privilege-change reason",
+      "description": "A grant with no maxDuration is a privilege-change reason next to its capabilities."
+    },
+    {
+      "id": "ev-admit-weakened-copy",
+      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#an edge copy class looser than an existing class of the same record is a guarantee-weakened reason",
+      "description": "A 72 hour copy class beside a 5 second class of the same record is flagged for freshness and erasure; a tighter class is not."
+    },
+    {
+      "id": "ev-admit-weakened-rule",
+      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a changed integrity rule is shown before and after and can be accepted",
+      "description": "A changed integrity rule is a guarantee-weakened reason with its text before and after."
+    },
+    {
+      "id": "ev-admit-accept-refused",
+      "claim": "admit-privilege-and-guarantee-changes-need-acknowledgement",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a reason that is not acknowledgeable cannot be accepted",
+      "description": "Accepting admit.new-claim-weak, admit.claim-regressed or admit.new-error fails with admit.not-acknowledgeable."
+    },
+    {
+      "id": "ev-admit-pending-milestone",
+      "claim": "admit-requirement-claims-pend-on-realisation",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a new requirement claim with a milestone is admitted as pending realisation",
+      "description": "A requirement of an external method with a milestone is admitted and listed under pendingRealisation."
+    },
+    {
+      "id": "ev-admit-pending-no-milestone",
+      "claim": "admit-requirement-claims-pend-on-realisation",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a new requirement claim without a milestone is rejected",
+      "description": "A requirement without a milestone is rejected as admit.requirement-without-milestone."
+    },
+    {
+      "id": "ev-admit-pending-weak",
+      "claim": "admit-requirement-claims-pend-on-realisation",
+      "kind": "test",
+      "ref": "tests/core/admit.test.js#a new claim a model method decides stays weak when it is not verified",
+      "description": "A structural claim that is not verified is still admit.new-claim-weak, even with a milestone."
+    },
+    {
+      "id": "ev-strength-admit",
+      "claim": "admit-flags-weak-new-claims",
+      "kind": "test",
+      "ref": "tests/core/claim-strength.test.js#admit gives a new vacuous self-contained claim acknowledgeable reasons and only reports existing ones",
+      "description": "A new never claim over a fault transition gets admit.claim-vacuous and admit.claim-self-contained, both acknowledgeable; the counts include the existing vacuous claim, which is no reason."
+    },
+    {
+      "id": "ev-spec-manifest-resolve",
+      "claim": "specification-manifest-parts",
+      "kind": "test",
+      "ref": "tests/core/spec-manifest.test.js#parts assemble in manifest order and array sections concatenate",
+      "description": "Parts assemble in manifest order into the canonical text."
+    },
+    {
+      "id": "ev-spec-manifest-refusals",
+      "claim": "specification-manifest-parts",
+      "kind": "test",
+      "ref": "tests/core/spec-manifest.test.js#an id repeated across parts is refused naming both files",
+      "description": "A duplicate id across parts is refused naming both files; a missing part and a section in two parts likewise (fixtures in tests/fixtures/spec-manifest)."
+    },
+    {
+      "id": "ev-spec-manifest-write-back",
+      "claim": "specification-manifest-parts",
+      "kind": "test",
+      "ref": "tests/core/spec-manifest.test.js#an edit is written back to the part that holds the entity and new entities go where the table says",
+      "description": "An edit goes to the part that holds the entity and a new entity to the part the table names."
+    },
+    {
+      "id": "ev-ms-trace-multiple",
+      "claim": "module-to-element-map-is-a-function",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#traceability: a file covered by two module elements is traceability.multiple-owners and the command fails",
+      "description": "Two components on one file and a directory over a file are both errors; exegra traceability fails."
+    },
+    {
+      "id": "ev-ms-trace-self",
+      "claim": "module-to-element-map-is-a-function",
+      "kind": "test",
+      "ref": "tests/core/multiscale.test.js#the self-specification is a logical hierarchy from exegra down to module elements with each file under one element",
+      "description": "exegra, subsystem, component, module; main.js under the composition root; builtin-types.js with one owner; no missing, unclaimed or doubly claimed file; the actors and the producer of edit-requested."
+    },
+    {
+      "id": "ev-cli-get",
+      "claim": "cli-get-prints-entities-with-references",
+      "kind": "test",
+      "ref": "tests/core/read-commands.test.js#get prints the named entities with declaration and references both ways",
+      "description": "get returns the declaration and both reference lists."
+    },
+    {
+      "id": "ev-cli-find",
+      "claim": "cli-find-filters-entities",
+      "kind": "test",
+      "ref": "tests/core/read-commands.test.js#find --fields adds only the requested data fields and --limit truncates",
+      "description": "Each filter is exercised on a fixture specification."
+    },
+    {
+      "id": "ev-cli-refs",
+      "claim": "cli-refs-equals-model-refs",
+      "kind": "test",
+      "ref": "tests/core/read-commands.test.js#refs equals what model.refs holds for the entity",
+      "description": "Compared with the references of a Project built from the same text."
+    },
+    {
+      "id": "ev-guard-refuses",
+      "claim": "guard-refuses-direct-spec-access",
+      "kind": "test",
+      "ref": "tests/core/spec-guard.test.js#Read Edit Write and MultiEdit of a spec file are refused with the replacement commands",
+      "description": "Refused calls, including manifest parts and shell readers."
+    },
+    {
+      "id": "ev-guard-allows",
+      "claim": "guard-leaves-other-calls-alone",
+      "kind": "test",
+      "ref": "tests/core/spec-guard.test.js#the hook script exits 2 with the reason on stderr to refuse and 0 silently to allow",
+      "description": "Allowed calls and the exit codes of the hook script."
+    },
+    {
+      "id": "ev-capability-matrix",
+      "claim": "capability-matrix-generated",
+      "kind": "test",
+      "ref": "tests/core/generate.test.js#the capability matrix lists a proved claim of class 4 as established in row 4",
+      "description": "A proved claim of class 4 appears in row 4 only; a stale check of it does not."
+    },
+    {
+      "id": "ev-incremental-verify",
+      "claim": "verify-reruns-only-impacted-evidence",
+      "kind": "test",
+      "ref": "tests/core/change-impact.test.js#incremental re-verification",
+      "description": "After the a1 edit the runner adapter is called for exactly the references of c1, c3, c6 and c7."
+    },
+    {
+      "id": "ev-admit-change-set",
+      "claim": "admit-takes-change-sets",
+      "kind": "test",
+      "ref": "tests/core/change-impact.test.js#admit takes a change set",
+      "description": "A change set editing a claim statement and touching F1.lean, t1.test.js and m2.csv."
+    },
+    {
+      "id": "ev-theorem-weakening",
+      "claim": "admit-refuses-theorem-weakening",
+      "kind": "test",
+      "ref": "tests/core/change-impact.test.js#a weakened theorem is refused",
+      "description": "The five counter_le variants checked by Lean."
+    },
+    {
+      "id": "ev-import-scan",
+      "claim": "import-scan-checks-relationships",
+      "kind": "test",
+      "ref": "tests/core/import-scan.test.js",
+      "description": "The scan finds the undeclared import and the claim reads undecided."
+    },
+    {
+      "id": "ev-self-spec-split-parts",
+      "claim": "self-specification-split-by-area",
+      "kind": "test",
+      "ref": "tests/core/spec-split.test.js#the self-specification is a manifest of part files none over 120 KB all listed and none stray",
+      "description": "The manifest lists every part, no part is over 120 KB and none in parts/ is unlisted."
+    },
+    {
+      "id": "ev-self-spec-split-hash",
+      "claim": "self-specification-split-by-area",
+      "kind": "test",
+      "ref": "tests/core/spec-split.test.js#splitting a specification keeps its semantic hash and its content and every comment of an entity",
+      "description": "Splitting the self-specification and assembling the parts gives the same semantic hash and document, with every comment kept."
+    },
+    {
+      "id": "ev-self-spec-split-placement",
+      "claim": "self-specification-split-by-area",
+      "kind": "test",
+      "ref": "tests/core/spec-split.test.js#apply places a new component and claim and evidence and relationship in the part its placement names and undo and redo restore the text exactly",
+      "description": "A transaction's new entities are written to the computed parts, an edit stays in its part, and undo restores every part byte for byte."
+    },
+    {
+      "id": "ev-self-spec-split-default",
+      "claim": "self-specification-split-by-area",
+      "kind": "test",
+      "ref": "tests/core/spec-split.test.js#a new entity with no rule goes to its default part",
+      "description": "An entity the table does not name goes to the section's default part."
+    },
+    {
+      "id": "ev-self-spec-split-workspace",
+      "claim": "self-specification-split-by-area",
+      "kind": "test",
+      "ref": "tests/core/spec-split.test.js#the workspace writes an apply of the self-specification to part files and a stale base is refused",
+      "description": "The workspace writes a transaction to the part files only, and refuses a stale base."
+    },
+    {
+      "id": "ev-self-spec-split-locate",
+      "claim": "self-specification-split-by-area",
+      "kind": "test",
+      "ref": "tests/core/spec-split.test.js#an entity is located in the part file and the line that hold it",
+      "description": "A source location names the part file and the line in it."
+    },
+    {
+      "id": "ev-self-spec-split-guard",
+      "claim": "self-specification-split-by-area",
+      "kind": "test",
+      "ref": "tests/core/spec-split.test.js#the guard refuses the part files and the directory that holds them and leaves the command line open",
+      "description": "The guard refuses a Read, Edit, Write, Grep or shell read of a part file or the parts directory."
+    },
+    {
+      "id": "ev-self-spec-split-stamp",
+      "claim": "self-specification-split-by-area",
+      "kind": "test",
+      "ref": "tests/core/spec-split.test.js#the tree stamp covers the part files",
+      "description": "The tree stamp covers every part file."
+    },
+    {
+      "id": "ev-static-extractor",
+      "claim": "static-extractor-reads-exact-imports",
+      "kind": "test",
+      "ref": "tests/core/extract.test.js",
+      "description": "The extractor reads a corpus of JavaScript, Lean and Rust sources and the repository itself, and its facts depend on the bytes only."
+    },
+    {
+      "id": "ev-nav-levels",
+      "claim": "levels-zero-and-one-state-purposes",
+      "kind": "test",
+      "ref": "tests/core/navigation.test.js#L0 draws the system as one block in its environment and every block of L0 and L1 states a purpose and L1 opens the system as a container",
+      "description": "Purposes and responsibilities of every block of l0 and l1."
+    }
+  ]
+}

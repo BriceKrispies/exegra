@@ -18,6 +18,7 @@ import { semanticHash } from './hash.js';
 import { OPERATIONS, OpError, Tx, parseLayout, EMPTY_LAYOUT } from './operations.js';
 import { own } from './own.js';
 import { newErrorViolations, describeCounterexample } from './integrity.js';
+import { attachExtracted, attachObserved, extractedChange, stripExtracted } from './extraction.js';
 
 /** @typedef {import('./types.js').Model} Model */
 /** @typedef {import('./types.js').Diagnostic} Diagnostic */
@@ -41,13 +42,19 @@ import { newErrorViolations, describeCounterexample } from './integrity.js';
 
 export class Project {
   /**
-   * @param {{specText: string, layoutText?: string|null, name?: string, layers?: import('./layers.js').ProductLayer[]}} init
+   * @param {{specText: string, layoutText?: string|null, name?: string, layers?: import('./layers.js').ProductLayer[], extracted?: import('./extraction.js').ExtractedFacts|null, observed?: import('./extraction.js').ObservedFacts|null}} init
+   *   extracted and observed are facts read from outside (src/core/extraction.js); they become relationships of the model,
+   *   with their own provenance, and are replaced as a whole by setFacts
    */
   constructor(init) {
     this.name = init.name ?? '';
     this.specText = init.specText;
     /** The product files layered on the specification, in order (none for most projects). */
     this.layers = init.layers ?? [];
+    /** The extracted facts (static imports of the implementation surface) the model carries, or null. */
+    this.extracted = init.extracted ?? null;
+    /** The observed facts (a recording's events) the model carries, or null. */
+    this.observed = init.observed ?? null;
     /** @type {Model|null} the model of the platform text alone; the model itself when there are no layers */
     this.baseModel = null;
     /** The semantic hash of the combined model; equal to semanticHash when there are no layers. */
@@ -83,7 +90,7 @@ export class Project {
    */
   #derive(analysis) {
     const a = analysis ?? this.#analyze(this.specText);
-    this.model = a.model;
+    this.model = this.#withFacts(a.model);
     this.diagnostics = a.diagnostics;
     this.errorCount = a.errorCount;
     if ('baseHash' in a) {
@@ -98,6 +105,27 @@ export class Project {
       this.layeredHash = this.semanticHash;
     }
     this.layout = parseLayout(this.layoutText);
+  }
+
+  /** The model with this project's extracted and observed facts attached. @param {Model|null} model */
+  #withFacts(model) {
+    if (!model) return model;
+    return attachObserved(attachExtracted(model, this.extracted), this.observed);
+  }
+
+  /**
+   * Replace the extracted and/or observed facts (an implementation change, a new recording). The specification is
+   * untouched. The result lists the relationship ids whose facts changed: the `affected` set to give rederive and
+   * claimsToRecompute, so the change propagates through footprints like an edit.
+   * @param {{extracted?: import('./extraction.js').ExtractedFacts|null, observed?: import('./extraction.js').ObservedFacts|null}} facts
+   * @returns {{before: Model|null, after: Model|null, affected: string[]}}
+   */
+  setFacts(facts) {
+    const before = this.model;
+    if (facts.extracted !== undefined) this.extracted = facts.extracted;
+    if (facts.observed !== undefined) this.observed = facts.observed;
+    this.model = this.#withFacts(before ? stripExtracted(before) : before);
+    return { before, after: this.model, affected: before && this.model ? extractedChange(before, this.model) : [] };
   }
 
   /**

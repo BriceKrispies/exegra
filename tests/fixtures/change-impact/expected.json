@@ -1,0 +1,10 @@
+{
+  "changes": [
+    { "name": "edit a1", "change": { "ops": [{ "type": "SetProperty", "id": "a1", "property": "statement", "value": "The network delivers every message, eventually." }] }, "remark": ["c1", "c3", "c6", "c7"], "guaranteeChanges": [] },
+    { "name": "edit a2", "change": { "ops": [{ "type": "SetProperty", "id": "a2", "property": "statement", "value": "The clock is monotonic." }] }, "remark": ["c2", "c3"], "guaranteeChanges": [] },
+    { "name": "edit F1.lean", "change": { "files": ["tests/fixtures/change-impact/F1.lean"] }, "remark": ["c4"], "guaranteeChanges": [] },
+    { "name": "edit t1.test.js", "change": { "files": ["tests/fixtures/change-impact/t1.test.js"] }, "remark": ["c5"], "guaranteeChanges": [] },
+    { "name": "edit c8's statement", "change": { "ops": [{ "type": "SetProperty", "id": "c8", "property": "statement", "value": "The fixture has one claim with no dependency." }] }, "remark": ["c8"], "guaranteeChanges": [{ "claim": "c8", "change": "statement" }] },
+    { "name": "edit an unrelated spec entity", "change": { "ops": [{ "type": "SetProperty", "id": "unrelated", "property": "purpose", "value": "Still nothing depends on it." }] }, "remark": [], "guaranteeChanges": [] }
+  ]
+}

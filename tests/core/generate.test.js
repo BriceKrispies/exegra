@@ -10,7 +10,9 @@ import {
   generateManifest,
   generateArchitectureDoc,
   generateClaimsReportJson,
+  generateCapabilities,
 } from '../../src/core/generate/index.js';
+import { capabilityRows } from '../../src/core/generate/capabilities.js';
 
 // Claims over scenarios run the simulation engine.
 initEngine();
@@ -64,10 +66,10 @@ function dataById(entities) {
   return Object.fromEntries(entities.map((e) => [e.id, e.data]));
 }
 
-test('generateAll returns exactly the five artifacts', () => {
+test('generateAll returns exactly the six artifacts', () => {
   const out = outputs(SPEC);
   assert.deepEqual(Object.keys(out).sort(), [
-    'ARCHITECTURE.md', 'claims-report.json', 'claims-report.md', 'manifest.json', 'tasks.json',
+    'ARCHITECTURE.md', 'capabilities.md', 'claims-report.json', 'claims-report.md', 'manifest.json', 'tasks.json',
   ]);
   for (const value of Object.values(out)) assert.equal(typeof value, 'string');
 });
@@ -139,4 +141,31 @@ test('no artifact contains undefined or object placeholders', () => {
       assert.ok(!body.includes('[object Object]'), `${name} contains "[object Object]"`);
     }
   }
+});
+
+// The capability matrix (WG-5684, criterion 6): a claim of class 4 (liveness) with a proved, fresh status and no
+// open assumption is listed as established in row 4, and only there.
+test('the capability matrix lists a proved claim of class 4 as established in row 4', () => {
+  const claim = { id: 'alpha-terminates', kind: 'invariant', statement: 'Alpha always terminates.', guaranteeClass: 'liveness', evaluate: { method: 'lean-theorem', theorem: 'Exegra.alpha_terminates', about: ['Exegra.alpha'] } };
+  const withClaim = SPEC.replace('"claims": [', `"claims": [
+    ${JSON.stringify(claim)},`);
+  const recorded = { theorems: { 'Exegra.alpha_terminates': { found: true, kind: 'theorem', kernel: 'ok', axioms: ['propext'], about: { 'Exegra.alpha': { kind: 'definition', inStatement: true } }, formalHash: 'F' } } };
+  const stamps = { tree: 'T', formal: 'F' };
+  const row4 = (/** @type {string} */ text) => {
+    const { model } = build(text);
+    const results = evaluateClaims(model, { recorded, stamps });
+    return { rows: capabilityRows(model, results), md: generateCapabilities(model, { claimResults: results }) };
+  };
+  const before = row4(SPEC);
+  assert.deepEqual(before.rows[3].established, []);
+  const after = row4(withClaim);
+  assert.equal(after.rows[3].row, '4. Liveness');
+  assert.deepEqual(after.rows[3].established, ['alpha-terminates']);
+  assert.ok(after.rows.every((r, i) => i === 3 || !r.established.includes('alpha-terminates')));
+  assert.match(after.md, /^\| 4\. Liveness \| `alpha-terminates` \| none \|$/m);
+  // The same claim read from a stale check is not established; it is listed with its status instead.
+  const { model } = build(withClaim);
+  const stale = capabilityRows(model, evaluateClaims(model, { recorded, stamps: { tree: 'T', formal: 'OTHER' } }));
+  assert.deepEqual(stale[3].established, []);
+  assert.deepEqual(stale[3].other, [{ id: 'alpha-terminates', status: 'not-evaluated' }]);
 });

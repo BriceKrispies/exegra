@@ -54,29 +54,6 @@
      "effects": [
       {
        "set": "total",
-       "to": "text - 1"
-      }
-     ],
-     "faultOnly": false,
-     "from": "calc-ready",
-     "guard": null,
-     "id": "calc-type",
-     "on": "calc-type-op",
-     "to": "calc-ready"
-    },
-    {
-     "effects": [],
-     "faultOnly": false,
-     "from": "calc-ready",
-     "guard": "total + 1",
-     "id": "calc-guard",
-     "on": "calc-guard-op",
-     "to": "calc-ready"
-    },
-    {
-     "effects": [
-      {
-       "set": "total",
        "to": "event.missing"
       }
      ],
@@ -192,5 +169,9 @@
    }
   ]
  },
- "version": 1
+ "time": {
+  "perSecond": null,
+  "unit": "tick"
+ },
+ "version": 2
 }

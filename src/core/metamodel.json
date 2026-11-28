@@ -6,7 +6,12 @@
     "system": { "entity": "system", "single": true },
     "vocabulary": { "doc": "Model-defined extensions of categories, relationship kinds and properties." },
     "components": { "entity": "component" },
+    "elementKinds": { "entity": "elementKind" },
+    "hierarchies": { "entity": "hierarchy" },
+    "facets": { "entity": "facet" },
+    "cuts": { "entity": "cut" },
     "relationships": { "entity": "relationship" },
+    "realisations": { "entity": "realisation" },
     "contracts": { "entity": "contract" },
     "events": { "entity": "event" },
     "behaviors": { "entity": "behavior" },
@@ -66,14 +71,21 @@
       "transport": { "label": "Message transport", "shape": "pipe", "color": "rose", "description": "An asynchronous channel carrying messages between components." }
     },
     "relationshipKinds": {
-      "depends-on": { "label": "Depends on", "line": "solid", "color": "neutral", "dependency": true, "description": "The source requires the target to fulfil its responsibilities." },
-      "calls": { "label": "Calls", "line": "solid", "color": "blue", "dependency": true, "description": "The source synchronously invokes an operation of the target." },
-      "data-flow": { "label": "Data flow", "line": "dashed", "color": "teal", "dependency": false, "description": "Data moves from source to target. Says nothing about who initiates." },
-      "publishes": { "label": "Publishes", "line": "dotted", "color": "rose", "dependency": false, "description": "The source asynchronously emits messages to the target channel." },
-      "subscribes": { "label": "Subscribes", "line": "dotted", "color": "rose", "dependency": true, "description": "The source consumes messages from the target channel." },
-      "reads": { "label": "Reads", "line": "dashed", "color": "amber", "dependency": true, "description": "The source reads state held by the target." },
-      "writes": { "label": "Writes", "line": "solid", "color": "amber", "dependency": true, "description": "The source mutates state held by the target." },
-      "observes": { "label": "Observes", "line": "dotted", "color": "neutral", "dependency": false, "description": "The source collects telemetry about the target." }
+      "interacts-with": { "label": "Interacts with", "line": "dotted", "color": "neutral", "dependency": false, "class": "none", "direction": { "control": "none", "data": "none" }, "parent": null, "description": "The root of the interaction kind tree: any relationship at all. A view that coarsens every kind shows this one." },
+      "depends-on": { "label": "Depends on", "line": "solid", "color": "neutral", "dependency": true, "class": "static", "direction": { "control": "none", "data": "none" }, "parent": "interacts-with", "description": "The source requires the target to fulfil its responsibilities. The general static dependency; imports and invokes refine it." },
+      "imports": { "label": "Imports", "line": "solid", "color": "steel", "dependency": true, "class": "static", "direction": { "control": "none", "data": "none" }, "parent": "depends-on", "description": "The source names the target in its own code (an import, a link-time or build-time use). A static dependency, whatever happens at run time." },
+      "invokes": { "label": "Invokes", "line": "solid", "color": "blue", "dependency": true, "class": "runtime", "direction": { "control": "with", "data": "both" }, "parent": "depends-on", "description": "The source synchronously invokes an operation of the target at run time: control and arguments go with the edge, the result comes back." },
+      "calls": { "label": "Calls", "line": "solid", "color": "blue", "dependency": true, "class": "runtime", "direction": { "control": "with", "data": "both" }, "parent": "invokes", "legacy": true, "replacedBy": "invokes", "description": "Legacy kind, unclassified: the source synchronously invokes an operation of the target. It behaves as invokes in every analysis and validation warns until a specification states the real kind (imports, invokes, notifies or composes)." },
+      "notifies": { "label": "Notifies", "line": "dotted", "color": "rose", "dependency": false, "class": "none", "direction": { "control": "with", "data": "with" }, "parent": "interacts-with", "description": "The source delivers a notification, callback or event to the target, which registered for it. Control and data go with the edge; the receiver depends on the notifier through its registration (a subscribes or an invokes the other way), not the notifier on the receiver." },
+      "composes": { "label": "Composes", "line": "solid", "color": "teal", "dependency": false, "class": "none", "direction": { "control": "with", "data": "none" }, "parent": "interacts-with", "description": "Lifecycle: the source mounts, constructs or wires the target and owns when it starts. Not a use of the target while it runs." },
+      "data-flow": { "label": "Data flow", "line": "dashed", "color": "teal", "dependency": false, "class": "none", "direction": { "control": "none", "data": "with" }, "parent": "interacts-with", "description": "Data moves from source to target. Says nothing about who initiates. What it carries is stated by carries." },
+      "publishes": { "label": "Publishes", "line": "dotted", "color": "rose", "dependency": false, "class": "none", "direction": { "control": "with", "data": "with" }, "parent": "notifies", "description": "The source asynchronously emits messages to the target channel or connector." },
+      "subscribes": { "label": "Subscribes", "line": "dotted", "color": "rose", "dependency": true, "class": "runtime", "direction": { "control": "against", "data": "against" }, "parent": "depends-on", "description": "The source consumes messages from the target channel or connector: the registration is the source depending on the target." },
+      "reads": { "label": "Reads", "line": "dashed", "color": "amber", "dependency": true, "class": "runtime", "direction": { "control": "with", "data": "against" }, "parent": "depends-on", "description": "The source reads state held by the target." },
+      "writes": { "label": "Writes", "line": "solid", "color": "amber", "dependency": true, "class": "runtime", "direction": { "control": "with", "data": "with" }, "parent": "depends-on", "description": "The source mutates state held by the target." },
+      "observes": { "label": "Observes", "line": "dotted", "color": "neutral", "dependency": false, "class": "none", "direction": { "control": "none", "data": "against" }, "parent": "interacts-with", "description": "The source collects telemetry about the target." },
+      "exercises": { "label": "Exercises", "line": "dotted", "color": "violet", "dependency": false, "class": "none", "direction": { "control": "with", "data": "against" }, "parent": "observes", "description": "The source drives the target to check it (a test, a benchmark, a probe). A verification relationship: nothing in the target depends on it." },
+      "network-link": { "label": "Network link", "line": "dashed", "color": "steel", "dependency": false, "class": "none", "direction": { "control": "none", "data": "both" }, "parent": "interacts-with", "description": "Deployment: the source and the target are joined by a network or transport link that can carry traffic between them." }
     },
     "shapes": ["box", "chamfer", "cylinder", "tablet", "octa", "hex", "pipe", "sphere", "diamond", "capsule"],
     "colors": ["slate", "blue", "amber", "teal", "violet", "steel", "rose", "green", "red", "neutral"],
@@ -89,6 +101,8 @@
         "id": { "type": "id", "required": true },
         "name": { "type": "string", "required": true, "label": "Name" },
         "description": { "type": "text", "label": "Description" },
+        "purpose": { "type": "text", "label": "Purpose", "doc": "What the system is for, as the block it is at the coarsest cut (level 0): the first coherence condition of a level asks every block to state its purpose." },
+        "responsibilities": { "type": "list", "items": { "type": "text" }, "label": "Responsibilities", "doc": "What the system as a whole is responsible for toward its environment." },
         "version": { "type": "string", "label": "Version" },
         "illustrative": { "type": "boolean", "label": "Illustrative", "doc": "True when the whole system is an example and not a description of real software." },
         "notes": { "type": "list", "items": { "type": "text" }, "label": "Notes" },
@@ -107,13 +121,14 @@
     },
     "component": {
       "label": "Component",
-      "doc": "A logical, computational, storage, client, external or infrastructure entity. kind 'subsystem' marks a component that contains other components.",
+      "doc": "An element of the specified system or its environment: a system, subsystem, component, module, actor, store, connector or external element (docs/model-and-format.md, \"Elements, hierarchies, facets and cuts\"). Whether an element is composite is derived: it is composite when it has members in a hierarchy.",
       "properties": {
         "id": { "type": "id", "required": true },
         "name": { "type": "string", "required": true, "label": "Name" },
-        "kind": { "type": "enum", "values": ["component", "subsystem"], "label": "Kind", "doc": "Defaults to component. Only a subsystem may be the parent of other components." },
+        "kind": { "type": "ref", "ref": ["elementKind"], "literals": ["system", "subsystem", "component", "module", "actor", "store", "connector", "external"], "label": "Kind", "doc": "The element kind. Defaults to component. Built in: system, subsystem, component, module, actor (a person or external agent), store, connector, external; a specification adds its own in elementKinds. Any element may be the parent of others; composite is derived from having members." },
         "category": { "type": "enum", "valuesFrom": "categories", "required": true, "label": "Category" },
-        "parent": { "type": "ref", "ref": ["component"], "label": "Parent subsystem" },
+        "parent": { "type": "ref", "ref": ["component", "system"], "label": "Parent element", "doc": "The element this one is a member of in the logical hierarchy (the default hierarchy): another element, or the system. Cycles are errors (component.parent-cycle)." },
+        "knowledge": { "type": "enum", "values": ["opaque", "unknown"], "label": "Knowledge", "doc": "What is known about the element's inside. opaque: its declared interface is authoritative and its members are not modelled; unknown: a placeholder, nothing derived through it is asserted. Without it the status is derived (query knowledgeOf): transparent when the element has members, opaque when it has none and is not implemented or external, otherwise a transparent leaf." },
         "purpose": { "type": "text", "label": "Purpose", "expected": true },
         "responsibilities": { "type": "list", "items": { "type": "text" }, "label": "Responsibilities" },
         "owner": { "type": "string", "label": "Owner" },
@@ -159,7 +174,8 @@
         "label": { "type": "string", "label": "Label" },
         "description": { "type": "text", "label": "Description", "expected": true },
         "contract": { "type": "ref", "ref": ["contract"], "label": "Contract" },
-        "carries": { "type": "list", "items": { "type": "ref", "ref": ["record"] }, "label": "Carries", "doc": "The records whose content passes along this relationship (a data flow), so residency rules can follow it to the component that receives it." },
+        "carries": { "type": "list", "items": { "type": "ref", "ref": ["record", "type", "event"] }, "label": "Carries", "doc": "What passes along this relationship: records (so residency rules can follow their content to the component that receives it), types (a payload shape) or events (what a notification or a message delivers)." },
+        "provenance": { "type": "enum", "values": ["declared", "extracted", "observed", "derived", "assumed"], "label": "Provenance", "doc": "Where the fact came from: declared by hand (the default when absent), extracted from code or configuration, observed at run time, derived from other facts, or assumed without evidence." },
         "illustrative": { "type": "boolean", "label": "Illustrative" }
       }
     },
@@ -215,6 +231,7 @@
         "description": { "type": "text", "label": "Description" },
         "payload": { "type": "list", "label": "Payload fields", "items": { "type": "object", "fields": { "name": { "type": "string", "required": true }, "type": { "type": "string" }, "optional": { "type": "boolean" }, "sensitive": { "type": "enum", "values": ["secret", "password", "token", "personal"], "label": "Sensitive", "doc": "The kind of sensitive data the field holds; it is never logged." } } } },
         "contract": { "type": "ref", "ref": ["contract"], "label": "Contract" },
+        "producedBy": { "type": "ref", "ref": ["component"], "label": "Produced by", "doc": "The element that produces the event when no behavior of the specification emits it: a person, an external actor or an element outside the scenarios. Declarative; simulation ignores it." },
         "role": { "type": "enum", "values": ["request", "response", "error"], "label": "Role in the contract" },
         "correlation": { "type": "string", "label": "Correlation field" },
         "delivery": { "type": "enum", "values": ["at-most-once", "at-least-once"], "label": "Delivery", "doc": "Implementation level: the delivery guarantee of an emitted event. Declarative; simulation ignores it (docs/semantics.md)." },
@@ -292,9 +309,9 @@
         "event": { "type": "ref", "ref": ["event"], "label": "Event" },
         "transition": { "type": "ref", "ref": ["transition"], "label": "Transition" },
         "occurrence": { "type": "number", "label": "Occurrence", "doc": "1-based occurrence of the event to affect. Omitted means every occurrence." },
-        "by": { "type": "any", "label": "Delay by", "doc": "Logical ticks (format 1) or a duration (format 2). For duplicate-event: how much later the second delivery comes (default 0)." },
+        "by": { "type": "any", "label": "Delay by", "doc": "Logical ticks (a scenario without a time unit) or a duration (a timed scenario). For duplicate-event: how much later the second delivery comes (default 0)." },
         "attempts": { "type": "number", "label": "Failed attempts", "doc": "For retry-event: a positive integer, the failed dispatches before the one that delivers; the delay is the sum of the backoff waits after each (system.generation.retry)." },
-        "at": { "type": "any", "label": "Inject at", "doc": "Logical time (format 1) or a duration (format 2)." },
+        "at": { "type": "any", "label": "Inject at", "doc": "Logical time (a scenario without a time unit) or a duration (a timed scenario)." },
         "payload": { "type": "map", "label": "Payload" },
         "realises": { "type": "ref", "ref": ["failureMode"], "label": "Realises failure mode", "doc": "The failure mode this injection is an instance of. Not read by the simulation engine." },
         "window": { "type": "map", "label": "Window", "doc": "{at, until?}: durations; the fault acts only in [at, until)." },
@@ -1072,6 +1089,8 @@
         "faultModel": { "type": "ref", "ref": ["faultModel"], "label": "Fault model", "doc": "The fault model this claim is evaluated under. A result states it in its scope." },
         "realisation": { "type": "enum", "values": ["construction", "checked", "operational"], "label": "Realisation", "doc": "For a requirement. construction: generated code guarantees it, and some claim whose models names it checks that. checked: hand-written code, checked by tests. operational: measured on a running deployment." },
         "realisedBy": { "type": "list", "items": { "type": "ref", "ref": ["policy", "validation", "retention", "quota", "retry", "audit"] }, "label": "Realised by", "doc": "For a requirement: the cross-cutting constructs that realise it by construction. A construction requirement is satisfied by a claim whose models names it or by at least one construct here." },
+        "discharges": { "type": "list", "items": { "type": "ref", "ref": ["assumption"] }, "label": "Discharges", "doc": "The assumptions this claim establishes: a claim resting on one of them depends on this claim (the dependency graph of exegra impact)." },
+        "guaranteeClass": { "type": "enum", "values": ["well-formedness", "consistency", "safety", "liveness", "compositionality", "refinement", "conformance", "fidelity", "change-impact"], "label": "Guarantee class", "doc": "The class of guarantee the claim belongs to, by which the capability matrix (generated/capabilities.md) groups claims: 1 well-formedness, 2 consistency, 3 safety, 4 liveness, 5 compositionality, 6 refinement, 7 implementation conformance, 8 simulation fidelity, and change impact." },
         "evaluate": { "type": "evaluation", "required": true, "label": "Evaluation" }
       }
     },
@@ -1099,6 +1118,69 @@
         "basis": { "type": "list", "items": { "type": "ref", "ref": ["*"] }, "label": "Basis", "doc": "The entities this relation rests on." }
       }
     },
+    "elementKind": {
+      "label": "Element kind",
+      "doc": "An element kind a specification adds to the built-in ones (system, subsystem, component, module, actor, store, connector, external); a component's kind may name it.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "description": { "type": "text", "label": "Description" }
+      }
+    },
+    "hierarchy": {
+      "label": "Hierarchy",
+      "doc": "A named laminar hierarchy over the elements, a perspective other than the logical one that component.parent declares (the id logical is reserved for it). groups place members under a parent; groupBy places every element by the value of one of its properties; explicit groups win. An element placed nowhere is a root; a module element derived from implementation.modules is a member of its component. Every element has at most one parent and the parent relation is acyclic.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "groups": { "type": "list", "label": "Groups", "items": { "type": "object", "fields": {
+          "parent": { "type": "ref", "ref": ["component", "system", "facet"], "required": true, "label": "Parent", "doc": "The element the members are placed under. A facet here is facet.contraction." },
+          "members": { "type": "list", "items": { "type": "ref", "ref": ["component"] }, "required": true, "label": "Members" }
+        } } },
+        "groupBy": { "type": "object", "label": "Group by property", "doc": "Places each element by the value of one of its properties: {property, parents: {value: parent element id}}. An element whose value maps to itself, or that a group places, is not placed by it.", "fields": {
+          "property": { "type": "string", "required": true, "label": "Property" },
+          "parents": { "type": "map", "required": true, "label": "Parent per value" }
+        } }
+      }
+    },
+    "facet": {
+      "label": "Facet",
+      "doc": "A named, possibly overlapping grouping of elements: a cross-cutting concern. It can be selected (claim selectors take facet) and claimed over, never contracted: a facet used as a hierarchy, a parent or a cut block is facet.contraction. A component tag acts as an implicit facet of the same name.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "members": { "type": "list", "items": { "type": "ref", "ref": ["component"] }, "label": "Members" },
+        "tag": { "type": "string", "label": "Tag", "doc": "Every component that carries this tag is a member too." }
+      }
+    },
+    "cut": {
+      "label": "Cut",
+      "doc": "A named level of a hierarchy: an antichain of elements that covers every element (every root-to-leaf path meets it once). Declared by expansion (start from the roots; expand replaces the listed composites by their members, depth n expands every composite above depth n, finest expands every composite) or by its blocks. The abstraction map sends each element at or below the cut to its unique ancestor-or-self on it (query cutMap). Semantic: in the text and the semantic hash; a viewer's collapse state is not a cut.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "required": true, "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "hierarchy": { "type": "ref", "ref": ["hierarchy", "facet"], "literals": ["logical"], "label": "Hierarchy", "doc": "Defaults to logical. A facet here is facet.contraction." },
+        "expand": { "type": "list", "items": { "type": "ref", "ref": ["component", "system", "facet"] }, "label": "Expanded elements", "doc": "Composites replaced by their members. Each must be composite in the hierarchy (cut.not-composite), and every ancestor of each must be expanded too (cut.ancestor-not-expanded)." },
+        "depth": { "type": "number", "label": "Depth", "doc": "Expand every composite whose depth (roots are at 0) is less than this." },
+        "finest": { "type": "boolean", "label": "Finest", "doc": "Expand every composite: the blocks are the leaves." },
+        "blocks": { "type": "list", "items": { "type": "ref", "ref": ["component", "system", "facet"] }, "label": "Blocks", "doc": "The cut given by its blocks instead of by expansion: they must cover every element (cut.uncovered) and contain no element together with its ancestor (cut.not-antichain)." }
+      }
+    },
+    "realisation": {
+      "label": "Realisation",
+      "doc": "A realisation map between perspectives: the logical interaction it names (a relationship) is realised by a path of relationships in another hierarchy, such as a chain of network links between the hosts its endpoints are placed on. Checked as a fact (abstraction.js, checkRealisations): every hop exists, the hops run head to tail, the path starts at a placement of the interaction's source in that hierarchy (an ancestor-or-self of it) and ends at a placement of its target.",
+      "properties": {
+        "id": { "type": "id", "required": true },
+        "name": { "type": "string", "label": "Name" },
+        "description": { "type": "text", "label": "Description" },
+        "interaction": { "type": "ref", "ref": ["relationship"], "required": true, "label": "Realised interaction" },
+        "hierarchy": { "type": "ref", "ref": ["hierarchy"], "literals": ["logical"], "required": true, "label": "Hierarchy", "doc": "The perspective the path lies in." },
+        "path": { "type": "list", "items": { "type": "ref", "ref": ["relationship"] }, "required": true, "label": "Path", "doc": "The relationships that realise the interaction, in order from its source to its target." }
+      }
+    },
     "evidence": {
       "label": "Evidence",
       "doc": "An artifact supporting or contradicting a claim. Author-entered; never an evaluation result by itself.",
@@ -1114,12 +1196,15 @@
     },
     "view": {
       "label": "View",
-      "doc": "A named projection of the model with explicit filter and display rules.",
+      "doc": "A named projection of the model with explicit filter and display rules. A structural view is a hierarchy, a cut of it, a kind coarsening and a filter: it draws the derived model at its cut (src/core/abstraction.js) minus what its filter removes and reports. Expanding and collapsing blocks in the application changes the cut it shows as interaction state; the specification holds only the default.",
       "properties": {
         "id": { "type": "id", "required": true },
         "name": { "type": "string", "required": true, "label": "Name" },
         "projection": { "type": "enum", "valuesFrom": "projections", "required": true, "label": "Projection" },
         "description": { "type": "text", "label": "Description" },
+        "hierarchy": { "type": "ref", "ref": ["hierarchy"], "literals": ["logical"], "label": "Hierarchy", "doc": "For a structural view: the hierarchy it is drawn in. Defaults to the hierarchy of its cut, else logical." },
+        "cut": { "type": "ref", "ref": ["cut"], "label": "Default cut", "doc": "For a structural view: the cut it opens at. Without one, a large model opens as an overview with its top-level subsystems collapsed and a small one with every subsystem open." },
+        "coarsen": { "type": "list", "items": { "type": "string" }, "label": "Kind coarsening", "doc": "For a structural view: relationship kinds every drawn kind is relabelled to (its nearest listed ancestor), or [\"all\"] for the kinds directly under interacts-with." },
         "filter": {
           "type": "object", "label": "Filter",
           "fields": {

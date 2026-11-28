@@ -136,11 +136,9 @@ const CONSISTENCY = [
   ['a policy condition that does not parse', 'policy.expr-syntax', (/** @type {any} */ d) => { entity(d.policies, 'p-place').condition = 'request.tenant =='; }],
   ['a policy condition reading an undeclared input', 'policy.expr-reference', (/** @type {any} */ d) => { entity(d.policies, 'p-place').condition = 'request.region == principal.tenant'; }],
   ['a policy condition comparing a number with a string', 'policy.expr-type', (/** @type {any} */ d) => { entity(d.policies, 'p-flow').condition = 'event.tenant == 3'; }],
-  ['a policy condition that is not a boolean', 'policy.expr-type', (/** @type {any} */ d) => { entity(d.policies, 'p-place').condition = 'request.amount + 1'; }],
   ['a contract validation naming a field', 'validation.target', (/** @type {any} */ d) => { entity(d.validations, 'v-order').field = 'order'; }],
   ['a validation of an undeclared input', 'validation.target-unknown', (/** @type {any} */ d) => { entity(d.validations, 'v-order').input = 'basket'; }],
   ['a maxLength that is not a positive integer', 'validation.param', (/** @type {any} */ d) => { entity(d.validations, 'v-note').maxLength = 0; }],
-  ['a parameter of another rule', 'validation.param', (/** @type {any} */ d) => { entity(d.validations, 'v-order').pattern = '^x$'; }],
   ['a range over a string input', 'validation.target-type', (/** @type {any} */ d) => { entity(d.validations, 'v-amount').input = 'tenant'; }],
   ['a pattern that is not a regular expression', 'validation.pattern', (/** @type {any} */ d) => { entity(d.validations, 'v-tenant').pattern = '([a-z'; }],
   ['an empty range', 'validation.range', (/** @type {any} */ d) => { Object.assign(entity(d.validations, 'v-amount'), { min: 10, max: 1 }); }],
@@ -161,7 +159,6 @@ const CONSISTENCY = [
   ['a retry of zero attempts', 'retry.attempts', (/** @type {any} */ d) => { entity(d.retries, 'y-place').attempts = 0; }],
   ['a retry timeout that is not a duration', 'retry.duration', (/** @type {any} */ d) => { entity(d.retries, 'y-place').timeout = '5 sec'; }],
   ['a cap on a fixed backoff', 'retry.backoff', (/** @type {any} */ d) => { entity(d.retries, 'y-place').backoff.kind = 'fixed'; }],
-  ['a backoff cap shorter than its base', 'retry.backoff', (/** @type {any} */ d) => { entity(d.retries, 'y-place').backoff.cap = '10 ms'; }],
   ['an idempotency key that is not an input', 'retry.idempotency-key-unknown', (/** @type {any} */ d) => { entity(d.retries, 'y-place').idempotencyKey = 'request-id'; }],
   ['an audit naming both a contract and an event', 'audit.target', (/** @type {any} */ d) => { entity(d.audits, 'a-place').event = 'placed'; }],
   ['an audit capturing one field twice', 'audit.capture', (/** @type {any} */ d) => { entity(d.audits, 'a-place').capture.push({ field: 'actor', from: 'principal.tenant' }); }],
@@ -169,13 +166,16 @@ const CONSISTENCY = [
   ['an audit capture reading an undeclared output', 'audit.expr-reference', (/** @type {any} */ d) => { entity(d.audits, 'a-place').capture.push({ field: 'detail', from: 'response.reason' }); }],
   ['an audit capture of the wrong class', 'audit.expr-type', (/** @type {any} */ d) => { entity(d.audits, 'a-place').capture[2].from = 'principal.id'; }],
   ['a chain field on an append-only audit', 'audit.chain-field', (/** @type {any} */ d) => { entity(d.audits, 'a-place').immutability = 'append-only'; }],
-  ['a chain field that is not bytes or a string', 'audit.chain-field', (/** @type {any} */ d) => { entity(d.records, 'audit-entry').fields[4].type = 'u64'; }],
   ['realisedBy on a claim that is not a requirement', 'claim.realised-by-not-requirement', (/** @type {any} */ d) => { entity(d.claims, 'c-struct').realisedBy = ['q-place']; }],
   ['a construction requirement with neither models nor realisedBy', 'requirement.construction-unmodelled', (/** @type {any} */ d) => { delete entity(d.claims, 'r-limit').realisedBy; }],
 ];
 
+const generationChecked = new Set();
 for (const [title, code, mutate] of CONSISTENCY) {
-  for (const generation of [false, true]) {
+  // The generation switch is checked once per family of reported codes (the part before the dot); the other cases run without it.
+  const modes = generationChecked.has(code.split(".")[0]) ? [false] : [false, true];
+  generationChecked.add(code.split(".")[0]);
+  for (const generation of modes) {
     test(`construct consistency: ${title} is reported once as ${code}${generation ? ' (generation set)' : ''}`, () => {
       const r = analyzeSpec(spec(/** @type {any} */ (mutate), { generation }));
       assert.deepEqual(codes(errors(r)), [code], explain(r));

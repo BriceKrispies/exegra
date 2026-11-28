@@ -1,0 +1,36 @@
+// The change-impact fixture (WG-5684, criterion 8): assumptions, claims resting on them, a claim discharging an
+// assumption, a lean-theorem claim on a theorem in F1.lean, test evidence in t1.test.js and t2.test.js,
+// a measurement in m2.csv, a claim
+// with no dependency, and an unrelated component. expected.json lists, for each change alone, the claims it re-marks.
+{
+  "exegra": "0.1",
+  "system": { "id": "change-impact", "name": "Change impact", "description": "A fixture for the dependency graph of claims." },
+  "components": [
+    { "id": "service", "name": "Service", "category": "logical", "purpose": "Serves requests." },
+    { "id": "unrelated", "name": "Unrelated", "category": "logical", "purpose": "Nothing depends on it." }
+  ],
+  "assumptions": [
+    { "id": "a1", "statement": "The network delivers every message." },
+    { "id": "a2", "statement": "The clock never goes backwards." },
+    { "id": "a3", "statement": "The service answers within a second." }
+  ],
+  "claims": [
+    { "id": "c1", "kind": "invariant", "statement": "Requests are answered.", "assumptions": ["a1"], "evaluate": { "method": "external-evidence" } },
+    { "id": "c2", "kind": "invariant", "statement": "Timestamps increase.", "assumptions": ["a2"], "evaluate": { "method": "external-evidence" } },
+    { "id": "c3", "kind": "invariant", "statement": "Answers are ordered.", "assumptions": ["a1", "a2"], "evaluate": { "method": "external-evidence" } },
+    { "id": "c4", "kind": "invariant", "statement": "f1 holds.", "evaluate": { "method": "lean-theorem", "theorem": "ChangeImpact.f1_thm", "about": ["ChangeImpact.f1"] } },
+    { "id": "c5", "kind": "invariant", "statement": "The parser accepts its examples.", "evaluate": { "method": "external-evidence" } },
+    { "id": "c6", "kind": "invariant", "statement": "The service answers within a second.", "assumptions": ["a1"], "discharges": ["a3"], "evaluate": { "method": "external-evidence" } },
+    { "id": "c7", "kind": "invariant", "statement": "Clients never time out.", "assumptions": ["a3"], "evaluate": { "method": "external-evidence" } },
+    { "id": "c8", "kind": "invariant", "statement": "The fixture has a claim with no dependency.", "evaluate": { "method": "external-evidence" } }
+  ],
+  "evidence": [
+    { "id": "ev-c1", "claim": "c1", "kind": "test", "ref": "tests/fixtures/change-impact/t2.test.js#c1" },
+    { "id": "ev-c2", "claim": "c2", "kind": "test", "ref": "tests/fixtures/change-impact/t2.test.js#c2" },
+    { "id": "ev-m2", "claim": "c2", "kind": "measurement", "ref": "tests/fixtures/change-impact/m2.csv" },
+    { "id": "ev-c3", "claim": "c3", "kind": "test", "ref": "tests/fixtures/change-impact/t2.test.js#c3" },
+    { "id": "ev-t1", "claim": "c5", "kind": "test", "ref": "tests/fixtures/change-impact/t1.test.js" },
+    { "id": "ev-c6", "claim": "c6", "kind": "test", "ref": "tests/fixtures/change-impact/t2.test.js#c6" },
+    { "id": "ev-c7", "claim": "c7", "kind": "test", "ref": "tests/fixtures/change-impact/t2.test.js#c7" }
+  ]
+}

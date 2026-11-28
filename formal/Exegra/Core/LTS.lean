@@ -3,7 +3,7 @@ Labelled transition systems: the object every guarantee Exegra establishes is a 
 (docs/foundations.md, section 3).
 
 An `LTS σ α` has a predicate of initial states and a step relation labelled by actions. Unlike the
-interpreter in `Exegra.Semantics`, it is a relation: nondeterminism is part of the object, not
+legacy format-2 interpreter (`Exegra.V2.traceOf`), it is a relation: nondeterminism is part of the object, not
 supplied from outside by an explorer, and a system with no successor from some state simply has
 none.
 

@@ -1,0 +1,549 @@
+// Claims of the generation-readiness subsystem (its evidence is in evidence-core-generation.jsonc).
+{
+  "claims": [
+    {
+      "id": "codegen-consistency-rules",
+      "kind": "invariant",
+      "statement": "Type entities, record constraints and requirement realisation are checked as errors whether or not the specification sets system.generation: an id or scalar type has a built-in representation, an enum has values, struct fields resolve, set-null needs optional, onDelete needs refersTo, unique and index fields are declared, changes list versions 1 to schemaVersion without gaps, and a construction requirement is named in the models property of some claim.",
+      "rationale": "Evidence is one core test per rule, each breaking a ready fixture once and expecting exactly that error. The claim is supported, not verified, because Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "generation-readiness-gated",
+      "kind": "invariant",
+      "statement": "The readiness rules (unresolved field, contract and event types, a reference without onDelete, a record without schemaVersion, a contract without realisation, a hole without an H- ref, implementedBy or postcondition, a requirement without realisation) are validation errors when system.generation is set; without it validate reports none of them and the readiness command lists them, exiting 0 either way.",
+      "rationale": "Evidence is two core tests per rule (with and without the switch) and the command test. Supported, not verified, as Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator",
+        "agent-cli"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "construct-consistency-rules",
+      "kind": "invariant",
+      "statement": "The cross-cutting constructs are checked as errors whether or not the specification sets system.generation: every policy, quota, retry, audit and validation names exactly one target; a validation names a declared input or field, carries exactly the parameters of its rule, fits the class of its target, and has a valid pattern and a non-empty range; a retention states exactly one of keepFor and until, a duration, fields only and always when it anonymises, declared fields, archiveTo only when it archives, and at most one per record; a quota has a positive limit, a duration window, and a declared contract error exactly when it refuses calls of a contract; a retry has positive attempts, durations, a cap only on an exponential backoff and not below the base, and a declared idempotency key; an audit captures declared fields once each, a chain field of bytes or string exactly when chained by hash; every condition, custom rule and capture parses, reads only what is in scope and types against the declared fields; and only a requirement has realisedBy.",
+      "rationale": "Evidence is one core test per rule, each breaking a fixture that uses every construct once and expecting exactly that error, with and without the switch. Supported, not verified: Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "construct-readiness-gated",
+      "kind": "invariant",
+      "statement": "The readiness rules of the cross-cutting constructs (a contract governed by policies without policyDefault, a policy on a transition of a model-level machine, a maxLength validation without a unit, a record with personal or credential fields and no retention, an archiving retention without archiveTo, a quota without heldBy, a retry of an event or of a non-idempotent contract without an idempotency key, a retry without a timeout, an audit that leaves a required field of its record unfilled) are validation errors when system.generation is set; without it validate reports none of them and readinessGaps lists each.",
+      "rationale": "Evidence is two core tests per rule, with and without the switch, over the fixture that uses every construct. Supported, not verified, as Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "construction-requirement-realised-by-constructs",
+      "kind": "invariant",
+      "statement": "A requirement realised by construction is satisfied by a claim whose models names it or by at least one construct in its realisedBy; with neither, validation reports requirement.construction-unmodelled.",
+      "rationale": "Evidence is the fixture whose construction requirements name only constructs and validate without error, and the test that removes realisedBy and gets exactly that error. Supported, not verified.",
+      "subjects": [
+        "generation-readiness"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "ui-consistency-rules",
+      "kind": "invariant",
+      "statement": "The user interface constructs are checked as errors whether or not the specification sets system.generation: a screen route is \"/\" or literal and :param segments with no parameter twice, no two screens answer the same route, auth is none, session or role:<r>, and every required input of the view-model contract is a route or query parameter; a form field fills a declared input of its contract with a control that fits its class, no input is filled twice, every required input is filled by a field or an argument, and only a select has options; an action gives an argument for every required input of its contract and none for an undeclared one; arguments and navigation parameters parse, read only route parameters, view-model outputs, the principal and (for navigation) the response, and are of the right class; a navigation gives exactly the target route parameters; accessible names are non-empty; a live binding refreshes the whole view model or a path into it, once per screen and event; and every journey step has exactly one known key with nothing else in its value (no CSS selector), names existing screens, forms, fields, events and browsers, gives every route parameter on goto, selects by a WAI-ARIA role, expects an HTTP status from 100 to 599 and scans logs with regular expressions, and a journey verifies requirements only.",
+      "rationale": "Evidence is one core test per rule, each breaking a fixture that uses every user interface construct once and expecting exactly that error, with and without the switch; reference errors come from the parser. Supported, not verified: Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "ui-readiness-gated",
+      "kind": "invariant",
+      "statement": "The readiness rules of the user interface (a screen without a view-model contract or a renderer, a form field without a label, an action without onSuccess or onError) are validation errors when system.generation is set; without it validate reports none of them and readinessGaps lists each. A contract a form or action uses that policies govern without policyDefault is the construct rule ready.policy-default-missing, reported once.",
+      "rationale": "Evidence is two core tests per rule, with and without the switch, over the fixture that uses every user interface construct. Supported, not verified.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "client-machines-held-to-machine-rules",
+      "kind": "invariant",
+      "statement": "An implementation-level behavior whose subject is a component of category client is accepted and held to the same machine readiness rules as any implementation-level behavior.",
+      "rationale": "Evidence is the fixture whose page kernel is a client-side implementation machine that validates without error, and the test that removes its transaction and gets exactly ready.transaction-missing. Supported, not verified.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "ui-journey-steps-checked",
+      "kind": "invariant",
+      "statement": "Every journey step addresses elements by WAI-ARIA role and an exact or patterned accessible name, with a heading level only on a heading and within only another such element, never a CSS selector; every pattern compiles; every attribute read is aria-*, data-*, value, href, lang or dir (data-*, lang or dir on the document element); every ${name} is captured by an earlier step and every name is captured once; a no-reload check names a marker, and a request check a log, set earlier in the same browser; hosts, paths, JSON reply paths, statuses and timeouts are well formed; an API call made as a browser names one of the journey; a gotoPath may add a fragment of letters, digits and = & _ - . ~ % (a captured value may stand in it) and a path carries none inline; expectUrl takes a pattern that compiles; captureMail names the address it reads, a pattern that compiles and a browser of the journey, and binds a name captured once; and clickAction gives a per-row action the row fields its label and confirmation read, and no row to any other action.",
+      "rationale": "Evidence is one core test per rule over a journey that uses every step kind, each breaking it once and expecting exactly that error, with and without the switch. Supported, not verified.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "ui-per-row-actions",
+      "kind": "invariant",
+      "statement": "A per-row action repeats over a path into its screen's view model that reaches a list of a declared struct; its arguments and navigation parameters read item.<field> typed by that struct, and its label and confirmation fill in only ${item.<field>} placeholders naming fields of the rows; an action that is not per-row has no item placeholders.",
+      "rationale": "Evidence is the core tests that break forEach, the label templates and an item argument once each. Supported, not verified.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "ui-client-constructs-third-set",
+      "kind": "invariant",
+      "statement": "A select or radio field takes options from a list in its screen's view model only through a path that reaches a list, naming struct fields of the control's class for value and a string for label; at most one screen is the catch-all and nothing navigates or goes to it; navigation addresses and parameters, toasts and derivations read only names in scope (query.<param> of the screen, form.<field> on a form, response.<output>, local.<name>), with toast placeholders that can be shown as text; a live binding's condition is a boolean over the event payload and the view model, or a membership of a value of the items' class in a view-model list, or any or all of such conditions; derived fields do not read themselves or derive in a cycle; and an action that keeps its result places an output of its contract in a declared screen-local value of the same type and does not navigate.",
+      "rationale": "Evidence is the core tests that break each rule of the third set once (WG-4877) and the fixture that uses every construct. Supported, not verified.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "wire-naming-and-json",
+      "kind": "invariant",
+      "statement": "system.generation.wireCase and a contract's binding.case accept exactly snake_case, kebab-case and camelCase, any other value being property.enum at its position; json is a built-in type that resolves wherever a type is named but is never the representation of an id or scalar (type.repr-json); in expressions a json value is its own class, compared only with == and != against json or null, refused by ordering, arithmetic, concatenation and boolean operators, by toasts and form controls, and no path reaches into it.",
+      "rationale": "Evidence is the core tests of WG-4881: the accepted and refused wire cases, json resolving in contract, struct and event fields, the expression class rules over json, the representation rule, and a refresh path into and an action argument from a json output. Supported, not verified, because Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "ui-client-constructs-fourth-set",
+      "kind": "invariant",
+      "statement": "A contract input is encoded only as its encode allows: trim, split and as read a text input, split names a separator and is not combined with as, and empty is given only for an optional input. A form field takes an initial value only from a path reaching a value its control edits, or from the first item of a list of structs whose field equals an expression of the field’s class, and an always-derived field takes none; normalize is only on a text, textarea or password control. A form’s second call reads the first call’s response, and the outcome reads the outputs of both calls. onSuccess.view names outputs of the view model of the screen the success opens, each of its output’s class. onError prefix and announce, when given, are not empty; confirmAnnounce belongs to an action with a confirm and is not empty; alsoOn offers an action on the screens of one authentication only and reads nothing of one screen. An error message is well formed: its placeholders fit its kind, the kinds it words are errors some contract of its forms and actions lists, no two messages word the same thing for the same forms and actions, and a specification with a form or an action has a default message for refusals (a readiness gap when generation is set).",
+      "rationale": "Evidence is the core tests that break each rule of the fourth set once (WG-4882) and the fixture that uses every construct. Supported, not verified.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "telemetry-logging-rules",
+      "kind": "invariant",
+      "statement": "system.telemetry declares services with distinct ids and relative log paths (telemetry.service); an event's logging is {logged: true, service, level, name?, tenant?, fields} or {logged: false, reason} (event.logging-shape), names a declared service (event.logging-service) and a dotted lower-case log name unique within the service (event.logging-name), and logs only payload fields that exist (event.logging-field-unknown), are scalars (event.logging-field-type), are neither marked sensitive nor of a type that is sensitive through structs, lists and options (event.logging-field-sensitive), and are written under lower-case names that are not ts, level, service, event, correlation or tenant and not twice (event.logging-field-reserved); with system.generation every domain event states its logging (ready.event-logging-missing); an expectLog step names a logged event and its service (uiScenario.log-event) and expects only the line's tenant and allowlisted members (uiScenario.log-field); and a logged domain event is not reported as an unused event, since the running system emits it.",
+      "rationale": "Evidence is the core tests of WG-4896: a specification with telemetry that validates, each rule broken once and reported exactly once with and without the switch, the sensitivity of types through structs, lists and options, the readiness gap, and each broken expectLog step. Supported, not verified, because Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "scenario-input-typed",
+      "kind": "invariant",
+      "statement": "Every value a scenario feeds a machine has the type its event declares: a step payload and the payload of an inject-event fault are checked field by field (uuid format, integer bounds per type, enum values, required fields present, no undeclared fields, option fields absent or null), and a finding scenario.input-type is an error when system.generation is set and a warning otherwise.",
+      "rationale": "Exegra's simulator accepts any payload, but the machines generated from a specification refuse input that does not match the declared types, so a scenario that the simulator runs can disagree with the generated machines (WG-4952). Evidence is a negative fixture (a uuid key given as x-1) refused with exactly one scenario.input-type, the severity switch, fault payloads and the per-type value rules. Supported, not verified, as Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "union-map-types-rules",
+      "kind": "invariant",
+      "statement": "A type may be a tagged union (variants that are unit, struct-like or newtype, written in serde's external, internal or adjacent form, with the variant names in their own case) and a type text may be map<K, V>; validation refuses a union without variants or with a variant twice (type.union-variants), a variant field that does not resolve (type.union-field), an encoding whose tagField or contentField does not fit its tag or its variants (type.encoding), a map key that is not a string, an integer or an id or scalar over one (type.map-key), a struct that contains itself through struct fields alone (type.recursion) while allowing a cycle through a union variant, list, option or map, and a constraint (pattern, minLength, maxLength) on a type that does not take it or with an invalid regular expression (type.constraints); a union and a map value are opaque (class json) in guard expressions, and readiness (ready.*-undeclared) covers map types.",
+      "rationale": "WG-4925 (NC-1): the Strata kernel's enums and maps (Value, Intent, FieldType, BTreeMap<FieldId, Value>) must be stated in the specification to be generated from it, and generated code must read and write the JSON the Rust kernel does. Evidence is the core tests: a ready specification in the kernel's forms with no error, and for each code a minimal specification breaking exactly that rule, refused once with that code with and without the generation switch. Supported, not verified: Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "language-construct-rules",
+      "kind": "invariant",
+      "statement": "A specification may state an expression language its users write (section languages, entity language): an AST union and a value union, shapes, scopes (record-scope with system attributes, param, constant, role-test) and operators, each with its syntax (infix, keyword-infix, prefix-word, call, literal or scope form, token, precedence, associativity), operand and result shapes, null handling and one primitive of a fixed catalogue whose semantics are pinned to the Strata kernel (crates/kernel/src/expr.rs); validation refuses two operators of one name (language.operator-duplicate), a word or symbol claimed twice (language.token-clash), a token of the wrong lexical class or a form the primitive is not written in (language.syntax), a missing or misplaced precedence or two associativities at one level (language.precedence), a primitive outside the catalogue (language.primitive-unknown), operands that disagree with the primitive arity or the AST variant (language.arity), an undeclared shape (language.shape-unknown), null handling other than the primitive's (language.nulls), an operator for a variant or case the AST does not have or a second operator for one (language.variant), and a scope that is malformed, missing for an operator or read by none (language.scope); with system.generation set an AST variant or case without an operator and an operator without a primitive are errors (ready.language-variant-uncovered, ready.language-primitive-missing).",
+      "rationale": "WG-4929 (NC-2, finding F1 of WG-4895): Exegra's guard language cannot state the kernel's rules, so the tenant rule language (three-valued logic, lists and in, len, lower, contains, starts_with, is_slug, if, has_role, $-attributes, record, old and new scopes with one-hop references, now, principal, params) must be stated as data for specc to generate its parser, printer, checker and evaluator (WG-4931) and for Strata's specification to describe it (WG-4930). The language is not the guard language and is not mirrored in Lean. Evidence is the core tests: the kernel language as it is today validates with no readiness gap, and for each code a minimal specification breaking exactly that rule is refused once with that code, with and without the generation switch. Supported, not verified: Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "function-construct-rules",
+      "kind": "invariant",
+      "statement": "A specification may state pure functions (section functions, entity function): typed params, a returns type, an optional errors union, lets and a body in the function body language, which is the guard language extended with struct field access, if, let, match over unions, options, results and enums, struct and union constructors, list literals, the operations map, filter, find, any, all, fold, sortBy, take, concat, keys, values, get, insert, remove and format, eval and check of a declared language, call of another function, fail and try; validation refuses a body or let that does not parse (function.expr-syntax), a name, field, variant, type, function, language or operation that does not exist (function.expr-reference), an expression that is ill typed or a body that does not fit the return type (function.expr-type), a match that misses a case without _, has a case twice or an arm after _ (function.match-exhaustive), a call cycle through two or more functions, or a call of a function of itself on anything but a strict sub-value of a union parameter at one position shared by all its calls of itself (function.recursion), errors that are not a union or a fail or try outside that union (function.error-unknown), malformed or duplicate parameter and let names and parameter or return types that do not resolve (function.param), and an example that is malformed or does not evaluate to its result or error in Exegra's JavaScript evaluator (function.example-failed); with system.generation set a function without a success example or without an example of an error variant it can fail with is an error (ready.function-example-missing).",
+      "rationale": "WG-4933 (NC-3 of WG-4895): the kernel's decision logic (intent decision, policy evaluation, validation, workflow steps, view assembly) must be stated in the specification so that specc can compile it into a pure crate (WG-4934). The acyclic call graph and finite list operations make every function total. Exegra gives functions a checked meaning by evaluating their examples in JavaScript; functions are not mirrored in Lean. Evidence is the core tests: real kernel functions (roles_of, may_attempt and authorize from rules.rs, check_version from transition.rs) with examples from the kernel tests validate with no readiness gap, and for each code a minimal specification breaking exactly that rule is refused once with that code, with and without the generation switch. Supported, not verified: Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "set-tuple-nested-types-rules",
+      "kind": "invariant",
+      "statement": "A type text may be set<T>, a JSON array of distinct items in order, which resolves, keys maps and closes recursion as list<T> does and has the class list in guard expressions; a scenario value of a set type that repeats an item does not have the type; a union variant may be a tuple variant (tuple: true, two or more positional fields written as a JSON array in order, as serde writes {\"Cmp\": [\"Eq\", a, b]}); generic type texts nest (map<K, map<K2, V>>, list<map<K, V>>). Validation refuses a set of an unresolved type (type.field-unresolved, type.union-field), a map keyed by a set or a bad key inside a set or another map (type.map-key), a tuple variant with fewer than two fields, also marked newtype, or with an optional field (type.union-variants), and a tuple variant under an internal tag (type.encoding). A shared<T> is a sharing hint, identical to T on the wire: it resolves, keys maps, closes recursion, has the class and holds the values of T, and validation refuses a shared of an unresolved type (type.field-unresolved) and a struct that holds itself through a shared field (type.recursion).",
+      "rationale": "WG-4956: the Strata kernel holds BTreeSet fields (PolicyDef.actions, WorkflowDef.initial, QueryDef.params, member roles), tuple variants (Expr::Cmp(CmpOp, Box<Expr>, Box<Expr>) and six more) and a map of maps (TenantState.records), which must be stated exactly to be generated from the specification. Evidence is the core tests: a ready specification using every form with no error, and for each refusal a minimal specification breaking exactly that rule, refused once with that code with and without the generation switch. Supported, not verified: Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "contract-errors-on-the-wire",
+      "kind": "invariant",
+      "statement": "A contract error states its HTTP status as status (an integer from 400 to 599, contract.error-status) or as kind (a key of system.generation.errorKinds, contract.error-kind-unknown), never both (contract.error-status-kind), and otherwise takes the default system.generation.errorKind or errorStatus; errorKinds map to statuses from 400 to 599 (generation.error-kinds) and the defaults are well formed and exclusive (generation.error-status); system.generation.errorBody names a struct type whose every field but code, message and correlation is optional (generation.error-body-type), a code field of an enum holding every kind and string message and correlation fields (generation.error-body-field, generation.error-body-code), needs errorKinds (generation.error-body-kinds) and maps exactly the six runtime failures to declared kinds (generation.error-body-runtime); when generation is set an error of a served contract with no status is ready.error-status-missing, and under an error body one with no kind is ready.error-kind-missing.",
+      "rationale": "Evidence is the core tests of WG-4893: a specification with kinds, a body and errors naming kinds validates clean, the status resolution order, each wire rule reported once at its position, and the two readiness gaps with and without their defaults. Supported, not verified, because Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "tenant-data-fixed-rule",
+      "kind": "invariant",
+      "statement": "A record states whether it is a platform table (scope platform, its fields its whole shape) or a platform table carrying tenant-defined data (scope tenant-meta, described by the type with metamodel tenant-schema), and may be marked realisation target; once a type has metamodel tenant-schema, validation refuses a record without a scope (record.scope-missing), a record that is not tenant-meta yet names a tenant object type or carries tenant field values, through a field of an object-id or values type or a map keyed by a field-id type (record.tenant-data-fixed), and a tenant-meta record without describedBy naming the tenant-schema type, or a describedBy on any other record (record.described-by); a specification without a tenant schema is unchanged.",
+      "rationale": "WG-4950: Strata stores tenant data in a metadata model (generic records described by each tenant's schema), and its specification declared tenant content as fixed record types. The format must say which records are platform tables and refuse a fixed record standing for tenant domain data. Evidence is the core tests: a passing metadata model, and for each code minimal specifications breaking exactly that rule, refused once with that code with and without the generation switch. Supported, not verified: Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "route-ambiguous-rule",
+      "kind": "invariant",
+      "statement": "Two screens whose routes tie are refused with route.ambiguous: both routes are non-catch-all, have the same number of segments, agree at every position (equal literals, or a parameter on either side), and have the same number of literal segments. Screens whose routes do not tie that way are not refused.",
+      "rationale": "Evidence is the consistency rule's negative fixture (two tying screens, reported once) and its passing case (screens whose routes differ), in tests/core/ui.test.js (WG-4955). Supported, not verified.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "contract-exposure-and-auth",
+      "kind": "invariant",
+      "statement": "A contract states its exposure (public, internal or local) and its auth as {scheme, ...} with scheme anonymous, session, service, provisioning-token, signature, signed-address, delegation or in-process; with system.generation set a missing or prose auth is contract.auth-structured and a missing exposure contract.exposure, and always an object auth has only the members of its scheme (contract.auth-structured) and in-process is exactly the scheme of local contracts (contract.exposure); a local contract has no HTTP binding and an internal one none under the gateway prefix (exposure.gateway); a public contract not marked readOnly needs a session or visitor with csrf and origin or a verified credential (auth.public-write); an anonymous public contract is readOnly or justified and limited by a quota, an anonymous internal one readOnly and justified (auth.anonymous); the service scheme is never public (auth.service-public); every named policy governs the contract (auth.policy-unknown); a development contract names a declared condition, is never anonymous and when public names roles (auth.dev-only); and a public contract states a tenantScope other than platform (contract.tenant-scope).",
+      "rationale": "Evidence is the core tests of WG-4908 (tests/core/access.test.js): a specification covering every exposure validates clean, prose is accepted only without the switch, and each rule is reported once at its position by a fixture that breaks only it. Supported, not verified, because Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "derivation-construct-rules",
+      "kind": "invariant",
+      "statement": "A contract may be derived (realisation derived, with derivation {kind: pure, function} | {kind: read, needs, load, decide, and optionally the need loop insufficient and needRounds together} | {kind: command, needs, load, decide, commit, conflict, insufficient, needRounds, retries}, and optionally fault) or a facade (realisation facade, with a bffRoute); validation refuses a derivation on a contract that is not derived, a derived contract without one, an unknown kind, a field of another kind or a read naming only one of insufficient and needRounds (derivation.kind), a function whose parameters are not inputs (or load outputs) of the same name and type, whose result is not the outputs, whose error variants are not errors of the contract, an insufficient variant that is not a variant of decide carrying one need, or a fault that is not an error without payload (derivation.signature), a load contract that is a facade or itself, whose required inputs nothing fills, that takes the needs not exactly once, whose outputs are named like inputs or whose errors are not errors of the contract (derivation.load), the same for the commit contract with what decide gives, a conflict that is not a commit error, and an output that is neither a commit output nor a field of what decide gives (derivation.commit), need rounds (of a command or a read with a need loop) or retries missing or not non-negative integers (derivation.bounds), and a facade with implementedBy or whose bffRoute method, path and shape not exactly one served contract states (contract.facade-route); with system.generation set a derivation naming an undeclared function is an error (ready.derived-function-missing).",
+      "rationale": "WG-4935 (NC-4 and NC-5 of WG-4895): the kernel's contracts become implementations a generator emits from functions (pure), from a load and a decision (read), and from the load-decide-commit loop of Strata's storage-api execute (command; need rounds 32 and conflict retries 8 there); publication-specific gateway contracts become facades a client lowers onto generic served contracts. Evidence is the core tests: the specification of specc's derived fixture validates with no readiness gap, and for each code a minimal specification breaking exactly that rule is refused once with that code, with and without the generation switch. Supported, not verified: Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "function-language-kernel-fidelity",
+      "kind": "invariant",
+      "statement": "The function body language states what the Strata kernel computes without stand-ins: an AST field typed string or an id or scalar over string (has_role's role-id) is read as a name, so has_role evaluates and checks; a variant, enum value or field named like a keyword (value.null, expr.if, then, else) is written after a dot, as a match pattern and before a colon, and a keyword-named field is never bound by shorthand; the built-in unit type has the one value () (null in examples), and unit is not the representation of an id or scalar and cannot be declared again; print(L, e) writes an expression as the kernel's Display writes it; format's {:?} writes a value as Rust's derived Debug of the type specc generates and {:json} as serde_json's compact text (strings escaped, f64 as ryu writes it); startsWith, endsWith, length, trim, chars, snakeCase, parseTime and the ASCII character classes behave as the kernel's Rust (str::starts_with, chars().count(), str::trim over White_Space, transition.rs snake_case, plain.rs parse_time, char::is_ascii_*); a function calls itself only on a strict sub-value of a union parameter; and the language evaluator and checker give the kernel's results and exact error texts on the shared case table.",
+      "rationale": "WG-4957 (with WG-4962): stating the kernel's functions (WG-4936, WG-4937, WG-4938) needed workarounds: has_role always false because the evaluator read only fields typed plain string, an absent parameter standing for Value::Null, the printed conditions and the blank-name test passed in as inputs, Debug texts spelled out per type, starts_with read through the rule language, JSON text without escapes, a list of lists named without recursion, and example error texts in Exegra's wording. Evidence is the core tests: the function fixture states holds-role, role-declared, print-rule, request-text, debug-texts, json-text, mentions-field, is-field-id, kind-rule, blank, route-ok, parse-time and the keyword-named plain-value functions with examples from the kernel's behaviour and its tests, each new rule has a negative fixture refused once with its code, and the shared case table gives the kernel's eval and check results and texts with each expression's printed source. Supported, not verified: Exegra does not check its own evaluator against the kernel; the kernel's tests read the same table.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "capability-model-closed",
+      "kind": "invariant",
+      "statement": "Capability, plan, role, grant, delegation, tokenScope and featureFlag are entity kinds, and a contract auth names the capabilities it requires in requires; every capability a contract, plan, role, grant, delegation, token scope or flag names is a capability (capability.unknown); with system.generation set every contract that is not local requires at least one (capability.required); every capability is conferred by some role or grant and is core or entitled by some plan (capability.unreachable); a delegation passes on only capabilities its source (role, token scope, grant or delegation) holds and a grant confers only capabilities its issuer role holds (delegation.exceeds); and a grant or delegation maxDuration is a positive duration (capability.duration).",
+      "rationale": "Evidence is the core tests of WG-4954 (tests/core/capabilities.test.js): a specification whose contracts require capabilities that roles confer and plans entitle validates clean, a missing requires is accepted only without the switch or on a local contract, and each rule is reported once at its position by a fixture that breaks only it. Supported, not verified, because Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "example-fixture-rules",
+      "kind": "invariant",
+      "statement": "A specification may declare example fixtures (section exampleFixtures, entity exampleFixture: id, type, value, description) and a function example's argument, result or error may be {fixture: id} or {fixture: id, with: {dotted path: value}} instead of the value; Exegra resolves the reference, and the overrides in order, before it evaluates the example, so the example is checked exactly as if the value were written out. Validation refuses a reference to a fixture that is not declared (example.fixture-unknown); a fixture whose type does not resolve or whose value is not of its type, and a fixture that, with its overrides, is not the type of the parameter, result or error it stands for (example.fixture-type); and an override path that does not lead into the fixture's value through struct fields, map keys, list indexes and union variant names, an empty step, or a with that is not an object (example.fixture-override).",
+      "rationale": "WG-4963: every function example of Strata carried the whole test tenant and schema, which grew its specification from 3.3 MB to 5.2 MB and slowed every apply. Declaring such values once and referring to them removes the repetition without changing what an example states, and specc writes each fixture once per generated test module. Evidence is the core tests: the passing fixture uses fixtures with and without overrides and every example holds, and for each code a minimal specification breaking exactly that rule is refused once with that code. Supported, not verified: Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "function-branch-coverage",
+      "kind": "invariant",
+      "statement": "Exegra records which branches of each function its examples take (both branches of if, each arm of match, the value and the error path of try where the called function can fail, and fail), without changing what the examples evaluate to; exegra cover-functions reports per function the branches covered out of the total and each uncovered branch with its place in the body or let; an uncovered branch is reported and raises no readiness gap, because a rule that asks for one example per branch rewards examples that restate the function rather than its requirement; system.generation.functionBranches is still accepted and changes nothing.",
+      "rationale": "WG-4965 made an uncovered branch a readiness gap; WG-5377 made it informational (Strata docs/assurance.md, principle 4: tests are judged by whether they fail when the code is wrong, not by branch coverage of examples). Evidence is tests/core/functions.test.js. Supported, not verified: Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "agent-cli"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "format-gaps-rules",
+      "kind": "invariant",
+      "statement": "A contract may be a target (realisation target: specified, not implemented, served by no route, never loaded, committed or lowered onto by a derivation or facade); a derivation of a read or command may state header: true (the load with no needs first, its outputs readable by the needs function, then the needs loaded in one round that no need round counts); an untagged union (encoding tag untagged) is written as the raw JSON of its variant, read in declaration order, and validation refuses one with a tagField, contentField or variantCase, two variants written as one JSON shape or a json newtype before another variant (type.encoding); binding.suppliedBy says an input comes from the route or session and never the body, and validation refuses one naming no input or no such supplier (contract.supplied-by), and a form field or argument (form.supplied-input) or action argument (action.supplied-input) that fills one; a function body may write the JSON null where a json value is expected and nowhere else (function.expr-type), and a union variant named like a keyword (plain-json.null) after a dot of a path or in a match pattern, eval may take a lookup that following a reference reads, and sortBy orders lists item by item and unions by variant and fields, as the kernel's Value does.",
+      "rationale": "WG-4968, from the read and view functions of Strata (WG-4939): CT-093 is target, the generic records contract takes raw JSON, tenant and context come from the route and session, projections write the JSON null, a query filter follows references and sorts lists, and the store loads a header before its needs. Evidence is the core tests: a fixture using each construct validates and its function examples hold, each rule has a minimal specification breaking exactly that rule, and values round-trip through their wire form. Supported, not verified: Exegra does not check its own validation rules.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "language-checked-arithmetic",
+      "kind": "invariant",
+      "statement": "The primitive catalogue holds checked integer arithmetic (add-checked, sub-checked, mul-checked), time arithmetic (add-checked and sub-checked on a timestamp and an int, time-difference, days-ms, hours-ms, minutes-ms) and text (concat-checked, to-text), and the language evaluator gives for them the results and exact error texts of the shared case table: every integer operand and result lies in -(2^53-1) to 2^53-1, and outside it the evaluation fails with integer-overflow (never a wrapped, saturated or rounded value), at both ends of the range and for a product beyond 64 bits; a concatenation longer than 4096 bytes of UTF-8 fails with string-too-long; a null operand gives null; an operand of the wrong kind is the error <op> does not apply to a <kind>; and the checker refuses an operand of the wrong shape (a timestamp on the right of + or -, a timestamp under *, a list under text) with <op> does not accept a <Shape> operand, giving + and - the shape of their left operand.",
+      "rationale": "WG-5064 (Strata D-6540 to D-6543, CMS-1540 to CMS-1546): Strata's tenant rule language needs arithmetic, time windows and keys built from several values, and its two evaluators (Exegra's and the Rust specc generates) must agree bit for bit, which the range of 2^53-1 makes possible without a big-integer type. Evidence is the core tests: the shared case table holds every new operator with ordinary values, both ends of the range, overflow in each direction, nulls and type errors, for eval and for check. Supported, not verified: the Rust side reads the same table in Strata.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "language-grapheme-emoji",
+      "kind": "invariant",
+      "statement": "The primitive catalogue holds the grapheme and emoji functions (graphemes, is-emoji), and the language evaluator gives for them Strata's results over its shared case table: graphemes of a string is its count of extended grapheme clusters (UAX #29), so that a combining sequence, a ZWJ emoji sequence, a flag or a keycap is one; is-emoji of a string is true exactly when the string is one grapheme that is a keycap, a flag, a subdivision tag sequence, or ZWJ-joined parts each an emoji presentation or a text-default emoji followed by VS16 or a skin tone; a VS15 makes it not an emoji, and a lone regional indicator, a lone digit, a bare copyright, trademark or heart, two emoji and the empty string are not; a null operand gives null and an operand of another kind is an error.",
+      "rationale": "WG-5603 (Strata WG-5597): Strata's tenant rule language gained graphemes and is-emoji, and Exegra's validation of Strata's specification refused them with language.primitive-unknown. Both are pinned to the Strata kernel's functions (crates/kernel/src/expr.rs, crates/model-core/src/tenant_rule_language.rs), so Exegra's evaluator must agree with Strata's on every case of Strata's table, which the core test mirrors. Supported, not verified: the emoji properties come from the JavaScript and Rust Unicode data of their own versions, so a character added by a later Unicode release could classify differently on the two sides.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    },
+    {
+      "id": "language-ancestor-of",
+      "kind": "invariant",
+      "statement": "The primitive catalogue holds ancestor-of, and the language evaluator gives for it Strata's results (WG-5510): ancestor_of(x, y, object, field) with x and y references and object and field string literals is true when x is y or one of its ancestors, the walk from y following the single reference field of the object type; it is false when the walk ends at a null field or an absent record; and it is an error, never a silent false, when the walk takes more than 32 hops, returns to a record it visited, or meets a record the lookup does not cover. Null on a null reference, an error on any other kind.",
+      "rationale": "WG-5510 (Strata hierarchies and recursion): Strata's tenant rule language gains a bounded ancestor test over a self-reference, so that a policy can grant a manager read over a subtree and a comment can be tested against its thread. Exegra's validation of Strata's specification refuses an operator whose primitive is not in its catalogue, so the primitive enters the catalogue before Strata's specification uses it. Its semantics are the kernel's (crates/kernel/src/expr.rs, Expr::AncestorOf, ANCESTOR_HOPS = 32); Exegra's evaluator must agree with the kernel's on every case of the shared table in tests/core/language.test.js.",
+      "subjects": [
+        "generation-readiness",
+        "validator"
+      ],
+      "assumptions": [
+        "tests-exercise-shipped-modules",
+        "recorded-results-reflect-current-code"
+      ],
+      "evaluate": {
+        "method": "external-evidence"
+      }
+    }
+  ]
+}

@@ -67,7 +67,7 @@ Wire format: request `{"fn": <name>, "args": <JSON>}` (`args` may be left out), 
 `{"ok": <result JSON>}` or `{"error": <message>}`. Errors are values: an unknown function, a
 malformed request, a refusal by the function, and a trap of the module (caught in `lean.js`,
 which then discards the instance and starts a fresh one on the next call) all come back as
-`{ok: false, error}`. Registered today: `engine.run` (`Exegra.runAnyValue`, format 1 and 2),
+`{ok: false, error}`. Registered today: `engine.run` (`Exegra.runAnyValue`, version 2; version 1 is refused),
 `engine.explore` (`Exegra.exploreValue`), `engine.temporal` (`Exegra.temporalValue`) and
 `api.functions`. A module port adds `formal/Exegra/Api/<Module>.lean` with its `List Entry`
 and appends it to `Exegra.Api.modules`; `Exegra.Api.registry_names_nodup` (by `decide`) fails
@@ -262,7 +262,10 @@ project(model, viewId, ctx) -> SceneModel
 registerProjection(name, fn)       // fn(model, view, ctx) -> SceneModel
 
 ctx = {
-  collapsed?: Set<string>, hidden?: Set<string>, isolate?: string|null,
+  cut?: { hierarchy, expanded: string[] }|null,  // structural: the viewer's cut (elements expanded); else the view's default
+  collapsed?: Set<string>,                     // structural, legacy: a collapse set (cutForCollapse) when no cut is given
+  hidden?: Set<string>, isolate?: string|null,
+  levelClaims?: { claimId, result: ClaimResult }[],   // claims stated at a cut, evaluated at this scene's cut
   focusClaim?: string|null, focusScenario?: string|null,
   focusEntity?: string|null,                   // the references projection's centre: any entity id
   claimResults?: ClaimResult[], trace?: Trace|null, stepIndex?: number   // stepIndex -1 = initial configuration
@@ -275,17 +278,26 @@ layoutScene(scene, pinned?, opts?) -> Placement
 //   An unknown method throws.
 chooseLayout(scene, pinned?, opts?) -> { method, placement, scores }
 //   runs every method in LAYOUT_METHODS, scores each (layout/score.js) and returns the
-//   lowest total; scores: Record<method, { total, aspect, edgeLength, crossings, area }>
+//   lowest total; scores: Record<method, { total, aspect, edgeLength, crossings, overlaps, area }>
+defaultCut(model, view) -> { hierarchy, expanded }   // the view's declared cut, else the overview of a large model
+sceneSemantics(scene) -> { cut, cutBlocks, expanded, blocks, containers, interactions, pathSummaries, marks, filterReport, levelClaims }
 LAYOUT_METHODS: { id, label, description }[]      // the four concrete methods, not 'auto'
 scorePlacement(scene, placement, { aspect? }) -> Score
 ```
 
-`structural`: components passing the view filter; subsystems with visible children
-are container nodes; a collapsed subsystem is a leaf with a child-count badge;
-relationships are edges resolved to components and lifted to the nearest visible
-ancestor (`lifted: true`), dropped when both ends lift to the same node. `isolate`
-shows only that subsystem's subtree. Node `status: 'violated'` when a violated
-claim result involves it. `display.colorBy`: category (default) | implementation | trustZone.
+`structural`: the derived model at the cut (src/core/abstraction.js, deriveModel): a node per block
+(`block: true`, with `element`, `elementKind` and `knowledge`; a module element's `entityId` is the component
+declaring it), a container per element the cut opens, an edge per derived interaction (`key`, `kind`, the
+complete `witnesses`; `lifted` when a witness ends inside a block). A block with members is `collapsed` and
+badged with what it holds after the filter. The filter (view.filter, `isolate`, `hidden`) removes blocks and
+witnesses; connections through hidden blocks become edges with `pathSummary: { via, kinds }` (dotted), and
+everything else removed is counted in the notes and in `scene.filterReport`. `marks` on nodes and edges name
+what is known or missing (opaque, external, planned, unknown, no-purpose, interface-disagrees, unwitnessed,
+kind-not-coarsening, not-declared, hidden-inside). `scene.abstraction` = { hierarchy, blocks, expanded, cut
+(the declared cut with exactly these blocks, or null), coarsen }; `scene.levelClaims` = the claims stated at a
+cut with their result at this cut and which counterexample parts are drawn. Node and edge `status: 'violated'`
+when a violated claim result (or a level claim's counterexample at this cut) involves it.
+`display.colorBy`: category (default) | implementation | trustZone.
 
 `claims`: with `focusClaim`: the claim (diamond), its assumptions, its evidence,
 the involved components and the relationships among them; edges claim→subject,
@@ -379,14 +391,20 @@ session.undo(), session.redo()
 session.saveState: 'saved'|'saving'|'conflict'|'error'|'readonly'   // readonly: production build, no persistence
 session.resolveConflict('reload'|'overwrite')
 
-session.selection: string|null             session.select(id|null, {source?: string})
+session.selection: string|null             session.select(id|null, {source?: string, edge?: string|null})
+//   an entity id or a module element id; edge: the scene edge it was picked on (session.selectedEdge)
 session.hover: string|null                 session.setHover(id|null)
 session.views: listViews() result          session.viewId: string
 session.setView(viewId)
-session.ui: { collapsed: Set<string>, hidden: Set<string>, isolate: string|null,
+session.ui: { cuts: Map<viewId, {hierarchy, expanded: Record<hierarchy, string[]>}>,
+              collapsed: Set<string> (read-only: the subsystem-level blocks of the current cut),
+              hidden: Set<string>, isolate: string|null,
               cameraMode: 'perspective'|'top', mode: 'select'|'connect',
               focusClaim: string|null, focusScenario: string|null }
-session.toggleCollapsed(id), session.setHidden(id, bool), session.setIsolate(id|null),
+session.toggleCollapsed(id)   // expand a block or collapse an opened element of the current structural cut
+session.currentCut() -> { hierarchy, expanded, blocks, opened, cut }|null, session.hierarchies(),
+session.setHierarchy(id), session.setCut(cutId), session.resetCut(), session.layoutKey()  // pins are keyed per cut
+session.setHidden(id, bool), session.setIsolate(id|null),
 session.setCameraMode(m), session.setMode(m), session.focusClaim(id|null), session.focusScenario(id|null)
 
 session.scene: SceneModel                  session.placement: Placement

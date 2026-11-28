@@ -118,3 +118,18 @@ test('components the scene does not draw give no path', () => {
   const without = { ...scene, nodes: scene.nodes.filter((n) => n.id !== 'server') };
   assert.deepEqual(flowPaths(model, without, stepFlow(model, trace.steps[1])), []);
 });
+
+test('a hop is classified against the derived model, so collapsing never lends it an edge another relationship witnesses', () => {
+  const doc = spec();
+  doc.relationships.push({ id: 'client-calls-archive', kind: 'calls', from: 'client', to: 'archive' });
+  const { model, errorCount } = analyzeSpec(JSON.stringify(doc));
+  assert.equal(errorCount, 0);
+  const trace = runScenario(/** @type {any} */ (model), 'round-trip');
+  const view = listViews(/** @type {any} */ (model)).find((v) => v.projection === 'structural');
+  const tell = stepFlow(/** @type {any} */ (model), trace.steps[3]);
+  const expanded = project(/** @type {any} */ (model), /** @type {any} */ (view).id, {});
+  const collapsed = project(/** @type {any} */ (model), /** @type {any} */ (view).id, { collapsed: new Set(['records']) });
+  assert.ok(collapsed.edges.some((e) => e.from === 'client' && e.to === 'records'), 'the collapsed scene draws client -> records, witnessed by client-calls-archive');
+  assert.deepEqual(flowPaths(/** @type {any} */ (model), expanded, tell), [{ kind: 'undeclared', from: 'client', to: 'auditor' }]);
+  assert.deepEqual(flowPaths(/** @type {any} */ (model), collapsed, tell), [{ kind: 'undeclared', from: 'client', to: 'records' }], 'no relationship joins the client and the auditor, collapsed or not');
+});

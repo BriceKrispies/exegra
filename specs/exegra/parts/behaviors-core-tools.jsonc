@@ -1,0 +1,1996 @@
+// Part of the specification: behaviors.
+{
+  "behaviors": [
+    {
+      "id": "transaction-flow",
+      "name": "Transaction system: check, validate, commit or reject",
+      "subject": "transactions",
+      "description": "Preconditions are checked and text edits computed; the candidate is parsed and validated. With no errors it commits and the revision increments; otherwise it is rejected and nothing changes. Precondition failures, which reject before any text is computed, are abstracted into the rejection.",
+      "initial": "tx-idle",
+      "variables": [
+        { "name": "revision", "type": "number", "initial": 1 },
+        { "name": "rejected", "type": "boolean", "initial": false }
+      ],
+      "states": [
+        { "id": "tx-idle", "name": "Idle" },
+        { "id": "tx-validating", "name": "Candidate being parsed and validated" }
+      ],
+      "transitions": [
+        { "id": "tx-begin", "from": "tx-idle", "to": "tx-validating", "on": "operation-submitted", "effects": [{ "emit": "text-edits-computed" }] },
+        {
+          "id": "tx-commit-unvalidated",
+          "from": "tx-validating",
+          "to": "tx-idle",
+          "on": "model-parsed",
+          "faultOnly": true,
+          "effects": [
+            {
+              "set": "revision",
+              "to": "revision + 1"
+            },
+            {
+              "set": "rejected",
+              "to": "false"
+            },
+            {
+              "emit": "transaction-committed",
+              "payload": {
+                "revision": "revision"
+              }
+            }
+          ]
+        },
+        {
+          "id": "tx-reject-partially-applied",
+          "from": "tx-validating",
+          "to": "tx-idle",
+          "on": "validation-failed",
+          "faultOnly": true,
+          "effects": [
+            {
+              "set": "revision",
+              "to": "revision + 1"
+            },
+            {
+              "set": "rejected",
+              "to": "true"
+            },
+            {
+              "emit": "transaction-rejected"
+            }
+          ]
+        },
+        { "id": "tx-commit", "from": "tx-validating", "to": "tx-idle", "on": "validation-passed", "description": "Project.#commit: swap the texts, derive the snapshot, increment the revision, record history, notify subscribers.", "effects": [{ "set": "revision", "to": "revision + 1" }, { "set": "rejected", "to": false }, { "emit": "transaction-committed", "payload": { "revision": "revision" } }] },
+        { "id": "tx-reject", "from": "tx-validating", "to": "tx-idle", "on": "validation-failed", "description": "The result would have validation errors: the texts, the model, the revision and the history stay as they were.", "effects": [{ "set": "rejected", "to": true }, { "emit": "transaction-rejected" }] }
+      ]
+    },
+    {
+      "id": "parser-flow",
+      "name": "Parser: derive the candidate model",
+      "subject": "parser",
+      "initial": "parser-ready",
+      "variables": [{ "name": "runs", "type": "number", "initial": 0 }],
+      "states": [{ "id": "parser-ready", "name": "Ready" }],
+      "transitions": [
+        { "id": "parser-parse", "from": "parser-ready", "to": "parser-ready", "on": "text-edits-computed", "effects": [{ "set": "runs", "to": "runs + 1" }, { "emit": "model-parsed" }] }
+      ]
+    },
+    {
+      "id": "validator-flow",
+      "name": "Validator: judge the candidate model",
+      "subject": "validator",
+      "description": "The faulty-input alternative is a faultOnly transition declared before the normal one so that it takes priority while the fault is active.",
+      "initial": "validator-ready",
+      "variables": [{ "name": "lastResult", "type": "string", "initial": "none" }],
+      "states": [{ "id": "validator-ready", "name": "Ready" }],
+      "transitions": [
+        { "id": "validator-reject", "from": "validator-ready", "to": "validator-ready", "on": "model-parsed", "faultOnly": true, "description": "The candidate has validation errors.", "effects": [{ "set": "lastResult", "to": "'failed'" }, { "emit": "validation-failed" }] },
+        { "id": "validator-accept", "from": "validator-ready", "to": "validator-ready", "on": "model-parsed", "effects": [{ "set": "lastResult", "to": "'passed'" }, { "emit": "validation-passed" }] }
+      ]
+    },
+    {
+      "id": "project-history-flow",
+      "name": "Project: commits, undo, redo and reload",
+      "subject": "transactions",
+      "description": "Project in src/core/project.js seen from the texts it holds: specHash and layoutHash stand for the current texts by their hashes, undoHash and redoHash for the text one undo or redo would restore (this machine keeps one level of each). Every change is a commit that notifies subscribers (commit-notified) with its origin. Project.reload (origin external) clears both stacks.",
+      "initial": "history-ready",
+      "variables": [
+        {
+          "name": "revision",
+          "type": "number",
+          "initial": 1
+        },
+        {
+          "name": "specHash",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "layoutHash",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "undoHash",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "redoHash",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "undoDepth",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "redoDepth",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "history-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "history-open",
+          "from": "history-ready",
+          "to": "history-ready",
+          "on": "project-opened",
+          "description": "session.open creates a new Project from the texts read.",
+          "effects": [
+            {
+              "set": "specHash",
+              "to": "event.specHash"
+            },
+            {
+              "set": "layoutHash",
+              "to": "event.layoutHash"
+            },
+            {
+              "set": "undoDepth",
+              "to": 0
+            },
+            {
+              "set": "redoDepth",
+              "to": 0
+            },
+            {
+              "set": "revision",
+              "to": 1
+            }
+          ]
+        },
+        {
+          "id": "history-edit",
+          "from": "history-ready",
+          "to": "history-ready",
+          "on": "edit-applied",
+          "effects": [
+            {
+              "set": "undoHash",
+              "to": "specHash"
+            },
+            {
+              "set": "specHash",
+              "to": "event.specHash"
+            },
+            {
+              "set": "undoDepth",
+              "to": "undoDepth + 1"
+            },
+            {
+              "set": "redoDepth",
+              "to": 0
+            },
+            {
+              "set": "revision",
+              "to": "revision + 1"
+            },
+            {
+              "emit": "commit-notified",
+              "payload": {
+                "origin": "event.origin",
+                "file": "'spec'",
+                "text": "event.specHash"
+              }
+            }
+          ]
+        },
+        {
+          "id": "history-move-edits-spec",
+          "from": "history-ready",
+          "to": "history-ready",
+          "on": "node-moved",
+          "faultOnly": true,
+          "description": "A defect the transaction system must not have: a presentation move edits the specification text.",
+          "effects": [
+            {
+              "set": "layoutHash",
+              "to": "event.layoutHash"
+            },
+            {
+              "set": "specHash",
+              "to": "'h-moved'"
+            },
+            {
+              "set": "revision",
+              "to": "revision + 1"
+            },
+            {
+              "emit": "commit-notified",
+              "payload": {
+                "origin": "'ui'",
+                "file": "'spec'",
+                "text": "'h-moved'"
+              }
+            }
+          ]
+        },
+        {
+          "id": "history-move",
+          "from": "history-ready",
+          "to": "history-ready",
+          "on": "node-moved",
+          "description": "MovePresentationNode: persistence layout, semantic false; the model and the semantic hash are kept.",
+          "effects": [
+            {
+              "set": "layoutHash",
+              "to": "event.layoutHash"
+            },
+            {
+              "set": "undoDepth",
+              "to": "undoDepth + 1"
+            },
+            {
+              "set": "revision",
+              "to": "revision + 1"
+            },
+            {
+              "emit": "commit-notified",
+              "payload": {
+                "origin": "'ui'",
+                "file": "'layout'",
+                "text": "event.layoutHash"
+              }
+            }
+          ]
+        },
+        {
+          "id": "history-undo-keeps-text",
+          "from": "history-ready",
+          "to": "history-ready",
+          "on": "undo-requested",
+          "guard": "undoDepth > 0",
+          "faultOnly": true,
+          "description": "A defect Project.undo must not have: the step is recorded but the earlier text is not restored.",
+          "effects": [
+            {
+              "set": "undoDepth",
+              "to": "undoDepth - 1"
+            },
+            {
+              "set": "redoDepth",
+              "to": "redoDepth + 1"
+            },
+            {
+              "set": "revision",
+              "to": "revision + 1"
+            },
+            {
+              "emit": "commit-notified",
+              "payload": {
+                "origin": "'undo'",
+                "file": "'spec'",
+                "text": "specHash"
+              }
+            }
+          ]
+        },
+        {
+          "id": "history-undo",
+          "from": "history-ready",
+          "to": "history-ready",
+          "on": "undo-requested",
+          "guard": "undoDepth > 0",
+          "description": "Project.undo: the whole earlier text is restored by a commit with origin undo.",
+          "effects": [
+            {
+              "set": "redoHash",
+              "to": "specHash"
+            },
+            {
+              "set": "specHash",
+              "to": "undoHash"
+            },
+            {
+              "set": "undoDepth",
+              "to": "undoDepth - 1"
+            },
+            {
+              "set": "redoDepth",
+              "to": "redoDepth + 1"
+            },
+            {
+              "set": "revision",
+              "to": "revision + 1"
+            },
+            {
+              "emit": "commit-notified",
+              "payload": {
+                "origin": "'undo'",
+                "file": "'spec'",
+                "text": "specHash"
+              }
+            }
+          ]
+        },
+        {
+          "id": "history-redo",
+          "from": "history-ready",
+          "to": "history-ready",
+          "on": "redo-requested",
+          "guard": "redoDepth > 0",
+          "effects": [
+            {
+              "set": "undoHash",
+              "to": "specHash"
+            },
+            {
+              "set": "specHash",
+              "to": "redoHash"
+            },
+            {
+              "set": "undoDepth",
+              "to": "undoDepth + 1"
+            },
+            {
+              "set": "redoDepth",
+              "to": "redoDepth - 1"
+            },
+            {
+              "set": "revision",
+              "to": "revision + 1"
+            },
+            {
+              "emit": "commit-notified",
+              "payload": {
+                "origin": "'redo'",
+                "file": "'spec'",
+                "text": "specHash"
+              }
+            }
+          ]
+        },
+        {
+          "from": "history-ready",
+          "to": "history-ready",
+          "id": "history-reload-layout",
+          "on": "reload-requested",
+          "guard": "event.file == 'layout'",
+          "effects": [
+            {
+              "set": "layoutHash",
+              "to": "event.text"
+            },
+            {
+              "set": "undoDepth",
+              "to": 0
+            },
+            {
+              "set": "redoDepth",
+              "to": 0
+            },
+            {
+              "set": "revision",
+              "to": "revision + 1"
+            },
+            {
+              "emit": "commit-notified",
+              "payload": {
+                "origin": "'external'",
+                "file": "'layout'",
+                "text": "event.text"
+              }
+            }
+          ]
+        },
+        {
+          "id": "history-reload",
+          "from": "history-ready",
+          "to": "history-ready",
+          "on": "reload-requested",
+          "description": "Project.reload adopts any text that parses, clears undo and redo, and is not undoable.",
+          "effects": [
+            {
+              "set": "specHash",
+              "to": "event.text"
+            },
+            {
+              "set": "undoDepth",
+              "to": 0
+            },
+            {
+              "set": "redoDepth",
+              "to": 0
+            },
+            {
+              "set": "revision",
+              "to": "revision + 1"
+            },
+            {
+              "emit": "commit-notified",
+              "payload": {
+                "origin": "'external'",
+                "file": "'spec'",
+                "text": "event.text"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "claim-evaluation-flow",
+      "name": "Claim evaluator: evaluate every claim, synchronously",
+      "subject": "claim-evaluator",
+      "description": "evaluateClaims of src/core/claims.js runs on the caller's thread; in the application that is the main thread, inside the commit. Trace and metric claims run engine scenarios there (claim-scenarios-run), not in the engine worker.",
+      "initial": "evaluator-ready",
+      "variables": [
+        {
+          "name": "evaluations",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "evaluator-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "evaluator-run",
+          "from": "evaluator-ready",
+          "to": "evaluator-ready",
+          "on": "claims-evaluation-requested",
+          "effects": [
+            {
+              "set": "evaluations",
+              "to": "evaluations + 1"
+            },
+            {
+              "emit": "claim-scenarios-run",
+              "payload": {
+                "modelHash": "event.modelHash"
+              }
+            },
+            {
+              "emit": "claims-evaluated",
+              "payload": {
+                "modelHash": "event.modelHash"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "engine-module-flow",
+      "name": "Engine module: load the WebAssembly",
+      "subject": "simulation-engine",
+      "description": "initEngine of src/core/engine.js in a page: asynchronous; it fails when src/engine/pkg has not been built.",
+      "initial": "engine-unloaded",
+      "variables": [
+        {
+          "name": "built",
+          "type": "boolean",
+          "initial": true
+        },
+        {
+          "name": "loaded",
+          "type": "boolean",
+          "initial": false
+        }
+      ],
+      "states": [
+        {
+          "id": "engine-unloaded",
+          "name": "Not loaded"
+        },
+        {
+          "id": "engine-settled",
+          "name": "Loaded or failed"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "engine-module-missing",
+          "from": "engine-unloaded",
+          "to": "engine-unloaded",
+          "on": "engine-not-built",
+          "effects": [
+            {
+              "set": "built",
+              "to": false
+            }
+          ]
+        },
+        {
+          "id": "engine-module-load",
+          "from": "engine-unloaded",
+          "to": "engine-settled",
+          "on": "engine-load-requested",
+          "effects": [
+            {
+              "set": "loaded",
+              "to": "built"
+            },
+            {
+              "emit": "engine-load-settled",
+              "payload": {
+                "ok": "built"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "engine-runner-flow",
+      "name": "Engine runner: one job at a time in the worker",
+      "subject": "simulation-engine",
+      "description": "run() of src/app/engine-runner.js: a run while another is waiting stops the worker (terminate, waiting cleared) and starts a new one; a reply is matched by id to the waiting job; when the worker cannot load, the waiting job reruns on the main thread. prevId and prevToken exist only for the defect that keeps a replaced job.",
+      "initial": "runner-ready",
+      "variables": [
+        {
+          "name": "seq",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "waitingId",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "waitingToken",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "prevId",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "prevToken",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "runner-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "runner-keep-stale-job",
+          "from": "runner-ready",
+          "to": "runner-ready",
+          "on": "engine-run-intent",
+          "guard": "waitingId != 0",
+          "faultOnly": true,
+          "description": "A defect the code must not have. a new run leaves the worker running and keeps the replaced job.",
+          "effects": [
+            {
+              "set": "prevId",
+              "to": "waitingId"
+            },
+            {
+              "set": "prevToken",
+              "to": "waitingToken"
+            },
+            {
+              "set": "seq",
+              "to": "seq + 1"
+            },
+            {
+              "set": "waitingId",
+              "to": "seq"
+            },
+            {
+              "set": "waitingToken",
+              "to": "event.token"
+            },
+            {
+              "emit": "engine-run-posted",
+              "payload": {
+                "id": "seq",
+                "input": "event.scenario"
+              }
+            }
+          ]
+        },
+        {
+          "id": "runner-restart",
+          "from": "runner-ready",
+          "to": "runner-ready",
+          "on": "engine-run-intent",
+          "guard": "waitingId != 0",
+          "description": "stop(): worker.terminate() and waiting.clear(), then a new worker gets the job.",
+          "effects": [
+            {
+              "set": "seq",
+              "to": "seq + 1"
+            },
+            {
+              "set": "waitingId",
+              "to": "seq"
+            },
+            {
+              "set": "waitingToken",
+              "to": "event.token"
+            },
+            {
+              "emit": "worker-terminated"
+            },
+            {
+              "emit": "engine-run-posted",
+              "payload": {
+                "id": "seq",
+                "input": "event.scenario"
+              }
+            }
+          ]
+        },
+        {
+          "id": "runner-post",
+          "from": "runner-ready",
+          "to": "runner-ready",
+          "on": "engine-run-intent",
+          "effects": [
+            {
+              "set": "seq",
+              "to": "seq + 1"
+            },
+            {
+              "set": "waitingId",
+              "to": "seq"
+            },
+            {
+              "set": "waitingToken",
+              "to": "event.token"
+            },
+            {
+              "emit": "engine-run-posted",
+              "payload": {
+                "id": "seq",
+                "input": "event.scenario"
+              }
+            }
+          ]
+        },
+        {
+          "id": "runner-forward-stale",
+          "from": "runner-ready",
+          "to": "runner-ready",
+          "on": "engine-run-returned",
+          "guard": "prevId != 0 && event.id == prevId",
+          "faultOnly": true,
+          "description": "Part of the defect runner-keeps-stale-job: the replaced job is still answered.",
+          "effects": [
+            {
+              "emit": "sim-trace-ready",
+              "payload": {
+                "token": "prevToken",
+                "steps": 3
+              }
+            }
+          ]
+        },
+        {
+          "id": "runner-forward",
+          "from": "runner-ready",
+          "to": "runner-ready",
+          "on": "engine-run-returned",
+          "guard": "event.id == waitingId",
+          "description": "A reply whose id is not waiting is ignored.",
+          "effects": [
+            {
+              "set": "waitingId",
+              "to": 0
+            },
+            {
+              "emit": "sim-trace-ready",
+              "payload": {
+                "token": "waitingToken",
+                "steps": 3
+              }
+            }
+          ]
+        },
+        {
+          "id": "runner-refused",
+          "from": "runner-ready",
+          "to": "runner-ready",
+          "on": "engine-run-refused",
+          "guard": "event.id == waitingId",
+          "effects": [
+            {
+              "set": "waitingId",
+              "to": 0
+            },
+            {
+              "emit": "sim-run-failed",
+              "payload": {
+                "token": "waitingToken"
+              }
+            }
+          ]
+        },
+        {
+          "id": "runner-main-thread",
+          "from": "runner-ready",
+          "to": "runner-ready",
+          "on": "worker-load-failed",
+          "guard": "waitingId != 0",
+          "description": "worker.onerror: the waiting job reruns with runEngine on the main thread, and every later run too.",
+          "effects": [
+            {
+              "set": "waitingId",
+              "to": 0
+            },
+            {
+              "emit": "sim-trace-ready",
+              "payload": {
+                "token": "waitingToken",
+                "steps": 3
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "engine-worker-flow",
+      "name": "Engine worker: run an input, reply with its trace",
+      "subject": "simulation-engine",
+      "description": "src/app/engine-worker.js: one run per message, answered with the same id. A terminated worker answers nothing: generation counts terminations and a run of an earlier generation is never answered.",
+      "initial": "worker-ready",
+      "variables": [
+        {
+          "name": "generation",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "runs",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "worker-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "worker-run",
+          "from": "worker-ready",
+          "to": "worker-ready",
+          "on": "engine-run-posted",
+          "effects": [
+            {
+              "set": "runs",
+              "to": "runs + 1"
+            },
+            {
+              "emit": "worker-run-done",
+              "after": 2,
+              "payload": {
+                "id": "event.id",
+                "input": "event.input",
+                "generation": "generation"
+              }
+            }
+          ]
+        },
+        {
+          "id": "worker-terminate",
+          "from": "worker-ready",
+          "to": "worker-ready",
+          "on": "worker-terminated",
+          "effects": [
+            {
+              "set": "generation",
+              "to": "generation + 1"
+            }
+          ]
+        },
+        {
+          "id": "worker-reply",
+          "from": "worker-ready",
+          "to": "worker-ready",
+          "on": "worker-run-done",
+          "guard": "event.generation == generation",
+          "effects": [
+            {
+              "emit": "engine-run-returned",
+              "payload": {
+                "id": "event.id",
+                "ok": true,
+                "trace": "event.input"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cli-process-flow",
+      "name": "Agent command line: one command per process",
+      "subject": "agent-cli",
+      "description": "runCommand of cli/commands.js for apply, verify and trace: the project is read once (loadProject, tools/workspace.js read()); apply runs Project.apply in process and writes the spec, then the layout, each with the hash read at the start; verify runs the test evidence, records the results and re-evaluates the claims; trace runs the engine in process and writes the trace file. One envelope answers the invocation. The texts apply produces are fixed here (h2, L2): the transaction itself is the edit-flow model.",
+      "initial": "cli-idle",
+      "variables": [
+        {
+          "name": "command",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "option",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "reqId",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "specRead",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "layoutRead",
+          "type": "string",
+          "initial": "none"
+        },
+        {
+          "name": "wroteSpec",
+          "type": "boolean",
+          "initial": false
+        },
+        {
+          "name": "reportedOk",
+          "type": "boolean",
+          "initial": false
+        },
+        {
+          "name": "reportedFailure",
+          "type": "boolean",
+          "initial": false
+        },
+        {
+          "name": "failureNotesSpecWritten",
+          "type": "boolean",
+          "initial": false
+        },
+        {
+          "name": "engineOk",
+          "type": "boolean",
+          "initial": false
+        },
+        {
+          "name": "traceWritten",
+          "type": "boolean",
+          "initial": false
+        }
+      ],
+      "states": [
+        {
+          "id": "cli-idle",
+          "name": "Not started"
+        },
+        {
+          "id": "cli-loading",
+          "name": "Reading the project"
+        },
+        {
+          "id": "cli-applying",
+          "name": "Writing the specification"
+        },
+        {
+          "id": "cli-writing-layout",
+          "name": "Writing the layout"
+        },
+        {
+          "id": "cli-verifying",
+          "name": "Running the evidence"
+        },
+        {
+          "id": "cli-tracing",
+          "name": "Running the engine"
+        },
+        {
+          "id": "cli-done",
+          "name": "Envelope written",
+          "terminal": true
+        }
+      ],
+      "transitions": [
+        {
+          "id": "cli-start",
+          "from": "cli-idle",
+          "to": "cli-loading",
+          "on": "cli-command-request",
+          "effects": [
+            {
+              "set": "command",
+              "to": "event.command"
+            },
+            {
+              "set": "option",
+              "to": "event.options"
+            },
+            {
+              "set": "reqId",
+              "to": "event.requestId"
+            },
+            {
+              "emit": "ws-read",
+              "payload": {
+                "name": "'exegra'",
+                "caller": "'cli'",
+                "requestId": "event.requestId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "cli-apply-read",
+          "from": "cli-loading",
+          "to": "cli-applying",
+          "on": "ws-read-done",
+          "guard": "event.caller == 'cli' && command == 'apply'",
+          "description": "Project.apply (origin cli) commits both texts in memory; the write follows (two ticks: the window in which another process can change the files).",
+          "effects": [
+            {
+              "set": "specRead",
+              "to": "event.spec"
+            },
+            {
+              "set": "layoutRead",
+              "to": "event.layout"
+            },
+            {
+              "emit": "ws-write",
+              "after": 2,
+              "payload": {
+                "name": "'exegra'",
+                "file": "'spec'",
+                "text": "'h2'",
+                "baseHash": "event.spec",
+                "caller": "'cli'",
+                "requestId": "reqId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "cli-apply-spec-written",
+          "from": "cli-applying",
+          "to": "cli-writing-layout",
+          "on": "ws-write-done",
+          "guard": "event.caller == 'cli'",
+          "effects": [
+            {
+              "set": "wroteSpec",
+              "to": true
+            },
+            {
+              "emit": "ws-write",
+              "payload": {
+                "name": "'exegra'",
+                "file": "'layout'",
+                "text": "'L2'",
+                "baseHash": "layoutRead",
+                "caller": "'cli'",
+                "requestId": "reqId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "cli-apply-spec-conflict",
+          "from": "cli-applying",
+          "to": "cli-done",
+          "on": "ws-write-conflict",
+          "guard": "event.caller == 'cli'",
+          "description": "Nothing was written.",
+          "effects": [
+            {
+              "set": "reportedFailure",
+              "to": true
+            },
+            {
+              "emit": "cli-command-failed",
+              "payload": {
+                "code": "'write.conflict'",
+                "command": "command",
+                "requestId": "reqId",
+                "specWritten": false
+              }
+            }
+          ]
+        },
+        {
+          "id": "cli-apply-written",
+          "from": "cli-writing-layout",
+          "to": "cli-done",
+          "on": "ws-write-done",
+          "guard": "event.caller == 'cli'",
+          "effects": [
+            {
+              "set": "reportedOk",
+              "to": true
+            },
+            {
+              "emit": "cli-command-ok",
+              "payload": {
+                "ok": true,
+                "command": "command",
+                "project": "'exegra'",
+                "semanticHash": "'m2'",
+                "result": "'written: spec, layout'",
+                "requestId": "reqId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "cli-apply-ok-after-layout-conflict",
+          "from": "cli-writing-layout",
+          "to": "cli-done",
+          "on": "ws-write-conflict",
+          "guard": "event.caller == 'cli'",
+          "faultOnly": true,
+          "description": "A defect the code must not have. the apply reports success after the layout write conflicted.",
+          "effects": [
+            {
+              "set": "reportedOk",
+              "to": true
+            },
+            {
+              "emit": "cli-command-ok",
+              "payload": {
+                "ok": true,
+                "command": "command",
+                "project": "'exegra'",
+                "semanticHash": "'m2'",
+                "result": "'written: spec'",
+                "requestId": "reqId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "cli-apply-failure-omits-spec",
+          "from": "cli-writing-layout",
+          "to": "cli-done",
+          "on": "ws-write-conflict",
+          "guard": "event.caller == 'cli'",
+          "faultOnly": true,
+          "description": "A defect the code must not have. the failure does not say that the specification was already written.",
+          "effects": [
+            {
+              "set": "reportedFailure",
+              "to": true
+            },
+            {
+              "emit": "cli-command-failed",
+              "payload": {
+                "code": "'write.conflict'",
+                "command": "command",
+                "requestId": "reqId",
+                "specWritten": false
+              }
+            }
+          ]
+        },
+        {
+          "id": "cli-apply-layout-conflict",
+          "from": "cli-writing-layout",
+          "to": "cli-done",
+          "on": "ws-write-conflict",
+          "guard": "event.caller == 'cli'",
+          "description": "\"layout.jsonc changed on disk since it was read. The specification was already written; the layout was not.\" The spec write and its journal line stay.",
+          "effects": [
+            {
+              "set": "reportedFailure",
+              "to": true
+            },
+            {
+              "set": "failureNotesSpecWritten",
+              "to": "wroteSpec"
+            },
+            {
+              "emit": "cli-command-failed",
+              "payload": {
+                "code": "'write.conflict'",
+                "command": "command",
+                "requestId": "reqId",
+                "specWritten": "wroteSpec"
+              }
+            }
+          ]
+        },
+        {
+          "id": "cli-verify-read",
+          "from": "cli-loading",
+          "to": "cli-verifying",
+          "on": "ws-read-done",
+          "guard": "event.caller == 'cli' && command == 'verify'",
+          "description": "Validation and traceability, then the test evidence.",
+          "effects": [
+            {
+              "emit": "verify-tests-run",
+              "payload": {
+                "count": 2
+              }
+            }
+          ]
+        },
+        {
+          "id": "cli-verify-report-early",
+          "from": "cli-verifying",
+          "to": "cli-verifying",
+          "on": "verify-tests-finished",
+          "faultOnly": true,
+          "description": "A defect the code must not have. verify reports before the results are recorded.",
+          "effects": [
+            {
+              "set": "reportedOk",
+              "to": true
+            },
+            {
+              "emit": "cli-command-ok",
+              "payload": {
+                "ok": true,
+                "command": "command",
+                "project": "'exegra'",
+                "semanticHash": "'m1'",
+                "result": "'verified'",
+                "requestId": "reqId"
+              }
+            },
+            {
+              "emit": "ws-write-recorded",
+              "payload": {
+                "version": "'r2'"
+              }
+            }
+          ]
+        },
+        {
+          "id": "cli-verify-record",
+          "from": "cli-verifying",
+          "to": "cli-verifying",
+          "on": "verify-tests-finished",
+          "description": "writeRecorded replaces evidence/results.json (results stamped with the records stamp, traceability and theorems, the other keys kept).",
+          "effects": [
+            {
+              "emit": "ws-write-recorded",
+              "payload": {
+                "version": "'r2'"
+              }
+            }
+          ]
+        },
+        {
+          "id": "cli-verify-recorded",
+          "from": "cli-verifying",
+          "to": "cli-verifying",
+          "on": "ws-recorded-done",
+          "guard": "!reportedOk",
+          "effects": [
+            {
+              "emit": "verify-claims-evaluated"
+            }
+          ]
+        },
+        {
+          "id": "cli-verify-done",
+          "from": "cli-verifying",
+          "to": "cli-done",
+          "on": "verify-claims-evaluated",
+          "effects": [
+            {
+              "set": "reportedOk",
+              "to": true
+            },
+            {
+              "emit": "cli-command-ok",
+              "payload": {
+                "ok": true,
+                "command": "command",
+                "project": "'exegra'",
+                "semanticHash": "'m1'",
+                "result": "'verified'",
+                "requestId": "reqId"
+              }
+            }
+          ]
+        },
+        {
+          "id": "cli-trace-read",
+          "from": "cli-loading",
+          "to": "cli-tracing",
+          "on": "ws-read-done",
+          "guard": "event.caller == 'cli' && command == 'trace'",
+          "description": "runTrace: runScenario in process.",
+          "effects": [
+            {
+              "emit": "engine-run-called",
+              "payload": {
+                "scenario": "option"
+              }
+            }
+          ]
+        },
+        {
+          "id": "cli-trace-run",
+          "from": "cli-tracing",
+          "to": "cli-tracing",
+          "on": "engine-run-finished",
+          "effects": [
+            {
+              "set": "engineOk",
+              "to": true
+            },
+            {
+              "emit": "trace-file-written",
+              "payload": {
+                "path": "'trace.json'"
+              }
+            }
+          ]
+        },
+        {
+          "id": "cli-trace-written-on-refusal",
+          "from": "cli-tracing",
+          "to": "cli-tracing",
+          "on": "engine-run-failed",
+          "faultOnly": true,
+          "description": "A defect the code must not have. the trace file is written although the engine refused the run.",
+          "effects": [
+            {
+              "emit": "trace-file-written",
+              "payload": {
+                "path": "'trace.json'"
+              }
+            }
+          ]
+        },
+        {
+          "id": "cli-trace-engine-refused",
+          "from": "cli-tracing",
+          "to": "cli-done",
+          "on": "engine-run-failed",
+          "effects": [
+            {
+              "set": "reportedFailure",
+              "to": true
+            },
+            {
+              "emit": "cli-command-failed",
+              "payload": {
+                "code": "'simulate.failed'",
+                "command": "command",
+                "requestId": "reqId",
+                "specWritten": false
+              }
+            }
+          ]
+        },
+        {
+          "id": "cli-trace-file",
+          "from": "cli-tracing",
+          "to": "cli-done",
+          "on": "trace-file-written",
+          "effects": [
+            {
+              "set": "traceWritten",
+              "to": true
+            },
+            {
+              "set": "reportedOk",
+              "to": "engineOk"
+            },
+            {
+              "emit": "cli-command-ok",
+              "payload": {
+                "ok": true,
+                "command": "command",
+                "project": "'exegra'",
+                "semanticHash": "'m1'",
+                "result": "'written: trace.json'",
+                "requestId": "reqId"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "test-runner-flow",
+      "name": "Test runner: execute the test evidence",
+      "subject": "test-suites",
+      "description": "runTestReference of cli/commands.js: node --test or npx playwright test per evidence reference, in a subprocess.",
+      "initial": "tests-ready",
+      "variables": [
+        {
+          "name": "runs",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "tests-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "tests-run",
+          "from": "tests-ready",
+          "to": "tests-ready",
+          "on": "verify-tests-run",
+          "effects": [
+            {
+              "set": "runs",
+              "to": "runs + event.count"
+            },
+            {
+              "emit": "verify-tests-finished",
+              "after": 1,
+              "payload": {
+                "passed": "event.count",
+                "failed": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "engine-call-flow",
+      "name": "Engine in process: run a scenario for the command line",
+      "subject": "simulation-engine",
+      "description": "runScenario of src/core/engine.js in Node: synchronous; it throws when src/engine/pkg has not been built.",
+      "initial": "engine-call-ready",
+      "variables": [
+        {
+          "name": "built",
+          "type": "boolean",
+          "initial": true
+        },
+        {
+          "name": "runs",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "engine-call-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "engine-call-missing",
+          "from": "engine-call-ready",
+          "to": "engine-call-ready",
+          "on": "engine-not-built",
+          "effects": [
+            {
+              "set": "built",
+              "to": false
+            }
+          ]
+        },
+        {
+          "id": "engine-call-run",
+          "from": "engine-call-ready",
+          "to": "engine-call-ready",
+          "on": "engine-run-called",
+          "guard": "built",
+          "effects": [
+            {
+              "set": "runs",
+              "to": "runs + 1"
+            },
+            {
+              "emit": "engine-run-finished",
+              "payload": {
+                "steps": 12
+              }
+            }
+          ]
+        },
+        {
+          "id": "engine-call-refuse",
+          "from": "engine-call-ready",
+          "to": "engine-call-ready",
+          "on": "engine-run-called",
+          "guard": "!built",
+          "description": "initEngine throws \"run npm run build:engine\".",
+          "effects": [
+            {
+              "emit": "engine-run-failed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prove-flow",
+      "name": "exegra prove: explore in Lean, report only what Lean accepted",
+      "subject": "proof-export",
+      "description": "proveScenario of tools/prove.js with the pure part in src/core/proof-export.js: lake build, exegra-lean explore, the proof file formal/generated/<scenario>.lean, lake env lean, and a result per claim only when Lean accepted its theorem.",
+      "initial": "prove-idle",
+      "variables": [
+        {
+          "name": "leanAccepted",
+          "type": "boolean",
+          "initial": false
+        },
+        {
+          "name": "reported",
+          "type": "boolean",
+          "initial": false
+        },
+        {
+          "name": "fileWritten",
+          "type": "boolean",
+          "initial": false
+        }
+      ],
+      "states": [
+        {
+          "id": "prove-idle",
+          "name": "Idle"
+        },
+        {
+          "id": "prove-building",
+          "name": "Building"
+        },
+        {
+          "id": "prove-exploring",
+          "name": "Exploring"
+        },
+        {
+          "id": "prove-checking",
+          "name": "Checking in Lean"
+        },
+        {
+          "id": "prove-done",
+          "name": "Done",
+          "terminal": true
+        }
+      ],
+      "transitions": [
+        {
+          "id": "prove-start",
+          "from": "prove-idle",
+          "to": "prove-building",
+          "on": "prove-requested",
+          "effects": [
+            {
+              "emit": "lake-build-requested"
+            }
+          ]
+        },
+        {
+          "id": "prove-explore",
+          "from": "prove-building",
+          "to": "prove-exploring",
+          "on": "lake-build-finished",
+          "effects": [
+            {
+              "emit": "explorer-request-sent",
+              "payload": {
+                "bound": 20
+              }
+            }
+          ]
+        },
+        {
+          "id": "prove-write",
+          "from": "prove-exploring",
+          "to": "prove-checking",
+          "on": "explorer-result-returned",
+          "effects": [
+            {
+              "set": "fileWritten",
+              "to": true
+            },
+            {
+              "emit": "lean-file-written",
+              "payload": {
+                "scenario": "'race'"
+              }
+            },
+            {
+              "emit": "lean-check-requested"
+            }
+          ]
+        },
+        {
+          "id": "prove-report-unchecked",
+          "from": "prove-checking",
+          "to": "prove-done",
+          "on": "lean-check-finished",
+          "faultOnly": true,
+          "description": "A defect the code must not have. the explorer's result is reported without Lean's acceptance.",
+          "effects": [
+            {
+              "set": "reported",
+              "to": true
+            },
+            {
+              "emit": "prove-finished",
+              "payload": {
+                "claims": 1
+              }
+            }
+          ]
+        },
+        {
+          "id": "prove-report",
+          "from": "prove-checking",
+          "to": "prove-done",
+          "on": "lean-check-finished",
+          "guard": "event.accepted",
+          "effects": [
+            {
+              "set": "leanAccepted",
+              "to": true
+            },
+            {
+              "set": "reported",
+              "to": true
+            },
+            {
+              "emit": "prove-finished",
+              "payload": {
+                "claims": 1
+              }
+            }
+          ]
+        },
+        {
+          "id": "prove-report-nothing",
+          "from": "prove-checking",
+          "to": "prove-done",
+          "on": "lean-check-finished",
+          "guard": "!event.accepted",
+          "effects": [
+            {
+              "emit": "prove-finished",
+              "payload": {
+                "claims": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lean-toolchain-flow",
+      "name": "Lean toolchain: build, explore and check",
+      "subject": "formal-semantics",
+      "description": "lake and exegra-lean as tools/prove.js calls them; accepts is false when the proof file does not check.",
+      "initial": "lean-ready",
+      "variables": [
+        {
+          "name": "accepts",
+          "type": "boolean",
+          "initial": true
+        }
+      ],
+      "states": [
+        {
+          "id": "lean-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "lean-broken",
+          "from": "lean-ready",
+          "to": "lean-ready",
+          "on": "lean-rejects-proof",
+          "effects": [
+            {
+              "set": "accepts",
+              "to": false
+            }
+          ]
+        },
+        {
+          "id": "lean-build",
+          "from": "lean-ready",
+          "to": "lean-ready",
+          "on": "lake-build-requested",
+          "effects": [
+            {
+              "emit": "lake-build-finished"
+            }
+          ]
+        },
+        {
+          "id": "lean-explore",
+          "from": "lean-ready",
+          "to": "lean-ready",
+          "on": "explorer-request-sent",
+          "effects": [
+            {
+              "emit": "explorer-result-returned",
+              "payload": {
+                "result": "'holds'"
+              }
+            }
+          ]
+        },
+        {
+          "id": "lean-check",
+          "from": "lean-ready",
+          "to": "lean-ready",
+          "on": "lean-check-requested",
+          "effects": [
+            {
+              "emit": "lean-check-finished",
+              "payload": {
+                "accepted": "accepts"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "markdown-import-flow",
+      "name": "Markdown importer: build a specification, write it past the transactions",
+      "subject": "markdown-importer",
+      "description": "main of tools/import-markdown.js: reads import-map.jsonc, the Markdown tree and its git HEAD, builds the specification, checks coverage, and writes the specification with node:fs only when the coverage gate passes. The write is not a transaction and has no base-hash check or journal line; to the workspace service it is a change made outside Exegra.",
+      "initial": "md-idle",
+      "variables": [
+        {
+          "name": "coverageOk",
+          "type": "boolean",
+          "initial": true
+        },
+        {
+          "name": "written",
+          "type": "boolean",
+          "initial": false
+        }
+      ],
+      "states": [
+        {
+          "id": "md-idle",
+          "name": "Idle"
+        },
+        {
+          "id": "md-done",
+          "name": "Done",
+          "terminal": true
+        }
+      ],
+      "transitions": [
+        {
+          "id": "md-unmapped",
+          "from": "md-idle",
+          "to": "md-idle",
+          "on": "markdown-source-unmapped",
+          "effects": [
+            {
+              "set": "coverageOk",
+              "to": false
+            }
+          ]
+        },
+        {
+          "id": "md-build",
+          "from": "md-idle",
+          "to": "md-idle",
+          "on": "markdown-import-run",
+          "effects": [
+            {
+              "emit": "markdown-spec-built",
+              "payload": {
+                "coverage": "coverageOk"
+              }
+            }
+          ]
+        },
+        {
+          "id": "md-write-despite-gate",
+          "from": "md-idle",
+          "to": "md-done",
+          "on": "markdown-spec-built",
+          "faultOnly": true,
+          "description": "A defect the code must not have. the specification is written although the coverage gate failed.",
+          "effects": [
+            {
+              "set": "written",
+              "to": true
+            },
+            {
+              "emit": "disk-edited-externally",
+              "payload": {
+                "file": "'spec'",
+                "hash": "'hmd'"
+              }
+            },
+            {
+              "emit": "markdown-report-printed"
+            }
+          ]
+        },
+        {
+          "id": "md-write",
+          "from": "md-idle",
+          "to": "md-done",
+          "on": "markdown-spec-built",
+          "guard": "event.coverage",
+          "effects": [
+            {
+              "set": "written",
+              "to": true
+            },
+            {
+              "emit": "disk-edited-externally",
+              "payload": {
+                "file": "'spec'",
+                "hash": "'hmd'"
+              }
+            },
+            {
+              "emit": "markdown-report-printed"
+            }
+          ]
+        },
+        {
+          "id": "md-refuse",
+          "from": "md-idle",
+          "to": "md-done",
+          "on": "markdown-spec-built",
+          "guard": "!event.coverage",
+          "description": "The coverage report lists what is not mapped; the output is not written.",
+          "effects": [
+            {
+              "emit": "markdown-report-printed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "conformance-flow",
+      "name": "Conformance runner: replay the goldens",
+      "subject": "simulation-contract",
+      "description": "tools/conformance.js: runs an engine on every golden input and compares the trace with the golden one, reporting the first differing step and field; any mismatch makes the run fail.",
+      "initial": "conformance-idle",
+      "variables": [
+        {
+          "name": "mismatches",
+          "type": "number",
+          "initial": 0
+        },
+        {
+          "name": "reportedAgree",
+          "type": "boolean",
+          "initial": false
+        }
+      ],
+      "states": [
+        {
+          "id": "conformance-idle",
+          "name": "Idle"
+        },
+        {
+          "id": "conformance-done",
+          "name": "Reported",
+          "terminal": true
+        }
+      ],
+      "transitions": [
+        {
+          "id": "conformance-start",
+          "from": "conformance-idle",
+          "to": "conformance-idle",
+          "on": "conformance-run",
+          "effects": [
+            {
+              "emit": "golden-replayed"
+            }
+          ]
+        },
+        {
+          "id": "conformance-ignore-mismatch",
+          "from": "conformance-idle",
+          "to": "conformance-done",
+          "on": "golden-compared",
+          "guard": "!event.matches",
+          "faultOnly": true,
+          "description": "A defect the code must not have. a differing trace is reported as agreement.",
+          "effects": [
+            {
+              "set": "mismatches",
+              "to": "mismatches + 1"
+            },
+            {
+              "set": "reportedAgree",
+              "to": true
+            },
+            {
+              "emit": "conformance-reported",
+              "payload": {
+                "ok": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "conformance-agree",
+          "from": "conformance-idle",
+          "to": "conformance-done",
+          "on": "golden-compared",
+          "guard": "event.matches",
+          "effects": [
+            {
+              "set": "reportedAgree",
+              "to": true
+            },
+            {
+              "emit": "conformance-reported",
+              "payload": {
+                "ok": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "conformance-mismatch",
+          "from": "conformance-idle",
+          "to": "conformance-done",
+          "on": "golden-compared",
+          "guard": "!event.matches",
+          "effects": [
+            {
+              "set": "mismatches",
+              "to": "mismatches + 1"
+            },
+            {
+              "emit": "conformance-reported",
+              "payload": {
+                "ok": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "engine-under-test-flow",
+      "name": "Engine under test",
+      "subject": "simulation-engine",
+      "description": "The engine a conformance or differential run executes (the Rust engine through src/core/engine.js, the native exegra-sim, or exegra-lean).",
+      "initial": "eut-ready",
+      "variables": [
+        {
+          "name": "agrees",
+          "type": "boolean",
+          "initial": true
+        }
+      ],
+      "states": [
+        {
+          "id": "eut-ready",
+          "name": "Ready"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "eut-diverge",
+          "from": "eut-ready",
+          "to": "eut-ready",
+          "on": "engine-diverges",
+          "effects": [
+            {
+              "set": "agrees",
+              "to": false
+            }
+          ]
+        },
+        {
+          "id": "eut-replay",
+          "from": "eut-ready",
+          "to": "eut-ready",
+          "on": "golden-replayed",
+          "effects": [
+            {
+              "emit": "golden-compared",
+              "payload": {
+                "matches": "agrees"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "differential-flow",
+      "name": "Differential runner: Rust engine against the Lean semantics",
+      "subject": "formal-semantics",
+      "description": "tools/differential.js: every golden input and the inputs generated from a seed run through the native engine and exegra-lean; each mismatching input is saved with its result under test-results/differential/.",
+      "initial": "diff-idle",
+      "variables": [
+        {
+          "name": "saved",
+          "type": "number",
+          "initial": 0
+        }
+      ],
+      "states": [
+        {
+          "id": "diff-idle",
+          "name": "Idle"
+        }
+      ],
+      "transitions": [
+        {
+          "id": "diff-run-agree",
+          "from": "diff-idle",
+          "to": "diff-idle",
+          "on": "differential-run",
+          "guard": "engine-under-test-flow.agrees"
+        },
+        {
+          "id": "diff-run-mismatch",
+          "from": "diff-idle",
+          "to": "diff-idle",
+          "on": "differential-run",
+          "guard": "!engine-under-test-flow.agrees",
+          "effects": [
+            {
+              "set": "saved",
+              "to": "saved + 1"
+            },
+            {
+              "emit": "differential-mismatch-saved"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

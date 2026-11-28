@@ -1,0 +1,22 @@
+{
+  "exegra": "0.1",
+  "system": { "id": "fx", "name": "Fixture" },
+  "components": [
+    { "id": "sub-a", "name": "A", "kind": "subsystem", "category": "logical", "parent": "fx", "purpose": "p" },
+    { "id": "sub-b", "name": "B", "kind": "subsystem", "category": "logical", "parent": "fx", "purpose": "p" },
+    { "id": "a-one", "name": "A one", "category": "logical", "parent": "sub-a", "purpose": "p", "implementation": { "status": "manual", "modules": ["src/a/one.js"] } },
+    { "id": "a-two", "name": "A two", "category": "logical", "parent": "sub-a", "purpose": "p", "implementation": { "status": "manual", "modules": ["src/a/two.js"] } },
+    { "id": "b-one", "name": "B one", "category": "logical", "parent": "sub-b", "purpose": "p", "implementation": { "status": "manual", "modules": ["src/b/one.js"] } },
+    { "id": "b-two", "name": "B two", "category": "logical", "parent": "sub-b", "purpose": "p", "implementation": { "status": "manual", "modules": ["src/b/two.js"] } }
+  ],
+  "cuts": [
+    { "id": "system", "name": "System", "expand": [] },
+    { "id": "subsystems", "name": "Subsystems", "depth": 1 },
+    { "id": "components", "name": "Components", "depth": 2 },
+    { "id": "modules", "name": "Modules", "finest": true }
+  ],
+  "claims": [
+    { "id": "a-not-b-components", "kind": "structural", "statement": "No import leads from subsystem A to subsystem B.", "subjects": ["sub-a", "sub-b"], "evaluate": { "method": "no-relationship", "from": "sub-a", "to": "sub-b", "kinds": ["imports"] } },
+    { "id": "a-not-b-subsystems", "kind": "structural", "statement": "At the subsystem cut no import leads from A to B.", "subjects": ["sub-a", "sub-b"], "evaluate": { "method": "no-relationship", "cut": "subsystems", "from": "sub-a", "to": "sub-b", "kinds": ["imports"] } }
+  ]
+}

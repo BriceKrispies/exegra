@@ -1,0 +1,92 @@
+{
+  // A fixture for exhaustive exploration on the behaviour calculus (tests/core/formal-explore.test.js,
+  // WG-5681). Time is logical ticks unless a scenario says otherwise.
+  // - order-ab / order-ba: machine a sets x := 1 and machine b sets y := a.x on the same event, listed in
+  //   both orders; under snapshot reads b.y stays 0 whichever is listed first (the [a, b] / [b, a]
+  //   example of modelchecking F4).
+  // - blink: a blinker turns on and off on tick and each transition emits the next tick; its runs never
+  //   end, so nothing can be claimed for every run.
+  // - divide: the only transition has the guard 1 / 0 > 0, which fails when it is evaluated (the
+  //   foundations F6 model): the failing step is a counterexample.
+  // - big-draw: a delay drawn from a uniform distribution over a million values, more than the
+  //   explorer tries.
+  // - sampled: a variable set from a draw, a construct the calculus does not cover.
+  "exegra": "0.1",
+  "system": {
+    "id": "behaviour-order-fixture",
+    "name": "Behaviour calculus exploration fixture",
+    "version": "0.1.0",
+    "description": "Machines for exhaustive exploration on the behaviour calculus.",
+    "illustrative": true
+  },
+
+  "components": [
+    { "id": "pair", "name": "Pair", "category": "computational", "purpose": "Two machines reacting to one event.", "illustrative": true }
+  ],
+
+  "events": [
+    { "id": "e", "name": "The shared event" },
+    { "id": "tick", "name": "Tick" },
+    { "id": "probe", "name": "Probe" },
+    { "id": "go", "name": "Go" },
+    { "id": "done", "name": "Done" }
+  ],
+
+  "behaviors": [
+    {
+      "id": "a", "name": "Machine a", "subject": "pair", "initial": "a-s",
+      "variables": [{ "name": "x", "type": "number", "initial": 0 }],
+      "states": [{ "id": "a-s", "name": "S" }],
+      "transitions": [{ "id": "a-set", "from": "a-s", "to": "a-s", "on": "e", "effects": [{ "set": "x", "to": "1" }] }]
+    },
+    {
+      "id": "b", "name": "Machine b", "subject": "pair", "initial": "b-s",
+      "variables": [{ "name": "y", "type": "number", "initial": 0 }],
+      "states": [{ "id": "b-s", "name": "S" }],
+      "transitions": [{ "id": "b-copy", "from": "b-s", "to": "b-s", "on": "e", "effects": [{ "set": "y", "to": "a.x" }] }]
+    },
+    {
+      "id": "blinker", "name": "Blinker", "subject": "pair", "initial": "off",
+      "states": [{ "id": "off", "name": "Off" }, { "id": "on", "name": "On" }],
+      "transitions": [
+        { "id": "turn-on", "from": "off", "to": "on", "on": "tick", "effects": [{ "emit": "tick", "after": 1 }] },
+        { "id": "turn-off", "from": "on", "to": "off", "on": "tick", "effects": [{ "emit": "tick", "after": 1 }] }
+      ]
+    },
+    {
+      "id": "divider", "name": "Divider", "subject": "pair", "initial": "d-s",
+      "states": [{ "id": "d-s", "name": "S" }],
+      "transitions": [{ "id": "d-probe", "from": "d-s", "to": "d-s", "on": "probe", "guard": "1 / 0 > 0" }]
+    },
+    {
+      "id": "drawer", "name": "Drawer", "subject": "pair", "initial": "w-s",
+      "states": [{ "id": "w-s", "name": "S" }],
+      "transitions": [{ "id": "w-go", "from": "w-s", "to": "w-s", "on": "go", "effects": [{ "emit": "done", "after": { "kind": "uniform", "lo": 0, "hi": 1000000 } }] }]
+    },
+    {
+      "id": "sampler", "name": "Sampler", "subject": "pair", "initial": "p-s",
+      "variables": [{ "name": "v", "type": "number", "initial": 0 }],
+      "states": [{ "id": "p-s", "name": "S" }],
+      "transitions": [{ "id": "p-go", "from": "p-s", "to": "p-s", "on": "go", "effects": [{ "set": "v", "to": { "sample": { "kind": "uniform", "lo": 0, "hi": 3 } } }] }]
+    }
+  ],
+
+  "scenarios": [
+    { "id": "order-ab", "name": "a listed first", "behaviors": ["a", "b"], "steps": [{ "at": 0, "event": "e" }] },
+    { "id": "order-ba", "name": "b listed first", "behaviors": ["b", "a"], "steps": [{ "at": 0, "event": "e" }] },
+    { "id": "blink", "name": "A blinker", "behaviors": ["blinker"], "maxSteps": 20, "steps": [{ "at": 0, "event": "tick" }] },
+    { "id": "divide", "name": "A guard that divides by zero", "behaviors": ["divider"], "steps": [{ "at": 0, "event": "probe" }] },
+    { "id": "big-draw", "name": "A delay with a million outcomes", "behaviors": ["drawer"], "seed": "42", "steps": [{ "at": 0, "event": "go" }] },
+    { "id": "sampled", "name": "A variable set from a draw", "behaviors": ["sampler"], "seed": "42", "steps": [{ "at": 0, "event": "go" }] }
+  ],
+
+  "claims": [
+    { "id": "ab-b-stays-zero", "kind": "invariant", "statement": "b.y stays 0 when a is listed first.", "evaluate": { "method": "state-invariant", "scenarios": ["order-ab"], "expr": "b.y == 0" } },
+    { "id": "ba-b-stays-zero", "kind": "invariant", "statement": "b.y stays 0 when b is listed first.", "evaluate": { "method": "state-invariant", "scenarios": ["order-ba"], "expr": "b.y == 0" } },
+    { "id": "blinker-turns-on", "kind": "temporal", "statement": "The blinker is eventually on.", "evaluate": { "method": "eventually", "scenarios": ["blink"], "expr": "blinker.state == 'on'" } },
+    { "id": "blinker-two-states", "kind": "invariant", "statement": "The blinker is on or off.", "evaluate": { "method": "state-invariant", "scenarios": ["blink"], "expr": "blinker.state == 'on' || blinker.state == 'off'" } },
+    { "id": "divider-runs", "kind": "invariant", "statement": "The divider never fails.", "evaluate": { "method": "state-invariant", "scenarios": ["divide"], "expr": "divider.state == 'd-s'" } },
+    { "id": "drawer-safe", "kind": "invariant", "statement": "The drawer stays in its state.", "evaluate": { "method": "state-invariant", "scenarios": ["big-draw"], "expr": "drawer.state == 'w-s'" } },
+    { "id": "sampler-small", "kind": "invariant", "statement": "The sampled value is small.", "evaluate": { "method": "state-invariant", "scenarios": ["sampled"], "expr": "sampler.v <= 3" } }
+  ]
+}

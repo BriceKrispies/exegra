@@ -11,7 +11,7 @@
 // deliberate change of the simulation semantics or of the specifications they are recorded from.
 //
 // For each source specification and each scenario it records, as <source>/<name>.input.json and
-// <name>.trace.json:
+// <name>.trace.json (only the input when the engine refuses it as ill-typed or non-integer):
 //   <scenario>               the scenario with its own declared faults
 //   <scenario>--none         with no faults, when the scenario declares any
 //   <scenario>--<fault>      with that one fault, when the scenario declares more than one
@@ -24,7 +24,8 @@ import { analyzeSpec } from '../src/core/analyze.js';
 import { stableStringify } from '../src/core/stable-json.js';
 import { initEngine, runScenario } from '../src/core/engine.js';
 import { simulationInput } from '../src/core/sim-input.js';
-import { GOLDENS_DIR, REPO_ROOT } from './conformance.js';
+import { ELAB_REFUSAL, GOLDENS_DIR, REPO_ROOT } from './conformance.js';
+import { readSpecFile } from './spec-manifest.js';
 
 /** The specifications the goldens are recorded from: [source name, path relative to the repository root]. */
 export const SOURCES = [
@@ -57,7 +58,7 @@ const toJson = (value) => `${stableStringify(value, 1)}\n`;
 
 /** @param {string} source @param {string} file */
 export function loadModel(source, file) {
-  const { model, errorCount, diagnostics } = analyzeSpec(fs.readFileSync(path.join(REPO_ROOT, file), 'utf8'));
+  const { model, errorCount, diagnostics } = analyzeSpec(readSpecFile(path.join(REPO_ROOT, file)));
   if (!model || errorCount) {
     const msgs = diagnostics.filter((d) => d.severity === 'error').map((d) => d.message).join('; ');
     throw new Error(`${source} (${file}) has errors: ${msgs}`);
@@ -98,8 +99,15 @@ function main(argv) {
     for (const scenario of model.byKind.scenario ?? []) {
       for (const v of variantsOf(model, scenario.id)) {
         const input = simulationInput(model, v.scenarioId, v.faults);
-        const trace = runScenario(model, v.scenarioId, v.faults === undefined ? undefined : { faults: v.faults });
-        for (const [suffix, value] of [['input', input], ['trace', trace]]) {
+        // An input the engine refuses as ill-typed or non-integer has no trace golden (WG-5681).
+        /** @type {any} */
+        let trace = null;
+        try {
+          trace = runScenario(model, v.scenarioId, v.faults === undefined ? undefined : { faults: v.faults });
+        } catch (e) {
+          if (!ELAB_REFUSAL.test(/** @type {Error} */ (e).message)) throw e;
+        }
+        for (const [suffix, value] of trace === null ? [['input', input]] : [['input', input], ['trace', trace]]) {
           const name = `${v.name}.${suffix}.json`;
           wanted.add(name);
           writes.push({ path: path.join(dir, name), text: toJson(value) });

@@ -33,7 +33,7 @@ test('regions tenant classes and residency exceptions are entities of the metamo
   }
   assert.deepEqual(metamodel.entities.component.properties.placement.values, ['per-region', 'fixed', 'global']);
   assert.deepEqual(metamodel.entities.component.properties.regions.items.ref, ['region']);
-  assert.deepEqual(metamodel.entities.relationship.properties.carries.items.ref, ['record']);
+  assert.deepEqual(metamodel.entities.relationship.properties.carries.items.ref, ['record', 'type', 'event']);
   assert.deepEqual(metamodel.entities.tenantClass.properties.binds.items.ref, ['record']);
 });
 

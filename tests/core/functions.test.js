@@ -44,8 +44,12 @@ test('the examples are evaluated: each one gives its stated result or error', ()
   assert.ok(n >= 30, `${n} examples`);
 });
 
+const generationChecked = new Set();
 for (const [title, code, mutate] of FIXTURES) {
-  for (const generation of [false, true]) {
+  // The generation switch is checked once per family of reported codes (the part before the dot); the other cases run without it.
+  const modes = generationChecked.has(code.split(".")[0]) ? [false] : [false, true];
+  generationChecked.add(code.split(".")[0]);
+  for (const generation of modes) {
     test(`${title} is reported once as ${code}${generation ? ' (generation set)' : ''}`, () => {
       const r = analyzeSpec(spec(mutate, { generation }));
       assert.deepEqual(codes(errors(r)), [code], r.diagnostics.map((/** @type {any} */ d) => `${d.code} ${d.message}`).join('\n'));

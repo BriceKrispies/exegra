@@ -1,6 +1,15 @@
 {
  "faults": [],
  "final": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "dev-server-flow": 0,
+   "persistence-client-flow": 0,
+   "traffic-recorder-flow": 0,
+   "workspace-disk-flow": 0
+  },
+  "links": {},
   "machines": {
    "dev-server-flow": {
     "state": "dev-ready",
@@ -36,10 +45,25 @@
     }
    }
   },
+  "meters": {},
   "pending": [],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
  "initial": {
+  "activeFaults": [],
+  "down": [],
+  "incarnations": {
+   "dev-server-flow": 0,
+   "persistence-client-flow": 0,
+   "traffic-recorder-flow": 0,
+   "workspace-disk-flow": 0
+  },
+  "links": {},
   "machines": {
    "dev-server-flow": {
     "state": "dev-ready",
@@ -75,6 +99,7 @@
     }
    }
   },
+  "meters": {},
   "pending": [
    {
     "event": "write-intent",
@@ -85,6 +110,7 @@
      "requestId": 1,
      "text": "h2"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -93,13 +119,29 @@
     "time": 0
    }
   ],
-  "time": 0
+  "resources": {},
+  "routeCounters": {},
+  "streams": {},
+  "time": 0,
+  "timers": {},
+  "workloads": {}
  },
+ "initialDraws": [],
  "outcome": "quiescent",
  "scenarioId": "real-write-recorded",
+ "seed": null,
  "steps": [
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "traffic-recorder-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -135,9 +177,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "write-file-request",
+      "from": {
+       "behavior": "persistence-client-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "baseHash": "h1",
        "file": "spec",
@@ -145,6 +193,7 @@
        "requestId": 1,
        "text": "h2"
       },
+      "scheduledAt": 0,
       "seq": 1,
       "source": {
        "behavior": "persistence-client-flow",
@@ -154,8 +203,14 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
     "id": "write-intent",
     "payload": {
@@ -165,6 +220,7 @@
      "requestId": 1,
      "text": "h2"
     },
+    "scheduledAt": 0,
     "seq": 0,
     "source": {
      "kind": "scenario",
@@ -191,6 +247,7 @@
      ],
      "from": "client-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -211,21 +268,26 @@
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "traffic-recorder-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 0,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "write-intent",
     "client-write",
@@ -236,6 +298,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "traffic-recorder-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -271,9 +342,15 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-write",
+      "from": {
+       "behavior": "dev-server-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "baseHash": "h1",
        "caller": "http",
@@ -282,6 +359,7 @@
        "requestId": 1,
        "text": "h2"
       },
+      "scheduledAt": 0,
       "seq": 2,
       "source": {
        "behavior": "dev-server-flow",
@@ -292,9 +370,15 @@
      },
      {
       "event": "traffic-step-recorded",
+      "from": {
+       "behavior": "traffic-recorder-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "event": "write-file-request"
       },
+      "scheduledAt": 0,
       "seq": 3,
       "source": {
        "behavior": "traffic-recorder-flow",
@@ -304,9 +388,20 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "persistence-client-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "write-file-request",
     "payload": {
      "baseHash": "h1",
@@ -315,6 +410,7 @@
      "requestId": 1,
      "text": "h2"
     },
+    "scheduledAt": 0,
     "seq": 1,
     "source": {
      "behavior": "persistence-client-flow",
@@ -343,6 +439,7 @@
      ],
      "from": "dev-ready",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -367,6 +464,7 @@
      ],
      "from": "recorder-on",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 1,
@@ -382,16 +480,20 @@
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 1,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "write-file-request",
     "dev-write",
@@ -405,6 +507,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "traffic-recorder-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -440,12 +551,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "traffic-step-recorded",
+      "from": {
+       "behavior": "traffic-recorder-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "event": "write-file-request"
       },
+      "scheduledAt": 0,
       "seq": 3,
       "source": {
        "behavior": "traffic-recorder-flow",
@@ -456,10 +574,16 @@
      },
      {
       "event": "disk-file-replaced",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "file": "spec",
        "hash": "h2"
       },
+      "scheduledAt": 0,
       "seq": 4,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -470,12 +594,18 @@
      },
      {
       "event": "ws-write-done",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "http",
        "file": "spec",
        "hash": "h2",
        "requestId": 1
       },
+      "scheduledAt": 0,
       "seq": 5,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -485,9 +615,20 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "dev-server-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-write",
     "payload": {
      "baseHash": "h1",
@@ -497,6 +638,7 @@
      "requestId": 1,
      "text": "h2"
     },
+    "scheduledAt": 0,
     "seq": 2,
     "source": {
      "behavior": "dev-server-flow",
@@ -532,6 +674,7 @@
      ],
      "from": "ws-ready",
      "guard": "event.file == 'spec' && event.baseHash == diskSpec",
+     "instance": 0,
      "sets": [
       {
        "after": "h2",
@@ -557,21 +700,26 @@
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "traffic-recorder-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 2,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-write",
     "ws-write-spec",
@@ -582,6 +730,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "traffic-recorder-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -617,13 +774,20 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "disk-file-replaced",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "file": "spec",
        "hash": "h2"
       },
+      "scheduledAt": 0,
       "seq": 4,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -634,12 +798,18 @@
      },
      {
       "event": "ws-write-done",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "http",
        "file": "spec",
        "hash": "h2",
        "requestId": 1
       },
+      "scheduledAt": 0,
       "seq": 5,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -649,13 +819,25 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "traffic-recorder-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "traffic-step-recorded",
     "payload": {
      "event": "write-file-request"
     },
+    "scheduledAt": 0,
     "seq": 3,
     "source": {
      "behavior": "traffic-recorder-flow",
@@ -669,26 +851,32 @@
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "traffic-recorder-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 3,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "traffic-step-recorded"
    ],
@@ -696,6 +884,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "traffic-recorder-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -731,15 +928,22 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "ws-write-done",
+      "from": {
+       "behavior": "workspace-disk-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "caller": "http",
        "file": "spec",
        "hash": "h2",
        "requestId": 1
       },
+      "scheduledAt": 0,
       "seq": 5,
       "source": {
        "behavior": "workspace-disk-flow",
@@ -749,14 +953,26 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "workspace-disk-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "disk-file-replaced",
     "payload": {
      "file": "spec",
      "hash": "h2"
     },
+    "scheduledAt": 0,
     "seq": 4,
     "source": {
      "behavior": "workspace-disk-flow",
@@ -770,26 +986,32 @@
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "traffic-recorder-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 4,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "disk-file-replaced"
    ],
@@ -797,6 +1019,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "traffic-recorder-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -832,14 +1063,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "write-file-ok",
+      "from": {
+       "behavior": "dev-server-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "hash": "h2",
        "ok": true,
        "requestId": 1
       },
+      "scheduledAt": 0,
       "seq": 6,
       "source": {
        "behavior": "dev-server-flow",
@@ -849,9 +1087,20 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "workspace-disk-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "ws-write-done",
     "payload": {
      "caller": "http",
@@ -859,6 +1108,7 @@
      "hash": "h2",
      "requestId": 1
     },
+    "scheduledAt": 0,
     "seq": 5,
     "source": {
      "behavior": "workspace-disk-flow",
@@ -884,6 +1134,7 @@
      ],
      "from": "dev-ready",
      "guard": "event.caller == 'http'",
+     "instance": 0,
      "sets": [],
      "to": "dev-ready",
      "transition": "dev-write-ok"
@@ -893,21 +1144,26 @@
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "traffic-recorder-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 5,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "ws-write-done",
     "dev-write-ok",
@@ -918,6 +1174,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "traffic-recorder-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -953,14 +1218,21 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "save-succeeded",
+      "from": {
+       "behavior": "persistence-client-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "file": "spec",
        "hash": "h2",
        "requestId": 1
       },
+      "scheduledAt": 0,
       "seq": 7,
       "source": {
        "behavior": "persistence-client-flow",
@@ -971,9 +1243,15 @@
      },
      {
       "event": "traffic-step-recorded",
+      "from": {
+       "behavior": "traffic-recorder-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "event": "write-file-ok"
       },
+      "scheduledAt": 0,
       "seq": 8,
       "source": {
        "behavior": "traffic-recorder-flow",
@@ -983,15 +1261,27 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "dev-server-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "write-file-ok",
     "payload": {
      "hash": "h2",
      "ok": true,
      "requestId": 1
     },
+    "scheduledAt": 0,
     "seq": 6,
     "source": {
      "behavior": "dev-server-flow",
@@ -1017,6 +1307,7 @@
      ],
      "from": "client-ready",
      "guard": null,
+     "instance": 0,
      "sets": [],
      "to": "client-ready",
      "transition": "client-write-ok"
@@ -1035,6 +1326,7 @@
      ],
      "from": "recorder-on",
      "guard": null,
+     "instance": 0,
      "sets": [
       {
        "after": 2,
@@ -1050,16 +1342,20 @@
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 6,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "write-file-ok",
     "client-write-ok",
@@ -1073,6 +1369,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "traffic-recorder-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -1108,12 +1413,19 @@
       }
      }
     },
+    "meters": {},
     "pending": [
      {
       "event": "traffic-step-recorded",
+      "from": {
+       "behavior": "traffic-recorder-flow",
+       "incarnation": 0,
+       "instance": 0
+      },
       "payload": {
        "event": "write-file-ok"
       },
+      "scheduledAt": 0,
       "seq": 8,
       "source": {
        "behavior": "traffic-recorder-flow",
@@ -1123,15 +1435,27 @@
       "time": 0
      }
     ],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "persistence-client-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "save-succeeded",
     "payload": {
      "file": "spec",
      "hash": "h2",
      "requestId": 1
     },
+    "scheduledAt": 0,
     "seq": 7,
     "source": {
      "behavior": "persistence-client-flow",
@@ -1145,26 +1469,32 @@
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "traffic-recorder-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 7,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "save-succeeded"
    ],
@@ -1172,6 +1502,15 @@
   },
   {
    "config": {
+    "activeFaults": [],
+    "down": [],
+    "incarnations": {
+     "dev-server-flow": 0,
+     "persistence-client-flow": 0,
+     "traffic-recorder-flow": 0,
+     "workspace-disk-flow": 0
+    },
+    "links": {},
     "machines": {
      "dev-server-flow": {
       "state": "dev-ready",
@@ -1207,14 +1546,27 @@
       }
      }
     },
+    "meters": {},
     "pending": [],
-    "time": 0
+    "resources": {},
+    "routeCounters": {},
+    "streams": {},
+    "time": 0,
+    "timers": {},
+    "workloads": {}
    },
+   "draws": [],
    "event": {
+    "from": {
+     "behavior": "traffic-recorder-flow",
+     "incarnation": 0,
+     "instance": 0
+    },
     "id": "traffic-step-recorded",
     "payload": {
      "event": "write-file-ok"
     },
+    "scheduledAt": 0,
     "seq": 8,
     "source": {
      "behavior": "traffic-recorder-flow",
@@ -1228,30 +1580,40 @@
     {
      "behavior": "persistence-client-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "dev-server-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "workspace-disk-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     },
     {
      "behavior": "traffic-recorder-flow",
      "considered": [],
+     "instance": 0,
      "reason": "no-transition"
     }
    ],
    "index": 8,
    "kind": "deliver",
+   "links": [],
+   "resources": [],
    "responsible": [
     "traffic-step-recorded"
    ],
    "time": 0
   }
- ]
+ ],
+ "stepsTaken": 9,
+ "timeUnit": "tick",
+ "truncated": false,
+ "version": 2
 }

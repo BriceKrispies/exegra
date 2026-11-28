@@ -226,7 +226,7 @@ function openEvents(req, res, url, ws, streams) {
  * The server events of one change notice. A hash this server wrote is its own write, whose
  * disk-file-replaced was recorded with the write; any other hash is an external edit, which the
  * server infers (marked inferred): the file was replaced by another process.
- * @param {string} name @param {'spec'|'layout'|'recorded'|'products'} file @param {string|null} hash
+ * @param {string} name @param {'spec'|'layout'|'recorded'|'products'|'facts'} file @param {string|null} hash
  * @returns {ServerEvent[]}
  */
 export function changeTrace(name, file, hash) {
@@ -383,7 +383,10 @@ export function exegraLinkedSpecs({ specsDir }) {
       if (build) {
         for (const { name } of await ws.listProjects()) {
           const file = ws.specFile(name);
-          if (file !== ws.resolve(name, 'spec.jsonc')) linked[name] = resolveSpecText(file, fs.readFileSync(file, 'utf8')).text;
+          // A specification outside specs/<name>/spec.jsonc, or one kept as a manifest of part files there, is bundled resolved:
+          // the glob of specs/*/spec.jsonc would otherwise ship the manifest alone.
+          const resolved = resolveSpecText(file, fs.readFileSync(file, 'utf8'));
+          if (file !== ws.resolve(name, 'spec.jsonc') || resolved.manifest) linked[name] = resolved.text;
         }
       }
       return `export default ${JSON.stringify(linked)};`;

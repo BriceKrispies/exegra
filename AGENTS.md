@@ -1,6 +1,6 @@
 # Working on Exegra
 
-Exegra is its own first subject. `specs/exegra/spec.jsonc` specifies Exegra: its components, what each is responsible
+Exegra is its own first subject. `specs/exegra/spec.jsonc` (a manifest of the part files in `specs/exegra/parts/`, see the front door below) specifies Exegra: its components, what each is responsible
 for, how they relate, how its pipelines behave, and the claims that must hold. Exegra is built from that specification
 and validated against it with Exegra's own tools. Keep it that way: no part of Exegra exists only in code.
 
@@ -15,8 +15,8 @@ What goes into the specification:
 - **Components.** A new module gets a component, or joins an existing one: purpose, responsibilities, the files in
   `implementation.modules`. `node cli/exegra.js traceability` lists the source files no component claims (`unclaimedFiles`) and the
   declared modules that do not exist (`missingModules`); it exits 0 either way, so read both lists.
-- **Relationships.** A new dependency between components is a relationship of the right kind (`calls`, `data-flow`,
-  `projects`, ...). Claims such as `core-independent-of-ui` and `core-dependencies-acyclic` are evaluated over them.
+- **Relationships.** A new dependency between components is a relationship of the right kind (`imports`, `invokes`,
+  `notifies`, `composes`, `data-flow`, `projects`, ...; `calls` is legacy, see docs/model-and-format.md#interaction-kinds). Claims such as `core-independent-of-ui` and `core-dependencies-acyclic` are evaluated over them.
 - **Behavior.** A change to a pipeline Exegra simulates about itself (scenarios such as `visual-edit-flow`) changes
   its behaviors, events and scenarios too, so the simulation keeps describing Exegra as it is.
 - **Claims and evidence.** Each new capability gets at least one claim saying precisely what must hold, and an
@@ -27,6 +27,31 @@ What goes into the specification:
 Planned work is specified too: components with `implementation.status` `not-implemented` and claims that stay
 *not evaluated* until evidence exists. The simulation roadmap (WG-4663) is recorded this way.
 
+## Front door: never open the specification file
+
+`specs/<project>/spec.jsonc` (and the part files of a manifest specification) is large: Exegra's own specification is
+over a megabyte in total, and one full read costs a large share of your budget. Do not `Read`, `Grep`, `cat` or hand-edit it.
+Use the command line, which answers from the semantic model and gives source lines:
+
+- **Read:** `node cli/exegra.js get --project exegra <id> [<id> ...]` (declaration, owner, source line, references both
+  ways); `find --kind K [--where prop=value] [--refers-to ID] [--referenced-by ID] [--text "..."] [--fields a,b]
+  [--limit N]`; `refs <id>`. `list`, `show`, `deps` and `claims` exist too.
+- **Write:** `apply --project exegra --file ops.json --dry-run`, then `apply` without `--dry-run`.
+- A script that parses the file with `jsonc-parser` and prints only what it needs is allowed.
+- **The self-specification is a manifest.** `specs/exegra/spec.jsonc` lists the part files of `specs/exegra/parts/` (27 files,
+  one per area of components, claims, behaviours and the rest, each at most about 120 KB) and a `specSections` table that
+  tells `apply` which part a new component, relationship, claim, evidence record or behaviour is written to; `get`, `find`
+  and `refs` print the part file and line. **To add a part:** create `specs/exegra/parts/<name>.jsonc` holding the
+  sections it takes, list it in `specParts`, and name it in `specSections` where new entities should land there (the
+  rule format is in docs/model-and-format.md, "A specification kept as a manifest of part files"). A script that reads
+  the self-specification as one text uses `readSpecFile` of `tools/spec-manifest.js`, never `fs.readFileSync` of
+  `spec.jsonc`.
+
+`.claude/settings.json` wires `tools/spec-guard.js`, a PreToolUse hook that refuses `Read`, `Edit`, `Write`,
+`MultiEdit`, an explicit `Grep` and `cat`-like shell commands aimed at a specification file, and names these commands
+in its message. A `Read` of the first 60 lines (the header comment) is allowed. The commands are described in
+`docs/agent-interface.md`.
+
 ## Done means validated by its own specification
 
 A change is done when:
@@ -36,7 +61,7 @@ A change is done when:
 3. `npm run verify` executes the evidence and records the results, and every claim of the change is **verified** or
    **supported** (or **proved**, for a `lean-theorem` claim); the only violated claims are the ones the script expects
    (`edits-only-via-transactions`, deliberately recorded as a known gap, and `core-logic-in-lean`, which lists the
-   components of the verified kernel (tag `verdict-kernel`) not yet ported to Lean until WG-4785 finishes);
+   components of the verified kernel (tag `verdict-kernel`) not yet ported to Lean until WG-4785 finishes, and `core-dependencies-acyclic` and `core-static-dependencies-acyclic`, which the static imports read from the code show to be violated: see docs/verification.md);
 4. `npm run generate` has rewritten the derived artifacts under `specs/exegra/generated/`;
 5. the user-visible part has been seen working in the running application, with screenshots.
 
